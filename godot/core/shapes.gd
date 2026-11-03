@@ -20,7 +20,9 @@ static var _cache := {}
 
 ## All distinct orientations for the given families, in a stable order.
 static func orientations(families: Array) -> Array[Dictionary]:
-	var key := ",".join(families.map(func(f): return str(f)))
+	var key := ""
+	for f in families:
+		key += str(f) + ","
 	if _cache.has(key):
 		return _cache[key]
 	var seen := {}
