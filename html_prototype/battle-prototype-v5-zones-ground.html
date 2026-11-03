@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid Control — Zones + Ground Prototype v5.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#131518; --panel:#1c1f24; --panel2:#22262c; --line:#33383f;
+  --parchment:#e8e2d4; --dim:#9a958a; --gold:#c9a45c;
+  --force:#e2593b; --nature:#4fae7f; --dark:#8a63c9;
+  --hp:#d95555; --move:#5b8fd9; --elev:#5aa8c4;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--ink);color:var(--parchment);font-family:'Inter',sans-serif;font-size:14px;overflow:hidden;display:flex;flex-direction:column}
+
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 22px;border-bottom:1px solid var(--line);flex-shrink:0}
+header h1{font-family:'Marcellus',serif;font-size:16px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:400}
+header h1 span{color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0;text-transform:none;margin-left:10px}
+header .round{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}
+header button.notes-btn{background:none;border:1px solid var(--line);color:var(--dim);border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Inter',sans-serif}
+header button.notes-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+.queue{display:flex;gap:8px;align-items:center;justify-content:center;padding:9px 0 0;flex-shrink:0}
+.queue .label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-right:6px}
+.chip{display:flex;align-items:center;gap:7px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:5px 10px}
+.chip.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.chip .dot{width:9px;height:9px;border-radius:50%}
+.chip .nm{font-size:12px;font-weight:600}
+.chip .init{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+.chip .sg{font-size:9px;color:var(--force);font-family:'JetBrains Mono',monospace}
+
+.main{flex:1;display:flex;min-height:0}
+.stage-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center}
+.hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:12px;color:var(--dim);background:rgba(19,21,24,.9);border:1px solid var(--line);border-radius:4px;padding:5px 14px;white-space:nowrap;z-index:30;text-align:center;max-width:600px}
+.banner{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(19,21,24,.8);z-index:60;flex-direction:column;gap:16px}
+.banner.show{display:flex}
+.banner .txt{font-family:'Marcellus',serif;font-size:34px;color:var(--gold);letter-spacing:.2em;text-transform:uppercase;border:1px solid var(--gold);padding:16px 42px;background:var(--ink)}
+.banner button{background:var(--gold);color:var(--ink);border:none;border-radius:5px;font-family:'Marcellus',serif;font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:10px 22px;cursor:pointer}
+
+.stage{width:560px;height:540px;perspective:1150px;display:flex;align-items:center;justify-content:center}
+.board{width:396px;height:396px;transform-style:preserve-3d;transform:rotateX(55deg) rotateZ(45deg);display:grid;grid-template-columns:repeat(5,76px);grid-template-rows:repeat(5,76px);gap:4px}
+.tile{position:relative;background:linear-gradient(135deg,#2b2f35,#24272c);border:1px solid #3a3f46;transform-style:preserve-3d;cursor:pointer;transition:background .15s,border-color .15s}
+.tile::after{content:attr(data-c);position:absolute;bottom:3px;right:5px;font-family:'JetBrains Mono',monospace;font-size:8px;color:#4c525a}
+.tile.elevated{transform:translateZ(14px);background:linear-gradient(135deg,#2c4a56,#1f363f);border-color:var(--elev);box-shadow:-5px 5px 0 #1a1c20}
+.tile.elevated::before{content:"HIGH GROUND";position:absolute;top:4px;left:5px;font-size:6px;letter-spacing:.06em;color:#8fd4ec}
+.tile.rubble{background:linear-gradient(135deg,#3a342c,#2e2921);border-color:#544d3f}
+.tile.rubble::before{content:"RUBBLE";position:absolute;top:4px;left:5px;font-size:7px;letter-spacing:.13em;color:#8a7d63}
+.tile.scorched{background:linear-gradient(135deg,#332420,#241a17);border-color:#6b3f30}
+.tile.scorched::before{content:"SCORCHED";position:absolute;top:4px;left:5px;font-size:7px;letter-spacing:.1em;color:#c4785a}
+.tile.cursed{background:linear-gradient(135deg,#241a30,#180f20);border-color:#5a3f7a}
+.tile.cursed::before{content:"CURSED";position:absolute;top:4px;left:5px;font-size:7px;letter-spacing:.1em;color:#a88fd0}
+.tile.voidscar{background:linear-gradient(135deg,#1a1420,#100c16);border-color:#4a3a66;animation:voidpulse 2s ease-in-out infinite alternate}
+.tile.voidscar::before{content:"VOIDSCAR";position:absolute;top:4px;left:5px;font-size:7px;letter-spacing:.13em;color:#8a6fc4}
+@keyframes voidpulse{from{box-shadow:inset 0 0 10px #4a3a6666}to{box-shadow:inset 0 0 22px #4a3a66cc}}
+
+.tile.charging-f{background:radial-gradient(circle at 40% 40%,#8a2f16,#5c1d0c);border-color:var(--force);animation:chargeglow-f 1s ease-in-out infinite alternate}
+.tile.charging-f::before{content:"⚠ CHARGING";position:absolute;top:4px;left:5px;font-size:7px;letter-spacing:.1em;color:#f0906b;font-weight:700}
+@keyframes chargeglow-f{from{box-shadow:inset 0 0 14px #e2593b66}to{box-shadow:inset 0 0 30px #e2593bcc}}
+.tile.charging-d{background:radial-gradient(circle at 40% 40%,#4a2f6b,#2c1c40);border-color:var(--dark);animation:chargeglow-d 1s ease-in-out infinite alternate}
+.tile.charging-d::before{content:"⚠ CHARGING";position:absolute;top:4px;left:5px;font-size:7px;letter-spacing:.1em;color:#b9a1e8;font-weight:700}
+@keyframes chargeglow-d{from{box-shadow:inset 0 0 14px #8a63c966}to{box-shadow:inset 0 0 30px #8a63c9cc}}
+
+.tile.hl-move{background:linear-gradient(135deg,#27405f,#203349);border-color:var(--move)}
+.tile.hl-dir{border-color:var(--gold);box-shadow:inset 0 0 0 2px var(--gold)}
+.tile.hl-target{border-color:var(--force);box-shadow:inset 0 0 0 2px var(--force)}
+.tile.no-sight{opacity:.4}
+
+.detbadge{position:absolute;left:50%;top:38%;transform:translate(-50%,0) rotateZ(-45deg) rotateX(-55deg);pointer-events:none;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;background:var(--ink);border:1px solid;border-radius:3px;padding:2px 6px;white-space:nowrap;z-index:5}
+.detbadge.f{color:#f0906b;border-color:var(--force)}
+.detbadge.d{color:#b9a1e8;border-color:var(--dark)}
+
+.piece{position:absolute;left:50%;top:50%;transform:translate(-50%,-58%) rotateZ(-45deg) rotateX(-55deg);transform-origin:center bottom;pointer-events:none}
+
+.mon{width:58px;height:74px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.mon .body{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Marcellus',serif;font-size:21px;border:2px solid;filter:drop-shadow(0 8px 6px rgba(0,0,0,.55))}
+.mon.force .body{background:radial-gradient(circle at 35% 30%,#f08a63,#8a2f16);border-color:#f0a883;color:#fff}
+.mon.dark .body{background:radial-gradient(circle at 35% 30%,#a888de,#3d2766);border-color:#b9a1e8;color:#fff}
+.mon .hpbar{display:flex;gap:2px}
+.mon .pip{width:9px;height:9px;background:var(--hp);border:1px solid #00000055;border-radius:1px}
+.mon .pip.off{background:#3a3f46}
+.mon .tag{font-size:8px;font-weight:600;letter-spacing:.08em;background:var(--ink);border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--parchment)}
+
+.prop-rock{width:52px;height:44px;border-radius:42% 48% 46% 40%;background:radial-gradient(circle at 35% 30%,#7d838c,#43474e);border:2px solid #565c66;filter:drop-shadow(0 8px 6px rgba(0,0,0,.55));display:flex;align-items:flex-end;justify-content:center;font-size:8px;color:#c8cdd4;padding-bottom:5px;letter-spacing:.1em}
+.prop-wall{width:62px;height:54px;background:repeating-linear-gradient(0deg,#575249 0 11px,#4a463e 11px 13px);border:2px solid #6b6558;filter:drop-shadow(0 8px 6px rgba(0,0,0,.55));display:flex;align-items:flex-end;justify-content:center;font-size:8px;color:#d8d2c4;padding-bottom:4px;letter-spacing:.1em}
+.prop-tree{width:44px;height:56px;border-radius:50% 50% 20% 20%;background:radial-gradient(circle at 35% 25%,#5a8f5f,#2d4a30);border:2px solid #6fa876;filter:drop-shadow(0 8px 6px rgba(0,0,0,.55));display:flex;align-items:flex-end;justify-content:center;font-size:7px;color:#d8ecd0;padding-bottom:4px;letter-spacing:.08em}
+.prop .hpbar{display:flex;gap:2px;justify-content:center;margin-top:3px}
+.prop .pip{width:8px;height:8px;background:#a8a294;border:1px solid #00000055}
+.prop .pip.off{background:#3a3f46}
+.prop .resist{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:7px;letter-spacing:.1em;color:var(--gold);white-space:nowrap}
+
+.preview{position:absolute;z-index:45;display:none;background:var(--ink);border:1px solid var(--force);border-radius:5px;padding:8px 12px;pointer-events:none;min-width:190px;box-shadow:0 10px 26px rgba(0,0,0,.6)}
+.preview.show{display:block}
+.preview .t{font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--force);margin-bottom:4px}
+.preview .row{display:flex;justify-content:space-between;gap:14px;font-size:12px;padding:1px 0}
+.preview .row b{font-family:'JetBrains Mono',monospace}
+.preview .kill{color:var(--gold);font-weight:600}
+
+.inspector{width:240px;flex-shrink:0;border-left:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:9px;overflow-y:auto}
+.inspector h2{font-family:'Marcellus',serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:400}
+.inspector .coord{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+.layer{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:7px 10px}
+.layer .lname{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+.layer .lval{font-size:12px;font-weight:500;margin-top:2px;line-height:1.35}
+.layer.filled{border-color:#4c525c;background:var(--panel2)}
+.layer.charge-f .lval{color:#f0906b}
+.layer.charge-f{border-color:var(--force)}
+.layer.charge-d .lval{color:#b9a1e8}
+.layer.charge-d{border-color:var(--dark)}
+
+.counters{margin-top:6px;border-top:1px solid var(--line);padding-top:10px}
+.counters h3{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.counters ul{padding-left:16px}
+.counters li{font-size:11px;color:var(--dim);line-height:1.6}
+.counters li.used{color:var(--gold);font-weight:600}
+.counters code{color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:10.5px}
+
+.hud{flex-shrink:0;border-top:1px solid var(--line);background:var(--panel);display:flex;align-items:stretch}
+.hud .portrait{display:flex;align-items:center;gap:12px;padding:12px 20px;border-right:1px solid var(--line);min-width:230px}
+.hud .pbody{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#f08a63,#8a2f16);border:2px solid #f0a883;display:flex;align-items:center;justify-content:center;font-family:'Marcellus',serif;font-size:19px}
+.hud .pinfo .pname{font-family:'Marcellus',serif;font-size:15px;letter-spacing:.04em}
+.hud .pinfo .aspect{font-size:9px;color:var(--force);letter-spacing:.12em;text-transform:uppercase}
+.hud .pinfo .pstats{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--dim);margin-top:2px}
+.hud .ap{display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 16px;border-right:1px solid var(--line)}
+.hud .ap .aplabel{font-size:9px;letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+.hud .ap .pips{display:flex;gap:5px}
+.hud .ap .appip{width:15px;height:15px;border-radius:3px;background:var(--gold);border:1px solid #00000066}
+.hud .ap .appip.off{background:#3a3f46}
+.hud .skills{flex:1;display:flex;align-items:center;gap:8px;padding:0 14px;overflow-x:auto}
+.skill{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:7px 12px;cursor:pointer;text-align:left;color:var(--parchment);font-family:'Inter',sans-serif;transition:border-color .15s;position:relative;min-width:96px;flex-shrink:0}
+.skill:hover{border-color:var(--gold)}
+.skill.selected{border-color:var(--force);box-shadow:0 0 0 1px var(--force)}
+.skill.selected.move{border-color:var(--move);box-shadow:0 0 0 1px var(--move)}
+.skill:disabled{opacity:.35;cursor:not-allowed}
+.skill .sname{font-weight:600;font-size:12px}
+.skill .smeta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim);margin-top:3px}
+.skill .stype{position:absolute;top:-7px;right:8px;font-size:7.5px;letter-spacing:.12em;background:var(--ink);border:1px solid var(--line);border-radius:2px;padding:1px 5px;color:var(--dim);text-transform:uppercase}
+.skill .stype.threat{color:#f0906b;border-color:var(--force)}
+.skill .cd{position:absolute;top:-7px;left:8px;font-size:8px;background:var(--ink);border:1px solid var(--dim);border-radius:2px;padding:1px 5px;color:var(--dim)}
+.skill.passive{cursor:default;border-style:dashed}
+.skill.passive:hover{border-color:var(--line)}
+.hud .endturn{border-left:1px solid var(--line);display:flex;align-items:center;padding:0 16px}
+.endturn button{background:var(--gold);color:var(--ink);border:none;border-radius:5px;font-family:'Marcellus',serif;font-size:13px;letter-spacing:.1em;text-transform:uppercase;padding:11px 18px;cursor:pointer}
+.endturn button:hover{filter:brightness(1.1)}
+.endturn button:disabled{opacity:.4;cursor:not-allowed}
+
+.log{position:absolute;bottom:12px;left:16px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);display:flex;flex-direction:column-reverse;gap:3px;max-height:150px;overflow:hidden;pointer-events:none;z-index:20;max-width:380px}
+.log div:first-child{color:var(--parchment)}
+.log div.gold{color:var(--gold)}
+
+.notes-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center}
+.notes-overlay.show{display:flex}
+.notes-card{width:560px;max-height:82vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px 26px}
+.notes-card h2{font-family:'Marcellus',serif;color:var(--gold);font-size:16px;letter-spacing:.08em;margin-bottom:14px}
+.notes-card h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:16px 0 6px}
+.notes-card p,.notes-card li{font-size:12.5px;color:var(--parchment);line-height:1.6}
+.notes-card ul{padding-left:18px;margin-top:4px}
+.notes-card code{color:var(--gold);font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.notes-card .close{margin-top:18px;background:var(--gold);color:var(--ink);border:none;border-radius:5px;padding:8px 16px;font-family:'Marcellus',serif;letter-spacing:.08em;cursor:pointer}
+
+.queue .label{order:-1}
+.chip .hp{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--hp)}
+.hint{display:flex;align-items:center;gap:10px}
+.hint button{background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:4px;font-size:11px;padding:3px 9px;cursor:pointer;display:none}
+.tile.charging-n{background:radial-gradient(circle at 40% 40%,#2f6b4a,#1c402c);border-color:var(--nature)}
+.zl{position:absolute;top:15px;left:5px;right:3px;font-size:7px;letter-spacing:.03em;font-weight:700;line-height:1.25;pointer-events:none}
+.zl.z-f{color:#f0906b}.zl.z-n{color:#8fd8b0}.zl.z-d{color:#b9a1e8}
+.tile.in-range{box-shadow:inset 0 0 0 1px #c9a45c66}
+.tile.cast-new{box-shadow:inset 0 0 0 3px var(--gold)}
+.tile.cast-lost{box-shadow:inset 0 0 0 3px #d95555;background:linear-gradient(135deg,#4a2222,#331818)}
+.tile.cast-bad{box-shadow:inset 0 0 0 2px #d95555;background:linear-gradient(135deg,#3a2224,#2a1a1c)}
+.preview .bad{color:#d95555}
+.preview{border-color:var(--gold)}
+.preview .row span{max-width:150px}
+.preview .t{color:var(--gold)}
+.mini{font-size:11px;color:var(--dim);line-height:1.55}
+.mini b{color:var(--gold);font-weight:600}
+.mini .fa{color:#f0906b}.mini .na{color:#8fd8b0}.mini .da{color:#b9a1e8}
+.tile.g-lava{background:linear-gradient(135deg,#6b2410,#3d140a);border-color:#e2593b}
+.sgl{position:absolute;top:4px;left:5px;right:3px;font-size:7px;letter-spacing:.05em;font-weight:700;color:#fff;pointer-events:none}
+.tile.charging-f::before,.tile.charging-d::before,.tile.charging-n::before{content:""}
+.tile.cast-level{box-shadow:inset 0 0 0 3px #e0c060;background:linear-gradient(135deg,#4a4220,#352f17)}
+.tile.cast-replace{box-shadow:inset 0 0 0 3px #5b8fd9}
+.preview .kill span{color:var(--gold)}
+
+.tile.zone-f{box-shadow:inset 0 0 0 3px #e2593b88;background:linear-gradient(135deg,#4a2a1e,#352019)}
+.tile.zone-n{box-shadow:inset 0 0 0 3px #4fae7f88;background:linear-gradient(135deg,#1f3b2c,#162b20)}
+.tile.zone-d{box-shadow:inset 0 0 0 3px #8a63c9aa;background:linear-gradient(135deg,#2b1c3d,#1d1229)}
+.tile.g-lava{background:linear-gradient(135deg,#6b2410,#3d140a);border-color:#e2593b}
+.tile.zone-n.g-lava{background:linear-gradient(135deg,#4a3a1a,#33220f)}
+.tile.zone-d.g-lava{background:linear-gradient(135deg,#4a2250,#33142f)}
+.att{position:absolute;left:0;right:0;bottom:0;height:11px;font-size:6.5px;letter-spacing:.12em;font-weight:700;text-align:center;line-height:11px;pointer-events:none}
+.att-f{background:#e2593b66;color:#f7b49f}.att-n{background:#4fae7f66;color:#a6e6c4}.att-d{background:#8a63c977;color:#cdbaf0}
+.tile.cast-cancel{box-shadow:inset 0 0 0 3px #5ad1c4;background:linear-gradient(135deg,#1f4a48,#173735)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Grid Control <span>v5.0 · zones steer, ground scars, Surges repaint</span></h1>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="round">ROUND <span id="round">1</span> · 5×5 · 1v1</div>
+    <button class="notes-btn" id="btn-notes">How it works</button>
+  </div>
+</header>
+
+<div class="queue">
+  <span class="label">Turn Order (initiative)</span>
+  <div class="chip active" id="chip-tiger">
+    <span class="dot" style="background:var(--force)"></span>
+    <span class="nm">Blaze Tiger</span><span class="init">INIT <span id="init-tiger">7</span></span>
+    <span class="hp" id="hp-tiger">6/6</span><span class="sg" id="sg-tiger"></span>
+  </div>
+  <div class="chip" id="chip-wolf">
+    <span class="dot" style="background:var(--dark)"></span>
+    <span class="nm">Gloom Wolf</span><span class="init">INIT <span id="init-wolf">5</span></span>
+    <span class="hp" id="hp-wolf">5/5</span><span class="sg" id="sg-wolf"></span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="stage-wrap">
+    <div class="hint"><span id="hint-text"></span><button id="btn-rot">↻ Rotate (R)</button></div>
+    <div class="stage"><div class="board" id="board"></div></div>
+    <div class="preview" id="preview"></div>
+    <div class="log" id="log"></div>
+    <div class="banner" id="banner">
+      <div class="txt" id="banner-text">Victory</div>
+      <button id="btn-restart">Fight Again</button>
+    </div>
+  </div>
+
+  <aside class="inspector">
+    <h2>Square Stack</h2>
+    <div class="coord" id="insp-coord">hover a square</div>
+    <div class="layer" id="l-air"><div class="lname">Air</div><div class="lval">—</div></div>
+    <div class="layer" id="l-obj"><div class="lname">Object</div><div class="lval">—</div></div>
+    <div class="layer" id="l-surge"><div class="lname">Pending Surge</div><div class="lval">—</div></div>
+    <div class="layer" id="l-zone"><div class="lname">Zone</div><div class="lval">—</div></div>
+    <div class="layer" id="l-ground"><div class="lname">Ground</div><div class="lval">—</div></div>
+
+    <div class="counters">
+      <h3>How it fits</h3>
+      <div class="mini">
+        <b>Zones</b> (2 rounds, one per square) steer movement: slow, push/pull, drain, <b>Veil</b> = shield. Opposed zones cancel (Bog↔Gale); same type levels up; otherwise replace. A Bog cools Lava to Rubble, a Gale fans it.<br>
+        <b>Ground</b> is permanent: Elevated, Rubble, Voidscar, <b>Lava</b> (burn), and <b>attunement</b> (Scorched / Overgrown / Cursed). Zones and Surges are <span class="fa">+1</span> on their aspect's squares and <span class="da">−1</span> on squares of the aspect that beats them.<br>
+        <b>Surges</b> deal damage first, then <b>repaint</b> their squares. Zones repaint theirs when they fade. (<span class="fa">Force</span>&gt;<span class="na">Nature</span>&gt;<span class="da">Dark</span>&gt;<span class="fa">Force</span>)
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div class="hud">
+  <div class="portrait">
+    <div class="pbody">虎</div>
+    <div class="pinfo">
+      <div class="pname">Blaze Tiger</div>
+      <div class="aspect">Force · Beast</div>
+      <div class="pstats">HP <span id="hud-hp">6</span> · INIT <span id="hud-init">7</span> · MOVE <span id="hud-move">2</span> · RNG <span id="hud-range">+0</span></div>
+    </div>
+  </div>
+  <div class="ap">
+    <div class="aplabel">AP</div>
+    <div class="pips" id="ap-pips"><div class="appip"></div><div class="appip"></div></div>
+  </div>
+  <div class="skills" id="skills">
+    <button class="skill move" id="sk-move">
+      <span class="stype">Move</span>
+      <div class="sname">Move</div>
+      <div class="smeta">1 AP · range 2</div>
+    </button>
+    <button class="skill passive" id="passive">
+      <span class="stype">Passive</span>
+      <div class="sname">Heatwave</div>
+      <div class="smeta">Surges scorch ground</div>
+    </button>
+  </div>
+  <div class="endturn"><button id="btn-end">End Turn</button></div>
+</div>
+
+<div class="notes-overlay" id="notes-overlay">
+  <div class="notes-card">
+    <h2>How it works</h2>
+    <p>Two layers on every square plus the Surge. Rotate shapes with <code>R</code> / right-click, hover to preview, click to cast.</p>
+    <h3>Zones — timed movement control</h3>
+    <ul>
+      <li><b>Bog</b> (slow + pull), <b>Gale</b> (push), <b>Mire</b> (slow, initiative and range drain), <b>Veils</b> (shield vs Surges). They last 2 rounds and hit anyone inside, including you.</li>
+      <li>One zone per square. <b>Opposed</b> (Bog ↔ Gale) cancel each other. The <b>same</b> zone recast levels up and refreshes. Anything else <b>replaces</b>.</li>
+      <li>Push / pull move you 1 square from / to the patch centre at the start of your turn (push into a prop = collision damage).</li>
+    </ul>
+    <h3>Ground — permanent</h3>
+    <ul>
+      <li><b>Lava</b> (Lava Field): burns if you end your turn on it (I = 1, II = 2). Stays until changed: recast = hotter, <b>Bog cools it to Rubble</b>, <b>Gale fans it</b>, Raise Ground cleanses it.</li>
+      <li><b>Attunement:</b> squares start neutral. A fired <b>Surge repaints</b> what it hit; a <b>fading zone repaints</b> its squares. Zones and Surges are +1 on their own aspect's squares, −1 on squares of the aspect that beats them (Force &gt; Nature &gt; Dark &gt; Force). Elevated, Rubble and Voidscar squares can't be attuned.</li>
+      <li>Elevated halts Surges and gives +1 range; debris collapses it to Rubble.</li>
+    </ul>
+    <h3>Surge — damage, then ground</h3>
+    <ul><li>Charges (blocks movement), fires at the end of the opponent's next turn: value ±1 by attunement − Veil shield. Props take 2 and shatter. Then the squares it hit are repainted in its aspect.</li></ul>
+    <h3>Simplified in this build</h3>
+    <ul><li>You carry 7 skills; real monsters carry a Surge + one utility. Wolf: Gloom Surge, Mire, Shade Veil.</li></ul>
+    <button class="close" id="btn-close-notes">Close</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   GRID CONTROL — v5.0  ZONES + GROUND
+   Stack: Air / Object / Pending Surge / ZONE (timed, movement control) / GROUND (permanent: height, rubble, lava, attunement)
+   Surge = damage now, then repaints the ground (attunement). One zone per square.
+   ============================================================ */
+const N=5, BASE_MOVE=2, ZONE_TURNS=2;
+const $=id=>document.getElementById(id);
+const key=(x,y)=>x+","+y;
+const inB=(x,y)=>x>=0&&y>=0&&x<N&&y<N;
+const mdist=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+const NAME={tiger:'Blaze Tiger',wolf:'Gloom Wolf'};
+const OTHER={tiger:'wolf',wolf:'tiger'};
+const ASP={f:{name:'Force',beats:'n'},n:{name:'Nature',beats:'d'},d:{name:'Dark',beats:'f'}};
+const beats=(a,b)=>ASP[a].beats===b;
+const ROMAN=['I','II','III'];
+const ATTNAME={f:'Scorched',n:'Overgrown',d:'Cursed'};
+/* zone strength / Surge damage on an attuned square: +1 own aspect, -1 if the square's aspect beats it */
+function attMod(aspect,att){
+  if(!att)return 0;
+  if(att===aspect)return 1;
+  return beats(att,aspect)?-1:0;
+}
+
+const TAGS={
+  slow:{trigger:'while_inside',action:'mod_stat',stat:'move',sign:-1,label:v=>'move −'+v+' while inside'},
+  drain_init:{trigger:'while_inside',action:'mod_stat',stat:'init',sign:-1,label:v=>'initiative −'+v+' while inside'},
+  drain_range:{trigger:'while_inside',action:'mod_stat',stat:'range',sign:-1,label:v=>'skill range −'+v+' while inside'},
+  pull:{trigger:'start_of_turn',action:'pull',label:()=>'pulled 1 toward the patch centre at start of turn'},
+  push:{trigger:'start_of_turn',action:'push',label:()=>'pushed 1 away from the patch centre at start of turn'},
+  shield:{trigger:'on_surge',action:'shield',label:v=>'shield '+v+' — cuts Surge damage here by '+v},
+  burn:{trigger:'end_of_turn',action:'damage',label:v=>v+' dmg if you END your turn here'}
+};
+
+/* ZONES: timed movement/tempo control. value = min(cap, base+level-1) +/- attunement (min 1) */
+const ZONEDEFS={
+  bog:{name:'Bog',aspect:'n',eff:[{tag:'slow',base:1,cap:2},{tag:'pull',base:1,cap:1}]},
+  gale:{name:'Gale',aspect:'n',eff:[{tag:'push',base:1,cap:1}]},
+  veil_n:{name:'Bark Veil',aspect:'n',eff:[{tag:'shield',base:2,cap:3}]},
+  mire:{name:'Mire',aspect:'d',eff:[{tag:'slow',base:1,cap:1},{tag:'drain_init',base:2,cap:3},{tag:'drain_range',base:1,cap:1}]},
+  veil_d:{name:'Shade Veil',aspect:'d',eff:[{tag:'shield',base:2,cap:3}]}
+};
+const OPPOSED=[['bog','gale']];
+const opposed=(a,b)=>OPPOSED.some(p=>(p[0]===a&&p[1]===b)||(p[0]===b&&p[1]===a));
+function zoneEff(zone,att){
+  const def=ZONEDEFS[zone.def],mod=attMod(def.aspect,att);
+  return def.eff.map(e=>{
+    if(e.tag==='push'||e.tag==='pull')return {tag:e.tag,value:1};
+    let v=Math.max(1,Math.min(e.cap,e.base+zone.level-1)+mod);
+    if(e.tag==='slow')v=Math.min(2,v);
+    return {tag:e.tag,value:v};
+  });
+}
+const zoneShield=(zone,att)=>zone?zoneEff(zone,att).filter(e=>e.tag==='shield').reduce((s,e)=>s+e.value,0):0;
+const tileShield=t=>zoneShield(t.zone,t.att);
+function surgeDmgOn(aspect,value,height,att,shield){
+  if(height)return 0;
+  return Math.max(0,value+attMod(aspect,att)-shield);
+}
+
+/* tetris shapes */
+const BASE={I2:[[0,0],[1,0]],I3:[[0,0],[1,0],[2,0]],L3:[[0,0],[0,1],[1,1]],O4:[[0,0],[1,0],[0,1],[1,1]],
+            T4:[[0,0],[1,0],[2,0],[1,1]],S4:[[1,0],[2,0],[0,1],[1,1]],L4:[[0,0],[0,1],[0,2],[1,2]]};
+function makeOrients(names){
+  const seen=new Set(),out=[];
+  names.forEach(n=>{
+    [false,true].forEach(mir=>{
+      let c=BASE[n].map(([x,y])=>[mir?-x:x,y]);
+      for(let r=0;r<4;r++){
+        c=c.map(([x,y])=>[-y,x]);
+        const mx=Math.min(...c.map(p=>p[0])),my=Math.min(...c.map(p=>p[1]));
+        const norm=c.map(([x,y])=>[x-mx,y-my]).sort((a,b)=>a[1]-b[1]||a[0]-b[0]);
+        const k=JSON.stringify(norm);
+        if(seen.has(k))continue;seen.add(k);
+        const cx=norm.reduce((s,p)=>s+p[0],0)/norm.length,cy=norm.reduce((s,p)=>s+p[1],0)/norm.length;
+        let ai=0,bd=1e9;
+        norm.forEach((p,i)=>{const d=(p[0]-cx)**2+(p[1]-cy)**2;if(d<bd-1e-9){bd=d;ai=i;}});
+        out.push({cells:norm,anchor:norm[ai]});
+      }
+    });
+  });
+  return out;
+}
+
+/* skills: kind = surge | zone | ground (lava) | height | prop */
+const SKILLS={
+  tiger:[
+    {id:'surge',name:'Magma Surge',type:'Surge',kind:'surge',aspect:'f',shapes:['I3','L3'],range:3,cd:0,value:3},
+    {id:'field',name:'Lava Field',type:'Terrain',kind:'ground',aspect:'f',shapes:['O4','T4','S4','L4'],range:3,cd:2},
+    {id:'bog',name:'Bog',type:'Snare',kind:'zone',zone:'bog',aspect:'n',shapes:['I3','L3'],range:3,cd:2},
+    {id:'gale',name:'Gale',type:'Current',kind:'zone',zone:'gale',aspect:'n',shapes:['I3'],range:3,cd:2},
+    {id:'veil',name:'Bark Veil',type:'Veil',kind:'zone',zone:'veil_n',aspect:'n',shapes:['I3','L3'],range:3,cd:2},
+    {id:'wall',name:'Raise Wall',type:'Raise Prop',kind:'prop',shapes:['I2'],range:3,cd:1},
+    {id:'height',name:'Raise Ground',type:'Height',kind:'height',shapes:['I2'],range:3,cd:2}
+  ],
+  wolf:[
+    {id:'surge',name:'Gloom Surge',type:'Surge',kind:'surge',aspect:'d',shapes:['I3','L3'],range:3,cd:0,value:3},
+    {id:'mire',name:'Mire',type:'Hex',kind:'zone',zone:'mire',aspect:'d',shapes:['T4','O4'],range:3,cd:2},
+    {id:'veil',name:'Shade Veil',type:'Veil',kind:'zone',zone:'veil_d',aspect:'d',shapes:['I3','L3'],range:3,cd:2}
+  ]
+};
+Object.values(SKILLS).flat().forEach(s=>{s.orients=makeOrients(s.shapes);});
+const skillsOf=who=>SKILLS[who];
+const skillById=(who,id)=>SKILLS[who].find(s=>s.id===id);
+
+let state;
+function newTile(){return {gtype:'plain',glevel:1,att:null,height:0,object:null,surge:null,zone:null};}
+function freshState(){
+  const s={round:1,order:['tiger','wolf'],idx:0,turnOwner:'tiger',ap:2,mode:null,skill:null,orient:0,hover:null,over:false,gid:0,
+    tiles:{},cd:{tiger:{},wolf:{}},
+    tiger:{id:'tiger',x:4,y:0,hp:6,max:6,init:7},
+    wolf:{id:'wolf',x:0,y:4,hp:5,max:5,init:5}};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++)s.tiles[key(x,y)]=newTile();
+  s.tiles["1,3"].object={name:'Rock',hp:3,max:3};
+  s.tiles["3,1"].object={name:'Tree',hp:2,max:2};
+  s.tiles["1,1"].height=1;
+  s.tiles["3,3"].height=1;
+  return s;
+}
+const tile=c=>state.tiles[key(c.x,c.y)];
+const monsterAt=(x,y)=>{
+  if(state.tiger.hp>0&&state.tiger.x===x&&state.tiger.y===y)return state.tiger;
+  if(state.wolf.hp>0&&state.wolf.x===x&&state.wolf.y===y)return state.wolf;
+  return null;
+};
+const neighbors=c=>[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>({x:c.x+dx,y:c.y+dy})).filter(p=>inB(p.x,p.y));
+const forTiles=f=>{for(let y=0;y<N;y++)for(let x=0;x<N;x++)f(state.tiles[key(x,y)],x,y);};
+const hasCharging=who=>{let r=false;forTiles(t=>{if(t.surge&&t.surge.owner===who)r=true;});return r;};
+/* attunement can't be set on Voidscar, Rubble or Elevated squares */
+function setAtt(t,a){if(t.gtype==='voidscar'||t.gtype==='rubble'||t.height)return;t.att=a;}
+
+function log(msg,cls){
+  const d=document.createElement("div");d.textContent="› "+msg;
+  if(cls)d.className=cls;
+  $("log").prepend(d);
+  while($("log").children.length>9)$("log").lastChild.remove();
+}
+
+/* ---------- stats ---------- */
+const groundEffects=t=>t.gtype==='lava'?[{tag:'burn',value:t.glevel}]:[];
+function effStat(u,stat){
+  let v=stat==='move'?BASE_MOVE:stat==='init'?u.init:0;
+  const t=tile(u);
+  if(t.zone)zoneEff(t.zone,t.att).forEach(e=>{const d=TAGS[e.tag];if(d.action==='mod_stat'&&d.stat===stat)v+=d.sign*e.value;});
+  if(stat==='range'&&t.height)v+=1;
+  return stat==='range'?v:Math.max(0,v);
+}
+const skillRange=(u,s)=>Math.max(1,s.range+effStat(u,'range'));
+
+function reachable(from,range){
+  const seen={},out=[],q=[[from.x,from.y,0]];seen[key(from.x,from.y)]=1;
+  while(q.length){
+    const[cx,cy,d]=q.shift();
+    if(d>=range)continue;
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+      const nx=cx+dx,ny=cy+dy;
+      if(!inB(nx,ny)||seen[key(nx,ny)])return;
+      const t=state.tiles[key(nx,ny)];
+      if(t.object||monsterAt(nx,ny)||t.surge)return;
+      const cost=t.gtype==="rubble"?2:1;
+      if(d+cost>range)return;
+      seen[key(nx,ny)]=1;out.push({x:nx,y:ny});q.push([nx,ny,d+cost]);
+    });
+  }
+  return out;
+}
+
+/* ---------- placement ---------- */
+function footprint(skill,oi,ax,ay){
+  const o=skill.orients[oi];
+  return o.cells.map(([x,y])=>({x:ax+x-o.anchor[0],y:ay+y-o.anchor[1]}));
+}
+function validPlacement(skill,caster,oi,ax,ay){
+  if(!inB(ax,ay))return null;
+  if(mdist(caster,{x:ax,y:ay})>skillRange(caster,skill))return null;
+  const cells=footprint(skill,oi,ax,ay);
+  for(const c of cells){
+    if(!inB(c.x,c.y))return null;
+    const t=tile(c);
+    if(skill.kind==='prop'&&(t.object||monsterAt(c.x,c.y)||t.surge))return null;
+    if(skill.kind!=='surge'&&skill.kind!=='prop'&&t.object)return null;
+  }
+  return cells;
+}
+function placements(skill,caster){
+  const out=[];
+  skill.orients.forEach((o,oi)=>{
+    for(let ay=0;ay<N;ay++)for(let ax=0;ax<N;ax++){
+      const cells=validPlacement(skill,caster,oi,ax,ay);
+      if(cells)out.push({oi,ax,ay,cells});
+    }
+  });
+  return out;
+}
+
+/* ---------- casting rules (pure previews, then apply) ---------- */
+function previewZone(skill,c){
+  const t=tile(c),z=t.zone;
+  if(!z)return {kind:'new',zone:{def:skill.zone,level:1}};
+  if(z.def===skill.zone)return {kind:'level',zone:{def:skill.zone,level:Math.min(3,z.level+1)}};
+  if(opposed(z.def,skill.zone))return {kind:'cancel',zone:null};
+  return {kind:'replace',zone:{def:skill.zone,level:1}};
+}
+/* designed reactions of a zone cast on Lava ground */
+function zoneOnGround(skill,c){
+  const t=tile(c);
+  if(t.gtype!=='lava')return null;
+  if(skill.zone==='bog')return 'cool';
+  if(skill.zone==='gale'&&t.glevel<2)return 'fan';
+  return null;
+}
+function previewGround(skill,c){
+  const t=tile(c);
+  if(t.gtype==='voidscar')return {kind:'lost'};
+  if(t.gtype==='lava')return {kind:'level',level:Math.min(2,t.glevel+1)};
+  return {kind:'new',level:1};
+}
+function previewCell(skill,c){
+  const t=tile(c);
+  if(skill.kind==='surge')return t.surge?{kind:'lost'}:{kind:'new'};
+  if(skill.kind==='zone')return previewZone(skill,c);
+  if(skill.kind==='ground')return previewGround(skill,c);
+  return {kind:'new'};
+}
+function applyToCell(skill,c,gid,owner){
+  const t=tile(c);
+  const pg=previewCell(skill,c);
+  if(pg.kind==='lost')return pg;
+  if(skill.kind==='surge'){
+    t.surge={owner,aspect:skill.aspect,name:skill.name,value:skill.value,fireAfter:OTHER[owner],gid};
+  }else if(skill.kind==='height'){
+    t.height=1;t.gtype='plain';t.glevel=1;t.att=null;          // Raise Ground cleanses: no lava, no attunement
+  }else if(skill.kind==='ground'){
+    t.gtype='lava';t.glevel=pg.level;
+    if(!t.height)t.att='f';
+  }else if(skill.kind==='zone'){
+    const re=zoneOnGround(skill,c);
+    if(re==='cool'){t.gtype='rubble';t.glevel=1;t.att=null;pg.react='cool';}
+    else if(re==='fan'){t.glevel=2;pg.react='fan';}
+    if(pg.zone)t.zone={gid,owner,aspect:skill.aspect,def:pg.zone.def,level:pg.zone.level,duration:ZONE_TURNS};
+    else t.zone=null;
+  }
+  return pg;
+}
+function castSkill(owner,skill,oi,ax,ay){
+  const cells=footprint(skill,oi,ax,ay);
+  const nm=NAME[owner];
+  state.cd[owner][skill.id]=skill.cd;
+  if(skill.kind==='prop'){
+    cells.forEach(c=>{tile(c).object={name:'Wall',hp:2,max:2};});
+    log(nm+" raises a Wall ("+cells.length+" squares).");return;
+  }
+  const gid='g'+(++state.gid);
+  const res={new:0,level:0,cancel:0,replace:0,lost:0};let cool=0,fan=0;
+  cells.forEach(c=>{
+    const r=applyToCell(skill,c,gid,owner);
+    if(res[r.kind]!==undefined)res[r.kind]++;
+    if(r.react==='cool')cool++;if(r.react==='fan')fan++;
+  });
+  if(skill.kind==='height'){log(nm+" raises "+cells.length+" squares of high ground (cleansed).");return;}
+  if(skill.kind==='surge'){
+    log(nm+" declares "+skill.name+" ("+(cells.length-res.lost)+" squares"+(res.lost?", "+res.lost+" blocked":"")+").","gold");
+    log("It fires at the end of "+NAME[OTHER[owner]]+"'s next turn.");return;
+  }
+  const parts=[];
+  if(res.new)parts.push(res.new+" new");
+  if(res.replace)parts.push(res.replace+" replaced");
+  if(res.level)parts.push(res.level+" levelled up");
+  if(res.cancel)parts.push(res.cancel+" cancelled");
+  if(res.lost)parts.push(res.lost+" blocked");
+  if(skill.kind==='ground')log(nm+" lays Lava: "+parts.join(", ")+".","gold");
+  else log(nm+" casts "+ZONEDEFS[skill.zone].name+": "+parts.join(", ")+".","gold");
+  if(cool)log("The Bog cools "+cool+" Lava square"+(cool>1?"s":"")+" to Rubble.");
+  if(fan)log("The Gale fans "+fan+" Lava square"+(fan>1?"s":"")+" hotter.");
+}
+
+/* ---------- effects over time ---------- */
+function hurt(who,d,src){
+  const m=state[who];
+  m.hp=Math.max(0,m.hp-d);
+  log(NAME[who]+" takes "+d+" damage ("+src+")");
+  if(m.hp===0){
+    log(NAME[who]+" is slain!");
+    state.over=true;
+    $("banner-text").textContent=who==="wolf"?"Victory":"Defeat";
+    setTimeout(()=>$("banner").classList.add("show"),450);
+  }
+}
+function patchCenter(t){
+  let sx=0,sy=0,n=0;
+  forTiles((q,x,y)=>{if(q.zone&&q.zone.gid===t.zone.gid&&q.zone.def===t.zone.def){sx+=x;sy+=y;n++;}});
+  return n?{x:sx/n,y:sy/n}:null;
+}
+function displace(u,t,mode){
+  const c=patchCenter(t);if(!c)return;
+  let vx=c.x-u.x,vy=c.y-u.y;
+  if(mode==='push'){vx=-vx;vy=-vy;}
+  if(Math.max(Math.abs(vx),Math.abs(vy))<0.5)return;
+  const sx=Math.abs(vx)>=Math.abs(vy)?Math.sign(vx):0,sy=sx?0:Math.sign(vy);
+  const nx=u.x+sx,ny=u.y+sy;
+  if(!inB(nx,ny)){log(NAME[u.id]+" is pinned against the edge.");return;}
+  const q=state.tiles[key(nx,ny)];
+  if(q.object){
+    if(mode==='push'){log(NAME[u.id]+" is slammed into the "+q.object.name+"!");hurt(u.id,1,'Collision');}
+    return;
+  }
+  if(monsterAt(nx,ny))return;
+  u.x=nx;u.y=ny;
+  log(NAME[u.id]+" is "+(mode==='push'?"pushed":"pulled")+" to ["+nx+","+ny+"] by the "+ZONEDEFS[t.zone.def].name);
+}
+function startOfTurnFX(who){
+  const u=state[who],t=tile(u);
+  if(!t.zone)return;
+  zoneEff(t.zone,t.att).forEach(e=>{
+    if(state.over)return;
+    const d=TAGS[e.tag];
+    if(d.trigger==='start_of_turn'&&(d.action==='push'||d.action==='pull'))displace(u,t,d.action);
+  });
+}
+function endOfTurnFX(who){
+  const u=state[who],t=tile(u);
+  groundEffects(t).forEach(e=>{
+    if(state.over)return;
+    if(e.tag==='burn')hurt(who,e.value,'Lava');
+  });
+}
+function fireDue(who){
+  const cells=[];
+  forTiles((t,x,y)=>{if(t.surge&&t.surge.fireAfter===who)cells.push({x,y});});
+  if(!cells.length)return;
+  const debris=[];
+  log(NAME[OTHER[who]]+"'s "+tile(cells[0]).surge.name+" FIRES!","gold");
+  cells.forEach(c=>{
+    const t=tile(c),sg=t.surge;
+    t.surge=null;
+    const m=monsterAt(c.x,c.y);
+    if(t.height){if(m)log(NAME[m.id]+" is shielded by the high ground.");return;}
+    if(t.object){
+      t.object.hp-=2;
+      log("Surge slams the "+t.object.name+" ("+Math.max(0,t.object.hp)+"/"+t.object.max+" left).");
+      if(t.object.hp<=0){log(t.object.name+" shatters → Rubble, debris flies!");t.object=null;t.gtype='rubble';t.glevel=1;t.att=null;debris.push(c);}
+      return;
+    }
+    const dmg=surgeDmgOn(sg.aspect,sg.value,0,t.att,tileShield(t));
+    if(m&&dmg>0)hurt(m.id,dmg,sg.name);
+    else if(m&&dmg===0)log(NAME[m.id]+" is unharmed — the Veil absorbs the Surge.");
+    setAtt(t,sg.aspect);   // the Surge repaints the ground it struck
+  });
+  if(state.over)return;
+  const seen={};
+  debris.forEach(c=>neighbors(c).forEach(n=>{
+    if(seen[key(n.x,n.y)])return;seen[key(n.x,n.y)]=1;
+    const m=monsterAt(n.x,n.y);
+    if(m&&!state.over)hurt(m.id,1,'Debris');
+    const t=tile(n);
+    if(t.height){t.height=0;t.gtype='rubble';t.glevel=1;t.att=null;log("Debris collapses the high ground at ["+n.x+","+n.y+"].");}
+  }));
+}
+function voidscarCheck(who){
+  const m=state[who];if(m.hp<=0)return;
+  if(tile(m).gtype==='voidscar')hurt(who,1,'Voidscar');
+}
+function tickZones(){
+  let faded=0;
+  forTiles(t=>{
+    if(!t.zone)return;
+    t.zone.duration--;
+    if(t.zone.duration<=0){setAtt(t,t.zone.aspect);t.zone=null;faded++;}
+  });
+  if(faded)log(faded+" zone square"+(faded>1?"s":"")+" fade and repaint the ground.");
+}
+function lateGameHazard(){
+  if(state.round<6)return;
+  let best=null,bs=-1;
+  forTiles((t,x,y)=>{
+    if(t.gtype==='voidscar'||t.object||monsterAt(x,y)||t.surge)return;
+    const sc=mdist({x,y},state.tiger)+mdist({x,y},state.wolf);
+    if(sc>bs){bs=sc;best={x,y};}
+  });
+  if(best){const t=tile(best);t.gtype='voidscar';t.glevel=1;t.att=null;t.zone=null;log("Voidscar spreads to ["+best.x+","+best.y+"] — the arena is shrinking");}
+}
+
+/* ---------- turn flow ---------- */
+function sortOrder(){
+  state.order=['tiger','wolf'].sort((a,b)=>effStat(state[b],'init')-effStat(state[a],'init')||(a==='tiger'?-1:1));
+}
+function startTurn(who){
+  if(state.over)return;
+  state.turnOwner=who;state.ap=2;state.mode=null;state.skill=null;
+  Object.keys(state.cd[who]).forEach(k=>{if(state.cd[who][k]>0)state.cd[who][k]--;});
+  voidscarCheck(who);if(state.over){render();return;}
+  startOfTurnFX(who);if(state.over){render();return;}
+  render();
+  if(who==='wolf')setTimeout(()=>wolfAct(2),800);
+}
+function endTurn(){
+  if(state.over)return;
+  const who=state.turnOwner;
+  state.mode=null;state.skill=null;
+  endOfTurnFX(who);if(state.over){render();return;}
+  fireDue(who);if(state.over){render();return;}
+  state.idx++;
+  if(state.idx>=state.order.length)endRound();
+  else startTurn(state.order[state.idx]);
+}
+function endRound(){
+  state.round++;$("round").textContent=state.round;
+  tickZones();
+  lateGameHazard();
+  sortOrder();state.idx=0;
+  const first=state.order[0];
+  log("Round "+state.round+" — "+NAME[first]+" acts first (initiative "+effStat(state[first],'init')+").");
+  startTurn(first);
+}
+function begin(){sortOrder();state.idx=0;startTurn(state.order[0]);}
+
+/* ---------- rendering ---------- */
+const board=$("board"),preview=$("preview");
+const effLabel=e=>TAGS[e.tag].label(e.value);
+const lavaLabel=t=>'Lava '+ROMAN[t.glevel-1];
+function render(){
+  board.innerHTML="";
+  const moveSet=state.mode==='move'?reachable(state.tiger,effStat(state.tiger,'move')):[];
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const t=state.tiles[key(x,y)];
+    const div=document.createElement("div");
+    div.className="tile";div.dataset.c=x+","+y;
+    if(t.gtype==='lava')div.classList.add("g-lava");
+    if(t.zone)div.classList.add("zone-"+t.zone.aspect);
+    if(t.height)div.classList.add("elevated");
+    if(t.gtype==='rubble')div.classList.add("rubble");
+    if(t.gtype==='voidscar')div.classList.add("voidscar");
+    if(t.surge)div.classList.add(t.surge.aspect==='f'?'charging-f':t.surge.aspect==='d'?'charging-d':'charging-n');
+    if(t.zone){
+      const zl=document.createElement("div");zl.className="zl z-"+t.zone.aspect;
+      zl.textContent=ZONEDEFS[t.zone.def].name+" "+ROMAN[t.zone.level-1]+" · "+t.zone.duration+"r";
+      div.appendChild(zl);
+    }
+    if(t.surge){
+      const sl=document.createElement("div");sl.className="sgl";
+      sl.textContent="⚠ "+t.surge.name;div.appendChild(sl);
+    }
+    if(t.gtype==='lava'||(t.att&&t.gtype==='plain')){
+      const a=document.createElement("div");
+      a.className="att att-"+(t.att||'f');
+      a.textContent=t.gtype==='lava'?lavaLabel(t).toUpperCase():ATTNAME[t.att].toUpperCase();
+      div.appendChild(a);
+    }
+    if(moveSet.some(p=>p.x===x&&p.y===y))div.classList.add("hl-move");
+    if(t.object){
+      const p=document.createElement("div");p.className="piece";
+      const b=document.createElement("div");
+      b.className=t.object.name==="Rock"?"prop-rock":t.object.name==="Wall"?"prop-wall":"prop-tree";
+      b.textContent=t.object.name.toUpperCase();
+      const hb=document.createElement("div");hb.className="hpbar";
+      for(let i=0;i<t.object.max;i++){const pip=document.createElement("div");pip.className="pip"+(i<t.object.hp?"":" off");hb.appendChild(pip);}
+      p.appendChild(b);p.appendChild(hb);div.appendChild(p);
+    }
+    [["tiger","force","虎"],["wolf","dark","狼"]].forEach(([k,cls,glyph])=>{
+      const m=state[k];
+      if(m.hp>0&&m.x===x&&m.y===y){
+        const p=document.createElement("div");p.className="piece mon "+cls;
+        const b=document.createElement("div");b.className="body";b.textContent=glyph;
+        const hb=document.createElement("div");hb.className="hpbar";
+        for(let i=0;i<m.max;i++){const pip=document.createElement("div");pip.className="pip"+(i<m.hp?"":" off");hb.appendChild(pip);}
+        const tag=document.createElement("div");tag.className="tag";tag.textContent=NAME[k];
+        p.appendChild(b);p.appendChild(hb);p.appendChild(tag);div.appendChild(p);
+      }
+    });
+    div.addEventListener("mouseenter",()=>{state.hover={x,y};inspect(x,y);updateCast();});
+    div.addEventListener("click",()=>clickTile(x,y));
+    board.appendChild(div);
+  }
+  renderHud();
+  updateCast();
+}
+function renderHud(){
+  const T=state.tiger,myTurn=state.turnOwner==='tiger'&&!state.over;
+  $("hud-hp").textContent=T.hp;
+  $("hud-init").textContent=effStat(T,'init');
+  $("hud-move").textContent=effStat(T,'move');
+  const rd=effStat(T,'range');$("hud-range").textContent=(rd>=0?"+":"")+rd;
+  [...$("ap-pips").children].forEach((p,i)=>p.classList.toggle("off",i>=state.ap));
+  ["tiger","wolf"].forEach(k=>{
+    const chip=$("chip-"+k);
+    chip.classList.toggle("active",state.turnOwner===k&&!state.over);
+    chip.style.order=state.order.indexOf(k);
+    $("init-"+k).textContent=effStat(state[k],'init');
+    $("hp-"+k).textContent=state[k].hp+"/"+state[k].max;
+    $("sg-"+k).textContent=hasCharging(k)?"⚠ charging":"";
+  });
+  $("sk-move").disabled=!myTurn||state.ap<1;
+  $("sk-move").classList.toggle("selected",state.mode==='move');
+  skillsOf('tiger').forEach(s=>{
+    const b=$("sk-"+s.id);
+    const cd=state.cd.tiger[s.id]||0;
+    b.disabled=!myTurn||state.ap<1||cd>0||(s.kind==='surge'&&hasCharging('tiger'));
+    b.classList.toggle("selected",state.mode==='place'&&state.skill===s.id);
+    let cdEl=b.querySelector(".cd");
+    if(cd>0){if(!cdEl){cdEl=document.createElement("span");cdEl.className="cd";b.appendChild(cdEl);}cdEl.textContent="CD "+cd;}
+    else if(cdEl)cdEl.remove();
+  });
+  $("btn-end").disabled=!myTurn;
+  $("btn-rot").style.display=state.mode==='place'?'inline-block':'none';
+  const sk=state.mode==='place'?skillById('tiger',state.skill):null;
+  let h;
+  if(state.mode==='move')h="Blue squares — click to move.";
+  else if(sk)h="Hover to aim "+sk.name+" ("+sk.orients.length+" orientations). Press R, right-click or ↻ to rotate. Click to cast.";
+  else h=myTurn?"Zones control movement for 2 rounds. Lava changes the ground for good. Surges burn, then repaint the ground.":"Gloom Wolf is acting…";
+  $("hint-text").textContent=h;
+}
+function groundName(t){
+  if(t.gtype==='lava')return lavaLabel(t);
+  if(t.gtype==='plain'&&t.att)return ATTNAME[t.att];
+  return t.gtype==='plain'?'Plain':t.gtype==='rubble'?'Rubble':'Voidscar';
+}
+function inspect(x,y){
+  const t=state.tiles[key(x,y)];
+  $("insp-coord").textContent="square ["+x+", "+y+"]";
+  const setL=(id,val,filled)=>{const el=$(id);el.querySelector(".lval").innerHTML=val;el.classList.toggle("filled",filled);};
+  setL("l-air","—",false);
+  setL("l-obj",t.object?t.object.name+" · "+t.object.hp+"/"+t.object.max+" HP":"—",!!t.object);
+  if(t.surge){
+    const sg=t.surge;
+    const dmg=surgeDmgOn(sg.aspect,sg.value,t.height,t.att,tileShield(t));
+    setL("l-surge","<b>"+sg.name+"</b> · "+ASP[sg.aspect].name+" · "+NAME[sg.owner]+"<br>fires at end of "+NAME[sg.fireAfter]+"'s turn<br>base "+sg.value+" → <b>"+dmg+" dmg here</b> (after ground + Veil)<br>afterwards repaints this square "+ASP[sg.aspect].name,true);
+    $("l-surge").classList.toggle("charge-f",sg.aspect==='f');$("l-surge").classList.toggle("charge-d",sg.aspect==='d');
+  }else{setL("l-surge","—",false);$("l-surge").classList.remove("charge-f","charge-d");}
+  if(t.zone){
+    const z=t.zone,def=ZONEDEFS[z.def],m=attMod(def.aspect,t.att);
+    let h="<b>"+def.name+" "+ROMAN[z.level-1]+"</b> · "+ASP[def.aspect].name+" · "+NAME[z.owner]+"<br><i>"+z.duration+" round"+(z.duration>1?"s":"")+" left — then repaints this square "+ASP[def.aspect].name+"</i>";
+    zoneEff(z,t.att).forEach(e=>{h+="<br>• "+effLabel(e);});
+    if(m)h+="<br><i>"+(m>0?"+1 from attunement":"−1 from attunement")+"</i>";
+    setL("l-zone",h,true);
+  }else setL("l-zone","—",false);
+  let g="<b>"+groundName(t)+"</b>";
+  if(t.att&&t.gtype!=='plain')g+=" · attuned "+ASP[t.att].name;
+  if(t.height)g+=" · <b>Elevated</b>: halts Surges, +1 skill range, collapses to Rubble from debris";
+  groundEffects(t).forEach(e=>{g+="<br>• "+effLabel(e);});
+  if(t.gtype==='rubble')g+="<br>• move cost 2";
+  if(t.gtype==='voidscar')g+="<br>• 1 dmg at turn start, permanent";
+  if(t.att)g+="<br><i>"+ASP[t.att].name+" Surges and zones +1 here · "+ASP[ASP[t.att].beats].name+" ones −1 here</i>";
+  setL("l-ground",g,t.gtype!=='plain'||t.height||!!t.att);
+}
+function placePreview(tileEl,offsetY){
+  const r=tileEl.getBoundingClientRect();
+  preview.style.left=(r.left+r.width/2+18)+"px";
+  preview.style.top=(r.top+offsetY)+"px";
+  preview.classList.add("show");
+}
+function updateCast(){
+  const els=[...board.children];
+  els.forEach(el=>el.classList.remove("cast-new","cast-level","cast-cancel","cast-replace","cast-lost","cast-bad","in-range"));
+  preview.classList.remove("show");
+  if(state.mode!=='place'||state.turnOwner!=='tiger')return;
+  const sk=skillById('tiger',state.skill),T=state.tiger;
+  const R=skillRange(T,sk);
+  els.forEach(el=>{
+    const [x,y]=el.dataset.c.split(",").map(Number);
+    if(mdist(T,{x,y})<=R)el.classList.add("in-range");
+  });
+  const h=state.hover;if(!h)return;
+  const cells=validPlacement(sk,T,state.orient,h.x,h.y);
+  const elAt=(x,y)=>els.find(e=>e.dataset.c===x+","+y);
+  if(!cells){
+    const fp=footprint(sk,state.orient,h.x,h.y);
+    fp.forEach(c=>{const e=elAt(c.x,c.y);if(e)e.classList.add("cast-bad");});
+    let why="can't go here";
+    if(mdist(T,{x:h.x,y:h.y})>R)why="out of range ("+R+")";
+    else if(fp.some(c=>!inB(c.x,c.y)))why="doesn't fit on the board";
+    else if(fp.some(c=>inB(c.x,c.y)&&tile(c).object&&sk.kind!=='surge'&&sk.kind!=='prop'))why="blocked by a prop";
+    else if(fp.some(c=>inB(c.x,c.y)&&(monsterAt(c.x,c.y)||tile(c).surge||tile(c).object)))why="square is occupied";
+    preview.innerHTML='<div class="t">'+sk.name+'</div><div class="row bad"><span>Invalid</span><b>'+why+'</b></div>';
+    const e0=elAt(h.x,h.y);if(e0)placePreview(e0,-70);
+    return;
+  }
+  const cnt={new:0,level:0,cancel:0,replace:0,lost:0};let plus=0,minus=0,cool=0,fan=0;const dmgs=[];
+  cells.forEach(c=>{
+    const pg=previewCell(sk,c);cnt[pg.kind]++;
+    const e=elAt(c.x,c.y);if(e)e.classList.add("cast-"+pg.kind);
+    const t=tile(c);
+    if(sk.kind==='zone'){
+      const m=attMod(sk.aspect,t.att);if(m>0)plus++;if(m<0)minus++;
+      const r=zoneOnGround(sk,c);if(r==='cool')cool++;if(r==='fan')fan++;
+    }
+    if(sk.kind==='surge'&&pg.kind!=='lost')dmgs.push(t.object?0:surgeDmgOn(sk.aspect,sk.value,t.height,t.att,tileShield(t)));
+  });
+  let rows='<div class="t">'+sk.name+(sk.aspect?" · "+ASP[sk.aspect].name:"")+'</div>'+
+    '<div class="row"><span>Squares</span><b>'+cells.length+'</b></div>';
+  if(sk.kind==='surge'){
+    const mn=Math.min(...dmgs,99),mx=Math.max(...dmgs,0);
+    rows+='<div class="row"><span>Damage (after ground + Veil)</span><b>'+(dmgs.length?(mn===mx?mx:mn+"–"+mx):0)+' per square</b></div>';
+    if(cnt.lost)rows+='<div class="row bad"><span>Blocked (enemy Surge)</span><b>'+cnt.lost+'</b></div>';
+    rows+='<div class="row"><span>Then</span><b>repaints squares '+ASP[sk.aspect].name+'</b></div>';
+    rows+='<div class="row"><span>Fires</span><b>end of Wolf\'s turn</b></div>';
+  }else if(sk.kind==='ground'){
+    if(cnt.new)rows+='<div class="row"><span>New Lava</span><b>'+cnt.new+'</b></div>';
+    if(cnt.level)rows+='<div class="row kill"><span>Lava hotter</span><b>'+cnt.level+'</b></div>';
+    if(cnt.lost)rows+='<div class="row bad"><span>Blocked (Voidscar)</span><b>'+cnt.lost+'</b></div>';
+    rows+='<div class="row"><span>Ground</span><b>stays until changed</b></div>';
+  }else if(sk.kind==='zone'){
+    if(cnt.new)rows+='<div class="row"><span>New zone</span><b>'+cnt.new+'</b></div>';
+    if(cnt.level)rows+='<div class="row kill"><span>Levels up</span><b>'+cnt.level+'</b></div>';
+    if(cnt.replace)rows+='<div class="row kill"><span>Replaces</span><b>'+cnt.replace+'</b></div>';
+    if(cnt.cancel)rows+='<div class="row kill"><span>Cancels opposed zone</span><b>'+cnt.cancel+'</b></div>';
+    if(plus)rows+='<div class="row"><span>Stronger (own attunement)</span><b>+1 ×'+plus+'</b></div>';
+    if(minus)rows+='<div class="row bad"><span>Weaker (hostile attunement)</span><b>−1 ×'+minus+'</b></div>';
+    if(cool)rows+='<div class="row kill"><span>Cools Lava → Rubble</span><b>'+cool+'</b></div>';
+    if(fan)rows+='<div class="row kill"><span>Fans Lava hotter</span><b>'+fan+'</b></div>';
+    rows+='<div class="row"><span>Lasts</span><b>'+ZONE_TURNS+' rounds</b></div>';
+  }else if(sk.kind==='height'){
+    rows+='<div class="row"><span>Effect</span><b>Elevated, cleanses ground</b></div>';
+  }
+  preview.innerHTML=rows;
+  const e=elAt(h.x,h.y);if(e)placePreview(e,-70);
+}
+
+/* ---------- player actions ---------- */
+function spend(n=1){
+  state.ap-=n;state.mode=null;state.skill=null;render();
+  if(state.ap<=0&&!state.over)setTimeout(()=>{if(state.turnOwner==='tiger'&&state.ap<=0)endTurn();},550);
+}
+function clickTile(x,y){
+  if(state.over||state.turnOwner!=='tiger')return;
+  if(state.mode==='move'){
+    const ok=reachable(state.tiger,effStat(state.tiger,'move')).some(p=>p.x===x&&p.y===y);
+    if(ok){state.tiger.x=x;state.tiger.y=y;log("Blaze Tiger moves to ["+x+","+y+"]");spend();}
+  }else if(state.mode==='place'){
+    const sk=skillById('tiger',state.skill);
+    if(validPlacement(sk,state.tiger,state.orient,x,y)){
+      castSkill('tiger',sk,state.orient,x,y);
+      preview.classList.remove("show");
+      spend();
+    }
+  }
+}
+function rotate(){
+  if(state.mode!=='place')return;
+  const sk=skillById('tiger',state.skill);
+  state.orient=(state.orient+1)%sk.orients.length;
+  updateCast();
+}
+
+/* ---------- Wolf AI: 2 AP, same rules as you ---------- */
+const WK=()=>skillsOf('wolf');
+function dangerFrom(owner){
+  const hit=new Map(),deb=new Set();
+  forTiles((t,x,y)=>{
+    const sg=t.surge;
+    if(!(sg&&sg.owner===owner))return;
+    if(t.height)return;
+    if(t.object){if(t.object.hp-2<=0)neighbors({x,y}).forEach(n=>deb.add(key(n.x,n.y)));}
+    else{const v=surgeDmgOn(sg.aspect,sg.value,0,t.att,tileShield(t));if(v>0)hit.set(key(x,y),v);}
+  });
+  return {hit,deb};
+}
+function cellRisk(c,danger){
+  const k=key(c.x,c.y),t=tile(c);let r=0;
+  if(danger.hit.has(k))r+=Math.min(3,danger.hit.get(k)*1.1);
+  if(danger.deb.has(k))r+=1;
+  groundEffects(t).forEach(e=>{if(e.tag==='burn')r+=e.value*1.2;});
+  if(t.zone)zoneEff(t.zone,t.att).forEach(e=>{
+    if(['slow','pull','push'].includes(e.tag))r+=0.6;
+    else if(e.tag.startsWith('drain'))r+=0.5;
+  });
+  if(t.gtype==='voidscar')r+=1.5;
+  return r;
+}
+function bestPlacement(skill,caster,scoreFn){
+  let best=null;
+  placements(skill,caster).forEach(pl=>{
+    const sc=scoreFn(pl);
+    if(!best||sc>best.score+1e-9||(Math.abs(sc-best.score)<1e-9&&Math.random()<0.3))best={...pl,score:sc};
+  });
+  return best;
+}
+function wolfDecide(){
+  const w=state.wolf,t=state.tiger;
+  const [surge,mire,veil]=WK();
+  const danger=dangerFrom('tiger');
+  const myCharging=hasCharging('wolf');
+  const mv=effStat(w,'move');
+  const reach=[{x:w.x,y:w.y}].concat(mv>0?reachable(w,mv):[]);
+  const wk=key(w.x,w.y);
+  const threatened=danger.hit.has(wk)||danger.deb.has(wk);
+  const ready=s=>(state.cd.wolf[s.id]||0)<=0;
+  const spot=c=>-cellRisk(c,danger)*2+(tile(c).height?1.5:0)+(tile(c).att==='d'?0.6:tile(c).att==='f'?-0.3:0)-0.4*Math.abs(mdist(c,t)-3);
+  const sortedSpots=reach.slice().sort((a,b)=>spot(b)-spot(a));
+  const cast=(skill,pl)=>{castSkill('wolf',skill,pl.oi,pl.ax,pl.ay);};
+  const moveTo=(c,why)=>{w.x=c.x;w.y=c.y;log("Gloom Wolf "+why+" ["+c.x+","+c.y+"]");};
+
+  const scoreSurge=pl=>{
+    const vals=new Map();
+    pl.cells.forEach(c=>{
+      const pg=previewCell(surge,c);
+      if(pg.kind==='lost'){vals.set(key(c.x,c.y),0);return;}
+      const q=tile(c);
+      vals.set(key(c.x,c.y),q.object?0:surgeDmgOn('d',surge.value,q.height,q.att,tileShield(q)));
+    });
+    if(![...vals.values()].some(v=>v>0))return -9;
+    const deb=new Set();
+    pl.cells.forEach(c=>{const o=tile(c).object;if(o&&o.hp-2<=0)neighbors(c).forEach(n=>deb.add(key(n.x,n.y)));});
+    const hurts=c=>(vals.get(key(c.x,c.y))||0)>0||deb.has(key(c.x,c.y));
+    const tmv=effStat(t,'move');
+    const tReach=[{x:t.x,y:t.y}].concat(tmv>0?reachable(t,tmv):[]);
+    const unsafe=tReach.filter(hurts).length;
+    const dmg=Math.max(vals.get(key(t.x,t.y))||0,hurts(t)?1:0);
+    let sc;
+    if(!hurts(t))sc=unsafe>0?0.2*3*unsafe/tReach.length:0;
+    else sc=dmg*(0.3+0.7*unsafe/tReach.length);
+    const wv=vals.get(wk)||0;
+    if(wv>0)sc-=wv*0.8;
+    if(deb.has(wk))sc-=1;
+    return sc;
+  };
+  const scoreMire=pl=>{
+    let sc=0;
+    pl.cells.forEach(c=>{
+      const pg=previewZone(mire,c);
+      if(c.x===t.x&&c.y===t.y)sc+=3*(attMod('d',tile(c).att)<0?0.7:1);
+      if(c.x===w.x&&c.y===w.y)sc-=2.5;
+      if(pg.kind==='level')sc+=0.3;
+    });
+    return sc;
+  };
+  const cutScore=pl=>{
+    let sc=0;
+    pl.cells.forEach(c=>{
+      const q=tile(c),sg=q.surge;
+      if(!(sg&&sg.owner==='tiger'))return;
+      const before=surgeDmgOn(sg.aspect,sg.value,q.height,q.att,tileShield(q));
+      const pg=previewZone(veil,c);
+      const after=surgeDmgOn(sg.aspect,sg.value,q.height,q.att,zoneShield(pg.zone,q.att));
+      const red=before-after;
+      sc+=red*0.4;
+      if(c.x===w.x&&c.y===w.y){if(after===0)sc+=10;else if(after<=1)sc+=6;else sc+=red;}
+    });
+    return sc;
+  };
+
+  if(threatened){
+    const cut=ready(veil)?bestPlacement(veil,w,cutScore):null;
+    const safe=sortedSpots.filter(c=>cellRisk(c,danger)<=0.7);
+    if(cut&&cut.score>=6&&(safe.length===0||Math.random()<0.4)){cast(veil,cut);return;}
+    if(safe.length){moveTo(safe[0],"dodges to");return;}
+    if(cut&&cut.score>=6){cast(veil,cut);return;}
+    log("Gloom Wolf is cornered — nowhere to go!");return;
+  }
+  if(!myCharging){
+    const b=bestPlacement(surge,w,scoreSurge);
+    if(b&&b.score>=1.2){cast(surge,b);return;}
+  }
+  if(ready(mire)){
+    const b=bestPlacement(mire,w,scoreMire);
+    if(b&&b.score>=3){cast(mire,b);return;}
+  }
+  const here=spot(w);
+  const best=sortedSpots[0];
+  if(best&&(best.x!==w.x||best.y!==w.y)&&spot(best)>here+0.6){moveTo(best,"takes position at");return;}
+  log("Gloom Wolf holds its ground");
+}
+function wolfAct(apLeft){
+  if(state.over){render();return;}
+  if(state.turnOwner!=='wolf')return;
+  if(apLeft<=0){setTimeout(()=>{if(state.turnOwner==='wolf'&&!state.over)endTurn();},350);return;}
+  wolfDecide();
+  render();
+  setTimeout(()=>wolfAct(apLeft-1),700);
+}
+
+/* ---------- setup ---------- */
+function buildSkillBar(){
+  const bar=$("skills");
+  skillsOf('tiger').forEach(s=>{
+    const b=document.createElement("button");
+    b.className="skill";b.id="sk-"+s.id;
+    const cells=s.orients[0].cells.length;
+    const meta="1 AP · rng "+s.range+" · "+cells+" sq"+(s.cd?" · CD "+s.cd:"");
+    b.innerHTML='<span class="stype'+(s.kind==='surge'?' threat':'')+'">'+s.type+'</span><div class="sname">'+s.name+'</div><div class="smeta">'+meta+'</div>';
+    b.onclick=()=>{
+      if(b.disabled)return;
+      if(state.mode==='place'&&state.skill===s.id){state.mode=null;state.skill=null;}
+      else{state.mode='place';state.skill=s.id;state.orient=0;}
+      render();
+    };
+    bar.insertBefore(b,$("passive"));
+  });
+}
+function bindButtons(){
+  $("sk-move").onclick=()=>{if($("sk-move").disabled)return;state.mode=state.mode==='move'?null:'move';state.skill=null;render();};
+  $("btn-end").onclick=()=>{if(state.turnOwner==='tiger')endTurn();};
+  $("btn-restart").onclick=restart;
+  $("btn-rot").onclick=rotate;
+  $("btn-notes").onclick=()=>$("notes-overlay").classList.add("show");
+  $("btn-close-notes").onclick=()=>$("notes-overlay").classList.remove("show");
+  document.addEventListener("keydown",e=>{if(e.key==='r'||e.key==='R')rotate();});
+  board.addEventListener("contextmenu",e=>{e.preventDefault();rotate();});
+  board.addEventListener("mouseleave",()=>{state.hover=null;updateCast();});
+}
+function restart(){
+  state=freshState();
+  $("banner").classList.remove("show");
+  $("round").textContent="1";
+  $("log").innerHTML="";
+  log("Round 1 — zones steer, lava scars, Surges burn and repaint.");
+  begin();
+}
+state=freshState();
+buildSkillBar();
+bindButtons();
+log("Round 1 — zones steer, lava scars, Surges burn and repaint.");
+begin();
+
+</script>
+</body>
+</html>
