@@ -334,7 +334,7 @@ func _on_event(e: Dictionary) -> void:
 		&"moved":
 			hud.log_line("%s moves to [%d,%d]" % [_name(e["who"]), e["to"].x, e["to"].y])
 		&"cast":
-			var sk := battle.monsters[e["who"]].skill_by_id(e["skill"])
+			var sk: SkillDef = battle.monsters[e["who"]].skill_by_id(e["skill"])
 			hud.log_line("%s %s %s (%d squares)" % [_name(e["who"]),
 					"declares" if sk.kind == SkillDef.Kind.SURGE else "casts", sk.display_name, e["cells"].size()])
 		&"damage":
