@@ -18,10 +18,12 @@ var _ai_running := false
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS      # Esc must work while paused
 	rng.randomize()
 	battle = BattleSetup.prototype()
 	battle.event_emitted.connect(_on_event)
 	view = BattleView.new()
+	view.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(view)
 	view.build(battle)
 	hud = BattleHud.new()
@@ -30,6 +32,8 @@ func _ready() -> void:
 	hud.skill_pressed.connect(_on_skill_pressed)
 	hud.end_turn_pressed.connect(_on_end_turn)
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
+	hud.resume_pressed.connect(_toggle_pause)
+	hud.menu_pressed.connect(_to_menu)
 	hud.log_line("Round 1 — zones steer, lava scars, Surges burn and repaint.")
 	battle.begin()
 	_refresh()
@@ -39,6 +43,10 @@ func _ready() -> void:
 # ---------- input ----------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if get_tree().paused:
+		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+			_toggle_pause()
+		return
 	if event is InputEventMouseMotion:
 		var c = view.cell_at_screen(event.position)
 		hover = c if c != null else NOWHERE
@@ -48,12 +56,32 @@ func _unhandled_input(event: InputEvent) -> void:
 			_click()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			_rotate()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
-		_rotate()
+	elif event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_R:
+			_rotate()
+		elif event.keycode == KEY_ESCAPE:
+			if mode != &"" and not get_tree().paused:
+				mode = &""
+				skill = null
+				_refresh()
+			else:
+				_toggle_pause()
 
 
 func _my_turn() -> bool:
-	return not battle.over and not _ai_running and battle.turn_owner == PLAYER
+	return not battle.over and not _ai_running and not get_tree().paused and battle.turn_owner == PLAYER
+
+
+func _toggle_pause() -> void:
+	if battle.over:
+		return
+	get_tree().paused = not get_tree().paused
+	hud.show_pause(get_tree().paused)
+
+
+func _to_menu() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://menu.tscn")
 
 
 func _on_skill_pressed(id: StringName) -> void:
@@ -111,7 +139,7 @@ func _after_action() -> void:
 	_refresh()
 	if battle.over or battle.ap > 0:
 		return
-	await get_tree().create_timer(0.55).timeout
+	await get_tree().create_timer(0.55, false).timeout
 	if _my_turn() and battle.ap <= 0:
 		battle.end_turn()
 		_refresh()
@@ -126,7 +154,7 @@ func _check_ai() -> void:
 	_ai_running = true
 	while not battle.over and battle.turn_owner != PLAYER:
 		var who := battle.turn_owner
-		await get_tree().create_timer(0.8).timeout
+		await get_tree().create_timer(0.8, false).timeout
 		while battle.can_act(who):
 			var a := AiBrain.decide(battle, who, rng)
 			var ok := false
@@ -138,7 +166,7 @@ func _check_ai() -> void:
 			if not ok:
 				break
 			_refresh()
-			await get_tree().create_timer(0.7).timeout
+			await get_tree().create_timer(0.7, false).timeout
 		if not battle.over:
 			battle.end_turn()
 		_refresh()
@@ -151,9 +179,14 @@ func _check_ai() -> void:
 func _refresh() -> void:
 	view.set_highlights(_highlights())
 	view.refresh()
-	hud.update(_order_text(), "AP  %d / %d" % [battle.ap if battle.turn_owner == PLAYER else 0, Battle.AP_PER_TURN],
+	hud.update(_order_text(), _ap_text(),
 			_hint_text(), _preview_text(), _inspector_text(), _skill_states(),
 			_my_turn(), _banner_text())
+
+
+func _ap_text() -> String:
+	var left := battle.ap if battle.turn_owner == PLAYER else 0
+	return "AP  " + "●".repeat(left) + "○".repeat(Battle.AP_PER_TURN - left)
 
 
 func _highlights() -> Dictionary:
@@ -195,11 +228,11 @@ func _cast_color(kind: StringName) -> Color:
 
 
 func _order_text() -> String:
-	var s := "ROUND %d   ·   " % battle.round_number
+	var s := "ROUND %d\n" % battle.round_number
 	for id in battle.order:
 		var m: Monster = battle.monsters[id]
 		var mark := "▶ " if id == battle.turn_owner and not battle.over else ""
-		s += "%s%s  INIT %d  HP %d/%d%s     " % [mark, m.display_name,
+		s += "%s%s  INIT %d  HP %d/%d%s\n" % [mark, m.display_name,
 				int(battle.effective_stat(m, Battle.Stat.INIT)), m.hp, m.max_hp,
 				"  ⚠ charging" if battle.has_charging(id) else ""]
 	return s
@@ -209,10 +242,10 @@ func _hint_text() -> String:
 	if mode == &"move":
 		return "Blue squares — click to move."
 	if mode == &"place" and skill != null:
-		return "Aim %s (%d orientations). R / right-click rotates, left-click casts." % [
+		return "Aim %s (%d orientations). R / right-click rotates · click casts · Esc cancels" % [
 				skill.display_name, skill.orientations().size()]
 	if _my_turn():
-		return "Zones control movement for 2 rounds. Lava changes the ground for good. Surges burn, then repaint."
+		return "Q / E rotate the camera · wheel zooms · middle-drag orbits · Esc pauses"
 	return "%s is acting…" % battle.monsters[battle.turn_owner].display_name
 
 
@@ -291,7 +324,7 @@ func _preview_text() -> String:
 
 func _inspector_text() -> String:
 	if hover == NOWHERE:
-		return "Square stack\n\nhover a square"
+		return ""
 	var sq := battle.board.at(hover)
 	var s := "Square [%d, %d]\n\n" % [hover.x, hover.y]
 	var occ = battle.board.occupants.get(hover)
@@ -338,8 +371,10 @@ func _on_event(e: Dictionary) -> void:
 			hud.log_line("%s %s %s (%d squares)" % [_name(e["who"]),
 					"declares" if sk.kind == SkillDef.Kind.SURGE else "casts", sk.display_name, e["cells"].size()])
 		&"damage":
+			view.floating_text(battle.monsters[e["target"]].pos, "-%d" % e["amount"], Color(1.0, 0.45, 0.4))
 			hud.log_line("%s takes %d damage (%s)" % [_name(e["target"]), e["amount"], e["source"]])
 		&"absorbed":
+			view.floating_text(battle.monsters[e["target"]].pos, "blocked", Color(0.6, 0.85, 1.0))
 			hud.log_line("%s is unharmed — the Veil absorbs the Surge." % _name(e["target"]))
 		&"prop_hit":
 			hud.log_line("A Surge slams a prop (%d HP left)." % e["hp"])
