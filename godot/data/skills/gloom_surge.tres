@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"gloom_surge"
+display_name = "Gloom Surge"
+kind = 0
+aspect = 3
+shapes = Array[StringName]([&"I3", &"L3"])
+range = 3
+cooldown = 0
+value = 3

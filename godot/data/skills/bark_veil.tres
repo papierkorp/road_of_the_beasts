@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/skill_def.gd" id="1"]
+[ext_resource type="Resource" path="res://data/zones/veil_n.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"bark_veil"
+display_name = "Bark Veil"
+kind = 1
+aspect = 2
+zone = ExtResource("2")
+shapes = Array[StringName]([&"I3", &"L3"])
+range = 3
+cooldown = 2
+value = 0
