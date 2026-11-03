@@ -136,6 +136,19 @@ func placement_cells(who: StringName, skill: SkillDef, orient_idx: int, anchor: 
 			orients[orient_idx], anchor)
 
 
+## Every legal placement of `skill` for `who`: [{oi, anchor, cells}].
+func all_placements(who: StringName, skill: SkillDef) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var orients := skill.orientations()
+	for oi in orients.size():
+		for y in board.size:
+			for x in board.size:
+				var cells := placement_cells(who, skill, oi, Vector2i(x, y))
+				if not cells.is_empty():
+					out.append({"oi": oi, "anchor": Vector2i(x, y), "cells": cells})
+	return out
+
+
 func cast(who: StringName, skill: SkillDef, orient_idx: int, anchor: Vector2i) -> bool:
 	if not can_cast(who, skill):
 		return false
