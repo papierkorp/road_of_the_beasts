@@ -10,12 +10,23 @@ var _buttons: VBoxContainer
 func _ready() -> void:
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS      # works while a battle is paused
+	var root := Control.new()
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(root)
 	_panel = PanelContainer.new()
 	_panel.theme = UiTheme.create()
 	_panel.visible = false
-	_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	_panel.position += Vector2(-16, 16)
-	add_child(_panel)
+	# pinned to the top-right corner and growing to the left, so it never leaves the window
+	_panel.anchor_left = 1.0
+	_panel.anchor_right = 1.0
+	_panel.anchor_top = 0.0
+	_panel.anchor_bottom = 0.0
+	_panel.offset_right = -16.0
+	_panel.offset_top = 16.0
+	_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_panel.grow_vertical = Control.GROW_DIRECTION_END
+	root.add_child(_panel)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 6)
 	_panel.add_child(col)
@@ -43,6 +54,7 @@ func _ready() -> void:
 ## The key is the input action "toggle_cheats" (Project Settings → Input Map): F10 and ` by default.
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_cheats") and not event.is_echo():
+		print("[cheats] menu toggled")
 		_panel.visible = not _panel.visible
 		_message.text = "" if GameSession.game != null else "No game running — start or continue a game first."
 		get_viewport().set_input_as_handled()
