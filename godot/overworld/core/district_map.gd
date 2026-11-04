@@ -36,7 +36,7 @@ static func room(seed_value: int, doors: Array[Dictionary]) -> DistrictMap:
 	rng.seed = seed_value
 	var slots: Array[Vector2] = [Vector2(6, 2.5), Vector2(6, 7.5), Vector2(9, 3.5), Vector2(9, 6.5), Vector2(12, 2.5), Vector2(12, 7.5)]
 	for i in 3:
-		var at := slots.pop_at(rng.randi_range(0, slots.size() - 1))
+		var at: Vector2 = slots.pop_at(rng.randi_range(0, slots.size() - 1))
 		m._add("pillar_%d" % i, "", at, Vector2(1.0, 1.0), 1.8, Color(0.42, 0.42, 0.46))
 	for i in doors.size():
 		var y := 5.0 + (float(i) - (doors.size() - 1) / 2.0) * 3.2
