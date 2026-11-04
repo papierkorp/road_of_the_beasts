@@ -23,7 +23,7 @@ const SURGE_BASE_DAMAGE := {SurgeType.ERUPTION: 3, SurgeType.FLOOD: 2, SurgeType
 ## shapes are tuned outside battle (overworld). Passive Adaptive may rotate in battle.
 @export var shapes: Array[StringName] = []
 @export var orientation: int = 0
-@export var range: int = 3
+@export var cast_range: int = 3
 ## kind SURGE
 @export var surge_type: SurgeType = SurgeType.NONE
 @export var twist: Twist = Twist.NONE
@@ -79,8 +79,8 @@ func base_range() -> int:
 		Twist.RING:
 			return 0
 		Twist.LOB:
-			return range + 2
-	return range
+			return cast_range + 2
+	return cast_range
 
 
 ## How many of the caster's turn starts until the Surge fires.

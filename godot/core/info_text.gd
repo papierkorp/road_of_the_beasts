@@ -75,14 +75,13 @@ static func range_text(skill: SkillDef) -> String:
 
 
 ## Card rows for a skill. `battle` / `caster` (optional) add live values like Momentum.
-static func skill_rows(skill: SkillDef, battle: Battle = null, caster: Monster = null) -> Array:
+static func skill_rows(skill: SkillDef, _battle: Battle = null, caster: Monster = null) -> Array:
 	var rotatable := caster != null and caster.has_passive(&"adaptive")
 	var rows: Array = [
+		["Does", summary(skill, caster)],
 		["Affects", AFFECTS.get(skill.kind, "—")],
-		["Archetype", String(skill.archetype)],
 		["Aspect", Aspect.NAMES[skill.aspect]],
-		["AP", "1"],
-		["Range", range_text(skill)],
+		["AP · Range", "1 · %s" % range_text(skill)],
 		["Shape", shape_text(skill, rotatable)],
 	]
 	match skill.kind:
@@ -131,9 +130,50 @@ static func skill_rows(skill: SkillDef, battle: Battle = null, caster: Monster =
 			rows.append(["Effect", "+1 range / Reach on top; climbing costs 2 move; Flood can't reach it"])
 		SkillDef.Kind.PROP:
 			rows.append(["Effect", "Walls (2 HP, brittle) on empty squares"])
-	if skill.description != "":
-		rows.append(["Note", skill.description])
+	rows.append(["Archetype", String(skill.archetype)])
 	return rows
+
+
+## One plain sentence: what happens when you use it.
+static func summary(skill: SkillDef, caster: Monster = null) -> String:
+	var cells: int = 4 if skill.twist == SkillDef.Twist.RING else (skill.orientations()[0]["cells"].size() if not skill.orientations().is_empty() else 0)
+	match skill.kind:
+		SkillDef.Kind.SURGE:
+			var bonus := caster.momentum_bonus if caster != null else 0
+			var t: Array = TYPE_TEXT.get(skill.surge_type, ["—", ""])
+			var when := "next turn" if skill.fire_delay() == 1 else "turn after next"
+			var s := "Marks %d squares. At the start of your %s it deals %d damage to everyone still standing there, then leaves %s for %d rounds." % [
+				cells, when, skill.surge_value() + bonus, t[0], skill.residue_rounds()]
+			if skill.surge_type == SkillDef.SurgeType.FLOOD:
+				s += " Struck monsters are pushed 1 square (WASD)."
+			if skill.twist == SkillDef.Twist.CONSTRICT:
+				s += " Struck monsters are pulled toward the centre."
+			return s
+		SkillDef.Kind.ZONE:
+			var z := skill.zone
+			var parts := []
+			for e in z.effective(1, Aspect.Type.NONE):
+				match e["tag"]:
+					ZoneEffect.Tag.SLOW:
+						parts.append("−%d movement" % e["value"])
+					ZoneEffect.Tag.DRAIN_INIT:
+						parts.append("−%d initiative" % e["value"])
+					ZoneEffect.Tag.DRAIN_RANGE:
+						parts.append("−%d range and Reach" % e["value"])
+					ZoneEffect.Tag.SHIELD:
+						parts.append("Surge damage −%d" % e["value"])
+					ZoneEffect.Tag.PUSH:
+						parts.append("pushed 1 square in the direction you set (WASD) at the end of their turn")
+					ZoneEffect.Tag.PULL:
+						parts.append("pulled 1 square toward the centre cell at the end of their turn")
+			return "For 2 rounds, everyone on these %d squares (allies too): %s." % [cells, "; ".join(PackedStringArray(parts))]
+		SkillDef.Kind.GROUND:
+			return "Turns %d squares into permanent %s: %s." % [cells, Square.ground_name(skill.ground_type), GROUND_TRIGGER.get(skill.ground_type, "")]
+		SkillDef.Kind.HEIGHT:
+			return "Raises %d squares to Elevated and clears their ground." % cells
+		SkillDef.Kind.PROP:
+			return "Raises %d Walls (2 HP) on empty squares." % cells
+	return skill.description
 
 
 static func move_rows(battle: Battle, m: Monster) -> Array:

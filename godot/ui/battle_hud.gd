@@ -41,7 +41,7 @@ var _pause: Control
 func build() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS     # pause menu must work while the tree is paused
 	var root := Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.theme = UiTheme.create()
 	add_child(root)
@@ -170,10 +170,6 @@ func _build_inspector(root: Control) -> void:
 
 	# skill card above the action bar
 	_card_panel = PanelContainer.new()
-	_card_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_card_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_card_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_card_panel.offset_bottom = -116
 	_card_panel.visible = false
 	_ignore(_card_panel)
 	root.add_child(_card_panel)
@@ -232,7 +228,16 @@ func _show_card() -> void:
 		return
 	_card_title.text = card["title"]
 	_fill_grid(_card_grid, card["rows"])
+	_place_card.call_deferred()
+
+
+## Keep the whole card on screen, centred above the action bar.
+func _place_card() -> void:
 	_card_panel.reset_size()
+	var vp := get_viewport().get_visible_rect().size
+	var sz := _card_panel.get_combined_minimum_size()
+	_card_panel.size = sz
+	_card_panel.position = Vector2(roundf((vp.x - sz.x) / 2.0), maxf(8.0, vp.y - 116.0 - sz.y))
 
 
 func _build_preview(root: Control) -> void:
@@ -252,12 +257,12 @@ func _build_preview(root: Control) -> void:
 func _build_banner(root: Control) -> void:
 	var dim := ColorRect.new()
 	dim.color = Color(0.05, 0.055, 0.065, 0.8)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.visible = false
 	root.add_child(dim)
 	_banner = dim
 	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.add_child(center)
 	var col := VBoxContainer.new()
 	col.add_theme_constant_override("separation", 14)
@@ -274,12 +279,12 @@ func _build_banner(root: Control) -> void:
 func _build_pause(root: Control) -> void:
 	var dim := ColorRect.new()
 	dim.color = Color(0.05, 0.055, 0.065, 0.75)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.visible = false
 	root.add_child(dim)
 	_pause = dim
 	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.add_child(center)
 	var panel := PanelContainer.new()
 	center.add_child(panel)

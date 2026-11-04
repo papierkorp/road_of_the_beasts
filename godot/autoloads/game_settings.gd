@@ -26,7 +26,7 @@ func apply() -> void:
 		win.size = SIZES[size_index]
 		var screen := DisplayServer.window_get_current_screen()
 		var area := DisplayServer.screen_get_size(screen)
-		win.position = DisplayServer.screen_get_position(screen) + (area - win.size) / 2
+		win.position = DisplayServer.screen_get_position(screen) + Vector2i((Vector2(area - win.size) / 2.0).floor())
 	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(volume, 0.0001)))
 	changed.emit()
 

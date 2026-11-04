@@ -54,7 +54,8 @@ func test_every_skill_and_monster_has_a_card() -> void:
 	for id in GameData.skill_ids():
 		var rows := InfoText.skill_rows(GameData.skill(id))
 		assert_int(rows.size()).is_greater(5)
-		assert_str(rows[0][0]).is_equal("Affects")
+		assert_str(rows[0][0]).is_equal("Does")
+		assert_int(rows[0][1].length()).is_greater(20)
 	for id in GameData.monster_ids():
 		var rows := InfoText.monster_rows(GameData.monster(id))
 		assert_int(rows.size()).is_greater(8)
