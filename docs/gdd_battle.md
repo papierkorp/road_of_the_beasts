@@ -148,7 +148,9 @@ Major Surge                   2 AP  (once per battle)
 | Glass cannon | 2 | 9.0 | 2 | 3 | 1 | commits fast, dies if its Surge is cut away |
 | Anvil | 8 | 2.0 | 1 | 1 | 2 | slow, hard to dislodge, threatens a radius it can't leave |
 | Skirmisher | 4 | 6.0 | 1 | 4 | 1 | never in its own Surge when it fires |
-| Berserker | 5 | 7.0 | 3 | 2 | 1 | escalates one Surge with Empower |
+| Berserker | 5 | 7.0 | 2 *(3 from Soul)* | 2 | 1 | escalates one Surge with Empower; TPR 3 opens with the Soul cap |
+| Balanced | 5 | 6.0 | 1 | 2 | 1 | no weakness, no spike — the kit decides |
+| Fragile | 3 | 6.0 | 2 | 2 | 1 | weak body, many turns; lives on its Surge |
 
 ---
 
@@ -730,7 +732,7 @@ Order inside a turn: due Surges (damage → residue → repaint) → start effec
 
 ## 15. Tamer Skills (Player Influence)
 
-The tamer shapes; monsters fight. Each tamer skill can be used **once per battle**.
+The tamer shapes; monsters fight. Each tamer skill can be used **once per battle**. The player brings a limited number of **slotted** skills into a battle (slots grow with cultivation stage, gdd_overworld §4.8).
 
 | Skill | Effect |
 |---|---|

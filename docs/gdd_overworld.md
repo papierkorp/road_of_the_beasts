@@ -86,7 +86,7 @@ BREAKTHROUGH  High → next stage's Lower
 
 ```
 1. STAGE       → unlocks mechanics (see 4.5)
-2. SUB-TIER    → grows spatial space capacity, tamer skill potency
+2. SUB-TIER    → grows spatial space capacity
 3. WITHIN      → cultivation XP bar (battles, story, resources)
                  full bar = sub-tier up
                  breakthroughs (High → next stage) gated by trials / story
@@ -103,7 +103,7 @@ SPECIES  (data file, shared by all individuals — gdd_battle §6.2)
   from species) · default utility · species passive · blurb · art
 
 INDIVIDUAL  (one per monster the player owns or meets in the wild)
-  stat shape      glass cannon | anvil | skirmisher | berserker | balanced …
+  stat shape      glass cannon | anvil | skirmisher | berserker | balanced | fragile
   rarity          Normal | Rare | Epic | Legendary
   stage + sub-tier + XP
   evolutions      the paths picked for its skills (4.7)
@@ -126,16 +126,21 @@ STAT = stat shape (where the budget goes)
 - No per-level stat picks, no stat bookkeeping — a sub-tier up makes the stats **snap** to the next fixed values of that individual's shape
 - Monster complexity lives in **shape, skill evolution and rarity**, not in levels
 - **Ceiling rule:** monsters cannot exceed the player's stage (the spatial space can only sustain what the tamer's qi can feed)
-- The same stat shapes as the battle GDD (§4.5), shown as the reference Core Formation spread:
+- **Six fixed stat shapes, the same in every stage** (the stage ceilings scale them, §4.6). Each shape is a *range per stat* plus one shared rule: **every individual of a stage has the same total of stat points** — the shape decides where they may go, the roll decides exactly where inside the ranges.
+- **Rolled, not assigned:** a new individual draws its stats inside its shape's min / max per stat until the stage budget is spent (stats have a price: Init and TPR cost more than HP; exact prices are tuning). Two Anvils are never identical, but never stronger than each other overall.
+- Reference spread at **Core Formation** (typical roll; ranges around it are a tuning task). The first four are the shapes of gdd_battle §4.5, Balanced and Fragile name the roster's "balanced" / "fragile" monsters:
 
 | Shape | HP | Init | TPR | Move | Reach | Feel |
 |---|---|---|---|---|---|---|
 | Glass cannon | 2 | 9.0 | 2 | 3 | 1 | commits fast, dies if its Surge is cut away |
 | Anvil | 8 | 2.0 | 1 | 1 | 2 | slow, hard to dislodge, threatens a radius it can't leave |
 | Skirmisher | 4 | 6.0 | 1 | 4 | 1 | never in its own Surge when it fires |
-| Berserker | 5 | 7.0 | 3 | 2 | 1 | escalates one Surge with Empower |
+| Berserker | 5 | 7.0 | 2 *(3 from Soul)* | 2 | 1 | escalates one Surge with Empower; fast chains once TPR 3 opens |
+| Balanced | 5 | 6.0 | 1 | 2 | 1 | no weakness, no spike — kit decides |
+| Fragile | 3 | 6.0 | 2 | 2 | 1 | weak body, many turns; lives on its Surge |
 
-*(The battle GDD lists Berserker TPR 3, which is above the Core cap of 2 — see Open Questions. Exact fractions per sub-tier are a tuning task.)*
+- **A stat never exceeds its stage ceiling**: a Berserker rolls TPR 2 until the player reaches Soul, then TPR 3 — the shape stays the same, the cap opens
+- Exact budget per stage and the min / max ranges are tuned with the battle simulation (`tools/sim.gd`)
 
 ### 4.5 Stage Unlock Table
 
@@ -144,10 +149,10 @@ The **full base kit is available from the first day** — Move, Strike, Surge, o
 | Stage | Monster unlock | Player unlock |
 |---|---|---|
 | Qi Gathering | full base kit (Move, Strike, Surge, 1 utility, 1 passive) · TPR 1 | holds 1 monster · **1v1** (5×5) |
-| Foundation | **2nd utility slot** · first skill evolution · TPR 2 possible | holds 3+ monsters · **3v3** (7×7, standard) · **2v2** (6×6) · 1 tamer skill |
-| Core Formation | second skill evolution · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer skill · **5v5** special battles |
+| Foundation | **2nd utility slot** · first skill evolution · TPR 2 possible | holds 3+ monsters · **3v3** (7×7, standard) · **2v2** (6×6) · 1 tamer slot |
+| Core Formation | second skill evolution · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer slot · **5v5** special battles |
 | Soul Tier | Air layer access (Winged) · 2x2 size · TPR 3 possible | mid-battle **Beast Swap** from the spatial space |
-| Immortal | Dual-aspect monsters *(rules open)* | 3rd tamer skill |
+| Immortal | Dual-aspect monsters *(rules open)* | 3rd tamer slot |
 | Sovereign | Signature skills (Legendary) · Major Surge (Ancient, Legendary only) | full spatial arsenal |
 
 > Expansion features (bigger teams, air layer, 2x2, swap) **are** the reward structure — mechanics introduced one breakthrough at a time, solving the tutorial problem for free. Battle modes follow the team size the player can field; **which mode a fight uses is set by the encounter** (a narrow corridor node is a 1v1/2v2, a dungeon hall a 3v3, a tournament a 5v5), and the player needs at least that many monsters.
@@ -192,6 +197,15 @@ MIRE (utility, T4), evolve → pick ONE:
 - Same species + different evolution picks = different playstyles → collection depth without new art
 - An evolved skill is still **exactly one shape, one fixed orientation, one twist** — all battle rules stay valid; the preview shows the evolved skill like any other
 - Evolution is a **Train** action (§7). Picks can be reversed through a ritual (cost open, §12) — "exchange, not just upgrade"
+
+### 4.8 Tamer Skills
+
+The five tamer skills of gdd_battle §15 (Spatial Pull, Qi Suppression, Spirit Shield, Domain Glimpse, Beast Swap) are **learned over the game** (story, rituals, favor) and **chosen before each battle** into the player's **tamer slots**.
+
+- Slots: 1 at Foundation → 2 at Core Formation → 3 at Immortal (§4.5). Qi Gathering has none
+- **Beast Swap** is a skill like the others but can only be slotted from Soul Tier
+- Each slotted skill is **once per battle**, free, never consumed — the choice of slots is part of the pre-battle decision (and visible to the player's own preview; enemy tamers' slots are shown in their sheet)
+- Sub-tier does **not** change a skill's strength. Tamer artifacts may adjust range or the numeric effect by +1 within the limits of §10.5, never the number of uses
 
 ---
 
@@ -441,7 +455,7 @@ Reuses the passive implementation — near-zero new code. Crafting = Producer pi
 | Wearer | Slots | Effects |
 |---|---|---|
 | **Monster** | 1 (2nd at Epic+ rarity) | extra passive OR +1 to one stat, **never above stage caps** |
-| **Player (tamer)** | 2–3 | tamer skill mods (+1 Spirit Shield use, +Spatial Pull range), +1 AP once/day, +spatial capacity, dungeon utility |
+| **Player (tamer)** | 2–3 | tamer skill mods (+Spatial Pull range, Qi Suppression −3 instead of −2 — never extra uses), +1 AP once/day, +spatial capacity, dungeon utility |
 
 Monster artifacts deepen the battle game; tamer artifacts feed the management/expedition game. A Normal-rarity beast with a perfect artifact-passive combo can rival an Epic — "skill beats stats."
 
@@ -492,14 +506,12 @@ PHASE 3  Dojo/faction staff, auction hall, monster hall,
 ## 12. Open Questions (Overworld & Meta)
 
 **Monsters & progression**
-- Exact stat budget per stage and fraction per sub-tier (Lower / Middle / High); the four reference shapes at each stage
-- **Berserker TPR 3** in gdd_battle §4.5 exceeds the Core cap of 2 — make it a Soul+ shape, or lower it?
+- Exact stat budget per stage and fraction per sub-tier (Lower / Middle / High); min / max ranges and point prices of the six shapes
 - Can an individual's **stat shape change** later (ritual / rare item), or is it fixed for life?
 - Are **evolution picks reversible**, and what does the respec ritual cost (materials, favor, AP)?
 - Evolution schedule: how many evolutions per skill per stage, and what XP / materials do they cost?
 - Rarity "paths offered / picked" counts for the four path families (§5)
-- **Tamer skills:** are the five skills of gdd_battle §15 chosen or fixed per stage, and what does "sub-tier grows potency" mean for once-per-battle skills? The artifact line "+1 Spirit Shield use" contradicts "once per battle" — reword
-- **Stat shapes:** a closed set (glass cannon / anvil / skirmisher / berserker / balanced) or a free distribution of the stage budget? Only some shapes exist in gdd_battle §4.5
+- **Tamer skills:** how are the skills learned (story, items, favor) and what is the exact set beyond gdd_battle §15 (Domain Glimpse tuning is open there)?
 - **Evolution × twist × Kin:** Shape evolutions must respect the twist (Ring has no free shape, Trail needs a straight line, Pounce uses O4) and the Kin's Surge size access (Swarm = 2-cell shapes) — validation rules to write
 - Do monsters share the exact cultivation stage names, or beast-flavored equivalents?
 - Rarity ascension materials & acquisition sources
@@ -533,6 +545,8 @@ PHASE 3  Dojo/faction staff, auction hall, monster hall,
 - **Rarity** (§5): "2 active skills" row replaced by the real kit; evolution choices now count path offers / picks
 - **TPR cap fixed**: TPR 2 is possible from Foundation (matches the stage-cap table); old "Core: TPR 2" removed
 - **Pre-battle**: full sheets of both teams visible (no hidden info), healing pills and HP persistence defined against the battle's start HP, arrays limited by the neutral-start rule
+- **Six closed stat shapes with rolled ranges and a fixed point total per stage** (§4.4); Berserker's TPR 3 opens at Soul instead of breaking the Core cap
+- **Tamer skills are chosen into slots** (§4.8); slots grow with stage, sub-tier no longer changes their potency
 - **Rarity gives no stat bonuses** (Soul+ caps = absolute scale); Normal monsters never reach Soul mechanics (air, 2x2, TPR 3) or the Major Surge — intended
 - Evolution **Small value** limited to zone duration +1 (max 3) and cast range +1; no level-II start
 - New §1.3 and §11 describe the battle request / result contract between both halves
