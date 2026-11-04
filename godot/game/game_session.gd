@@ -5,6 +5,7 @@ extends Node
 ## The request stays after the battle so "Fight Again" fights the same teams again.
 
 ## Emitted when something outside a screen changed the running game (the F10 cheat menu).
+@warning_ignore("unused_signal")
 signal state_changed
 
 var request: BattleRequest = null
