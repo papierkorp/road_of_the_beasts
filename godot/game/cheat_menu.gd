@@ -1,5 +1,5 @@
 extends CanvasLayer
-## Developer cheat menu: F10 opens / closes it on any screen. Gives resources to the running game
+## Developer cheat menu: F10 (or `) opens / closes it on any screen. Gives resources to the running game
 ## (GameSession.game) and tells the screens to refresh via GameSession.state_changed.
 
 var _panel: PanelContainer
@@ -20,7 +20,7 @@ func _ready() -> void:
 	col.add_theme_constant_override("separation", 6)
 	_panel.add_child(col)
 	var title := Label.new()
-	title.text = "CHEATS  (F10)"
+	title.text = "CHEATS  (F10 or `)"
 	title.add_theme_color_override("font_color", UiTheme.ACCENT)
 	col.add_child(title)
 	_message = Label.new()
@@ -40,8 +40,9 @@ func _ready() -> void:
 	_add("Next day (market moves)", func(s): return Cheats.next_day(s))
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F10:
+## The key is the input action "toggle_cheats" (Project Settings → Input Map): F10 and ` by default.
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_cheats") and not event.is_echo():
 		_panel.visible = not _panel.visible
 		_message.text = "" if GameSession.game != null else "No game running — start or continue a game first."
 		get_viewport().set_input_as_handled()
