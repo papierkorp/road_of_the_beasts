@@ -115,4 +115,6 @@ func _start(m: StringName) -> void:
 	BattleSetup.mode = m
 	BattleSetup.player_pick = _picked.duplicate()
 	BattleSetup.enemy_pick = BattleSetup.random_enemy(_picked, BattleSetup.team_size(m), rng)
+	BattleSetup.player_team = BattleSetup.references(BattleSetup.player_pick)
+	BattleSetup.enemy_team = BattleSetup.references(BattleSetup.enemy_pick)
 	get_tree().change_scene_to_file(BATTLE_SCENE)

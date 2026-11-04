@@ -5,6 +5,9 @@ extends RefCounted
 
 static var player_pick: Array[StringName] = []
 static var enemy_pick: Array[StringName] = []
+## The individuals behind the picks (gdd_overworld §4.3). When set, they win over the picks.
+static var player_team: Array[MonsterInstance] = []
+static var enemy_team: Array[MonsterInstance] = []
 static var mode: StringName = &"3v3"
 ## Let the AI play both sides (headless smoke tests: --autoplay).
 static var autoplay := false
@@ -30,7 +33,20 @@ static func random_enemy(pick: Array[StringName], size: int, rng: RandomNumberGe
 	return out
 
 
+## Reference individuals (the species' own numbers) for a list of species ids.
+static func references(ids: Array[StringName]) -> Array[MonsterInstance]:
+	var out: Array[MonsterInstance] = []
+	for id in ids:
+		out.append(MonsterInstance.reference(load_def(id)))
+	return out
+
+
 static func create(p_mode: StringName, player: Array[StringName], enemy: Array[StringName]) -> Battle:
+	return create_from_units(p_mode, references(player), references(enemy))
+
+
+## Builds a battle from individuals: each becomes a finished unit sheet at its current HP.
+static func create_from_units(p_mode: StringName, player: Array[MonsterInstance], enemy: Array[MonsterInstance]) -> Battle:
 	var board: Board
 	var starts_player: Array[Vector2i] = []
 	var voidscar_from := 6
@@ -49,11 +65,11 @@ static func create(p_mode: StringName, player: Array[StringName], enemy: Array[S
 			board.at(p).elevated = true
 	var monsters: Array[Monster] = []
 	for i in mini(player.size(), starts_player.size()):
-		monsters.append(Monster.new(StringName("p%d_%s" % [i, player[i]]), load_def(player[i]), 0, starts_player[i]))
+		monsters.append(Monster.new(StringName("p%d_%s" % [i, player[i].species_id]), player[i].to_battle_unit(), 0, starts_player[i], player[i].current_hp))
 	for i in mini(enemy.size(), starts_player.size()):
 		var s := starts_player[i]
 		var mirrored := Vector2i(board.size - 1 - s.x, board.size - 1 - s.y)
-		monsters.append(Monster.new(StringName("e%d_%s" % [i, enemy[i]]), load_def(enemy[i]), 1, mirrored))
+		monsters.append(Monster.new(StringName("e%d_%s" % [i, enemy[i].species_id]), enemy[i].to_battle_unit(), 1, mirrored, enemy[i].current_hp))
 	return Battle.new(board, monsters, voidscar_from)
 
 
@@ -68,13 +84,13 @@ static func _mirror_props(board: Board, props: Dictionary, mirror: bool) -> void
 
 ## Default teams when the battle scene is started directly (no draft).
 static func default_battle() -> Battle:
-	var p: Array[StringName] = [&"blaze_tiger", &"moss_turtle", &"gloom_wolf"]
-	var e: Array[StringName] = [&"hollow_serpent", &"grove_wisp", &"ember_hawk"]
+	var ids_p: Array[StringName] = [&"blaze_tiger", &"moss_turtle", &"gloom_wolf"]
+	var ids_e: Array[StringName] = [&"hollow_serpent", &"grove_wisp", &"ember_hawk"]
 	if not player_pick.is_empty():
-		p = player_pick.duplicate()
+		ids_p = player_pick.duplicate()
 	if not enemy_pick.is_empty():
-		e = enemy_pick.duplicate()
+		ids_e = enemy_pick.duplicate()
 	var size := team_size(mode)
-	p = p.slice(0, size)
-	e = e.slice(0, size)
-	return create(mode, p, e)
+	var p: Array[MonsterInstance] = player_team.duplicate() if not player_team.is_empty() else references(ids_p)
+	var e: Array[MonsterInstance] = enemy_team.duplicate() if not enemy_team.is_empty() else references(ids_e)
+	return create_from_units(mode, p.slice(0, size), e.slice(0, size))

@@ -13,13 +13,14 @@ var init_penalty_next := 0      # Spirit Siphon
 var momentum_bonus := 0         # passive Momentum
 
 
-func _init(p_id: StringName, p_def: MonsterDef, p_side: int, p_pos: Vector2i) -> void:
+## `p_hp` < 0 starts at full HP; otherwise the current HP of the individual (never above max).
+func _init(p_id: StringName, p_def: MonsterDef, p_side: int, p_pos: Vector2i, p_hp := -1) -> void:
 	id = p_id
 	def = p_def
 	side = p_side
 	pos = p_pos
-	hp = p_def.hp
 	max_hp = p_def.hp
+	hp = p_def.hp if p_hp < 0 else clampi(p_hp, 1, p_def.hp)
 
 
 func is_alive() -> bool:
