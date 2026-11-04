@@ -28,7 +28,7 @@ static func random_enemy(pick: Array[StringName], size: int, rng: RandomNumberGe
 static func references(ids: Array[StringName]) -> Array[MonsterInstance]:
 	var out: Array[MonsterInstance] = []
 	for id in ids:
-		out.append(MonsterInstance.reference(load_def(id)))
+		out.append(MonsterInstance.of_species(load_def(id)))
 	return out
 
 

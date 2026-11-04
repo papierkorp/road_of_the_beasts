@@ -25,7 +25,7 @@ var current_hp := 1
 
 ## The species' own numbers, unrolled: the "reference individual" of gdd_battle §6.2.
 ## Keeps the existing roster, tests and the draft behaving exactly as before.
-static func reference(def: MonsterDef) -> MonsterInstance:
+static func of_species(def: MonsterDef) -> MonsterInstance:
 	var m := MonsterInstance.new()
 	m.species_id = def.id
 	m.stats = {"hp": def.hp, "initiative": def.initiative, "move": def.move, "tpr": def.tpr, "reach": def.reach}

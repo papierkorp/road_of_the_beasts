@@ -14,7 +14,7 @@ func _rng(seed_value := 7) -> RandomNumberGenerator:
 func test_reference_individual_keeps_the_species_numbers() -> void:
 	for id in GameData.monster_ids():
 		var def := BattleSetup.load_def(id)
-		var unit := MonsterInstance.reference(def).to_battle_unit()
+		var unit := MonsterInstance.of_species(def).to_battle_unit()
 		assert_int(unit.hp).is_equal(def.hp)
 		assert_float(unit.initiative).is_equal(def.initiative)
 		assert_int(unit.move).is_equal(def.move)
@@ -26,7 +26,7 @@ func test_reference_individual_keeps_the_species_numbers() -> void:
 
 func test_battle_unit_is_a_copy_of_the_species() -> void:
 	var def := BattleSetup.load_def(&"blaze_tiger")
-	var inst := MonsterInstance.reference(def)
+	var inst := MonsterInstance.of_species(def)
 	inst.stats["hp"] = 3
 	var unit := inst.to_battle_unit()
 	assert_int(unit.hp).is_equal(3)
@@ -91,9 +91,9 @@ func test_kin_lean_picks_a_known_shape() -> void:
 
 
 func test_battle_monster_starts_at_the_individuals_current_hp() -> void:
-	var inst := MonsterInstance.reference(BattleSetup.load_def(&"forge_golem"))
+	var inst := MonsterInstance.of_species(BattleSetup.load_def(&"forge_golem"))
 	inst.current_hp = 3
-	var other := MonsterInstance.reference(BattleSetup.load_def(&"ember_hawk"))
+	var other := MonsterInstance.of_species(BattleSetup.load_def(&"ember_hawk"))
 	var b := BattleSetup.create_from_units(&"1v1", [inst] as Array[MonsterInstance], [other] as Array[MonsterInstance])
 	var golem: Monster = b.monsters[&"p0_forge_golem"]
 	assert_int(golem.hp).is_equal(3)
