@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://core/monster_def.gd" id="1"]
+[ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
 [ext_resource type="Resource" path="res://data/skills/cinder_dive.tres" id="2"]
 [ext_resource type="Resource" path="res://data/skills/shockwave.tres" id="3"]
 

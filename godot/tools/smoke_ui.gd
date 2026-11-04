@@ -14,7 +14,7 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	_mode = StringName(args[0]) if args.size() > 0 else &"3v3"
 	_rng.seed = int(args[1]) if args.size() > 1 else 7
-	change_scene_to_file("res://draft.tscn")
+	change_scene_to_file("res://battle/draft.tscn")
 
 
 func _process(_delta: float) -> bool:

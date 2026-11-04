@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ZoneDef" load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://core/zone_def.gd" id="1"]
-[ext_resource type="Script" path="res://core/zone_effect.gd" id="2"]
+[ext_resource type="Script" path="res://shared/zone_def.gd" id="1"]
+[ext_resource type="Script" path="res://shared/zone_effect.gd" id="2"]
 
 [sub_resource type="Resource" id="eff_0"]
 script = ExtResource("2")

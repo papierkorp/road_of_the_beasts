@@ -11,14 +11,14 @@ config_version=5
 [application]
 
 config/name="road-of-the-beasts"
-run/main_scene="res://menu.tscn"
+run/main_scene="res://game/menu.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
 [autoload]
 
-GameSettings="*res://autoloads/game_settings.gd"
-GameSession="*res://autoloads/game_session.gd"
+GameSettings="*res://game/game_settings.gd"
+GameSession="*res://game/game_session.gd"
 
 [display]
 

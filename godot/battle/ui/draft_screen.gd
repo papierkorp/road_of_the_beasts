@@ -2,7 +2,7 @@ extends Control
 ## Pre-battle draft (GDD §3): pick 3 of the 9 roster monsters (or 1 for a duel).
 ## The AI gets a random team from the monsters you didn't pick.
 
-const BATTLE_SCENE := "res://main.tscn"
+const BATTLE_SCENE := "res://battle/battle.tscn"
 
 var _picked: Array[StringName] = []
 var _cards := {}                    # id -> Button
@@ -68,7 +68,7 @@ func _ready() -> void:
 	var back := Button.new()
 	back.text = "Back"
 	back.custom_minimum_size = Vector2(160, 46)
-	back.pressed.connect(func(): get_tree().change_scene_to_file("res://menu.tscn"))
+	back.pressed.connect(func(): get_tree().change_scene_to_file("res://game/menu.tscn"))
 	row.add_child(back)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL

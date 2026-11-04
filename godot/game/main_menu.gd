@@ -1,7 +1,7 @@
 extends Control
 ## Start menu: start the battle, settings, quit.
 
-const DRAFT_SCENE := "res://draft.tscn"
+const DRAFT_SCENE := "res://battle/draft.tscn"
 
 var _buttons: VBoxContainer
 var _settings: SettingsPanel

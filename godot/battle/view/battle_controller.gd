@@ -72,7 +72,7 @@ func _toggle_pause() -> void:
 
 func _to_menu() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://menu.tscn")
+	get_tree().change_scene_to_file("res://game/menu.tscn")
 
 
 # ---------- input ----------
