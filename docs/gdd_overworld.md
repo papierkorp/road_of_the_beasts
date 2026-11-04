@@ -502,7 +502,8 @@ PHASE 1  Battle system (done: 1v1 + 3v3, draft, 9 monsters) + individual monster
 PHASE 2  Walkable city districts (first step built: Teleport Plaza, Market, Inner World;
          WASD + E, iso camera, monster follows; visible dungeon with ambush; building system:
          grid, blueprints + materials, cultivation spots, herb plots, adjacency; skill evolution at
-         the Evolution Pillar, breakthrough),
+         the Evolution Pillar, breakthrough; Producer: Refining Furnace + Pill Stall, healing and
+         battle-prep pills),
          Producer business, favor system with 2-3 factions
 PHASE 3  Dojo/faction staff, auction hall, monster hall,
          internal world growth stages, clan storyline

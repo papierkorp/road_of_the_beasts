@@ -69,6 +69,10 @@ func _structure_view() -> void:
 			_growing(s)
 	if def.id == GameState.EVOLUTION_PILLAR:
 		_evolution_view()
+	elif def.id == &"refining_furnace":
+		_furnace(s)
+	elif def.id == &"pill_stall":
+		_stall(s)
 
 
 func _cultivation(s: Dictionary) -> void:
@@ -132,6 +136,77 @@ func _harvest() -> void:
 	SaveGame.save(_game)
 	changed.emit()
 	refresh()
+
+
+# ---------- production: furnace and stall (gdd_overworld §8 Producer) ----------
+
+func _furnace(s: Dictionary) -> void:
+	var uid := int(s["uid"])
+	var order := StringName(s["order"])
+	_text("STANDING ORDER — made every night from the materials in your bag (free)", UiTheme.DIM)
+	_text("Now: %s" % (RecipeCatalog.recipe_name(order) if order != &"" else "nothing"), UiTheme.TEXT)
+	for id in RecipeCatalog.ids():
+		var yield_now := _game.batch_yield(s, id)
+		_text("%s — %s → %d pill(s)%s" % [RecipeCatalog.recipe_name(id), RecipeCatalog.inputs_text(id), yield_now,
+			"  (fine batch: a Qi Spring is next to it)" if yield_now > RecipeCatalog.batch_yield(id) else ""], UiTheme.TEXT)
+		var ob := _button("Make %s every night" % RecipeCatalog.recipe_name(id), func(): _set_order(uid, id))
+		ob.disabled = order == id
+		add_child(ob)
+		var wb := _button("Work now: one batch  (1 AP)", func(): _work(uid, id))
+		wb.disabled = _game.ap < 1 or not _game.can_produce(uid, id)
+		add_child(wb)
+	if order != &"":
+		add_child(_button("Clear the order", func(): _set_order(uid, &"")))
+
+
+func _set_order(uid: int, id: StringName) -> void:
+	if _game.set_order(uid, id):
+		SaveGame.save(_game)
+		changed.emit()
+		refresh()
+
+
+func _work(uid: int, id: StringName) -> void:
+	var made := _game.work_furnace(uid, id)
+	if made.is_empty():
+		return
+	_note = "You work the furnace: %d × %s." % [int(made["count"]), ItemCatalog.display_name(String(made["item"]))]
+	SaveGame.save(_game)
+	changed.emit()
+	refresh()
+
+
+func _stall(s: Dictionary) -> void:
+	var uid := int(s["uid"])
+	_text("Customers tonight: %d. Each buys the most valuable pill on the shelf." % _game.customers_per_night(s), UiTheme.TEXT)
+	_text("TODAY'S PRICES", UiTheme.DIM)
+	for id in ItemCatalog.pills_of_tier(int(_game.stage)):
+		_text("%s — %d" % [ItemCatalog.display_name(id), _game.market.shop_price(id)], UiTheme.TEXT)
+	_text("ON THE SHELF", UiTheme.DIM)
+	var shelf: Dictionary = s["shelf"]
+	if shelf.is_empty():
+		_text("Empty.", UiTheme.DIM)
+	for id in shelf:
+		var item := String(id)
+		add_child(_button("%s ×%d — take back" % [ItemCatalog.display_name(item), int(shelf[id])], func(): _shelve(uid, item, -int(shelf[item]))))
+	_text("PUT ON THE SHELF", UiTheme.DIM)
+	var any := false
+	for id in _game.bag_ids():
+		if ItemCatalog.kind_of(id) != ItemCatalog.Kind.PILL:
+			continue
+		any = true
+		var item2 := id
+		add_child(_button("%s ×%d — put all on the shelf" % [ItemCatalog.display_name(id), _game.item_count(id)],
+			func(): _shelve(uid, item2, _game.item_count(item2))))
+	if not any:
+		_text("No pills in your bag. The Refining Furnace makes them.", UiTheme.DIM)
+
+
+func _shelve(uid: int, item: String, n: int) -> void:
+	if _game.stock_shelf(uid, item, n):
+		SaveGame.save(_game)
+		changed.emit()
+		refresh()
 
 
 # ---------- the Evolution Pillar (gdd_overworld §4.7) ----------

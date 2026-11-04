@@ -59,7 +59,7 @@ func _ready() -> void:
 	_buttons.add_theme_constant_override("separation", 4)
 	col.add_child(_buttons)
 	_add("+1000 spirit stones", func(s): return Cheats.give_money(s, 1000))
-	_add("+5 cultivation pills", func(s): return Cheats.give_pills(s, 5))
+	_add("+5 of every pill", func(s): return Cheats.give_pills(s, 5))
 	_add("+5 of every material", func(s): return Cheats.give_materials(s, 5))
 	_add("Stage up (player and monsters)", func(s): return Cheats.stage_up(s))
 	_add("All blueprints", func(s): return Cheats.give_blueprints(s))

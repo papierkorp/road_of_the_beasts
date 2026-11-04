@@ -80,6 +80,11 @@ func _build_inner() -> void:
 		var give := _button("Give a cultivation pill", func(): _give_pill(pill, m))
 		give.disabled = _game.item_count(pill) < 1 or not m.can_gain_xp()
 		add_child(give)
+		var heal := ItemCatalog.healing_pill_id(int(_game.stage))
+		if m.current_hp < m.max_hp():
+			var hb := _button("Give a healing pill  (%d in the bag)" % _game.item_count(heal), func(): _heal(heal, m))
+			hb.disabled = _game.item_count(heal) < 1
+			add_child(hb)
 	_build_breakthrough()
 
 
@@ -163,6 +168,15 @@ func _build_market() -> void:
 			func(): _trade(market.buy(_game, id)))
 		bb.disabled = _game.money < market.buy_price(id)
 		add_child(bb)
+
+
+func _heal(pill: String, m: MonsterInstance) -> void:
+	if not _game.use_healing_pill(pill, m):
+		return
+	_note = "%s recovers %d HP." % [m.species().display_name, ItemCatalog.HEAL_AMOUNT]
+	SaveGame.save(_game)
+	changed.emit()
+	refresh()
 
 
 func _give_pill(pill: String, m: MonsterInstance) -> void:

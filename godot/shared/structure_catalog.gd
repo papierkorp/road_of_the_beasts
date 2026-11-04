@@ -26,6 +26,12 @@ static func _ensure() -> void:
 	_add(&"spirit_pond", "Spirit Pond", StructureDef.Category.SPECIAL, Vector2i(2, 1), N,
 		Color(0.25, 0.5, 0.75), 0.25, "Still water. Herb plots next to it grow a night faster.",
 		[{"aspect": N, "count": 3}], 150, 0, true)
+	_add(&"refining_furnace", "Refining Furnace", StructureDef.Category.PRODUCTION, Vector2i(1, 1), F,
+		Color(0.8, 0.4, 0.2), 1.5, "Turns materials into pills — every night on its standing order, or at once when you work it. A Qi Spring next to it makes finer batches.",
+		[{"aspect": F, "count": 4}, {"aspect": ANY, "count": 2}], 350, 0, false)
+	_add(&"pill_stall", "Pill Stall", StructureDef.Category.PRODUCTION, Vector2i(1, 1), ANY,
+		Color(0.6, 0.45, 0.3), 1.0, "Pills on its shelf are sold to customers every night. Water next to it brings one more customer.",
+		[{"aspect": ANY, "count": 6}], 250, 0, false)
 	_add(&"evolution_pillar", "Evolution Pillar", StructureDef.Category.SPECIAL, Vector2i(1, 1), ANY,
 		Color(0.85, 0.7, 0.3), 1.9, "The ritual site for skill evolution: pick one variant of a skill instead of a number.",
 		[{"aspect": ANY, "count": 6}], 400, 0, false)

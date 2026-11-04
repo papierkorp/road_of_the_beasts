@@ -46,6 +46,10 @@ func _ready() -> void:
 	hud.menu_pressed.connect(_to_menu)
 	hud.log_line("%s on %d×%d — zones steer, ground scars, Surges burn and repaint." % [
 		request.mode, battle.board.size, battle.board.size])
+	for id in battle.roster:
+		var pm: Monster = battle.monsters[id]
+		if pm.prep_init > 0:
+			hud.log_line("%s is prepared: +%d initiative this battle." % [pm.display_name(), pm.prep_init])
 	if battle.ambush_side >= 0:
 		hud.log_line("%s struck from behind: +%d initiative in round 1." % ["You" if battle.ambush_side == PLAYER_SIDE else "The wild monsters", int(Battle.AMBUSH_BONUS)])
 	battle.begin()

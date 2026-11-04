@@ -9,8 +9,9 @@ static func give_money(state: GameState, amount: int) -> String:
 
 
 static func give_pills(state: GameState, count: int) -> String:
-	state.add_item(ItemCatalog.pill_id(int(state.stage)), count)
-	return "+%d %s" % [count, ItemCatalog.display_name(ItemCatalog.pill_id(int(state.stage)))]
+	for id in ItemCatalog.pills_of_tier(int(state.stage)):
+		state.add_item(id, count)
+	return "+%d of each pill (cultivation, healing, battle-prep)" % count
 
 
 ## `count` of every material of the player's tier.

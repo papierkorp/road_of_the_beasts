@@ -63,6 +63,10 @@ static func build(request: BattleRequest) -> Battle:
 	var e: Array[MonsterInstance] = request.enemy_team.slice(0, size)
 	var b := create_from_units(request.mode, p, e)
 	b.ambush_side = request.ambush_side
+	for id in b.roster:
+		var m: Monster = b.monsters[id]
+		if m.side == 0 and request.prep_init.has(m.team_index):
+			m.prep_init = int(request.prep_init[m.team_index])
 	return b
 
 

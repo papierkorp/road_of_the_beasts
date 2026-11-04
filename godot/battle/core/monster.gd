@@ -12,6 +12,7 @@ var max_hp: int
 
 var init_penalty_next := 0      # Spirit Siphon
 var momentum_bonus := 0         # passive Momentum
+var prep_init := 0              # battle-prep pill: initiative bonus for this whole battle
 
 
 ## `p_hp` < 0 starts at full HP; otherwise the current HP of the individual (never above max).

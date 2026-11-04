@@ -20,6 +20,7 @@ var _in_battle_room := false
 var _encountering := false
 var _ambush := -1
 var _checks: Array[CheckBox] = []
+var _prep_checks: Array[CheckBox] = []
 var _team_label: Label
 var _fight: Button
 
@@ -133,7 +134,20 @@ func _update_actors(delta: float) -> void:
 func _begin_encounter(roamer: WildRoamer) -> void:
 	_encountering = true
 	_ambush = Encounter.ambush_side(_pos, _facing, roamer.pos, roamer.facing)
+	_build_encounter_panel()
+
+
+## Datasheets, ambush, healing and prep pills, team pick. Rebuilt after a pill, keeping your picks.
+func _build_encounter_panel() -> void:
+	var keep: Array[bool] = []
+	for c in _checks:
+		keep.append(c.button_pressed)
+	var keep_prep: Array[bool] = []
+	for c in _prep_checks:
+		keep_prep.append(c.button_pressed)
 	_clear_side()
+	_checks.clear()
+	_prep_checks.clear()
 	var node := _ex.node(_ex.selected)
 	_text("%s — %s   reward %d spirit stones" % [("BOSS" if node["kind"] == &"boss" else "WILD MONSTERS"),
 		String(node["mode"]).to_upper(), node["reward"]], UiTheme.ACCENT, 20)
@@ -149,15 +163,38 @@ func _begin_encounter(roamer: WildRoamer) -> void:
 		_text(e.sheet_text(), UiTheme.TEXT)
 	var team_size := BattleRequest.team_size_of(node["mode"])
 	_text("YOUR TEAM", UiTheme.DIM)
-	_checks.clear()
 	for i in _game.monsters.size():
 		var cb := CheckBox.new()
 		cb.text = _game.monsters[i].sheet_text(false).replace("\n", "   ")
-		cb.button_pressed = i < team_size
+		cb.button_pressed = keep[i] if i < keep.size() else i < team_size
 		cb.toggled.connect(func(_on: bool): _update_team())
 		_side_body.add_child(cb)
 		_checks.append(cb)
 	_team_label = _text("", UiTheme.DIM)
+
+	var heal := ItemCatalog.healing_pill_id(int(_game.stage))
+	var prep := ItemCatalog.prep_pill_id(int(_game.stage))
+	_text("HEALING PILLS in your bag: %d  (+%d HP each)" % [_game.item_count(heal), ItemCatalog.HEAL_AMOUNT], UiTheme.DIM)
+	for i in _game.monsters.size():
+		var m := _game.monsters[i]
+		if m.current_hp < m.max_hp():
+			var hb := Button.new()
+			hb.text = "Heal %s  (HP %d / %d)" % [m.species().display_name, m.current_hp, m.max_hp()]
+			hb.custom_minimum_size = Vector2(300, 40)
+			hb.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			hb.disabled = _game.item_count(heal) < 1
+			hb.pressed.connect(func(): _heal(heal, i))
+			_side_body.add_child(hb)
+	_text("BATTLE-PREP PILLS in your bag: %d  (+%d initiative for the whole battle, used up when the fight starts)"
+		% [_game.item_count(prep), ItemCatalog.PREP_INIT], UiTheme.DIM)
+	for i in _game.monsters.size():
+		var pc := CheckBox.new()
+		pc.text = "Prep pill for %s" % _game.monsters[i].species().display_name
+		pc.button_pressed = keep_prep[i] if i < keep_prep.size() else false
+		pc.toggled.connect(func(_on: bool): _update_team())
+		_side_body.add_child(pc)
+		_prep_checks.append(pc)
+
 	_fight = Button.new()
 	_fight.text = "Fight"
 	_fight.custom_minimum_size = Vector2(300, 46)
@@ -166,6 +203,12 @@ func _begin_encounter(roamer: WildRoamer) -> void:
 	_side_body.add_child(_fight)
 	_update_team()
 	_open_side(false)
+
+
+func _heal(pill: String, i: int) -> void:
+	if _game.use_healing_pill(pill, _game.monsters[i]):
+		SaveGame.save(_game)
+		_build_encounter_panel()
 
 
 func _picked() -> Array[MonsterInstance]:
@@ -181,11 +224,24 @@ func _update_team() -> void:
 	var count := _picked().size()
 	_team_label.text = "Team %d / %d" % [count, team_size]
 	_fight.disabled = count < 1 or count > team_size
+	# only as many prep pills as you have
+	var pills := _game.item_count(ItemCatalog.prep_pill_id(int(_game.stage)))
+	var used := 0
+	for c in _prep_checks:
+		if c.button_pressed:
+			used += 1
+	for c in _prep_checks:
+		c.disabled = used >= pills and not c.button_pressed
 
 
 func _start_battle() -> void:
-	var request := _ex.request_for(_game, _picked())
+	var team := _picked()
+	var request := _ex.request_for(_game, team)
 	request.ambush_side = _ambush
+	var prep := ItemCatalog.prep_pill_id(int(_game.stage))
+	for i in _prep_checks.size():
+		if _prep_checks[i].button_pressed and team.has(_game.monsters[i]) and _game.remove_item(prep):
+			request.prep_init[team.find(_game.monsters[i])] = ItemCatalog.PREP_INIT
 	var problem := request.problem()
 	if problem != "":
 		_say("Can't fight: " + problem)

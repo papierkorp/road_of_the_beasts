@@ -96,7 +96,7 @@ func effective_stat(m: Monster, stat: Stat) -> float:
 				return float(m.def.move + _zone_value(sq, ZoneEffect.Tag.HASTE))
 			return maxf(0.0, m.def.move - _zone_value(sq, ZoneEffect.Tag.SLOW) + _zone_value(sq, ZoneEffect.Tag.HASTE))
 		Stat.INIT:
-			return maxf(0.1, m.def.initiative - _zone_value(sq, ZoneEffect.Tag.DRAIN_INIT)
+			return maxf(0.1, m.def.initiative + m.prep_init - _zone_value(sq, ZoneEffect.Tag.DRAIN_INIT)
 					+ _zone_value(sq, ZoneEffect.Tag.QUICKEN))
 	# RANGE modifier
 	return float((1 if sq.elevated else 0) - _zone_value(sq, ZoneEffect.Tag.DRAIN_RANGE)

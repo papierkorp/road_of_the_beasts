@@ -109,7 +109,8 @@ func bag_ids() -> Array[String]:
 ## Feeds a cultivation pill to a monster: XP, maybe a sub-tier up. Returns the sub-tier ups,
 ## or -1 when it didn't work (no such pill, not a pill, or the XP bar is already full).
 func use_pill(id: String, m: MonsterInstance) -> int:
-	if ItemCatalog.kind_of(id) != ItemCatalog.Kind.PILL or not m.can_gain_xp() or item_count(id) < 1:
+	if ItemCatalog.kind_of(id) != ItemCatalog.Kind.PILL or ItemCatalog.pill_type(id) != &"cultivation" \
+			or not m.can_gain_xp() or item_count(id) < 1:
 		return -1
 	remove_item(id)
 	return m.add_xp(ItemCatalog.pill_xp(id))
@@ -200,7 +201,7 @@ func place_structure(sid: StringName, cell: Vector2i, rot: bool) -> int:
 	var uid := _next_uid
 	_next_uid += 1
 	structures.append({"uid": uid, "id": String(sid), "x": cell.x, "y": cell.y, "rot": rot,
-		"assigned": -1, "plant": "", "grown": 0})
+		"assigned": -1, "plant": "", "grown": 0, "order": "", "shelf": {}})
 	return uid
 
 
@@ -370,6 +371,121 @@ func monster_break_through(monster_index: int) -> bool:
 	return true
 
 
+# ---------- production (gdd_overworld §8 Producer, §10.2 pills) ----------
+
+const SHOP_CUSTOMERS := 2
+const SHOP_WATER_BONUS := 1
+
+
+func is_production(s: Dictionary, sid: StringName) -> bool:
+	return StringName(s["id"]) == sid
+
+
+## The standing order of a Refining Furnace (free; "" = nothing).
+func set_order(uid: int, recipe: StringName) -> bool:
+	var s := structure(uid)
+	if s.is_empty() or not is_production(s, &"refining_furnace") or (recipe != &"" and not RecipeCatalog.has(recipe)):
+		return false
+	s["order"] = String(recipe)
+	return true
+
+
+func batch_yield(s: Dictionary, recipe: StringName) -> int:
+	var bonus := 0
+	for n in StructureRules.neighbours(self, s):
+		if StringName(n["id"]) == &"qi_spring":
+			bonus = RecipeCatalog.WATER_BONUS
+	return RecipeCatalog.batch_yield(recipe) + bonus
+
+
+func can_produce(uid: int, recipe: StringName) -> bool:
+	var s := structure(uid)
+	return not s.is_empty() and is_production(s, &"refining_furnace") and RecipeCatalog.has(recipe) \
+		and not materials_payment(RecipeCatalog.inputs(recipe)).is_empty()
+
+
+## One batch: the materials of the recipe become pills. Returns {item, count} or an empty dictionary.
+func produce_batch(uid: int, recipe: StringName) -> Dictionary:
+	if not can_produce(uid, recipe):
+		return {}
+	var s := structure(uid)
+	var paid := materials_payment(RecipeCatalog.inputs(recipe))
+	for id in paid:
+		remove_item(id, int(paid[id]))
+	var item := RecipeCatalog.output_id(recipe, int(stage))
+	var count := batch_yield(s, recipe)
+	add_item(item, count)
+	return {"item": item, "count": count}
+
+
+## "Work" (§7, 1 AP): the player personally runs a batch right now.
+func work_furnace(uid: int, recipe: StringName) -> Dictionary:
+	if ap < 1 or not can_produce(uid, recipe):
+		return {}
+	var made := produce_batch(uid, recipe)
+	if not made.is_empty():
+		spend_ap(1)
+	return made
+
+
+## Puts pills from the bag on the shelf of a Pill Stall (free), or takes them back (negative n).
+func stock_shelf(uid: int, item: String, n: int) -> bool:
+	var s := structure(uid)
+	if s.is_empty() or not is_production(s, &"pill_stall") or ItemCatalog.kind_of(item) != ItemCatalog.Kind.PILL:
+		return false
+	var shelf: Dictionary = s["shelf"]
+	if n > 0:
+		if not remove_item(item, n):
+			return false
+		shelf[item] = int(shelf.get(item, 0)) + n
+	else:
+		var back := mini(-n, int(shelf.get(item, 0)))
+		if back <= 0:
+			return false
+		shelf[item] = int(shelf[item]) - back
+		if int(shelf[item]) <= 0:
+			shelf.erase(item)
+		add_item(item, back)
+	return true
+
+
+func customers_per_night(s: Dictionary) -> int:
+	return SHOP_CUSTOMERS + (SHOP_WATER_BONUS if StructureRules.has_water_neighbour(self, s) else 0)
+
+
+## Customers buy the most valuable pill on the shelf, one each. Returns [{item, price}].
+func shop_night(s: Dictionary) -> Array[Dictionary]:
+	var sold: Array[Dictionary] = []
+	var shelf: Dictionary = s["shelf"]
+	for c in customers_per_night(s):
+		var best := ""
+		for id in shelf:
+			if int(shelf[id]) > 0 and (best == "" or market.shop_price(String(id)) > market.shop_price(best)):
+				best = String(id)
+		if best == "":
+			break
+		var price := market.shop_price(best)
+		shelf[best] = int(shelf[best]) - 1
+		if int(shelf[best]) <= 0:
+			shelf.erase(best)
+		add_money(price)
+		sold.append({"item": best, "price": price})
+	return sold
+
+
+# ---------- healing and battle prep (gdd_overworld §10.2) ----------
+
+## A healing pill between battles: restores HP (a fallen monster is brought back too).
+func use_healing_pill(id: String, m: MonsterInstance) -> bool:
+	if ItemCatalog.kind_of(id) != ItemCatalog.Kind.PILL or ItemCatalog.pill_type(id) != &"healing":
+		return false
+	if m.current_hp >= m.max_hp() or item_count(id) < 1:
+		return false
+	remove_item(id)
+	m.current_hp = mini(m.max_hp(), m.current_hp + ItemCatalog.HEAL_AMOUNT)
+	return true
+
+
 ## The structure part of the night: meditating monsters gain XP, plants grow. Returns report lines.
 func _night_structures() -> Array[String]:
 	var notes: Array[String] = []
@@ -383,6 +499,20 @@ func _night_structures() -> Array[String]:
 			var ups := monsters[idx].add_xp(int(info["xp"]))
 			notes.append("%s meditates at the %s: +%d XP%s" % [monsters[idx].species().display_name, def.display_name,
 				int(info["xp"]), (" — reaches %s!" % Stage.sub_tier_name(monsters[idx].sub_tier)) if ups > 0 else ""])
+		elif def.id == &"refining_furnace" and String(s["order"]) != "":
+			var recipe := StringName(s["order"])
+			var made := produce_batch(int(s["uid"]), recipe)
+			if made.is_empty():
+				notes.append("The Refining Furnace lacks materials for %s." % RecipeCatalog.recipe_name(recipe))
+			else:
+				notes.append("The Refining Furnace makes %d × %s." % [int(made["count"]), ItemCatalog.display_name(String(made["item"]))])
+		elif def.id == &"pill_stall":
+			var sold := shop_night(s)
+			if not sold.is_empty():
+				var total := 0
+				for sale in sold:
+					total += int(sale["price"])
+				notes.append("The Pill Stall sells %d pill(s) for %d spirit stones." % [sold.size(), total])
 		elif def.category == StructureDef.Category.GROWING and String(s["plant"]) != "":
 			s["grown"] = int(s["grown"]) + 1
 			if StructureRules.is_ready(self, s):
@@ -415,6 +545,13 @@ func to_dict() -> Dictionary:
 		"structures": structures.duplicate(true), "next_uid": _next_uid}
 
 
+static func _int_dict(d: Dictionary) -> Dictionary:
+	var out := {}
+	for k in d:
+		out[String(k)] = int(d[k])
+	return out
+
+
 static func from_dict(d: Dictionary) -> GameState:
 	var g := GameState.new()
 	g.day = int(d["day"])
@@ -430,7 +567,8 @@ static func from_dict(d: Dictionary) -> GameState:
 	g._next_uid = int(d.get("next_uid", 1))
 	for sd in d.get("structures", []):
 		g.structures.append({"uid": int(sd["uid"]), "id": String(sd["id"]), "x": int(sd["x"]), "y": int(sd["y"]),
-			"rot": bool(sd["rot"]), "assigned": int(sd["assigned"]), "plant": String(sd["plant"]), "grown": int(sd["grown"])})
+			"rot": bool(sd["rot"]), "assigned": int(sd["assigned"]), "plant": String(sd["plant"]), "grown": int(sd["grown"]),
+			"order": String(sd.get("order", "")), "shelf": _int_dict(sd.get("shelf", {}))})
 	if d.has("market"):
 		g.market = Market.from_dict(d["market"])
 	else:
