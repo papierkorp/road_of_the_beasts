@@ -6,7 +6,7 @@ extends VBoxContainer
 
 signal changed                      # the game changed (trade, pill, ...): refresh headers
 
-const DUNGEON_SCENE := "res://overworld/dungeon.tscn"
+const DUNGEON_SCENE := "res://overworld/dungeon_room.tscn"
 
 const INFO := {
 	&"inner": {"name": "Inner World", "built": true,

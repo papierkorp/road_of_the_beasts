@@ -73,6 +73,29 @@ func choices() -> Array[int]:
 	return out
 
 
+## What to tell the player after a battle of the current node (`before` = `current` before it).
+func result_note(before: int) -> String:
+	var note := ""
+	if finished and victory:
+		note = "Dungeon cleared! +%d spirit stones in total." % money_earned
+	elif finished:
+		note = "Your team fell. The run ends here — the night will heal you."
+	elif current != before:
+		note = "Victory! Choose your next door."
+	if current != before:
+		note += "  " + loot_text()
+		if not last_ups.is_empty():
+			note += "\n" + ", ".join(PackedStringArray(last_ups)) + " — stats snap to the new values!"
+	return note
+
+
+func loot_text() -> String:
+	var parts: Array[String] = []
+	for id in last_loot:
+		parts.append("%s ×%d" % [ItemCatalog.display_name(String(id)), int(last_loot[id])])
+	return "Loot: " + (", ".join(PackedStringArray(parts)) if not parts.is_empty() else "nothing") + "."
+
+
 func select(id: int) -> bool:
 	if not choices().has(id):
 		return false

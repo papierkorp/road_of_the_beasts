@@ -61,7 +61,9 @@ static func build(request: BattleRequest) -> Battle:
 	var size := request.team_size()
 	var p: Array[MonsterInstance] = request.player_team.slice(0, size)
 	var e: Array[MonsterInstance] = request.enemy_team.slice(0, size)
-	return create_from_units(request.mode, p, e)
+	var b := create_from_units(request.mode, p, e)
+	b.ambush_side = request.ambush_side
+	return b
 
 
 ## Builds a battle from individuals: each becomes a finished unit sheet at its current HP.

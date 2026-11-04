@@ -6,6 +6,7 @@ extends Control
 const SCENE := "res://overworld/dungeon.tscn"
 const BATTLE_SCENE := "res://battle/battle.tscn"
 const CITY_SCENE := "res://overworld/district.tscn"
+const ROOM_SCENE := "res://overworld/dungeon_room.tscn"
 
 var _game: GameState
 var _ex: Expedition
@@ -49,6 +50,12 @@ func _ready() -> void:
 	_canvas = DungeonCanvas.new()
 	_canvas.node_pressed.connect(_on_node)
 	col.add_child(_canvas)
+	var rooms := Button.new()
+	rooms.text = "Walk through the rooms"
+	rooms.custom_minimum_size = Vector2(300, 46)
+	rooms.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	rooms.pressed.connect(func(): get_tree().change_scene_to_file(ROOM_SCENE))
+	col.add_child(rooms)
 	_info = VBoxContainer.new()
 	_info.add_theme_constant_override("separation", 10)
 	col.add_child(_info)
@@ -65,23 +72,7 @@ func _apply_battle_result() -> void:
 	GameSession.last_result = null
 	var before := _ex.current
 	_ex.apply_result(_game, res)
-	if _ex.finished and _ex.victory:
-		_note = "Dungeon cleared! +%d spirit stones in total." % _ex.money_earned
-	elif _ex.finished:
-		_note = "Your team fell. The run ends here — the night will heal you."
-	elif _ex.current != before:
-		_note = "Victory! Choose where to go next."
-	if _ex.current != before:
-		_note += "  " + _loot_text()
-		if not _ex.last_ups.is_empty():
-			_note += "\n" + ", ".join(PackedStringArray(_ex.last_ups)) + " — stats snap to the new values!"
-
-
-func _loot_text() -> String:
-	var parts: Array[String] = []
-	for id in _ex.last_loot:
-		parts.append("%s ×%d" % [ItemCatalog.display_name(String(id)), int(_ex.last_loot[id])])
-	return "Loot: " + (", ".join(PackedStringArray(parts)) if not parts.is_empty() else "nothing") + "."
+	_note = _ex.result_note(before)
 
 
 func _refresh() -> void:

@@ -10,6 +10,8 @@ signal event_emitted(e: Dictionary)
 
 const AP_PER_TURN := 2
 const EXTRA_TURN_INIT_PENALTY := 3.0
+## Round-1 initiative of the side that struck first on the overworld (gdd_overworld §6.2).
+const AMBUSH_BONUS := 1.0
 
 enum Stat { MOVE, INIT, RANGE }
 
@@ -24,6 +26,7 @@ var round_number := 1
 var over := false
 var winner_side := -1
 var voidscar_from := 6
+var ambush_side := -1               # side with the round-1 initiative bonus (-1 = nobody)
 var events: Array[Dictionary] = []
 var _gid := 0
 var _tie_side := -1                 # side that wins the next initiative tie (-1 = not decided yet)
@@ -532,6 +535,8 @@ func _build_queue() -> void:
 				entries.append({"id": id, "init": m.def.initiative, "base": m.def.initiative, "side": m.side, "ghost": true})
 			continue
 		var eff := maxf(0.1, effective_stat(m, Stat.INIT) - m.init_penalty_next)
+		if round_number == 1 and m.side == ambush_side:
+			eff += AMBUSH_BONUS
 		m.init_penalty_next = 0
 		entries.append({"id": id, "init": eff, "base": m.def.initiative, "side": m.side, "ghost": false})
 		for k in range(1, m.def.tpr):

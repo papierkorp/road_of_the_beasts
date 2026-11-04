@@ -246,7 +246,7 @@ The five tamer skills of gdd_battle §15 (Spatial Pull, Qi Suppression, Spirit S
 
 ### 6.2 Monsters in the Overworld
 
-- **Dungeons:** wild monsters roam visibly (no random encounters) — touching = battle; touching from behind = small round-1 initiative advantage for the player's team (exact value tuned in battle)
+- **Dungeons:** wild monsters roam visibly (no random encounters) — touching = battle; touching from behind = small round-1 initiative advantage for the player's team (built: +1, `Battle.AMBUSH_BONUS`; a monster that catches you from behind gets the same). Each node is a room, the doors lead to the next nodes
 - Dungeon monsters are full **individuals** (own stat shape, stage, evolutions) and telegraph kin/aspect visually; their complete sheet is shown in the pre-battle screen → informed roster picks and counter-picks
 - A dungeon node fixes the **battle mode** (1v1 / 2v2 / 3v3 / 5v5) and the number of wild monsters; the board follows the generation rules of gdd_battle §13
 - **City:** the player's active monster follows them — walking the market with a Magma Drake behind you is the status fantasy, for free

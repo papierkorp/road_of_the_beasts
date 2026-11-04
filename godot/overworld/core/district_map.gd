@@ -21,6 +21,30 @@ var things: Array[Dictionary] = []
 var arrivals := {}
 
 
+## A dungeon room: entrance (leave portal) on the west, doors to the next nodes on the east and a
+## few pillars. The same seed gives the same room. `doors`: [{id: node id, label}].
+static func room(seed_value: int, doors: Array[Dictionary]) -> DistrictMap:
+	var m := DistrictMap.new()
+	m.id = &"room"
+	m.title = "Dungeon"
+	m.size = Vector2(16, 10)
+	m.ground = Color(0.18, 0.17, 0.2)
+	m.arrivals = {&"start": Vector2(2.6, 5.0)}
+	m._add("leave", "Teleport out", Vector2(0.8, 5.0), Vector2(1.6, 3.0), 2.0, Color(0.45, 0.35, 0.7), &"leave",
+		"Teleport back to the city")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var slots: Array[Vector2] = [Vector2(6, 2.5), Vector2(6, 7.5), Vector2(9, 3.5), Vector2(9, 6.5), Vector2(12, 2.5), Vector2(12, 7.5)]
+	for i in 3:
+		var at := slots.pop_at(rng.randi_range(0, slots.size() - 1))
+		m._add("pillar_%d" % i, "", at, Vector2(1.0, 1.0), 1.8, Color(0.42, 0.42, 0.46))
+	for i in doors.size():
+		var y := 5.0 + (float(i) - (doors.size() - 1) / 2.0) * 3.2
+		m._add("door_%d" % i, "Door", Vector2(15.2, y), Vector2(1.6, 2.4), 2.0, Color(0.7, 0.5, 0.25),
+			StringName("door:%d" % int(doors[i]["id"])), String(doors[i]["label"]))
+	return m
+
+
 static func ids() -> Array[StringName]:
 	return [&"plaza", &"market", &"inner"]
 
@@ -120,9 +144,11 @@ func nearest_action(p: Vector2, reach := REACH) -> Dictionary:
 
 
 ## A free spot away from everything (for wandering monsters).
-func random_free_point(rng: RandomNumberGenerator, radius := 0.5) -> Vector2:
+func random_free_point(rng: RandomNumberGenerator, radius := 0.5, region := Rect2()) -> Vector2:
+	var area := region if region.has_area() else Rect2(Vector2.ZERO, size)
 	for i in 40:
-		var p := Vector2(rng.randf_range(radius, size.x - radius), rng.randf_range(radius, size.y - radius))
+		var p := Vector2(rng.randf_range(area.position.x + radius, area.end.x - radius),
+			rng.randf_range(area.position.y + radius, area.end.y - radius))
 		if not blocked(p, radius + 0.2):
 			return p
 	return size / 2.0

@@ -5,11 +5,14 @@ extends RefCounted
 ## Lives in shared/ because both halves use it — it is the contract between them.
 ## The battle never reaches back into the caller — it only reads this and reports a BattleResult.
 ##
-## Not yet carried (later steps): board parameters, pills / arrays, tamer slots, ambush bonus.
+## Not yet carried (later steps): board parameters, pills / arrays, tamer slots.
 
 var mode: StringName = &"3v3"
 var player_team: Array[MonsterInstance] = []
 var enemy_team: Array[MonsterInstance] = []
+## Side that attacked from behind on the overworld and gets a small round-1 initiative bonus
+## (0 = player, 1 = enemy, -1 = nobody; gdd_overworld §6.2).
+var ambush_side := -1
 
 
 ## Species ids → reference individuals (the roster numbers as before).

@@ -13,10 +13,11 @@ battle/      the deterministic grid battle (gdd_battle.md)
   battle.tscn, draft.tscn
 overworld/   days, AP, night phase, economy, internal world (gdd_overworld.md)
   core/      headless: GameState (day, AP, money, bag, owned individuals), Expedition (dungeon node map),
-             Market (Trader), DistrictMap (layout and movement of a walkable district), Cheats
-  ui/        DistrictScreen (walkable 3D district, WASD + E), PlacePanel (what a place offers),
+             Market (Trader), DistrictMap (layout and movement of a walkable area), WildRoamer, Encounter, Cheats
+  ui/        WalkScreen (base: iso camera, WASD + E, HUD), DistrictScreen (city districts),
+             DungeonRoomScreen (rooms with visible wild monsters), PlacePanel (what a place offers),
              WorldMapScreen (menu map of the city), DungeonScreen + DungeonCanvas (node map)
-  district.tscn (the streets), overworld.tscn (menu map), dungeon.tscn
+  district.tscn (the streets), dungeon_room.tscn (walkable dungeon), overworld.tscn / dungeon.tscn (menu maps)
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession)
 data/        content as Resource files: monsters/, skills/, zones/ (a new file = new content)
 tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game

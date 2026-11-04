@@ -90,3 +90,32 @@ func test_wounded_individual_enters_the_battle_wounded() -> void:
 	# the request is not changed by fighting
 	_play(b)
 	assert_int(r.player_team[0].current_hp).is_equal(2)
+
+
+func _first_init(b: Battle, id: StringName) -> float:
+	for e in b.queue:
+		if e["id"] == id:
+			return e["init"]
+	return -1.0
+
+
+func test_an_ambush_gives_the_attacking_side_round_one_initiative() -> void:
+	var plain := BattleSetup.build(BattleRequest.default())
+	plain.begin()
+	var r := BattleRequest.default()
+	r.ambush_side = 0
+	var ambush := BattleSetup.build(r)
+	ambush.begin()
+	assert_float(_first_init(ambush, &"p0_blaze_tiger")).is_equal(_first_init(plain, &"p0_blaze_tiger") + Battle.AMBUSH_BONUS)
+	assert_float(_first_init(ambush, &"e0_hollow_serpent")).is_equal(_first_init(plain, &"e0_hollow_serpent"))
+
+
+func test_the_ambush_bonus_lasts_one_round_only() -> void:
+	var r := BattleRequest.default()
+	r.ambush_side = 1
+	var b := BattleSetup.build(r)
+	b.begin()
+	var round_one := _first_init(b, &"e0_hollow_serpent")
+	b.round_number = 2
+	b._build_queue()
+	assert_float(_first_init(b, &"e0_hollow_serpent")).is_equal(round_one - Battle.AMBUSH_BONUS)
