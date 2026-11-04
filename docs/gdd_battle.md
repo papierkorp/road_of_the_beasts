@@ -16,7 +16,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 | **3v3** | **7×7** | **standard battle** — enough monsters for combos between allies, short enough for a session |
 | 5v5 | 9×9 | special battles only (bosses, tournaments), later |
 
-Modes unlock in the order 1v1 → 2v2 → 3v3 (gdd_overworld §4.4).
+Modes follow the team size the player can field: 1v1 from the start, **3v3 and 2v2 from Foundation**, 5v5 special battles from Core Formation (gdd_overworld §4.5). The encounter chooses the mode.
 
 **Why 7×7 for 3v3:** 6 monsters on 49 squares is about as crowded as 2 on 25 (1v1), so the pressure stays similar. 8×8 gives each monster more room to step out of a 3–4 cell Surge — exactly the "too easy to dodge" problem. An odd size also has a **centre square** for contested high ground and mirror-fair starts. Small kits (§9.5) keep 3v3–5v5 readable: every monster brings Move + Strike + its Surge + 1–2 utilities, not a skill bar.
 
@@ -41,7 +41,7 @@ Setting, progression, economy, overworld: see **gdd_overworld.md**.
 ## 3. Core Battle Loop
 
 1. Battlefield generated (ground, props, contested high ground — §13)
-2. Pre-battle: draft monsters, place them in your start area, apply pills / arrays
+2. Pre-battle: draft monsters, place them in your start area, apply pills / arrays. Monsters start at their **current HP** (never above max; below max after earlier fights of an expedition, gdd_overworld §10.2). An **ambush** (attacking a wild monster from behind) gives the attacker's side a small round-1 initiative bonus (value tuned in playtest, proposed +1)
 3. **Each round:** one queue for all monsters of both sides, highest effective initiative first (§4.3)
 4. **On a monster's turn:**
    1. its own Surges that are due **fire** (§9.3): damage, then residue, then repaint
@@ -123,7 +123,7 @@ Major Surge                   2 AP  (once per battle)
 ### 4.5 Monster Identity — The 6 Axes
 
 ```
-1. STAT SHAPE   glass cannon / anvil / skirmisher / berserker
+1. STAT SHAPE   glass cannon / anvil / skirmisher / berserker   (per individual monster, rolled with the Kin's lean — gdd_overworld §4.3)
 2. ASPECT       Force / Nature / Dark → Surge TYPE (Eruption / Flood / Rift), zone family, hazard ground, the colour it paints
 3. KIN          creature type → Strike, layer, stat lean, which utility archetypes it may take, Surge size access
 4. SURGE        its own named burst: type from aspect, shape + size from species, at most ONE twist (§9.4.2)
@@ -208,7 +208,7 @@ Every monster has a **Strike** (§9.4 #16): target = an enemy monster or a prop 
 
 ### 6.2 First Roster Draft — 9 monsters, 3 per aspect
 
-Numbers are **Core Formation**-stage values (caps: HP 8, Init 9, TPR 2, Move 4, Reach 2 — gdd_overworld §4.5). Every monster also has **Move** and its Kin **Strike** (§6.1). Skills come from the matrix (§9.5); twists from §9.4.2.
+The stat shape is a property of the **individual monster** (gdd_overworld §4.3); the shapes below are the **reference individuals** — the typical roll of each species. Numbers are **Core Formation**-stage values (caps: HP 8, Init 9, TPR 2, Move 4, Reach 2 — gdd_overworld §4.6). Every monster also has **Move** and its Kin **Strike** (§6.1). Skills come from the matrix (§9.5); twists from §9.4.2.
 
 | Monster | Kin | Aspect | Shape · HP / Init / Move / TPR / Reach | Surge (type · shape · twist) | Utility | Passive |
 |---|---|---|---|---|---|---|
@@ -300,12 +300,12 @@ Zone definitions are data: `"bog": { "aspect":"n", "effects":[ {"tag":"slow","ba
 
 | Thing | Clock | Notes |
 |---|---|---|
-| **Zone** | 2 rounds, ticks at round end | on expiry the square is **repainted** with the zone's aspect |
+| **Zone** | 2 rounds by default (a skill may carry +1 from evolution, max 3, gdd_overworld §4.7), ticks at round end | on expiry the square is **repainted** with the zone's aspect |
 | **Pending Surge** | fires at the start of its caster's next turn (§9.3) | then removed; damage, then its **residue**, then **repaint** |
 | **Timed ground** | 2 rounds (Lingering: 3), ticks at round end | the residue of a Surge: its aspect's hazard ground at level I; on expiry → Plain (attunement stays) |
 | **Permanent ground** | none — stays until changed | changed by Raise Ground, the triangle rule (§7.3), a new ground, shattered props, debris, Voidscar |
 
-**Principle:** *zones are temporary control, ground is the board's memory.* One clock per zone or timed ground — effects never carry their own timers.
+**Principle:** *zones are temporary control, ground is the board's memory.* One clock per zone or timed ground — effects never carry their own timers (the clock's length is a property of the cast zone, not of its effects).
 
 ### 7.3 Zones: Effects, Rules & Opposites
 
@@ -399,7 +399,7 @@ Every Surge, zone and terrain skill controls **several squares in a fixed shape 
 | S4 / Z4 | 4 | 4 |
 | L4 / J4 | 4 | 8 |
 
-**Fixed shapes:** every skill has exactly **one shape family and one fixed orientation**, absolute on the board for both teams (e.g. Gloom Rift: vertical I3; Mire: T4). Shapes are tuned outside battle (overworld: skill variants / evolution, gdd_overworld §4.6) — in battle you only pick *where* to place it, plus the push direction for Currents, Floods and Tail Sweep. Only the passive **Adaptive** may rotate shapes in battle (`R` / right-click). Place by the **anchor** — the shape's centre-most cell — which must be within range (Manhattan, base + Elevated bonus − drains). All cells must be on the board; ground skills need prop-free squares; props need empty squares; zones and Surges may land on props. Directional skills (Currents, Flood) also take a direction, pull skills an anchor. The cast preview colours each square (**new / levels up / replaces / cancels / blocked**) and lists attunement strength (+1/−1 counts), ground and prop reactions, landing squares of displaced monsters and, for Surges, damage after ground and Veils.
+**Fixed shapes:** every skill has exactly **one shape family and one fixed orientation**, absolute on the board for both teams (e.g. Gloom Rift: vertical I3; Mire: T4). Shapes are tuned outside battle (overworld: skill variants / evolution, gdd_overworld §4.7) — in battle you only pick *where* to place it, plus the push direction for Currents, Floods and Tail Sweep. Only the passive **Adaptive** may rotate shapes in battle (`R` / right-click). Place by the **anchor** — the shape's centre-most cell — which must be within range (Manhattan, base + Elevated bonus − drains). All cells must be on the board; ground skills need prop-free squares; props need empty squares; zones and Surges may land on props. Directional skills (Currents, Flood) also take a direction, pull skills an anchor. The cast preview colours each square (**new / levels up / replaces / cancels / blocked**) and lists attunement strength (+1/−1 counts), ground and prop reactions, landing squares of displaced monsters and, for Surges, damage after ground and Veils.
 
 ---
 
@@ -516,7 +516,7 @@ The archetypes are the rule system; concrete skills come from the matrix (§9.5)
 |---|---|---|
 | **Universal actions** | every monster | Move, Strike (#16, Kin twist §6.1) |
 | **Surge** | every monster, one each | #1 — type from aspect, shape from species, ≤1 twist (§9.4.2) |
-| **Utility pool** | 1 per monster (2 from Foundation stage, gdd_overworld §4.4), limited by Kin | #2–#15 |
+| **Utility pool** | 1 per monster (2 from Foundation stage, gdd_overworld §4.5), limited by Kin | #2–#15 |
 
 #### 9.4.1 All archetypes
 
@@ -604,7 +604,7 @@ Zone, terrain and Surge casts are placed by **range from the caster to the ancho
   "directional": false               // Currents / Flood: caster sets a direction at cast
 }
 ```
-**Rules:** no cooldowns (§4.4) · only `kind: surge` deals burst damage · ground damage capped at 2 per trigger · zone effect values/caps live on the **zone definition**, not on the skill · every zone must carry ≥1 effect tag · zones last 2 rounds (global constant, tunable).
+**Rules:** no cooldowns (§4.4) · only `kind: surge` deals burst damage · ground damage capped at 2 per trigger · zone effect values/caps live on the **zone definition**, not on the skill · every zone must carry ≥1 effect tag · zones last 2 rounds by default (global constant, tunable); an evolved skill may add +1 round (max 3).
 
 ### 9.8 Unique Skill Examples
 

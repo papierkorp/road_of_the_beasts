@@ -148,7 +148,7 @@ The **full base kit is available from the first day** — Move, Strike, Surge, o
 | Core Formation | second skill evolution · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer skill · **5v5** special battles |
 | Soul Tier | Air layer access (Winged) · 2x2 size · TPR 3 possible | mid-battle **Beast Swap** from the spatial space |
 | Immortal | Dual-aspect monsters *(rules open)* | 3rd tamer skill |
-| Sovereign | Signature skills (Legendary) · Major Surge (Ancient) | full spatial arsenal |
+| Sovereign | Signature skills (Legendary) · Major Surge (Ancient, Legendary only) | full spatial arsenal |
 
 > Expansion features (bigger teams, air layer, 2x2, swap) **are** the reward structure — mechanics introduced one breakthrough at a time, solving the tutorial problem for free. Battle modes follow the team size the player can field; **which mode a fight uses is set by the encounter** (a narrow corridor node is a 1v1/2v2, a dungeon hall a 3v3, a tournament a 5v5), and the player needs at least that many monsters.
 
@@ -174,14 +174,14 @@ Every skill a monster has (its Surge and its utilities) can **evolve**. At an ev
 |---|---|---|
 | **Shape** | other shape family or orientation | same cell count = free. +1 cell is a *Widen*: it pays the Wide price (Surge damage −1, see gdd_battle §9.4.2). Shapes stay fixed in battle |
 | **Twist** *(Surge only)* | swap the Surge's twist, or add one to a baseline Surge | at most ONE twist, each twist pays its own price (gdd_battle §9.4.2) |
-| **Small value** | zone lasts 3 instead of 2 rounds · cast range +1 · zone starts at level II | tiny, capped; **never raises Surge or ground damage** |
+| **Small value** | zone lasts 3 instead of 2 rounds (zones only, max 3) · cast range +1 (max +1 per skill) | tiny, capped; **never raises Surge or ground damage**. No level-II start (that is the Overgrowth passive's job and would make a Veil shield 3 in one cast, gdd_battle §18 Double Veil) |
 | **Swap** *(utility only)* | exchange the utility for another one from the matrix (gdd_battle §9.5) | must respect the Kin's locked-out archetypes (gdd_battle §6) |
 
 ```
 GLOOM RIFT (Surge, I3 vertical), evolve → pick ONE:
   a) Shape  — I3 → L3 (same cells, new territory)
   b) Twist  — baseline → Lingering (residue lasts 3 rounds, damage −1)
-  c) Value  — cast range 3 → 4
+  c) Value  — cast range 3 → 4 (max +1)
 
 MIRE (utility, T4), evolve → pick ONE:
   a) Shape  — T4 → L4 (+1 cell)
@@ -204,12 +204,12 @@ MIRE (utility, T4), evolve → pick ONE:
 | Base kit | Move, Strike, Surge, 1 utility (2 from Foundation) | same | same | same (+ signature at max stage) |
 | Passives | 1 | 1 | 2 | 2 |
 | Evolution paths offered / picked | 2 offered, pick 1 | 3 offered, pick 1 | 3 offered, pick 2 | all offered, pick all |
-| Stat cap bonus | — | +1 one cap | +1 two caps | +1 two caps, flexible |
 | Max stage reachable | Core | Soul | Immortal | Sovereign |
 | Aspect | fixed | fixed | fixed | can shift once |
 
 - "Max stage reachable" is the core axis — the wuxia "noble bloodline" trope, long-term potential over instant power
-- Stat cap bonuses stay tiny (+1) to protect balance and never touch the damage law
+- **No stat bonuses from rarity.** Soul+ caps already sit on the absolute scale (HP 10, Init 10.0, TPR 3, Reach 3), so rarity buys slots, evolutions and ceiling — never numbers
+- **High mechanics are Rare+ territory by design:** Air layer and 2x2 need Soul, TPR 3 needs Soul, the Ancient's Major Surge needs Sovereign. A Normal monster (max Core) stays grounded, single-turn-count and simple
 - Rarity does **not** decide the stat shape: any rarity can roll any shape (weighted by Kin lean, §4.3)
 - Offered / picked counts are a tuning start, not final (§12)
 
@@ -447,7 +447,7 @@ Monster artifacts deepen the battle game; tamer artifacts feed the management/ex
 
 ### 10.4 Arrays (artifacts for places)
 
-- Battlefield modifiers deployed pre-battle on home turf. Battles start **neutral on purpose** (no monster born disadvantaged, gdd_battle §7.5), so arrays are the only thing allowed to break that, kept small: e.g. one or two squares start attuned to the owner's aspect, or one start square begins elevated
+- Battlefield modifiers deployed pre-battle on home turf. Battles start **neutral on purpose** (no monster born disadvantaged, gdd_battle §7.5), so arrays are the only thing allowed to break that — and the one deliberate exception to the mirrored-fairness rule of gdd_battle §13 — kept small: e.g. one or two squares start attuned to the owner's aspect, or one start square begins elevated
 - Internal-world structure boosters, business protections
 
 ### 10.5 Hard Caps
@@ -498,6 +498,9 @@ PHASE 3  Dojo/faction staff, auction hall, monster hall,
 - Are **evolution picks reversible**, and what does the respec ritual cost (materials, favor, AP)?
 - Evolution schedule: how many evolutions per skill per stage, and what XP / materials do they cost?
 - Rarity "paths offered / picked" counts for the four path families (§5)
+- **Tamer skills:** are the five skills of gdd_battle §15 chosen or fixed per stage, and what does "sub-tier grows potency" mean for once-per-battle skills? The artifact line "+1 Spirit Shield use" contradicts "once per battle" — reword
+- **Stat shapes:** a closed set (glass cannon / anvil / skirmisher / berserker / balanced) or a free distribution of the stage budget? Only some shapes exist in gdd_battle §4.5
+- **Evolution × twist × Kin:** Shape evolutions must respect the twist (Ring has no free shape, Trail needs a straight line, Pounce uses O4) and the Kin's Surge size access (Swarm = 2-cell shapes) — validation rules to write
 - Do monsters share the exact cultivation stage names, or beast-flavored equivalents?
 - Rarity ascension materials & acquisition sources
 - XP curve per sub-tier; what breakthrough trials look like mechanically
@@ -506,7 +509,7 @@ PHASE 3  Dojo/faction staff, auction hall, monster hall,
 
 **Battle hand-off**
 - What happens to a monster that **dies in an expedition** (revived by pills, injured for N days, lost)?
-- Exact round-1 initiative bonus for attacking a wild monster from behind
+- Exact round-1 initiative bonus for attacking a wild monster from behind (the rule itself is now in gdd_battle §3)
 - Does a victory give a **catch** chance, a catch action (costs AP / item), or a guaranteed catch of one defeated monster?
 - Which board parameters does a dungeon node control (props, elevated squares) versus the generator in gdd_battle §13?
 - Spatial space capacity per player sub-tier, and the bench size for counter-picks
@@ -530,4 +533,6 @@ PHASE 3  Dojo/faction staff, auction hall, monster hall,
 - **Rarity** (§5): "2 active skills" row replaced by the real kit; evolution choices now count path offers / picks
 - **TPR cap fixed**: TPR 2 is possible from Foundation (matches the stage-cap table); old "Core: TPR 2" removed
 - **Pre-battle**: full sheets of both teams visible (no hidden info), healing pills and HP persistence defined against the battle's start HP, arrays limited by the neutral-start rule
+- **Rarity gives no stat bonuses** (Soul+ caps = absolute scale); Normal monsters never reach Soul mechanics (air, 2x2, TPR 3) or the Major Surge — intended
+- Evolution **Small value** limited to zone duration +1 (max 3) and cast range +1; no level-II start
 - New §1.3 and §11 describe the battle request / result contract between both halves
