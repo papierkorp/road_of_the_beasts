@@ -28,6 +28,13 @@ static func create(tier: int, rng: RandomNumberGenerator) -> Market:
 	return m
 
 
+## A new tier of materials becomes tradable (after a breakthrough).
+func add_tier(tier: int, rng: RandomNumberGenerator) -> void:
+	for id in ItemCatalog.materials_of_tier(tier):
+		if not factors.has(id):
+			factors[id] = rng.randf_range(0.8, 1.2)
+
+
 ## The night: prices drift, the stock changes.
 func new_day(rng: RandomNumberGenerator) -> void:
 	var ids := factors.keys()

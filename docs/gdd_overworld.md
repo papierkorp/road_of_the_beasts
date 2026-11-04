@@ -501,7 +501,8 @@ PHASE 1  Battle system (done: 1v1 + 3v3, draft, 9 monsters) + individual monster
          (money → cultivation pills → XP → stronger stats)
 PHASE 2  Walkable city districts (first step built: Teleport Plaza, Market, Inner World;
          WASD + E, iso camera, monster follows; visible dungeon with ambush; building system:
-         grid, blueprints + materials, cultivation spots, herb plots, adjacency), skill evolution,
+         grid, blueprints + materials, cultivation spots, herb plots, adjacency; skill evolution at
+         the Evolution Pillar, breakthrough),
          Producer business, favor system with 2-3 factions
 PHASE 3  Dojo/faction staff, auction hall, monster hall,
          internal world growth stages, clan storyline
@@ -515,7 +516,7 @@ PHASE 3  Dojo/faction staff, auction hall, monster hall,
 - Exact stat budget per stage and fraction per sub-tier (Lower / Middle / High); min / max ranges and point prices of the six shapes
   *(prototype: Lower 75% / Middle 90% / High 100% of the HP and Initiative budget; XP to next sub-tier 60 / 120, High bar 200; pill +30 XP for 80 stones; dungeon win +10 XP)*
 - Can an individual's **stat shape change** later (ritual / rare item), or is it fixed for life?
-- Are **evolution picks reversible**, and what does the respec ritual cost (materials, favor, AP)?
+- *(prototype)* evolutions are done at the Evolution Pillar (1 AP each); taking them all back costs 1 AP + 4 materials of the monster's aspect; breakthrough costs 1 AP + 5 materials (player) / 3 (monster)
 - Evolution schedule: how many evolutions per skill per stage, and what XP / materials do they cost?
 - Rarity "paths offered / picked" counts for the four path families (§5)
 - **Tamer skills:** how are the skills learned (story, items, favor) and what is the exact set beyond gdd_battle §15 (Domain Glimpse tuning is open there)?

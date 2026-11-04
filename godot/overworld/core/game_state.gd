@@ -136,12 +136,17 @@ func owns_structure(sid: StringName) -> bool:
 ## Specific aspects are paid first, "any" with the cheapest materials left; only materials of
 ## tiers up to the player's stage count.
 func recipe_payment(def: StructureDef) -> Dictionary:
+	return materials_payment(def.recipe)
+
+
+## The same for any list of requirements [{aspect, count}].
+func materials_payment(requirements: Array) -> Dictionary:
 	var counts := {}
 	for id in bag_ids():
 		if ItemCatalog.kind_of(id) == ItemCatalog.Kind.MATERIAL and ItemCatalog.tier_of(id) <= int(stage):
 			counts[id] = item_count(id)
 	var paid := {}
-	var reqs := def.recipe.duplicate()
+	var reqs := requirements.duplicate()
 	reqs.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		return int(a["aspect"] != Aspect.Type.NONE) > int(b["aspect"] != Aspect.Type.NONE))
 	for r in reqs:
@@ -255,6 +260,114 @@ func harvest(uid: int) -> String:
 	s["plant"] = ""
 	s["grown"] = 0
 	return id
+
+
+# ---------- evolution and breakthrough (gdd_overworld §4.1, §4.7) ----------
+
+const EVOLUTION_PILLAR := &"evolution_pillar"
+const RESPEC_MATERIALS := 4
+const BREAKTHROUGH_MATERIALS := 5
+const MONSTER_BREAKTHROUGH_MATERIALS := 3
+
+
+func has_pillar() -> bool:
+	for s in structures:
+		if StringName(s["id"]) == EVOLUTION_PILLAR:
+			return true
+	return false
+
+
+## A skill evolution costs 1 AP (§7 "Train") and is done at the Evolution Pillar.
+func can_evolve() -> bool:
+	return has_pillar() and ap >= 1
+
+
+func evolve(monster_index: int, slot: int, skill: StringName, family: StringName, arg: String) -> bool:
+	if not can_evolve() or monster_index < 0 or monster_index >= monsters.size():
+		return false
+	if not monsters[monster_index].pick(slot, skill, family, arg):
+		return false
+	spend_ap(1)
+	return true
+
+
+func respec_requirements(monster_index: int) -> Array:
+	return [{"aspect": monsters[monster_index].species().aspect, "count": RESPEC_MATERIALS}]
+
+
+## Taking the evolutions back ("exchange, not just upgrade"): 1 AP and materials of its aspect.
+func can_respec(monster_index: int) -> bool:
+	return has_pillar() and ap >= 1 and monster_index >= 0 and monster_index < monsters.size() \
+		and not monsters[monster_index].evolutions.is_empty() \
+		and not materials_payment(respec_requirements(monster_index)).is_empty()
+
+
+func respec(monster_index: int) -> bool:
+	if not can_respec(monster_index):
+		return false
+	var paid := materials_payment(respec_requirements(monster_index))
+	for id in paid:
+		remove_item(id, int(paid[id]))
+	spend_ap(1)
+	monsters[monster_index].reset_evolutions()
+	return true
+
+
+## The monster that makes the player's breakthrough possible: at the player's stage, High, bar full.
+func breakthrough_monster() -> int:
+	for i in monsters.size():
+		var m := monsters[i]
+		if m.stage == stage and m.sub_tier == Stage.SubTier.HIGH and m.xp >= MonsterInstance.HIGH_BAR:
+			return i
+	return -1
+
+
+func can_break_through() -> bool:
+	return int(stage) < int(Stage.Type.SOVEREIGN) and ap >= 1 and breakthrough_monster() >= 0 \
+		and not materials_payment([{"aspect": Aspect.Type.NONE, "count": BREAKTHROUGH_MATERIALS}]).is_empty()
+
+
+## The player's breakthrough: 1 AP and materials; AP grows, the buildable area grows, new tier
+## of materials, and the first one unlocks the Evolution Pillar (a milestone blueprint).
+func break_through() -> bool:
+	if not can_break_through():
+		return false
+	var paid := materials_payment([{"aspect": Aspect.Type.NONE, "count": BREAKTHROUGH_MATERIALS}])
+	for id in paid:
+		remove_item(id, int(paid[id]))
+	spend_ap(1)
+	advance_stage()
+	return true
+
+
+## Stage + 1 without any cost (the breakthrough and the cheat menu use it).
+func advance_stage() -> void:
+	stage = (int(stage) + 1) as Stage.Type
+	sub_tier = Stage.SubTier.LOWER
+	max_ap += 1
+	ap += 1
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	market.add_tier(int(stage), rng)
+	if stage == Stage.Type.FOUNDATION and not owns_structure(EVOLUTION_PILLAR):
+		add_item(ItemCatalog.blueprint_id(EVOLUTION_PILLAR))
+
+
+func can_monster_break_through(monster_index: int) -> bool:
+	return ap >= 1 and monster_index >= 0 and monster_index < monsters.size() \
+		and monsters[monster_index].can_break_through(stage) \
+		and not materials_payment([{"aspect": Aspect.Type.NONE, "count": MONSTER_BREAKTHROUGH_MATERIALS}]).is_empty()
+
+
+func monster_break_through(monster_index: int) -> bool:
+	if not can_monster_break_through(monster_index):
+		return false
+	var paid := materials_payment([{"aspect": Aspect.Type.NONE, "count": MONSTER_BREAKTHROUGH_MATERIALS}])
+	for id in paid:
+		remove_item(id, int(paid[id]))
+	spend_ap(1)
+	monsters[monster_index].break_through()
+	return true
 
 
 ## The structure part of the night: meditating monsters gain XP, plants grow. Returns report lines.

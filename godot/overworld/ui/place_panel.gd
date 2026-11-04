@@ -80,6 +80,48 @@ func _build_inner() -> void:
 		var give := _button("Give a cultivation pill", func(): _give_pill(pill, m))
 		give.disabled = _game.item_count(pill) < 1 or not m.can_gain_xp()
 		add_child(give)
+	_build_breakthrough()
+
+
+## Stage-ups: the player first, then each monster follows on its own (a monster never exceeds the
+## player's stage). Prototype rule: the player's breakthrough is carried by a monster that is ready.
+func _build_breakthrough() -> void:
+	_text("BREAKTHROUGH", UiTheme.DIM)
+	if int(_game.stage) < int(Stage.Type.SOVEREIGN):
+		var next := Stage.stage_name((int(_game.stage) + 1) as Stage.Type)
+		_text("You: %s. To reach %s one of your monsters must be at your stage, High, with a full XP bar. Cost: 1 AP and %d materials."
+			% [Stage.stage_name(_game.stage), next, GameState.BREAKTHROUGH_MATERIALS], UiTheme.TEXT)
+		var b := _button("Break through to %s" % next, _break_through)
+		b.disabled = not _game.can_break_through()
+		add_child(b)
+	for i in _game.monsters.size():
+		var m := _game.monsters[i]
+		if int(m.stage) < int(_game.stage):
+			var mb := _button("%s: break through to %s  (1 AP, %d materials)" % [m.species().display_name,
+				Stage.stage_name((int(m.stage) + 1) as Stage.Type), GameState.MONSTER_BREAKTHROUGH_MATERIALS],
+				func(): _monster_break_through(i))
+			mb.disabled = not _game.can_monster_break_through(i)
+			add_child(mb)
+
+
+func _break_through() -> void:
+	if not _game.break_through():
+		return
+	_note = "You break through to %s! More AP, a larger garden and new materials." % Stage.stage_name(_game.stage)
+	if _game.stage == Stage.Type.FOUNDATION:
+		_note += " A blueprint for the Evolution Pillar is yours."
+	SaveGame.save(_game)
+	changed.emit()
+	refresh()
+
+
+func _monster_break_through(i: int) -> void:
+	if not _game.monster_break_through(i):
+		return
+	_note = "%s breaks through to %s!" % [_game.monsters[i].species().display_name, Stage.stage_name(_game.monsters[i].stage)]
+	SaveGame.save(_game)
+	changed.emit()
+	refresh()
 
 
 func _build_plaza() -> void:

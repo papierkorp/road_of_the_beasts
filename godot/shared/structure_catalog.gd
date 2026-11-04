@@ -26,6 +26,9 @@ static func _ensure() -> void:
 	_add(&"spirit_pond", "Spirit Pond", StructureDef.Category.SPECIAL, Vector2i(2, 1), N,
 		Color(0.25, 0.5, 0.75), 0.25, "Still water. Herb plots next to it grow a night faster.",
 		[{"aspect": N, "count": 3}], 150, 0, true)
+	_add(&"evolution_pillar", "Evolution Pillar", StructureDef.Category.SPECIAL, Vector2i(1, 1), ANY,
+		Color(0.85, 0.7, 0.3), 1.9, "The ritual site for skill evolution: pick one variant of a skill instead of a number.",
+		[{"aspect": ANY, "count": 6}], 400, 0, false)
 	_add(&"altar_force", "Force Altar", StructureDef.Category.SPECIAL, Vector2i(1, 1), F,
 		Color(0.89, 0.35, 0.23), 1.3, "Force monsters meditating next to it gain extra XP.",
 		[{"aspect": F, "count": 4}], 200, 0, false)

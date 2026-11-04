@@ -31,6 +31,11 @@ const SURGE_BASE_DAMAGE := {SurgeType.ERUPTION: 3, SurgeType.FLOOD: 2, SurgeType
 @export var directional: bool = false
 @export_multiline var description: String = ""
 
+## Set by skill evolution (gdd_overworld §4.7); runtime only, never stored in the .tres files.
+var range_bonus := 0        # cast range +1
+var duration_bonus := 0     # zones last +1 round
+var damage_penalty := 0     # a widened Surge deals less
+
 
 func placement() -> Board.Placement:
 	match kind:
@@ -68,7 +73,7 @@ func surge_value() -> int:
 			v -= 1
 		Twist.SLOW_BURN:
 			v += 1
-	return maxi(0, v)
+	return maxi(0, v - damage_penalty)
 
 
 ## Anchor range before Elevated bonus and drains.
@@ -79,8 +84,8 @@ func base_range() -> int:
 		Twist.RING:
 			return 0
 		Twist.LOB:
-			return cast_range + 2
-	return cast_range
+			return cast_range + range_bonus + 2
+	return cast_range + range_bonus
 
 
 ## How many of the caster's turn starts until the Surge fires.

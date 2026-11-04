@@ -37,6 +37,16 @@ static func give_blueprints(state: GameState) -> String:
 	return "+%d blueprints (all known)" % n
 
 
+static func stage_up(state: GameState) -> String:
+	if int(state.stage) >= int(Stage.Type.SOVEREIGN):
+		return "Already at the highest stage"
+	state.advance_stage()
+	for m in state.monsters:
+		if int(m.stage) < int(state.stage):
+			m.break_through()
+	return "Stage up: %s (monsters follow)" % Stage.stage_name(state.stage)
+
+
 static func refill_ap(state: GameState) -> String:
 	state.ap = state.max_ap
 	return "AP refilled (%d)" % state.ap

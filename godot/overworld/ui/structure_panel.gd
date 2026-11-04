@@ -13,6 +13,7 @@ var _build := false
 var _placing: StringName = &""
 var _rotated := false
 var _note := ""
+var _evo_monster := 0
 
 
 func setup(game: GameState) -> void:
@@ -66,6 +67,8 @@ func _structure_view() -> void:
 			_cultivation(s)
 		StructureDef.Category.GROWING:
 			_growing(s)
+	if def.id == GameState.EVOLUTION_PILLAR:
+		_evolution_view()
 
 
 func _cultivation(s: Dictionary) -> void:
@@ -126,6 +129,75 @@ func _harvest() -> void:
 	if id == "":
 		return
 	_note = "Harvested %d × %s." % [StructureRules.HARVEST_YIELD, ItemCatalog.display_name(id)]
+	SaveGame.save(_game)
+	changed.emit()
+	refresh()
+
+
+# ---------- the Evolution Pillar (gdd_overworld §4.7) ----------
+
+func _evolution_view() -> void:
+	_text("Each evolution picks ONE variant of a skill — never more damage. It costs 1 AP (you have %d). "
+		% _game.ap + "Taking all of a monster's evolutions back costs 1 AP and %d materials of its aspect." % GameState.RESPEC_MATERIALS, UiTheme.DIM)
+	_text("CHOOSE A MONSTER", UiTheme.DIM)
+	_evo_monster = clampi(_evo_monster, 0, _game.monsters.size() - 1)
+	for i in _game.monsters.size():
+		var m := _game.monsters[i]
+		var used := 0
+		for slot in m.evo_slots():
+			used += m.slot_picks(slot).size()
+		var b := _button("%s — %s · %d evolution(s), %d slot(s)" % [m.species().display_name, Stage.stage_name(m.stage), used, m.evo_slots()],
+			func(): _select_evo_monster(i))
+		b.disabled = i == _evo_monster
+		add_child(b)
+	var mon := _game.monsters[_evo_monster]
+	_text(mon.sheet_text() + "\nRarity: %s" % MonsterInstance.Rarity.keys()[mon.rarity].capitalize(), UiTheme.TEXT)
+	if mon.evo_slots() == 0:
+		_text("No evolution slots yet — one opens with every stage above Qi Gathering.", UiTheme.DIM)
+		return
+	if not mon.evolutions.is_empty():
+		_text("EVOLUTIONS", UiTheme.DIM)
+		for p in mon.evolutions:
+			_text("• %s: %s" % [String(p["skill"]).capitalize(), Evolution.pick_text(p)], UiTheme.TEXT)
+		var rb := _button("Take them all back  (1 AP, %d materials)" % GameState.RESPEC_MATERIALS, _respec)
+		rb.disabled = not _game.can_respec(_evo_monster)
+		add_child(rb)
+	for slot in mon.evo_slots():
+		var left := mon.picks_left(slot)
+		_text("SLOT %d — %s" % [slot + 1, "%d pick(s) left" % left if left > 0 else "used"], UiTheme.ACCENT)
+		for path in mon.slot_offers(slot):
+			var variants := mon.path_variants(path["skill"], path["family"])
+			_text("%s%s" % [Evolution.path_name(path), "" if not variants.is_empty() else "  (taken or closed)"], UiTheme.TEXT)
+			if left <= 0:
+				continue
+			for v in variants:
+				var label := String(v["label"])
+				if v.has("art"):
+					label += "\n" + String(v["art"])
+				var vb := _button(label, func(): _evolve(slot, path["skill"], path["family"], String(v["arg"])))
+				vb.disabled = not _game.can_evolve()
+				add_child(vb)
+
+
+func _select_evo_monster(i: int) -> void:
+	_evo_monster = i
+	refresh()
+
+
+func _evolve(slot: int, skill: StringName, family: StringName, arg: String) -> void:
+	if not _game.evolve(_evo_monster, slot, skill, family, arg):
+		return
+	_note = "%s evolves: %s." % [_game.monsters[_evo_monster].species().display_name,
+		Evolution.pick_text(_game.monsters[_evo_monster].evolutions[-1])]
+	SaveGame.save(_game)
+	changed.emit()
+	refresh()
+
+
+func _respec() -> void:
+	if not _game.respec(_evo_monster):
+		return
+	_note = "%s's evolutions are undone." % _game.monsters[_evo_monster].species().display_name
 	SaveGame.save(_game)
 	changed.emit()
 	refresh()

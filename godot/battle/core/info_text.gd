@@ -103,7 +103,7 @@ static func skill_rows(skill: SkillDef, _battle: Battle = null, caster: Monster 
 			for e in z.effective(1, Aspect.Type.NONE):
 				effs.append("%s %d" % [ZoneEffect.label(e["tag"]), e["value"]])
 			rows.append(["Effects", ", ".join(PackedStringArray(effs)) + " (level I; +1 per level, ±1 attunement)"])
-			rows.append(["Lasts", "%d rounds, recast = level up (max III)" % Rules.ZONE_TURNS])
+			rows.append(["Lasts", "%d rounds, recast = level up (max III)" % (Rules.ZONE_TURNS + skill.duration_bonus)])
 			if skill.needs_direction():
 				rows.append(["Direction", "push set with WASD, at the end of the occupant's turn"])
 			elif skill.is_pull():

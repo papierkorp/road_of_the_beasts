@@ -133,7 +133,7 @@ static func _apply_zone(sq: Square, skill: SkillDef, pg: Dictionary, owner: Stri
 		sq.zone = null
 	else:
 		sq.zone = {"def": skill.zone, "gid": gid, "owner": owner, "level": pg["level"],
-			"duration": ZONE_TURNS, "dir": dir, "anchor": anchor, "native": native}
+			"duration": ZONE_TURNS + skill.duration_bonus, "dir": dir, "anchor": anchor, "native": native}
 
 
 static func _count(out: Dictionary, kind: StringName) -> void:
