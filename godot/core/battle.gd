@@ -186,6 +186,68 @@ func can_cast(who: StringName, skill: SkillDef) -> bool:
 	return not (skill.kind == SkillDef.Kind.SURGE and has_charging(who))
 
 
+## Why a skill can't be used at all right now ("" = usable).
+func cast_error(who: StringName, skill: SkillDef) -> String:
+	if over:
+		return "the battle is over"
+	if turn_owner != who:
+		return "not this monster's turn"
+	if ap < 1:
+		return "no AP left"
+	if skill.kind == SkillDef.Kind.SURGE and has_charging(who):
+		return "this monster already has a charging Surge (one at a time)"
+	return ""
+
+
+## Why a placement is illegal ("" = legal). Same checks as placement_cells, in readable form.
+func placement_error(who: StringName, skill: SkillDef, orient_idx: int, anchor: Vector2i) -> String:
+	var e := cast_error(who, skill)
+	if e != "":
+		return e
+	var m: Monster = monsters[who]
+	if skill.kind == SkillDef.Kind.SURGE and skill.twist == SkillDef.Twist.RING:
+		return "" if not board.neighbors(m.pos).is_empty() else "no free neighbours"
+	var orients := skill.orientations()
+	if orients.is_empty():
+		return "this skill has no shape"
+	var cells := Shapes.footprint(orients[effective_orientation(m, skill, orient_idx)], anchor)
+	match skill.twist:
+		SkillDef.Twist.POUNCE:
+			if Board.manhattan(m.pos, anchor) != 1:
+				return "Pounce: the anchor (centre cell) must be right next to %s" % m.display_name()
+		SkillDef.Twist.TRAIL:
+			if not _is_trail(m.pos, cells):
+				return "Trail: the line must start next to %s and point straight away from it" % m.display_name()
+		_:
+			if not board.in_bounds(anchor):
+				return "the anchor is off the board"
+			var r := skill_range(m, skill)
+			var d := Board.manhattan(m.pos, anchor)
+			if d > r:
+				return "out of range: anchor is %d away, range is %d" % [d, r]
+	for c in cells:
+		if not board.in_bounds(c):
+			return "the shape doesn't fit on the board"
+	var allow_flammable := skill.kind == SkillDef.Kind.GROUND and skill.aspect == Aspect.Type.FORCE
+	for c in cells:
+		var sq := board.at(c)
+		match skill.placement():
+			Board.Placement.PROP:
+				if sq.object != null:
+					return "[%d,%d] already holds a %s — props need empty squares" % [c.x, c.y, sq.object["name"]]
+				if board.occupants.has(c):
+					return "[%d,%d] is occupied by %s — props need empty squares" % [c.x, c.y, monster_at(c).display_name()]
+				if sq.surge != null:
+					return "[%d,%d] holds a charging Surge — props need empty squares" % [c.x, c.y]
+			Board.Placement.GROUND:
+				if sq.object != null and not (allow_flammable and sq.has_tag("flammable")):
+					return "[%d,%d] holds a %s — ground skills need prop-free squares%s" % [c.x, c.y,
+							sq.object["name"], " (only Force Fields may target Trees)" if sq.has_tag("flammable") else ""]
+	if cells.has(m.pos) and skill.kind == SkillDef.Kind.PROP:
+		return "can't raise a Wall on your own square"
+	return ""
+
+
 ## Cells of a placement or empty if illegal (range, shape, twists, placement rule).
 func placement_cells(who: StringName, skill: SkillDef, orient_idx: int, anchor: Vector2i) -> Array[Vector2i]:
 	var none: Array[Vector2i] = []
@@ -355,6 +417,29 @@ func can_strike(who: StringName, target: Vector2i) -> bool:
 	if sq.object != null and sq.has_tag("indestructible"):
 		return false
 	return d == 1 or has_line_of_sight(m.pos, target)
+
+
+## Why a Strike at `target` is illegal ("" = legal).
+func strike_error(who: StringName, target: Vector2i) -> String:
+	if not can_act(who):
+		return "no AP left" if turn_owner == who else "not this monster's turn"
+	var m: Monster = monsters[who]
+	var sq := board.at(target)
+	var t := monster_at(target)
+	if t == null and sq.object == null:
+		return "nothing to hit here"
+	if t != null and t.side == m.side:
+		return "can't strike your own side"
+	if sq.object != null and sq.has_tag("indestructible"):
+		return "the %s is indestructible" % sq.object["name"]
+	var d := Board.manhattan(m.pos, target)
+	if d > reach(m):
+		return "out of Reach: %d away, Reach is %d" % [d, reach(m)]
+	if ap < strike_cost(who, target):
+		return "needs %d AP, %d left" % [strike_cost(who, target), ap]
+	if d > 1 and not has_line_of_sight(m.pos, target):
+		return "no line of sight (a prop is in the way)"
+	return ""
 
 
 func strike_targets(who: StringName) -> Array[Vector2i]:

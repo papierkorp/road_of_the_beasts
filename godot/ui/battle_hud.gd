@@ -241,7 +241,7 @@ func _build_preview(root: Control) -> void:
 	_ignore(_preview_panel)
 	root.add_child(_preview_panel)
 	_preview = Label.new()
-	_preview.custom_minimum_size = Vector2(240, 0)
+	_preview.custom_minimum_size = Vector2(380, 0)
 	_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_preview.add_theme_font_size_override("font_size", 15)
 	_preview.add_theme_color_override("font_color", UiTheme.ACCENT)

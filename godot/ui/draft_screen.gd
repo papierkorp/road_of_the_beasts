@@ -42,13 +42,17 @@ func _ready() -> void:
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
-	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	col.add_child(grid)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	col.add_child(scroll)
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(grid)
 	for id in GameData.monster_ids():
 		var def := BattleSetup.load_def(id)
 		var b := Button.new()
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(420, 250)
+		b.custom_minimum_size = Vector2(380, 250)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

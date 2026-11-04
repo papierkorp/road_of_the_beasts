@@ -380,13 +380,21 @@ func _actions() -> Array:
 	out.append({"id": ACT_MOVE, "text": "Move\n1 AP", "enabled": mine and battle.ap >= 1,
 		"selected": mode == &"move", "card": {"title": "Move", "rows": InfoText.move_rows(battle, m)}})
 	var can_strike := mine and not battle.strike_targets(m.id).is_empty()
+	var strike_rows := InfoText.strike_rows(battle, m)
+	if mine and not can_strike:
+		strike_rows.push_front(["Unavailable", "no enemy or prop within Reach %d%s" % [battle.reach(m),
+				" (or not enough AP)" if battle.ap < 2 else ""]])
 	out.append({"id": ACT_STRIKE, "text": "%s\n%s" % [m.def.strike_name(), "2 AP"], "enabled": can_strike,
-		"selected": mode == &"strike", "card": {"title": "Strike — " + m.def.strike_name(), "rows": InfoText.strike_rows(battle, m)}})
+		"selected": mode == &"strike", "card": {"title": "Strike — " + m.def.strike_name(), "rows": strike_rows}})
 	for s in m.skills():
+		var rows := InfoText.skill_rows(s, battle, m)
+		var why := battle.cast_error(m.id, s) if mine else ""
+		if why != "":
+			rows.push_front(["Unavailable", why])
 		var charging := s.kind == SkillDef.Kind.SURGE and battle.has_charging(m.id)
 		out.append({"id": s.id, "text": s.display_name + ("\ncharging" if charging else "\n1 AP"),
 			"enabled": mine and battle.can_cast(m.id, s), "selected": mode == &"place" and skill == s,
-			"card": {"title": s.display_name, "rows": InfoText.skill_rows(s, battle, m)}})
+			"card": {"title": s.display_name, "rows": rows}})
 	return out
 
 
@@ -404,7 +412,7 @@ func _preview_text() -> String:
 	var m := _active()
 	if mode == &"strike":
 		if not battle.can_strike(m.id, hover):
-			return ""
+			return "Strike — " + battle.strike_error(m.id, hover)
 		var t := battle.monster_at(hover)
 		var dmg := battle.strike_damage(m.id, hover)
 		var who: String = t.display_name() if t != null else battle.board.at(hover).object["name"]
@@ -417,35 +425,16 @@ func _preview_text() -> String:
 		return ""
 	if mode != &"place" or skill == null:
 		return ""
-	var cells := battle.placement_cells(m.id, skill, orient, _anchor_for(skill))
+	var anchor := _anchor_for(skill)
+	var cells := battle.placement_cells(m.id, skill, orient, anchor)
 	if cells.is_empty():
-		return "%s: can't go here" % skill.display_name
-	var counts := {}
-	var dmgs: Array[String] = []
-	for c in cells:
-		var sq := battle.board.at(c)
-		var pg := Rules.preview_cell(skill, sq)
-		counts[pg["kind"]] = counts.get(pg["kind"], 0) + 1
-		if skill.kind == SkillDef.Kind.ZONE:
-			if pg["ground"] != &"":
-				counts["ground " + String(pg["ground"])] = counts.get("ground " + String(pg["ground"]), 0) + 1
-			if pg["prop"] != &"":
-				counts["prop " + String(pg["prop"])] = counts.get("prop " + String(pg["prop"]), 0) + 1
-		if skill.kind == SkillDef.Kind.SURGE:
-			var t2 := battle.monster_at(c)
-			if t2 != null:
-				var sg := {"type": skill.surge_type, "aspect": skill.aspect,
-					"value": skill.surge_value() + m.momentum_bonus, "native": m.has_passive(&"native_ground")}
-				dmgs.append("%s %s %d" % [_side_tag(t2), t2.display_name(), battle.surge_damage_at(sq, sg, t2)])
+		return "%s — can't place here:\n%s" % [skill.display_name, battle.placement_error(m.id, skill, orient, anchor)]
 	var s := "%s — %d squares" % [skill.display_name, cells.size()]
 	if skill.kind == SkillDef.Kind.SURGE:
-		s += "\n%s %d dmg, fires at the start of your next %s" % [SkillDef.surge_type_name(skill.surge_type),
-				skill.surge_value() + m.momentum_bonus, "turn" if skill.fire_delay() == 1 else "turn but one"]
-		if not dmgs.is_empty():
-			s += "\nwould hit now: " + ", ".join(PackedStringArray(dmgs))
-	for k in counts:
-		if k != &"new":
-			s += "\n%s ×%d" % [k, counts[k]]
+		s += " · %s %d dmg, fires at the start of your %s" % [SkillDef.surge_type_name(skill.surge_type),
+				skill.surge_value() + m.momentum_bonus, "next turn" if skill.fire_delay() == 1 else "turn after next"]
+	for line in CastPreview.lines(battle, m, skill, cells, aim_dir, anchor):
+		s += "\n• " + line
 	return s
 
 
@@ -498,7 +487,20 @@ func _on_event(e: Dictionary) -> void:
 		&"cast":
 			var sk: SkillDef = battle.monsters[e["who"]].skill_by_id(e["skill"])
 			var verb := "declares" if sk.kind == SkillDef.Kind.SURGE else "casts"
-			hud.log_line("%s %s %s (%d squares)" % [_name(e["who"]), verb, sk.display_name, e["cells"].size()])
+			var detail := ""
+			if e.has("result"):
+				var parts := []
+				var names := {&"new": "new", &"level": "levelled up", &"replace": "replaced",
+					&"cancel": "cancelled (opposite)", &"lost": "no effect", &"ignite": "ignited"}
+				for k in e["result"]["counts"]:
+					parts.append("%d %s" % [e["result"]["counts"][k], names.get(k, String(k))])
+				for k in ["cleared", "boosted", "ignited", "extinguished", "healed"]:
+					if e["result"][k] > 0 and not (k == "ignited" and e["result"]["counts"].has(&"ignite")):
+						parts.append("%d ground/prop %s" % [e["result"][k], k])
+				detail = ": " + ", ".join(PackedStringArray(parts))
+			elif e.get("lost", 0) > 0:
+				detail = ": %d squares already claimed" % e["lost"]
+			hud.log_line("%s %s %s%s" % [_name(e["who"]), verb, sk.display_name, detail])
 		&"surge_fired":
 			hud.log_line("%s's %s fires!" % [_name(e["who"]), e["name"]])
 		&"strike":
