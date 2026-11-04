@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/monster_def.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/magma_pounce.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/lava_field.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = &"blaze_tiger"
+display_name = "Blaze Tiger"
+kin = 0
+aspect = 1
+hp = 5
+initiative = 7.0
+move = 3
+tpr = 1
+reach = 1
+surge = ExtResource("2")
+utility = ExtResource("3")
+passive = &"momentum"
+blurb = "Dives into melee range, lays Lava behind the enemy and pounces with a big Eruption next to itself."

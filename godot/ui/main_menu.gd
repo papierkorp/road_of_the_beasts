@@ -1,7 +1,7 @@
 extends Control
 ## Start menu: start the battle, settings, quit.
 
-const BATTLE_SCENE := "res://main.tscn"
+const DRAFT_SCENE := "res://draft.tscn"
 
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
@@ -39,7 +39,7 @@ func _ready() -> void:
 	_buttons = VBoxContainer.new()
 	_buttons.add_theme_constant_override("separation", 10)
 	col.add_child(_buttons)
-	_add_button("Start Battle", func(): get_tree().change_scene_to_file(BATTLE_SCENE))
+	_add_button("Start Battle", func(): get_tree().change_scene_to_file(DRAFT_SCENE))
 	_add_button("Settings", _show_settings)
 	_add_button("Quit", func(): get_tree().quit())
 

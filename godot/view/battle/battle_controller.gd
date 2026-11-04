@@ -1,18 +1,22 @@
 extends Node3D
 ## Wires Battle (rules), BattleView (3D) and BattleHud (UI) together and handles input.
-## You play the Blaze Tiger; the Gloom Wolf is driven by AiBrain.
+## You control side 0 whenever one of your monsters is next in the queue; side 1 is the AI.
+## Start with `--autoplay` (after `--`) to let the AI play both sides.
 
-const PLAYER := &"tiger"
+const PLAYER_SIDE := 0
 const NOWHERE := Vector2i(-1, -1)
+const ACT_MOVE := &"__move"
+const ACT_STRIKE := &"__strike"
 
 var battle: Battle
 var view: BattleView
 var hud: BattleHud
 var rng := RandomNumberGenerator.new()
 
-var mode := &""                    # &"" | &"move" | &"place"
+var mode := &""                    # &"" | &"move" | &"strike" | &"place"
 var skill: SkillDef = null
 var orient := 0
+var aim_dir := Vector2i.UP         # board direction for pushes / Floods / Tail Sweep
 var hover := NOWHERE
 var _ai_running := false
 
@@ -20,7 +24,9 @@ var _ai_running := false
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS      # Esc must work while paused
 	rng.randomize()
-	battle = BattleSetup.prototype()
+	if OS.get_cmdline_user_args().has("--autoplay"):
+		BattleSetup.autoplay = true
+	battle = BattleSetup.default_battle()
 	battle.event_emitted.connect(_on_event)
 	view = BattleView.new()
 	view.process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -28,16 +34,42 @@ func _ready() -> void:
 	view.build(battle)
 	hud = BattleHud.new()
 	add_child(hud)
-	hud.build(battle.monsters[PLAYER].skills)
-	hud.skill_pressed.connect(_on_skill_pressed)
+	hud.build()
+	hud.action_pressed.connect(_on_action)
 	hud.end_turn_pressed.connect(_on_end_turn)
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	hud.resume_pressed.connect(_toggle_pause)
 	hud.menu_pressed.connect(_to_menu)
-	hud.log_line("Round 1 — zones steer, lava scars, Surges burn and repaint.")
+	hud.log_line("%s on %d×%d — zones steer, ground scars, Surges burn and repaint." % [
+		BattleSetup.mode, battle.board.size, battle.board.size])
 	battle.begin()
 	_refresh()
 	_check_ai()
+
+
+func _active() -> Monster:
+	return battle.active()
+
+
+func _is_player_turn() -> bool:
+	var m := _active()
+	return m != null and m.side == PLAYER_SIDE and not BattleSetup.autoplay
+
+
+func _my_turn() -> bool:
+	return not battle.over and not _ai_running and not get_tree().paused and _is_player_turn()
+
+
+func _toggle_pause() -> void:
+	if battle.over:
+		return
+	get_tree().paused = not get_tree().paused
+	hud.show_pause(get_tree().paused)
+
+
+func _to_menu() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://menu.tscn")
 
 
 # ---------- input ----------
@@ -57,46 +89,64 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			_rotate()
 	elif event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_R:
-			_rotate()
-		elif event.keycode == KEY_ESCAPE:
-			if mode != &"" and not get_tree().paused:
-				mode = &""
-				skill = null
-				_refresh()
-			else:
-				_toggle_pause()
+		match event.keycode:
+			KEY_R:
+				_rotate()
+			KEY_W, KEY_UP:
+				_set_dir(Vector2i(0, -1))
+			KEY_S, KEY_DOWN:
+				_set_dir(Vector2i(0, 1))
+			KEY_A, KEY_LEFT:
+				_set_dir(Vector2i(-1, 0))
+			KEY_D, KEY_RIGHT:
+				_set_dir(Vector2i(1, 0))
+			KEY_1:
+				_on_action(ACT_MOVE)
+			KEY_2:
+				_on_action(ACT_STRIKE)
+			KEY_3, KEY_4:
+				var m := _active()
+				if m != null:
+					var list := m.skills()
+					var i: int = event.keycode - KEY_3
+					if i < list.size():
+						_on_action(list[i].id)
+			KEY_SPACE:
+				_on_end_turn()
+			KEY_ESCAPE:
+				if mode != &"":
+					_clear_mode()
+					_refresh()
+				else:
+					_toggle_pause()
 
 
-func _my_turn() -> bool:
-	return not battle.over and not _ai_running and not get_tree().paused and battle.turn_owner == PLAYER
+func _set_dir(screen: Vector2i) -> void:
+	aim_dir = view.board_dir_from_screen(screen)
+	_refresh()
 
 
-func _toggle_pause() -> void:
-	if battle.over:
-		return
-	get_tree().paused = not get_tree().paused
-	hud.show_pause(get_tree().paused)
+func _clear_mode() -> void:
+	mode = &""
+	skill = null
 
 
-func _to_menu() -> void:
-	get_tree().paused = false
-	get_tree().change_scene_to_file("res://menu.tscn")
-
-
-func _on_skill_pressed(id: StringName) -> void:
+func _on_action(id: StringName) -> void:
 	if not _my_turn():
 		return
-	if id == BattleHud.MOVE_ID:
+	var m := _active()
+	if id == ACT_MOVE:
 		mode = &"" if mode == &"move" else &"move"
 		skill = null
+	elif id == ACT_STRIKE:
+		mode = &"" if mode == &"strike" else &"strike"
+		skill = null
 	else:
-		var s: SkillDef = battle.monsters[PLAYER].skill_by_id(id)
-		if s == null or not battle.can_cast(PLAYER, s):
+		var s := m.skill_by_id(id)
+		if s == null or not battle.can_cast(m.id, s):
 			return
 		if mode == &"place" and skill == s:
-			mode = &""
-			skill = null
+			_clear_mode()
 		else:
 			mode = &"place"
 			skill = s
@@ -105,7 +155,7 @@ func _on_skill_pressed(id: StringName) -> void:
 
 
 func _rotate() -> void:
-	if mode != &"place" or skill == null:
+	if mode != &"place" or skill == null or skill.orientations().is_empty():
 		return
 	orient = (orient + 1) % skill.orientations().size()
 	_refresh()
@@ -114,32 +164,42 @@ func _rotate() -> void:
 func _click() -> void:
 	if not _my_turn() or hover == NOWHERE:
 		return
+	var m := _active()
 	var done := false
-	if mode == &"move":
-		done = battle.move(PLAYER, hover)
-	elif mode == &"place" and skill != null:
-		done = battle.cast(PLAYER, skill, orient, hover)
+	match mode:
+		&"move":
+			done = battle.move(m.id, hover)
+		&"strike":
+			done = battle.strike(m.id, hover, aim_dir)
+		&"place":
+			if skill != null:
+				done = battle.cast(m.id, skill, orient, _anchor_for(skill), aim_dir)
 	if done:
 		_after_action()
+
+
+## Ring Surges have no aim: they always centre on the caster.
+func _anchor_for(s: SkillDef) -> Vector2i:
+	if s.twist == SkillDef.Twist.RING:
+		return _active().pos
+	return hover
 
 
 func _on_end_turn() -> void:
 	if not _my_turn():
 		return
-	mode = &""
-	skill = null
+	_clear_mode()
 	battle.end_turn()
 	_refresh()
 	_check_ai()
 
 
 func _after_action() -> void:
-	mode = &""
-	skill = null
+	_clear_mode()
 	_refresh()
 	if battle.over or battle.ap > 0:
 		return
-	await get_tree().create_timer(0.55, false).timeout
+	await get_tree().create_timer(0.5, false).timeout
 	if _my_turn() and battle.ap <= 0:
 		battle.end_turn()
 		_refresh()
@@ -149,25 +209,21 @@ func _after_action() -> void:
 # ---------- AI turns ----------
 
 func _check_ai() -> void:
-	if battle.over or _ai_running or battle.turn_owner == PLAYER:
+	if battle.over or _ai_running or _is_player_turn():
 		return
 	_ai_running = true
-	while not battle.over and battle.turn_owner != PLAYER:
+	while not battle.over and not _is_player_turn():
 		var who := battle.turn_owner
-		await get_tree().create_timer(0.8, false).timeout
-		while battle.can_act(who):
-			var a := AiBrain.decide(battle, who, rng)
-			var ok := false
-			match a["type"]:
-				&"move":
-					ok = battle.move(who, a["to"])
-				&"cast":
-					ok = battle.cast(who, a["skill"], a["oi"], a["anchor"])
-			if not ok:
+		_refresh()
+		await get_tree().create_timer(0.6, false).timeout
+		var guard := 0
+		while battle.can_act(who) and guard < 6:
+			guard += 1
+			if not AiBrain.execute(battle, who, AiBrain.decide(battle, who, rng)):
 				break
 			_refresh()
-			await get_tree().create_timer(0.7, false).timeout
-		if not battle.over:
+			await get_tree().create_timer(0.55, false).timeout
+		if not battle.over and battle.turn_owner == who:
 			battle.end_turn()
 		_refresh()
 	_ai_running = false
@@ -177,40 +233,56 @@ func _check_ai() -> void:
 # ---------- refresh ----------
 
 func _refresh() -> void:
-	view.set_highlights(_highlights())
+	var arrows := {}
+	view.set_highlights(_highlights(arrows), arrows)
 	view.refresh()
-	hud.update(_order_text(), _ap_text(),
-			_hint_text(), _preview_text(), _inspector_text(), _skill_states(),
-			_my_turn(), _banner_text())
+	hud.update(_order_text(), _portrait_text(), _ap_text(), _hint_text(), _preview_text(),
+			_inspector_text(), _actions(), _my_turn(), _banner_text())
 
 
 func _ap_text() -> String:
-	var left := battle.ap if battle.turn_owner == PLAYER else 0
-	return "AP  " + "●".repeat(left) + "○".repeat(Battle.AP_PER_TURN - left)
+	var left := battle.ap if _is_player_turn() else 0
+	return "AP  " + "●".repeat(left) + "○".repeat(maxi(0, Battle.AP_PER_TURN - left))
 
 
-func _highlights() -> Dictionary:
+func _highlights(arrows: Dictionary) -> Dictionary:
 	var out := {}
 	if not _my_turn():
 		return out
-	var me: Monster = battle.monsters[PLAYER]
-	if mode == &"move":
-		for c in battle.reachable(me, int(battle.effective_stat(me, Battle.Stat.MOVE))):
-			out[c] = Color(0.36, 0.56, 0.85, 0.5)
-	elif mode == &"place" and skill != null:
-		var rng_cells := battle.skill_range(me, skill)
-		for sq: Square in battle.board.all_squares():
-			if Board.manhattan(me.pos, sq.pos) <= rng_cells:
-				out[sq.pos] = Color(0.79, 0.64, 0.36, 0.18)
-		if hover != NOWHERE:
-			var cells := battle.placement_cells(PLAYER, skill, orient, hover)
+	var m := _active()
+	match mode:
+		&"move":
+			var opts := battle.move_options(m)
+			for c in opts:
+				out[c] = Color(0.85, 0.45, 0.3, 0.55) if opts[c]["thorn"] > 0 else Color(0.36, 0.56, 0.85, 0.5)
+		&"strike":
+			for c in battle.strike_targets(m.id):
+				out[c] = Color(0.95, 0.35, 0.3, 0.55)
+			if m.kin() == MonsterDef.Kin.SCALED and hover != NOWHERE and battle.can_strike(m.id, hover):
+				arrows[hover] = aim_dir
+		&"place":
+			if skill == null:
+				return out
+			if skill.twist != SkillDef.Twist.RING and skill.twist != SkillDef.Twist.POUNCE:
+				var r := battle.skill_range(m, skill)
+				for sq: Square in battle.board.all_squares():
+					if Board.manhattan(m.pos, sq.pos) <= r:
+						out[sq.pos] = Color(0.79, 0.64, 0.36, 0.16)
+			if hover == NOWHERE and skill.twist != SkillDef.Twist.RING:
+				return out
+			var cells := battle.placement_cells(m.id, skill, orient, _anchor_for(skill))
 			if cells.is_empty():
-				for c in Shapes.footprint(skill.orientations()[orient], hover):
-					if battle.board.in_bounds(c):
-						out[c] = Color(0.85, 0.33, 0.33, 0.6)
-			else:
-				for c in cells:
-					out[c] = _cast_color(Rules.preview_cell(skill, battle.board.at(c))["kind"])
+				if not skill.orientations().is_empty():
+					for c in Shapes.footprint(skill.orientations()[orient % skill.orientations().size()], hover):
+						if battle.board.in_bounds(c):
+							out[c] = Color(0.85, 0.33, 0.33, 0.6)
+				return out
+			for c in cells:
+				out[c] = _cast_color(Rules.preview_cell(skill, battle.board.at(c))["kind"])
+				if skill.needs_direction():
+					arrows[c] = aim_dir
+				elif skill.is_pull() or skill.twist == SkillDef.Twist.CONSTRICT:
+					arrows[c] = Battle._step_toward(c, _anchor_for(skill))
 	return out
 
 
@@ -224,101 +296,158 @@ func _cast_color(kind: StringName) -> Color:
 			return Color(0.35, 0.82, 0.77, 0.65)
 		&"lost":
 			return Color(0.85, 0.33, 0.33, 0.65)
+		&"ignite":
+			return Color(1.0, 0.5, 0.15, 0.7)
 	return Color(0.79, 0.64, 0.36, 0.65)
 
 
+func _side_tag(m: Monster) -> String:
+	return "◆" if m.side == PLAYER_SIDE else "◇"
+
+
 func _order_text() -> String:
-	var s := "ROUND %d\n" % battle.round_number
-	for id in battle.order:
-		var m: Monster = battle.monsters[id]
-		var mark := "▶ " if id == battle.turn_owner and not battle.over else ""
-		s += "%s%s  INIT %d  HP %d/%d%s\n" % [mark, m.display_name,
-				int(battle.effective_stat(m, Battle.Stat.INIT)), m.hp, m.max_hp,
-				"  ⚠ charging" if battle.has_charging(id) else ""]
+	var s := "ROUND %d   ·   %s\n" % [battle.round_number, "your side ◆ / enemy ◇"]
+	for i in battle.queue.size():
+		var e: Dictionary = battle.queue[i]
+		var m: Monster = battle.monsters[e["id"]]
+		if not m.is_alive() and not e["ghost"]:
+			continue
+		var mark := "▶ " if i == battle.queue_idx and not battle.over else ("   " if i > battle.queue_idx else " ✓ ")
+		var extra := " (Surge only)" if e["ghost"] else ""
+		s += "%s%s %s  %.1f  HP %d/%d%s\n" % [mark, _side_tag(m), m.display_name(), e["init"], m.hp, m.max_hp, extra]
+	return s.strip_edges()
+
+
+func _portrait_text() -> String:
+	var m := _active()
+	if m == null:
+		return ""
+	var d := m.def
+	var s := "%s %s — %s %s\n" % [_side_tag(m), d.display_name, Aspect.NAMES[d.aspect], MonsterDef.kin_name(d.kin)]
+	s += "HP %d/%d · Init %.1f · Move %d · Reach %d · TPR %d\n" % [m.hp, m.max_hp,
+			battle.effective_stat(m, Battle.Stat.INIT), int(battle.effective_stat(m, Battle.Stat.MOVE)),
+			battle.reach(m), d.tpr]
+	s += "Surge: %s (%s%s) — %s\n" % [d.surge.display_name, SkillDef.surge_type_name(d.surge.surge_type),
+			", " + SkillDef.twist_name(d.surge.twist) if d.surge.twist != SkillDef.Twist.NONE else "", d.surge.description]
+	s += "Utility: %s — %s\n" % [d.utility.display_name, d.utility.description]
+	s += "Strike: %s — %s\n" % [d.strike_name(), MonsterDef.STRIKE_TEXT[d.kin]]
+	s += "Passive: %s — %s" % [d.passive_name(), d.passive_text()]
 	return s
 
 
 func _hint_text() -> String:
-	if mode == &"move":
-		return "Blue squares — click to move."
-	if mode == &"place" and skill != null:
-		return "Aim %s (%d orientations). R / right-click rotates · click casts · Esc cancels" % [
-				skill.display_name, skill.orientations().size()]
-	if _my_turn():
-		return "Q / E rotate the camera · wheel zooms · middle-drag orbits · Esc pauses"
-	return "%s is acting…" % battle.monsters[battle.turn_owner].display_name
+	if battle.over:
+		return ""
+	if not _is_player_turn():
+		return "%s is acting…" % _active().display_name() if _active() != null else ""
+	match mode:
+		&"move":
+			return "Blue squares — click to move (orange = Thornbed on the way). Esc cancels."
+		&"strike":
+			var t := "Red squares — click to Strike."
+			if _active().kin() == MonsterDef.Kin.SCALED:
+				t += " WASD sets the Tail Sweep push direction."
+			return t
+		&"place":
+			if skill == null:
+				return ""
+			var t2 := "Aim %s." % skill.display_name
+			if skill.orientations().size() > 1:
+				t2 += " R / right-click rotates."
+			if skill.needs_direction():
+				t2 += " WASD sets the push direction (%s)." % _dir_name(aim_dir)
+			if skill.is_pull():
+				t2 += " Pulls toward the anchor (centre cell)."
+			return t2 + " Click casts · Esc cancels."
+	return "1 Move · 2 Strike · 3 Surge · 4 Utility · Space ends turn · Q/E camera · Esc pause"
 
 
-func _skill_states() -> Dictionary:
-	var out := {}
+func _dir_name(d: Vector2i) -> String:
+	match d:
+		Vector2i(0, -1):
+			return "north"
+		Vector2i(0, 1):
+			return "south"
+		Vector2i(-1, 0):
+			return "west"
+	return "east"
+
+
+func _actions() -> Array:
+	var out: Array = []
+	var m := _active()
+	if m == null or m.side != PLAYER_SIDE:
+		return out
 	var mine := _my_turn()
-	out[BattleHud.MOVE_ID] = {"enabled": mine and battle.ap >= 1, "selected": mode == &"move",
-			"text": "Move\n1 AP"}
-	var me: Monster = battle.monsters[PLAYER]
-	for s in me.skills:
-		var cd: int = me.cooldowns.get(s.id, 0)
-		out[s.id] = {"enabled": mine and battle.can_cast(PLAYER, s),
-				"selected": mode == &"place" and skill == s,
-				"text": s.display_name + ("\nCD %d" % cd if cd > 0 else "")}
+	out.append({"id": ACT_MOVE, "text": "Move\n1 AP", "enabled": mine and battle.ap >= 1,
+		"selected": mode == &"move", "tooltip": "Move up to %d squares" % int(battle.effective_stat(m, Battle.Stat.MOVE))})
+	var can_strike := mine and not battle.strike_targets(m.id).is_empty()
+	out.append({"id": ACT_STRIKE, "text": "%s\n%s" % [m.def.strike_name(), "2 AP"], "enabled": can_strike,
+		"selected": mode == &"strike", "tooltip": MonsterDef.STRIKE_TEXT[m.kin()]})
+	for s in m.skills():
+		var charging := s.kind == SkillDef.Kind.SURGE and battle.has_charging(m.id)
+		out.append({"id": s.id, "text": s.display_name + ("\ncharging" if charging else "\n1 AP"),
+			"enabled": mine and battle.can_cast(m.id, s), "selected": mode == &"place" and skill == s,
+			"tooltip": s.description})
 	return out
 
 
 func _banner_text() -> String:
 	if not battle.over:
 		return ""
-	return "Victory" if battle.winner == PLAYER else "Defeat"
+	if battle.winner_side == PLAYER_SIDE:
+		return "Victory"
+	return "Draw" if battle.winner_side < 0 else "Defeat"
 
 
 func _preview_text() -> String:
-	if mode != &"place" or skill == null or hover == NOWHERE or not _my_turn():
+	if not _my_turn() or hover == NOWHERE:
 		return ""
-	var me: Monster = battle.monsters[PLAYER]
-	var cells := battle.placement_cells(PLAYER, skill, orient, hover)
+	var m := _active()
+	if mode == &"strike":
+		if not battle.can_strike(m.id, hover):
+			return ""
+		var t := battle.monster_at(hover)
+		var dmg := battle.strike_damage(m.id, hover)
+		var who: String = t.display_name() if t != null else battle.board.at(hover).object["name"]
+		return "%s on %s — %d damage%s · %d AP" % [m.def.strike_name(), who, dmg,
+				" (kills)" if t != null and dmg >= t.hp else "", battle.strike_cost(m.id, hover)]
+	if mode == &"move":
+		var opts := battle.move_options(m)
+		if opts.has(hover) and opts[hover]["thorn"] > 0:
+			return "Move — %d Thornbed damage on the way" % opts[hover]["thorn"]
+		return ""
+	if mode != &"place" or skill == null:
+		return ""
+	var cells := battle.placement_cells(m.id, skill, orient, _anchor_for(skill))
 	if cells.is_empty():
-		var why := "can't go here"
-		var fp := Shapes.footprint(skill.orientations()[orient], hover)
-		if Board.manhattan(me.pos, hover) > battle.skill_range(me, skill):
-			why = "out of range (%d)" % battle.skill_range(me, skill)
-		elif fp.any(func(c: Vector2i): return not battle.board.in_bounds(c)):
-			why = "doesn't fit on the board"
-		elif fp.any(func(c: Vector2i): return battle.board.in_bounds(c) and battle.board.at(c).object != null):
-			why = "blocked by a prop"
-		else:
-			why = "square is occupied"
-		return "%s: invalid — %s" % [skill.display_name, why]
+		return "%s: can't go here" % skill.display_name
 	var counts := {}
-	var plus := 0
-	var minus := 0
-	var cool := 0
-	var fan := 0
-	var dmg_min := 99
-	var dmg_max := 0
+	var dmgs: Array[String] = []
 	for c in cells:
 		var sq := battle.board.at(c)
-		var kind: StringName = Rules.preview_cell(skill, sq)["kind"]
-		counts[kind] = counts.get(kind, 0) + 1
+		var pg := Rules.preview_cell(skill, sq)
+		counts[pg["kind"]] = counts.get(pg["kind"], 0) + 1
 		if skill.kind == SkillDef.Kind.ZONE:
-			var mod := Aspect.attunement_mod(skill.aspect, sq.attunement)
-			if mod > 0: plus += 1
-			if mod < 0: minus += 1
-			var r := Rules.zone_on_ground(skill, sq)
-			if r == &"cool": cool += 1
-			if r == &"fan": fan += 1
-		if skill.kind == SkillDef.Kind.SURGE and kind != &"lost":
-			var d := 0 if sq.object != null else sq.surge_damage(skill.aspect, skill.value)
-			dmg_min = mini(dmg_min, d)
-			dmg_max = maxi(dmg_max, d)
+			if pg["ground"] != &"":
+				counts["ground " + String(pg["ground"])] = counts.get("ground " + String(pg["ground"]), 0) + 1
+			if pg["prop"] != &"":
+				counts["prop " + String(pg["prop"])] = counts.get("prop " + String(pg["prop"]), 0) + 1
+		if skill.kind == SkillDef.Kind.SURGE:
+			var t2 := battle.monster_at(c)
+			if t2 != null:
+				var sg := {"type": skill.surge_type, "aspect": skill.aspect,
+					"value": skill.surge_value() + m.momentum_bonus, "native": m.has_passive(&"native_ground")}
+				dmgs.append("%s %s %d" % [_side_tag(t2), t2.display_name(), battle.surge_damage_at(sq, sg, t2)])
 	var s := "%s — %d squares" % [skill.display_name, cells.size()]
 	if skill.kind == SkillDef.Kind.SURGE:
-		s += " · damage %s per square (after ground + Veil), then repaints" % (
-				str(dmg_max) if dmg_min == dmg_max else "%d–%d" % [dmg_min, dmg_max])
+		s += "\n%s %d dmg, fires at the start of your next %s" % [SkillDef.surge_type_name(skill.surge_type),
+				skill.surge_value() + m.momentum_bonus, "turn" if skill.fire_delay() == 1 else "turn but one"]
+		if not dmgs.is_empty():
+			s += "\nwould hit now: " + ", ".join(PackedStringArray(dmgs))
 	for k in counts:
 		if k != &"new":
-			s += " · %s ×%d" % [k, counts[k]]
-	if plus > 0: s += " · stronger (own attunement) ×%d" % plus
-	if minus > 0: s += " · weaker (hostile attunement) ×%d" % minus
-	if cool > 0: s += " · cools Lava ×%d" % cool
-	if fan > 0: s += " · fans Lava ×%d" % fan
+			s += "\n%s ×%d" % [k, counts[k]]
 	return s
 
 
@@ -326,31 +455,29 @@ func _inspector_text() -> String:
 	if hover == NOWHERE:
 		return ""
 	var sq := battle.board.at(hover)
-	var s := "Square [%d, %d]\n\n" % [hover.x, hover.y]
-	var occ = battle.board.occupants.get(hover)
-	s += "Air: —\n"
-	s += "Object: %s\n" % (("%s %d/%d HP" % [sq.object["name"], sq.object["hp"], sq.object["max_hp"]]) if sq.object != null else "—")
+	var s := "Square [%d, %d]\n" % [hover.x, hover.y]
+	var occ := battle.monster_at(hover)
 	if occ != null:
-		s += "Monster: %s\n" % battle.monsters[occ].display_name
+		s += "%s %s · HP %d/%d\n" % [_side_tag(occ), occ.display_name(), occ.hp, occ.max_hp]
+	if sq.object != null:
+		s += "Prop: %s %d/%d %s%s\n" % [sq.object["name"], sq.object["hp"], sq.object["max_hp"],
+				", ".join(PackedStringArray(sq.object["tags"])), " (burning)" if sq.object["burning"] else ""]
 	if sq.surge != null:
 		var sg: Dictionary = sq.surge
-		s += "Surge: %s (%s) fires after %s's next turn; %d dmg here, then repaints\n" % [
-				sg["name"], battle.monsters[sg["owner"]].display_name,
-				"the opponent", sq.surge_damage(sg["aspect"], sg["value"])]
-	else:
-		s += "Surge: —\n"
+		var owner: Monster = battle.monsters[sg["owner"]]
+		s += "Surge: %s (%s) by %s — fires in %d of its turns, %d dmg here\n" % [sg["name"],
+				SkillDef.surge_type_name(sg["type"]), owner.display_name(), sg["turns_left"],
+				battle.surge_damage_at(sq, sg, occ)]
 	if sq.zone != null:
 		var z: Dictionary = sq.zone
-		s += "Zone: %s %s · %d round(s) left\n" % [z["def"].display_name, BattleView.ROMAN[z["level"] - 1], z["duration"]]
-		for e in z["def"].effective(z["level"], sq.attunement):
-			s += "  • %s %d\n" % [ZoneEffect.Tag.keys()[e["tag"]].to_lower(), e["value"]]
-	else:
-		s += "Zone: —\n"
-	s += "Ground: %s" % Square.GroundType.keys()[sq.ground].capitalize()
-	if sq.ground == Square.GroundType.LAVA:
-		s += " %s (burns %d)" % [BattleView.ROMAN[sq.lava_level - 1], sq.lava_level]
+		s += "Zone: %s %s · %d round(s)\n" % [z["def"].display_name, BattleView.ROMAN[z["level"] - 1], z["duration"]]
+		for e in z["def"].effective(z["level"], sq.attunement, z["native"]):
+			s += "  • %s %d\n" % [ZoneEffect.label(e["tag"]), e["value"]]
+	s += "Ground: %s" % Square.ground_name(sq.ground)
+	if sq.is_aspect_ground():
+		s += " %s%s" % [BattleView.ROMAN[sq.level - 1], " (%d rounds)" % sq.timer if sq.timer != Square.PERMANENT else ""]
 	if sq.elevated:
-		s += " · Elevated (halts Surges, +1 range)"
+		s += " · Elevated"
 	if sq.attunement != Aspect.Type.NONE:
 		s += "\nAttuned: %s" % Aspect.ATTUNEMENT_NAMES[sq.attunement]
 	return s
@@ -359,40 +486,55 @@ func _inspector_text() -> String:
 # ---------- log ----------
 
 func _name(id: StringName) -> String:
-	return battle.monsters[id].display_name
+	var m: Monster = battle.monsters.get(id)
+	return m.display_name() if m != null else String(id)
 
 
 func _on_event(e: Dictionary) -> void:
+	if BattleSetup.autoplay and e["type"] in [&"round_started", &"battle_over", &"slain"]:
+		print("[autoplay] ", e)
 	match e["type"]:
 		&"moved":
 			hud.log_line("%s moves to [%d,%d]" % [_name(e["who"]), e["to"].x, e["to"].y])
 		&"cast":
 			var sk: SkillDef = battle.monsters[e["who"]].skill_by_id(e["skill"])
-			hud.log_line("%s %s %s (%d squares)" % [_name(e["who"]),
-					"declares" if sk.kind == SkillDef.Kind.SURGE else "casts", sk.display_name, e["cells"].size()])
+			var verb := "declares" if sk.kind == SkillDef.Kind.SURGE else "casts"
+			hud.log_line("%s %s %s (%d squares)" % [_name(e["who"]), verb, sk.display_name, e["cells"].size()])
+		&"surge_fired":
+			hud.log_line("%s's %s fires!" % [_name(e["who"]), e["name"]])
+		&"strike":
+			hud.log_line("%s strikes [%d,%d]" % [_name(e["who"]), e["target"].x, e["target"].y])
 		&"damage":
 			view.floating_text(battle.monsters[e["target"]].pos, "-%d" % e["amount"], Color(1.0, 0.45, 0.4))
-			hud.log_line("%s takes %d damage (%s)" % [_name(e["target"]), e["amount"], e["source"]])
+			hud.log_line("%s takes %d (%s)" % [_name(e["target"]), e["amount"], e["source"]])
 		&"absorbed":
 			view.floating_text(battle.monsters[e["target"]].pos, "blocked", Color(0.6, 0.85, 1.0))
-			hud.log_line("%s is unharmed — the Veil absorbs the Surge." % _name(e["target"]))
-		&"prop_hit":
-			hud.log_line("A Surge slams a prop (%d HP left)." % e["hp"])
+			hud.log_line("%s is unharmed." % _name(e["target"]))
+		&"blanked":
+			hud.log_line("The Flood can't reach the high ground at [%d,%d]." % [e["pos"].x, e["pos"].y])
+		&"ignite":
+			hud.log_line("A Tree catches fire at [%d,%d]." % [e["pos"].x, e["pos"].y])
+		&"extinguish":
+			hud.log_line("A burning Tree is put out.")
+		&"burned_down":
+			hud.log_line("A Tree burns down → Lava at [%d,%d]." % [e["pos"].x, e["pos"].y])
 		&"shatter":
 			hud.log_line("A prop shatters → Rubble, debris flies!")
 		&"collapse":
-			hud.log_line("Debris collapses the high ground at [%d,%d]." % [e["pos"].x, e["pos"].y])
+			hud.log_line("The high ground at [%d,%d] collapses." % [e["pos"].x, e["pos"].y])
 		&"slain":
 			hud.log_line("%s is slain!" % _name(e["who"]))
 		&"displaced":
-			hud.log_line("%s is %s to [%d,%d]" % [_name(e["who"]), "pushed" if e["push"] else "pulled", e["to"].x, e["to"].y])
+			hud.log_line("%s is moved to [%d,%d]" % [_name(e["who"]), e["to"].x, e["to"].y])
 		&"collision":
-			hud.log_line("%s is slammed into the %s!" % [_name(e["who"]), e["prop"]])
+			hud.log_line("%s slams into the %s!" % [_name(e["who"]), e["prop"]])
 		&"pinned":
 			hud.log_line("%s is pinned against the edge." % _name(e["who"]))
 		&"zones_faded":
 			hud.log_line("%d zone squares fade and repaint the ground." % e["count"])
 		&"voidscar":
-			hud.log_line("Voidscar spreads to [%d,%d] — the arena is shrinking" % [e["pos"].x, e["pos"].y])
+			hud.log_line("Voidscar spreads to [%d,%d]." % [e["pos"].x, e["pos"].y])
 		&"round_started":
 			hud.log_line("Round %d — %s acts first." % [e["round"], _name(e["first"])])
+		&"battle_over":
+			hud.log_line("The battle is over.")

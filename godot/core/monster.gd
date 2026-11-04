@@ -1,38 +1,63 @@
 class_name Monster
 extends RefCounted
-## Runtime state of one monster in a battle (GDD §4.1-4.2).
+## Runtime state of one monster in a battle.
 
-var id: StringName
-var display_name: String
-var aspect: Aspect.Type
+var id: StringName              # unique in this battle, e.g. &"p0_blaze_tiger"
+var def: MonsterDef
+var side: int                   # 0 = player, 1 = enemy
 var pos := Vector2i.ZERO
 var hp: int
 var max_hp: int
-var initiative: float
-var base_move: int = 2
-var skills: Array[SkillDef] = []
-var cooldowns := {}                 # skill id -> turns left
+
+var init_penalty_next := 0      # Spirit Siphon
+var momentum_bonus := 0         # passive Momentum
 
 
-func _init(p_id: StringName, p_name: String, p_aspect: Aspect.Type, p_pos: Vector2i,
-		p_hp: int, p_init: float, p_move: int, p_skills: Array[SkillDef]) -> void:
+func _init(p_id: StringName, p_def: MonsterDef, p_side: int, p_pos: Vector2i) -> void:
 	id = p_id
-	display_name = p_name
-	aspect = p_aspect
+	def = p_def
+	side = p_side
 	pos = p_pos
-	hp = p_hp
-	max_hp = p_hp
-	initiative = p_init
-	base_move = p_move
-	skills = p_skills
+	hp = p_def.hp
+	max_hp = p_def.hp
 
 
 func is_alive() -> bool:
 	return hp > 0
 
 
+func display_name() -> String:
+	return def.display_name
+
+
+func aspect() -> Aspect.Type:
+	return def.aspect
+
+
+func kin() -> MonsterDef.Kin:
+	return def.kin
+
+
+func has_passive(p: StringName) -> bool:
+	return def.passive == p
+
+
+func skills() -> Array[SkillDef]:
+	var out: Array[SkillDef] = []
+	if def.surge != null:
+		out.append(def.surge)
+	if def.utility != null:
+		out.append(def.utility)
+	return out
+
+
 func skill_by_id(skill_id: StringName) -> SkillDef:
-	for s in skills:
+	for s in skills():
 		if s.id == skill_id:
 			return s
 	return null
+
+
+## Spirit Kin and the Phasing passive move through props.
+func phases() -> bool:
+	return def.kin == MonsterDef.Kin.SPIRIT or def.passive == &"phasing"

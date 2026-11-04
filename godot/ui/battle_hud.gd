@@ -5,16 +5,18 @@ extends CanvasLayer
 ## cast preview that follows the cursor, end banner and pause menu.
 ## Emits signals only; it knows no rules.
 
-signal skill_pressed(id: StringName)
+signal action_pressed(id: StringName)
 signal end_turn_pressed
 signal restart_pressed
 signal resume_pressed
 signal menu_pressed
 
-const MOVE_ID := &"__move"
 const LOG_LINES := 6
 
 var _buttons := {}                 # id -> Button
+var _button_row: HBoxContainer
+var _action_ids: Array = []
+var _portrait: Label
 var _order: Label
 var _hint: Label
 var _ap: Label
@@ -29,7 +31,7 @@ var _banner_text: Label
 var _pause: Control
 
 
-func build(skills: Array[SkillDef]) -> void:
+func build() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS     # pause menu must work while the tree is paused
 	var root := Control.new()
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -51,8 +53,18 @@ func build(skills: Array[SkillDef]) -> void:
 	_hint.add_theme_font_size_override("font_size", 15)
 	root.add_child(_hint)
 
+	_portrait = Label.new()
+	_portrait.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_portrait.offset_left = -360
+	_portrait.offset_right = -24
+	_portrait.offset_top = 16
+	_portrait.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_portrait.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_portrait.add_theme_font_size_override("font_size", 15)
+	root.add_child(_portrait)
+
 	_build_log(root)
-	_build_bar(root, skills)
+	_build_bar(root)
 	_build_inspector(root)
 	_build_preview(root)
 	_build_banner(root)
@@ -76,7 +88,7 @@ func _build_log(root: Control) -> void:
 	root.add_child(_log_box)
 
 
-func _build_bar(root: Control, skills: Array[SkillDef]) -> void:
+func _build_bar(root: Control) -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	center.offset_top = -104
@@ -93,9 +105,9 @@ func _build_bar(root: Control, skills: Array[SkillDef]) -> void:
 	_ap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_ap.add_theme_color_override("font_color", UiTheme.ACCENT)
 	row.add_child(_ap)
-	_add_button(row, MOVE_ID, "Move\n1 AP")
-	for s in skills:
-		_add_button(row, s.id, s.display_name)
+	_button_row = HBoxContainer.new()
+	_button_row.add_theme_constant_override("separation", 8)
+	row.add_child(_button_row)
 	_end_button = Button.new()
 	_end_button.text = "End Turn"
 	_end_button.custom_minimum_size = Vector2(110, 56)
@@ -103,13 +115,22 @@ func _build_bar(root: Control, skills: Array[SkillDef]) -> void:
 	row.add_child(_end_button)
 
 
-func _add_button(parent: Control, id: StringName, text: String) -> void:
-	var b := Button.new()
-	b.text = text
-	b.custom_minimum_size = Vector2(104, 56)
-	b.pressed.connect(func(): skill_pressed.emit(id))
-	parent.add_child(b)
-	_buttons[id] = b
+## Rebuilds the action buttons when the set of actions changes (a new monster's turn).
+func _sync_buttons(actions: Array) -> void:
+	var ids: Array = actions.map(func(a): return a["id"])
+	if ids == _action_ids:
+		return
+	_action_ids = ids
+	for c in _button_row.get_children():
+		c.queue_free()
+	_buttons.clear()
+	for a in actions:
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(118, 56)
+		var id: StringName = a["id"]
+		b.pressed.connect(func(): action_pressed.emit(id))
+		_button_row.add_child(b)
+		_buttons[id] = b
 
 
 func _build_inspector(root: Control) -> void:
@@ -204,20 +225,24 @@ func show_pause(on: bool) -> void:
 	_pause.visible = on
 
 
-## One call per refresh. `skill_states`: id -> {enabled, selected, text}.
+## One call per refresh. `actions`: [{id, text, enabled, selected, tooltip}].
 ## An empty `inspector` or `preview` hides that panel.
-func update(order_text: String, ap_text: String, hint: String, preview: String,
-		inspector: String, skill_states: Dictionary, can_end: bool, banner: String) -> void:
+func update(order_text: String, portrait: String, ap_text: String, hint: String, preview: String,
+		inspector: String, actions: Array, can_end: bool, banner: String) -> void:
 	_order.text = order_text
+	_portrait.text = portrait
 	_ap.text = ap_text
 	_hint.text = hint
 	_end_button.disabled = not can_end
-	for id in _buttons:
-		var st: Dictionary = skill_states.get(id, {})
-		var b: Button = _buttons[id]
-		b.disabled = not st.get("enabled", false)
-		b.text = st.get("text", b.text)
-		b.modulate = UiTheme.ACCENT if st.get("selected", false) else Color.WHITE
+	_sync_buttons(actions)
+	for a in actions:
+		var b: Button = _buttons.get(a["id"])
+		if b == null:
+			continue
+		b.disabled = not a.get("enabled", false)
+		b.text = a.get("text", "")
+		b.tooltip_text = a.get("tooltip", "")
+		b.modulate = UiTheme.ACCENT if a.get("selected", false) else Color.WHITE
 	_banner.visible = banner != ""
 	_banner_text.text = banner
 

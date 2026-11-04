@@ -15,3 +15,4 @@ id = &"veil_n"
 display_name = "Bark Veil"
 aspect = 2
 effects = Array[ExtResource("2")]([SubResource("eff_0")])
+heals_props = true

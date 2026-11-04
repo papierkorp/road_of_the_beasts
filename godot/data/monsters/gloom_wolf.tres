@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/monster_def.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/gloom_rift.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/mire.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = &"gloom_wolf"
+display_name = "Gloom Wolf"
+kin = 0
+aspect = 3
+hp = 5
+initiative = 6.0
+move = 2
+tpr = 1
+reach = 1
+surge = ExtResource("2")
+utility = ExtResource("3")
+passive = &"pack_hunter"
+blurb = "The baseline: Mire flips the turn order, its Rift does the rest; stronger with an ally next to the target."

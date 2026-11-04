@@ -1,20 +1,44 @@
 class_name ZoneDef
 extends Resource
-## Zone definition as data (GDD §7.1). Lives in res://data/zones/*.tres.
+## Zone definition as data (GDD §7.1, §7.3, §9.5). Lives in res://data/zones/*.tres.
 
 @export var id: StringName
 @export var display_name: String
 @export var aspect: Aspect.Type = Aspect.Type.NATURE
 @export var effects: Array[ZoneEffect] = []
 
+@export_group("Aspect side effects (§9.5)")
+## Shockwave: +x collision damage when this zone pushes someone into a prop.
+@export var collision_bonus: int = 0
+## Kiln Shell: occupants ignore Lava.
+@export var ignores_lava: bool = false
+## Bark Veil: a prop on the square gets +1 HP once.
+@export var heals_props: bool = false
+## Shade Veil: Strike damage on this square -x.
+@export var strike_shield: int = 0
 
-## Live effective values for a zone of `level` on a square attuned to `att`.
-## Returns Array of {tag: ZoneEffect.Tag, value: int}.
-## value = min(cap, base + level - 1) + attunement, min 1; slow capped at 2;
-## push/pull are always 1 (GDD §7.1).
-func effective(level: int, att: Aspect.Type) -> Array[Dictionary]:
+
+func has_tag(t: ZoneEffect.Tag) -> bool:
+	for e in effects:
+		if e.tag == t:
+			return true
+	return false
+
+
+## True if any effect of this zone is the opposite of any effect of `other` (GDD §7.3).
+func opposes(other: ZoneDef) -> bool:
+	for e in effects:
+		for f in other.effects:
+			if ZoneEffect.OPPOSITE.get(e.tag, -1) == f.tag:
+				return true
+	return false
+
+
+## Live effective values: [{tag, value}].
+## value = min(cap, base + level - 1) + attunement, min 1; slow capped at 2; push/pull always 1.
+func effective(level: int, att: Aspect.Type, native: bool = false) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	var mod := Aspect.attunement_mod(aspect, att)
+	var mod := Aspect.attunement_mod(aspect, att, native)
 	for e in effects:
 		var v: int
 		if e.tag == ZoneEffect.Tag.PUSH or e.tag == ZoneEffect.Tag.PULL:
@@ -27,9 +51,9 @@ func effective(level: int, att: Aspect.Type) -> Array[Dictionary]:
 	return out
 
 
-func shield(level: int, att: Aspect.Type) -> int:
+func value_of(t: ZoneEffect.Tag, level: int, att: Aspect.Type, native: bool = false) -> int:
 	var total := 0
-	for e in effective(level, att):
-		if e["tag"] == ZoneEffect.Tag.SHIELD:
+	for e in effective(level, att, native):
+		if e["tag"] == t:
 			total += e["value"]
 	return total

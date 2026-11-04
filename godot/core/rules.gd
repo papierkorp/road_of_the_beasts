@@ -1,164 +1,148 @@
 class_name Rules
 extends RefCounted
-## Pure battle rules (GDD §7, §9, §11, §16). No nodes, no randomness.
-## Monster HP is not owned here: resolution returns events the caller applies.
+## Pure board rules (GDD §7, §8). No nodes, no randomness, no monster HP.
+## The same preview function drives the cast preview, the AI and the tests (GDD §16).
+## Surge detonation, Strikes and displacement need monsters and live in Battle.
 
 const ZONE_TURNS := 2
 const MAX_ZONE_LEVEL := 3
-const MAX_LAVA_LEVEL := 2
+const MAX_GROUND_LEVEL := 2
 const SURGE_PROP_DAMAGE := 2
-const OPPOSED := [[&"bog", &"gale"]]    # data table, add pairs later
 
 
-static func opposed(a: StringName, b: StringName) -> bool:
-	for p in OPPOSED:
-		if (p[0] == a and p[1] == b) or (p[0] == b and p[1] == a):
-			return true
-	return false
+# ---------- previews ----------
+
+## What a zone does to a square that may already hold one (GDD §7.3).
+## kind: new | level | cancel | replace ; level = resulting level.
+static func zone_result(zone: ZoneDef, sq: Square) -> Dictionary:
+	var z = sq.zone
+	if z == null:
+		return {"kind": &"new", "level": 1}
+	var existing: ZoneDef = z["def"]
+	if existing.id == zone.id:
+		return {"kind": &"level", "level": mini(MAX_ZONE_LEVEL, z["level"] + 1)}
+	if existing.opposes(zone) or zone.opposes(existing):
+		return {"kind": &"cancel", "level": 0}
+	return {"kind": &"replace", "level": 1}
 
 
-# ---------- previews (pure, drive UI, AI and tests) ----------
+## Zone × ground, the triangle rule (GDD §7.3): &"clear", &"boost" or &"".
+static func triangle(zone_aspect: Aspect.Type, sq: Square) -> StringName:
+	if not sq.is_aspect_ground():
+		return &""
+	var g := sq.ground_aspect()
+	if Aspect.beats(zone_aspect, g):
+		return &"clear"
+	if zone_aspect == g and sq.level < MAX_GROUND_LEVEL:
+		return &"boost"
+	return &""
 
-## Result of casting `skill` on one square: {kind, zone?, level?}
-## kind: new | level | replace | cancel | lost
+
+## Prop reaction of an aspect source hitting a prop (GDD §8.2): &"ignite", &"extinguish", &"heal" or &"".
+static func prop_reaction(aspect: Aspect.Type, sq: Square, zone: ZoneDef = null) -> StringName:
+	if sq.object == null:
+		return &""
+	if sq.has_tag("flammable"):
+		if aspect == Aspect.Type.FORCE and not sq.object["burning"]:
+			return &"ignite"
+		if aspect == Aspect.Type.NATURE and sq.object["burning"]:
+			return &"extinguish"
+	if zone != null and zone.heals_props and not sq.object["healed"] and not sq.has_tag("indestructible"):
+		return &"heal"
+	return &""
+
+
+## Full per-square preview of a cast: {kind, level?, ground?, prop?}.
+## kind: new | level | replace | cancel | lost | ignite
 static func preview_cell(skill: SkillDef, sq: Square) -> Dictionary:
 	match skill.kind:
 		SkillDef.Kind.SURGE:
 			return {"kind": &"lost" if sq.surge != null else &"new"}
 		SkillDef.Kind.ZONE:
-			return _preview_zone(skill, sq)
+			var r := zone_result(skill.zone, sq)
+			r["ground"] = triangle(skill.zone.aspect, sq)
+			r["prop"] = prop_reaction(skill.zone.aspect, sq, skill.zone)
+			return r
 		SkillDef.Kind.GROUND:
+			if sq.object != null:
+				return {"kind": &"ignite"} if prop_reaction(skill.aspect, sq) == &"ignite" else {"kind": &"lost"}
 			if sq.ground == Square.GroundType.VOIDSCAR:
 				return {"kind": &"lost"}
-			if sq.ground == Square.GroundType.LAVA:
-				return {"kind": &"level", "level": mini(MAX_LAVA_LEVEL, sq.lava_level + 1)}
-			return {"kind": &"new", "level": 1}
+			if sq.ground == skill.ground_type:
+				return {"kind": &"level", "level": mini(MAX_GROUND_LEVEL, sq.level + 1)}
+			return {"kind": &"replace" if sq.is_aspect_ground() else &"new", "level": 1}
+		SkillDef.Kind.HEIGHT:
+			return {"kind": &"lost" if sq.ground == Square.GroundType.VOIDSCAR or sq.elevated else &"new"}
 	return {"kind": &"new"}
 
 
-static func _preview_zone(skill: SkillDef, sq: Square) -> Dictionary:
-	var z = sq.zone
-	if z == null:
-		return {"kind": &"new", "level": 1}
-	var existing: StringName = z["def"].id
-	if existing == skill.zone.id:
-		return {"kind": &"level", "level": mini(MAX_ZONE_LEVEL, z["level"] + 1)}
-	if opposed(existing, skill.zone.id):
-		return {"kind": &"cancel"}
-	return {"kind": &"replace", "level": 1}
+# ---------- casting (zones, ground, height, props; Surges are placed by Battle) ----------
 
-
-## Designed zone x ground reactions: &"cool", &"fan" or &"" (GDD §7.3).
-static func zone_on_ground(skill: SkillDef, sq: Square) -> StringName:
-	if skill.kind != SkillDef.Kind.ZONE or sq.ground != Square.GroundType.LAVA:
-		return &""
-	if skill.zone.id == &"bog":
-		return &"cool"
-	if skill.zone.id == &"gale" and sq.lava_level < MAX_LAVA_LEVEL:
-		return &"fan"
-	return &""
-
-
-# ---------- casting ----------
-
-## Applies one cast to its cells. Returns {counts: {kind: n}, cool: n, fan: n}.
-static func cast(board: Board, owner: StringName, skill: SkillDef,
-		cells: Array[Vector2i], gid: String) -> Dictionary:
-	var out := {"counts": {}, "cool": 0, "fan": 0}
+## Applies a non-Surge cast. Returns {counts: {kind: n}, cleared, boosted, ignited, extinguished, healed}.
+static func cast(board: Board, owner: StringName, skill: SkillDef, cells: Array[Vector2i],
+		gid: String, dir: Vector2i, anchor: Vector2i, native: bool = false) -> Dictionary:
+	var out := {"counts": {}, "cleared": 0, "boosted": 0, "ignited": 0, "extinguished": 0, "healed": 0}
 	for c in cells:
 		var sq := board.at(c)
 		if skill.kind == SkillDef.Kind.PROP:
-			sq.object = {"name": "Wall", "hp": 2, "max_hp": 2}
+			sq.object = Square.make_prop("Wall")
+			_count(out, &"new")
 			continue
 		var pg := preview_cell(skill, sq)
-		out["counts"][pg["kind"]] = out["counts"].get(pg["kind"], 0) + 1
-		if pg["kind"] == &"lost":
-			continue
+		_count(out, pg["kind"])
 		match skill.kind:
-			SkillDef.Kind.SURGE:
-				sq.surge = {"owner": owner, "aspect": skill.aspect, "name": skill.display_name,
-					"value": skill.value, "gid": gid}
-			SkillDef.Kind.HEIGHT:   # Raise Ground cleanses lava and attunement
-				sq.elevated = true
-				sq.ground = Square.GroundType.PLAIN
-				sq.lava_level = 1
-				sq.attunement = Aspect.Type.NONE
-			SkillDef.Kind.GROUND:
-				sq.ground = Square.GroundType.LAVA
-				sq.lava_level = pg["level"]
-				if not sq.elevated:
-					sq.attunement = Aspect.Type.FORCE
 			SkillDef.Kind.ZONE:
-				var reaction := zone_on_ground(skill, sq)
-				if reaction == &"cool":
-					sq.ground = Square.GroundType.RUBBLE
-					sq.lava_level = 1
+				_apply_zone(sq, skill, pg, owner, gid, dir, anchor, native, out)
+			SkillDef.Kind.GROUND:
+				if pg["kind"] == &"ignite":
+					sq.object["burning"] = true
+					out["ignited"] += 1
+				elif pg["kind"] != &"lost":
+					sq.lay_ground(skill.ground_type, Square.PERMANENT)
+			SkillDef.Kind.HEIGHT:
+				if pg["kind"] != &"lost":
+					sq.clear_ground()
 					sq.attunement = Aspect.Type.NONE
-					out["cool"] += 1
-				elif reaction == &"fan":
-					sq.lava_level = MAX_LAVA_LEVEL
-					out["fan"] += 1
-				if pg["kind"] == &"cancel":
-					sq.zone = null
-				else:
-					sq.zone = {"def": skill.zone, "gid": gid, "owner": owner,
-						"level": pg["level"], "duration": ZONE_TURNS}
+					sq.elevated = true
 	return out
 
 
-# ---------- resolution ----------
-
-## Detonates every Surge due after `who`'s turn (GDD §11.2).
-## Returns events: {type: damage|absorbed|prop_hit|shatter|collapse, ...}.
-## Damage events must be applied to monster HP by the caller.
-static func fire_due(board: Board, who: StringName) -> Array[Dictionary]:
-	var events: Array[Dictionary] = []
-	var debris: Array[Vector2i] = []
-	for sq: Square in board.all_squares():
-		if sq.surge == null or sq.surge["owner"] == who:
-			continue
-		var sg: Dictionary = sq.surge
-		sq.surge = null
-		var target = board.occupants.get(sq.pos)
-		if sq.elevated:                       # Elevated blanks the square
-			continue
-		if sq.object != null:
-			sq.object["hp"] -= SURGE_PROP_DAMAGE
-			events.append({"type": &"prop_hit", "pos": sq.pos, "hp": maxi(0, sq.object["hp"])})
-			if sq.object["hp"] <= 0:
-				sq.object = null
-				sq.ground = Square.GroundType.RUBBLE
-				sq.lava_level = 1
-				sq.attunement = Aspect.Type.NONE
-				debris.append(sq.pos)
-				events.append({"type": &"shatter", "pos": sq.pos})
-			continue
-		var dmg := sq.surge_damage(sg["aspect"], sg["value"])
-		if target != null:
-			if dmg > 0:
-				events.append({"type": &"damage", "target": target, "amount": dmg, "source": sg["name"]})
-			else:
-				events.append({"type": &"absorbed", "target": target})
-		sq.set_attunement(sg["aspect"])        # the Surge repaints what it struck
-	var seen := {}
-	for d in debris:
-		for n in board.neighbors(d):
-			if seen.has(n):
-				continue
-			seen[n] = true
-			if board.occupants.has(n):
-				events.append({"type": &"damage", "target": board.occupants[n], "amount": 1, "source": "Debris"})
-			var nsq := board.at(n)
-			if nsq.elevated:
-				nsq.elevated = false
-				nsq.ground = Square.GroundType.RUBBLE
-				nsq.lava_level = 1
-				nsq.attunement = Aspect.Type.NONE
-				events.append({"type": &"collapse", "pos": n})
-	return events
+static func _apply_zone(sq: Square, skill: SkillDef, pg: Dictionary, owner: StringName, gid: String,
+		dir: Vector2i, anchor: Vector2i, native: bool, out: Dictionary) -> void:
+	match pg["ground"]:
+		&"clear":
+			sq.clear_ground()
+			sq.set_attunement(skill.zone.aspect)
+			out["cleared"] += 1
+		&"boost":
+			sq.level = mini(MAX_GROUND_LEVEL, sq.level + 1)
+			out["boosted"] += 1
+	match pg["prop"]:
+		&"ignite":
+			sq.object["burning"] = true
+			out["ignited"] += 1
+		&"extinguish":
+			sq.object["burning"] = false
+			out["extinguished"] += 1
+		&"heal":
+			sq.object["hp"] = mini(sq.object["max_hp"] + 1, sq.object["hp"] + 1)
+			sq.object["max_hp"] = maxi(sq.object["max_hp"], sq.object["hp"])
+			sq.object["healed"] = true
+			out["healed"] += 1
+	if pg["kind"] == &"cancel":
+		sq.zone = null
+	else:
+		sq.zone = {"def": skill.zone, "gid": gid, "owner": owner, "level": pg["level"],
+			"duration": ZONE_TURNS, "dir": dir, "anchor": anchor, "native": native}
 
 
-## Round end: zones lose a round; a fading zone repaints its square. Returns faded count.
+static func _count(out: Dictionary, kind: StringName) -> void:
+	out["counts"][kind] = out["counts"].get(kind, 0) + 1
+
+
+# ---------- round end ----------
+
+## Zones lose a round; a fading zone repaints its square (GDD §7.2). Returns faded count.
 static func tick_zones(board: Board) -> int:
 	var faded := 0
 	for sq: Square in board.all_squares():
@@ -170,3 +154,16 @@ static func tick_zones(board: Board) -> int:
 			sq.zone = null
 			faded += 1
 	return faded
+
+
+## Timed ground (Surge residue) loses a round; expired → Plain, attunement stays. Returns expired count.
+static func tick_ground(board: Board) -> int:
+	var expired := 0
+	for sq: Square in board.all_squares():
+		if sq.timer == Square.PERMANENT:
+			continue
+		sq.timer -= 1
+		if sq.timer <= 0:
+			sq.clear_ground()
+			expired += 1
+	return expired

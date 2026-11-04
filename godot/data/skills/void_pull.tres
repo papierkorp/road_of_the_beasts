@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SkillDef" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://core/skill_def.gd" id="1"]
+[ext_resource type="Resource" path="res://data/zones/void_pull.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"void_pull"
+display_name = "Void Pull"
+kind = 1
+aspect = 3
+zone = ExtResource("2")
+shapes = Array[StringName]([&"T4", &"L3"])
+range = 3
+surge_type = 0
+twist = 0
+directional = false
+description = "Pull zone toward the anchor"

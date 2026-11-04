@@ -8,6 +8,7 @@ extends RefCounted
 const BASE := {
 	&"I2": [Vector2i(0, 0), Vector2i(1, 0)],
 	&"I3": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)],
+	&"I4": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)],
 	&"L3": [Vector2i(0, 0), Vector2i(0, 1), Vector2i(1, 1)],
 	&"O4": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)],
 	&"T4": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(1, 1)],

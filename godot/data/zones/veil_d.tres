@@ -15,3 +15,4 @@ id = &"veil_d"
 display_name = "Shade Veil"
 aspect = 3
 effects = Array[ExtResource("2")]([SubResource("eff_0")])
+strike_shield = 1

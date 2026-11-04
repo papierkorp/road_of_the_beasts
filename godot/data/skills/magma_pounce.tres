@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"magma_pounce"
+display_name = "Magma Pounce"
+kind = 0
+aspect = 1
+shapes = Array[StringName]([&"O4"])
+range = 3
+surge_type = 1
+twist = 1
+directional = false
+description = "Eruption next to you: 3 dmg, Lava residue"

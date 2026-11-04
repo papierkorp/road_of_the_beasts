@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://core/monster_def.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/crucible.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/raise_wall.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+id = &"forge_golem"
+display_name = "Forge Golem"
+kin = 5
+aspect = 1
+hp = 8
+initiative = 2.0
+move = 1
+tpr = 1
+reach = 2
+surge = ExtResource("2")
+utility = ExtResource("3")
+passive = &"immovable"
+blurb = "Walls itself in and erupts around its own body; you have to come to it."

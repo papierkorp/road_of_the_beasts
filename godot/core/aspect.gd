@@ -10,6 +10,13 @@ const ATTUNEMENT_NAMES := {
 	Type.DARK: "Cursed",
 }
 
+const NAMES := {
+	Type.NONE: "Neutral",
+	Type.FORCE: "Force",
+	Type.NATURE: "Nature",
+	Type.DARK: "Dark",
+}
+
 
 ## True if `a` beats `b`.
 static func beats(a: Type, b: Type) -> bool:
@@ -20,11 +27,14 @@ static func beats(a: Type, b: Type) -> bool:
 	)
 
 
-## Strength modifier of a zone/Surge of `aspect` on a square attuned to `att`:
-## +1 on its own aspect, -1 if the square's aspect beats it, else 0 (GDD §7.6).
-static func attunement_mod(aspect: Type, att: Type) -> int:
-	if att == Type.NONE:
+## Strength modifier of a zone/Surge of `aspect` on a square attuned to `att` (GDD §7.5):
+## +1 on its own aspect, -1 if the square's aspect beats it, else 0.
+## `native` (passive Native Ground): +2 on its own aspect and never -1.
+static func attunement_mod(aspect: Type, att: Type, native: bool = false) -> int:
+	if att == Type.NONE or aspect == Type.NONE:
 		return 0
 	if att == aspect:
-		return 1
-	return -1 if beats(att, aspect) else 0
+		return 2 if native else 1
+	if beats(att, aspect):
+		return 0 if native else -1
+	return 0

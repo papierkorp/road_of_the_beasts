@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"coiling_rift"
+display_name = "Coiling Rift"
+kind = 0
+aspect = 3
+shapes = Array[StringName]([&"L4"])
+range = 3
+surge_type = 3
+twist = 8
+directional = false
+description = "Rift: 2 dmg, pulls the struck toward the anchor"

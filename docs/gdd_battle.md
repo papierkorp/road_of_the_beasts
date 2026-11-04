@@ -1,5 +1,5 @@
 # GDD — BATTLE SYSTEM
-*Working Draft v6.0 — Options, not luck · companion file: gdd_overworld.md · playable reference: Godot project `godot/` and `html_prototype/battle-prototype-v5-zones-ground.html` (both implement the **v5** rules — v6 is designed, not built yet; see §19 for what changed)*
+*Working Draft v6.0 — Options, not luck · companion file: gdd_overworld.md · playable reference: Godot project `godot/` (implements **v6**: 3v3 on 7×7, 1v1 duel, draft, 9 monsters) · `html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference · see §19 for what changed*
 
 ---
 
@@ -83,7 +83,7 @@ SKILLS: Move + Strike + 1 Surge + 1 utility (2 from Foundation) + 1 passive (§9
 | Movement | int | Squares per Move action; zones can slow it |
 | Skill range | derived | Base per skill; **+1 on Elevated ground; zones can drain it** |
 | Reach | 1–3 | Strike distance (Manhattan); +1 on Elevated; `drain_range` lowers it (min 1); Reach ≥ 2 needs line of sight (props block) |
-| TurnsPerRound | 1–3 | Extra turns re-enter the queue at reduced initiative |
+| TurnsPerRound | 1–3 | Extra turns re-enter the queue at −3 initiative per extra turn |
 | Aspect | F/N/D | Triangle position, Surge type, zone family |
 | Kin / Rarity / Size | — | see §6 and gdd_overworld |
 
@@ -99,7 +99,7 @@ Stat ceilings per stage: HP 4/6/8/10, Init 5/7/9/10, TPR 1/2/2/3, Move 3/3/4/4, 
 - A side may act several times in a row — that is the reward for initiative, not a bug
 - **Ties:** higher base initiative first; still tied → the sides alternate (the first tie of a battle goes to the side with the lower total initiative)
 - A drain zone (e.g. Mire: −2 init) can flip the order, giving a monster two turns back to back across the round boundary — a real tempo weapon
-- Multi-turn monsters re-enter the queue at reduced initiative after each extra turn
+- Multi-turn monsters get one extra queue entry per extra turn, each at −3 initiative (min 0.1)
 - **Surge clock:** a Surge fires **at the start of its caster's next turn** (§9.3). In 1v1 that is the same moment as "the end of the opponent's turn"; in team battles every other monster has had its turn in between
 
 ### 4.4 Action Points
@@ -200,8 +200,8 @@ Every monster has a **Strike** (§9.4 #16): target = an enemy monster or a prop 
 | Kin | Strike | Effect |
 |---|---|---|
 | Beast | Bite | 2 damage |
-| Winged | Dive | 1 damage, then move 1 square away for free |
-| Scaled | Tail Sweep | 1 damage, push the target 1 square (direction chosen) |
+| Winged | Dive | 1 damage, then move 1 square away for free (the free neighbour farthest from the target) |
+| Scaled | Tail Sweep | 1 damage, push the target 1 square (direction chosen with WASD) |
 | Swarm | Gnaw | 1 damage, props take double (2) |
 | Spirit | Siphon | 1 damage, target −1 initiative next round |
 | Ancient | Slam | 2 damage to a prop or 1 to a monster, cracks Elevated under the target → Rubble |
@@ -216,7 +216,7 @@ Numbers are **Core Formation**-stage values (caps: HP 8, Init 9, TPR 2, Move 4, 
 | **Ember Hawk** | Winged | Force | glass cannon · 2 / 9.0 / 3 / 2 / 1 | *Cinder Dive* · Eruption · I3 · **Trail** | Shockwave | Skittish |
 | **Forge Golem** | Ancient | Force | anvil · 8 / 2.0 / 1 / 1 / 2 | *Crucible* · Eruption · ring of 4 · **Ring** | Raise Wall | Immovable |
 | **Moss Turtle** | Scaled | Nature | anvil · 8 / 3.0 / 1 / 1 / 2 | *Tidal Shell* · Flood · I3 · **Slow-burn** | Bark Veil | Deep Roots |
-| **Thorn Mites** | Swarm | Nature | fragile · 3 / 6.0 / 2 / 2 / 1 | *Bramble Tide* · Flood · I2 · **Lingering** | Thornbed | Overgrowth |
+| **Thorn Mites** | Swarm | Nature | fragile · 3 / 6.0 / 2 / 2 / 1 | *Bramble Tide* · Flood · I2 · **Lingering** | Thornbed | Thornwalker |
 | **Grove Wisp** | Spirit | Nature | skirmisher · 3 / 8.0 / 3 / 1 / 1 | *Spring Burst* · Flood · L3 · **Lob** | Gale | Painter |
 | **Gloom Wolf** | Beast | Dark | balanced · 5 / 6.0 / 2 / 1 / 1 | *Gloom Rift* · Rift · I3 / L3 · — (baseline) | Mire | Pack Hunter |
 | **Dusk Moth** | Winged | Dark | glass cannon · 2 / 9.0 / 3 / 2 / 1 | *Eclipse* · Rift · I3 → 4 cells · **Wide** | Shade Veil | Native Ground |
@@ -227,7 +227,7 @@ One sentence each (design test):
 - **Ember Hawk** — strafes a burning line from where it stands, pushes enemies with Shockwave, and dodges away after taking a hit.
 - **Forge Golem** — walls itself in and erupts around its own body; you have to come to it.
 - **Moss Turtle** — a slow, heavy Flood that hits one turn later but harder, behind Bark Veils, and can't be pushed off its own ground.
-- **Thorn Mites** — weak little Floods that leave thorns for 3 rounds, on top of a permanent Thornbed.
+- **Thorn Mites** — weak little Floods that leave thorns for 3 rounds, on top of a permanent Thornbed they walk through unharmed.
 - **Grove Wisp** — throws weak Floods from far away, phases through props, and paints the board green around every hit.
 - **Gloom Wolf** — the baseline: Mire flips the turn order, its Rift does the rest; much stronger with an ally next to the target.
 - **Dusk Moth** — a wide, weaker Rift on Cursed squares, under a Shade Veil.
@@ -264,7 +264,7 @@ Ancient  Forge Golem      Elder Treant     Bone Colossus
 - all layers can be active at once · **1 object, 1 pending Surge, 1 zone, 1 ground type** per square
 - zones may be placed on prop squares — the zone affects the prop only through the reaction table (§8.2); a monster can't stand there anyway
 - skills that create ground (Field, Raise Ground) need prop-free squares, except for the prop reactions in §8.2 (Lava Field on a Tree ignites it instead of laying Lava)
-- a pending Surge blocks movement like a temporary object and may land on props
+- a pending Surge blocks *voluntary* movement like a temporary object and may land on props; displacement (push / pull / Flood) **can** move monsters into it — that is the combo
 - **zones = what you do to movement; ground = what the board remembers**
 
 ### 7.1 Square Data Model
@@ -430,7 +430,7 @@ Props stop being "just in the way": each tag reacts to a few aspect sources. Rea
 
 | Tag | Force (Force zones, Lava Field, Eruption) | Nature (Nature zones, Flood) | Dark (Dark zones, Blight, Rift) |
 |---|---|---|---|
-| **flammable** (Tree) | **ignites** when a Force skill hits it: burns down at the next round end → Rubble + timed Lava I on its square | a Nature zone or Flood **extinguishes** a burning Tree; Bark Veil: +1 HP | — |
+| **flammable** (Tree) | **ignites** when a Force skill hits it (an Eruption ignites it instead of dealing prop damage): burns down at the next round end → Rubble + timed Lava I on its square | a Nature zone or Flood **extinguishes** a burning Tree; Bark Veil: +1 HP | — |
 | **brittle** (Wall) | — | — | crumbles: −1 HP per round while a Dark zone or Blight is on it, −1 extra when hit by a Rift |
 | **heavy** (Rock) | — | can't be moved by Flood; Flood deals it no damage | — |
 | **indestructible** (Pillar) | — | — | — |
@@ -615,7 +615,7 @@ Mirror Step · Spatial Rend (remove a square 2 rounds) · Exile · Anchor (squar
 
 **Terrain Identity:** Native Ground (your zones and Surges get +2 instead of +1 on own-aspect squares; ignores the −1) · Painter (fired Surges also repaint adjacent squares) · Trailblazer (repaints squares it walks over) · Deep Roots (undisplaceable on own-aspect squares) · Purifier (adjacent enemy zones lose 1 round at round end) · Overgrowth (your zones start at level II)
 
-**Position & Movement:** Highlander (+2 init on Elevated) · Turret (can't move, +1 range and Reach) · Skittish (free 1-square move after taking Surge damage) · Phasing (moves through props) · Momentum (+1 cell to the next cast after a max-distance move)
+**Position & Movement:** Highlander (+2 init on Elevated) · Turret (can't move, +1 range and Reach) · Skittish (free 1-square move after taking Surge damage — to the safest free neighbour) · Phasing (moves through props) · Momentum (after a max-distance move, the next Surge this turn deals +1)
 
 **Displacement:** Crashlander (when pushed or pulled into a prop or monster, it takes no collision damage — the other side takes 1) · Immovable (ignores push/pull) · Counterweight (allies orthogonally adjacent to it can't be pushed or pulled)
 
@@ -708,7 +708,7 @@ On 7×7 the sides start 5–6 rows apart: no Strike and no Surge reaches the ene
 
 ### 13.1 Late-Round Pressure (Anti-Stalling)
 
-From a set round on, the square farthest from all living monsters converts to **Voidscar** each round (permanent, undestroyable). The start round scales with the board (tunable: 1v1 round 6, 3v3 round 8).
+From a set round on, the square farthest from all living monsters converts to **Voidscar** each round (permanent, undestroyable). The start round scales with the board (tunable: 1v1 round 6, 3v3 round 8). **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round — so every battle ends.
 
 ---
 
@@ -756,7 +756,11 @@ The tamer shapes; monsters fight. Each tamer skill can be used **once per battle
 
 ## 17. Prototype & Playtests
 
-**Current builds (v5 rules):** `html_prototype/battle-prototype-v5-zones-ground.html` and its Godot port in `godot/` — 5×5, 1v1, you (Blaze Tiger, Force) vs an AI Gloom Wolf (Dark). Tiger kit (test bench): Magma Surge, Lava Field, Bog, Gale, Bark Veil, Raise Wall, Raise Ground. Wolf kit: Gloom Surge, Mire, Shade Veil.
+**Current build (v6):** the Godot project in `godot/` — main menu → draft (pick 3 of the 9 roster monsters, or 1 for a duel) → **3v3 on 7×7** or **1v1 on 5×5** against an AI team drawn from the rest. All v6 rules of this document are implemented in the headless core (`godot/core/`). The HTML prototype is the older v5 reference.
+
+**Tools:** `godot/tests/` (gdUnit4 suites for the rules), `godot/tools/sim.gd` (AI-vs-AI batch simulation with win rates per monster), `godot/tools/smoke_ui.gd` (plays the player's side through the real UI headless).
+
+**First simulation (60 AI-vs-AI 3v3 battles, random teams):** sides win 50/50, ~14 rounds per battle. Outliers to look at: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue), Blight is the biggest damage source after Eruption, Veils absorb a lot (230 blocked hits), and ~1 in 5 battles is decided by the arena collapse (§13.1).
 
 **Next playtest — what to check once v6 is built:**
 
@@ -767,6 +771,7 @@ The tamer shapes; monsters fight. Each tamer skill can be used **once per battle
 5. Do the three Surge types make Elevated a real decision?
 6. Do props now get *used* (burned, crumbled, smashed for debris) instead of just being in the way?
 7. Is 3v3 on 7×7 readable, and do fights end in a reasonable number of rounds?
+8. Is Dusk Moth really that strong for a human player, or is it the AI? (simulation: 87% win rate)
 
 ---
 

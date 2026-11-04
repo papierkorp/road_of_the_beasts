@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://core/skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"spring_burst"
+display_name = "Spring Burst"
+kind = 0
+aspect = 2
+shapes = Array[StringName]([&"L3"])
+range = 3
+surge_type = 2
+twist = 4
+directional = true
+description = "Flood from range 5: 1 dmg, push, Thornbed residue"
