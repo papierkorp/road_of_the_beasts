@@ -2,7 +2,7 @@ extends Control
 ## Start menu: start the battle, settings, quit.
 
 const DRAFT_SCENE := "res://battle/draft.tscn"
-const OVERWORLD_SCENE := "res://overworld/overworld.tscn"
+const OVERWORLD_SCENE := "res://overworld/district.tscn"
 
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
@@ -67,6 +67,8 @@ func _new_game() -> void:
 	rng.randomize()
 	GameSession.game = GameState.new_game(rng)
 	GameSession.expedition = null
+	GameSession.district = &"plaza"
+	GameSession.arrive_from = &"start"
 	SaveGame.save(GameSession.game)
 	get_tree().change_scene_to_file(OVERWORLD_SCENE)
 
@@ -77,6 +79,8 @@ func _continue_game() -> void:
 		return
 	GameSession.game = g
 	GameSession.expedition = null
+	GameSession.district = &"plaza"
+	GameSession.arrive_from = &"start"
 	get_tree().change_scene_to_file(OVERWORLD_SCENE)
 
 

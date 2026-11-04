@@ -17,6 +17,10 @@ var autoplay := false
 
 ## The running game (null in the plain battle prototype) and its current dungeon run.
 var game: GameState = null
+
+## The walkable district the player is in and where they came from (decides where they appear).
+var district: StringName = &"plaza"
+var arrive_from: StringName = &"start"
 var expedition: Expedition = null
 
 

@@ -5,7 +5,7 @@ extends Control
 
 const SCENE := "res://overworld/dungeon.tscn"
 const BATTLE_SCENE := "res://battle/battle.tscn"
-const CITY_SCENE := "res://overworld/overworld.tscn"
+const CITY_SCENE := "res://overworld/district.tscn"
 
 var _game: GameState
 var _ex: Expedition
@@ -159,6 +159,8 @@ func _start_battle() -> void:
 
 func _leave() -> void:
 	GameSession.expedition = null
+	GameSession.district = &"plaza"
+	GameSession.arrive_from = &"dungeon"
 	SaveGame.save(_game)
 	get_tree().change_scene_to_file(CITY_SCENE)
 

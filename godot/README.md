@@ -2,7 +2,7 @@
 
 ```
 shared/      data schemas and the cultivation model, used by every part
-             aspect, shapes, MonsterDef / SkillDef / ZoneDef / ZoneEffect (species + skills + zones),
+             aspect, shapes, MonsterLook (simple 3D body per kin), MonsterDef / SkillDef / ZoneDef / ZoneEffect (species + skills + zones),
              Stage, StatShape, MonsterInstance (the individual monster), ItemCatalog, BattleRequest / BattleResult
              (the contract between battle and overworld), GameData (registry), UiTheme
 battle/      the deterministic grid battle (gdd_battle.md)
@@ -12,9 +12,11 @@ battle/      the deterministic grid battle (gdd_battle.md)
   ui/        battle HUD and the pre-battle draft screen
   battle.tscn, draft.tscn
 overworld/   days, AP, night phase, economy, internal world (gdd_overworld.md)
-  core/      headless: GameState (day, AP, money, bag, owned individuals), Expedition (dungeon node map), Market (Trader)
-  ui/        WorldMapScreen (the city as a map of places), DungeonScreen + DungeonCanvas (node map)
-  overworld.tscn (city map), dungeon.tscn
+  core/      headless: GameState (day, AP, money, bag, owned individuals), Expedition (dungeon node map),
+             Market (Trader), DistrictMap (layout and movement of a walkable district), Cheats
+  ui/        DistrictScreen (walkable 3D district, WASD + E), PlacePanel (what a place offers),
+             WorldMapScreen (menu map of the city), DungeonScreen + DungeonCanvas (node map)
+  district.tscn (the streets), overworld.tscn (menu map), dungeon.tscn
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession)
 data/        content as Resource files: monsters/, skills/, zones/ (a new file = new content)
 tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game
