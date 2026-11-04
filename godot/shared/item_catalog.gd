@@ -98,7 +98,7 @@ static func display_name(id: String) -> String:
 		Kind.STRUCTURE:
 			return StructureCatalog.def(structure_of(id)).display_name
 		Kind.PILL:
-			var noun := {&"cultivation": "Cultivation", &"healing": "Healing", &"prep": "Battle-Prep"}[pill_type(id)]
+			var noun: String = {&"cultivation": "Cultivation", &"healing": "Healing", &"prep": "Battle-Prep"}[pill_type(id)]
 			return "%s %s Pill" % [Stage.stage_name(tier_of(id)), noun]
 	return "%s %s (%s)" % [ASPECT_WORD[int(parts[2])], KIN_FORM[int(parts[1])], Stage.stage_name(int(parts[3]))]
 
