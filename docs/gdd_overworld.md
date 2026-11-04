@@ -499,7 +499,8 @@ PHASE 1  Battle system (done: 1v1 + 3v3, draft, 9 monsters) + individual monster
          (stat shapes, stage caps, XP → sub-tier snap) + node-based dungeon access
          + Trader business (pure buy/sell) + money → power loop
          (money → cultivation pills → XP → stronger stats)
-PHASE 2  Walkable city districts, internal world v1, skill evolution,
+PHASE 2  Walkable city districts (first step built: Teleport Plaza, Market, Inner World;
+         WASD + E, iso camera, monster follows), internal world v1, skill evolution,
          Producer business, favor system with 2-3 factions
 PHASE 3  Dojo/faction staff, auction hall, monster hall,
          internal world growth stages, clan storyline
