@@ -10,6 +10,7 @@
 > - **Zones change ground** through a (small) reaction table.
 > - **Elevated** no longer blocks every Surge — it depends on the Surge type.
 > - **AP rework (proposal):** no cooldowns; actions may be repeated as long as AP last; Strike costs 2 AP.
+> - **Monster identity:** Kin (body) + Aspect (energy) + Species (own named Surge with ≤1 twist, one utility from a pool, a passive). No fixed team roles. Skills are organised as **archetype system → skill matrix (archetype × aspect) → roster** (§4.5, §6.2, §9.4–9.5).
 >
 > v6 changes are marked **(v6)** below. Numbers are starting values for the next playtest. Open points are collected in §18.
 
@@ -23,7 +24,7 @@
 
 Turn-based, isometric monster battles about **grid control**, fully deterministic and readable. Inspired by *Into the Breach*.
 
-**Battle modes:** 1v1 on **5x5** (default; tetris shapes need room — 4x4 stays viable for tiny arenas) → 2v2 / 3v3 on larger boards (unlocked via progression).
+**Battle modes:** 1v1 on **5x5** (default; tetris shapes need room — 4x4 stays viable for tiny arenas) → 2v2 / 3v3 on larger boards (unlocked via progression) → **(v6) goal: up to 5v5**. Small kits (§9.5) are what keeps 5v5 readable: every monster brings Move + Strike + its Surge + 1–2 utilities, not a skill bar.
 
 Setting, progression, economy, overworld: see **gdd_overworld.md**.
 
@@ -117,14 +118,24 @@ Stat ceilings per stage: HP 4/6/8/10, Init 5/7/9/10, TPR 1/2/2/3, Move 3/3/4/4.
 
 ```
 1. STAT SHAPE   glass cannon / anvil / skirmisher / berserker
-2. ASPECT       Force / Nature / Dark → Surge flavour, zone family, the colour it paints
-3. KIN          creature type → Surge scale access, layer, stat lean
-4. SURGE        its one burst threat: shape, size, aspect
+2. ASPECT       Force / Nature / Dark → Surge TYPE (Eruption / Flood / Rift), zone family, the colour it paints
+3. KIN          creature type → Strike, layer, stat lean, which utility archetypes it may take, Surge size access
+4. SURGE        its own named burst: type from aspect, shape + size from species, at most ONE twist (§9.4.2)
 5. PASSIVE      the rule-bender — biggest personality driver
 6. SIZE         1x1 vs 2x2
 ```
 
-**Design test:** one sentence per monster built from its Surge + its Zone skill. If two monsters read the same, change the shape family, the aspect or the zone's tag set.
+**(v6) Three layers build a monster** — nothing is invented from scratch per monster:
+
+| Layer | Decides | Example |
+|---|---|---|
+| **Kin** (body) | Strike, movement layer, stat lean, allowed utility archetypes, Surge size | Beast bites and is fast; only Ancient has a Major Surge |
+| **Aspect** (energy) | Surge type, zone family, attunement colour | Force → Eruption, Nature → Flood, Dark → Rift |
+| **Species** (the monster) | its Surge (shape + ≤1 twist), 1 utility from the matrix, 1 passive | Blaze Tiger: *Magma Pounce* — O4 Eruption that must land next to the tiger |
+
+**(v6) No fixed roles.** A Kin is not a class (Beast ≠ "damage dealer"). What a monster does for a team comes from its kit, so two Beasts can play completely differently. Team building means picking *combinations* — one monster pulls, another one Strikes; one floods the enemy into the other's Eruption.
+
+**Design test:** one sentence per monster built from its Surge + its utility. If two monsters read the same, change the Surge shape or twist, the aspect or the utility.
 
 | Shape | HP | Init | TPR | Move | Feel |
 |---|---|---|---|---|---|
@@ -190,6 +201,37 @@ Every monster has a **Strike** (§9.4 #16): target = an orthogonally adjacent mo
 | Swarm | Gnaw | 1 damage, props take double (2) |
 | Spirit | Siphon | 1 damage, target −1 initiative next round |
 | Ancient | Slam | 2 damage to a prop or 1 to a monster, cracks Elevated under the target → Rubble |
+
+### 6.2 First Roster Draft (v6) — 9 monsters, 3 per aspect
+
+Numbers are Foundation-stage values (gdd_overworld §4.5). Every monster also has **Move** and its Kin **Strike** (§6.1). Skills come from the matrix (§9.5); twists from §9.4.2.
+
+| Monster | Kin | Aspect | Shape · HP / Init / Move / TPR | Surge (type · shape · twist) | Utility | Passive |
+|---|---|---|---|---|---|---|
+| **Blaze Tiger** | Beast | Force | skirmisher · 5 / 7.0 / 3 / 1 | *Magma Pounce* · Eruption · O4 · **Pounce** | Lava Field | Momentum |
+| **Ember Hawk** | Winged | Force | glass cannon · 2 / 9.0 / 3 / 2 | *Cinder Dive* · Eruption · I3 · **Trail** | Shockwave | Skittish |
+| **Forge Golem** | Ancient | Force | anvil · 8 / 2.0 / 1 / 1 | *Crucible* · Eruption · ring of 4 · **Ring** | Raise Wall | Immovable |
+| **Moss Turtle** | Scaled | Nature | anvil · 8 / 3.0 / 1 / 1 | *Tidal Shell* · Flood · I3 · **Slow-burn** | Bark Veil | Deep Roots |
+| **Thorn Mites** | Swarm | Nature | fragile · 3 / 6.0 / 2 / 2 | *Bramble Tide* · Flood · I2 · **Lingering** | Thornbed | Overgrowth |
+| **Grove Wisp** | Spirit | Nature | skirmisher · 3 / 8.0 / 3 / 1 | *Spring Burst* · Flood · L3 · **Lob** | Gale | Phasing |
+| **Gloom Wolf** | Beast | Dark | balanced · 5 / 6.0 / 2 / 1 | *Gloom Rift* · Rift · I3 / L3 · — (baseline) | Mire | Pack Hunter |
+| **Dusk Moth** | Winged | Dark | glass cannon · 2 / 9.0 / 3 / 2 | *Eclipse* · Rift · I3 → 4 cells · **Wide** | Shade Veil | Native Ground |
+| **Hollow Serpent** | Scaled | Dark | anvil-ish · 6 / 4.0 / 2 / 1 | *Coiling Rift* · Rift · L4 · **Constrict** | Void Pull | Thick Hide |
+
+One sentence each (design test):
+- **Blaze Tiger** — dives into melee range, lays Lava behind the enemy and pounces with a big Eruption next to itself.
+- **Ember Hawk** — strafes a burning line from where it stands, pushes enemies with Shockwave, and dodges away after taking a hit.
+- **Forge Golem** — walls itself in and erupts around its own body; you have to come to it.
+- **Moss Turtle** — a slow, heavy Flood that hits one turn later but harder, behind Bark Veils that can't be pushed off its own ground.
+- **Thorn Mites** — tiny Floods that leave Mud for 3 rounds, on top of a field of thorns.
+- **Grove Wisp** — throws weak Floods from far away and phases through props to reposition the fight with Gale.
+- **Gloom Wolf** — the baseline: Mire flips the turn order, its Rift does the rest; much stronger with an ally next to the target.
+- **Dusk Moth** — a wide, weaker Rift on Cursed squares, under a Shade Veil.
+- **Hollow Serpent** — pulls you in with Void Pull, then its Rift drags everything it hits toward the centre.
+
+New passives used here: **Pack Hunter** — Strike costs 1 AP if an ally is adjacent to the target. **Thick Hide** — Strikes and collisions deal 1 less (min 0). (Others: §10.)
+
+Gaps on purpose (filled later): Swarm and Spirit in Force/Dark, Ancient in Nature/Dark, Snare/Hex for Force, Raise Ground, Shove, Reposition.
 
 **Kin × Aspect grid (launch roster ≈ 15 of 18):**
 
@@ -441,7 +483,17 @@ So Elevated is a real decision: high ground is safe against a Flood, normal agai
 | **Answer with your own Surge** | race it — but you can't claim squares already held by an enemy's charging Surge |
 | **Control the tempo** | Mire / Bog / Gale to steer where the target can stand |
 
-### 9.4 The 16 Archetypes
+### 9.4 The Archetype System
+
+**(v6)** The archetypes are the rule system; concrete skills come from the matrix (§9.5); monsters pick from it (§6.2). Three groups:
+
+| Group | Who has it | Archetypes |
+|---|---|---|
+| **Universal actions** | every monster | Move, Strike (#16, Kin twist §6.1) |
+| **Surge** | every monster, one each | #1 — type from aspect, shape from species, ≤1 twist (§9.4.2) |
+| **Utility pool** | 1 per monster (2 from Foundation stage, gdd_overworld §4.4), limited by Kin | #2–#15 |
+
+#### 9.4.1 All archetypes
 
 | # | Archetype | Type | What it does | Parameters |
 |---|---|---|---|---|
@@ -464,15 +516,46 @@ So Elevated is a real decision: high ground is safe against a Flood, normal agai
 
 *(Removed in v3.0: Dispel, Rupture, Bind, HexField. v4 removed zones entirely; v5 restored them with one-zone-per-square rules instead of merge arithmetic.)*
 
-### 9.5 Kit-Building Rule
+#### 9.4.2 Surge Twists (v6)
+
+A twist is **one** extra rule on a species' Surge. It must stay readable in the preview, and every twist pays for its advantage:
+
+| Twist | Rule | Price |
+|---|---|---|
+| — (baseline) | normal Surge | — |
+| **Pounce** | anchor must be adjacent to the caster; may use a 4-cell shape | range 1, you stand next to your own blast |
+| **Trail** | the shape must start on a square adjacent to the caster, in a straight line | no free aiming |
+| **Ring** | the shape is the caster's 4 neighbours (caster's square excluded) | range 0, the enemy must come close |
+| **Lob** | range +2 | damage −1 |
+| **Wide** | +1 cell | damage −1 |
+| **Slow-burn** | fires one turn later | damage +1 |
+| **Lingering** | residue lasts 3 rounds instead of 2 | Swarm shape (2 cells) |
+| **Constrict** | struck monsters are pulled 1 toward the anchor after the damage | 4-cell shape only on Scaled |
+
+### 9.5 Skill Matrix (v6) — archetype × aspect
+
+Aspect-flavoured archetypes get one concrete skill per aspect. Same archetype = same core rule, the aspect adds **one** side effect. Names are working titles.
+
+| Archetype | Force | Nature | Dark |
+|---|---|---|---|
+| **Field** (damage ground) | **Lava Field** — burn at end of turn | **Thornbed** — 1 dmg when you *enter* the square | **Blight Field** — 1 dmg at *start* of turn |
+| **Snare** (slow) | **Ash Snare** — slow 1, ignites flammable props | **Bog** — slow + pull, cools Lava | **Grasping Shade** — slow 1 + range −1 |
+| **Current** (push / pull) | **Shockwave** — push (direction set), collision +1 | **Gale** — push (direction set), clears Rubble, fans Lava | **Void Pull** — pull to the anchor |
+| **Hex** (drain) | **Glare** — range −2 | **Spore Cloud** — initiative −1, slow 1 | **Mire** — slow, initiative −2, range −1 |
+| **Veil** (shield) | **Kiln Shell** — shield 2, occupants ignore burn | **Bark Veil** — shield 2, props on it +1 HP | **Shade Veil** — shield 2, also blocks Strike damage 1 |
+
+**Neutral archetypes** (Raise Prop, Raise Ground, Sanctify, Shove, Reposition, Channel, Ward, Relocate, Empower) have no aspect variant: the aspect only decides the attunement interaction (+1/−1) and the colour. Kin decides who may take them (§6, "Locked out of").
+
+**Kit rule:**
 
 ```
-Monster = 1 Surge
-        + 1 Ground skill / Utility from the archetypes above
-        + 1 passive
+Monster = Move + Strike (Kin)                      — universal
+        + 1 Surge (aspect type, species shape, ≤1 twist)
+        + 1 utility from the matrix / neutral pool  — 2nd utility from Foundation
+        + 1 passive                                  — 2nd passive at Epic+ (gdd_overworld §5)
 ```
 
-**Kit design tip (v5):** pair the Surge with one zone of a *different effect family* (a Veil, a Snare, a Current) so there is always an answer in the kit. Aspects are **flavour + territory**: they decide which squares you paint with Surges and which zones get +1 there.
+**Kit design tip:** pair the Surge with a utility of a *different effect family* (a Veil, a Snare, a Current) so there is always an answer in the kit. Aspects are **flavour + territory**: they decide which squares you paint with Surges and which zones get +1 there. The prototype Tiger's 7 skills are a test bench, not a kit.
 
 ### 9.6 Sight
 
@@ -511,7 +594,7 @@ Mirror Step · Spatial Rend (remove a square 2 rounds) · Exile · Anchor (squar
 
 **Displacement:** Crashlander · Immovable (ignores push/pull) · Counterweight
 
-**Combat:** Thick Hide · Frenzy (+1 shape cell at 1–2 HP) · Scavenger · First Blood · Vengeful · Bulwark (team)
+**Combat:** Thick Hide (Strikes and collisions −1, v6) · **Pack Hunter** (Strike costs 1 AP if an ally is adjacent to the target, v6) · Frenzy (+1 shape cell at 1–2 HP) · Scavenger · First Blood · Vengeful · Bulwark (team)
 
 **Zone & Ground Resistance:** Sure-footed (ignores `slow`) · Clear Mind (ignores `drain_*`) · Heatproof (ignores `burn`) — the unit-level way of shrugging a specific tag.
 
@@ -655,6 +738,12 @@ The tamer shapes; monsters fight. Once per battle (or very long cooldown).
 ## 18. Open Questions (Battle)
 
 **(v6) To decide next:**
+
+- **Board size per mode:** 1v1 5×5, 3v3 7×7?, 5v5 9×9? Shapes and ranges were tuned for 5×5
+- **Turn order in teams:** strict initiative across all 6–10 monsters, or alternating sides (A1, B1, A2, B2 …)? Initiative drain/flip gets very strong when one side can chain turns
+- **Strike reach on larger boards:** still only adjacent?
+- **Matrix opposed pairs:** Bog ↔ Gale only. Add Shockwave ↔ Void Pull, Kiln Shell ↔ Ash Snare?
+- **Roster gaps:** which 6 of the remaining 9 Kin × Aspect cells come next
 
 - **Double Surge:** without cooldowns, may a monster declare two Surges in one turn (2 AP, up to 6 squares)? Pro: real all-in turn, solves dodging. Contra: likely one-turn kills on 5–6 HP. Current proposal: keep **one charging Surge per monster**
 - **Strike cost:** 2 AP (whole turn) or 1 AP but only if you didn't move this turn?
