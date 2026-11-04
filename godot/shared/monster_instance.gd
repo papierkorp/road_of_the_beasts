@@ -72,6 +72,21 @@ func to_battle_unit() -> MonsterDef:
 	return d
 
 
+## The full datasheet as text (identity, stats, kit) — what the pre-battle screen and the
+## inner world show. No hidden information (gdd_battle pillar 6).
+func sheet_text(with_kit := true) -> String:
+	var def := species()
+	var head := "%s — %s %s · %s" % [def.display_name, Aspect.NAMES[def.aspect], MonsterDef.kin_name(def.kin),
+		StatShape.shape_name(shape)]
+	var line := "HP %d/%d   Init %.1f   Move %d   TPR %d   Reach %d" % [current_hp, max_hp(),
+		float(stats["initiative"]), int(stats["move"]), int(stats["tpr"]), int(stats["reach"])]
+	if not with_kit:
+		return head + "\n" + line
+	var kit := "Surge: %s · Utility: %s · Passive: %s · Strike: %s" % [def.surge.display_name,
+		def.utility.display_name, def.passive_name(), def.strike_name()]
+	return head + "\n" + line + "\n" + kit
+
+
 func to_dict() -> Dictionary:
 	return {"species": String(species_id), "shape": int(shape), "rarity": int(rarity), "stage": int(stage),
 		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "current_hp": current_hp}

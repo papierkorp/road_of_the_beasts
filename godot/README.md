@@ -12,8 +12,9 @@ battle/      the deterministic grid battle (gdd_battle.md)
   ui/        battle HUD and the pre-battle draft screen
   battle.tscn, draft.tscn
 overworld/   days, AP, night phase, economy, internal world (gdd_overworld.md)
-  core/      headless: GameState (day, AP, money, owned individuals), Expedition (dungeon run)
-  ui/        hub screen; overworld.tscn
+  core/      headless: GameState (day, AP, money, owned individuals), Expedition (dungeon node map)
+  ui/        WorldMapScreen (the city as a map of places), DungeonScreen + DungeonCanvas (node map)
+  overworld.tscn (city map), dungeon.tscn
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession)
 data/        content as Resource files: monsters/, skills/, zones/ (a new file = new content)
 tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game

@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://overworld/ui/overworld_screen.gd" id="1"]
+[ext_resource type="Script" path="res://overworld/ui/world_map_screen.gd" id="1"]
 
 [node name="Overworld" type="Control"]
 script = ExtResource("1")

@@ -59,42 +59,91 @@ func test_state_survives_a_json_round_trip() -> void:
 	assert_float(back.monsters[0].stats["initiative"]).is_equal(g.monsters[0].stats["initiative"])
 
 
-func test_expedition_is_a_chain_of_wild_battles_at_the_players_mode() -> void:
+func _win_node(g: GameState, e: Expedition, id: int, hp_left := 3) -> void:
+	assert_bool(e.select(id)).is_true()
+	e.request_for(g)
+	e.apply_result(g, _result(0, hp_left))
+
+
+func test_expedition_is_a_node_map_with_a_boss_at_the_end() -> void:
 	var g := GameState.new_game(_rng())
 	var e := Expedition.generate(g, _rng())
-	assert_int(e.nodes.size()).is_equal(Expedition.NODE_COUNT)
+	var total := 0
+	for n in Expedition.LAYER_SIZES:
+		total += int(n)
+	assert_int(e.nodes.size()).is_equal(total)
+	assert_str(String(e.nodes[e.nodes.size() - 1]["kind"])).is_equal("boss")
+	assert_int(e.choices().size()).is_equal(Expedition.LAYER_SIZES[0])
 	for n in e.nodes:
 		assert_str(String(n["mode"])).is_equal("1v1")
 		assert_int((n["enemies"] as Array).size()).is_equal(1)
+
+
+func test_every_node_can_be_reached() -> void:
+	for seed_value in 12:
+		var g := GameState.new_game(_rng(seed_value))
+		var e := Expedition.generate(g, _rng(seed_value))
+		var reachable := {}
+		for id in e.choices():
+			reachable[id] = true
+		for n in e.nodes:
+			if reachable.has(n["id"]):
+				for nx in n["next"]:
+					reachable[nx] = true
+		assert_int(reachable.size()).is_equal(e.nodes.size())
+
+
+func test_only_nodes_on_the_map_ahead_can_be_selected() -> void:
+	var g := GameState.new_game(_rng())
+	var e := Expedition.generate(g, _rng())
+	assert_bool(e.select(e.nodes.size() - 1)).is_false()
+	assert_bool(e.select(e.choices()[0])).is_true()
+
+
+func test_request_uses_the_chosen_team_and_the_nodes_wild_monsters() -> void:
+	var g := GameState.new_game(_rng())
+	var e := Expedition.generate(g, _rng())
+	e.select(e.choices()[0])
 	var req := e.request_for(g)
 	assert_str(req.problem()).is_empty()
 	assert_object(req.player_team[0]).is_same(g.monsters[0])
+	assert_object(req.enemy_team[0]).is_same(e.node(e.selected)["enemies"][0])
 
 
-func test_victory_pays_keeps_hp_gives_xp_and_advances() -> void:
+func test_victory_pays_keeps_hp_gives_xp_and_opens_the_next_nodes() -> void:
 	var g := GameState.new_game(_rng())
 	var e := Expedition.generate(g, _rng())
-	e.apply_result(g, _result(0, 2))
+	var first: int = e.choices()[0]
+	var reward: int = e.node(first)["reward"]
+	var next: Array = e.node(first)["next"]
+	_win_node(g, e, first, 2)
 	assert_int(g.monsters[0].current_hp).is_equal(2)
-	assert_int(g.money).is_equal(Expedition.REWARD_PER_NODE)
+	assert_int(g.money).is_equal(reward)
 	assert_int(g.monsters[0].xp).is_equal(Expedition.XP_PER_WIN)
-	assert_int(e.index).is_equal(1)
+	assert_bool(e.is_cleared(first)).is_true()
+	assert_int(e.selected).is_equal(-1)
+	assert_array(e.choices()).contains_exactly(next)
 	assert_bool(e.finished).is_false()
 
 
-func test_clearing_the_last_node_ends_the_run_in_victory() -> void:
+func test_clearing_a_path_to_the_boss_ends_the_run_in_victory() -> void:
 	var g := GameState.new_game(_rng())
 	var e := Expedition.generate(g, _rng())
-	for i in Expedition.NODE_COUNT:
-		e.apply_result(g, _result(0, 3))
+	var guard := 0
+	while not e.finished and guard < 20:
+		_win_node(g, e, e.choices()[0])
+		guard += 1
 	assert_bool(e.finished).is_true()
 	assert_bool(e.victory).is_true()
 	assert_int(g.money).is_equal(e.money_earned)
+	assert_int(e.choices().size()).is_equal(0)
 
 
 func test_defeat_ends_the_run_without_reward() -> void:
 	var g := GameState.new_game(_rng())
 	var e := Expedition.generate(g, _rng())
+	e.select(e.choices()[0])
+	e.request_for(g)
 	e.apply_result(g, _result(1, 0))
 	assert_bool(e.finished).is_true()
 	assert_bool(e.victory).is_false()
@@ -105,8 +154,9 @@ func test_defeat_ends_the_run_without_reward() -> void:
 func test_an_unfinished_battle_changes_nothing() -> void:
 	var g := GameState.new_game(_rng())
 	var e := Expedition.generate(g, _rng())
+	e.select(e.choices()[0])
 	var r := _result(0, 1)
 	r.over = false
 	e.apply_result(g, r)
-	assert_int(e.index).is_equal(0)
+	assert_int(e.current).is_equal(-1)
 	assert_int(g.money).is_equal(0)

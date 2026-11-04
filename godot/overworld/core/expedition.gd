@@ -1,55 +1,111 @@
 class_name Expedition
 extends RefCounted
-## One dungeon run (gdd_overworld §6.2, §7, §10.2): a chain of battle nodes with visible wild
-## monsters. HP persists from node to node, the run ends after the last node or on defeat.
-## It builds BattleRequests and reads BattleResults — it never touches the battle itself.
+## One dungeon run as a node map (gdd_overworld §6.2, §11 "Slay-the-Spire style").
+## Layers of battle nodes, the player picks a path; the last layer is a boss node.
+## HP persists from node to node (§10.2). It builds BattleRequests and reads BattleResults —
+## it never touches the battle itself.
 ##
-## Phase 1: straight chain of battles, flat money reward, flat XP. Branching, loot and
-## catching come later.
+## Phase 1: only battle and boss nodes, flat money reward and XP; at most 2 nodes per layer.
+## Branches, loot, rest nodes and catching come later.
 
-const NODE_COUNT := 3
-const REWARD_PER_NODE := 10         # spirit stones, times the node number
+const LAYER_SIZES := [2, 2, 2, 1]
+const REWARD_PER_LAYER := 10        # spirit stones, times the layer number
+const BOSS_MULTIPLIER := 2
 const XP_PER_WIN := 10
 
-var nodes: Array[Dictionary] = []   # {mode, enemies: Array[MonsterInstance], reward}
-var index := 0
+## Node: {id, layer, col, kind (&"battle" | &"boss"), mode, enemies: Array[MonsterInstance], reward, next: Array[int]}
+var nodes: Array[Dictionary] = []
+var current := -1                   # last cleared node (-1 = not entered yet)
+var selected := -1                  # node the player is about to fight
 var finished := false
 var victory := false
 var money_earned := 0
+var _team: Array[MonsterInstance] = []
+var _path: Array[int] = []          # cleared nodes in order
 
 
 static func generate(state: GameState, rng: RandomNumberGenerator) -> Expedition:
 	var e := Expedition.new()
 	var mode := state.battle_mode()
 	var ids := GameData.monster_ids()
-	for i in NODE_COUNT:
-		var enemies: Array[MonsterInstance] = []
-		for k in BattleRequest.team_size_of(mode):
-			var def := GameData.monster(ids[rng.randi_range(0, ids.size() - 1)])
-			enemies.append(MonsterInstance.roll(def, rng, StatShape.Id.NONE, state.stage, state.sub_tier))
-		e.nodes.append({"mode": mode, "enemies": enemies, "reward": REWARD_PER_NODE * (i + 1)})
+	var layers: Array = []
+	for l in LAYER_SIZES.size():
+		var row: Array[int] = []
+		var boss: bool = l == LAYER_SIZES.size() - 1
+		for c in int(LAYER_SIZES[l]):
+			var enemies: Array[MonsterInstance] = []
+			for k in BattleRequest.team_size_of(mode):
+				var def := GameData.monster(ids[rng.randi_range(0, ids.size() - 1)])
+				enemies.append(MonsterInstance.roll(def, rng, StatShape.Id.NONE, state.stage, state.sub_tier))
+			var next: Array[int] = []
+			e.nodes.append({"id": e.nodes.size(), "layer": l, "col": c, "kind": &"boss" if boss else &"battle",
+				"mode": mode, "enemies": enemies, "next": next,
+				"reward": REWARD_PER_LAYER * (l + 1) * (BOSS_MULTIPLIER if boss else 1)})
+			row.append(e.nodes.size() - 1)
+		layers.append(row)
+	# paths: straight on, sometimes also across (every node of the next layer stays reachable)
+	for l in LAYER_SIZES.size() - 1:
+		var here: Array = layers[l]
+		var there: Array = layers[l + 1]
+		for c in here.size():
+			var straight := mini(c, there.size() - 1)
+			var nx: Array[int] = [there[straight]]
+			if there.size() > 1 and rng.randf() < 0.5:
+				nx.append(there[1 - straight])
+			e.nodes[here[c]]["next"] = nx
 	return e
 
 
-func current_node() -> Dictionary:
-	return nodes[index] if index < nodes.size() else {}
+## Nodes the player may enter next.
+func choices() -> Array[int]:
+	var out: Array[int] = []
+	if finished:
+		return out
+	if current < 0:
+		for n in nodes:
+			if n["layer"] == 0:
+				out.append(n["id"])
+	else:
+		for i in nodes[current]["next"]:
+			out.append(i)
+	return out
 
 
-func request_for(state: GameState) -> BattleRequest:
-	var n := current_node()
+func select(id: int) -> bool:
+	if not choices().has(id):
+		return false
+	selected = id
+	return true
+
+
+func node(id: int) -> Dictionary:
+	return nodes[id] if id >= 0 and id < nodes.size() else {}
+
+
+## A node counts as cleared when it lies on the path walked so far.
+func is_cleared(id: int) -> bool:
+	return _path.has(id)
+
+
+## The request for the selected node. `team` is the player's pick (default: the first monsters).
+func request_for(state: GameState, team: Array[MonsterInstance] = []) -> BattleRequest:
 	var r := BattleRequest.new()
+	var n := node(selected)
+	if n.is_empty():
+		return r
+	_team = team if not team.is_empty() else state.team_for(n["mode"])
 	r.mode = n["mode"]
-	r.player_team = state.team_for(n["mode"])
+	r.player_team = _team
 	r.enemy_team = n["enemies"]
 	return r
 
 
-## Reads the finished battle of the current node: HP persists, victory pays and advances.
+## Reads the finished battle of the selected node: HP persists, victory pays and moves on.
 func apply_result(state: GameState, result: BattleResult) -> void:
-	if finished or index >= nodes.size() or not result.over:
+	var n := node(selected)
+	if finished or n.is_empty() or not result.over:
 		return
-	var n := nodes[index]
-	var team := state.team_for(n["mode"])
+	var team := _team if not _team.is_empty() else state.team_for(n["mode"])
 	result.apply_hp(team, 0)
 	if result.player_won():
 		state.add_money(n["reward"])
@@ -57,8 +113,10 @@ func apply_result(state: GameState, result: BattleResult) -> void:
 		for m in team:
 			if m.current_hp > 0:
 				m.xp += XP_PER_WIN
-		index += 1
-		if index >= nodes.size():
+		current = selected
+		_path.append(selected)
+		selected = -1
+		if (n["next"] as Array).is_empty():
 			finished = true
 			victory = true
 	else:
