@@ -24,6 +24,7 @@ const PASSIVE_TEXT := {
 	&"deep_roots": "Can't be displaced on own-aspect squares",
 	&"thornwalker": "Ignores Thornbed",
 	&"painter": "Fired Surges also repaint adjacent squares",
+	&"adaptive": "May rotate its skill shapes in battle",
 	&"pack_hunter": "Strike costs 1 AP if an ally is next to the target",
 	&"native_ground": "+2 instead of +1 on own-aspect squares, never -1",
 	&"thick_hide": "Strikes and collisions deal 1 less",

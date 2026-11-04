@@ -7,10 +7,12 @@
 script = ExtResource("1")
 id = &"void_pull"
 display_name = "Void Pull"
+archetype = &"Current"
 kind = 1
 aspect = 3
 zone = ExtResource("2")
-shapes = Array[StringName]([&"T4", &"L3"])
+shapes = Array[StringName]([&"T4"])
+orientation = 0
 range = 3
 surge_type = 0
 twist = 0

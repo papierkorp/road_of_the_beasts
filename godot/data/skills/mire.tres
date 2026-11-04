@@ -7,10 +7,12 @@
 script = ExtResource("1")
 id = &"mire"
 display_name = "Mire"
+archetype = &"Hex"
 kind = 1
 aspect = 3
 zone = ExtResource("2")
-shapes = Array[StringName]([&"T4", &"O4"])
+shapes = Array[StringName]([&"T4"])
+orientation = 0
 range = 3
 surge_type = 0
 twist = 0

@@ -217,7 +217,7 @@ Numbers are **Core Formation**-stage values (caps: HP 8, Init 9, TPR 2, Move 4, 
 | **Forge Golem** | Ancient | Force | anvil · 8 / 2.0 / 1 / 1 / 2 | *Crucible* · Eruption · ring of 4 · **Ring** | Raise Wall | Immovable |
 | **Moss Turtle** | Scaled | Nature | anvil · 8 / 3.0 / 1 / 1 / 2 | *Tidal Shell* · Flood · I3 · **Slow-burn** | Bark Veil | Deep Roots |
 | **Thorn Mites** | Swarm | Nature | fragile · 3 / 6.0 / 2 / 2 / 1 | *Bramble Tide* · Flood · I2 · **Lingering** | Thornbed | Thornwalker |
-| **Grove Wisp** | Spirit | Nature | skirmisher · 3 / 8.0 / 3 / 1 / 1 | *Spring Burst* · Flood · L3 · **Lob** | Gale | Painter |
+| **Grove Wisp** | Spirit | Nature | skirmisher · 3 / 8.0 / 3 / 1 / 1 | *Spring Burst* · Flood · L3 · **Lob** | Gale | Adaptive |
 | **Gloom Wolf** | Beast | Dark | balanced · 5 / 6.0 / 2 / 1 / 1 | *Gloom Rift* · Rift · I3 / L3 · — (baseline) | Mire | Pack Hunter |
 | **Dusk Moth** | Winged | Dark | glass cannon · 2 / 9.0 / 3 / 2 / 1 | *Eclipse* · Rift · I3 → 4 cells · **Wide** | Shade Veil | Native Ground |
 | **Hollow Serpent** | Scaled | Dark | anvil-ish · 6 / 4.0 / 2 / 1 / 2 | *Coiling Rift* · Rift · L4 · **Constrict** | Void Pull | Thick Hide |
@@ -228,7 +228,7 @@ One sentence each (design test):
 - **Forge Golem** — walls itself in and erupts around its own body; you have to come to it.
 - **Moss Turtle** — a slow, heavy Flood that hits one turn later but harder, behind Bark Veils, and can't be pushed off its own ground.
 - **Thorn Mites** — weak little Floods that leave thorns for 3 rounds, on top of a permanent Thornbed they walk through unharmed.
-- **Grove Wisp** — throws weak Floods from far away, phases through props, and paints the board green around every hit.
+- **Grove Wisp** — throws weak Floods from far away, phases through props, and is the only one that can turn its shapes in battle.
 - **Gloom Wolf** — the baseline: Mire flips the turn order, its Rift does the rest; much stronger with an ally next to the target.
 - **Dusk Moth** — a wide, weaker Rift on Cursed squares, under a Shade Veil.
 - **Hollow Serpent** — pulls you in with Void Pull, then its Rift drags everything it hits toward the centre.
@@ -399,7 +399,7 @@ Every Surge, zone and terrain skill controls **several squares in a fixed shape 
 | S4 / Z4 | 4 | 4 |
 | L4 / J4 | 4 | 8 |
 
-A skill lists the families it may use (e.g. Gloom Rift: I3/L3; Lava Field: O4/T4/S4/L4; Gale: I3). Rotate (`R` / right-click) and place by the **anchor** — the shape's centre-most cell — which must be within range (Manhattan, base + Elevated bonus − drains). All cells must be on the board; ground skills need prop-free squares; props need empty squares; zones and Surges may land on props. Directional skills (Currents, Flood) also take a direction, pull skills an anchor. The cast preview colours each square (**new / levels up / replaces / cancels / blocked**) and lists attunement strength (+1/−1 counts), ground and prop reactions, landing squares of displaced monsters and, for Surges, damage after ground and Veils.
+**Fixed shapes:** every skill has exactly **one shape family and one fixed orientation**, absolute on the board for both teams (e.g. Gloom Rift: vertical I3; Mire: T4). Shapes are tuned outside battle (overworld: skill variants / evolution, gdd_overworld §4.6) — in battle you only pick *where* to place it, plus the push direction for Currents, Floods and Tail Sweep. Only the passive **Adaptive** may rotate shapes in battle (`R` / right-click). Place by the **anchor** — the shape's centre-most cell — which must be within range (Manhattan, base + Elevated bonus − drains). All cells must be on the board; ground skills need prop-free squares; props need empty squares; zones and Surges may land on props. Directional skills (Currents, Flood) also take a direction, pull skills an anchor. The cast preview colours each square (**new / levels up / replaces / cancels / blocked**) and lists attunement strength (+1/−1 counts), ground and prop reactions, landing squares of displaced monsters and, for Surges, damage after ground and Veils.
 
 ---
 
@@ -464,7 +464,7 @@ A **Surge is a pending marker with a timer** — same shapes and placement as zo
 
 ```
 MINOR SURGE
-  shape: per species (I2 … L4, see the roster §6.2), chosen & rotated at cast; twists may change it (§9.4.2)
+  shape: per species (I2 … L4, see the roster §6.2), one family in a fixed orientation (§7.6); twists may change it (§9.4.2)
   range: 3 (anchor), +1 on Elevated ground; twists may change it
   charging: visible, blocks movement through its squares
   fires: at the START of the caster's next turn (1v1: = end of the opponent's turn)
@@ -590,12 +590,13 @@ Zone, terrain and Surge casts are placed by **range from the caster to the ancho
 {
   "id": "bog",
   "name": "Bog",
-  "archetype": "Snare",              // see §9.4.1
   "kind": "zone",                    // strike | surge | zone | ground | height | prop | direct | self
   "aspect": "nature",
   "zone": "bog",                     // zone definition id (kind: zone)
   "ground": null,                    // kind: ground → lava | thornbed | blight
-  "shapes": ["I3","L3"],             // allowed tetris families
+  "archetype": "Snare",              // §9.4.1
+  "shapes": ["L3"],                  // exactly one tetris family
+  "orientation": 0,                  // fixed orientation index (absolute on the board)
   "range": 3,                        // anchor range (Manhattan)
   "cost": 1,                         // AP, always ≥ 1 (Strike / Major Surge: 2)
   "surge_type": null,                // eruption | flood | rift — kind: surge only
@@ -613,7 +614,7 @@ Mirror Step · Spatial Rend (remove a square 2 rounds) · Exile · Anchor (squar
 
 ## 10. Passives Library
 
-**Terrain Identity:** Native Ground (your zones and Surges get +2 instead of +1 on own-aspect squares; ignores the −1) · Painter (fired Surges also repaint adjacent squares) · Trailblazer (repaints squares it walks over) · Deep Roots (undisplaceable on own-aspect squares) · Purifier (adjacent enemy zones lose 1 round at round end) · Overgrowth (your zones start at level II)
+**Terrain Identity:** Native Ground (your zones and Surges get +2 instead of +1 on own-aspect squares; ignores the −1) · Painter (fired Surges also repaint adjacent squares) · Adaptive (may rotate its skill shapes in battle) · Trailblazer (repaints squares it walks over) · Deep Roots (undisplaceable on own-aspect squares) · Purifier (adjacent enemy zones lose 1 round at round end) · Overgrowth (your zones start at level II)
 
 **Position & Movement:** Highlander (+2 init on Elevated) · Turret (can't move, +1 range and Reach) · Skittish (free 1-square move after taking Surge damage — to the safest free neighbour) · Phasing (moves through props) · Momentum (after a max-distance move, the next Surge this turn deals +1)
 
@@ -744,6 +745,7 @@ The tamer shapes; monsters fight. Each tamer skill can be used **once per battle
 ## 16. Technical Notes (Battle)
 
 - Godot 4 · **3D square grid, orthogonal camera ~45°** — never hex
+- **Content = data files with a fixed template:** one Resource per monster / skill / zone in `data/monsters`, `data/skills`, `data/zones`, typed by its script class (`MonsterDef`, `SkillDef`, `ZoneDef` — only their exported fields exist, the inspector shows them as a form). `GameData` is the single registry: it finds every file automatically, indexes it by `id` (= file name) and validates the set on startup (duplicate ids, missing Surge/utility, unknown shapes or passives, aspect mismatches, stat ranges). A new monster = a new file
 - Battle logic **headless & engine-independent**: 2D array of Square objects; each square stores `{ ground{type, level, timer, height, attunement}, object, surge, zone }`; zone definitions are a data table (aspect + effect list with base/cap), values computed live from level and attunement
 - Resolution is deterministic and order-defined (§14); casting is a pure function `preview_cell(skill, cell)` returning `new | level | replace | cancel | lost` plus ground and prop reactions, residue and landing squares of displacement — the same function drives the preview, the AI and the unit tests
 - Opposite effects (§7.3), the triangle rule for zone × ground, the source × prop-tag table (§8.2), Surge types and twists are data (Resources), not code branches; the zone × zone check compares effect tags, never zone ids
@@ -760,7 +762,7 @@ The tamer shapes; monsters fight. Each tamer skill can be used **once per battle
 
 **Tools:** `godot/tests/` (gdUnit4 suites for the rules), `godot/tools/sim.gd` (AI-vs-AI batch simulation with win rates per monster), `godot/tools/smoke_ui.gd` (plays the player's side through the real UI headless).
 
-**First simulation (60 AI-vs-AI 3v3 battles, random teams):** sides win 50/50, ~14 rounds per battle. Outliers to look at: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue), Blight is the biggest damage source after Eruption, Veils absorb a lot (230 blocked hits), and ~1 in 5 battles is decided by the arena collapse (§13.1).
+**First simulation (60 AI-vs-AI 3v3 battles, random teams):** sides win 50/50, ~14 rounds per battle with free rotation — **~19 rounds with fixed shapes**. Outliers to look at: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue), Blight is the biggest damage source after Eruption, Veils absorb a lot (230 blocked hits), and ~1 in 5 battles is decided by the arena collapse (§13.1).
 
 **Next playtest — what to check once v6 is built:**
 

@@ -6,9 +6,11 @@
 script = ExtResource("1")
 id = &"gloom_rift"
 display_name = "Gloom Rift"
+archetype = &"Surge"
 kind = 0
 aspect = 3
-shapes = Array[StringName]([&"I3", &"L3"])
+shapes = Array[StringName]([&"I3"])
+orientation = 0
 range = 3
 surge_type = 3
 twist = 0

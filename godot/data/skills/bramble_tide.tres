@@ -6,9 +6,11 @@
 script = ExtResource("1")
 id = &"bramble_tide"
 display_name = "Bramble Tide"
+archetype = &"Surge"
 kind = 0
 aspect = 2
 shapes = Array[StringName]([&"I2"])
+orientation = 0
 range = 3
 surge_type = 2
 twist = 7

@@ -150,12 +150,12 @@ func _on_action(id: StringName) -> void:
 		else:
 			mode = &"place"
 			skill = s
-			orient = 0
+			orient = battle.effective_orientation(m, s, 0)
 	_refresh()
 
 
 func _rotate() -> void:
-	if mode != &"place" or skill == null or skill.orientations().is_empty():
+	if mode != &"place" or skill == null or not battle.can_rotate(battle.turn_owner, skill):
 		return
 	orient = (orient + 1) % skill.orientations().size()
 	_refresh()
@@ -237,7 +237,7 @@ func _refresh() -> void:
 	view.set_highlights(_highlights(arrows), arrows)
 	view.refresh()
 	hud.update(_order_text(), _portrait_text(), _ap_text(), _hint_text(), _preview_text(),
-			_inspector_text(), _actions(), _my_turn(), _banner_text())
+			_inspector(), _actions(), _my_turn(), _banner_text())
 
 
 func _ap_text() -> String:
@@ -273,7 +273,7 @@ func _highlights(arrows: Dictionary) -> Dictionary:
 			var cells := battle.placement_cells(m.id, skill, orient, _anchor_for(skill))
 			if cells.is_empty():
 				if not skill.orientations().is_empty():
-					for c in Shapes.footprint(skill.orientations()[orient % skill.orientations().size()], hover):
+					for c in Shapes.footprint(skill.orientations()[battle.effective_orientation(m, skill, orient)], hover):
 						if battle.board.in_bounds(c):
 							out[c] = Color(0.85, 0.33, 0.33, 0.6)
 				return out
@@ -327,11 +327,7 @@ func _portrait_text() -> String:
 	s += "HP %d/%d · Init %.1f · Move %d · Reach %d · TPR %d\n" % [m.hp, m.max_hp,
 			battle.effective_stat(m, Battle.Stat.INIT), int(battle.effective_stat(m, Battle.Stat.MOVE)),
 			battle.reach(m), d.tpr]
-	s += "Surge: %s (%s%s) — %s\n" % [d.surge.display_name, SkillDef.surge_type_name(d.surge.surge_type),
-			", " + SkillDef.twist_name(d.surge.twist) if d.surge.twist != SkillDef.Twist.NONE else "", d.surge.description]
-	s += "Utility: %s — %s\n" % [d.utility.display_name, d.utility.description]
-	s += "Strike: %s — %s\n" % [d.strike_name(), MonsterDef.STRIKE_TEXT[d.kin]]
-	s += "Passive: %s — %s" % [d.passive_name(), d.passive_text()]
+	s += "Passive: %s · hover a skill for its card" % d.passive_name()
 	return s
 
 
@@ -352,8 +348,10 @@ func _hint_text() -> String:
 			if skill == null:
 				return ""
 			var t2 := "Aim %s." % skill.display_name
-			if skill.orientations().size() > 1:
-				t2 += " R / right-click rotates."
+			if battle.can_rotate(_active().id, skill):
+				t2 += " R / right-click rotates (Adaptive)."
+			else:
+				t2 += " Fixed shape."
 			if skill.needs_direction():
 				t2 += " WASD sets the push direction (%s)." % _dir_name(aim_dir)
 			if skill.is_pull():
@@ -380,15 +378,15 @@ func _actions() -> Array:
 		return out
 	var mine := _my_turn()
 	out.append({"id": ACT_MOVE, "text": "Move\n1 AP", "enabled": mine and battle.ap >= 1,
-		"selected": mode == &"move", "tooltip": "Move up to %d squares" % int(battle.effective_stat(m, Battle.Stat.MOVE))})
+		"selected": mode == &"move", "card": {"title": "Move", "rows": InfoText.move_rows(battle, m)}})
 	var can_strike := mine and not battle.strike_targets(m.id).is_empty()
 	out.append({"id": ACT_STRIKE, "text": "%s\n%s" % [m.def.strike_name(), "2 AP"], "enabled": can_strike,
-		"selected": mode == &"strike", "tooltip": MonsterDef.STRIKE_TEXT[m.kin()]})
+		"selected": mode == &"strike", "card": {"title": "Strike — " + m.def.strike_name(), "rows": InfoText.strike_rows(battle, m)}})
 	for s in m.skills():
 		var charging := s.kind == SkillDef.Kind.SURGE and battle.has_charging(m.id)
 		out.append({"id": s.id, "text": s.display_name + ("\ncharging" if charging else "\n1 AP"),
 			"enabled": mine and battle.can_cast(m.id, s), "selected": mode == &"place" and skill == s,
-			"tooltip": s.description})
+			"card": {"title": s.display_name, "rows": InfoText.skill_rows(s, battle, m)}})
 	return out
 
 
@@ -451,14 +449,12 @@ func _preview_text() -> String:
 	return s
 
 
-func _inspector_text() -> String:
+func _inspector() -> Dictionary:
 	if hover == NOWHERE:
-		return ""
+		return {}
 	var sq := battle.board.at(hover)
 	var s := "Square [%d, %d]\n" % [hover.x, hover.y]
 	var occ := battle.monster_at(hover)
-	if occ != null:
-		s += "%s %s · HP %d/%d\n" % [_side_tag(occ), occ.display_name(), occ.hp, occ.max_hp]
 	if sq.object != null:
 		s += "Prop: %s %d/%d %s%s\n" % [sq.object["name"], sq.object["hp"], sq.object["max_hp"],
 				", ".join(PackedStringArray(sq.object["tags"])), " (burning)" if sq.object["burning"] else ""]
@@ -480,7 +476,10 @@ func _inspector_text() -> String:
 		s += " · Elevated"
 	if sq.attunement != Aspect.Type.NONE:
 		s += "\nAttuned: %s" % Aspect.ATTUNEMENT_NAMES[sq.attunement]
-	return s
+	if occ != null:
+		return {"title": "%s %s" % [_side_tag(occ), occ.display_name()],
+			"rows": InfoText.monster_rows(occ.def, occ, battle), "text": s}
+	return {"title": "Square [%d, %d]" % [hover.x, hover.y], "rows": [], "text": s.substr(s.find("\n") + 1)}
 
 
 # ---------- log ----------

@@ -6,9 +6,11 @@
 script = ExtResource("1")
 id = &"tidal_shell"
 display_name = "Tidal Shell"
+archetype = &"Surge"
 kind = 0
 aspect = 2
 shapes = Array[StringName]([&"I3"])
+orientation = 0
 range = 3
 surge_type = 2
 twist = 6

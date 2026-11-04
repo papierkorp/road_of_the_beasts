@@ -3,7 +3,7 @@ extends GdUnitTestSuite
 
 
 func test_all_roster_monsters_load_with_surge_and_utility() -> void:
-	for id in BattleSetup.ROSTER:
+	for id in GameData.monster_ids():
 		var d := BattleSetup.load_def(id)
 		assert_object(d).is_not_null()
 		assert_object(d.surge).is_not_null()

@@ -44,15 +44,15 @@ func _ready() -> void:
 	grid.add_theme_constant_override("v_separation", 12)
 	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	col.add_child(grid)
-	for id in BattleSetup.ROSTER:
+	for id in GameData.monster_ids():
 		var def := BattleSetup.load_def(id)
 		var b := Button.new()
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(420, 170)
+		b.custom_minimum_size = Vector2(420, 250)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		b.add_theme_font_size_override("font_size", 14)
+		b.add_theme_font_size_override("font_size", 13)
 		b.text = _card_text(def)
 		b.toggled.connect(func(on: bool): _toggle(id, on))
 		grid.add_child(b)
@@ -83,13 +83,8 @@ func _ready() -> void:
 
 
 func _card_text(d: MonsterDef) -> String:
-	return "%s — %s %s\nHP %d · Init %.1f · Move %d · Reach %d · TPR %d\nSurge: %s (%s%s)\nUtility: %s — %s\nPassive: %s — %s\n%s" % [
-		d.display_name, Aspect.NAMES[d.aspect], MonsterDef.kin_name(d.kin),
-		d.hp, d.initiative, d.move, d.reach, d.tpr,
-		d.surge.display_name, SkillDef.surge_type_name(d.surge.surge_type),
-		", " + SkillDef.twist_name(d.surge.twist) if d.surge.twist != SkillDef.Twist.NONE else "",
-		d.utility.display_name, d.utility.description,
-		d.passive_name(), d.passive_text(), d.blurb]
+	var rows := InfoText.monster_rows(d)
+	return "%s\n%s\n%s" % [d.display_name.to_upper(), InfoText.rows_to_text(rows), d.blurb]
 
 
 func _toggle(id: StringName, on: bool) -> void:

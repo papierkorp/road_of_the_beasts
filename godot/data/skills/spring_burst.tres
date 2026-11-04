@@ -6,9 +6,11 @@
 script = ExtResource("1")
 id = &"spring_burst"
 display_name = "Spring Burst"
+archetype = &"Surge"
 kind = 0
 aspect = 2
 shapes = Array[StringName]([&"L3"])
+orientation = 0
 range = 3
 surge_type = 2
 twist = 4

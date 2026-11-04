@@ -7,10 +7,12 @@
 script = ExtResource("1")
 id = &"bog"
 display_name = "Bog"
+archetype = &"Snare"
 kind = 1
 aspect = 2
 zone = ExtResource("2")
-shapes = Array[StringName]([&"I3", &"L3"])
+shapes = Array[StringName]([&"L3"])
+orientation = 0
 range = 3
 surge_type = 0
 twist = 0

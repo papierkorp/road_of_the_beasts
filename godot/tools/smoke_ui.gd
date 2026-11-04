@@ -57,6 +57,10 @@ func _play_one(c) -> void:
 			c._refresh()
 		c._rotate()
 		c._set_dir(Vector2i(1, 0))
+		c.hud._hover_id = act
+		c.hud._show_card()
+	c.hud._hover_id = &""
+	c.hud._show_card()
 	c._clear_mode()
 	var a := AiBrain.decide(b, m.id, _rng)
 	match a["type"]:

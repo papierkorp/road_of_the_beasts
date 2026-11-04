@@ -11,13 +11,18 @@ const SURGE_BASE_DAMAGE := {SurgeType.ERUPTION: 3, SurgeType.FLOOD: 2, SurgeType
 
 @export var id: StringName
 @export var display_name: String
+## Archetype from GDD §9.4.1 (Surge, Field, Snare, Current, Hex, Veil, Raise Prop, Raise Ground, …)
+@export var archetype: StringName
 @export var kind: Kind = Kind.ZONE
 @export var aspect: Aspect.Type = Aspect.Type.NONE
 ## kind ZONE
 @export var zone: ZoneDef
 ## kind GROUND (Field): the hazard ground it lays
 @export var ground_type: Square.GroundType = Square.GroundType.LAVA
+## Exactly one shape family. Its orientation is fixed in battle (absolute on the board);
+## shapes are tuned outside battle (overworld). Passive Adaptive may rotate in battle.
 @export var shapes: Array[StringName] = []
+@export var orientation: int = 0
 @export var range: int = 3
 ## kind SURGE
 @export var surge_type: SurgeType = SurgeType.NONE
@@ -40,6 +45,10 @@ func placement() -> Board.Placement:
 
 func orientations() -> Array[Dictionary]:
 	return Shapes.orientations(shapes)
+
+
+static func kind_name(k: Kind) -> String:
+	return Kind.keys()[k].capitalize()
 
 
 func is_pull() -> bool:
@@ -88,4 +97,7 @@ static func surge_type_name(t: SurgeType) -> String:
 
 
 static func twist_name(t: Twist) -> String:
-	return "" if t == Twist.NONE else Twist.keys()[t].capitalize().replace("_", "-")
+	if t == Twist.NONE:
+		return ""
+	var n: String = Twist.keys()[t].to_lower().replace("_", "-")
+	return n.left(1).to_upper() + n.substr(1)

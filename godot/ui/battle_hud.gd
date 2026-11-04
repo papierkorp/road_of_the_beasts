@@ -22,7 +22,14 @@ var _hint: Label
 var _ap: Label
 var _end_button: Button
 var _inspector_panel: PanelContainer
+var _inspector_title: Label
+var _inspector_grid: GridContainer
 var _inspector: Label
+var _card_panel: PanelContainer
+var _card_title: Label
+var _card_grid: GridContainer
+var _cards := {}                   # action id -> {title, rows}
+var _hover_id: StringName = &""
 var _preview_panel: PanelContainer
 var _preview: Label
 var _log_box: VBoxContainer
@@ -129,6 +136,11 @@ func _sync_buttons(actions: Array) -> void:
 		b.custom_minimum_size = Vector2(118, 56)
 		var id: StringName = a["id"]
 		b.pressed.connect(func(): action_pressed.emit(id))
+		b.mouse_entered.connect(func(): _hover_id = id; _show_card())
+		b.mouse_exited.connect(func():
+			if _hover_id == id:
+				_hover_id = &""
+				_show_card())
 		_button_row.add_child(b)
 		_buttons[id] = b
 
@@ -143,12 +155,84 @@ func _build_inspector(root: Control) -> void:
 	_inspector_panel.visible = false
 	_ignore(_inspector_panel)
 	root.add_child(_inspector_panel)
+	var box := VBoxContainer.new()
+	_ignore(box)
+	_inspector_panel.add_child(box)
+	_inspector_title = _card_label(box, 17, UiTheme.ACCENT)
+	_inspector_grid = _make_grid(box)
 	_inspector = Label.new()
-	_inspector.custom_minimum_size = Vector2(290, 0)
+	_inspector.custom_minimum_size = Vector2(320, 0)
 	_inspector.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_inspector.add_theme_font_size_override("font_size", 15)
+	_inspector.add_theme_font_size_override("font_size", 14)
+	_inspector.add_theme_color_override("font_color", UiTheme.DIM)
 	_ignore(_inspector)
-	_inspector_panel.add_child(_inspector)
+	box.add_child(_inspector)
+
+	# skill card above the action bar
+	_card_panel = PanelContainer.new()
+	_card_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	_card_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_card_panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_card_panel.offset_bottom = -116
+	_card_panel.visible = false
+	_ignore(_card_panel)
+	root.add_child(_card_panel)
+	var cbox := VBoxContainer.new()
+	_ignore(cbox)
+	_card_panel.add_child(cbox)
+	_card_title = _card_label(cbox, 18, UiTheme.ACCENT)
+	_card_grid = _make_grid(cbox)
+
+
+func _card_label(parent: Control, size_px: int, color: Color) -> Label:
+	var l := Label.new()
+	l.add_theme_font_size_override("font_size", size_px)
+	l.add_theme_color_override("font_color", color)
+	_ignore(l)
+	parent.add_child(l)
+	return l
+
+
+func _make_grid(parent: Control) -> GridContainer:
+	var g := GridContainer.new()
+	g.columns = 2
+	g.add_theme_constant_override("h_separation", 14)
+	g.add_theme_constant_override("v_separation", 3)
+	_ignore(g)
+	parent.add_child(g)
+	return g
+
+
+## Renders [[label, value], ...] as a two-column table.
+func _fill_grid(g: GridContainer, rows: Array) -> void:
+	for c in g.get_children():
+		g.remove_child(c)
+		c.queue_free()
+	for r in rows:
+		var k := Label.new()
+		k.text = r[0]
+		k.add_theme_font_size_override("font_size", 14)
+		k.add_theme_color_override("font_color", UiTheme.DIM)
+		k.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+		_ignore(k)
+		g.add_child(k)
+		var v := Label.new()
+		v.text = r[1]
+		v.add_theme_font_size_override("font_size", 14)
+		v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		v.custom_minimum_size = Vector2(300, 0)
+		_ignore(v)
+		g.add_child(v)
+
+
+func _show_card() -> void:
+	var card: Dictionary = _cards.get(_hover_id, {})
+	_card_panel.visible = not card.is_empty()
+	if card.is_empty():
+		return
+	_card_title.text = card["title"]
+	_fill_grid(_card_grid, card["rows"])
+	_card_panel.reset_size()
 
 
 func _build_preview(root: Control) -> void:
@@ -227,8 +311,10 @@ func show_pause(on: bool) -> void:
 
 ## One call per refresh. `actions`: [{id, text, enabled, selected, tooltip}].
 ## An empty `inspector` or `preview` hides that panel.
+## `inspector`: {title, rows, text} — empty dictionary hides it.
+## Each action may carry "card": {title, rows} shown while the mouse is over its button.
 func update(order_text: String, portrait: String, ap_text: String, hint: String, preview: String,
-		inspector: String, actions: Array, can_end: bool, banner: String) -> void:
+		inspector: Dictionary, actions: Array, can_end: bool, banner: String) -> void:
 	_order.text = order_text
 	_portrait.text = portrait
 	_ap.text = ap_text
@@ -243,11 +329,20 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 		b.text = a.get("text", "")
 		b.tooltip_text = a.get("tooltip", "")
 		b.modulate = UiTheme.ACCENT if a.get("selected", false) else Color.WHITE
+		if a.has("card"):
+			_cards[a["id"]] = a["card"]
 	_banner.visible = banner != ""
 	_banner_text.text = banner
 
-	_inspector_panel.visible = inspector != ""
-	_inspector.text = inspector
+	if _hover_id != &"":
+		_show_card()
+	_inspector_panel.visible = not inspector.is_empty()
+	if not inspector.is_empty():
+		_inspector_title.text = inspector.get("title", "")
+		_fill_grid(_inspector_grid, inspector.get("rows", []))
+		_inspector.text = inspector.get("text", "")
+		_inspector.visible = _inspector.text != ""
+		_inspector_panel.reset_size()
 	_preview_panel.visible = preview != ""
 	_preview.text = preview
 	if preview != "":

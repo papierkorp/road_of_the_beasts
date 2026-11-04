@@ -197,7 +197,7 @@ func placement_cells(who: StringName, skill: SkillDef, orient_idx: int, anchor: 
 	var orients := skill.orientations()
 	if orients.is_empty():
 		return none
-	var o: Dictionary = orients[orient_idx % orients.size()]
+	var o: Dictionary = orients[effective_orientation(m, skill, orient_idx)]
 	cells = Shapes.footprint(o, anchor)
 	match skill.twist:
 		SkillDef.Twist.POUNCE:
@@ -215,6 +215,20 @@ func placement_cells(who: StringName, skill: SkillDef, orient_idx: int, anchor: 
 	if cells.has(m.pos) and skill.kind == SkillDef.Kind.PROP:
 		return none
 	return cells
+
+
+## Shapes are fixed in battle (the skill's own orientation); only Adaptive may pick another.
+func effective_orientation(m: Monster, skill: SkillDef, requested: int) -> int:
+	var n := skill.orientations().size()
+	if n == 0:
+		return 0
+	if m.has_passive(&"adaptive"):
+		return posmod(requested, n)
+	return clampi(skill.orientation, 0, n - 1)
+
+
+func can_rotate(who: StringName, skill: SkillDef) -> bool:
+	return monsters[who].has_passive(&"adaptive") and skill.orientations().size() > 1
 
 
 ## Trail: a straight line that starts next to the caster and leads away from it.
@@ -240,7 +254,13 @@ func all_placements(who: StringName, skill: SkillDef) -> Array[Dictionary]:
 			out.append({"oi": 0, "anchor": monsters[who].pos, "cells": cells})
 		return out
 	var n := skill.orientations().size()
-	for oi in n:
+	var choices: Array[int] = []
+	if can_rotate(who, skill):
+		for oi in n:
+			choices.append(oi)
+	else:
+		choices.append(effective_orientation(monsters[who], skill, 0))
+	for oi in choices:
 		for y in board.size:
 			for x in board.size:
 				var cells := placement_cells(who, skill, oi, Vector2i(x, y))

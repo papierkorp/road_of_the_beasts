@@ -6,9 +6,11 @@
 script = ExtResource("1")
 id = &"cinder_dive"
 display_name = "Cinder Dive"
+archetype = &"Surge"
 kind = 0
 aspect = 1
 shapes = Array[StringName]([&"I3"])
+orientation = 0
 range = 3
 surge_type = 1
 twist = 2

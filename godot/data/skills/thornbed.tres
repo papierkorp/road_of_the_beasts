@@ -6,10 +6,12 @@
 script = ExtResource("1")
 id = &"thornbed"
 display_name = "Thornbed"
+archetype = &"Field"
 kind = 2
 aspect = 2
 ground_type = 4
-shapes = Array[StringName]([&"I3", &"L3"])
+shapes = Array[StringName]([&"L3"])
+orientation = 0
 range = 3
 surge_type = 0
 twist = 0

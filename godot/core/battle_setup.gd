@@ -3,12 +3,6 @@ extends RefCounted
 ## Boards, start areas and teams (GDD §1, §13). Point-symmetric boards so both sides are equal.
 ## The draft screen writes the player's pick into the static vars; the battle scene reads them.
 
-const ROSTER: Array[StringName] = [
-	&"blaze_tiger", &"ember_hawk", &"forge_golem",
-	&"moss_turtle", &"thorn_mites", &"grove_wisp",
-	&"gloom_wolf", &"dusk_moth", &"hollow_serpent",
-]
-
 static var player_pick: Array[StringName] = []
 static var enemy_pick: Array[StringName] = []
 static var mode: StringName = &"3v3"
@@ -17,7 +11,7 @@ static var autoplay := false
 
 
 static func load_def(id: StringName) -> MonsterDef:
-	return load("res://data/monsters/%s.tres" % id)
+	return GameData.monster(id)
 
 
 static func team_size(m: StringName) -> int:
@@ -27,7 +21,7 @@ static func team_size(m: StringName) -> int:
 ## Random enemy team from the monsters the player didn't pick.
 static func random_enemy(pick: Array[StringName], size: int, rng: RandomNumberGenerator) -> Array[StringName]:
 	var pool: Array[StringName] = []
-	for id in ROSTER:
+	for id in GameData.monster_ids():
 		if not pick.has(id):
 			pool.append(id)
 	var out: Array[StringName] = []

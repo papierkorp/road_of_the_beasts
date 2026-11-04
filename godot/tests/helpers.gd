@@ -11,11 +11,11 @@ static func def(id: StringName, overrides: Dictionary = {}) -> MonsterDef:
 
 
 static func skill(id: String) -> SkillDef:
-	return load("res://data/skills/%s.tres" % id)
+	return GameData.skill(StringName(id))
 
 
 static func zone(id: String) -> ZoneDef:
-	return load("res://data/zones/%s.tres" % id)
+	return GameData.zone(StringName(id))
 
 
 ## specs: [[id, side, pos, overrides?], ...]

@@ -6,10 +6,12 @@
 script = ExtResource("1")
 id = &"lava_field"
 display_name = "Lava Field"
+archetype = &"Field"
 kind = 2
 aspect = 1
 ground_type = 3
-shapes = Array[StringName]([&"O4", &"T4", &"S4", &"L4"])
+shapes = Array[StringName]([&"O4"])
+orientation = 0
 range = 3
 surge_type = 0
 twist = 0

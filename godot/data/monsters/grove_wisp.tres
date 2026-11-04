@@ -17,5 +17,5 @@ tpr = 1
 reach = 1
 surge = ExtResource("2")
 utility = ExtResource("3")
-passive = &"painter"
-blurb = "Throws weak Floods from far away, phases through props, paints the board green."
+passive = &"adaptive"
+blurb = "Throws weak Floods from far away, phases through props, and is the only one that can turn its shapes in battle."
