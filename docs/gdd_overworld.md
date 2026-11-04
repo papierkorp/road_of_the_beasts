@@ -493,8 +493,9 @@ Monster artifacts deepen the battle game; tamer artifacts feed the management/ex
 ```
 PHASE 1  Battle system (done: 1v1 + 3v3, draft, 9 monsters) + individual monsters
          (built: individuals, BattleRequest/Result, GameState, city map of places,
-         dungeon node map with full enemy sheets and team pick; next: Trader + cultivation pills;
-         placeholders: night heals everyone, flat rewards and XP)
+         dungeon node map with full enemy sheets and team pick, loot, Trader with drifting
+         prices, cultivation pills → XP → sub-tier with stat snap;
+         placeholders: night heals everyone, flat rewards, prototype prices and XP curve)
          (stat shapes, stage caps, XP → sub-tier snap) + node-based dungeon access
          + Trader business (pure buy/sell) + money → power loop
          (money → cultivation pills → XP → stronger stats)
@@ -510,6 +511,7 @@ PHASE 3  Dojo/faction staff, auction hall, monster hall,
 
 **Monsters & progression**
 - Exact stat budget per stage and fraction per sub-tier (Lower / Middle / High); min / max ranges and point prices of the six shapes
+  *(prototype: Lower 75% / Middle 90% / High 100% of the HP and Initiative budget; XP to next sub-tier 60 / 120, High bar 200; pill +30 XP for 80 stones; dungeon win +10 XP)*
 - Can an individual's **stat shape change** later (ritual / rare item), or is it fixed for life?
 - Are **evolution picks reversible**, and what does the respec ritual cost (materials, favor, AP)?
 - Evolution schedule: how many evolutions per skill per stage, and what XP / materials do they cost?

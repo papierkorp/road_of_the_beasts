@@ -70,6 +70,17 @@ func _apply_battle_result() -> void:
 		_note = "Your team fell. The run ends here — the night will heal you."
 	elif _ex.current != before:
 		_note = "Victory! Choose where to go next."
+	if _ex.current != before:
+		_note += "  " + _loot_text()
+		if not _ex.last_ups.is_empty():
+			_note += "\n" + ", ".join(PackedStringArray(_ex.last_ups)) + " — stats snap to the new values!"
+
+
+func _loot_text() -> String:
+	var parts: Array[String] = []
+	for id in _ex.last_loot:
+		parts.append("%s ×%d" % [ItemCatalog.display_name(String(id)), int(_ex.last_loot[id])])
+	return "Loot: " + (", ".join(PackedStringArray(parts)) if not parts.is_empty() else "nothing") + "."
 
 
 func _refresh() -> void:

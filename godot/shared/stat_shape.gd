@@ -90,15 +90,20 @@ static func roll_core(shape: Id, rng: RandomNumberGenerator) -> Dictionary:
 		"tpr": int(d["tpr"]), "reach": int(d["reach"])}
 
 
-## Snaps a Core-scale spread to a stage: HP and Initiative scale with the cap, Move / TPR / Reach
+## How much of the stage budget a sub-tier fills (HP and Initiative). Prototype values, to be tuned.
+const SUB_TIER_FILL := {Stage.SubTier.LOWER: 0.75, Stage.SubTier.MIDDLE: 0.9, Stage.SubTier.HIGH: 1.0}
+
+
+## Snaps a Core-scale spread to a stage: HP and Initiative scale with the cap and the sub-tier, Move / TPR / Reach
 ## keep their value but never exceed the cap — and a stat that sat on the Core cap sits on the
 ## cap of the new stage (so a Berserker's TPR 2 becomes TPR 3 at Soul Tier).
-static func at_stage(core: Dictionary, stage: Stage.Type) -> Dictionary:
+static func at_stage(core: Dictionary, stage: Stage.Type, sub_tier: Stage.SubTier = Stage.SubTier.HIGH) -> Dictionary:
 	var cap := Stage.caps(stage)
 	var core_cap := Stage.caps(Stage.Type.CORE_FORMATION)
+	var fill: float = SUB_TIER_FILL[sub_tier]
 	var out := {}
-	out["hp"] = clampi(roundi(float(core["hp"]) * float(cap["hp"]) / float(core_cap["hp"])), 1, int(cap["hp"]))
-	out["initiative"] = clampf(snappedf(float(core["initiative"]) * float(cap["initiative"]) / float(core_cap["initiative"]), 0.1),
+	out["hp"] = clampi(roundi(float(core["hp"]) * float(cap["hp"]) / float(core_cap["hp"]) * fill), 1, int(cap["hp"]))
+	out["initiative"] = clampf(snappedf(float(core["initiative"]) * float(cap["initiative"]) / float(core_cap["initiative"]) * fill, 0.1),
 		0.1, float(cap["initiative"]))
 	for k in ["move", "tpr", "reach"]:
 		var value := int(core[k])

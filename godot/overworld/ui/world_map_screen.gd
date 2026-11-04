@@ -1,8 +1,8 @@
 class_name WorldMapScreen
 extends Control
 ## The city as a map of places (gdd_overworld §6.1, §11 "node-based map v1").
-## Click a place to see what it offers; only the Teleport Plaza (dungeon) and the Inner World
-## are built so far. Decisions are free, execution costs: only entering a dungeon spends AP (§7).
+## Click a place to see what it offers; the Inner World (monsters, cultivation pills), the Teleport
+## Plaza (dungeon) and the Market (Trader) are built so far. Decisions are free, execution costs: only entering a dungeon spends AP (§7).
 
 const SCENE := "res://overworld/overworld.tscn"
 const DUNGEON_SCENE := "res://overworld/dungeon.tscn"
@@ -16,8 +16,8 @@ const PLACES := [
 		"blurb": "Your spatial space: the monsters you hold, and later cultivation spots, plots and structures (§6.3)."},
 	{"id": &"plaza", "name": "Teleport Plaza", "pos": Vector2(380, 120), "built": true,
 		"blurb": "Travel arrays lead to dungeon regions. Entering a dungeon costs 1 AP and includes its battles (§7)."},
-	{"id": &"market", "name": "Market District", "pos": Vector2(610, 300), "built": false,
-		"blurb": "Trader: buy low, sell high, spend spirit stones on cultivation pills. Comes in the next step (§8, §11)."},
+	{"id": &"market", "name": "Market District", "pos": Vector2(610, 300), "built": true,
+		"blurb": "The Trader: sell dungeon loot, buy cultivation pills, and play the price swings — they drift every night (§8, §11)."},
 	{"id": &"clan", "name": "Clan Compound", "pos": Vector2(380, 380), "built": false,
 		"blurb": "Clan meetings, favor and story events. Phase 2-3 (§8.2)."},
 ]
@@ -124,8 +124,15 @@ func _refresh() -> void:
 	match _selected:
 		&"inner":
 			_text("YOUR MONSTERS  (%d / %d held)" % [_game.monsters.size(), _game.capacity()], UiTheme.DIM)
+			var pill := ItemCatalog.pill_id(int(_game.stage))
+			_text("Cultivation pills in your bag: %d  (+%d XP each)" % [_game.item_count(pill), ItemCatalog.pill_xp(pill)], UiTheme.DIM)
 			for m in _game.monsters:
-				_text(m.sheet_text() + "\nXP %d" % m.xp, UiTheme.TEXT)
+				_text(m.sheet_text() + "\n" + m.progress_text(), UiTheme.TEXT)
+				var give := _button("Give a cultivation pill", func(): _give_pill(pill, m))
+				give.disabled = _game.item_count(pill) < 1 or not m.can_gain_xp()
+				_detail.add_child(give)
+		&"market":
+			_build_market()
 		&"plaza":
 			if GameSession.expedition != null:
 				_detail.add_child(_button("Return to the dungeon", _enter_dungeon))
@@ -135,6 +142,50 @@ func _refresh() -> void:
 				_detail.add_child(go)
 		_:
 			_text("Not built yet.", UiTheme.DIM)
+
+
+func _give_pill(pill: String, m: MonsterInstance) -> void:
+	var ups := _game.use_pill(pill, m)
+	if ups < 0:
+		return
+	_note = "%s gains %d XP." % [m.species().display_name, ItemCatalog.pill_xp(pill)]
+	if ups > 0:
+		_note += " It reaches %s — its stats snap to the new values!" % Stage.sub_tier_name(m.sub_tier)
+	SaveGame.save(_game)
+	_refresh()
+
+
+func _build_market() -> void:
+	var market := _game.market
+	_text("SELL — your bag  (the Trader pays %d%% of today's value)" % roundi(Market.SELL_RATE * 100.0), UiTheme.DIM)
+	var any := false
+	for id in _game.bag_ids():
+		if market.sell_price(id) <= 0:
+			continue
+		any = true
+		var count := _game.item_count(id)
+		var b := _button("%s  ×%d  —  sell one for %d" % [ItemCatalog.display_name(id), count, market.sell_price(id)],
+			func(): _trade(market.sell(_game, id)))
+		_detail.add_child(b)
+	if not any:
+		_text("Nothing to sell. Dungeon battles drop materials.", UiTheme.DIM)
+	_text("BUY — today's offers", UiTheme.DIM)
+	var pill := ItemCatalog.pill_id(int(_game.stage))
+	var pb := _button("%s  (+%d XP)  —  %d" % [ItemCatalog.display_name(pill), ItemCatalog.pill_xp(pill), market.buy_price(pill)],
+		func(): _trade(market.buy(_game, pill)))
+	pb.disabled = _game.money < market.buy_price(pill)
+	_detail.add_child(pb)
+	for id in market.stock:
+		var bb := _button("%s  —  %d   (worth %d today)" % [ItemCatalog.display_name(id), market.buy_price(id), market.sell_price(id)],
+			func(): _trade(market.buy(_game, id)))
+		bb.disabled = _game.money < market.buy_price(id)
+		_detail.add_child(bb)
+
+
+func _trade(ok: bool) -> void:
+	if ok:
+		SaveGame.save(_game)
+	_refresh()
 
 
 func _start_dungeon() -> void:
@@ -153,7 +204,7 @@ func _end_day() -> void:
 		_note = "Finish or leave the dungeon first."
 		_refresh()
 		return
-	var report := _game.end_day()
+	var report := _game.end_day(_rng)
 	_note = "The night passes. Day %d begins; %d monster(s) recovered." % [report["day"], report["healed"]]
 	SaveGame.save(_game)
 	_refresh()

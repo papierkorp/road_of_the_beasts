@@ -5,8 +5,8 @@ extends RefCounted
 ## HP persists from node to node (§10.2). It builds BattleRequests and reads BattleResults —
 ## it never touches the battle itself.
 ##
-## Phase 1: only battle and boss nodes, flat money reward and XP; at most 2 nodes per layer.
-## Branches, loot, rest nodes and catching come later.
+## Phase 1: only battle and boss nodes, flat money reward and XP, one material drop per wild
+## monster (by its kin); at most 2 nodes per layer. Rest nodes and catching come later.
 
 const LAYER_SIZES := [2, 2, 2, 1]
 const REWARD_PER_LAYER := 10        # spirit stones, times the layer number
@@ -20,6 +20,8 @@ var selected := -1                  # node the player is about to fight
 var finished := false
 var victory := false
 var money_earned := 0
+var last_loot := {}                 # item id -> count, of the last victory
+var last_ups: Array[String] = []    # "Name reached Middle", of the last victory
 var _team: Array[MonsterInstance] = []
 var _path: Array[int] = []          # cleared nodes in order
 
@@ -110,9 +112,16 @@ func apply_result(state: GameState, result: BattleResult) -> void:
 	if result.player_won():
 		state.add_money(n["reward"])
 		money_earned += n["reward"]
+		last_loot = {}
+		for e: MonsterInstance in n["enemies"]:
+			var sp := e.species()
+			var loot := ItemCatalog.material_id(sp.kin, sp.aspect, int(e.stage))
+			state.add_item(loot)
+			last_loot[loot] = int(last_loot.get(loot, 0)) + 1
+		last_ups = []
 		for m in team:
-			if m.current_hp > 0:
-				m.xp += XP_PER_WIN
+			if m.current_hp > 0 and m.add_xp(XP_PER_WIN) > 0:
+				last_ups.append("%s reached %s" % [m.species().display_name, Stage.sub_tier_name(m.sub_tier)])
 		current = selected
 		_path.append(selected)
 		selected = -1

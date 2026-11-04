@@ -11,12 +11,20 @@ extends RefCounted
 
 enum Rarity { NORMAL, RARE, EPIC, LEGENDARY }
 
+## XP needed to reach the next sub-tier (prototype values, tuning: gdd_overworld §12). The High
+## bar can fill but only a breakthrough trial (not built yet) leads to the next stage.
+const XP_TO_NEXT := {Stage.SubTier.LOWER: 60, Stage.SubTier.MIDDLE: 120}
+const HIGH_BAR := 200
+
 var species_id: StringName
 var shape: StatShape.Id = StatShape.Id.NONE
 var rarity: Rarity = Rarity.NORMAL
 var stage: Stage.Type = Stage.Type.CORE_FORMATION
 var sub_tier: Stage.SubTier = Stage.SubTier.HIGH
 var xp := 0
+## The rolled spread on the Core Formation scale; stats are re-snapped from it when the sub-tier
+## or stage changes. Empty for reference individuals (their stats are fixed).
+var core := {}
 ## Resolved stats: hp, initiative, move, tpr, reach.
 var stats := {}
 ## Persists between battles of an expedition (gdd_overworld §10.2).
@@ -43,7 +51,8 @@ static func roll(def: MonsterDef, rng: RandomNumberGenerator, p_shape := StatSha
 	m.rarity = p_rarity
 	m.stage = p_stage
 	m.sub_tier = p_sub_tier
-	m.stats = StatShape.at_stage(StatShape.roll_core(m.shape, rng), p_stage)
+	m.core = StatShape.roll_core(m.shape, rng)
+	m.stats = StatShape.at_stage(m.core, p_stage, p_sub_tier)
 	m.current_hp = m.max_hp()
 	return m
 
@@ -54,6 +63,47 @@ func max_hp() -> int:
 
 func species() -> MonsterDef:
 	return GameData.monster(species_id)
+
+
+func xp_needed() -> int:
+	return XP_TO_NEXT.get(sub_tier, HIGH_BAR)
+
+
+func can_gain_xp() -> bool:
+	return not (sub_tier == Stage.SubTier.HIGH and xp >= HIGH_BAR)
+
+
+## Adds XP; a full bar is a sub-tier up and the stats snap to the new values. Returns the ups.
+func add_xp(amount: int) -> int:
+	var ups := 0
+	xp += amount
+	while sub_tier != Stage.SubTier.HIGH and xp >= xp_needed():
+		xp -= xp_needed()
+		sub_tier = (int(sub_tier) + 1) as Stage.SubTier
+		ups += 1
+	if sub_tier == Stage.SubTier.HIGH:
+		xp = mini(xp, HIGH_BAR)
+	if ups > 0:
+		resnap()
+	return ups
+
+
+## Recomputes the stats from the rolled spread for the current stage and sub-tier. The extra
+## max HP is healed; reference individuals keep their fixed stats.
+func resnap() -> void:
+	if core.is_empty():
+		return
+	var old_max := max_hp()
+	stats = StatShape.at_stage(core, stage, sub_tier)
+	var gain := max_hp() - old_max
+	current_hp = mini(max_hp(), current_hp + maxi(gain, 0))
+
+
+func progress_text() -> String:
+	var s := "%s · %s" % [Stage.stage_name(stage), Stage.sub_tier_name(sub_tier)]
+	if sub_tier == Stage.SubTier.HIGH and xp >= HIGH_BAR:
+		return s + " — XP bar full (a breakthrough trial is needed)"
+	return s + " — XP %d / %d" % [xp, xp_needed()]
 
 
 func heal_full() -> void:
@@ -89,7 +139,7 @@ func sheet_text(with_kit := true) -> String:
 
 func to_dict() -> Dictionary:
 	return {"species": String(species_id), "shape": int(shape), "rarity": int(rarity), "stage": int(stage),
-		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "current_hp": current_hp}
+		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "core": core.duplicate(), "current_hp": current_hp}
 
 
 static func from_dict(d: Dictionary) -> MonsterInstance:
@@ -103,5 +153,9 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 	var st: Dictionary = d["stats"]
 	m.stats = {"hp": int(st["hp"]), "initiative": float(st["initiative"]), "move": int(st["move"]),
 		"tpr": int(st["tpr"]), "reach": int(st["reach"])}
+	var c: Dictionary = d.get("core", {})
+	if not c.is_empty():
+		m.core = {"hp": int(c["hp"]), "initiative": float(c["initiative"]), "move": int(c["move"]),
+			"tpr": int(c["tpr"]), "reach": int(c["reach"])}
 	m.current_hp = int(d["current_hp"])
 	return m

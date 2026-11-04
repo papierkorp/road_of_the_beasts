@@ -5,7 +5,7 @@ extends RefCounted
 ## Imports only shared/ — it never touches the battle.
 ##
 ## Phase 1 placeholders (marked, to be replaced by the real systems): the night heals everybody
-## fully, the player's stage never changes, XP is collected but does not yet raise sub-tiers.
+## fully and the player's own stage never changes (monsters rise through sub-tiers with XP).
 
 const START_AP := 3
 const STARTER := &"blaze_tiger"
@@ -17,11 +17,14 @@ var money := 0                      # spirit stones, lowest denomination (gdd_ov
 var stage: Stage.Type = Stage.Type.QI_GATHERING
 var sub_tier: Stage.SubTier = Stage.SubTier.LOWER
 var monsters: Array[MonsterInstance] = []
+var items := {}                     # item id -> count (ItemCatalog)
+var market: Market
 
 
 static func new_game(rng: RandomNumberGenerator, starter: StringName = STARTER) -> GameState:
 	var g := GameState.new()
 	g.monsters.append(MonsterInstance.roll(GameData.monster(starter), rng, StatShape.Id.NONE, g.stage, g.sub_tier))
+	g.market = Market.create(int(g.stage), rng)
 	return g
 
 
@@ -65,8 +68,53 @@ func add_money(n: int) -> void:
 	money += n
 
 
+func spend_money(n: int) -> bool:
+	if money < n:
+		return false
+	money -= n
+	return true
+
+
+func add_item(id: String, n := 1) -> void:
+	items[id] = item_count(id) + n
+
+
+func remove_item(id: String, n := 1) -> bool:
+	if item_count(id) < n:
+		return false
+	items[id] = item_count(id) - n
+	if items[id] <= 0:
+		items.erase(id)
+	return true
+
+
+func item_count(id: String) -> int:
+	return int(items.get(id, 0))
+
+
+## Ids of everything in the bag, sorted.
+func bag_ids() -> Array[String]:
+	var out: Array[String] = []
+	for id in items:
+		out.append(String(id))
+	out.sort()
+	return out
+
+
+## Feeds a cultivation pill to a monster: XP, maybe a sub-tier up. Returns the sub-tier ups,
+## or -1 when it didn't work (no such pill, not a pill, or the XP bar is already full).
+func use_pill(id: String, m: MonsterInstance) -> int:
+	if ItemCatalog.kind_of(id) != ItemCatalog.Kind.PILL or not m.can_gain_xp() or item_count(id) < 1:
+		return -1
+	remove_item(id)
+	return m.add_xp(ItemCatalog.pill_xp(id))
+
+
 ## Night phase: every resolver runs once (gdd_overworld §7). Returns a report for the results screen.
-func end_day() -> Dictionary:
+func end_day(rng: RandomNumberGenerator = null) -> Dictionary:
+	if rng == null:
+		rng = RandomNumberGenerator.new()
+		rng.randomize()
 	var healed := 0
 	for m in monsters:
 		if m.current_hp < m.max_hp():
@@ -74,6 +122,7 @@ func end_day() -> Dictionary:
 		m.heal_full()
 	day += 1
 	ap = max_ap
+	market.new_day(rng)
 	return {"day": day, "healed": healed}
 
 
@@ -82,7 +131,7 @@ func to_dict() -> Dictionary:
 	for m in monsters:
 		ms.append(m.to_dict())
 	return {"day": day, "max_ap": max_ap, "ap": ap, "money": money, "stage": int(stage),
-		"sub_tier": int(sub_tier), "monsters": ms}
+		"sub_tier": int(sub_tier), "monsters": ms, "items": items.duplicate(), "market": market.to_dict()}
 
 
 static func from_dict(d: Dictionary) -> GameState:
@@ -95,4 +144,12 @@ static func from_dict(d: Dictionary) -> GameState:
 	g.sub_tier = int(d["sub_tier"]) as Stage.SubTier
 	for md in d["monsters"]:
 		g.monsters.append(MonsterInstance.from_dict(md))
+	for id in d.get("items", {}):
+		g.items[String(id)] = int(d["items"][id])
+	if d.has("market"):
+		g.market = Market.from_dict(d["market"])
+	else:
+		var rng := RandomNumberGenerator.new()
+		rng.randomize()
+		g.market = Market.create(int(g.stage), rng)
 	return g
