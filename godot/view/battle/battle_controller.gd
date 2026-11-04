@@ -442,33 +442,15 @@ func _inspector() -> Dictionary:
 	if hover == NOWHERE:
 		return {}
 	var sq := battle.board.at(hover)
-	var s := "Square [%d, %d]\n" % [hover.x, hover.y]
 	var occ := battle.monster_at(hover)
-	if sq.object != null:
-		s += "Prop: %s %d/%d %s%s\n" % [sq.object["name"], sq.object["hp"], sq.object["max_hp"],
-				", ".join(PackedStringArray(sq.object["tags"])), " (burning)" if sq.object["burning"] else ""]
-	if sq.surge != null:
-		var sg: Dictionary = sq.surge
-		var owner: Monster = battle.monsters[sg["owner"]]
-		s += "Surge: %s (%s) by %s — fires in %d of its turns, %d dmg here\n" % [sg["name"],
-				SkillDef.surge_type_name(sg["type"]), owner.display_name(), sg["turns_left"],
-				battle.surge_damage_at(sq, sg, occ)]
-	if sq.zone != null:
-		var z: Dictionary = sq.zone
-		s += "Zone: %s %s · %d round(s)\n" % [z["def"].display_name, BattleView.ROMAN[z["level"] - 1], z["duration"]]
-		for e in z["def"].effective(z["level"], sq.attunement, z["native"]):
-			s += "  • %s %d\n" % [ZoneEffect.label(e["tag"]), e["value"]]
-	s += "Ground: %s" % Square.ground_name(sq.ground)
-	if sq.is_aspect_ground():
-		s += " %s%s" % [BattleView.ROMAN[sq.level - 1], " (%d rounds)" % sq.timer if sq.timer != Square.PERMANENT else ""]
-	if sq.elevated:
-		s += " · Elevated"
-	if sq.attunement != Aspect.Type.NONE:
-		s += "\nAttuned: %s" % Aspect.ATTUNEMENT_NAMES[sq.attunement]
+	var rows: Array = []
+	var title := "Square [%d, %d]" % [hover.x, hover.y]
 	if occ != null:
-		return {"title": "%s %s" % [_side_tag(occ), occ.display_name()],
-			"rows": InfoText.monster_rows(occ.def, occ, battle), "text": s}
-	return {"title": "Square [%d, %d]" % [hover.x, hover.y], "rows": [], "text": s.substr(s.find("\n") + 1)}
+		title = "%s %s  ·  [%d, %d]" % [_side_tag(occ), occ.display_name(), hover.x, hover.y]
+		rows = InfoText.monster_rows(occ.def, occ, battle)
+		rows.append(["", ""])
+	rows.append_array(InfoText.square_rows(battle, sq))
+	return {"title": title, "rows": rows, "text": ""}
 
 
 # ---------- log ----------

@@ -147,11 +147,6 @@ func _sync_buttons(actions: Array) -> void:
 
 func _build_inspector(root: Control) -> void:
 	_inspector_panel = PanelContainer.new()
-	_inspector_panel.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-	_inspector_panel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	_inspector_panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	_inspector_panel.offset_right = -20
-	_inspector_panel.offset_left = -340
 	_inspector_panel.visible = false
 	_ignore(_inspector_panel)
 	root.add_child(_inspector_panel)
@@ -200,7 +195,7 @@ func _make_grid(parent: Control) -> GridContainer:
 
 
 ## Renders [[label, value], ...] as a two-column table.
-func _fill_grid(g: GridContainer, rows: Array) -> void:
+func _fill_grid(g: GridContainer, rows: Array, value_width: float = 300.0) -> void:
 	for c in g.get_children():
 		g.remove_child(c)
 		c.queue_free()
@@ -216,7 +211,7 @@ func _fill_grid(g: GridContainer, rows: Array) -> void:
 		v.text = r[1]
 		v.add_theme_font_size_override("font_size", 14)
 		v.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		v.custom_minimum_size = Vector2(300, 0)
+		v.custom_minimum_size = Vector2(value_width, 0)
 		_ignore(v)
 		g.add_child(v)
 
@@ -229,6 +224,17 @@ func _show_card() -> void:
 	_card_title.text = card["title"]
 	_fill_grid(_card_grid, card["rows"])
 	_place_card.call_deferred()
+
+
+## Right edge, below the monster panel, always fully on screen.
+func _place_inspector() -> void:
+	_inspector_panel.reset_size()
+	var vp := get_viewport().get_visible_rect().size
+	var sz := _inspector_panel.get_combined_minimum_size()
+	_inspector_panel.size = sz
+	var top := _portrait.position.y + _portrait.size.y + 12.0
+	var y := clampf((vp.y - sz.y) / 2.0, top, maxf(top, vp.y - 116.0 - sz.y))
+	_inspector_panel.position = Vector2(vp.x - sz.x - 20.0, y)
 
 
 ## Keep the whole card on screen, centred above the action bar.
@@ -344,10 +350,10 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 	_inspector_panel.visible = not inspector.is_empty()
 	if not inspector.is_empty():
 		_inspector_title.text = inspector.get("title", "")
-		_fill_grid(_inspector_grid, inspector.get("rows", []))
+		_fill_grid(_inspector_grid, inspector.get("rows", []), 330.0)
 		_inspector.text = inspector.get("text", "")
 		_inspector.visible = _inspector.text != ""
-		_inspector_panel.reset_size()
+		_place_inspector.call_deferred()
 	_preview_panel.visible = preview != ""
 	_preview.text = preview
 	if preview != "":

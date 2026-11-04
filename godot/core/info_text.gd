@@ -235,3 +235,98 @@ static func rows_to_text(rows: Array) -> String:
 	for r in rows:
 		lines.append("%s: %s" % [r[0], r[1]])
 	return "\n".join(PackedStringArray(lines))
+
+
+## Explained rows for one square: every layer says what it does, not just its name.
+static func square_rows(battle: Battle, sq: Square) -> Array:
+	var rows: Array = []
+	var occ := battle.monster_at(sq.pos)
+	if sq.surge != null:
+		var sg: Dictionary = sq.surge
+		var owner: Monster = battle.monsters[sg["owner"]]
+		var when := "start of %s's next turn" % owner.display_name() if sg["turns_left"] <= 1 \
+				else "in %d of %s's turns" % [sg["turns_left"], owner.display_name()]
+		var dmg := battle.surge_damage_at(sq, sg, occ)
+		rows.append(["Surge", "%s (%s) — fires at the %s; %d damage to whoever stands here, then %s residue" % [
+			sg["name"], SkillDef.surge_type_name(sg["type"]), when, dmg,
+			Square.ground_name(Battle._residue_ground(sg["type"]))]])
+	if sq.zone != null:
+		var z: Dictionary = sq.zone
+		var def: ZoneDef = z["def"]
+		var parts := []
+		for e in def.effective(z["level"], sq.attunement, z["native"]):
+			match e["tag"]:
+				ZoneEffect.Tag.SLOW:
+					parts.append("movement −%d" % e["value"])
+				ZoneEffect.Tag.DRAIN_INIT:
+					parts.append("initiative −%d" % e["value"])
+				ZoneEffect.Tag.DRAIN_RANGE:
+					parts.append("range and Reach −%d" % e["value"])
+				ZoneEffect.Tag.SHIELD:
+					parts.append("Surge damage −%d" % e["value"])
+				ZoneEffect.Tag.PUSH:
+					parts.append("pushed 1 %s at the end of the occupant's turn" % _dir_word(z["dir"]))
+				ZoneEffect.Tag.PULL:
+					parts.append("pulled 1 toward [%d,%d] at the end of the occupant's turn" % [z["anchor"].x, z["anchor"].y])
+		rows.append(["Zone", "%s %s · %d round%s left — %s" % [def.display_name, BattleView.ROMAN[z["level"] - 1],
+			z["duration"], "" if z["duration"] == 1 else "s", "; ".join(PackedStringArray(parts))]])
+	if sq.object != null:
+		var o: Dictionary = sq.object
+		var tag_text := []
+		for t in o["tags"]:
+			match t:
+				"flammable":
+					tag_text.append("burns when a Force skill hits it" if not o["burning"] else "BURNING — burns down at round end, leaves Lava")
+				"brittle":
+					tag_text.append("crumbles under Dark zones / Blight, Rifts hit it harder")
+				"heavy":
+					tag_text.append("can't be moved, Floods don't hurt it")
+				"indestructible":
+					tag_text.append("can't be destroyed")
+		var hp := "" if o["tags"].has("indestructible") else " %d/%d HP" % [o["hp"], o["max_hp"]]
+		rows.append(["Prop", "%s%s — blocks movement; %s" % [o["name"], hp, ", ".join(PackedStringArray(tag_text))]])
+	rows.append(["Ground", ground_text(sq)])
+	if sq.elevated:
+		rows.append(["Height", "Elevated — +1 range and Reach on top; climbing up costs 2 move; pushed off = 1 fall damage; Floods can't reach it, Rifts collapse it"])
+	if sq.attunement != Aspect.Type.NONE:
+		rows.append(["Colour", attunement_text(sq.attunement)])
+	return rows
+
+
+static func ground_text(sq: Square) -> String:
+	var left := "permanent" if sq.timer == Square.PERMANENT else "%d round%s left" % [sq.timer, "" if sq.timer == 1 else "s"]
+	match sq.ground:
+		Square.GroundType.PLAIN:
+			return "Plain — normal ground (move cost 1)"
+		Square.GroundType.RUBBLE:
+			return "Rubble — costs 2 movement, can't hold a colour"
+		Square.GroundType.VOIDSCAR:
+			return "Voidscar — 1 damage at the start of a turn here, permanent"
+		Square.GroundType.LAVA:
+			return "Lava %s — %d damage to whoever ENDS its turn here · %s" % [BattleView.ROMAN[sq.level - 1], sq.level, left]
+		Square.GroundType.THORNBED:
+			return "Thornbed %s — %d damage to whoever ENTERS (also when pushed in) · %s" % [BattleView.ROMAN[sq.level - 1], sq.level, left]
+		Square.GroundType.BLIGHT:
+			return "Blight %s — %d damage to whoever STARTS its turn here · %s" % [BattleView.ROMAN[sq.level - 1], sq.level, left]
+	return Square.ground_name(sq.ground)
+
+
+## "Cursed (Dark) — Dark zones and Surges +1 here, Force ones −1."
+static func attunement_text(att: Aspect.Type) -> String:
+	var weaker := Aspect.Type.NONE
+	for t in [Aspect.Type.FORCE, Aspect.Type.NATURE, Aspect.Type.DARK]:
+		if Aspect.beats(att, t):
+			weaker = t
+	return "%s (%s) — %s zones and Surges are +1 stronger here, %s ones −1 weaker. Set by Surges, fading zones and %s ground" % [
+		Aspect.ATTUNEMENT_NAMES[att], Aspect.NAMES[att], Aspect.NAMES[att], Aspect.NAMES[weaker], Aspect.NAMES[att]]
+
+
+static func _dir_word(d: Vector2i) -> String:
+	match d:
+		Vector2i(0, -1):
+			return "north"
+		Vector2i(0, 1):
+			return "south"
+		Vector2i(-1, 0):
+			return "west"
+	return "east"

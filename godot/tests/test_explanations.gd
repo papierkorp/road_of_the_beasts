@@ -74,3 +74,16 @@ func test_strike_error_reasons() -> void:
 	var b := _battle()
 	assert_str(b.strike_error(&"m0", Vector2i(3, 1))).contains("out of Reach")
 	assert_str(b.strike_error(&"m0", Vector2i(0, 0))).contains("nothing to hit")
+
+
+func test_square_rows_explain_ground_and_colour() -> void:
+	var b := _battle()
+	var sq := b.board.at(Vector2i(0, 0))
+	sq.lay_ground(Square.GroundType.LAVA, 2)
+	var text := InfoText.rows_to_text(InfoText.square_rows(b, sq))
+	assert_str(text).contains("Lava I — 1 damage to whoever ENDS its turn here · 2 rounds left")
+	assert_str(text).contains("Scorched (Force) — Force zones and Surges are +1 stronger here, Nature ones −1 weaker")
+	sq.lay_ground(Square.GroundType.BLIGHT, Square.PERMANENT)
+	text = InfoText.rows_to_text(InfoText.square_rows(b, sq))
+	assert_str(text).contains("Cursed (Dark) — Dark zones and Surges are +1 stronger here, Force ones −1 weaker")
+	assert_str(text).contains("STARTS its turn here · permanent")
