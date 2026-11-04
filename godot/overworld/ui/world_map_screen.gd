@@ -88,6 +88,7 @@ func _ready() -> void:
 	col.add_child(bar)
 	bar.add_child(_button("End day  (night passes)", _end_day))
 	bar.add_child(_button("Save and quit to menu", _to_menu))
+	GameSession.state_changed.connect(_refresh)
 	_refresh()
 
 

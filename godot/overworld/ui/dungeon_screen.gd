@@ -53,6 +53,7 @@ func _ready() -> void:
 	_info.add_theme_constant_override("separation", 10)
 	col.add_child(_info)
 	_apply_battle_result()
+	GameSession.state_changed.connect(_refresh)
 	_refresh()
 
 

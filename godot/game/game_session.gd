@@ -4,6 +4,9 @@ extends Node
 ## scene; the battle scene reads it and leaves its BattleResult here.
 ## The request stays after the battle so "Fight Again" fights the same teams again.
 
+## Emitted when something outside a screen changed the running game (the F10 cheat menu).
+signal state_changed
+
 var request: BattleRequest = null
 var last_result: BattleResult = null
 ## Scene the battle returns to when it is over ("" = back to the main menu).
