@@ -53,7 +53,7 @@ func test_result_reports_winner_and_hp_in_team_order() -> void:
 	var b := BattleSetup.build(r)
 	_play(b)
 	assert_bool(b.over).is_true()
-	var res := BattleResult.from_battle(b)
+	var res := BattleSetup.make_result(b)
 	assert_bool(res.over).is_true()
 	assert_int(res.winner_side).is_equal(b.winner_side)
 	assert_int(res.rounds).is_equal(b.round_number)
@@ -76,7 +76,7 @@ func test_apply_hp_writes_back_into_the_individuals() -> void:
 	var r := BattleRequest.default()
 	var b := BattleSetup.build(r)
 	_play(b)
-	var res := BattleResult.from_battle(b)
+	var res := BattleSetup.make_result(b)
 	res.apply_hp(r.player_team, 0)
 	for i in 3:
 		assert_int(r.player_team[i].current_hp).is_equal(res.player[i]["hp_left"])

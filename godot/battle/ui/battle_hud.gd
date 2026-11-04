@@ -35,6 +35,8 @@ var _preview: Label
 var _log_box: VBoxContainer
 var _banner: Control
 var _banner_text: Label
+var _banner_restart: Button
+var _banner_menu: Button
 var _pause: Control
 
 
@@ -278,8 +280,10 @@ func _build_banner(root: Control) -> void:
 	_banner_text.add_theme_color_override("font_color", UiTheme.ACCENT)
 	_banner_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_banner_text)
-	col.add_child(_menu_button("Fight Again", func(): restart_pressed.emit()))
-	col.add_child(_menu_button("Main Menu", func(): menu_pressed.emit()))
+	_banner_restart = _menu_button("Fight Again", func(): restart_pressed.emit())
+	col.add_child(_banner_restart)
+	_banner_menu = _menu_button("Main Menu", func(): menu_pressed.emit())
+	col.add_child(_banner_menu)
 
 
 func _build_pause(root: Control) -> void:
@@ -314,6 +318,12 @@ func _menu_button(text: String, action: Callable) -> Button:
 	b.custom_minimum_size = Vector2(260, 46)
 	b.pressed.connect(action)
 	return b
+
+
+## When the battle was started from the overworld the end banner continues there instead.
+func set_exit_mode(from_overworld: bool) -> void:
+	_banner_restart.visible = not from_overworld
+	_banner_menu.text = "Continue" if from_overworld else "Main Menu"
 
 
 func show_pause(on: bool) -> void:

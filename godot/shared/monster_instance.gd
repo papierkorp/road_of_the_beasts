@@ -85,6 +85,8 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 	m.stage = int(d["stage"]) as Stage.Type
 	m.sub_tier = int(d["sub_tier"]) as Stage.SubTier
 	m.xp = int(d["xp"])
-	m.stats = (d["stats"] as Dictionary).duplicate()
+	var st: Dictionary = d["stats"]
+	m.stats = {"hp": int(st["hp"]), "initiative": float(st["initiative"]), "move": int(st["move"]),
+		"tpr": int(st["tpr"]), "reach": int(st["reach"])}
 	m.current_hp = int(d["current_hp"])
 	return m

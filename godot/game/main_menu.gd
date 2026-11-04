@@ -2,6 +2,7 @@ extends Control
 ## Start menu: start the battle, settings, quit.
 
 const DRAFT_SCENE := "res://battle/draft.tscn"
+const OVERWORLD_SCENE := "res://overworld/overworld.tscn"
 
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
@@ -30,7 +31,7 @@ func _ready() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 	var sub := Label.new()
-	sub.text = "Battle prototype"
+	sub.text = "Phase 1 prototype"
 	sub.add_theme_color_override("font_color", UiTheme.DIM)
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(sub)
@@ -39,7 +40,10 @@ func _ready() -> void:
 	_buttons = VBoxContainer.new()
 	_buttons.add_theme_constant_override("separation", 10)
 	col.add_child(_buttons)
-	_add_button("Start Battle", func(): get_tree().change_scene_to_file(DRAFT_SCENE))
+	_add_button("New Game", _new_game)
+	var cont := _add_button("Continue", _continue_game)
+	cont.disabled = not SaveGame.exists()
+	_add_button("Battle Prototype", func(): get_tree().change_scene_to_file(DRAFT_SCENE))
 	_add_button("Settings", _show_settings)
 	_add_button("Quit", func(): get_tree().quit())
 
@@ -49,12 +53,31 @@ func _ready() -> void:
 	col.add_child(_settings)
 
 
-func _add_button(text: String, action: Callable) -> void:
+func _add_button(text: String, action: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.custom_minimum_size = Vector2(280, 48)
 	b.pressed.connect(action)
 	_buttons.add_child(b)
+	return b
+
+
+func _new_game() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	GameSession.game = GameState.new_game(rng)
+	GameSession.expedition = null
+	SaveGame.save(GameSession.game)
+	get_tree().change_scene_to_file(OVERWORLD_SCENE)
+
+
+func _continue_game() -> void:
+	var g := SaveGame.load_game()
+	if g == null:
+		return
+	GameSession.game = g
+	GameSession.expedition = null
+	get_tree().change_scene_to_file(OVERWORLD_SCENE)
 
 
 func _show_settings() -> void:

@@ -492,6 +492,8 @@ Monster artifacts deepen the battle game; tamer artifacts feed the management/ex
 **Development phases:**
 ```
 PHASE 1  Battle system (done: 1v1 + 3v3, draft, 9 monsters) + individual monsters
+         (built: individuals, BattleRequest/Result, GameState, 3-node expedition hub;
+         placeholders: night heals everyone, flat rewards and XP)
          (stat shapes, stage caps, XP → sub-tier snap) + node-based dungeon access
          + Trader business (pure buy/sell) + money → power loop
          (money → cultivation pills → XP → stronger stats)

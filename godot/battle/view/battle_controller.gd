@@ -38,6 +38,7 @@ func _ready() -> void:
 	hud = BattleHud.new()
 	add_child(hud)
 	hud.build()
+	hud.set_exit_mode(GameSession.return_scene != "")
 	hud.action_pressed.connect(_on_action)
 	hud.end_turn_pressed.connect(_on_end_turn)
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
@@ -72,7 +73,8 @@ func _toggle_pause() -> void:
 
 func _to_menu() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://game/menu.tscn")
+	var target := GameSession.return_scene if GameSession.return_scene != "" else "res://game/menu.tscn"
+	get_tree().change_scene_to_file(target)
 
 
 # ---------- input ----------
@@ -523,5 +525,5 @@ func _on_event(e: Dictionary) -> void:
 		&"round_started":
 			hud.log_line("Round %d — %s acts first." % [e["round"], _name(e["first"])])
 		&"battle_over":
-			GameSession.last_result = BattleResult.from_battle(battle)
+			GameSession.last_result = BattleSetup.make_result(battle)
 			hud.log_line("The battle is over.")

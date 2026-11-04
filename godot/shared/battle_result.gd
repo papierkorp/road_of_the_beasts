@@ -14,24 +14,7 @@ var player: Array[Dictionary] = []
 var enemy: Array[Dictionary] = []
 
 
-static func from_battle(b: Battle) -> BattleResult:
-	var r := BattleResult.new()
-	r.over = b.over
-	r.winner_side = b.winner_side
-	r.rounds = b.round_number
-	for id in b.roster:
-		var m: Monster = b.monsters[id]
-		var entry := {"species": m.def.id, "index": m.team_index, "hp_left": maxi(m.hp, 0),
-			"max_hp": m.max_hp, "alive": m.is_alive()}
-		if m.side == 0:
-			r.player.append(entry)
-		else:
-			r.enemy.append(entry)
-	var by_index := func(a: Dictionary, c: Dictionary) -> bool: return a["index"] < c["index"]
-	r.player.sort_custom(by_index)
-	r.enemy.sort_custom(by_index)
-	return r
-
+## Filled by `BattleSetup.make_result(battle)` — the battle side knows how to read a Battle.
 
 func player_won() -> bool:
 	return over and winner_side == 0
