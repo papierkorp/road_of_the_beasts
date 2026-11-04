@@ -4,6 +4,7 @@ extends RefCounted
 ## drifts a little each night, a few materials are in stock today. Buy low, sell high — the
 ## spread (buy x1.25, sell x0.8) means only real price swings pay. Cultivation pills are always
 ## on sale at a fixed price and are never bought back (money buys speed, never exclusive power, §9.4).
+## Now and then the Trader also has a ready-made structure (§6.4) — most come from blueprints instead.
 ## Headless; the state it trades with is passed in.
 
 const MARKUP := 1.25
@@ -12,9 +13,11 @@ const STOCK_SIZE := 5
 const FACTOR_MIN := 0.6
 const FACTOR_MAX := 1.5
 const FACTOR_STEP := 0.2
+const OFFER_CHANCE := 0.3
 
 var factors := {}                   # material id -> price factor
 var stock: Array[String] = []       # materials for sale today
+var structure_offer: StringName = &""      # a constructed structure for sale today, or none
 
 
 static func create(tier: int, rng: RandomNumberGenerator) -> Market:
@@ -35,6 +38,8 @@ func new_day(rng: RandomNumberGenerator) -> void:
 
 
 func _restock(rng: RandomNumberGenerator) -> void:
+	var offers := StructureCatalog.ids()
+	structure_offer = offers[rng.randi_range(0, offers.size() - 1)] if rng.randf() < OFFER_CHANCE else &""
 	stock.clear()
 	var ids := factors.keys()
 	ids.sort()
@@ -47,19 +52,26 @@ func factor(id: String) -> float:
 
 
 func can_buy(id: String) -> bool:
-	return ItemCatalog.kind_of(id) == ItemCatalog.Kind.PILL or stock.has(id)
+	match ItemCatalog.kind_of(id):
+		ItemCatalog.Kind.PILL:
+			return true
+		ItemCatalog.Kind.STRUCTURE:
+			return structure_offer != &"" and id == ItemCatalog.structure_item_id(structure_offer)
+		ItemCatalog.Kind.BLUEPRINT:
+			return false
+	return stock.has(id)
 
 
 func buy_price(id: String) -> int:
 	var value := float(ItemCatalog.base_value(id)) * factor(id)
-	if ItemCatalog.kind_of(id) == ItemCatalog.Kind.PILL:
-		return int(value)
-	return maxi(1, ceili(value * MARKUP))
+	if ItemCatalog.kind_of(id) == ItemCatalog.Kind.MATERIAL:
+		return maxi(1, ceili(value * MARKUP))
+	return int(value)
 
 
-## 0 = the Trader does not buy this (pills).
+## 0 = the Trader does not buy this (everything but materials).
 func sell_price(id: String) -> int:
-	if ItemCatalog.kind_of(id) == ItemCatalog.Kind.PILL:
+	if ItemCatalog.kind_of(id) != ItemCatalog.Kind.MATERIAL:
 		return 0
 	return floori(float(ItemCatalog.base_value(id)) * factor(id) * SELL_RATE)
 
@@ -68,6 +80,8 @@ func buy(state: GameState, id: String) -> bool:
 	if not can_buy(id) or not state.spend_money(buy_price(id)):
 		return false
 	state.add_item(id)
+	if ItemCatalog.kind_of(id) == ItemCatalog.Kind.STRUCTURE:
+		structure_offer = &""
 	return true
 
 
@@ -80,7 +94,7 @@ func sell(state: GameState, id: String) -> bool:
 
 
 func to_dict() -> Dictionary:
-	return {"factors": factors.duplicate(), "stock": stock.duplicate()}
+	return {"factors": factors.duplicate(), "stock": stock.duplicate(), "offer": String(structure_offer)}
 
 
 static func from_dict(d: Dictionary) -> Market:
@@ -89,4 +103,5 @@ static func from_dict(d: Dictionary) -> Market:
 		m.factors[String(id)] = float(d["factors"][id])
 	for id in d["stock"]:
 		m.stock.append(String(id))
+	m.structure_offer = StringName(d.get("offer", ""))
 	return m

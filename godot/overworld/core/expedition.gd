@@ -20,6 +20,7 @@ var selected := -1                  # node the player is about to fight
 var finished := false
 var victory := false
 var money_earned := 0
+var blueprint_reward: StringName = &""   # the boss drops this blueprint (none if everything is known)
 var last_loot := {}                 # item id -> count, of the last victory
 var last_ups: Array[String] = []    # "Name reached Middle", of the last victory
 var _team: Array[MonsterInstance] = []
@@ -28,6 +29,12 @@ var _path: Array[int] = []          # cleared nodes in order
 
 static func generate(state: GameState, rng: RandomNumberGenerator) -> Expedition:
 	var e := Expedition.new()
+	var unknown: Array[StringName] = []
+	for sid in StructureCatalog.ids():
+		if not state.owns_structure(sid):
+			unknown.append(sid)
+	if not unknown.is_empty():
+		e.blueprint_reward = unknown[rng.randi_range(0, unknown.size() - 1)]
 	var mode := state.battle_mode()
 	var ids := GameData.monster_ids()
 	var layers: Array = []
@@ -78,6 +85,8 @@ func result_note(before: int) -> String:
 	var note := ""
 	if finished and victory:
 		note = "Dungeon cleared! +%d spirit stones in total." % money_earned
+		if blueprint_reward != &"":
+			note += " Blueprint found: %s!" % StructureCatalog.def(blueprint_reward).display_name
 	elif finished:
 		note = "Your team fell. The run ends here — the night will heal you."
 	elif current != before:
@@ -151,6 +160,8 @@ func apply_result(state: GameState, result: BattleResult) -> void:
 		if (n["next"] as Array).is_empty():
 			finished = true
 			victory = true
+			if blueprint_reward != &"":
+				state.add_item(ItemCatalog.blueprint_id(blueprint_reward))
 	else:
 		finished = true
 		victory = false

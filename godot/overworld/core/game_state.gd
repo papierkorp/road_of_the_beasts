@@ -19,12 +19,17 @@ var sub_tier: Stage.SubTier = Stage.SubTier.LOWER
 var monsters: Array[MonsterInstance] = []
 var items := {}                     # item id -> count (ItemCatalog)
 var market: Market
+var structures: Array[Dictionary] = []   # placed in the Inner World: see BuildGrid
+var _next_uid := 1
 
 
 static func new_game(rng: RandomNumberGenerator, starter: StringName = STARTER) -> GameState:
 	var g := GameState.new()
 	g.monsters.append(MonsterInstance.roll(GameData.monster(starter), rng, StatShape.Id.NONE, g.stage, g.sub_tier))
 	g.market = Market.create(int(g.stage), rng)
+	# the first recipes: a place to meditate and a place to grow herbs
+	g.add_item(ItemCatalog.blueprint_id(&"meditation_stone"))
+	g.add_item(ItemCatalog.blueprint_id(&"herb_plot"))
 	return g
 
 
@@ -111,11 +116,173 @@ func use_pill(id: String, m: MonsterInstance) -> int:
 
 
 ## Night phase: every resolver runs once (gdd_overworld §7). Returns a report for the results screen.
+# ---------- structures (gdd_overworld §6.4) ----------
+
+func has_blueprint(sid: StringName) -> bool:
+	return item_count(ItemCatalog.blueprint_id(sid)) > 0
+
+
+## Whether the structure is known, built, or waiting in the bag (blueprints are not consumed).
+func owns_structure(sid: StringName) -> bool:
+	if has_blueprint(sid) or item_count(ItemCatalog.structure_item_id(sid)) > 0:
+		return true
+	for s in structures:
+		if StringName(s["id"]) == sid:
+			return true
+	return false
+
+
+## Materials a recipe would use, or an empty dictionary when they are not all there.
+## Specific aspects are paid first, "any" with the cheapest materials left; only materials of
+## tiers up to the player's stage count.
+func recipe_payment(def: StructureDef) -> Dictionary:
+	var counts := {}
+	for id in bag_ids():
+		if ItemCatalog.kind_of(id) == ItemCatalog.Kind.MATERIAL and ItemCatalog.tier_of(id) <= int(stage):
+			counts[id] = item_count(id)
+	var paid := {}
+	var reqs := def.recipe.duplicate()
+	reqs.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["aspect"] != Aspect.Type.NONE) > int(b["aspect"] != Aspect.Type.NONE))
+	for r in reqs:
+		var need: int = r["count"]
+		var ids := counts.keys()
+		ids.sort_custom(func(a: String, b: String) -> bool: return ItemCatalog.base_value(a) < ItemCatalog.base_value(b))
+		for id in ids:
+			if need <= 0:
+				break
+			if r["aspect"] != Aspect.Type.NONE and ItemCatalog.material_aspect(id) != r["aspect"]:
+				continue
+			var take := mini(need, int(counts[id]))
+			counts[id] = int(counts[id]) - take
+			paid[id] = int(paid.get(id, 0)) + take
+			need -= take
+		if need > 0:
+			return {}
+	return paid
+
+
+func can_construct(sid: StringName) -> bool:
+	return StructureCatalog.has(sid) and has_blueprint(sid) and ap >= 1 \
+		and not recipe_payment(StructureCatalog.def(sid)).is_empty()
+
+
+## Blueprint + materials + 1 AP (gdd_overworld §7 "Build"): the finished structure goes to the bag.
+func construct(sid: StringName) -> bool:
+	if not can_construct(sid):
+		return false
+	var paid := recipe_payment(StructureCatalog.def(sid))
+	for id in paid:
+		remove_item(id, int(paid[id]))
+	spend_ap(1)
+	add_item(ItemCatalog.structure_item_id(sid))
+	return true
+
+
+func structure(uid: int) -> Dictionary:
+	for s in structures:
+		if int(s["uid"]) == uid:
+			return s
+	return {}
+
+
+## Places a structure from the bag. Free (decisions are free); returns the uid or -1.
+func place_structure(sid: StringName, cell: Vector2i, rot: bool) -> int:
+	var def := StructureCatalog.def(sid)
+	if def == null or item_count(ItemCatalog.structure_item_id(sid)) < 1 or not BuildGrid.can_place(self, def, cell, rot):
+		return -1
+	remove_item(ItemCatalog.structure_item_id(sid))
+	var uid := _next_uid
+	_next_uid += 1
+	structures.append({"uid": uid, "id": String(sid), "x": cell.x, "y": cell.y, "rot": rot,
+		"assigned": -1, "plant": "", "grown": 0})
+	return uid
+
+
+## Takes a structure back into the bag (never lost). A growing plot can't be picked up.
+func pick_up_structure(uid: int) -> bool:
+	var s := structure(uid)
+	if s.is_empty() or String(s["plant"]) != "":
+		return false
+	structures.erase(s)
+	add_item(ItemCatalog.structure_item_id(StringName(s["id"])))
+	return true
+
+
+## Moves a structure to another cell (free); false if it doesn't fit.
+func move_structure(uid: int, cell: Vector2i, rot: bool) -> bool:
+	var s := structure(uid)
+	if s.is_empty() or not BuildGrid.can_place(self, StructureCatalog.def(StringName(s["id"])), cell, rot, uid):
+		return false
+	s["x"] = cell.x
+	s["y"] = cell.y
+	s["rot"] = rot
+	return true
+
+
+## Sends a monster to meditate at a cultivation spot (a monster sits at one spot only).
+func assign_monster(uid: int, monster_index: int) -> bool:
+	var s := structure(uid)
+	if s.is_empty() or StructureCatalog.def(StringName(s["id"])).category != StructureDef.Category.CULTIVATION:
+		return false
+	if monster_index >= monsters.size():
+		return false
+	for other in structures:
+		if int(other["assigned"]) == monster_index:
+			other["assigned"] = -1
+	s["assigned"] = monster_index
+	return true
+
+
+func plant(uid: int, material: String) -> bool:
+	var s := structure(uid)
+	if s.is_empty() or StructureCatalog.def(StringName(s["id"])).category != StructureDef.Category.GROWING:
+		return false
+	if String(s["plant"]) != "" or ItemCatalog.kind_of(material) != ItemCatalog.Kind.MATERIAL or not remove_item(material):
+		return false
+	s["plant"] = material
+	s["grown"] = 0
+	return true
+
+
+## Harvests a ready plot: the planted material, three times. Returns the item id or "".
+func harvest(uid: int) -> String:
+	var s := structure(uid)
+	if s.is_empty() or not StructureRules.is_ready(self, s):
+		return ""
+	var id := String(s["plant"])
+	add_item(id, StructureRules.HARVEST_YIELD)
+	s["plant"] = ""
+	s["grown"] = 0
+	return id
+
+
+## The structure part of the night: meditating monsters gain XP, plants grow. Returns report lines.
+func _night_structures() -> Array[String]:
+	var notes: Array[String] = []
+	for s in structures:
+		var def := StructureCatalog.def(StringName(s["id"]))
+		if def.category == StructureDef.Category.CULTIVATION:
+			var idx := int(s["assigned"])
+			if idx < 0 or idx >= monsters.size() or not monsters[idx].can_gain_xp():
+				continue
+			var info := StructureRules.idle_xp(self, s)
+			var ups := monsters[idx].add_xp(int(info["xp"]))
+			notes.append("%s meditates at the %s: +%d XP%s" % [monsters[idx].species().display_name, def.display_name,
+				int(info["xp"]), (" — reaches %s!" % Stage.sub_tier_name(monsters[idx].sub_tier)) if ups > 0 else ""])
+		elif def.category == StructureDef.Category.GROWING and String(s["plant"]) != "":
+			s["grown"] = int(s["grown"]) + 1
+			if StructureRules.is_ready(self, s):
+				notes.append("%s on the %s is ready to harvest." % [ItemCatalog.display_name(String(s["plant"])), def.display_name])
+	return notes
+
+
 func end_day(rng: RandomNumberGenerator = null) -> Dictionary:
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	var healed := 0
+	var notes := _night_structures()
 	for m in monsters:
 		if m.current_hp < m.max_hp():
 			healed += 1
@@ -123,7 +290,7 @@ func end_day(rng: RandomNumberGenerator = null) -> Dictionary:
 	day += 1
 	ap = max_ap
 	market.new_day(rng)
-	return {"day": day, "healed": healed}
+	return {"day": day, "healed": healed, "notes": notes}
 
 
 func to_dict() -> Dictionary:
@@ -131,7 +298,8 @@ func to_dict() -> Dictionary:
 	for m in monsters:
 		ms.append(m.to_dict())
 	return {"day": day, "max_ap": max_ap, "ap": ap, "money": money, "stage": int(stage),
-		"sub_tier": int(sub_tier), "monsters": ms, "items": items.duplicate(), "market": market.to_dict()}
+		"sub_tier": int(sub_tier), "monsters": ms, "items": items.duplicate(), "market": market.to_dict(),
+		"structures": structures.duplicate(true), "next_uid": _next_uid}
 
 
 static func from_dict(d: Dictionary) -> GameState:
@@ -146,6 +314,10 @@ static func from_dict(d: Dictionary) -> GameState:
 		g.monsters.append(MonsterInstance.from_dict(md))
 	for id in d.get("items", {}):
 		g.items[String(id)] = int(d["items"][id])
+	g._next_uid = int(d.get("next_uid", 1))
+	for sd in d.get("structures", []):
+		g.structures.append({"uid": int(sd["uid"]), "id": String(sd["id"]), "x": int(sd["x"]), "y": int(sd["y"]),
+			"rot": bool(sd["rot"]), "assigned": int(sd["assigned"]), "plant": String(sd["plant"]), "grown": int(sd["grown"])})
 	if d.has("market"):
 		g.market = Market.from_dict(d["market"])
 	else:

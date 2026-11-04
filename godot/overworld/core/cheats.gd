@@ -28,6 +28,15 @@ static func give_xp(state: GameState, amount: int) -> String:
 	return "+%d XP for every monster (%d sub-tier up(s))" % [amount, ups]
 
 
+static func give_blueprints(state: GameState) -> String:
+	var n := 0
+	for sid in StructureCatalog.ids():
+		if not state.has_blueprint(sid):
+			state.add_item(ItemCatalog.blueprint_id(sid))
+			n += 1
+	return "+%d blueprints (all known)" % n
+
+
 static func refill_ap(state: GameState) -> String:
 	state.ap = state.max_ap
 	return "AP refilled (%d)" % state.ap

@@ -131,7 +131,10 @@ func _end_day() -> void:
 	var report := _game.end_day(_rng)
 	SaveGame.save(_game)
 	_refresh_header()
-	_panel.say("The night passes. Day %d begins; %d monster(s) recovered." % [report["day"], report["healed"]])
+	var text := "The night passes. Day %d begins; %d monster(s) recovered." % [report["day"], report["healed"]]
+	for line in report["notes"]:
+		text += "\n" + String(line)
+	_panel.say(text)
 
 
 func _to_menu() -> void:

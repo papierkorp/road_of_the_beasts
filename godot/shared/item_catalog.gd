@@ -4,9 +4,11 @@ extends RefCounted
 ## (name, kind, value, effect) is derived from it — "archetypes over uniques".
 ##   material  "mat:<kin>:<aspect>:<tier>"   beast part, dropped by kin, tier = cultivation stage
 ##   pill      "pill:<tier>"                 cultivation pill (out-of-battle XP, §10.2)
+##   blueprint "bp:<structure>"               the recipe of a structure (kept, §6.4)
+##   structure "st:<structure>"               a constructed structure waiting in the bag to be placed
 ## Prices are Phase 1 placeholders (tuning, gdd_overworld §12).
 
-enum Kind { MATERIAL, PILL }
+enum Kind { MATERIAL, PILL, BLUEPRINT, STRUCTURE }
 
 const BASE_VALUE := 8               # spirit stones of a Qi Gathering material
 const PILL_PRICE := 80
@@ -29,8 +31,32 @@ static func pill_id(tier := 0) -> String:
 	return "pill:%d" % tier
 
 
+static func blueprint_id(structure: StringName) -> String:
+	return "bp:%s" % structure
+
+
+static func structure_item_id(structure: StringName) -> String:
+	return "st:%s" % structure
+
+
 static func kind_of(id: String) -> Kind:
-	return Kind.PILL if id.begins_with("pill:") else Kind.MATERIAL
+	if id.begins_with("pill:"):
+		return Kind.PILL
+	if id.begins_with("bp:"):
+		return Kind.BLUEPRINT
+	if id.begins_with("st:"):
+		return Kind.STRUCTURE
+	return Kind.MATERIAL
+
+
+## The structure a blueprint or structure item belongs to.
+static func structure_of(id: String) -> StringName:
+	return StringName(id.split(":")[1])
+
+
+## The aspect of a material.
+static func material_aspect(id: String) -> Aspect.Type:
+	return int(id.split(":")[2]) as Aspect.Type
 
 
 static func tier_of(id: String) -> int:
@@ -39,13 +65,23 @@ static func tier_of(id: String) -> int:
 
 static func display_name(id: String) -> String:
 	var parts := id.split(":")
-	if kind_of(id) == Kind.PILL:
-		return "%s Cultivation Pill" % Stage.stage_name(tier_of(id))
+	match kind_of(id):
+		Kind.BLUEPRINT:
+			return "%s Blueprint" % StructureCatalog.def(structure_of(id)).display_name
+		Kind.STRUCTURE:
+			return StructureCatalog.def(structure_of(id)).display_name
+		Kind.PILL:
+			return "%s Cultivation Pill" % Stage.stage_name(tier_of(id))
 	return "%s %s (%s)" % [ASPECT_WORD[int(parts[2])], KIN_FORM[int(parts[1])], Stage.stage_name(int(parts[3]))]
 
 
 ## Spirit stones, before any market factor. Every tier is worth 3x the one below.
 static func base_value(id: String) -> int:
+	match kind_of(id):
+		Kind.STRUCTURE:
+			return StructureCatalog.def(structure_of(id)).price
+		Kind.BLUEPRINT:
+			return StructureCatalog.def(structure_of(id)).price * 2
 	var unit := PILL_PRICE if kind_of(id) == Kind.PILL else BASE_VALUE
 	return unit * int(pow(3.0, tier_of(id)))
 

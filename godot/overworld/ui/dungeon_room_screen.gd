@@ -40,8 +40,11 @@ func _make_map() -> DistrictMap:
 	if not _in_battle_room:
 		for id in _ex.choices():
 			var n := _ex.node(id)
-			doors.append({"id": id, "label": "%s — %s, reward %d" % ["Boss door" if n["kind"] == &"boss" else "Door",
-				String(n["mode"]).to_upper(), n["reward"]]})
+			var label := "%s — %s, reward %d" % ["Boss door" if n["kind"] == &"boss" else "Door",
+				String(n["mode"]).to_upper(), n["reward"]]
+			if n["kind"] == &"boss" and _ex.blueprint_reward != &"":
+				label += " + %s blueprint" % StructureCatalog.def(_ex.blueprint_reward).display_name
+			doors.append({"id": id, "label": label})
 	var seed_value := (_ex.selected + 1) * 31 + (_ex.current + 2) * 7 + _ex.nodes.size()
 	var m := DistrictMap.room(seed_value, doors)
 	if _in_battle_room:

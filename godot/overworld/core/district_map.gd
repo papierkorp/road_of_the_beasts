@@ -65,15 +65,13 @@ static func of(district_id: StringName) -> DistrictMap:
 			m._add("crates_b", "", Vector2(9.6, 5.4), Vector2(1.2, 1.0), 0.8, Color(0.45, 0.35, 0.25))
 			m._add("gate", "Plaza", Vector2(0.8, 5), Vector2(1.6, 3.2), 2.2, Color(0.35, 0.55, 0.75), &"goto:plaza", "Back to the Teleport Plaza")
 		&"inner":
+			# the grid area (BuildGrid) is free ground; the strip below holds the stone and the gate
 			m.title = "Inner World"
-			m.size = Vector2(16, 12)
+			m.size = Vector2(16, 13)
 			m.ground = Color(0.20, 0.27, 0.22)
-			m.arrivals = {&"start": Vector2(8, 9.5), &"plaza": Vector2(8, 9.5)}
-			m._add("stone", "Cultivation Stone", Vector2(8, 4.5), Vector2(1.8, 1.8), 1.2, Color(0.55, 0.62, 0.75), &"panel:inner", "Look at your monsters")
-			m._add("rock_a", "", Vector2(3.0, 3.0), Vector2(1.6, 1.6), 1.0, Color(0.4, 0.42, 0.4))
-			m._add("rock_b", "", Vector2(13.2, 4.2), Vector2(1.4, 1.4), 0.9, Color(0.4, 0.42, 0.4))
-			m._add("rock_c", "", Vector2(12.4, 9.0), Vector2(1.8, 1.2), 0.8, Color(0.4, 0.42, 0.4))
-			m._add("gate", "Return to the city", Vector2(8, 11.4), Vector2(3.6, 1.0), 2.0, Color(0.35, 0.55, 0.75), &"goto:plaza", "Return to the city")
+			m.arrivals = {&"start": Vector2(8, 10.9), &"plaza": Vector2(8, 10.9)}
+			m._add("stone", "Cultivation Stone", Vector2(12.6, 11.2), Vector2(1.6, 1.6), 1.2, Color(0.55, 0.62, 0.75), &"panel:inner", "Look at your monsters")
+			m._add("gate", "Return to the city", Vector2(8, 12.2), Vector2(3.6, 1.0), 2.0, Color(0.35, 0.55, 0.75), &"goto:plaza", "Return to the city")
 		_:
 			m.id = &"plaza"
 			m.title = "Teleport Plaza"
@@ -87,6 +85,15 @@ static func of(district_id: StringName) -> DistrictMap:
 			m._add("pillar_w", "", Vector2(4.0, 3.5), Vector2(0.8, 0.8), 2.0, Color(0.5, 0.5, 0.52))
 			m._add("pillar_e", "", Vector2(12.0, 3.5), Vector2(0.8, 0.8), 2.0, Color(0.5, 0.5, 0.52))
 	return m
+
+
+## The structures the player built in the Inner World become solid things you can use.
+func add_structures(structures: Array[Dictionary]) -> void:
+	for s in structures:
+		var d := StructureCatalog.def(StringName(s["id"]))
+		var r := BuildGrid.world_rect(d, Vector2i(int(s["x"]), int(s["y"])), bool(s["rot"]))
+		_add("s%d" % int(s["uid"]), d.display_name, r.get_center(), r.size - Vector2(0.3, 0.3), d.height, d.color,
+			StringName("structure:%d" % int(s["uid"])), "Use the %s" % d.display_name)
 
 
 func _add(thing_id: String, thing_name: String, pos: Vector2, thing_size: Vector2, height: float, color: Color,

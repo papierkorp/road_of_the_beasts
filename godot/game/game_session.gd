@@ -21,6 +21,13 @@ var game: GameState = null
 ## The walkable district the player is in and where they came from (decides where they appear).
 var district: StringName = &"plaza"
 var arrive_from: StringName = &"start"
+## Set when a screen reloads itself and the player should stay where they are.
+var resume_pos := Vector2(-1.0, -1.0)
+
+## Build mode of the Inner World (gdd_overworld §6.4): on / off, the structure being placed, its rotation.
+var build_mode := false
+var build_item: StringName = &""
+var build_rot := false
 var expedition: Expedition = null
 
 

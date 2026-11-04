@@ -110,6 +110,12 @@ func _build_market() -> void:
 		func(): _trade(market.buy(_game, pill)))
 	pb.disabled = _game.money < market.buy_price(pill)
 	add_child(pb)
+	if market.structure_offer != &"":
+		var sid := ItemCatalog.structure_item_id(market.structure_offer)
+		var ob := _button("%s  (ready-made structure)  —  %d" % [ItemCatalog.display_name(sid), market.buy_price(sid)],
+			func(): _trade(market.buy(_game, sid)))
+		ob.disabled = _game.money < market.buy_price(sid)
+		add_child(ob)
 	for id in market.stock:
 		var bb := _button("%s  —  %d   (worth %d today)" % [ItemCatalog.display_name(id), market.buy_price(id), market.sell_price(id)],
 			func(): _trade(market.buy(_game, id)))

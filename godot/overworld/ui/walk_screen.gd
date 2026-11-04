@@ -29,6 +29,7 @@ var _side: PanelContainer
 var _side_body: VBoxContainer
 var _side_close: Button
 var _side_closable := true
+var _side_blocks := true                 # a blocking panel stops walking and using things
 var _toast_time := 0.0
 
 
@@ -68,6 +69,11 @@ func _top_buttons() -> Array[Button]:
 
 func _after_ready() -> void:
 	pass
+
+
+## Extra input of a subclass; return true when the event was used.
+func _extra_input(_event: InputEvent) -> bool:
+	return false
 
 
 # ---------- setup ----------
@@ -268,8 +274,9 @@ func _say(text: String, seconds := 3.0) -> void:
 	_toast_time = seconds
 
 
-func _open_side(closable := true) -> void:
+func _open_side(closable := true, blocks := true) -> void:
 	_side_closable = closable
+	_side_blocks = blocks
 	_side_close.visible = closable
 	_side.visible = true
 
@@ -294,9 +301,12 @@ func _clear_side() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _game == null:
 		return
+	if _extra_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_E:
-			if not _side.visible:
+			if not (_side.visible and _side_blocks):
 				var thing := _map.nearest_action(_pos)
 				if not thing.is_empty():
 					_interact_with(thing)
@@ -312,12 +322,12 @@ func _process(delta: float) -> void:
 		_toast_time -= delta
 		if _toast_time <= 0.0:
 			_toast.text = ""
-	if not _side.visible:
+	if not (_side.visible and _side_blocks):
 		_move_player(delta)
 	_update_actors(delta)
 	_update_camera(minf(1.0, delta * 6.0))
 	var near := _map.nearest_action(_pos)
-	_prompt.text = "" if near.is_empty() or _side.visible else "[E]  " + String(near["label"])
+	_prompt.text = "" if near.is_empty() or (_side.visible and _side_blocks) else "[E]  " + String(near["label"])
 
 
 func _move_player(delta: float) -> void:
