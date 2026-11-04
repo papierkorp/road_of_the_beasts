@@ -112,9 +112,6 @@ func _update() -> void:
 func _start(m: StringName) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	BattleSetup.mode = m
-	BattleSetup.player_pick = _picked.duplicate()
-	BattleSetup.enemy_pick = BattleSetup.random_enemy(_picked, BattleSetup.team_size(m), rng)
-	BattleSetup.player_team = BattleSetup.references(BattleSetup.player_pick)
-	BattleSetup.enemy_team = BattleSetup.references(BattleSetup.enemy_pick)
+	var enemy := BattleSetup.random_enemy(_picked, BattleSetup.team_size(m), rng)
+	GameSession.start_battle(BattleRequest.from_ids(m, _picked.duplicate(), enemy))
 	get_tree().change_scene_to_file(BATTLE_SCENE)

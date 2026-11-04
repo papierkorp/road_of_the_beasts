@@ -6,6 +6,7 @@ var id: StringName              # unique in this battle, e.g. &"p0_blaze_tiger"
 var def: MonsterDef
 var side: int                   # 0 = player, 1 = enemy
 var pos := Vector2i.ZERO
+var team_index := -1            # position in its team (BattleRequest order)
 var hp: int
 var max_hp: int
 

@@ -8,6 +8,7 @@ const NOWHERE := Vector2i(-1, -1)
 const ACT_MOVE := &"__move"
 const ACT_STRIKE := &"__strike"
 
+var request: BattleRequest
 var battle: Battle
 var view: BattleView
 var hud: BattleHud
@@ -25,8 +26,10 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS      # Esc must work while paused
 	rng.randomize()
 	if OS.get_cmdline_user_args().has("--autoplay"):
-		BattleSetup.autoplay = true
-	battle = BattleSetup.default_battle()
+		GameSession.autoplay = true
+	request = GameSession.request if GameSession.request != null else BattleRequest.default()
+	GameSession.request = request
+	battle = BattleSetup.build(request)
 	battle.event_emitted.connect(_on_event)
 	view = BattleView.new()
 	view.process_mode = Node.PROCESS_MODE_PAUSABLE
@@ -41,7 +44,7 @@ func _ready() -> void:
 	hud.resume_pressed.connect(_toggle_pause)
 	hud.menu_pressed.connect(_to_menu)
 	hud.log_line("%s on %d×%d — zones steer, ground scars, Surges burn and repaint." % [
-		BattleSetup.mode, battle.board.size, battle.board.size])
+		request.mode, battle.board.size, battle.board.size])
 	battle.begin()
 	_refresh()
 	_check_ai()
@@ -53,7 +56,7 @@ func _active() -> Monster:
 
 func _is_player_turn() -> bool:
 	var m := _active()
-	return m != null and m.side == PLAYER_SIDE and not BattleSetup.autoplay
+	return m != null and m.side == PLAYER_SIDE and not GameSession.autoplay
 
 
 func _my_turn() -> bool:
@@ -461,7 +464,7 @@ func _name(id: StringName) -> String:
 
 
 func _on_event(e: Dictionary) -> void:
-	if BattleSetup.autoplay and e["type"] in [&"round_started", &"battle_over", &"slain"]:
+	if GameSession.autoplay and e["type"] in [&"round_started", &"battle_over", &"slain"]:
 		print("[autoplay] ", e)
 	match e["type"]:
 		&"moved":
@@ -520,4 +523,5 @@ func _on_event(e: Dictionary) -> void:
 		&"round_started":
 			hud.log_line("Round %d — %s acts first." % [e["round"], _name(e["first"])])
 		&"battle_over":
+			GameSession.last_result = BattleResult.from_battle(battle)
 			hud.log_line("The battle is over.")
