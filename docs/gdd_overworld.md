@@ -110,6 +110,7 @@ Each stage defines hard caps; sub-tiers snap stats toward them:
 | Max Initiative | 5.0 | 7.0 | 9.0 | 10.0 |
 | Max TurnsPerRound | 1 | 2 | 2 | 3 |
 | Max Movement | 3 | 3 | 4 | 4 |
+| Max Reach (Strike distance, see gdd_battle §4.2) | 1 | 2 | 2 | 3 |
 
 The base stat ranges (HP 1-10, Init 0.1-10.0, TPR 1-3) are the **lifetime scale of the entire game** — number inflation would kill the deterministic low-HP feel.
 
