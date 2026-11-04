@@ -46,7 +46,7 @@ static func room(seed_value: int, doors: Array[Dictionary]) -> DistrictMap:
 
 
 static func ids() -> Array[StringName]:
-	return [&"plaza", &"market", &"inner"]
+	return [&"plaza", &"market", &"inner", &"clan"]
 
 
 static func of(district_id: StringName) -> DistrictMap:
@@ -63,6 +63,17 @@ static func of(district_id: StringName) -> DistrictMap:
 			m._add("stall_e", "", Vector2(10.6, 2.6), Vector2(2.0, 1.4), 1.2, Color(0.5, 0.4, 0.3))
 			m._add("crates_a", "", Vector2(5.0, 6.0), Vector2(1.0, 1.0), 0.8, Color(0.45, 0.35, 0.25))
 			m._add("crates_b", "", Vector2(9.6, 5.4), Vector2(1.2, 1.0), 0.8, Color(0.45, 0.35, 0.25))
+			m._add("guild_factor", "Guild Factor", Vector2(11.8, 7.6), Vector2(1.8, 1.4), 1.5, Color(0.8, 0.65, 0.3), &"faction:guild", "Speak to the Guild Factor")
+			m._add("gate", "Plaza", Vector2(0.8, 5), Vector2(1.6, 3.2), 2.2, Color(0.35, 0.55, 0.75), &"goto:plaza", "Back to the Teleport Plaza")
+		&"clan":
+			m.title = "Clan Compound"
+			m.size = Vector2(14, 10)
+			m.ground = Color(0.30, 0.24, 0.24)
+			m.arrivals = {&"start": Vector2(7, 8), &"plaza": Vector2(2.6, 5)}
+			m._add("envoy_family", "Clan Envoy", Vector2(3.6, 2.6), Vector2(2.0, 1.6), 1.6, Color(0.75, 0.55, 0.3), &"faction:family", "Speak to the Clan Envoy")
+			m._add("envoy_guild", "Guild Factor", Vector2(7.0, 2.6), Vector2(2.0, 1.6), 1.6, Color(0.8, 0.65, 0.3), &"faction:guild", "Speak to the Guild Factor")
+			m._add("envoy_watch", "Watch Captain", Vector2(10.4, 2.6), Vector2(2.0, 1.6), 1.6, Color(0.4, 0.5, 0.7), &"faction:watch", "Speak to the Watch Captain")
+			m._add("board", "Notice Board", Vector2(7.0, 6.0), Vector2(3.0, 0.8), 1.4, Color(0.55, 0.4, 0.25), &"panel:clan", "Read the notice board")
 			m._add("gate", "Plaza", Vector2(0.8, 5), Vector2(1.6, 3.2), 2.2, Color(0.35, 0.55, 0.75), &"goto:plaza", "Back to the Teleport Plaza")
 		&"inner":
 			# the grid area (BuildGrid) is free ground; the strip below holds the stone and the gate
@@ -77,11 +88,12 @@ static func of(district_id: StringName) -> DistrictMap:
 			m.title = "Teleport Plaza"
 			m.size = Vector2(16, 12)
 			m.ground = Color(0.30, 0.29, 0.31)
-			m.arrivals = {&"start": Vector2(8, 9), &"market": Vector2(11.6, 6), &"inner": Vector2(4.6, 6), &"dungeon": Vector2(8, 4.8)}
+			m.arrivals = {&"start": Vector2(8, 9), &"market": Vector2(11.6, 6), &"inner": Vector2(4.6, 6), &"dungeon": Vector2(8, 4.8), &"clan": Vector2(8, 9.4)}
 			m._add("array", "Teleport Array", Vector2(8, 2.2), Vector2(4.0, 2.2), 1.0, Color(0.45, 0.35, 0.7), &"panel:plaza", "Use the Teleport Array")
 			m._add("pavilion", "Meditation Pavilion", Vector2(2.6, 6), Vector2(2.4, 2.6), 1.8, Color(0.35, 0.6, 0.5), &"goto:inner", "Enter your Inner World")
 			m._add("market_gate", "Market District", Vector2(13.6, 6), Vector2(1.8, 3.2), 2.2, Color(0.35, 0.55, 0.75), &"goto:market", "Go to the Market District")
-			m._add("clan_gate", "Clan Compound (closed)", Vector2(8, 11.3), Vector2(4.0, 1.0), 2.0, Color(0.5, 0.3, 0.3), &"locked:clan", "The Clan Compound is closed for now")
+			m._add("clan_gate", "Clan Compound", Vector2(8, 11.3), Vector2(4.0, 1.0), 2.0, Color(0.5, 0.3, 0.3), &"goto:clan", "Go to the Clan Compound")
+			m._add("watch_post", "Watch Post", Vector2(13.4, 9.4), Vector2(1.8, 1.4), 1.5, Color(0.4, 0.5, 0.7), &"faction:watch", "Speak to the Watch")
 			m._add("pillar_w", "", Vector2(4.0, 3.5), Vector2(0.8, 0.8), 2.0, Color(0.5, 0.5, 0.52))
 			m._add("pillar_e", "", Vector2(12.0, 3.5), Vector2(0.8, 0.8), 2.0, Color(0.5, 0.5, 0.52))
 	return m

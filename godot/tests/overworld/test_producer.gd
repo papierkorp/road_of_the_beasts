@@ -10,7 +10,9 @@ func _rng(seed_value := 23) -> RandomNumberGenerator:
 
 
 func _game() -> GameState:
-	return GameState.new_game(_rng())
+	var g := GameState.new_game(_rng())
+	g.licenses = ["production", "street_trade"] as Array[String]       # the Producer's structures need licenses
+	return g
 
 
 func _place(g: GameState, sid: StringName, cell: Vector2i) -> int:

@@ -21,6 +21,13 @@ var items := {}                     # item id -> count (ItemCatalog)
 var market: Market
 var structures: Array[Dictionary] = []   # placed in the Inner World: see BuildGrid
 var _next_uid := 1
+## Favor (gdd_overworld §8.2): a balance to spend and the lifetime standing that decides the rank.
+var favor := {}                     # faction -> balance
+var standing := {}                  # faction -> lifetime favor earned
+var quests: Array[Dictionary] = []  # open requests, see QuestBoard
+var licenses: Array[String] = []    # bought with favor, see FactionCatalog.LICENSES
+var recruits: Array[Dictionary] = []   # monsters for hire: {faction, cost, monster: MonsterInstance}
+var _next_quest := 1
 
 
 static func new_game(rng: RandomNumberGenerator, starter: StringName = STARTER) -> GameState:
@@ -30,6 +37,7 @@ static func new_game(rng: RandomNumberGenerator, starter: StringName = STARTER) 
 	# the first recipes: a place to meditate and a place to grow herbs
 	g.add_item(ItemCatalog.blueprint_id(&"meditation_stone"))
 	g.add_item(ItemCatalog.blueprint_id(&"herb_plot"))
+	QuestBoard.fill(g, rng)
 	return g
 
 
@@ -117,6 +125,146 @@ func use_pill(id: String, m: MonsterInstance) -> int:
 
 
 ## Night phase: every resolver runs once (gdd_overworld §7). Returns a report for the results screen.
+# ---------- factions and favor (gdd_overworld §8.2) ----------
+
+func favor_of(faction: StringName) -> int:
+	return int(favor.get(String(faction), 0))
+
+
+func standing_of(faction: StringName) -> int:
+	return int(standing.get(String(faction), 0))
+
+
+func rank_of(faction: StringName) -> int:
+	return FactionCatalog.rank_of(standing_of(faction))
+
+
+func add_favor(faction: StringName, n: int) -> void:
+	favor[String(faction)] = favor_of(faction) + n
+	if n > 0:
+		standing[String(faction)] = standing_of(faction) + n
+	_sync_perks(null)
+
+
+func spend_favor(faction: StringName, n: int) -> bool:
+	if favor_of(faction) < n:
+		return false
+	favor[String(faction)] = favor_of(faction) - n
+	return true
+
+
+## What the guild's rank gives the Trader: the discount and, from rank 2, a rare blueprint offer.
+func _sync_perks(rng: RandomNumberGenerator) -> void:
+	if market == null:
+		return
+	market.guild_rank = rank_of(FactionCatalog.GUILD)
+	if market.guild_rank < 2:
+		market.blueprint_offer = &""
+	elif rng != null and market.blueprint_offer == &"":
+		var unknown: Array[StringName] = []
+		for sid in StructureCatalog.ids():
+			if not owns_structure(sid):
+				unknown.append(sid)
+		if not unknown.is_empty():
+			market.blueprint_offer = unknown[rng.randi_range(0, unknown.size() - 1)]
+
+
+func take_quest_uid() -> int:
+	_next_quest += 1
+	return _next_quest - 1
+
+
+func quest(uid: int) -> Dictionary:
+	for q in quests:
+		if int(q["uid"]) == uid:
+			return q
+	return {}
+
+
+func can_deliver(uid: int) -> bool:
+	var q := quest(uid)
+	return not q.is_empty() and item_count(String(q["item"])) >= int(q["count"])
+
+
+## Hands the requested items over: favor (and money) in return.
+func deliver_quest(uid: int) -> bool:
+	if not can_deliver(uid):
+		return false
+	var q := quest(uid)
+	remove_item(String(q["item"]), int(q["count"]))
+	add_money(int(q["money"]))
+	quests.erase(q)
+	add_favor(StringName(q["faction"]), int(q["favor"]))
+	return true
+
+
+func has_license(id: StringName) -> bool:
+	return licenses.has(String(id))
+
+
+func license_cost(id: StringName) -> int:
+	return int(FactionCatalog.LICENSES[id]["cost"])
+
+
+func license_faction(id: StringName) -> StringName:
+	return FactionCatalog.LICENSES[id]["faction"]
+
+
+func buy_license(id: StringName) -> bool:
+	if not FactionCatalog.LICENSES.has(id) or has_license(id):
+		return false
+	if not spend_favor(license_faction(id), license_cost(id)):
+		return false
+	licenses.append(String(id))
+	return true
+
+
+## The license a structure needs before it can be built (§8.2 "business licenses"), or "".
+static func license_for(sid: StringName) -> StringName:
+	match sid:
+		&"refining_furnace":
+			return &"production"
+		&"pill_stall":
+			return &"street_trade"
+	return &""
+
+
+func missing_license(sid: StringName) -> StringName:
+	var need := license_for(sid)
+	return need if need != &"" and not has_license(need) else &""
+
+
+## Every third night (or when there are none) the family and the watch offer a beast for hire.
+func refresh_recruits(rng: RandomNumberGenerator) -> void:
+	if not recruits.is_empty() and day % 3 != 0:
+		return
+	recruits.clear()
+	for f in [FactionCatalog.FAMILY, FactionCatalog.WATCH]:
+		if rank_of(f) < 1:
+			continue
+		var ids := GameData.monster_ids()
+		var def := GameData.monster(ids[rng.randi_range(0, ids.size() - 1)])
+		var rarity := MonsterInstance.Rarity.RARE if rank_of(f) >= 3 else MonsterInstance.Rarity.NORMAL
+		recruits.append({"faction": String(f), "cost": FactionCatalog.RECRUIT_COST,
+			"monster": MonsterInstance.roll(def, rng, StatShape.Id.NONE, stage, Stage.SubTier.LOWER, rarity)})
+
+
+func can_recruit(index: int) -> bool:
+	if index < 0 or index >= recruits.size() or monsters.size() >= capacity():
+		return false
+	return favor_of(StringName(recruits[index]["faction"])) >= int(recruits[index]["cost"])
+
+
+func recruit(index: int) -> bool:
+	if not can_recruit(index):
+		return false
+	var offer := recruits[index]
+	spend_favor(StringName(offer["faction"]), int(offer["cost"]))
+	monsters.append(offer["monster"])
+	recruits.remove_at(index)
+	return true
+
+
 # ---------- structures (gdd_overworld §6.4) ----------
 
 func has_blueprint(sid: StringName) -> bool:
@@ -169,7 +317,7 @@ func materials_payment(requirements: Array) -> Dictionary:
 
 
 func can_construct(sid: StringName) -> bool:
-	return StructureCatalog.has(sid) and has_blueprint(sid) and ap >= 1 \
+	return StructureCatalog.has(sid) and has_blueprint(sid) and ap >= 1 and missing_license(sid) == &"" \
 		and not recipe_payment(StructureCatalog.def(sid)).is_empty()
 
 
@@ -195,7 +343,8 @@ func structure(uid: int) -> Dictionary:
 ## Places a structure from the bag. Free (decisions are free); returns the uid or -1.
 func place_structure(sid: StringName, cell: Vector2i, rot: bool) -> int:
 	var def := StructureCatalog.def(sid)
-	if def == null or item_count(ItemCatalog.structure_item_id(sid)) < 1 or not BuildGrid.can_place(self, def, cell, rot):
+	if def == null or item_count(ItemCatalog.structure_item_id(sid)) < 1 or missing_license(sid) != &"" \
+			or not BuildGrid.can_place(self, def, cell, rot):
 		return -1
 	remove_item(ItemCatalog.structure_item_id(sid))
 	var uid := _next_uid
@@ -533,6 +682,9 @@ func end_day(rng: RandomNumberGenerator = null) -> Dictionary:
 	day += 1
 	ap = max_ap
 	market.new_day(rng)
+	QuestBoard.night(self, rng)
+	refresh_recruits(rng)
+	_sync_perks(rng)
 	return {"day": day, "healed": healed, "notes": notes}
 
 
@@ -542,7 +694,16 @@ func to_dict() -> Dictionary:
 		ms.append(m.to_dict())
 	return {"day": day, "max_ap": max_ap, "ap": ap, "money": money, "stage": int(stage),
 		"sub_tier": int(sub_tier), "monsters": ms, "items": items.duplicate(), "market": market.to_dict(),
-		"structures": structures.duplicate(true), "next_uid": _next_uid}
+		"structures": structures.duplicate(true), "next_uid": _next_uid,
+		"favor": favor.duplicate(), "standing": standing.duplicate(), "quests": quests.duplicate(true),
+		"licenses": licenses.duplicate(), "next_quest": _next_quest, "recruits": _recruits_to_dicts()}
+
+
+func _recruits_to_dicts() -> Array:
+	var out := []
+	for r in recruits:
+		out.append({"faction": r["faction"], "cost": r["cost"], "monster": (r["monster"] as MonsterInstance).to_dict()})
+	return out
 
 
 static func _int_dict(d: Dictionary) -> Dictionary:
@@ -575,4 +736,19 @@ static func from_dict(d: Dictionary) -> GameState:
 		var rng := RandomNumberGenerator.new()
 		rng.randomize()
 		g.market = Market.create(int(g.stage), rng)
+	g.favor = _int_dict(d.get("favor", {}))
+	g.standing = _int_dict(d.get("standing", {}))
+	g._next_quest = int(d.get("next_quest", 1))
+	for l in d.get("licenses", []):
+		g.licenses.append(String(l))
+	for q in d.get("quests", []):
+		g.quests.append({"uid": int(q["uid"]), "faction": String(q["faction"]), "item": String(q["item"]),
+			"count": int(q["count"]), "favor": int(q["favor"]), "money": int(q["money"]), "days": int(q["days"])})
+	if g.quests.is_empty():
+		var qrng := RandomNumberGenerator.new()
+		qrng.randomize()
+		QuestBoard.fill(g, qrng)
+	for r in d.get("recruits", []):
+		g.recruits.append({"faction": String(r["faction"]), "cost": int(r["cost"]), "monster": MonsterInstance.from_dict(r["monster"])})
+	g._sync_perks(null)
 	return g

@@ -15,6 +15,7 @@ var _follower_pos := Vector2.ZERO
 var _wanderers: Array[Dictionary] = []     # {node, pos, target, wait}
 var _panel: PlacePanel
 var _structures: StructurePanel
+var _favor: FavorPanel
 var _cursor: MeshInstance3D
 var _cursor_mat: StandardMaterial3D
 
@@ -49,6 +50,12 @@ func _after_ready() -> void:
 	_structures.changed.connect(_on_state_changed)
 	_structures.place_requested.connect(_on_place_requested)
 	_side_body.add_child(_structures)
+	_favor = FavorPanel.new()
+	_favor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_favor.setup(_game)
+	_favor.visible = false
+	_favor.changed.connect(_on_state_changed)
+	_side_body.add_child(_favor)
 	if _map.id == &"inner":
 		_build_overlay()
 		if GameSession.build_mode:
@@ -96,6 +103,8 @@ func _on_state_changed() -> void:
 	_refresh_header()
 	if _side.visible:
 		_panel.refresh()
+		if _favor.visible:
+			_favor.refresh()
 
 
 func _move_follower(delta: float) -> void:
@@ -137,10 +146,18 @@ func _interact_with(thing: Dictionary) -> void:
 		"panel":
 			_panel.visible = true
 			_structures.visible = false
+			_favor.visible = false
 			_panel.show_place(arg)
+			_open_side()
+		"faction":
+			_panel.visible = false
+			_structures.visible = false
+			_favor.visible = true
+			_favor.show_faction(arg)
 			_open_side()
 		"structure":
 			_panel.visible = false
+			_favor.visible = false
 			_structures.visible = true
 			_structures.show_structure(int(parts[1]))
 			_open_side()
@@ -217,6 +234,7 @@ func _reload_here() -> void:
 
 func _show_build_panel() -> void:
 	_panel.visible = false
+	_favor.visible = false
 	_structures.visible = true
 	_structures.show_build(GameSession.build_item, GameSession.build_rot)
 	_open_side(true, false)       # the build menu doesn't stop you from walking

@@ -15,8 +15,8 @@ const INFO := {
 		"blurb": "Travel arrays lead to dungeon regions. Entering a dungeon costs 1 AP and includes its battles (§7)."},
 	&"market": {"name": "Market District", "built": true,
 		"blurb": "The Trader: sell dungeon loot, buy cultivation pills, and play the price swings — they drift every night (§8, §11)."},
-	&"clan": {"name": "Clan Compound", "built": false,
-		"blurb": "Clan meetings, favor and story events. Phase 2-3 (§8.2)."},
+	&"clan": {"name": "Clan Compound", "built": true,
+		"blurb": "The notice board of the three factions: requests to fill for favor, licenses, rare offers (§8.2). Each faction also has an envoy to talk to."},
 }
 
 var _game: GameState
@@ -67,6 +67,12 @@ func refresh() -> void:
 			_build_plaza()
 		&"market":
 			_build_market()
+		&"clan":
+			var fp := FavorPanel.new()
+			fp.setup(_game)
+			fp.changed.connect(func(): changed.emit())
+			add_child(fp)
+			fp.show_faction(&"all")
 		_:
 			_text("Not built yet.", UiTheme.DIM)
 

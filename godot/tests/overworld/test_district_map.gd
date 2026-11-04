@@ -53,6 +53,8 @@ func test_gates_lead_somewhere_and_back() -> void:
 				assert_bool(DistrictMap.of(target).arrivals.has(id)).is_true()
 			elif parts[0] == "panel":
 				assert_bool(PlacePanel.is_built(StringName(parts[1]))).is_true()
+			elif parts[0] == "faction":
+				assert_bool(FactionCatalog.DATA.has(StringName(parts[1]))).is_true()
 
 
 func test_walls_stop_and_slide() -> void:

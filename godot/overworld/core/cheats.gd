@@ -48,6 +48,15 @@ static func stage_up(state: GameState) -> String:
 	return "Stage up: %s (monsters follow)" % Stage.stage_name(state.stage)
 
 
+static func give_favor(state: GameState) -> String:
+	for f in FactionCatalog.ids():
+		state.add_favor(f, 30)
+	for id in FactionCatalog.LICENSES:
+		if not state.has_license(id):
+			state.licenses.append(String(id))
+	return "+30 favor with every faction, all licenses"
+
+
 static func refill_ap(state: GameState) -> String:
 	state.ap = state.max_ap
 	return "AP refilled (%d)" % state.ap

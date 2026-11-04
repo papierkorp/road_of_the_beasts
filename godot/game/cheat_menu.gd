@@ -62,6 +62,7 @@ func _ready() -> void:
 	_add("+5 of every pill", func(s): return Cheats.give_pills(s, 5))
 	_add("+5 of every material", func(s): return Cheats.give_materials(s, 5))
 	_add("Stage up (player and monsters)", func(s): return Cheats.stage_up(s))
+	_add("+30 favor and all licenses", func(s): return Cheats.give_favor(s))
 	_add("All blueprints", func(s): return Cheats.give_blueprints(s))
 	_add("+100 XP for all monsters", func(s): return Cheats.give_xp(s, 100))
 	_add("Refill AP", func(s): return Cheats.refill_ap(s))

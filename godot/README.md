@@ -14,10 +14,10 @@ battle/      the deterministic grid battle (gdd_battle.md)
 overworld/   days, AP, night phase, economy, internal world (gdd_overworld.md)
   core/      headless: GameState (day, AP, money, bag, owned individuals), Expedition (dungeon node map),
              Market (Trader), DistrictMap (layout and movement of a walkable area), WildRoamer, Encounter,
-             BuildGrid + StructureRules (building system), Cheats
+             BuildGrid + StructureRules (building system), QuestBoard (faction requests), Cheats
   ui/        WalkScreen (base: iso camera, WASD + E, HUD), DistrictScreen (city districts),
              DungeonRoomScreen (rooms with visible wild monsters), PlacePanel (what a place offers),
-             StructurePanel (build menu, what a placed structure does),
+             StructurePanel (build menu, what a placed structure does), FavorPanel (factions),
              WorldMapScreen (menu map of the city), DungeonScreen + DungeonCanvas (node map)
   district.tscn (the streets), dungeon_room.tscn (walkable dungeon), overworld.tscn / dungeon.tscn (menu maps)
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession)

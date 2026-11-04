@@ -309,6 +309,10 @@ func _build_menu() -> void:
 		var sid2 := ItemCatalog.structure_of(id)
 		var def2 := StructureCatalog.def(sid2)
 		_text("%s — needs %s" % [def2.display_name, def2.recipe_text()], UiTheme.TEXT)
+		var need := _game.missing_license(sid2)
+		if need != &"":
+			var lic: Dictionary = FactionCatalog.LICENSES[need]
+			_text("Needs the %s (%s, %d favor) — buy it at their envoy." % [lic["name"], FactionCatalog.faction_name(lic["faction"]), int(lic["cost"])], UiTheme.DIM)
 		var b := _button("Construct %s  (1 AP)" % def2.display_name, func(): _construct(sid2))
 		b.disabled = not _game.can_construct(sid2)
 		add_child(b)

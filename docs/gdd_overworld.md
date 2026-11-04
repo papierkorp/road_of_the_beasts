@@ -503,7 +503,8 @@ PHASE 2  Walkable city districts (first step built: Teleport Plaza, Market, Inne
          WASD + E, iso camera, monster follows; visible dungeon with ambush; building system:
          grid, blueprints + materials, cultivation spots, herb plots, adjacency; skill evolution at
          the Evolution Pillar, breakthrough; Producer: Refining Furnace + Pill Stall, healing and
-         battle-prep pills),
+         battle-prep pills; Favor with the Family, the Merchants' Guild and the City Watch: requests,
+         discounts, licenses, recruits; walkable Clan Compound),
          Producer business, favor system with 2-3 factions
 PHASE 3  Dojo/faction staff, auction hall, monster hall,
          internal world growth stages, clan storyline

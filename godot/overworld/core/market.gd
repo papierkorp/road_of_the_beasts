@@ -22,6 +22,8 @@ var factors := {}                   # material id -> price factor
 var pill_factors := {}              # pill id -> what customers pay today (x base value), for the Pill Stall
 var stock: Array[String] = []       # materials for sale today
 var structure_offer: StringName = &""      # a constructed structure for sale today, or none
+var blueprint_offer: StringName = &""     # a rare blueprint the guild lets you buy (guild rank 2+), or none
+var guild_rank := 0                         # set by the GameState; decides the discount
 
 
 static func create(tier: int, rng: RandomNumberGenerator) -> Market:
@@ -78,6 +80,11 @@ func factor(id: String) -> float:
 	return float(factors.get(id, 1.0)) if ItemCatalog.kind_of(id) == ItemCatalog.Kind.MATERIAL else 1.0
 
 
+## The guild's discount for its friends (gdd_overworld §8.2).
+func discount() -> float:
+	return FactionCatalog.DISCOUNT_PER_RANK * float(guild_rank)
+
+
 func can_buy(id: String) -> bool:
 	match ItemCatalog.kind_of(id):
 		ItemCatalog.Kind.PILL:
@@ -85,15 +92,14 @@ func can_buy(id: String) -> bool:
 		ItemCatalog.Kind.STRUCTURE:
 			return structure_offer != &"" and id == ItemCatalog.structure_item_id(structure_offer)
 		ItemCatalog.Kind.BLUEPRINT:
-			return false
+			return blueprint_offer != &"" and id == ItemCatalog.blueprint_id(blueprint_offer)
 	return stock.has(id)
 
 
 func buy_price(id: String) -> int:
 	var value := float(ItemCatalog.base_value(id)) * factor(id)
-	if ItemCatalog.kind_of(id) == ItemCatalog.Kind.MATERIAL:
-		return maxi(1, ceili(value * MARKUP))
-	return int(value)
+	var full := maxi(1, ceili(value * MARKUP)) if ItemCatalog.kind_of(id) == ItemCatalog.Kind.MATERIAL else int(value)
+	return maxi(1, floori(float(full) * (1.0 - discount())))
 
 
 ## 0 = the Trader does not buy this (everything but materials).
@@ -109,6 +115,8 @@ func buy(state: GameState, id: String) -> bool:
 	state.add_item(id)
 	if ItemCatalog.kind_of(id) == ItemCatalog.Kind.STRUCTURE:
 		structure_offer = &""
+	elif ItemCatalog.kind_of(id) == ItemCatalog.Kind.BLUEPRINT:
+		blueprint_offer = &""
 	return true
 
 
@@ -122,7 +130,7 @@ func sell(state: GameState, id: String) -> bool:
 
 func to_dict() -> Dictionary:
 	return {"factors": factors.duplicate(), "stock": stock.duplicate(), "offer": String(structure_offer),
-		"pill_factors": pill_factors.duplicate()}
+		"pill_factors": pill_factors.duplicate(), "bp_offer": String(blueprint_offer)}
 
 
 static func from_dict(d: Dictionary) -> Market:
@@ -132,6 +140,7 @@ static func from_dict(d: Dictionary) -> Market:
 	for id in d["stock"]:
 		m.stock.append(String(id))
 	m.structure_offer = StringName(d.get("offer", ""))
+	m.blueprint_offer = StringName(d.get("bp_offer", ""))
 	for id in d.get("pill_factors", {}):
 		m.pill_factors[String(id)] = float(d["pill_factors"][id])
 	return m
