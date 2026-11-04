@@ -301,8 +301,10 @@ func _clear_side() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _game == null:
 		return
+	# keep the viewport: a handler may reload the scene, which removes this node from the tree
+	var viewport := get_viewport()
 	if _extra_input(event):
-		get_viewport().set_input_as_handled()
+		viewport.set_input_as_handled()
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.physical_keycode == KEY_E:
