@@ -1,5 +1,5 @@
 # GDD — BATTLE SYSTEM
-*Working Draft v6.1 — Options, not luck · companion file: gdd_overworld.md · playable reference: Godot project `godot/` (implements **v6.0**: 3v3 on 7×7, 1v1 duel, draft, 9 monsters; the v6.1 changes in §9 are design ahead of the code) · `html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference · see §9 for what changed*
+*Working Draft v6.2 — Options, not luck · companion file: gdd_overworld.md · playable reference: Godot project `godot/` (implements **v6.0**: 3v3 on 7×7, 1v1 duel, draft, 9 monsters; the v6.1 / v6.2 changes in §9 are design ahead of the code) · `html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference · see §9 for what changed*
 
 ---
 
@@ -41,7 +41,7 @@ Modes follow the team size the player can field: 1v1 from the start, **3v3 and 2
 ### 2.1 Core Battle Loop
 
 1. Battlefield generated (ground, props, contested high ground — §4.1)
-2. Pre-battle: draft monsters, place them in your start area, apply pills / arrays, choose the battle loadout (§5.11). Monsters start at their **current HP** (never above max; below max after earlier fights of an expedition, gdd_overworld §6.6). An **ambush** (attacking a wild monster from behind) gives the attacker's side a small round-1 initiative bonus (value tuned in playtest, proposed +1)
+2. Pre-battle: draft monsters, place them in your start area, apply pills / arrays, choose the battle loadout (§5.11). Monsters start at their **current HP** (never above max; below max after earlier fights of an expedition, gdd_overworld §6.6).
 3. **Each round:** one queue for all monsters of both sides, highest effective initiative first (§2.2)
 4. **On a monster's turn:**
    1. its own Surges that are due **fire** (§5.4): damage, then residue, then repaint
@@ -113,7 +113,7 @@ Initiative    0.1–10.0
 Movement      squares per movement skill (Step is always 1)
 Reach         1–3   Strike distance
 TurnsPerRound 1–3
-AP            2–3   action points per turn
+AP            2–5   action points per turn (4 from Immortal, 5 from Sovereign, TPR 1 shapes only)
 
 SKILLS: 4 active skills + 1 passive (§5.6)
 ```
@@ -128,11 +128,11 @@ SKILLS: 4 active skills + 1 passive (§5.6)
 | Skill range         | derived  | Base per skill; **+1 on Elevated ground; zones can drain it**                                                             |
 | Reach               | 1–3      | Strike distance (Manhattan); +1 on Elevated; `drain_range` lowers it (min 1); Reach ≥ 2 needs line of sight (props block) |
 | TurnsPerRound       | 1–3      | Extra turns re-enter the queue at −3 initiative per extra turn                                                            |
-| AP                  | 2–3      | Action points per turn (§2.3)                                                                                             |
+| AP                  | 2–5      | Action points per turn (§2.3)                                                                                             |
 | Aspect              | F/N/D    | Triangle position, Surge type, zone family                                                                                |
 | Kin / Rarity / Size | —        | see §3.6 and gdd_overworld                                                                                                |
 
-Stat ceilings per stage: HP 4/6/8/10, Init 5/7/9/10, TPR 1/2/2/3, Move 3/4/5/5, Reach 1/2/2/3, AP 2/2/3/3.
+Stat ceilings per stage (Qi / Foundation / Core / Soul): HP 4/6/8/10, Init 5/7/9/10, TPR 1/2/2/3, Move 3/4/5/5, Reach 1/2/2/3, AP 2/2/3/3; AP is 4 at Immortal and 5 at Sovereign.
 
 **Every stat is paid for.** All monsters of a stage and sub-tier have the same stat budget, the stat shapes (§3.3) spend it in different places (prices, budget and frames: gdd_overworld §5.2): a fast monster acts first and may act several times in a row, so it must have less HP or less Reach. A slow monster is punished in the turn order and gets that back in HP, Reach or AP.
 
@@ -675,17 +675,77 @@ Mirror Step · Spatial Rend (remove a square 2 rounds) · Exile · Anchor (squar
 
 ### 5.11 Tamer Skills (Player Influence)
 
-The tamer shapes; monsters fight. Each tamer skill can be used **once per battle**. The player brings a limited number of **slotted** skills into a battle (slots grow with cultivation stage, gdd_overworld §6.4).
+The tamer shapes; monsters fight. Each tamer skill can be used **once per battle**. A human tamer (the player or an NPC) brings a limited number of **slotted** skills into a battle (slots grow with cultivation stage, gdd_overworld §6.4). Wild monsters have no tamer and no skills.
 
-|     Skill      |                               Effect                               |
-|----------------|--------------------------------------------------------------------|
-| Spatial Pull   | move an own monster to any empty square                            |
-| Qi Suppression | an enemy monster −2 initiative next round                          |
-| Spirit Shield  | the next Surge damage on one own monster is 0                      |
-| Domain Glimpse | clear a tetromino of zones and reset its ground to Plain/neutral   |
-| Beast Swap     | (Soul+) exchange an active monster with one from the spatial space |
+Skills come from two sources (gdd_overworld §6.4): a pick at the tamer's **breakthrough** of the listed stage, or a **scroll**. Rows marked *proposal* are new.
 
-**Battle loadout.** Besides tamer skills the player may bring **medicines** and **arrays** *(planned, details open, §8)*: they can change the field in battle and are partly used up. The loadout is fixed before the battle and known to both sides, so pillar 6 stays intact; every effect is deterministic and previewed.
+|      Skill      | Stage |                                  Effect                                  |  Kind  |
+|-----------------|-------|--------------------------------------------------------------------------|--------|
+| Spatial Pull    | Foundation | move an own monster to any empty square                            | position |
+| Qi Suppression  | Foundation | an enemy monster −2 initiative next round                          | tempo |
+| Spirit Shield   | Foundation | the next Surge damage on one own monster is 0                      | defense |
+| Swap Places *(proposal)* | Foundation | two own monsters trade squares                             | position |
+| Attune *(proposal)* | Foundation | one square is repainted in the aspect of a chosen own monster         | terrain |
+| Domain Glimpse  | Core | clear a tetromino of zones and reset its ground to Plain/neutral         | terrain |
+| Urgent Order *(proposal)* | Core | an own monster that has not acted this round acts next          | tempo |
+| Second Wind *(proposal)* | Core | an own monster regains 1 HP (never above max)                     | defense |
+| Life Thread *(proposal)* | Core | the next time an own monster would fall it stays at 1 HP          | defense (also protects in Deadly dungeons) |
+| Double Bind *(proposal)* | Core | after the battle one extra defeated wild monster may be bound (gdd_overworld §5.7) | catching, uses a slot |
+| Beast Swap      | Soul | exchange an active monster with one from the spatial space               | position |
+| Seal Mastery *(proposal)* | Soul | Binding Seals one tier lower than the target still bind it       | catching, uses a slot |
+
+Catching skills take a slot on purpose: a team that wants to bind gives up a battle skill.
+
+**Battle loadout.** Besides tamer skills a human tamer may bring **medicines** and **arrays** *(planned, details open, §8)*: they can change the field in battle and are partly used up. The loadout is fixed before the battle and known to both sides, so pillar 6 stays intact; every effect is deterministic and previewed. Enemy human tamers bring one as well; wild monsters never do.
+
+### 5.12 Skill Catalog
+
+Every skill and passive that exists or is proposed, with its category. This is the table the kit decision is made from (gdd_overworld §9). "Role" is what the skill is *for* in a kit.
+
+**Active skills**
+
+|     Category     |                  Skill                  | Aspect |       Kin limit        |   Role    | Status |
+|------------------|-----------------------------------------|--------|------------------------|-----------|--------|
+| Basic            | Step (no slot)                          | —      | all                    | mobility  | rule   |
+| Movement         | Run                                     | —      | all but Spirit         | mobility  | rule   |
+| Movement         | Leap                                    | —      | Beast                  | mobility  | rule   |
+| Movement         | Glide                                   | —      | Winged                 | mobility  | rule   |
+| Movement         | Burrow                                  | —      | Scaled, Swarm          | mobility  | rule   |
+| Movement         | Phase                                   | —      | Spirit                 | mobility  | rule   |
+| Movement         | Blink                                   | —      | Spirit                 | mobility  | rule   |
+| Strike           | Bite · Dive · Tail Sweep · Gnaw · Siphon · Slam | — | by Kin (§3.7)       | damage    | rule   |
+| Surge            | Magma Pounce (Pounce) · Cinder Dive (Trail) · Crucible (Ring) | Force | —       | damage    | roster |
+| Surge            | Tidal Shell (Slow-burn) · Bramble Tide (Lingering) · Spring Burst (Lob) | Nature | — | damage | roster |
+| Surge            | Gloom Rift (baseline) · Eclipse (Wide) · Coiling Rift (Constrict) | Dark | —   | damage    | roster |
+| Surge            | Major Surge                             | any    | Ancient / Legendary    | damage    | Sovereign |
+| Field            | Lava Field · Thornbed · Blight Field    | F / N / D | —                   | terrain   | matrix |
+| Snare            | Ash Snare · Bog · Grasping Shade        | F / N / D | —                   | control   | matrix |
+| Current          | Shockwave · Gale · Void Pull            | F / N / D | —                   | control   | matrix |
+| Hex              | Glare · Spore Cloud · Mire              | F / N / D | —                   | control   | matrix |
+| Veil             | Kiln Shell · Bark Veil · Shade Veil     | F / N / D | —                   | defense   | matrix |
+| Terrain          | Raise Prop (Wall)                       | —      | not Winged, Spirit     | terrain   | archetype |
+| Terrain          | Raise Ground                            | —      | —                      | terrain   | archetype |
+| Terrain          | Sanctify (Shrine / Sigil)               | —      | not Beast              | support   | archetype |
+| Direct           | Shove                                   | —      | —                      | control   | archetype |
+| Direct           | Relocate                                | —      | not Swarm              | terrain   | archetype |
+| Self             | Channel                                 | —      | —                      | support   | archetype |
+| Self             | Ward                                    | —      | —                      | defense   | archetype |
+| Self             | Empower                                 | own aspect | —                  | support   | archetype |
+| Unique           | Mirror Step · Spatial Rend · Exile · Anchor · Conversion · Inversion · Mimicry · Devour Prop · Curse of Sight · Gravity Well | various | per skill | various | idea |
+| Signature        | Twin Surge                              | —      | Legendary              | damage    | idea   |
+
+**Passives**
+
+|         Category         |                                   Passive                                    |
+|--------------------------|------------------------------------------------------------------------------|
+| Terrain identity         | Native Ground · Painter · Adaptive · Trailblazer · Deep Roots · Purifier · Overgrowth |
+| Position & movement      | Highlander · Turret · Skittish · Phasing · Momentum                          |
+| Displacement             | Crashlander · Immovable · Counterweight                                      |
+| Combat                   | Thick Hide · Pack Hunter · First Blood · Vengeful · Scavenger · Frenzy · Bulwark |
+| Ground & zone resistance | Sure-footed · Clear Mind · Heatproof · Thornwalker · Void-touched            |
+
+- About 27 passives and several dozen actives exist as names today. Passives are **always on**; the question is whether they share the 4 slots (below)
+- **Kit model under discussion:** *Step + 4 slots, each an active or a passive, at least one active.* Passive availability would depend on the species' own list, the aspect (Native Ground, Painter, resistances for their ground) and the individual (Epic+ extra slots, artifacts). The consequence to check: a kit of 1 active + 3 passives is legal but weak; pure-active kits stay as today. Alternatives: keep 4 actives + 1 passive (current), or 3 actives + 2 passives. No rule changes until decided
 
 ---
 
@@ -822,10 +882,14 @@ Always cardinal and one square per trigger; the landing square is visible in the
 - **Major Surge:** shape and size
 - **Winged air layer:** how zones and ground affect air units (Soul+)
 - **Domain Glimpse tuning:** how big
+- **Tamer skill balance:** the proposed skills in §5.11 (Life Thread vs Spirit Shield, Urgent Order vs initiative) are untested
+- **Kit model:** see §5.12
 
 ---
 
 ## 9. Changelog
+
+**v6.2 — Tables and tamer skills (design ahead of the code).** AP rises to 4 at Immortal and 5 at Sovereign (TPR 1 shapes only). The ambush bonus is removed. Tamer skills get stages, sources (breakthrough pick or scroll) and seven proposed skills including catching skills (§5.11); only human tamers bring a loadout. New skill catalog table (§5.12) for the kit decision.
 
 **v6.1 — Open kits (design ahead of the code).** The monster sheet gets **AP as a stat** (2–3), and the stat shapes become frames with a shared budget (gdd_overworld §5.2); the roster's reference values were recalculated to that budget. Max Movement rises to 3 / 4 / 5 / 5. Kits are now **4 active skills + 1 passive** instead of fixed Move + Strike + Surge + utility; Strike and movement become slot skills and a kit may hold several Surges. Medicines and arrays may join tamer skills as a **battle loadout**, partly consumed in battle, always known beforehand. Moving costs **2 AP**: every monster has **Step** (1 square, no slot), everything better is a movement skill in a slot with Kin limits (§5.5.3). Reposition became the Movement archetype.
 
