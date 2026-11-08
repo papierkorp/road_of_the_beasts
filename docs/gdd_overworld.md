@@ -166,7 +166,7 @@ Business turns what dungeons bring into money, and money into speed and breadth.
 | Take a pill (other than a relearning pill) | Cultivation | free + 1 pill        | pill                                              | XP, healing, cure; skill change has its own row |
 | Assign a monster to a spot       | Cultivation | free                    | spot in the Internal World                        | idle XP every night                          |
 | Spend stat points                | Cultivation | free                    | unspent points                                    | inside the stage ceilings (gdd_monsters §2.2)             |
-| Change a monster skill    | Cultivation | relearning pill; day AP open | outside expeditions; unlocked species learnable list | no EP purchase; slot progress stays, matching upgrades reselected (§6.3.2) |
+| Change a monster skill    | Cultivation | relearning pill; day AP open | outside expeditions; unlocked species learnable list | no EP purchase; progress rules: [§6.3.2](#632-permanent-skill-slot-development-confirmed) |
 | Develop a skill slot             | Cultivation | EP; day AP open         | individual slot; Evolution Pillar                 | directly grants a designer-authored, skill-specific upgrade choice (§6.3.2); EP prices open |
 | Take back physical evolutions    | Cultivation | 1 AP + 4 materials      | Evolution Pillar                                  | prototype cost; input selection unresolved (T16/T30); not a skill-upgrade respec |
 | Breakthrough                     | Cultivation | 1 AP + trial + materials | High sub-tier, Trial Pillar                      | prototype: 5 (player) / 3 (monster) materials |
@@ -216,19 +216,19 @@ The outside world: the city and the dungeons behind its teleport arrays. Economy
 
 #### 3.1.1 Clan Compound
 
-- Home base; the clan looks down on the player. Buildings: Clan Hall, Notice Board, Clan Envoy ([index](#319-building-index)).
+- Home base; the clan looks down on the player. Buildings: see the [index](#319-building-index).
 
 #### 3.1.2 Rival Compounds
 
-- Initially closed; entry is a story/favor beat. Building: Family Hall ([index](#319-building-index)).
+- Initially closed; entry is a story/favor beat. Building: see the [index](#319-building-index).
 
 #### 3.1.3 City Lord's Keep
 
-- City law/order. Buildings: Audience Hall, Guard Barracks, Watch Post ([index](#319-building-index)).
+- City law/order. Buildings: see the [index](#319-building-index).
 
 #### 3.1.4 Market District
 
-- Goods exchange. Buildings: Trader, Guild Factor, Guild Hall, Auction Hall ([index](#319-building-index)).
+- Goods exchange. Buildings: see the [index](#319-building-index).
 
 #### 3.1.5 Business District
 
@@ -236,11 +236,11 @@ The player's properties house commerce and city workshops. Property access is li
 
 #### 3.1.6 Arena
 
-- Public fights. Buildings: Arena Ring, Ranking Board ([index](#319-building-index)).
+- Public fights. Buildings: see the [index](#319-building-index).
 
 #### 3.1.7 Teleport Plaza
 
-- Hub connecting every district. Buildings: Teleport Array, Meditation Pavilion, Watch Post ([index](#319-building-index)).
+- Hub connecting every district. Buildings: see the [index](#319-building-index).
 
 #### 3.1.8 Slums
 
@@ -502,7 +502,7 @@ Tamer skills are **learned over the game**, then **slotted before each battle**;
 ### 6.5 The Balance Rule (Pills, Medicines, Artifacts, Arrays)
 
 - **Pills:** out-of-battle progression. **Artifacts:** in-battle options, not numbers. All goods share the item schema (§7.6).
-- **Loadout:** human tamers (player/NPC) select tamer skills, medicines and arrays pre-battle; both sides know it, and it may change the field during battle. Medicines/some arrays are consumed, tamer skills are not ([§6.4](#64-tamer-skills)). Every effect is deterministic and previewed.
+- **Loadout:** selection, visibility and consumption are defined in [§2.1](#21-battle-loop), [§7.9](#79-inventory-and-loadout) and [§6.4](#64-tamer-skills); loadout effects may change the field during battle.
 
 ### 6.6 Pills & Medicines
 
@@ -713,7 +713,7 @@ Furnace, Array Workshop and the Forge are the same code with different stations 
 
 |        Family         |                  Effect                  |                    Recipe pattern (tier T)                    |
 |-----------------------|------------------------------------------|---------------------------------------------------------------|
-| Cultivation           | XP (+30 / 80 / 200 / 500 / 1200)         | 3 herbs of tier T                                 |
+| Cultivation           | XP per tier: [Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps) | 3 herbs of tier T                                 |
 | Healing               | restore 2 HP between battles             | 2 herbs of tier T                                             |
 | Revival               | injury recovery: [§5.2](#52-defeat-and-injury) | 2 herbs + 1 beast part |
 | Swift (battle prep)   | +1 initiative in the next battle         | 2 herbs + 1 ore                                               |

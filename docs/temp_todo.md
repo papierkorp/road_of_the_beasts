@@ -25,6 +25,7 @@ Central list of open design decisions and validation tasks from the three GDDs. 
   2. Whether physical evolution exists and what it does — T36 (new gap; T05 depends on it).
   3. Then resume the T02 sequence: Surge cross-check → same-AP development paths (Run, Slowing Zone, Surge with ground effect, Jab) → shared EP economy (T05).
   Small independent decision: the Ambitious Standing comparison (T26).
+- **Refactoring pass (uncommitted at last check):** editorial deduplication applied in all three GDDs without rule, number or status changes: Monsters §4.7 (YAML block removed, reference tables turned into per-field lists), §4.2/§4.4 (contract tables turned into lists, layer rules link to Battle §4.3), §4.4/§4.5/§4.7 (zone bounds, upgrade limits, combination policy, repeated “no defaults” clauses now stated once), Overworld §3.1/§2.6/§6.5/§7.5 (pointers instead of copies). Remaining candidates are listed in T37.
 - **Blockers:** user decisions above; T13 has no executed tests and the documented Godot build is the historical v6.0 ruleset.
 - **Git state observed at session end:** branch `docs/update_gdd`, HEAD `116494b`, three commits ahead of its remote-tracking branch (local observation, not a freshness guarantee). `CLAUDE.md` and `docs/temp_todo.md` were already modified before this session (user work, preserved); this session edited only `docs/temp_todo.md`. No commits, pulls, pushes, resets or branch changes. Recheck Git on every machine.
 - **Checks actually performed:** all three GDDs and this file read in full; every relative link and anchor in the four files checked by script (0 broken); recomputed by script or by hand: all 66 Strike construction totals, the calibration examples, the 1-AP Surge subtotals (23/27, 25/30, 27/33), movement/self-buff totals, the nine reference individuals (each 31 points, inside their frames), the stage-scaled frame ranges (see T03 findings) and the Core frame totals. **Not performed:** any gameplay, balance, XP or engine test; arithmetic agreement is not validation.
@@ -431,6 +432,18 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 - *New:* keep the [Battle §7.1](gdd_battle.md#71-technical-notes-battle) legacy validator note consistent with the open kit rule; synchronize “physical Size path” wording (Overworld §6.3) after T36.
 - **Done when:** all other tasks are closed or consciously deferred, tables/schema fields/references are synchronized, the development phases are updated and prototype comparisons are limited to what distinguishes implementation from design.
 
+### [ ] T37 · Editorial Deduplication Pass (K)
+**Status:** Mostly done — see the handoff for the applied batches; the bullets below list what is still a candidate.
+**Prerequisites:** none; coordinate with T35.
+**Sources:** all three GDDs.
+- Monsters §4.7: the Slowing Zone is described three times (walkthrough bullets, YAML block, table column); the other reference cases partly twice. Keep one representation per case.
+- AP per Strike shape appears in [Monsters §3.2](gdd_monsters.md#32-strike-by-kin), the §4.5 Strike table and the §4.5 AP baseline table; Strike “max 2 damage” appears in Battle §6.1 and Monsters §3.2/§4.3/§4.4.
+- Monsters §4.2 spatial contracts (layer occupancy, fixed bindings) overlap Battle §4.3/§4.4/§6.5; the Surge prop/height table in §4.3 overlaps Battle §4.7/§4.10/§4.11.
+- Slot development is summarized in Monsters §4.6/§7.1 and Overworld §2.6/§4.3/§6.3.2; stage gains appear in Monsters §7.4, Overworld §6.3 and Battle §1.1; pill XP in Monsters §7.4 and Overworld §7.5.
+- Repeated per-statement “unresolved Tnn” disclaimers (mostly Monsters §4.2–§4.4) could become one section status each, as CLAUDE.md prefers.
+- 11 table cells over ~450 characters (Monsters §4.2 spatial contract rows, §4.4 board-operation rows, §4.7 reference tables) could be split into lists. Prose paragraphs are already bulleted; no German text remains in the GDDs.
+- **Done when:** each candidate is merged into one owning section with links elsewhere, or consciously kept; a before/after information check (conditions, exceptions, status) and the link check pass.
+
 ## Completed Tasks (IDs Retained for References)
 
 IDs stay valid for references in the GDDs and this file; completion was verified against the current text of all three GDDs.
@@ -528,4 +541,35 @@ Fasse Fokus und nächsten Schritt kurz zusammen. Belegte redaktionelle Korrektur
 Aktualisiere ausschließlich docs/temp_todo.md für die Übergabe dieser Dokumentationssession. Lies CLAUDE.md, prüfe docs/update_gdd und erhalte Nutzeränderungen. Nutze die aktuellen Dateien und ausdrücklichen Entscheidungen dieser Session; Empfehlungen sind keine Freigaben.
 
 Aktualisiere Context Handoff: Fokus, Beschlüsse gegenüber Vorschlägen, offene Fragen/Blocker, genaue nächste Schritte/Quellenlinks, beobachteter Git-/Commit-Stand und tatsächlich erfolgte oder noch fehlende Prüfungen. Aufgabenstatus nur bei erfüllten Abschlussbedingungen ändern. AI Prompts und unbeteiligte Aufgaben erhalten. Keine Regel-/Preiskopien oder laufende Historie; veralteten Kontext ersetzen. Dokumentation Englisch, Antwort Deutsch; wiederverwendbare Chat-Prompts samt Unterüberschriften unter AI Prompts bleiben Deutsch. git diff --check ausführen; ohne ausdrücklichen Auftrag weder committen noch synchronisieren.
+```
+
+## GDDs redaktionell refactoren (Duplikate und Fließtext)
+
+```text
+Refactore die GDDs von Road of the Beasts redaktionell gemäß CLAUDE.md. Verlasse dich nicht auf frühere Chatverläufe.
+
+Sicherheit und Umfang:
+- Lies CLAUDE.md. Prüfe zuerst Branch und Git-Status: nur auf docs/update_gdd arbeiten; andernfalls anhalten und nachfragen, nicht selbst wechseln.
+- Erhalte Nutzeränderungen. Schreibe nur in docs/ (docs/gdd_battle.md, docs/gdd_monsters.md, docs/gdd_overworld.md; docs/temp_todo.md nur für Verweise und Übergabe). Keine Spielimplementierung, keine Commits, Branchwechsel, Pulls, Pushes oder Resets ohne ausdrücklichen Auftrag.
+- Chat Deutsch; alle Dokumentation unter docs/ bleibt Englisch (Ausnahme: Chat-Prompts samt Unterüberschriften unter AI Prompts). Deutsche Bestandsabschnitte ins Englische übersetzen, ohne Regeln oder Entscheidungsstatus zu ändern.
+
+Analyse zuerst:
+1. Lies docs/temp_todo.md (Context Handoff, offene Aufgaben) und danach alle drei GDDs vollständig, abschnittsweise. Eine Gliederungsübersicht allein genügt nicht.
+2. Erstelle vor dem Bearbeiten eine Befundliste: (a) Spielmechaniken, Regeln, Formeln, Preislisten oder Datenstrukturen, die an mehreren Stellen definiert oder fast wortgleich wiederholt werden; (b) lange Fließtext-Absätze und überlange Tabellenzellen; (c) deutsche Reste; (d) Verweise, die nach Umbauten brechen würden. Lege die Liste dem Nutzer kurz vor, wenn du mehr als nur eindeutige Duplikate zusammenführen willst.
+
+Refactoring-Ziele (in dieser Priorität):
+1. Keine doppelten oder mehrfachen Definitionen: Jede Regel, Formel, Preisliste und Datenstruktur hat genau einen zuständigen Abschnitt (Zuständigkeiten laut CLAUDE.md, Tabelle „Dokumentzuständigkeiten“). Alle anderen Stellen verlinken per relativem Markdown-Link und beschreiben nur ihre eigene Schnittstelle, keine Regelkopien. Beispiele und Referenzrechnungen folgen den zentralen Regeln und bilden keine zweite Regelversion. Allgemeine Regeln beschreiben Effekt-/Skillklassen statt Namenslisten; Skill-Ausnahmen nie auf ganze Klassen übertragen.
+2. Keine Fließtext-Absätze: Längeren Fließtext in thematische Stichpunktlisten umwandeln, zusammengehörige Aussagen bündeln (nicht jeden Satz einzeln aufzählen), Unterlisten nur für echte Unterstruktur, Abläufe nummerieren, Vergleiche und Referenzwerte in kompakten Tabellen. Kurze Überblicks- und Begründungssätze dürfen bleiben.
+3. Sprache: Englisch, einheitliche GDD-Terminologie und Bezeichner.
+
+Harte Grenzen:
+- Reines Refactoring: keine Regel, Zahl, Bedingung, Ausnahme, Negation, Einheit und kein Entscheidungsstatus (beschlossen / Arbeitsentwurf / nicht validiert) darf sich ändern. Keine neuen Mechaniken, keine Standardannahmen, offene Alternativen nicht entscheiden (z. B. Endzustand nach Höhenbruch bleibt offen). Widersprüche nicht still auflösen, sondern als Aufgabe in docs/temp_todo.md erfassen.
+- Informationserhalt prüfen: tatsächlichen Zeichenumfang vergleichen, mehr Zeilen sind keine Kürzung. Beim Zusammenführen von Duplikaten die vollständigste Fassung behalten und nur wirklich redundante Teile entfernen; Bedingungen nur in einer Quelle nicht verlieren.
+- Überschriften stabil halten; nach Verschiebungen oder Umbenennungen alle Links, Abschnittsnummern und Anker in allen GDDs und in temp_todo.md aktualisieren. Aufgaben-IDs in temp_todo.md bleiben erhalten.
+- Arbeite in kleinen, thematisch geschlossenen Schritten (ein Kapitel oder eine Mechanik pro Schritt) und prüfe jeden Schritt, bevor du fortfährst.
+
+Prüfung und Antwort:
+- Prüfe Diff auf Informationsverlust und unbeabsichtigte Entscheidungsänderungen, alle relativen Links und Anker (per Skript), Rechensummen, verbliebene doppelte Definitionen (gezielte Suche nach Schlüsselbegriffen) und `git diff --check`.
+- Aktualisiere Context Handoff in docs/temp_todo.md auf den tatsächlichen Stand (Fokus, Blocker, nächster Schritt, Git-Stand, erfolgte Prüfungen).
+- Berichte auf Deutsch: geprüfter Umfang, zusammengeführte Duplikate (mit zuständigem Abschnitt), umgewandelte Fließtexte, gefundene Widersprüche und neue Aufgaben, durchgeführte Prüfungen, offene Punkte. Keine vollständige Prüfung behaupten, wenn etwas fehlt.
 ```

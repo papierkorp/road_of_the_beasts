@@ -426,7 +426,9 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 
 **Historical v6.0 implementation notes — not the current authoring schema or complete current runtime:**
 
-- One Resource per monster / skill / zone in `data/monsters`, `data/skills`, `data/zones`, typed by `MonsterDef`, `SkillDef`, `ZoneDef`. `GameData` indexes by `id` (= file name); startup validation checks duplicate ids, missing Surge/utility, unknown shapes/passives, species learn-list references, concrete Surge types/effects and stat ranges. The legacy Surge/utility requirement does not override the [open kit rules](gdd_monsters.md#41-the-kit)
+- One Resource per monster / skill / zone in `data/monsters`, `data/skills`, `data/zones`, typed by `MonsterDef`, `SkillDef`, `ZoneDef`.
+  - `GameData` indexes by `id` (= file name); startup validation checks duplicate ids, missing Surge/utility, unknown shapes/passives, species learn-list references, concrete Surge types/effects and stat ranges.
+  - The legacy Surge/utility requirement does not override the [open kit rules](gdd_monsters.md#41-the-kit)
 - The headless board uses a 2D array of Square objects storing `{ ground{type, level, height}, object, surge, zone }`, with level-derived zone effect values. These fields are not an alternative current schema
 - Documented preview architecture: pure `preview_cell(skill, cell)` returns `new | level | replace | weaken | cancel | lost`, shared by preview, AI and unit tests. This does not establish implementation of revised contracts or optional residue
 - Shape orientations use base shapes (rotate + mirror, de-duplicated), anchor nearest the centroid. Current design instead requires explicit [footprint/anchor mappings](gdd_monsters.md#footprints-and-placement); missing mappings remain T02
