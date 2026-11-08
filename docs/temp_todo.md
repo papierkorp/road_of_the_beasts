@@ -1,409 +1,418 @@
-# Temporäre Klärungsliste — Road of the Beasts
+# Temporary Clarification List — Road of the Beasts
 
-Zentrale Liste der offenen Designentscheidungen und Validierungen aus den drei GDDs. Die Reihenfolge unten ist eine vorgeschlagene Arbeitsreihenfolge, keine neue Spielregel. **Nur im Ordner `docs` und auf `main` arbeiten.**
+Central list of open design decisions and validation tasks from the three GDDs. The order below is a proposed work sequence, not a new game rule. **Work only in `docs/` and on `docs/update_gdd`.**
 
-## Verwendung
+## Usage
 
-- Die GDDs beschreiben den aktuellen Arbeitsstand; vorhandene Vorschläge und Zahlen sind durch diese Auslagerung **nicht automatisch beschlossen**.
-- Offene Fragen, Alternativen und Prüfaufträge werden ausschließlich hier gepflegt. Inhaltliche Entwürfe, historische Changelogs und dokumentierte Prototyp-Abweichungen bleiben in den GDDs erhalten.
-- Erst die unter „Voraussetzung“ genannten Punkte abschließen, dann das Thema entscheiden. Unabhängige Punkte derselben Phase können parallel bearbeitet werden.
-- Nach Abschluss: Entscheidung in die angegebenen GDD-Abschnitte übernehmen, betroffene Begleitdateien synchronisieren und den Punkt hier abhaken. Bei Playtests erst Messung und Ergebnis dokumentieren, dann gegebenenfalls Regeln ändern.
-- **D** = Designentscheidung, **V** = Validierung/Balance, **K** = Konsistenzkorrektur. Quellen beziehen sich auf die weiterhin gültigen Abschnittsnummern der GDDs.
-- **Zentrale Skill-Spezifikation:** `gdd_monsters.md` Kapitel 4. Dort werden Kit, Baukasten, Schema, Validierung, Zugang und Slotentwicklung definiert. Battle beschreibt die generische Laufzeit-/Board-Auflösung; Overworld nur Meta-Integration, Ökonomie und eigene Tamer-/Loadout-Inhalte. Keine parallelen Monster-Skillpreislisten oder Upgrade-Regeln pflegen. Historische Angaben sind keine aktive Spezifikation.
+- The GDDs describe the current working state; existing proposals and numbers are **not automatically approved** by moving open tasks here.
+- Open questions, alternatives and review tasks are maintained exclusively here. The GDDs hold the current design, including labelled content drafts and prototype deviations needed to distinguish it from historical implementations. Use Git history to trace changes; do not maintain changelogs in the GDDs or this file. Keep the handoff current rather than appending a running change history.
+- Complete the items listed under “Prerequisites” before deciding the topic. Independent items in the same phase may be worked on in parallel.
+- On completion: incorporate the decision into the specified GDD sections, synchronize affected companion files and check off the item here. For playtests, document measurements and results before changing rules if necessary.
+- **D** = design decision, **V** = validation/balance, **K** = consistency correction. Sources refer to the current GDD section numbers unless explicitly labelled historical.
+- **Central skill specification:** [Monsters chapter 4](gdd_monsters.md#4-skills). It defines the kit, construction kit, schema, validation, access and slot development. Battle describes generic runtime/board resolution; Overworld only meta integration, economy and its own tamer/loadout content. Do not maintain parallel monster-skill price lists or upgrade rules. Historical statements are not active specifications.
 
-## Übergabe / Wiedereinstieg — aktueller Stand 2026-11-08
+## Handoff / Re-entry — Current State 2026-11-08
 
-Diese Übergabe ersetzt die alten Gesprächsverläufe und Rechenproben. Die Aufgaben T01–T35 darunter bleiben maßgeblich. **T02, T05 und T13 sind offen; keine Balancefreigabe.**
+This handoff supersedes earlier conversation histories and calculation checks. Tasks T01–T35 below remain authoritative. **T02, T05 and T13 remain open; no balance approval.**
 
-### Arbeitsweise und Zuständigkeiten
-
-- **Nur `docs/`, auf `main` bleiben.** Keine Implementierung, Commits, Branches, Pulls oder Resets ohne Auftrag. Gestagte/ungestagte Nutzeränderungen erhalten; vor Änderungen Git-Stand prüfen. Zuletzt `main` einen Commit hinter `origin/main`; nicht automatisch synchronisieren.
-- Deutsch, knapp und verständlich. Der Nutzer möchte ähnliche **Kostenentwürfe gesammelt durch den Agenten ausarbeiten lassen**, nicht jede Zahl einzeln bestätigen. Grundsätzliche Gameplayänderungen nicht aus dieser Erlaubnis ableiten; Empfehlungen begründen und neue Zahlen als Entwurf kennzeichnen.
-- **Lesbarkeit ist ausdrücklich wichtig:** kompakte Tabellen und kurze Regeln statt wiederholter Warntexte/Entscheidungsprotokolle. §4.5 wurde bereits gebündelt; beim Weiterarbeiten nicht erneut aufblähen. Gesprächskontext gehört hierher, Preise nur zentral ins GDD.
-- **Monsters Kapitel 4 ist die zentrale Skillquelle:** §4.1 Kit/Zugang, §4.2 gemeinsames Modell, §4.3 Ausführungsprofile, §4.4 Effekt-/Boardverträge, §4.5 Kosten, §4.6 Slotentwicklung, §4.7 Referenzen/Validierung. Battle besitzt allgemeine Kampf-/Boardauflösung; Overworld Meta, Tamer und Loadout. Bereits erfolgte Konsolidierung nicht neu planen.
-- Alle Monster-Skills einschließlich Passives/Self-Buffs/Signatures nutzen dieselben 14 Feldgruppen. Keine Custom-/`unique`-Sonderstruktur, künstlichen Flächen für Non-Area-Skills, globalen `affects_ground`/`affects_air`-Autoreneingaben oder 0-AP-Aktivpassives. Ebenen stehen am Effekt, Bodenänderungen in `board_changes`. Darstellbarkeit/Preis ist keine Contentfreigabe.
-
-### Bestätigte Prinzipien und gewählte Arbeitswerte
-
-- Keine Aspekte, Dreiecke, Attunement oder festen Ersatz-Elemente. Freie Themen und entworfene Spezies-Lernlisten; T01/T33/T34 abgeschlossen.
-- Designer erstellen fertige Skills/Upgrades; keine freie Spieler-Konstruktion. Konstruktionspunkte sind interne Bewertungsdaten, nicht Schaden, EP, Spielerwährung oder Overworld-Blueprint-Items.
-- **Gemeinsame Budgetobergrenzen 24/30/36 für Slot-Level 1/2/3**, keine Ratings, Mindestwerte, Zufallsbudgets oder eigenen Pools/AP-Klassenbudgets. Skillart allein bekommt keinen pauschalen Preis; bewertet werden Mechaniken/Verträge.
-- **AP-Effizienz:** 1/2/3/4/5 Battle-AP kosten 12/6/3/1/0 Konstruktionspunkte. Hohe AP geben keine negativen Gutschriften. Bestehende Battle-AP nicht automatisch verändern.
-- **Schadenskomponente:** Schaden × potenzielle Trefferzellen × 2. Sofortschaden 100 %, kein pauschaler Sofortzuschlag; angekündigter ausweichbarer Surge-Schaden 50 % ausschließlich dieses Schadensanteils. Andere Komponenten nicht automatisch halbieren. Trefferzellen sind keine garantierten Treffer.
-- **Strike verursacht weiterhin 2 HP Schaden pro getroffenem Monster.** Zahlen wie 32 in einer Kostenspalte sind Konstruktionspunkte! Tabellen eindeutig beschriften. 2×2-Treffermultiplikation bleibt offen, nicht implizit einführen.
-- Boardanker innerhalb Reach ohne LOS zusammen +2; wirksame Strike-Richtungsauswahl +2, symmetrische Formen ohne geänderte Trefferfelder +0. Boden-/Luft-Schadensabdeckung +2 je Schadenseffekt. Normale Surge-Markerblockierung +1 je vollständigem Marker.
-- Fixe Nicht-Strike-Formen bekommen keinen pauschalen Formaufschlag. **Strike-Ausnahme:** +2 pro Trefferzelle außerhalb des angrenzenden 8er-Rings; für 1×1 `max(abs(dx), abs(dy)) > 1`, nicht Manhattan Reach.
-- Kin-Effekte zählen ins gemeinsame Budget. Scaled-Push +2 je potenzieller Trefferzelle, Winged-Rückzug +3 einmal pro Einsatz. Normale Prop-Schädigung offensiver Skills vorerst ohne generellen Zuschlag; keine neuen Schadensrechte für Support/Bewegung.
-- Vollständige Entwicklung bei ursprünglichem AP-Preis erforderlich. Keine direkten Schadens-, AP-Senkungs- oder Cast-Reichweiten-Upgrades; höhere AP nur optionale sichtbare Zweige. Slotfortschritt individuell, gemeinsamer EP-Pool mit körperlicher Evolution. Pillenbasierter Skillwechsel außerhalb Expeditionen erhält Slotfortschritt; EP-/Pillenökonomie noch offen.
-
-### Zuletzt beschlossen — hier genau wieder einsteigen
-
-1. **Kombinationszuschläge sind generell gestrichen**, auch innerhalb eines Skills. Gesamtpreis = tatsächliche mechanische Komponenten + AP-Effizienz beziehungsweise passive Verfügbarkeit. Früher ergänzte Synergieaufschläge nicht wieder einführen. Vorhandene `combination_cost`-Felder bleiben 0. Wechselwirkungen trotzdem testen; bei Problemen verantwortliche Komponenten/Regeln prüfen.
-2. **„Rückstand“ meint die Bodenänderung nach Surge-Ausführung**, nicht Props. Eruption → Lava I, Flood → Thornbed I, Rift → Blight I, mit vorhandenen Höhen-/Prop-Ausnahmen. Diese Bodenwirkung gehört zu den konkreten Profilen; der allgemeine Surge-Lifecycle verlangt sie nicht automatisch. Die rückstandsfreie Referenz ersetzt diese Profile nicht.
-3. **Brauchbare grundlegende Surges einschließlich ihrer vorgesehenen Bodenwirkung sollen 1 Battle-AP kosten können.** Nicht alles auf 2 AP verteuern: Bewegung kostet bereits 2, AP-Stat anfangs 2; das würde die Aktionsmöglichkeiten verarmen lassen.
-4. Verzögerter Surge-Hazardrückstand hat jetzt **agentenseitig entworfene 1 Konstruktionspunkt/Zelle** statt 4 bei sofortiger Hazardplatzierung. Kein weiterer 50-%-Rabatt, zweiter Cast-Anker oder zweite AP-Effizienz. Der Nutzer hat die Richtung „günstiger, keine Kombokosten“ beschlossen, **nicht diesen exakten Einzelpreis separat ausgewählt**.
-
-Die Änderungen stehen in Monsters §4.5/§4.7, der Overworld-Trackingverweis ist synchronisiert. Keine Gameplay-AP oder Schadenswerte geändert. Alte Rechnungen mit 42 Punkten für den Drei-Zellen-Rückstands-Surge sind gelöscht/ersetzt; nicht als aktuellen Befund verwenden.
-
-### Bereits durch den Agenten ausgearbeitet — Testentwürfe, keine validierte Gleichwertigkeit
-
-Die vollständigen Preise/Annahmen stehen ausschließlich in Monsters §4.5; hier nur Orientierung:
-
-| Bereich | Aktueller Stand |
-|---------|-----------------|
-| Strikes | 11 Formen × 6 Kins tabelliert; Spirit/Swarm/Ancient je +2 je potenzieller Trefferzelle. Swarm/Ancient besonders vorläufig wegen Prop-/Höhenüberarbeitung. |
-| Bewegung | Feste Profilpreise statt je gelaufenem Feld: Run 6, Leap/Glide/Burrow 8, Phase 7, Blink 10; jeweils +6 AP-Effizienz bei 2 Battle-AP. Swim geplant (7 + angenommene 6), Step slotfrei/außerhalb Skillbudget. Keine freien Flag-Upgrades. |
-| Self/Passive | Focus 8 + 12 = 20; Adaptive 6 + 12 Verfügbarkeit = 18. Focus weiterhin Contententwurf; passive Verfügbarkeit zunächst nur für selbstgebundene kontinuierliche boolesche Erlaubnis, nicht alle Passives. |
-| Zonen/Schutz/Heilung | Raten für Statmods, Push/Pull, Veil und Mend; normales AP-bezahltes Leveln/Refresh in Basisraten enthalten. Erlaubte Werte/Caps/Heiltrigger dadurch nicht entschieden. |
-| Ground/Board | Paketpreise für permanente Gefahren-/Segensböden, Raise Ground/Collapse und vorläufige Props/Relocate. Permanente Wirkung nicht nochmals als sofortiger Schaden/Zone berechnen. Zusätzliche Cleanse-Quellen nur Preisplatzhalter, keine Freigabe. |
-
-Alle sechs Referenzfälle haben erste Rechnungen: **Beast-Jab 14, Slow-Zone 23, rückstandsfreier Surge 24, Run 12, Focus 20, Adaptive 18**. Keine vollständigen dreistufigen Entwicklungspfade oder Content-/Balancefreigaben.
-
-### Aktuelle Gegenprobe und verbleibende Konflikte
-
-| Beispiel | Punkte | Aussage |
-|----------|--------|---------|
-| Struktureller Surge: 2 Zellen, 3 Schaden, Hazardrückstand, 1 AP | 23 | 6 Schadenkosten + 2 Rückstand + 1 Marker + 2 Anker + 12 AP-Effizienz |
-| Derselbe Strukturentwurf mit 3 Zellen, 1 AP | 27 | 9 + 3 + 1 + 2 + 12; noch über Basisbudget 24 |
-| Veil / Quicken 1: 2 Zellen, 2 Runden, 1 AP | 22 | Kleine Basiskandidaten rechnerisch möglich, keine neuen Footprints beschlossen |
-| Mend 1: 2 Zellen, 2 Runden, 1 AP | 26 | Heilungsregeln und Basiskosten noch abstimmen |
-| Long Whirl / Long Cross als Beast bei 5 AP | 42 | Größte Legacy-Strikes passen nicht in 36; AP-Effizienz schon 0, AP-Anheben hilft nicht |
-
-**Keine komplette Eruption-/Flood-/Rift-Bewertung:** obige Surge-Beispiele enthalten keine besonderen Push-, Höhen- oder Propwirkungen. Kleine Basiskandidaten sind eine Empfehlung, kein Beschluss „alle Basic-Skills nur zwei Felder“. Keine Preis-/Budgetänderung nur zum passenden Ergebnis verstecken.
-
-### Nächster Agent: konkreter Arbeitsauftrag
-
-- Zuerst diese Übergabe und Monsters §4.5 lesen; §4.3/§4.4/§4.7 gezielt hinzunehmen. Budget/AP-/Schadensprinzipien, Props und gestrichene Kombokosten **nicht erneut zur Grundsatzwahl stellen**.
-- **Zuerst den letzten Surge-Stand abrunden:** grundlegende Eruption/Flood/Rift inklusive vorgesehener Bodenwirkung und bestehender Zusatzmechanik als kompakte Gegenprobe bei **1 AP** berechnen. Restkonflikte benennen, insbesondere Flood-Push/Rift-Höhenbruch; offene Auflösungsregeln nicht erfinden. Exakter Rückstandspreis bleibt Testentwurf.
-- Danach wenige vollständige **Same-AP-Entwicklungspfade** entwerfen: Run, einfache Zone, Surge mit vorgesehener Bodenwirkung sowie Jab. Budgetgrenzen, reale Verbesserungen und zugelassene Patches prüfen. Jab benötigt sinnvolle Entwicklung ohne Schadens-/AP-/Range-Upgrade. Bei nicht lösbaren Legacy-Konflikten klar zur Entscheidung vorlegen, nicht Grundprinzipien umgehen.
-- Erst anschließend gemeinsame EP-Vergabe/-Kosten für körperliche und Slotentwicklung ausarbeiten (T05). T02 nicht vor vollständiger Kalkulation/Vertragsprüfung als erledigt markieren; T13 erst nach echten Tests.
-
-### Offen lassen / Validierungsstand
-
-- **Props später grundsätzlich überarbeiten (T04):** konkrete Einwirkung × Prop bestimmt Zerstörbarkeit und Reaktion; Splitter/Fallen können sichtbaren Schaden verursachen, Baum kann sich teilen oder anders abbrennen. Zunächst Fallwirkung plus Boden-/Darstellungsreste, keine beweglichen Baumhälften. Alles deterministisch vorhersehbar. Battle §4.9 enthält die Richtung; alte pauschale Shatter-Regeln nur Zwischenstand. Keine Detailrunde dazu vorziehen.
-- Effekt-Caps/Stacking/Refresh über Quellen, Tod/Entfernung, passive Trigger/Frequenz/Rekursion, Focus-Refresh/Contentwerte, Schutzverbrauch, Flood-/Tail-Sweep-Reihenfolge, Pull-Gleichstände, Kollision, Zielverlust, Luft/2×2 und Major-/Signature-Zugang bleiben Fachaufgaben. Preisplatzhalter lösen keine davon.
-- EP-Mengen/Unlocks, passive Slotentwicklung/Aktiv-Passiv-Wechsel, Same-Skill-Respec, EP-Rücknahme/-Übertragung, Umlernpillen-Rezept/Preis und Tages-AP offen; alte Normal-Vergabe ergibt insgesamt nur 2 EP und ist ungeprüft.
-- Ausschließlich Dokumentation. Rechensummen (u. a. 66 Strike-Summen, Bewegungs-/Buff-/Residuebeispiele) und `git diff --check` wurden geprüft; keine Engine-/Balance-Playtests. Früherer Prototyp implementiert nicht automatisch den aktuellen GDD-Stand.
-
-## Phase 1 — Grundlagen und widersprüchliche Regeln klären
-
-### [x] T01 · Aspekt-System bestätigen (D/V)
-**Voraussetzung:** keine.
-**Quelle:** `gdd_monsters.md` §7.4; `gdd_battle.md` §3.2, §4.8.
-- **Beschlossen:** Dreieck und feste Monster-Aspekte entfallen; keine festen Elemente als Ersatz. Monster erhalten freie beschreibende Themen, ihre erlaubten Fähigkeiten bestimmen bewusst entworfene Spezies-Lernlisten.
-- Attunement entfällt. Konkrete Skills, Böden und Surge-Verhalten bleiben als Baukasten erhalten, ohne feste Aspektbindung oder verpflichtende Dreifachvarianten.
-- In allen drei GDDs übernommen. Neue Bodeninteraktionen werden unter T07 geklärt; konkrete Lernlisten und Roster unter T10–T12. Die Balance der verbleibenden Mechaniken ist dadurch noch nicht validiert.
-
-### [ ] T02 · Datenmodell, Punktekalkulation und AP-Effizienz abschließen (D/K)
-**Voraussetzung:** T01.
-**Quelle:** `gdd_monsters.md` §4.1–§4.7; `gdd_battle.md` §2.3/§5; `gdd_overworld.md` §6.3.2.
-
-**Erarbeitet und dokumentiert:**
-- Gemeinsames Modell aller Monster-Skills, zentrale Profile/Verträge und sechs Referenzen; keine parallelen Skillquellen oder Custom-Sonderstrukturen. Designer-Skills/Upgrade-Auswahlen statt Spieler-Konstruktion.
-- Gemeinsame Budgetobergrenzen 24/30/36, AP-Effizienz 12/6/3/1/0, Schadensfaktor 2 und 50 % ausschließlich auf angekündigten ausweichbaren Surge-Schaden als gewählte Arbeitsentwürfe. **Keine Kombinationszuschläge.**
-- Tabellenentwürfe für alle Strikes/Bewegungsprofile, Self/Passive, Zonen/Schutz/Heilung sowie Boden/Board. Sechs Referenzen mit ersten Summen, noch keine vollständige Content-/Balancevalidierung. Preise nur zentral in Monsters §4.5 pflegen, hier nicht duplizieren.
-- Surge-Rückstand = verzögerte Bodenänderung; Eruption/Flood/Rift behalten ihre vorgesehenen Böden. Neuer Designer-Testpreis 1 Punkt/Zelle für verzögerten Hazardrückstand (sofortiger Field 4/Zelle); grundlegende Surges sollen inklusive Bodenwirkung bei 1 AP möglich sein.
-
-**Noch zu erledigen:**
-- Vollständige 1-AP-Gegenprobe für Eruption/Flood/Rift inklusive Zusatzmechaniken; fehlende Regeln T04/T07/T09 zuordnen, keine impliziten Defaults. Kleine strukturelle Gegenprobe passt bei zwei Zellen in 24, drei Zellen kosten 27; das ist keine automatische Skillfreigabe.
-- Budgetkonflikte bei großen Strikes, Heilung und komplexen Surges gezielt lösen, ohne automatisch Budgets/AP/Schaden zu ändern oder getrennte Skillart-Pools einzuführen. Keine doppelte Flächen-/Flag-/Quellenbewertung.
-- Vollständige Entwicklungspfade bei ursprünglichen AP ausarbeiten, insbesondere Jab; größere Formen behalten bestehende AP bis zur Neuentscheidung. Keine direkten Schadens-, AP-Senkungs- oder Cast-Reichweiten-Upgrades. Anschließend T05/EP.
-- Fehlende Footprints/Anker/Orientierungen, Sicht/Zielgültigkeit, Effektwerte/Caps, Trigger/Endbedingungen und Interaktionsreihenfolgen vervollständigen. Self-/Passive-Stacking, Quellengruppen, Tod/Entfernung und Wiederholung/Rekursion explizit festlegen. Focus bleibt Entwurf; keine neue Mechanik allein durch ein Schemafeld zulassen.
-- Kombinationen und Wiederholung als Balance-/Vertragsfrage prüfen, **nicht als zusätzliche Preiskategorie**. Props, Heilung, Luft und 2×2 nach T04/T07–T09 einbeziehen. Zahlen erst durch geeignete Tests validieren; T13 bleibt offen.
-
-### [ ] T03 · Stat-Budget, Frames und Progressionsgrenzen prüfen (V/K)
-**Voraussetzung:** T02.
-**Quelle:** `gdd_monsters.md` §2.1–§2.3, §7.4; `gdd_overworld.md` §1.2, §2.4.
-- Preise, Budgets und alle skalierten Frames prüfen; Reichweite kostet 3 Punkte pro Stufe und betrifft nun alle Casts. Reach-2-Individuen gegen den alten Surge-Radius 3 testen.
-- Init beim Roll 1 Punkt = 1.0, beim Level-up = 0.1: gleiche erhaltene Punkte bedeuten nicht zwingend gleiche resultierende Stärke; frisch gerollte und hochgezogene Individuen vergleichen.
-- Stage vs. genauer Sub-Tier als Monster-Cap vereinheitlichen (§7.4 nennt den Schritt, andere Texte nur die Stage).
-- Overworld-Texte begrenzen ausgegebene Punkte teils noch durch den Frame; Monster-GDD begrenzt nur den Roll durch den Frame.
-- Step-only-Monster: zufällige Movement-Punkte gegenüber „bleibt am Frame-Minimum“ eindeutig regeln.
-
-### [ ] T04 · Auflösungsregeln und Sonderfälle konsistent machen (D/K)
-**Voraussetzung:** T01, T02.
-**Quelle:** `gdd_battle.md` §2.2, §4.1, §4.4, §4.8, §4.10, §6.1–§6.3; `gdd_monsters.md` §5.
-- Kollision: Schadensgesetz nennt Monster-Kollisionen, Detailregel sagt kein Schaden. Crashlander dagegen abgleichen. Shockwaves bisherigen Kollisionsbonus +1 gegen das feste Ereignisschadensgesetz prüfen; bislang keine beschlossene Ausnahme.
-- Auflösungsreihenfolge für Flood-Schaden/Rückstand/Push und Tail-Sweep-Schaden/Push festlegen; Pull-Gleichstände und Verhalten bei bereits belegtem Anker explizit definieren.
-- Schutzquellen: Stacking, Reihenfolge und Verbrauch bei auf 0 reduziertem Schaden festlegen; Ward, Veil und Hallowed unterscheiden. Tamer-Ausnahmen mit T20 abstimmen.
-- Kombinierte Boardoperationen: Reihenfolge von Collapse, Debris, Residue und Cleanse festlegen; Relocate-Distanz, Pfad, legale Ziele und Reaktionen konkretisieren. Keine freien Defaults aus Datenfeld-Reihenfolge ableiten.
-- Attunement-/Elevated-Konflikt durch T01 entfallen; verbleibende Kombinationen aus Höhe und konkretem Boden prüfen.
-- Zonenwerte ohne Attunement: harte Caps für Slow (2) und Push/Pull (1) sowie Level-Skalierung konsistent halten.
-- **Prop-Überarbeitung:** gemeinsame Einwirkungs-/Reaktionsverträge; breit zerstörbare Props und konkrete Ausnahmen/Resistenzen definieren. Zerstörungsart bestimmt Splitter-/Fallwirkung und Rückstände statt immer identischem Shatter. Baum kann sich teilen; zunächst Fallwirkung plus Boden-/Darstellungsreste, keine separat beweglichen Hälften. Fallrichtung, Trefferfelder, Schaden und Zustand danach deterministisch vorhersagen. Einwirkungskategorien, Prop-Katalog, HP/Schadensmatrix, Kettenreaktionen und Ereignisreihenfolge noch offen. Bestehende Zahlen bleiben Zwischenstand, keine neuen pauschalen Trefferrechte. Gewöhnliche Prop-Schädigung für Kosten vorläufig gemeinsame Basis ohne Zuschlag (Monsters §4.5); besondere Vorteile und Kosten nach Redesign prüfen.
-- Sigil ist betretbar; Prop-Regel sagt „Prop nimmt Schaden, Monster dort nicht“. Trefferreihenfolge für Monster auf Field-Props definieren.
-- Zielgültigkeit bei Auflösung klären: bewegtes, gefallenes oder entferntes Einheiten-/Propziel und ungültig gewordene Platzierung. Kein implizites Tracking, Retargeting oder frei erfundener Abbruch-/Erstattungsdefault. Gleichzeitige Ereignisse und Ablauf-/Trigger-Reihenfolge deterministisch festlegen.
-- Surge bei mehreren Turns pro Runde, geänderter Initiative oder totem Caster präzisieren: „nächster Caster-Turn“ garantiert nicht, dass alle anderen vorher handeln.
-- Deterministische Gleichstände bei Voidscar-Auswahl sowie Push/Pull-Ziel und freien Ausweichfeldern definieren.
-- Punktsymmetrische Generierung gegen ungerade Prop-Anzahlen prüfen; zulässige zentrale Einzelobjekte je Boardgröße festlegen.
-
-## Phase 2 — Skills, Entwicklung und Monster-Identität
-
-### [ ] T05 · Skill-Verbesserungen abschließen (D)
-**Voraussetzung:** T02.
-**Quelle:** `gdd_monsters.md` §4.6 (Slotentwicklung), §7.2/§7.4 (EP-/Fortschrittsentwurf); `gdd_overworld.md` §6.3.2 (Integration).
-- **Beschlossen:** Permanente Skillslotentwicklung ist eine zusätzliche Evolutionsmöglichkeit des individuellen Monsters. Körperliche Evolution und Slotentwicklung verwenden denselben EP-Pool. Ein bezahlter Slotentwicklungsschritt gewährt direkt eine von Designern entworfene, skillabhängige Upgrade-Auswahl; keine zusätzliche Spieler-Punktwährung.
-- **Beschlossen:** Skillwechsel aus der freigeschalteten Spezies-Lernliste außerhalb von Expeditionen kostet eine wertvolle Umlernpille statt EP. Slotentwicklung bleibt erhalten; passende Upgrades für den neuen Skill werden im bestehenden Entwicklungsumfang neu gewählt. Kein kostenloses Re-Slotting, kein EP-bezahlter Swap-Pfad.
-- **Nächster Schritt:** Gemeinsames EP-Budget und Preise für körperliche Evolution und Slotentwicklung entwerfen. Alte Vergabe von 1 EP für Normal/Rare bzw. 2 EP für Epic/Legendary ist unvalidiert; Normal hätte bisher insgesamt nur 2 EP. Zielinvestitionen über mehrere Slots und Konkurrenz zu körperlichen Entwicklungen prüfen.
-- **Beschlossen:** Slot-Level 1–3 mit steigenden Budgetobergrenzen, keine Skill-Ratings. EP-Preise, Freischaltungen und mögliche Zwischenentwicklung innerhalb dieser Level festlegen; keine weitere Ranghierarchie voraussetzen.
-- **Beschlossen:** Kleine feste Schadenswerte bleiben erhalten. Slot-Upgrades erhöhen keinen direkten Schaden, senken keine AP-Kosten und erhöhen keine Cast-Reichweite. Erlaubte Verbesserungsarten: Fläche, Form/Orientierung, Dauer, Bewegung/Verschiebung und ausdrücklich entworfene Zusatzeffekte; jeweils mit skillabhängigen Grenzen. Gesamtauswirkung durch mehr Ziele oder Trigger trotzdem prüfen.
-- Für jeden Skill ausreichend viele vorab sichtbare Upgrade-Auswahlen, Voraussetzungen, Ausschlüsse und Caps entwerfen; Shape, Size, Twist und Small value als Kandidaten prüfen. Die entfernten Legacy-Swap-Pfade nicht wieder einführen; Wechsel bleibt pillenbasiert.
-- Klären, wie Slots mit unterschiedlich vielen legalen Upgrade-Angeboten behandelt werden und wie passive bzw. passive-only Slots sowie Aktiv/Passiv-Wechsel funktionieren. Keine Slotinvestition beim Wechsel verlieren lassen.
-- Noch offen: Kosten der Neuwahl bestehender Upgrades desselben Skills, Rücknahme von EP-Investitionen und eventuelle Übertragung zwischen Slots. Pillenkosten für Upgrade-Respec sind bislang nur Empfehlung, nicht beschlossen.
-- Umlernpille konkretisieren: verlässliche Beschaffung, Rezept, Tier, Preis und Tages-AP mit T16/T30/T31 abstimmen; bewusster Wechsel statt ständigem Umbau, ohne Experimentieren dauerhaft zu bestrafen.
-- Generisches Size-Maximum 4 gegen Strike-Formen bis 8 Felder abgrenzen. Die alten widersprüchlichen Shape-Preise sind überholt; konkrete Upgrade-Angebote und EP-Schrittpreise im gemeinsamen Modell festlegen.
-
-### [ ] T06 · Strike-Formen und Kin-Effekte abschließen (D/V)
-**Voraussetzung:** T02, T03, T05.
-**Quelle:** `gdd_monsters.md` §3.2.
-- Vor Core nur Jab: kommen interessante Formen zu spät? Storm/5-AP-Formen erreichen nur späte TPR-1-Builds.
-- Whirl (4 Felder) gegen Arc (3) zum selben Preis sowie Nutzen der Thrust-Reichweite testen. Die alte Frage nennt „Skewer“, die Tabelle „Thrust“: Bezeichnung vereinheitlichen.
-- Beast Bite: eigenen Effekt ohne Verletzung der Schadensobergrenze geben oder fehlenden Effekt bewusst akzeptieren.
-
-### [ ] T07 · Bodeninteraktionen und Heilung abstimmen (D/V)
-**Voraussetzung:** T01, T02, T04.
-**Quelle:** `gdd_battle.md` §4.6–§4.8; `gdd_monsters.md` §4.2, §4.4–§4.5.
-- Permanente Residuen: füllt sich das Board zu schnell, wird Rift/Blight dadurch übermächtig?
-- Hazard-Anteil auf 7×7 bis Runde 5 messen. Falls nötig: Field 2 AP oder maximal N Field-Felder pro Monster als Alternativen prüfen.
-- Ohne Dreieck festlegen, ob und wie Zonen vorhandene Böden verändern; keine automatische Überlegenheit aus Monsterthemen ableiten.
-- Attunement und Painting-Snowball entfallen durch T01. Stattdessen Gegenmittel gegen permanente Gefahrenböden und deren Zugänglichkeit prüfen.
-- Blessing: 2 AP für permanente 3–4 Felder angemessen? Mossbed pro Turn begrenzen?
-- Boon/`mend`: Heilung bei HP 1–10 prüfen; darf das Zonenlevel die Heilung erhöhen oder bleibt sie fest bei 1? Numerischen Heilungs-Cap und Mossbed-Wiedereintritt/per-Turn-Limit explizit definieren; Persistenz gewährt keine zusätzlichen Heiltrigger.
-- Level-II-Rückstand als konkrete Erweiterung bewerten; der frühere Name „Deep Residue“ und +1 AP sind keine bestätigte universelle Regel.
-
-### [ ] T08 · Wasser und Swim definieren (D)
-**Voraussetzung:** T02, T07.
-**Quelle:** `gdd_battle.md` §4.7, §5.5; `gdd_monsters.md` §3.3.
-- Wo entsteht Wasser: nur Generator oder auch Skills? Dürfen erzeugte Gefahren- oder Segensböden Wasser ersetzen?
-- Welche Kins erhalten Swim? Kostenprofil und Flag-Ausnahmen gegen die allgemeine Bewegungstabelle prüfen.
-
-### [ ] T09 · Luft-Ebene und 2×2-Regeln spezifizieren (D/K)
-**Voraussetzung:** T02, T04, T06, T07.
-**Quelle:** `gdd_battle.md` §4.3, §5.5–§5.6; `gdd_monsters.md` §3.1, §4.2, §4.7.
-- Welche Effekte außer Strike dürfen Luft-Empfänger haben? Ebenen am jeweiligen Effekt definieren, kein globales `affects_air`-Autorenflag. Mindestens ausreichend lesbare Gegenmittel gegen Winged ab Soul sicherstellen.
-- Flugbewegung, Besetzung und Interaktion mit Props/Boden konkretisieren. Für 2×2 zusätzlich Distanzursprung, Flächenüberschneidung, Empfänger-Deduplizierung sowie Eintritts-/Austrittsauswertung über mehrere Felder definieren; das generische Flächenmodell entscheidet diese Fälle nicht.
-- Ergänzend bei der Analyse gefunden: 2×2 ist angekündigt, aber Flächentreffer, Schadensmultiplikation, Platzierung, Bewegung und Displacement sind nicht ausreichend definiert. Mehrfach belegte Felder dürfen keine implizite Mehrfachschadensregel erzeugen.
-
-### [ ] T10 · Konkrete Skills aus Blueprints neu aufbauen (D)
-**Voraussetzung:** T05–T09.
-**Quelle:** `gdd_monsters.md` §4.2–§4.6.
-- Konkrete Skills ausschließlich im gemeinsamen Schema §4.5 erstellen und nach §4.3 validieren; keine neue parallele Blueprint-/Beispieltabelle. Effekte, Trigger, Zielwahl, Footprints, Interaktionen, Kosten und autorisierte Upgrade-Patches vollständig definieren.
-- Speziesexklusive und Signature-Skills verwenden dasselbe Schema; Unterschiede über Zugang, Urheberschaft und explizite Regeln darstellen. Frühere benannte Ideen sind kein zugesagter Content. Konkrete Skills und ausreichend tiefe Upgrade-Auswahlen erst nach bestätigten Budgets auswählen.
-
-### [ ] T11 · Lernlisten, Passives und Referenzroster überarbeiten (D)
-**Voraussetzung:** T03, T06, T10.
-**Quelle:** `gdd_monsters.md` §4.4, §5, §6.1, §7.4.
-- Für jede Spezies lernbare Skills (derzeit Ziel ungefähr 8) und verfügbare Passives definieren: Spezies- und Individualbindung unterscheiden; freie Themen sind keine zusätzliche Lernbeschränkung. Ehemals aspektabhängige Passive überarbeiten oder streichen.
-- Die neun Referenzmonster haben aktuell vier aktive Skills plus Passive; auf vier gemeinsame Slots reduzieren, Epic+-Zusatzslot gesondert behandeln.
-- Jede Spezies erhält einen Species-Twist statt des gemeinsamen Platzhalters sowie eine konkrete Strike-Form und feste Surge-Orientierung.
-- Beschreibungen wie „weak Flood“/„weaker Rift“ mit den geltenden Schadens- und AP-Regeln abgleichen.
-
-### [ ] T12 · Launch-Roster auswählen (D)
-**Voraussetzung:** T11.
-**Quelle:** `gdd_monsters.md` §6.1–§6.2.
-- Ohne Kin×Aspekt-Pflichtmatrix aus den neun Referenzmonstern und weiteren Namensideen ein vielfältiges Roster auswählen (bisher Ziel etwa 15); freie Themen und eigenständige Spielweisen statt Kategorienvollständigkeit priorisieren.
-- Fehlende Blueprint-/Movement-Abdeckung und unterscheidbare Ein-Satz-Identitäten prüfen.
-
-## Phase 3 — Kampf validieren, bevor die Meta Zahlen festschreibt
-
-### [ ] T13 · Kampftests mit dem überarbeiteten Regelstand planen und auswerten (V)
-**Voraussetzung:** T04, T07, T11; T08/T09 für Wasser-/Soul-Tests.
-**Quelle:** `gdd_battle.md` §7.2; ehemalige §8; `gdd_monsters.md` §2.2, ehemalige §8.
-- Erst sicherstellen, dass der getestete Build den untersuchten Entwurf umsetzt: dokumentierter Godot-Stand ist v6.0, nicht v6.3. Codeänderungen sind nicht Teil dieser Docs-Aufgabe.
-- Residuen: treffen Surges indirekt auch beim Ausweichen oder erzwingen sie sinnvolle Wege?
-- Lesbare Kombos: Current → Surge/Lava, Pull → Strike; Pull-Anker und Push-Richtung prüfen.
-- Strike ab 2 AP: lohnend oder ungenutzt, Nahkampf zu klebrig?
-- No-Cooldown-Spam und Double Veil (2 AP → Level II, Shield 3) prüfen. Fallback: Level-up nur einmal pro Turn und Feld.
-- Veil Shield 2, Level/Attunement und Surge 3 auf echte Gegenmittel prüfen.
-- Bewegungspreise, Step-only-Viabilität und Movement-Cap 5 prüfen.
-- Drei Surge-Typen gegen Elevated; Props als taktische Ressourcen statt Hindernisse.
-- 3v3/7×7: Lesbarkeit, Rundenzahl, Collapse-Anteil und Startdistanzen; Reach 4 + Elevated = 5 gegen das Versprechen eines sicheren Openings prüfen.
-- First-Surge-claims-square und Initiative-Ketten/Fokusfeuer prüfen. Fallback bei Dominanz: Initiative teurer machen.
-- Dusk Moth (historisch 87 % Sim-Winrate) mit Menschen und KI vergleichen; Native Ground/Wide/Blight getrennt betrachten.
-- Stat-/Strike-/Heilungs-Tests aus T03/T06/T07 gemeinsam auswerten; Preise erst anhand der Ergebnisse nachjustieren.
-
-### [ ] T14 · Reshape gegen Reroll-Ausnutzung absichern (D/V)
-**Voraussetzung:** T03, T13.
-**Quelle:** `gdd_monsters.md` §2.2; `gdd_overworld.md` §2.6, §7.5.
-- Genügen seltenes Elixier und Ritualkosten oder braucht es Cap/Cooldown gegen wiederholtes Optimierungs-Rollen?
-
-## Phase 4 — Welt, Kataloge und Ausrüstung (teilweise parallel zu Phase 2/3)
-
-### [ ] T15 · Stadtmächte, Zuständigkeiten und Inhalte festlegen (D)
-**Voraussetzung:** keine; parallel zum Kampfdesign möglich.
-**Quelle:** `gdd_overworld.md` §3.1–§3.2, §7.2.
-- Fraktionsnamen, Profile und Angebote der drei Familien festlegen.
-- Betreiber von Arena, Teleport Plaza, Business District bestätigen: Vorschlag City Lord, City Lord, Guild.
-- Gebäude/Zugang der Rival Compounds und Zweck der Slums klären; Black Stall bleibt eine optionale Idee, kein zugesagtes Feature.
-
-### [ ] T16 · Material-, Item- und Rezeptkataloge vervollständigen (D)
-**Voraussetzung:** T01; T10 für kampfbezogene Produkte.
-**Quelle:** `gdd_overworld.md` §6.6–§6.8, §7.5–§7.8.
-- Aus Mustern konkrete Materialien, Kräuter, Seeds, Rezepte, Seals, Scrolls und Blueprints ableiten; Anzahl, Stufen und Grade bestimmen.
-- Mengenannahme „vier Tiers/~40 Pills“ gegen sechs Kultivierungsstufen und fehlende Sovereign-XP-Werte abgleichen.
-- Grade-Abhängigkeiten und Bezugsquellen gegen „Geld kauft niemals exklusive Macht“ prüfen; Legendary-Blutlinien-Zutaten sind derzeit zugleich nur Story und bei Boss/Quest/Auktion verortet.
-- Array-Rezepte und Forge-Weg (Ore + Beast Parts) bestätigen; festlegen, ob Upper Stones reine Währung oder auch Ritualmaterial sind.
-
-### [ ] T17 · Artefakt-Regeln und Stapelung festlegen (D/K)
-**Voraussetzung:** T03, T11, T16.
-**Quelle:** `gdd_overworld.md` §6.7, §6.9, §7.5; `gdd_monsters.md` §7.2.
-- Tamer: zwei oder drei Slots, und wann? Monster: zweiter Slot bei Epic+ oder erst zusätzlich ab Core? Tabellen synchronisieren.
-- Passive ODER Stat-Mod gegenüber Schema „Passive + kleiner Stat-Mod“ klären; doppelte Passive und mehrere Artefakte begrenzen.
-- +1 AP/Tag, Kapazitäts- und Skill-Mods gegen Tagesökonomie, Stage-Caps und die Options-statt-Zahlen-Regel prüfen.
-
-### [ ] T18 · Medicines und Arrays spezifizieren (D)
-**Voraussetzung:** T07, T10, T16.
-**Quelle:** `gdd_overworld.md` §6.6, §6.8, §7.5–§7.6.
-- Medicine-Effekte, Rezepte, Item-Kind und Abgrenzung zu Pills bestimmen. Schutz-/Heilungs-/Boardeffekte benötigen eigene Quellen-, Verbrauchs- und Timingverträge im gemeinsamen Datenmodell; Monster-Effektverträge erteilen keine automatische Item-Freigabe.
-- Welche Arrays sind verbrauchbar, welche wiederverwendbar? Haltbarkeit, Platzierung und Effekte im Kampf definieren.
-- Pre-battle-Arrays als begrenzte Ausnahme von neutralem/punktsymmetrischem Start bestätigen; vier bisherige Array-Entwürfe prüfen.
-
-### [ ] T19 · Battle-Loadout und Timing abschließen (D)
-**Voraussetzung:** T18.
-**Quelle:** `gdd_battle.md` §5.8; `gdd_overworld.md` §2.1, §7.9, §8.
-- Anzahl Medicines/Arrays, Aktivierungsfenster (eigener Turn oder jederzeit), AP-Kosten und Verbrauch festlegen.
-- Dieselben Regeln für menschliche Gegner; Sichtbarkeit, Vorschau, Pre-battle-Fixierung und Rückgabe verbrauchter Items im BattleResult präzisieren.
-- Abhängigkeit ist gerichtet: erst Item-Effekte/Kosten, dann Loadout-Limits; nicht beide gegenseitig blockieren lassen.
-
-### [ ] T20 · Tamer-Skills einschließlich Beast Swap validieren (D/V)
-**Voraussetzung:** T09, T13, T19.
-**Quelle:** `gdd_overworld.md` §6.4; `gdd_battle.md` §5.8.
-- Vorschläge Swap Places, Urgent Order, Second Wind, Life Thread, Double Bind und Seal Mastery bestätigen/ändern/verwerfen; Attune ist durch T01 entfallen. Tamer-Quellen im gemeinsamen Effektmodell ausdrücklich definieren, ohne Monster-Skillrechte oder AP-Klassen zu übertragen.
-- Life Thread gegen Spirit Shield und Urgent Order gegen Initiative testen; Nutzungstiming der kostenlosen Skills festlegen.
-- Beast Swap: HP, Verletzung, Warteschlange, eigene ladende Surges, 2×2-Platzbedarf und Nachrück-Regeln definieren.
-- Scrolls lehren Skills früher, Beast Swap darf erst ab Soul geslottet werden: Lernen vs. Nutzen und Stage-Gates eindeutig trennen.
-
-## Phase 5 — Expedition, Sammlung und räumliche Welt
-
-### [ ] T21 · Dungeon-Node ↔ Board-Generator-Vertrag festlegen (D)
-**Voraussetzung:** T04, T08, T12.
-**Quelle:** `gdd_overworld.md` §3.3; `gdd_battle.md` §4.1.
-- Was fixiert der Node, was generiert der Generator? Vorschlag: Node bestimmt Modus, Thema/Bodenfamilien und Prop-Anzahlbereich; Generator setzt alles punktsymmetrisch.
-- Encounter-Zugang gegen notwendige Teamgröße und verfügbare gesunde Monster prüfen.
-
-### [ ] T22 · Expeditionen und Loot-Tabellen abschließen (D/V)
-**Voraussetzung:** T16, T19, T21.
-**Quelle:** `gdd_overworld.md` §2.2, §7.8.
-- Floors/Kämpfe pro Run, tieferer Einstieg (1/2 Tages-AP), Rückzug und Reward-Tabellen je Floor/Boss bestimmen.
-- HP-Persistenz und kostenloser Rückzug mit Loot sind bereits Arbeitsstand, nicht erneut grundlos öffnen; offene Detailfälle daran anschließen.
-- „Healing Pill ist einzige Heilung im Run“ gegen Mend/Mossbed, Heilpassives und Second Wind präzisieren: außerhalb oder auch innerhalb der Kämpfe gemeint?
-
-### [ ] T23 · Verletzung und Deadly-Dungeons abstimmen (D/V)
-**Voraussetzung:** T16, T20, T22.
-**Quelle:** `gdd_overworld.md` §5.2, §6.6.
-- Zwei Nächte Ausfall, Revival-Preis und Deadly-Lootbonus prüfen; optionale Deadly-Dungeons für Launch bestätigen oder zurückstellen.
-- Recovery Spring halbiert bereits auf eine Nacht; zusätzlicher −1-Nacht-Nachbarschaftsbonus: Minimum festlegen.
-- Heilung nach Rückkehr/nachts für nicht verletzte Monster und HP nach Genesung festlegen; Verhältnis Soul Tether/Life Thread zu permanentem Verlust prüfen.
-
-### [ ] T24 · Binding, Eier, Zucht und Hive konkretisieren (D/V)
-**Voraussetzung:** T12, T16, T20, T22.
-**Quelle:** `gdd_overworld.md` §5.1, §7.5.
-- Seal-Preise/Grade und zweite Bindung balancieren; Seal Mastery gegen Spieler-Stage-Cap prüfen.
-- Zucht-/Hive-/Schlupfzeiten je Rarity sowie Brutbedingungen definieren; gleiche Spezies vs. „Spezies eines Elternteils“ präzisieren.
-- Ei-Rarity, Spezies-Sichtbarkeit und Zufallszeitpunkt eindeutig machen.
-
-### [ ] T25 · Internal World: Kapazität, Gebäude, Nachbarschaft (D/V)
-**Voraussetzung:** T09, T16, T23, T24.
-**Quelle:** `gdd_overworld.md` §4.2–§4.4.
-- Grid-/Kapazitätskurve, Footprints, Unlocks und neue Strukturen bestätigen.
-- Housing-Kapazitätsbonus, Mood/Loyalty und deren konkreten Nutzen festlegen oder unnötiges System streichen.
-- Schlupf bei voller Kapazität, gemietete Monster und Bench-Größe regeln.
-- Trial Pillar öffnet erst Foundation, wird aber für den Weg dorthin gebraucht; Zugang zum ersten Durchbruch klären.
-- Nachbarschaftsboni: Mindestzeiten, Mehrfachnachbarn und Stapelgrenzen; Furnace −1 AP bis 0 gegen „Ausführung kostet AP“ abgleichen.
-- Staff bleiben innen vorerst ausgeschlossen. Nur bei konkretem Nutzen neu entscheiden; keine Implementierung allein wegen der Möglichkeit.
-
-## Phase 6 — Ökonomie, Fortschritt und Tagesbalance
-
-### [ ] T26 · Staff-Traits und Zahlen ausarbeiten (D/V)
-**Voraussetzung:** T15, T16.
-**Quelle:** `gdd_overworld.md` §7.1.1.
-- Modell B ist gewählt: sichtbare Skill-/Loyalty-Werte plus ein Trait. Nicht erneut Modelle A/B/C auswählen.
-- Trait-Liste, Löhne, Output, Loyalty-Änderung, Kündigung, Abwerbung und Gegenangebote definieren.
-- Verdeckte Deception höchstens als spätere geskriptete Story-Idee behandeln, nicht für zufällige Hires.
-
-### [ ] T27 · Favor/Standing und Request-Pools abstimmen (D/V)
-**Voraussetzung:** T15, T16, T26.
-**Quelle:** `gdd_overworld.md` §7.2.
-- Modell Favor + lebenslanges Earned Total/Standing ist gewählt; Zahlen, Request-Größen, Laufzeiten und Schwellen testen.
-- Rivalenregel (Allied bei einer Familie begrenzt die andere auf Trusted) bestätigen.
-- Eigene Familie: Fortschritt über Stärke/Arena konkret berechnen.
-- Standing schaltet Zugang frei, Tabelle nennt Lizenzen/Recruitment/Einladungen zusätzlich als Favor-Ausgabe: Zugangsvoraussetzung und Kaufpreis sauber trennen.
-- Request-Pools pro Faktion und Stage, Wiederholungsgrenzen und Belohnungen definieren.
-
-### [ ] T28 · Markt, Properties und Businesses balancieren (D/V)
-**Voraussetzung:** T16, T22, T26, T27.
-**Quelle:** `gdd_overworld.md` §3.1.5, §7.1, §7.5–§7.8.
-- Erst nach den Katalogen: Preisfluktuationsmodell, Basispreise, Kauf/Verkauf und Schutz vor endloser Arbitrage bestimmen.
-- Property-Kosten, Lizenzen, Facility-Output, Queue-Dauer, Verkaufsmengen und Staff-Automatisierung mit Dungeon-Erträgen vergleichen.
-- Deal umfasst viele Tätigkeiten: eine Tätigkeit pro AP oder mehrere in einem Deal? Gratis Queue gegen sofortige Work-Produktion abgrenzen.
-- Monster-Hall-Verkauf, Dojo und Dungeon Company als Datenkonfigurationen konkretisieren.
-
-### [ ] T29 · XP-Kurven und Kultivierungs-Pacing prüfen (V)
-**Voraussetzung:** T05, T22, T25, T28.
-**Quelle:** `gdd_monsters.md` §7.4; `gdd_overworld.md` §2.4.
-- Erste 18-Schritte-XP-Kurve, Pill-XP, Win-XP, Training/Cultivate und Idle-XP prüfen; Spielerwerte ggf. getrennt bestimmen.
-- Ziel 3–6 fokussierte Tage je Sub-Tier gegen Farm-/Kauf-/Staff-Einkommen prüfen; nicht anhand alter Prototypzahlen als bestätigt behandeln.
-
-### [ ] T30 · Breakthrough-Trials und Rituale abschließen (D/V)
-**Voraussetzung:** T20, T25, T27, T29.
-**Quelle:** `gdd_overworld.md` §6.3.1; `gdd_monsters.md` §7.3.
-- Ersten Trial-Entwurf mit Prototyp/Spielablauf prüfen; Materialmengen und Pill-Effekt bestätigen.
-- „Spieler startet bei halben HP“/„Spieler im Gewinnerteam“ widerspricht der Rolle als nicht kämpfender Tamer: welches Monster/Team ist gemeint?
-- Spieler-/Monster-Trials, Wiederholung, Failure-Kosten und Trial-Zugang festlegen; Rarity-Ascension-Zutaten und Beschaffungswege synchronisieren.
-
-### [ ] T31 · Tages-AP und Aktionskosten final abstimmen (D/V)
-**Voraussetzung:** T22, T25, T28–T30.
-**Quelle:** `gdd_overworld.md` §2.3, §2.6.
-- Vorschlag 3/4/4/5/5/6 AP je Stage und Arena-Preis pro Turnierrunde prüfen.
-- Expedition, Kultivierung, Story und Arbeit gegeneinander balancieren; staffbedingte Entlastung berücksichtigen.
-- Gratis Entscheiden/Queue/Umstellen gegen kostenpflichtiges Ausführen konsistent halten.
-
-## Phase 7 — Spätes Spiel und Abschluss
-
-### [ ] T32 · Major Surges und Signatures gestalten (D)
-**Voraussetzung:** T09, T12, T13.
-**Quelle:** `gdd_battle.md` §5.4; `gdd_monsters.md` §3.1, §4.2, §4.6, §7.4.
-- Konkrete Formen, Fläche und Reichweite bestimmen; halbes Board/2 AP/einmal pro Kampf prüfen.
-- Zugang Ancient UND Legendary ab Sovereign gegen teilweise nur „Ancient“ in Tabellen synchronisieren; Signatures anderer Legendary-Kins abgrenzen.
-
-### [x] T33 · Legendary-Aspektwechsel entfällt (D)
-**Voraussetzung:** T01, T11, T30.
-**Quelle:** `gdd_monsters.md` §7.2.
-- Durch T01 gestrichen: Ohne feste Aspekte gibt es keinen Aspektwechsel. Kein Ersatzfeature beschlossen; sonstige Legendary-Entwicklung bleibt Gegenstand der bestehenden Progressionsaufgaben.
-
-### [x] T34 · Dual-Aspekt-System entfällt (D)
-**Voraussetzung:** T01, T09, T13.
-**Quelle:** `gdd_monsters.md` §7.4; `gdd_overworld.md` §6.3.
-- Durch T01 gestrichen: keine Dual-Aspekte und kein entsprechender Immortal-Unlock. Mehrere freie Themen benötigen keine eigene Freischaltung oder Sondermechanik.
-
-### [ ] T35 · GDD-Synchronisierung und Umsetzungsplan aktualisieren (K)
-**Voraussetzung:** jeweils die betroffenen Entscheidungen; Gesamtabschluss nach T01–T34.
-**Quelle:** alle drei GDDs, besonders technische Notizen und Development Phases.
-- Beschlossene Regeln, Vorschläge, vorhandenen Prototyp und spätere Features eindeutig unterscheiden.
-- Tabellen, Schemafelder, Abschnittsverweise und Versionsstände synchronisieren. Technischer Validator fordert derzeit Surge/Utility, obwohl offene Kits beides nicht vorschreiben; Species-Passive vs. slotgebundene Lernliste abgleichen.
-- Entwicklungsphasen anhand der geklärten Abhängigkeiten aktualisieren; Implementierungsaufgaben nicht mit offenen Designentscheidungen vermischen.
-- Historische Changelogs nicht nachträglich als aktuelle Spezifikation umschreiben.
-
-## Abhängigkeitsübersicht
+### Working Practices and Ownership
+
+- **Stay within `docs/`, on `docs/update_gdd`.** No implementation, commits, branch changes, pulls or resets without instruction. Preserve staged/unstaged user changes; check Git state before editing. Do not synchronize automatically.
+- **Language:** write and maintain all documentation under `docs/` in English, including this task list; chat communication remains German. Translate existing German sections when revising them, preserving rules and decision status.
+- The user wants the agent to **draft related cost proposals together**, rather than asking for approval of every number. This does not authorize fundamental gameplay changes; explain recommendations and mark new values as drafts.
+- **Readability is explicitly important:** compact tables and short rules instead of repeated warnings/decision logs. [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency) has already been consolidated; do not expand it with repetition again. Conversation context belongs here; prices belong only in the central GDD section.
+- **Monsters chapter 4 is the central skill source:** [§4.1 kit/access](gdd_monsters.md#41-the-kit), [§4.2 shared model](gdd_monsters.md#42-data-oriented-skill-construction-kit), [§4.3 execution profiles](gdd_monsters.md#43-skill-execution-profiles), [§4.4 effect/board contracts](gdd_monsters.md#44-effect-and-board-operation-contracts), [§4.5 costs](gdd_monsters.md#45-construction-points-and-ap-efficiency), [§4.6 slot development](gdd_monsters.md#46-slot-levels-development-replacement-and-upgrades), [§4.7 references/validation](gdd_monsters.md#47-complete-references-and-validation). Battle owns general battle/board resolution; Overworld owns meta, tamer and loadout content. Do not re-plan the completed consolidation.
+- All monster skills, including passives/self-buffs/signatures, use the same 14 field groups. No custom/`unique` special structure, artificial areas for non-area skills, global `affects_ground`/`affects_air` authoring inputs or 0-AP active passives. Layers belong to effects; ground changes belong in `board_changes`. Representability/pricing is not content approval.
+
+### Confirmed Principles and Selected Working Values
+
+- No aspects, triangles, Attunement or fixed replacement elements. Free themes and designed species learnlists; T01/T33/T34 completed.
+- Designers create finished skills/upgrades; no free player construction. Construction points are internal evaluation data, not damage, EP, player currency or Overworld blueprint items.
+- **Shared budget ceilings of 24/30/36 for slot levels 1/2/3**, with no ratings, minimum values, random budgets or separate pools/AP-class budgets. Skill type alone has no flat price; mechanics/contracts are evaluated.
+- **AP efficiency:** 1/2/3/4/5 Battle-AP cost 12/6/3/1/0 construction points. High AP grants no negative credits. Do not automatically change existing Battle-AP.
+- **Damage component:** damage × potential hit squares × 2. Immediate damage counts at 100%, with no flat immediate-damage surcharge; telegraphed, avoidable Surge damage counts at 50% of this damage component only. Do not automatically halve other components. Hit squares are not guaranteed hits.
+- **Strike still deals 2 HP damage per monster hit.** Numbers such as 32 in a cost column are construction points! Label tables clearly. Hit multiplication for 2×2 remains open; do not introduce it implicitly.
+- Board anchoring within Reach without LOS costs +2 in total; meaningful Strike direction selection costs +2, symmetric shapes with unchanged hit squares +0. Ground/air damage coverage costs +2 per damage effect. Normal Surge marker blocking costs +1 per complete marker.
+- Fixed non-Strike shapes have no flat shape surcharge. **Strike exception:** +2 per hit square outside the adjacent 8-square ring; for 1×1, `max(abs(dx), abs(dy)) > 1`, not Manhattan Reach.
+- Kin effects count toward the shared budget. Scaled push costs +2 per potential hit square; Winged retreat costs +3 once per use. Normal prop damage from offensive skills currently has no general surcharge; no new damage permissions for support/movement.
+- Full development at the original AP price is required. No direct damage, AP-reduction or cast-range upgrades; higher AP only as optional visible branches. Slot progress is individual, with an EP pool shared with physical evolution. Pill-based skill replacement outside expeditions preserves slot progress; EP/pill economy remains open.
+
+### Latest Decisions — Resume Here
+
+1. **Combination surcharges are removed entirely**, including within a skill. Total price = actual mechanical components + AP efficiency or passive availability. Do not reintroduce previously added synergy surcharges. Existing `combination_cost` fields remain 0. Still test interactions; if problems arise, review the responsible components/rules.
+2. **“Residue” means the ground change after Surge execution**, not props. Eruption → Lava I, Flood → Thornbed I, Rift → Blight I, with existing height/prop exceptions. This ground effect belongs to the concrete profiles; the general Surge lifecycle does not automatically require it. The residue-free reference does not replace these profiles.
+3. **Usable basic Surges, including their intended ground effect, should be possible at 1 Battle-AP.** Do not raise everything to 2 AP: movement already costs 2, and the initial AP stat is 2; that would impoverish action choices.
+4. Delayed Surge hazard residue now has an **agent-drafted price of 1 construction point/square**, rather than 4 for immediate hazard placement. No further 50% discount, second cast anchor or second AP-efficiency charge. The user approved the direction “cheaper, no combination costs”, **not this exact individual price separately**.
+
+The changes are in [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency)/[§4.7](gdd_monsters.md#47-complete-references-and-validation); the Overworld tracking reference is synchronized. No gameplay AP or damage values changed. Old calculations of 42 points for the three-square residue Surge have been deleted/replaced; do not use them as current findings.
+
+### Already Drafted by the Agent — Test Drafts, Not Validated Equivalence
+
+Complete prices/assumptions belong exclusively in [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency); this is orientation only:
+
+| Area | Current state |
+|------|---------------|
+| Strikes | 11 shapes × 6 Kins tabulated; Spirit/Swarm/Ancient each +2 per potential hit square. Swarm/Ancient are especially provisional pending the prop/height revision. |
+| Movement | Fixed profile prices rather than per square travelled: Run 6, Leap/Glide/Burrow 8, Phase 7, Blink 10; each adds +6 AP efficiency at 2 Battle-AP. Swim is planned (7 + assumed 6); Step is slot-free/outside the skill budget. No free flag upgrades. |
+| Self/Passive | Focus 8 + 12 = 20; Adaptive 6 + 12 availability = 18. Focus remains a content draft; passive availability initially applies only to a self-bound continuous boolean permission, not all passives. |
+| Zones/Protection/Healing | Rates for stat modifiers, Push/Pull, Veil and Mend; normal AP-paid levelling/refresh is included in base rates. This does not decide allowed values/caps/healing triggers. |
+| Ground/Board | Package prices for permanent hazard/blessed ground, Raise Ground/Collapse and provisional props/Relocate. Do not charge permanent effects again as immediate damage/zones. Additional Cleanse sources are price placeholders only, not approval. |
+
+All six reference cases have initial calculations: **Beast Jab 14, Slow zone 23, residue-free Surge 24, Run 12, Focus 20, Adaptive 18**. No complete three-level development paths or content/balance approval.
+
+### Current Cross-check and Remaining Conflicts
+
+| Example | Points | Implication |
+|---------|--------|-------------|
+| Structural Surge: 2 squares, 3 damage, hazard residue, 1 AP | 23 | 6 damage cost + 2 residue + 1 marker + 2 anchor + 12 AP efficiency |
+| Same structural draft with 3 squares, 1 AP | 27 | 9 + 3 + 1 + 2 + 12; still above base budget 24 |
+| Veil / Quicken 1: 2 squares, 2 rounds, 1 AP | 22 | Small base candidates are arithmetically possible; no new footprints approved |
+| Mend 1: 2 squares, 2 rounds, 1 AP | 26 | Healing rules and base costs still need alignment |
+| Long Whirl / Long Cross as Beast at 5 AP | 42 | Largest legacy Strikes do not fit within 36; AP efficiency is already 0, so raising AP does not help |
+
+**Not a complete Eruption/Flood/Rift evaluation:** the Surge examples above do not include special push, height or prop effects. Small base candidates are a recommendation, not a decision that “all basic skills use only two squares”. Do not hide price/budget changes merely to obtain a fitting result.
+
+### Next Agent: Concrete Gameplay Assignment
+
+- First read this handoff and [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency); consult [§4.3](gdd_monsters.md#43-skill-execution-profiles)/[§4.4](gdd_monsters.md#44-effect-and-board-operation-contracts)/[§4.7](gdd_monsters.md#47-complete-references-and-validation) as needed. **Do not reopen** budget/AP/damage principles, props or removed combination costs as fundamental choices.
+- **First round off the latest Surge work:** calculate basic Eruption/Flood/Rift, including intended ground effects and existing additional mechanics, as a compact cross-check at **1 AP**. Identify remaining conflicts, especially Flood push/Rift height break; do not invent missing resolution rules. The exact residue price remains a test draft.
+- Then draft a few complete **same-AP development paths**: Run, a simple zone, Surge with intended ground effects, and Jab. Check budget limits, meaningful improvements and allowed patches. Jab needs meaningful development without damage/AP/range upgrades. Present unsolved legacy conflicts clearly for a decision rather than bypassing fundamental principles.
+- Only afterwards draft shared EP awards/costs for physical and slot development (T05). Do not mark T02 complete before full calculation/contract review; T13 requires actual tests.
+
+### Keep Open / Validation Status
+
+- **Fundamentally revise props later (T04):** the concrete impact × prop determines destructibility and reaction; splinters/falls can cause visible damage, and a tree can split or burn differently. Initially use falling effects plus ground/visual residue, not movable tree halves. Everything must be deterministically predictable. [Battle §4.9](gdd_battle.md#49-props) contains this direction; old blanket Shatter rules are interim only. Do not bring the detailed discussion forward.
+- Effect caps/stacking/refresh across sources, death/removal, passive triggers/frequency/recursion, Focus refresh/content values, protection consumption, Flood/Tail Sweep order, Pull ties, collision, target loss, air/2×2 and Major/Signature access remain domain tasks. Price placeholders resolve none of them.
+- EP amounts/unlocks, passive slot development/active-passive replacement, same-skill respec, EP refunds/transfers, relearning pill recipe/price and day-AP remain open; the old Normal award yields only 2 EP in total and is unverified.
+- Documentation only. Calculation sums (including 66 Strike totals and movement/buff/residue examples) and `git diff --check` were checked in earlier work; no engine/balance playtests. The earlier prototype does not automatically implement the current GDD state.
+
+### Editorial Progress — Gameplay Sequence Unchanged
+
+- The approved editorial cleanup is complete: documentation is English, topic ownership and reference examples are consolidated, and historical/provisional status is explicit. The three GDD changelogs and manual GDD version/synchronization headers are removed. Their removal required no transfer of current rules; applicable information was already present in the owning sections. Necessary prototype comparisons remain explicitly historical.
+- Change tracking uses Git history, not this handoff or a separate changelog. Keep this handoff current. The Ambitious Standing comparison remains unresolved under T26; no editorial cleanup selects a design variant.
+- T35 remains open for ongoing synchronization and the eventual implementation-plan update. Existing decisions, working values, task IDs/checkmarks and dependencies are unchanged. Resume gameplay work in the same order: Surge cross-checks → same-AP development paths → shared EP economy. Editorial completion is not completion of T02/T05/T13 or gameplay/balance validation.
+
+
+## Phase 1 — Clarify Foundations and Conflicting Rules
+
+### [x] T01 · Confirm the Aspect System (D/V)
+**Prerequisites:** none.
+**Sources:** [Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps); Battle [§3.2](gdd_battle.md#32-monster-identity--skill-access), [§4.8](gdd_battle.md#48-no-attunement).
+- **Decided:** remove the triangle and fixed monster aspects; no fixed replacement elements. Monsters receive free descriptive themes; deliberately designed species learnlists determine their allowed abilities.
+- Remove Attunement. Concrete skills, ground types and Surge behaviour remain available in the construction kit, without fixed aspect binding or mandatory sets of three variants.
+- Incorporated into all three GDDs. New ground interactions are addressed under T07; concrete learnlists and roster under T10–T12. This does not validate the balance of the remaining mechanics.
+
+### [ ] T02 · Complete the Data Model, Point Calculation and AP Efficiency (D/K)
+**Prerequisites:** T01.
+**Sources:** Monsters [§4.1](gdd_monsters.md#41-the-kit)–[§4.7](gdd_monsters.md#47-complete-references-and-validation); Battle [§2.3](gdd_battle.md#23-action-points)/[§5.1](gdd_battle.md#51-monster-skills-central-specification); [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed).
+
+**Drafted and documented:**
+- Shared model for all monster skills, central profiles/contracts and six references; no parallel skill sources or custom special structures. Designer-authored skills/upgrade choices instead of player construction.
+- Shared budget ceilings 24/30/36, AP efficiency 12/6/3/1/0, damage factor 2 and 50% exclusively for telegraphed, avoidable Surge damage as selected working drafts. **No combination surcharges.**
+- Draft tables for all Strikes/movement profiles, self/passive, zones/protection/healing and ground/board. Six references with initial totals, not yet full content/balance validation. Maintain prices only in [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency), not duplicated here.
+- Surge residue = delayed ground change; Eruption/Flood/Rift retain their intended ground types. New designer test price of 1 point/square for delayed hazard residue (immediate Field 4/square); basic Surges should be possible at 1 AP including ground effects.
+
+**Still to do:**
+- Complete 1-AP cross-check for Eruption/Flood/Rift including additional mechanics; assign missing rules to T04/T07/T09, with no implicit defaults. The small structural cross-check fits within 24 at two squares; three squares cost 27. This is not automatic skill approval.
+- Resolve budget conflicts for large Strikes, healing and complex Surges specifically, without automatically changing budgets/AP/damage or introducing separate skill-type pools. No double-charging for area/flags/sources.
+- Draft complete development paths at original AP, especially Jab; larger shapes retain existing AP until a new decision. No direct damage, AP-reduction or cast-range upgrades. Then T05/EP.
+- Complete missing footprints/anchors/orientations, visibility/target validity, effect values/caps, triggers/end conditions and interaction order. Explicitly define self/passive stacking, source groups, death/removal and repetition/recursion. Focus remains a draft; no new mechanic is authorized solely by a schema field.
+- Review combinations and repetition as balance/contract questions, **not as an additional price category**. Include props, healing, air and 2×2 under T04/T07–T09. Validate numbers only through suitable tests; T13 remains open.
+
+### [ ] T03 · Review Stat Budgets, Frames and Progression Limits (V/K)
+**Prerequisites:** T02.
+**Sources:** Monsters [§2.1](gdd_monsters.md#21-the-stats)–[§2.3](gdd_monsters.md#23-stat-ceilings-per-stage), [§7.4](gdd_monsters.md#74-monster-progression-the-18-steps); Overworld [§1.2](gdd_overworld.md#12-design-pillars), [§2.4](gdd_overworld.md#24-cultivation-loop).
+- Check prices, budgets and all scaled frames; Reach costs 3 points per level and now affects all casts. Test Reach-2 individuals against the old Surge radius 3.
+- Init on roll: 1 point = 1.0; on level-up: 0.1. Equal points received do not necessarily mean equal resulting strength; compare freshly rolled and raised individuals.
+- Unify Stage versus exact sub-tier as the monster cap ([Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps) names the step, other texts only the Stage).
+- Some Overworld texts still limit spent points by the frame; the monster GDD limits only the roll by the frame.
+- Step-only monsters: explicitly resolve random Movement points versus “stays at frame minimum”.
+
+### [ ] T04 · Make Resolution Rules and Edge Cases Consistent (D/K)
+**Prerequisites:** T01, T02.
+**Sources:** Battle [§2.2](gdd_battle.md#22-initiative-rules), [§4.1](gdd_battle.md#41-battlefield-generation), [§4.4](gdd_battle.md#44-square-data-model), [§4.8](gdd_battle.md#48-no-attunement), [§4.10](gdd_battle.md#410-damage-shatter--prop-types), [§6.1](gdd_battle.md#61-the-damage-law)–[§6.3](gdd_battle.md#63-collision-fall--debris); [Monsters §5](gdd_monsters.md#5-passives).
+- Collision: the damage law includes monster collisions, but the detailed rule says no damage. Cross-check Crashlander. Check Shockwave's existing +1 collision bonus against the fixed event-damage law; no exception has been approved.
+- Define the resolution order for Flood damage/residue/push and Tail Sweep damage/push; explicitly define Pull ties and behaviour when the anchor is already occupied.
+- Protection sources: define stacking, order and consumption when damage is reduced to 0; distinguish Ward, Veil and Hallowed. Coordinate tamer exceptions with T20.
+- Combined board operations: define the order of Collapse, Debris, Residue and Cleanse; specify Relocate distance, path, legal targets and reactions. Do not derive free defaults from data-field order.
+- T01 removes the Attunement/Elevated conflict; check remaining combinations of height and concrete ground types.
+- Zone values without Attunement: keep hard caps for Slow (2) and Push/Pull (1) consistent with level scaling.
+- **Prop revision:** shared impact/reaction contracts; define broadly destructible props and concrete exceptions/resistances. Destruction type determines splinter/fall effects and residue instead of identical Shatter every time. A tree may split; initially use falling effects plus ground/visual residue, not separately movable halves. Predict fall direction, hit squares, damage and resulting state deterministically. Impact categories, prop catalogue, HP/damage matrix, chain reactions and event order remain open. Existing numbers are interim, with no new blanket hit permissions. For pricing, ordinary prop damage is provisionally a shared baseline without surcharge ([Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency)); review special advantages and costs after the redesign.
+- Sigil is enterable; the prop rule says “the prop takes damage, not the monster there”. Define hit order for monsters on field props.
+- Clarify target validity on resolution: moved, fallen or removed unit/prop targets and placements that have become invalid. No implicit tracking, retargeting or invented cancellation/refund defaults. Define simultaneous events and expiry/trigger order deterministically.
+- Specify Surge behaviour with multiple turns per round, changed initiative or a dead caster: “next caster turn” does not guarantee everyone else acts first.
+- Define deterministic ties for Voidscar selection, Push/Pull destinations and free dodge squares.
+- Check point-symmetric generation against odd prop counts; define legal central single objects for each board size.
+
+## Phase 2 — Skills, Development and Monster Identity
+
+### [ ] T05 · Complete Skill Improvements (D)
+**Prerequisites:** T02.
+**Sources:** [Monsters §4.6](gdd_monsters.md#46-slot-levels-development-replacement-and-upgrades) (slot development), [§7.2](gdd_monsters.md#72-monster-rarity)/[§7.4](gdd_monsters.md#74-monster-progression-the-18-steps) (EP/progression draft); [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed) (integration).
+- **Decided:** permanent skill-slot development is an additional evolution option for the individual monster. Physical evolution and slot development use the same EP pool. A paid slot-development step directly grants a designer-authored, skill-dependent upgrade choice; no additional player point currency.
+- **Decided:** replacing a skill from the unlocked species learnlist outside expeditions costs a valuable relearning pill instead of EP. Slot development is preserved; suitable upgrades for the new skill are reselected within the existing development extent. No free re-slotting or EP-paid swap path.
+- **Next step:** draft a shared EP budget and prices for physical evolution and slot development. Old awards of 1 EP for Normal/Rare or 2 EP for Epic/Legendary are unvalidated; Normal would currently have only 2 EP in total. Check target investments across multiple slots and competition with physical development.
+- **Decided:** slot levels 1–3 with increasing budget ceilings, no skill ratings. Define EP prices, unlocks and possible intermediate development within these levels; do not assume another rank hierarchy.
+- **Decided:** retain small fixed damage values. Slot upgrades do not increase direct damage, lower AP costs or increase cast range. Allowed improvement types: area, shape/orientation, duration, movement/displacement and explicitly designed additional effects, each with skill-dependent limits. Still check total impact through more targets or triggers.
+- Design enough upgrade choices visible in advance, prerequisites, exclusions and caps for every skill; examine Shape, Size, Twist and Small value as candidates. Do not reintroduce removed legacy swap paths; replacement remains pill-based.
+- Clarify how to handle slots with different numbers of legal upgrade offers, passive/passive-only slots and active/passive replacement. Do not lose slot investment on replacement.
+- Still open: cost of reselecting existing upgrades of the same skill, refunding EP investments and possible transfers between slots. Pill costs for upgrade respec are only a recommendation, not a decision.
+- Specify the relearning pill: coordinate reliable acquisition, recipe, tier, price and day-AP with T16/T30/T31; deliberate replacement rather than constant rebuilding, without permanently penalizing experimentation.
+- Distinguish generic Size maximum 4 from Strike shapes of up to 8 squares. Old conflicting Shape prices are obsolete; define concrete upgrade offers and EP step prices in the shared model.
+
+### [ ] T06 · Complete Strike Shapes and Kin Effects (D/V)
+**Prerequisites:** T02, T03, T05.
+**Sources:** [Monsters §3.2](gdd_monsters.md#32-strike-by-kin).
+- Only Jab before Core: do interesting shapes arrive too late? Storm/5-AP shapes only reach late TPR-1 builds.
+- Test Whirl (4 squares) against Arc (3) at the same price, and the value of Thrust's range. The old question says “Skewer”, the table “Thrust”: unify the name.
+- Beast Bite: give it its own effect without violating the damage ceiling, or deliberately accept the lack of an effect.
+
+### [ ] T07 · Align Ground Interactions and Healing (D/V)
+**Prerequisites:** T01, T02, T04.
+**Sources:** Battle [§4.6](gdd_battle.md#46-zones-effects-rules--opposites)–[§4.8](gdd_battle.md#48-no-attunement); Monsters [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit), [§4.4](gdd_monsters.md#44-effect-and-board-operation-contracts)–[§4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency).
+- Permanent residue: does the board fill too quickly, making Rift/Blight overpowered?
+- Measure hazard coverage on 7×7 by round 5. If needed, examine Field at 2 AP or a maximum of N Field squares per monster as alternatives.
+- Without the triangle, define whether and how zones change existing ground; do not infer automatic superiority from monster themes.
+- T01 removes Attunement and painting snowball. Instead review counters to permanent hazard ground and their accessibility.
+- Blessing: is 2 AP appropriate for 3–4 permanent squares? Limit Mossbed per turn?
+- Boon/`mend`: check healing at HP 1–10; may zone level increase healing, or does it stay fixed at 1? Explicitly define the numerical healing cap and Mossbed re-entry/per-turn limit; persistence grants no additional healing triggers.
+- Evaluate level-II residue as a concrete extension; the former name “Deep Residue” and +1 AP are not confirmed universal rules.
+
+### [ ] T08 · Define Water and Swim (D)
+**Prerequisites:** T02, T07.
+**Sources:** Battle [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed), [§5.1](gdd_battle.md#51-monster-skills-central-specification) (integration); Monsters [§3.3](gdd_monsters.md#33-movement-by-kin), [§4.3](gdd_monsters.md#43-skill-execution-profiles) (movement profiles).
+- Where does water originate: generator only, or skills too? May generated hazard/blessed ground replace water?
+- Which Kins receive Swim? Check its cost profile and flag exceptions against the general movement table.
+
+### [ ] T09 · Specify the Air Layer and 2×2 Rules (D/K)
+**Prerequisites:** T02, T04, T06, T07.
+**Sources:** Battle [§4.3](gdd_battle.md#43-the-square-stack-zones--ground), [§5.1](gdd_battle.md#51-monster-skills-central-specification) (integration); Monsters [§3.1](gdd_monsters.md#31-kin-table), [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit), [§4.3](gdd_monsters.md#43-skill-execution-profiles), [§4.4](gdd_monsters.md#44-effect-and-board-operation-contracts), [§4.7](gdd_monsters.md#47-complete-references-and-validation).
+- Which effects besides Strike may have air recipients? Define layers per effect, not as a global `affects_air` authoring flag. Ensure at least sufficiently readable counters to Winged from Soul onward.
+- Specify flight movement, occupancy and interaction with props/ground. For 2×2, also define distance origin, area overlap, recipient deduplication and entry/exit evaluation across multiple squares; the generic area model does not decide these cases.
+- Additional analysis finding: 2×2 is announced, but area hits, damage multiplication, placement, movement and displacement are insufficiently defined. Occupying multiple squares must not create an implicit multiple-damage rule.
+
+### [ ] T10 · Rebuild Concrete Skills from Blueprints (D)
+**Prerequisites:** T05–T09.
+**Sources:** Monsters [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit)–[§4.7](gdd_monsters.md#47-complete-references-and-validation).
+- Create concrete skills exclusively in the shared schema [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit) and validate under [§4.7](gdd_monsters.md#47-complete-references-and-validation); no new parallel blueprint/example table. Fully define effects, triggers, targeting, footprints, interactions, costs and authorized upgrade patches.
+- Species-exclusive and Signature skills use the same schema; express differences through access, authorship and explicit rules. Earlier named ideas are not promised content. Select concrete skills and sufficiently deep upgrade choices only after budgets are confirmed.
+
+### [ ] T11 · Revise Learnlists, Passives and Reference Roster (D)
+**Prerequisites:** T03, T06, T10.
+**Sources:** Monsters [§4.1](gdd_monsters.md#41-the-kit), [§5](gdd_monsters.md#5-passives), [§6.1](gdd_monsters.md#61-first-roster-draft--9-monsters), [§7.4](gdd_monsters.md#74-monster-progression-the-18-steps).
+- Define learnable skills (current target roughly 8) and available passives for each species: distinguish species binding from individual binding; free themes are not an additional learning restriction. Revise or remove formerly aspect-dependent passives.
+- The nine reference monsters currently have four active skills plus passives; reduce to four shared slots and handle the Epic+ additional slot separately.
+- Give every species a Species Twist instead of the shared placeholder, plus a concrete Strike shape and fixed Surge orientation.
+- Check descriptions such as “weak Flood”/“weaker Rift” against current damage and AP rules.
+
+### [ ] T12 · Select the Launch Roster (D)
+**Prerequisites:** T11.
+**Sources:** Monsters [§6.1](gdd_monsters.md#61-first-roster-draft--9-monsters)–[§6.2](gdd_monsters.md#62-additional-species-candidates).
+- Without a mandatory Kin×aspect matrix, select a diverse roster from the nine reference monsters and additional name ideas (previous target about 15); prioritize free themes and distinct playstyles over category completeness.
+- Check missing blueprint/movement coverage and distinct one-sentence identities.
+
+## Phase 3 — Validate Battle Before the Meta Fixes Numbers
+
+### [ ] T13 · Plan and Evaluate Battle Tests with the Revised Rules (V)
+**Prerequisites:** T04, T07, T11; T08/T09 for water/Soul tests.
+**Sources:** [Battle §7.2](gdd_battle.md#72-prototype--playtests); historical Battle §8; [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups), historical Monsters §8.
+- First ensure that the tested build implements the draft under examination: the documented Godot baseline is the historical battle v6.0 ruleset, not the current GDD design. Code changes are outside this documentation task.
+- Residue: do Surges indirectly hit even when dodged, or force meaningful routes?
+- Readable combos: Current → Surge/Lava, Pull → Strike; check Pull anchors and push direction.
+- Strike from 2 AP: worthwhile or unused, melee too sticky?
+- Check no-cooldown spam and Double Veil (2 AP → level II, Shield 3). Fallback: level-up only once per turn and square.
+- Test Veil Shield 2, level/Attunement and Surge 3 for genuine counters. Attunement is a historical test reference, removed by T01; do not reintroduce it.
+- Check movement prices, Step-only viability and Movement cap 5.
+- Three Surge types against Elevated; props as tactical resources rather than obstacles.
+- 3v3/7×7: readability, round count, Collapse share and starting distances; test Reach 4 + Elevated = 5 against the promise of a safe opening.
+- Test first-Surge-claims-square and initiative chains/focus fire. Fallback if dominant: make initiative more expensive.
+- Compare Dusk Moth (historical 87% simulation win rate) with humans and AI; examine Native Ground/Wide/Blight separately.
+- Evaluate stat/Strike/healing tests from T03/T06/T07 together; adjust prices only based on results.
+
+### [ ] T14 · Safeguard Reshape Against Reroll Exploitation (D/V)
+**Prerequisites:** T03, T13.
+**Sources:** [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups); Overworld [§2.6](gdd_overworld.md#26-action-catalog), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades).
+- Are a rare elixir and ritual costs sufficient, or is a cap/cooldown needed against repeated optimization rolls?
+
+## Phase 4 — World, Catalogues and Equipment (Partly Parallel to Phase 2/3)
+
+### [ ] T15 · Define City Powers, Responsibilities and Content (D)
+**Prerequisites:** none; may run in parallel with battle design.
+**Sources:** Overworld [§3.1](gdd_overworld.md#31-the-city)–[§3.2](gdd_overworld.md#32-the-powers-of-the-city), [§7.2](gdd_overworld.md#72-favor--faction).
+- Define faction names, profiles and offerings for the three families.
+- Confirm operators of Arena, Teleport Plaza and Business District: proposal is City Lord, City Lord, Guild.
+- Clarify buildings/access for Rival Compounds and the purpose of the Slums; Black Stall remains an optional idea, not a promised feature.
+
+### [ ] T16 · Complete Material, Item and Recipe Catalogues (D)
+**Prerequisites:** T01; T10 for battle-related products.
+**Sources:** Overworld [§6.6](gdd_overworld.md#66-pills--medicines)–[§6.8](gdd_overworld.md#68-arrays-artifacts-for-places), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades)–[§7.8](gdd_overworld.md#78-acquisition-sources).
+- Derive concrete materials, herbs, seeds, recipes, seals, scrolls and blueprints from patterns; determine counts, tiers and grades.
+- Reconcile the quantity assumption “four tiers/~40 pills” with six cultivation stages and missing Sovereign XP values.
+- Check grade dependencies and acquisition sources against “money never buys exclusive power”; Legendary bloodline ingredients are currently described both as story-only and as boss/quest/auction rewards.
+- Confirm Array recipes and the Forge route (Ore + Beast Parts); decide whether Upper Stones are currency only or also ritual materials.
+
+### [ ] T17 · Define Artifact Rules and Stacking (D/K)
+**Prerequisites:** T03, T11, T16.
+**Sources:** Overworld [§6.7](gdd_overworld.md#67-artifacts-equipment--socketed-passives), [§6.9](gdd_overworld.md#69-hard-caps), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades); [Monsters §7.2](gdd_monsters.md#72-monster-rarity).
+- Tamer: two or three slots, and when? Monster: second slot at Epic+, or additionally only from Core? Synchronize tables.
+- Clarify passive OR stat modifier versus the schema “passive + small stat modifier”; limit duplicate passives and multiple artifacts.
+- Check +1 AP/day, capacity and skill modifiers against day economy, Stage caps and the options-not-numbers rule.
+
+### [ ] T18 · Specify Medicines and Arrays (D)
+**Prerequisites:** T07, T10, T16.
+**Sources:** Overworld [§6.6](gdd_overworld.md#66-pills--medicines), [§6.8](gdd_overworld.md#68-arrays-artifacts-for-places), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades)–[§7.6](gdd_overworld.md#76-item-schema).
+- Determine Medicine effects, recipes, item kind and distinction from pills. Protection/healing/board effects need their own source, consumption and timing contracts in the shared data model; monster-effect contracts do not automatically approve items.
+- Which Arrays are consumable, and which reusable? Define durability, placement and battle effects.
+- Confirm pre-battle Arrays as a limited exception to a neutral/point-symmetric start; review the four existing Array drafts.
+
+### [ ] T19 · Complete Battle Loadout and Timing (D)
+**Prerequisites:** T18.
+**Sources:** [Battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout) (integration); Overworld [§2.1](gdd_overworld.md#21-battle-loop), [§7.9](gdd_overworld.md#79-inventory-and-loadout), [§8](gdd_overworld.md#8-technical-notes-overworld--development-phases).
+- Define Medicine/Array counts, activation windows (own turn or anytime), AP costs and consumption.
+- Apply the same rules to human opponents; specify visibility, preview, pre-battle locking and reporting consumed items in BattleResult.
+- Dependency is directional: item effects/costs first, then loadout limits; do not let them block each other mutually.
+
+### [ ] T20 · Validate Tamer Skills Including Beast Swap (D/V)
+**Prerequisites:** T09, T13, T19.
+**Sources:** [Overworld §6.4](gdd_overworld.md#64-tamer-skills); [Battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout) (integration).
+- Confirm/change/reject proposed Swap Places, Urgent Order, Second Wind, Life Thread, Double Bind and Seal Mastery; T01 removed Attune. Explicitly define tamer sources in the shared effect model without transferring monster-skill permissions or AP classes.
+- Test Life Thread against Spirit Shield and Urgent Order against initiative; define usage timing for free skills.
+- Beast Swap: define HP, injury, queue, own charging Surges, 2×2 space requirements and replacement-entry rules.
+- Scrolls teach skills earlier; Beast Swap may only be slotted from Soul: clearly distinguish learning from use and Stage gates.
+
+## Phase 5 — Expeditions, Collection and the Spatial World
+
+### [ ] T21 · Define the Dungeon Node ↔ Board Generator Contract (D)
+**Prerequisites:** T04, T08, T12.
+**Sources:** [Overworld §3.3](gdd_overworld.md#33-dungeons); [Battle §4.1](gdd_battle.md#41-battlefield-generation).
+- What does the node fix, and what does the generator generate? Proposal: node determines mode, theme/ground families and prop-count range; generator places everything point-symmetrically.
+- Check encounter access against required team size and available healthy monsters.
+
+### [ ] T22 · Complete Expeditions and Loot Tables (D/V)
+**Prerequisites:** T16, T19, T21.
+**Sources:** Overworld [§2.2](gdd_overworld.md#22-expedition-loop), [§7.8](gdd_overworld.md#78-acquisition-sources).
+- Determine floors/battles per run, deeper entry (1/2 day-AP), retreat and reward tables per floor/boss.
+- HP persistence and free retreat with loot are already the working state; do not reopen them without cause. Build open edge cases on that basis.
+- Clarify “Healing Pill is the only healing during a run” against Mend/Mossbed, healing passives and Second Wind: outside battles only, or also during battles?
+
+### [ ] T23 · Align Injury and Deadly Dungeons (D/V)
+**Prerequisites:** T16, T20, T22.
+**Sources:** Overworld [§5.2](gdd_overworld.md#52-defeat-and-injury), [§6.6](gdd_overworld.md#66-pills--medicines).
+- Review two nights of downtime, Revival price and Deadly loot bonus; confirm or defer optional Deadly dungeons for launch.
+- Recovery Spring already halves downtime to one night; define a minimum for the additional −1-night adjacency bonus.
+- Define healing on return/overnight for uninjured monsters and HP after recovery; check Soul Tether/Life Thread against permanent loss.
+
+### [ ] T24 · Specify Binding, Eggs, Breeding and Hive (D/V)
+**Prerequisites:** T12, T16, T20, T22.
+**Sources:** Overworld [§5.1](gdd_overworld.md#51-obtaining-monsters), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades).
+- Balance seal prices/grades and the second binding; check Seal Mastery against the player Stage cap.
+- Define breeding/Hive/hatching times per rarity and incubation conditions; clarify same species versus “species of one parent”.
+- Make egg rarity, species visibility and timing of randomization explicit.
+
+### [ ] T25 · Internal World: Capacity, Buildings, Adjacency (D/V)
+**Prerequisites:** T09, T16, T23, T24.
+**Sources:** Overworld [§4.2](gdd_overworld.md#42-building-system)–[§4.4](gdd_overworld.md#44-capacity-and-growth).
+- Confirm grid/capacity curve, footprints, unlocks and new structures.
+- Define housing capacity bonus, Mood/Loyalty and their concrete benefits, or remove an unnecessary system.
+- Define hatching at full capacity, rented monsters and bench size.
+- Trial Pillar unlocks only at Foundation but is needed to reach it; clarify access to the first breakthrough.
+- Adjacency bonuses: minimum times, multiple neighbours and stacking limits; reconcile Furnace −1 AP down to 0 with “execution costs AP”.
+- Staff remain excluded from the interior for now. Reconsider only for concrete benefits; no implementation merely because it is possible.
+
+## Phase 6 — Economy, Progression and Day Balance
+
+### [ ] T26 · Draft Staff Traits and Numbers (D/V)
+**Prerequisites:** T15, T16.
+**Sources:** [Overworld §7.1.1](gdd_overworld.md#711-staff-model-b-chosen).
+- Model B is selected: visible Skill/Loyalty values plus one trait. Do not choose between models A/B/C again.
+- Define trait list, wages, output, Loyalty changes, dismissal, poaching and counteroffers.
+- Ambitious poaching offers: resolve the previously contradictory Standing condition in [Overworld §7.1.1](gdd_overworld.md#711-staff-model-b-chosen). Specify whose Standing is compared, the faction/reference it is compared against, and the comparison direction. No comparison condition is selected yet.
+- Treat hidden Deception at most as a later scripted story idea, not for random hires.
+
+### [ ] T27 · Align Favor/Standing and Request Pools (D/V)
+**Prerequisites:** T15, T16, T26.
+**Sources:** [Overworld §7.2](gdd_overworld.md#72-favor--faction).
+- Favor + lifetime Earned Total/Standing is the selected model; test numbers, request sizes, durations and thresholds.
+- Confirm the rivalry rule (Allied with one family caps the other at Trusted).
+- Own family: calculate concrete progression through strength/Arena.
+- Standing unlocks access, but the table additionally lists licences/recruitment/invitations as Favor expenses: distinguish access requirements from purchase prices clearly.
+- Define request pools per faction and Stage, repeat limits and rewards.
+
+### [ ] T28 · Balance the Market, Properties and Businesses (D/V)
+**Prerequisites:** T16, T22, T26, T27.
+**Sources:** Overworld [§3.1.5](gdd_overworld.md#315-business-district), [§7.1](gdd_overworld.md#71-businesses), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades)–[§7.8](gdd_overworld.md#78-acquisition-sources).
+- Only after the catalogues: determine price fluctuation model, base prices, buying/selling and safeguards against endless arbitrage.
+- Compare property costs, licences, facility output, queue duration, sale quantities and staff automation with dungeon income.
+- Deal covers many activities: one activity per AP or several in one Deal? Distinguish free Queue from immediate Work production.
+- Specify Monster Hall sales, Dojo and Dungeon Company as data configurations.
+
+### [ ] T29 · Review XP Curves and Cultivation Pacing (V)
+**Prerequisites:** T05, T22, T25, T28.
+**Sources:** [Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps); [Overworld §2.4](gdd_overworld.md#24-cultivation-loop).
+- Check the initial 18-step XP curve, pill XP, win XP, Training/Cultivate and idle XP; determine player values separately if necessary.
+- Check the target of 3–6 focused days per sub-tier against farm/purchase/staff income; do not treat old prototype numbers as confirmation.
+
+### [ ] T30 · Complete Breakthrough Trials and Rituals (D/V)
+**Prerequisites:** T20, T25, T27, T29.
+**Sources:** [Overworld §6.3.1](gdd_overworld.md#631-breakthrough-trials); [Monsters §7.3](gdd_monsters.md#73-rarity-ascension).
+- Check the first trial draft against prototype/game flow; confirm material quantities and pill effect.
+- “Player starts at half HP”/“player on the winning team” conflicts with the non-combatant tamer role: which monster/team is meant?
+- Define player/monster trials, repetition, failure costs and trial access; synchronize rarity-ascension ingredients and acquisition routes.
+
+### [ ] T31 · Finalize Day-AP and Action Costs (D/V)
+**Prerequisites:** T22, T25, T28–T30.
+**Sources:** Overworld [§2.3](gdd_overworld.md#23-day-loop), [§2.6](gdd_overworld.md#26-action-catalog).
+- Review proposed 3/4/4/5/5/6 AP per Stage and Arena price per tournament round.
+- Balance expeditions, cultivation, story and work against each other; account for staff reducing the workload.
+- Keep free decisions/queuing/rearranging consistent with paid execution.
+
+## Phase 7 — Late Game and Completion
+
+### [ ] T32 · Design Major Surges and Signatures (D)
+**Prerequisites:** T09, T12, T13.
+**Sources:** Monsters [§3.1](gdd_monsters.md#31-kin-table), [§4.1](gdd_monsters.md#41-the-kit) (access), [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit), [§4.3](gdd_monsters.md#43-skill-execution-profiles) (Surge profiles), [§4.6](gdd_monsters.md#46-slot-levels-development-replacement-and-upgrades), [§7.4](gdd_monsters.md#74-monster-progression-the-18-steps); [Battle §5.1](gdd_battle.md#51-monster-skills-central-specification) (integration only).
+- Determine concrete shapes, area and range; review half-board/2 AP/once per battle.
+- Synchronize access for Ancient AND Legendary from Sovereign against tables sometimes saying only “Ancient”; distinguish Signatures of other Legendary Kins.
+
+### [x] T33 · Legendary Aspect Change Removed (D)
+**Prerequisites:** T01, T11, T30.
+**Sources:** [Monsters §7.2](gdd_monsters.md#72-monster-rarity).
+- Removed by T01: without fixed aspects, there is no aspect change. No replacement feature approved; other Legendary development remains part of existing progression tasks.
+
+### [x] T34 · Dual-Aspect System Removed (D)
+**Prerequisites:** T01, T09, T13.
+**Sources:** [Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps); [Overworld §6.3](gdd_overworld.md#63-stage-unlock-table).
+- Removed by T01: no dual aspects or corresponding Immortal unlock. Multiple free themes require no separate unlock or special mechanic.
+
+### [ ] T35 · Update GDD Synchronization and Implementation Plan (K)
+**Prerequisites:** the respective affected decisions; overall completion after T01–T34.
+**Sources:** all three GDDs, especially technical notes and Development Phases.
+- Clearly distinguish decided rules, proposals, the existing prototype and later features.
+- Synchronize tables, schema fields, section references and version states. The technical validator currently requires Surge/Utility, although open kits require neither; reconcile species passives with slot-bound learnlists.
+- Update development phases based on clarified dependencies; do not mix implementation tasks with open design decisions.
+- Keep change history in Git, not in the GDDs or this task list. Maintain a current handoff and preserve only prototype comparisons needed to distinguish implementation from the current design.
+
+## Dependency Overview
 
 ```mermaid
 flowchart TD
-    A[T01 Aspekte] --> B[T02 Blueprints und Kosten]
-    B --> C[T03 Stats und T04 Auflösung]
-    C --> D[T05 bis T11 Skills und Referenzroster]
-    D --> E[T12 Launch-Roster und T13 Kampftests]
-    A --> F[T16 Item- und Rezeptkataloge]
+    A[T01 Aspects] --> B[T02 Blueprints and Costs]
+    B --> C[T03 Stats and T04 Resolution]
+    C --> D[T05 to T11 Skills and Reference Roster]
+    D --> E[T12 Launch Roster and T13 Battle Tests]
+    A --> F[T16 Item and Recipe Catalogues]
     D --> F
-    F --> G[T17 bis T20 Ausrüstung und Loadout]
-    E --> H[T21 bis T25 Expedition und Sammlung]
+    F --> G[T17 to T20 Equipment and Loadout]
+    E --> H[T21 to T25 Expeditions and Collection]
     G --> H
-    I[T15 Stadtmächte] --> J[T26 bis T28 Staff Favor und Markt]
+    I[T15 City Powers] --> J[T26 to T28 Staff Favor and Market]
     F --> J
     H --> J
-    J --> K[T29 XP und T30 Trials]
-    K --> L[T31 Tages-AP]
-    E --> M[T32 bis T34 Spätspiel]
-    L --> N[T35 GDD-Abgleich]
+    J --> K[T29 XP and T30 Trials]
+    K --> L[T31 Day-AP]
+    E --> M[T32 to T34 Late Game]
+    L --> N[T35 GDD Synchronization]
     M --> N
 ```
 
-Die Detailvoraussetzungen je Punkt sind maßgeblich; das Diagramm fasst nur die großen Arbeitsstränge zusammen.
+The detailed prerequisites per item are authoritative; the diagram summarizes only the main work streams.
