@@ -9,7 +9,7 @@ Every monster definition lives here, once. The other two files link to this one.
 
 |                                        Question                                        |       File       |
 |----------------------------------------------------------------------------------------|------------------|
-| What is a monster? Stats, Kins, skills, passives, roster, evolution, rarity             | this file        |
+| What is a monster? Stats, Kins, skills, passives, roster, progression, rarity            | this file        |
 | How does a fight run? Turns, squares, zones, ground, generic damage resolution                | gdd_battle.md    |
 | How do you catch, house and lose monsters? Tamer skills, items, economy, the world      | gdd_overworld.md |
 
@@ -28,7 +28,7 @@ INDIVIDUAL  (one per monster the player owns or meets in the wild)
   stats           rolled inside the shape's frame, then spent by the player (§2.2)
   rarity          Normal | Rare | Epic | Legendary
   stage + sub-tier + XP
-  evolutions      physical evolution choices and permanent development per skill slot (§4.6)
+  slot development  permanent development per skill slot, gained at advancement steps (§4.6, §7.4)
   slot loadout    equipped skill and its selected upgrades per slot; development survives skill replacement
   artifact(s)     socketed passives (gdd_overworld §6.7)
   current HP      persists between battles of an expedition
@@ -141,7 +141,7 @@ PRICE   stats cost points: a strong stat is paid for with the others
 | Core Formation      | 14 (29) | 15 (30) | 16 (31) |
 | Soul Tier and above | 18 (33) | 19 (34) | 20 (35) |
 
-So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Foundation**, because TPR 2 opens there). Immortal and Sovereign add no points: the absolute scale is reached, those sub-tiers give evolution points instead (§7.4).
+So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Foundation**, because TPR 2 opens there). Immortal and Sovereign add no points: the absolute scale is reached, those sub-tiers give slot-development steps instead (§7.4).
 
 **The six frames at Core Formation** (min–max). Total points are absolute totals with all stats at minimum/maximum; every shape contains the required Core budget (29 / 30 / 31).
 
@@ -174,7 +174,7 @@ So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Found
 | Balanced     | 17–20      | 20–27              | 22–33        | 26–39         |
 | Fragile      | 17–20      | 24–30              | 25–34        | 30–39         |
 
-- **Unspent points:** Qi Anvil (max 19 vs. budgets 19 / 20 / 21) leaves 1 at Middle, 2 at High; Foundation High Anvil/Skirmisher (max 26 vs. 27) leave 1. The player spends roll leftovers freely: no lost points or frame changes.
+- **Unspent points:** Qi Anvil (max 19 vs. budgets 19 / 20 / 21) leaves 1 at Middle, 2 at High; Qi Balanced/Fragile (max 20) leave 1 at High; Foundation High Anvil/Skirmisher (max 26 vs. 27) leave 1. The player spends roll leftovers freely: no lost points or frame changes.
 - The table excludes Berserker's TPR 3 at Soul.
 
 - **Init at roll:** 1 point = **1.0 Init**; speed costs other stats. A free decimal (.0–.9) is rolled on top, below the frame maximum.
@@ -271,7 +271,7 @@ Cleave   Long Whirl   Long Cross
 
 - **AP decides when:** AP 2 is the ceiling until Core, so Qi and Foundation Strikes are all Jabs and differ by Kin twist only. AP 3 opens at Core, AP 4 at Immortal and AP 5 at Sovereign, the last two only with TPR 1 (§2.3)
 - **Every shape hits allies too.** The bigger the shape, the more of them stand in it. A 2x2 monster starts the shape at the edge of its body
-- The shape is part of the species and changes through the Shape and Size evolutions (§4.6)
+- The shape is part of the species and changes through slot-development upgrades (Shape and Size, §4.6)
 
 **Kin twists:** every Strike deals **2 damage per struck monster**, plus its bound Kin effect. Under confirmed policy, Kin advantages consume the shared construction budget (§4.5); Beast has none to price.
 - §4.5 prices all Kins/existing shapes as unvalidated calibration drafts; full combination evaluation is pending. Existing effects and battle-AP prices remain unchanged.
@@ -334,7 +334,7 @@ Monster = Step (always, no slot)
 
 - **Signature/Major access:** Signature remains Legendary/progression-bound (§7.2/§7.4), without a decided slot treatment or effect. Major Surge retains Ancient access at Sovereign, 2 AP, once per battle. Their legacy access ambiguity remains [temp_todo.md](temp_todo.md) T02/T32, not an active Battle rule or Major permission for every Legendary. No new access/values are decided here.
 
-- **Effects/upgrades:** new effects need authored, validated definitions; exclusivity grants no arbitrary boosts, damage, healing, board removal or targeting. Use authorized field patches (§4.6), without a separate evolution count. Unresolved content stays central T02/T10–T12/T32, not a parallel catalogue.
+- **Effects/upgrades:** new effects need authored, validated definitions; exclusivity grants no arbitrary boosts, damage, healing, board removal or targeting. Use authorized field patches (§4.6), without a separate per-skill step count. Unresolved content stays central T02/T10–T12/T32, not a parallel catalogue.
 
 ### 4.2 Data-Oriented Skill Construction Kit
 
@@ -766,7 +766,7 @@ skill point cost <= allowed ceiling
 | 2 | 30 points (base +6) |
 | 3 | 36 points (base +12) |
 
-Maximums only: no spending targets, balance/component-price approval, EP prices or unlock conditions.
+Maximums only: no spending targets, balance/component-price approval, step prices or unlock conditions.
 
 #### Component Price Sheet
 
@@ -1009,20 +1009,20 @@ Maximums only: no spending targets, balance/component-price approval, EP prices 
 
 ### 4.6 Slot Levels, Development, Replacement and Upgrades
 
-**Confirmed: permanent slot development**, alongside physical evolution, spending the individual monster's shared **evolution points (EP)**. No separate player skill-point currency; construction/blueprint points are internal authoring data, neither intermediate spendable budget nor Overworld Blueprint items.
-- **Ownership/choice:** EP develop one slot on one monster, not its equipped skill or species globally.
-  - Each purchased step directly grants a skill-specific upgrade choice.
+**Confirmed: permanent slot development**, gained only at **advancement steps** ([§7.4](#74-monster-progression-the-18-steps)): a stage breakthrough (or the listed later sub-tier steps) offers the individual monster the option to develop one skill slot. There is no separate experience/EP currency, no spending outside an advancement and no physical evolution. No separate player skill-point currency; construction/blueprint points are internal authoring data, neither intermediate spendable budget nor Overworld Blueprint items.
+- **Ownership/choice:** a development step develops one slot on one monster, not its equipped skill or species globally.
+  - Each development step directly grants a skill-specific upgrade choice.
   - Designers use §4.2–§4.7 for finished skills/upgrades, internal budgeting/AP pricing; players select authored options, not arbitrary components.
   - Equipped skills define legal upgrades/prerequisites/exclusions; slot progress determines available development, not simultaneous access to all upgrades.
-- **Replacement:** outside expeditions, unlocked species learnable-list skill, valuable **relearning pill**. Preserve all purchased slot progress; select legal replacement upgrades using it without another EP purchase, not literal transfer of old effects. Pill acquisition/recipe/tier/price/overworld AP remain T05/T16/T31.
-- **Levels 1–3:** increasing construction ceilings (§4.5), no separate skill ratings/ranks. EP prices/unlocks/intermediate steps/total supply remain undecided; review legacy supply alongside physical evolution costs.
+- **Replacement:** outside expeditions, unlocked species learnable-list skill, valuable **relearning pill**. Preserve all purchased slot progress; select legal replacement upgrades using it without spending another development step, not literal transfer of old effects. Pill acquisition/recipe/tier/price/overworld AP remain T05/T16/T31.
+- **Levels 1–3:** increasing construction ceilings (§4.5), no separate skill ratings/ranks. How steps map to levels, unlocks, intermediate steps, total supply (including Normal's two steps) and whether an unused step can be deferred remain undecided (T05).
 - **Open:** pill use for same-skill upgrade reselection; passive-only slot development and active/passive replacement rules are required before implementation.
 
 **Confirmed construction budget and AP policy**
 
 **Superseded prices and legacy reconciliation:**
 
-- The former per-skill prices (1 EP for Shape/Twist/Value/Swap, 2 EP for Size) are superseded, not slot-level development prices.
+- The former per-skill prices (1 EP for Shape/Twist/Value/Swap, 2 EP for Size) are superseded; no EP currency exists.
 - Legacy “Shape always free”, blanket “Twist = 2 AP”, “Size adds 1 AP”, Twist-plus-Size totals and double-charging an already enlarged footprint remain T02/T05 reconciliation work; none overrides the confirmed policy below.
 
 - **Budget:** ceilings and AP efficiency: [§4.5](#45-construction-points-and-ap-efficiency); balance remains open (temp_todo T02/T05).
@@ -1030,19 +1030,19 @@ Maximums only: no spending targets, balance/component-price approval, EP prices 
 - **Patches:** authorized fields on the same definition (§4.7), not a parallel model; area, shape/orientation, duration, movement/displacement or explicitly designed secondary effects, within skill limits/prerequisites.
 - **Limits:** no direct-damage, AP-reduction or cast-range upgrades; existing Strike/Surge/ground damage caps hold. More cells/duration may increase total impact and still require budgeting/validation. Budget guidelines bypass no hard caps/legal combinations; reconcile legacy blanket AP surcharges, never apply automatically.
 
-**Candidate catalogue, not final step prices/unlocks.** Cast range is excluded; slot development supersedes old per-skill evolution counts. Review concrete offers/AP effects under temp_todo T02/T05.
+**Candidate catalogue, not final step prices/unlocks.** Cast range is excluded; slot development supersedes old per-skill evolution counts and prices. Review concrete offers/AP effects under temp_todo T02/T05.
 
 |           Family           |                                       What changes                                      |                                                                                         Rules                                                                                         |
 |----------------------------|-----------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Shape** | Other shape family or orientation, **same cell count** | I2 orientation, I3↔L3 or legal 4-cell families; Strike swaps same-size shapes from §3.2. Family must respect Kin and twist constraints; shapes remain fixed in battle. Legacy ‘always free’ grants no free EP development or respec; costs remain T05. |
-| **Size** | **+1 cell** within the owning profile's cap; Strike selects a larger §3.2 shape | Ordinary tetris max 4; Swarm Surge cannot enlarge. A larger Strike uses its existing shape AP price as an optional higher-cost branch, never the only development path. The old automatic Surge +1 AP is unconfirmed; requirements, EP prices and optional AP effects remain T02/T05. |
+| **Shape** | Other shape family or orientation, **same cell count** | I2 orientation, I3↔L3 or legal 4-cell families; Strike swaps same-size shapes from §3.2. Family must respect Kin and twist constraints; shapes remain fixed in battle. Legacy ‘always free’ grants no free development step or respec; costs remain T05. |
+| **Size** | **+1 cell** within the owning profile's cap; Strike selects a larger §3.2 shape | Ordinary tetris max 4; Swarm Surge cannot enlarge. A larger Strike uses its existing shape AP price as an optional higher-cost branch, never the only development path. The old automatic Surge +1 AP is unconfirmed; requirements, step costs and optional AP effects remain T02/T05. |
 | **Twist** *(Surge only)* | Replace/add an authored extra rule; not on a Species Surge | At most one; preserve §4.3 constraints and exclude damage/range increases, including legacy delayed-damage or extended-range candidates. Validate under the confirmed AP policy. |
 | **Small value** | Zones: `duration` +1 round total per skill. Movement: one flag flip total, turning off one restriction or lowering its distance penalty by 1 (§4.3) | Bounded candidate patches, not free upgrades. No damage increase or level-II start; the level-II-start passive remains a separate candidate (§5), not an approval through this table. |
 
 - **Shared process:** authorize patches to [§4.2](#42-data-oriented-skill-construction-kit), validate through [§4.7](#47-complete-references-and-validation), including species-specific/Signature (§4.1); no per-kind schema. Replacement is never a patch and follows this section's opening rules. Legacy named examples/evolution counts are retired pending T02/T05/T10.
-- **Identity:** different evolution choices within one species yield different playstyles without new art. Shaped skills retain **one shape/fixed orientation**, except existing rotation permissions; Surges have **at most one, not mandatory, twist**. Non-area skills gain no footprint. Battle rules remain valid; preview the resolved variant normally.
-- **Purchase/logistics:** deliberate shared EP spend, not focused-XP Train/automatic breakthrough reward. Location/day-AP: [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed). EP awards (§7.2/§7.4) remain unvalidated; reversal/transfer/same-skill reselection remain [temp_todo.md](temp_todo.md) T05, not free resets.
-- **Validation:** enforce candidate limits, owning [Surge constraints](#surge-constraints-and-species-access), Kin access (§3) and [§4.7](#47-complete-references-and-validation). Evolution UI offers only passing paths. Unsupported 2×2/spatial cases stay T09; evolution grants no exceptions/air access.
+- **Identity:** different slot-development choices within one species yield different playstyles without new art. Shaped skills retain **one shape/fixed orientation**, except existing rotation permissions; Surges have **at most one, not mandatory, twist**. Non-area skills gain no footprint. Battle rules remain valid; preview the resolved variant normally.
+- **Granting/logistics:** development steps are granted by advancements ([§7.4](#74-monster-progression-the-18-steps)), not bought and not a focused-XP Train reward. Where and when the choice is made, and day AP: [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed). Step supply (§7.2/§7.4) remains unvalidated; reversal/transfer/same-skill reselection remain [temp_todo.md](temp_todo.md) T05, not free resets.
+- **Validation:** enforce candidate limits, owning [Surge constraints](#surge-constraints-and-species-access), Kin access (§3) and [§4.7](#47-complete-references-and-validation). The development UI offers only passing paths. Unsupported 2×2/spatial cases stay T09; slot development grants no exceptions/air access.
 
 ### 4.7 Complete References and Validation
 
@@ -1140,7 +1140,7 @@ Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference
 **Upgrade candidate choices — all DRAFT, not balance approval or unlocks.**
 
 - Patches use the same schema and must pass §4.6.
-- Each offer is an alternative, not automatically cumulative; no level requirements or EP prices are assigned; upgrade limits: [§4.6](#46-slot-levels-development-replacement-and-upgrades).
+- Each offer is an alternative, not automatically cumulative; no level requirements or step prices are assigned; upgrade limits: [§4.6](#46-slot-levels-development-replacement-and-upgrades).
 
 - **Slowing Zone**
   - Same-AP candidate choice: At 1 AP: choose fixed vertical I3 (`offsets: [[0,-1],[0,0],[0,1]]`, orientation vertical), or `persistence.duration: 3` (the +1 total cap); other fields unchanged
@@ -1344,8 +1344,8 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 
 ### 7.1 Skill Development Reference
 
-- **Ownership:** §4.6 exclusively defines permanent slot development, shared EP, pill replacement, patches and AP policy; costing §4.5, model/references §4.2/§4.7.
-- Rarity/progression tables retain working values, not new slot ranks/prices or validated EP awards.
+- **Ownership:** §4.6 exclusively defines permanent slot development, development steps, pill replacement, patches and AP policy; costing §4.5, model/references §4.2/§4.7.
+- Rarity/progression tables retain working values, not new slot ranks/prices or validated step supply.
 
 ### 7.2 Monster Rarity
 
@@ -1355,17 +1355,16 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 |----------------------------------|----------------------------------------------------|-------------------|-------------------|---------------------------------|
 | Base kit                         | 4 slots (active or passive, ≥ 1 active)            | same              | same              | same (+ signature at max stage) |
 | Extra passive slot               | —                                                  | —                 | 1                 | 1                               |
-| Paths offered per evolution      | 2                                                  | 3                 | 3                 | all                             |
-| Evolution points per step        | 1                                                  | 1                 | 2                 | 2                               |
+| Slot-development steps per advancement |                      1                             |         1         |         2         |                2                |
 | Max stage reachable              | Core                                               | Soul              | Immortal          | Sovereign                       |
 
 - "Max stage reachable" is the core axis — the wuxia "noble bloodline" trope, long-term potential over instant power
-- **No stat bonuses from rarity.** Soul+ caps already sit on the absolute scale ([§2.3](#23-stat-ceilings-per-stage)), so rarity buys slots, evolutions and ceiling — never numbers
+- **No stat bonuses from rarity.** Soul+ caps already sit on the absolute scale ([§2.3](#23-stat-ceilings-per-stage)), so rarity buys slots, development steps and ceiling — never numbers
 - **High mechanics are Rare+ territory by design:** Air layer and 2x2 need Soul, TPR 3 needs Soul, the Ancient's Major Surge needs Sovereign.
   - A Normal monster (max Core) has no Soul-tier air/2×2 or TPR-3 access; TPR 2 is already possible from Foundation (§7.4)
 - Rarity does **not** decide the stat shape: any rarity can roll any shape (weighted by Kin lean, §1.1)
-- Shared EP spending, superseded per-skill prices and replacement rules: §4.6. This table supplies only rarity/progression working data, not slot-development prices.
-- Offered counts and EP income in the table are legacy working values, not a validated budget for the shared system.
+- Slot development, superseded per-skill prices and replacement rules: §4.6. This table supplies only rarity/progression working data, not slot-development prices.
+- Step counts in the table are legacy working values, not a validated supply for slot development.
 
 ### 7.3 Rarity Ascension
 
@@ -1384,24 +1383,24 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 | 1 | Qi Gathering Lower| 4                   | full kit (4 slots) · TPR 1 · AP 2 · 1v1                                       | 60                      |
 | 2 | Qi Gathering Middle| 5                  | +1 stat point                                                                                    | 120                     |
 | 3 | Qi Gathering High | 6                   | +1 stat point · breakthrough trial opens                                                         | 200 (+ trial)           |
-| 4 | Foundation Lower  | 10                  | **+4 points** · **evolution step** · +1 learnable skill · TPR 2 · 3v3 / 2v2 · 1 tamer slot       | 150                     |
+| 4 | Foundation Lower  | 10                  | **+4 points** · **slot-development step** · +1 learnable skill · TPR 2 · 3v3 / 2v2 · 1 tamer slot       | 150                     |
 | 5 | Foundation Middle | 11                  | +1 stat point                                                                                    | 300                     |
 | 6 | Foundation High   | 12                  | +1 stat point                                                                                    | 500 (+ trial)           |
-| 7 | Core Formation Lower | 14               | **+2 points** · **evolution step** · +1 learnable skill · AP 3 · 5v5 special · 2nd tamer slot    | 400                     |
+| 7 | Core Formation Lower | 14               | **+2 points** · **slot-development step** · +1 learnable skill · AP 3 · 5v5 special · 2nd tamer slot    | 400                     |
 | 8 | Core Formation Middle | 15              | +1 stat point                                                                                    | 800                     |
 | 9 | Core Formation High | 16                | +1 stat point                                                                                    | 1300 (+ trial)          |
-| 10| Soul Tier Lower   | 18                  | **+2 points** · **evolution step** · +1 learnable skill · air layer, 2x2, TPR 3 · foreign movement mode (§3.3) · Beast Swap     | 1000                    |
+| 10| Soul Tier Lower   | 18                  | **+2 points** · **slot-development step** · +1 learnable skill · air layer, 2x2, TPR 3 · foreign movement mode (§3.3) · Beast Swap     | 1000                    |
 | 11| Soul Tier Middle  | 19                  | +1 stat point                                                                                    | 2000                    |
 | 12| Soul Tier High    | 20                  | +1 stat point                                                                                    | 3200 (+ trial)          |
-| 13| Immortal Lower    | 20                  | no points · **evolution step** · +1 learnable skill · AP 4 (TPR 1 only) · 3rd tamer slot | 2500 |
-| 14| Immortal Middle   | 20                  | +1 evolution step                                                                                | 5000                    |
-| 15| Immortal High     | 20                  | +1 evolution step                                                                                | 8000 (+ trial)          |
-| 16| Sovereign Lower   | 20                  | **evolution step** · AP 5 (TPR 1 only) · Signature skill (Legendary) · Major Surge (Ancient)   | 6000                    |
-| 17| Sovereign Middle  | 20                  | +1 evolution step                                                                                | 12000                   |
-| 18| Sovereign High    | 20                  | +1 evolution step · the end of the table                                                         | —                       |
+| 13| Immortal Lower    | 20                  | no points · **slot-development step** · +1 learnable skill · AP 4 (TPR 1 only) · 3rd tamer slot | 2500 |
+| 14| Immortal Middle   | 20                  | +1 slot-development step                                                                                | 5000                    |
+| 15| Immortal High     | 20                  | +1 slot-development step                                                                                | 8000 (+ trial)          |
+| 16| Sovereign Lower   | 20                  | **slot-development step** · AP 5 (TPR 1 only) · Signature skill (Legendary) · Major Surge (Ancient)   | 6000                    |
+| 17| Sovereign Middle  | 20                  | +1 slot-development step                                                                                | 12000                   |
+| 18| Sovereign High    | 20                  | +1 slot-development step · the end of the table                                                         | —                       |
 
-- **Evolution step** = the monster earns the EP of its rarity (§7.2): 1 for Normal / Rare, 2 for Epic / Legendary.
-  - Normal reaches Core (steps 4 and 7: only 2 EP under the old supply, which must be reviewed for shared slot/physical evolution), Rare reaches Soul (3 steps), Epic Immortal, Legendary Sovereign.
+- **Slot-development step** = the monster may develop one skill slot (§4.6): 1 step for Normal / Rare, 2 for Epic / Legendary (§7.2).
+  - Normal reaches Core (steps 4 and 7: only 2 development steps in total, to be reviewed under T05), Rare reaches Soul (3 steps), Epic Immortal, Legendary Sovereign.
   - Immortal and Sovereign give choices instead of numbers
 - **Learnable skills:** the species list grows with the stages (4 defaults + 1 per breakthrough from Foundation to Immortal = 8). Kit access and replacement/development rules: §4.1/§4.6
 - **Why not points at Immortal / Sovereign:** the stat ceilings and the damage law are reached; more points would only be number inflation (pillar 1)

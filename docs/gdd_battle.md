@@ -98,7 +98,7 @@ Entry effects apply when a monster enters a square, including by push / pull.
 
 ## 3. Monsters in Battle
 
-Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, Strikes, kits, passives, roster, evolution): [gdd_monsters.md](gdd_monsters.md); loadout integration: [§5.2](#52-tamer-skills-and-battle-loadout).
+Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, Strikes, kits, passives, roster, progression): [gdd_monsters.md](gdd_monsters.md); loadout integration: [§5.2](#52-tamer-skills-and-battle-loadout).
 
 ### 3.1 Effective Stats
 
