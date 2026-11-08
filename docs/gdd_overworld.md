@@ -442,7 +442,7 @@ A monster that falls in battle is **Injured**, not dead:
 - It is **not usable for 2 nights** (resting in the Internal World). A **Recovery Spring** halves that (rounded up), a **Revival pill** ends it at once
 - Sub-tier, stat points and evolutions are never lost
 - **Arena** fights never injure
-- **Deadly dungeons** *(optional, marked at the Teleport Array)* give better loot, but a defeated monster there is **lost for good** unless protected: by the pill **Soul Tether** (one monster) or the tamer skill **Life Thread** (proposal; effect in [§6.4](#64-tamer-skills), interaction unresolved under T20/T23). This keeps death as a real stake without making every run a risk of losing a favourite
+- **Deadly dungeons** *(optional, marked at the Teleport Array)* give better loot, but a defeated monster there is **lost for good** unless protected: by the pill **Soul Tether** (one monster) or the proposed tamer skill that prevents an own monster from falling (effect in [§6.4](#64-tamer-skills), interaction unresolved under T20/T23). This keeps death as a real stake without making every run a risk of losing a favourite
 
 ---
 
@@ -478,7 +478,7 @@ The starting kit and legal access are defined in **gdd_monsters §4.1**; this ta
 | Qi Gathering   | full kit (4 slots) · TPR 1 · AP 2                                  | holds 1 monster · **1v1** (5×5)                                                        |
 | Foundation     | physical evolution access · TPR 2 possible                               | holds 3+ monsters · **3v3** (7×7, standard) · **2v2** (6×6) · 1 tamer slot             |
 | Core Formation | physical Size path · AP 3 · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer slot · **5v5** special battles |
-| Soul Tier      | Air layer access (Winged) · 2x2 size · TPR 3 possible · one foreign movement mode                | mid-battle **Beast Swap** from the spatial space                                       |
+| Soul Tier      | Air layer access (Winged) · 2x2 size · TPR 3 possible · one foreign movement mode                | mid-battle **Beast Swap** access ([§6.4](#64-tamer-skills))                                       |
 | Immortal       | Dual-aspect unlock removed; no replacement mechanic confirmed (T34 completed)             | 3rd tamer slot                                                                         |
 | Sovereign      | Signature / Major Surge access: gdd_monsters §4.1 / §7.4; Ancient-only vs Legendary wording remains open (T02/T32) | full spatial arsenal                                                                   |
 
@@ -514,7 +514,7 @@ Slot development is separate from breakthrough rewards ([§6.3.2](#632-permanent
 
 Tamer skills are **learned over the game** and **chosen before each battle** into the player's **tamer slots**. How they work in a fight: gdd_battle §5.2. Rows marked *proposal* are new.
 
-**Shared effect/schema contract, separate source:** concrete tamer definitions reference the effect contracts in [gdd_monsters §4.4](gdd_monsters.md#44-effect-and-board-operation-contracts), the shared data model in [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit) and validation in [§4.7](gdd_monsters.md#47-complete-references-and-validation), while retaining their explicit tamer-source permissions, unlocks, loadout and usage rules here / in gdd_battle §5.2. The table summarizes effects, not complete executable definitions. Monster-profile permissions, species/Kin access, slot EP and monster-action AP prices do not transfer to tamers. Conversely, Spirit Shield, Spatial Pull, Domain Glimpse or proposed Second Wind do not authorize equivalent monster effects. Source-contract completion and validation remain [T19/T20](temp_todo.md); unspecified details have no implicit defaults.
+**Shared effect/schema contract, separate source:** concrete tamer definitions reference the effect contracts in [gdd_monsters §4.4](gdd_monsters.md#44-effect-and-board-operation-contracts), the shared data model in [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit) and validation in [§4.7](gdd_monsters.md#47-complete-references-and-validation), while retaining their explicit tamer-source permissions, unlocks, loadout and usage rules here / in gdd_battle §5.2. The table summarizes effects, not complete executable definitions. Monster-profile permissions, species/Kin access, slot EP and monster-action AP prices do not transfer to tamers. Conversely, the table's tamer-source permissions for Surge-damage prevention, own-monster repositioning, zone clearing with ground reset or proposed direct healing do not authorize equivalent monster effects. Source-contract completion and validation remain [T19/T20](temp_todo.md); unspecified details have no implicit defaults.
 
 |      Skill      | Stage |                                  Effect                                  |  Kind  |
 |-----------------|-------|--------------------------------------------------------------------------|--------|
@@ -561,7 +561,7 @@ Pills connect progression, expedition supplies and the Producer economy. The [§
 | Reshape Elixir | rare ritual input: [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups) |
 | Medicine *(planned)* | consumed in battle through the loadout; effects and item-kind treatment unresolved (T18/T19) |
 
-**Unresolved healing scope (T22):** the legacy claim that a healing pill is the *only* HP restoration in a run conflicts with combat healing such as Mend/Mossbed, healing passives and proposed Second Wind. Whether the restriction means only between battles or the entire run is undecided; neither interpretation is adopted here.
+**Unresolved healing scope (T22):** the legacy claim that a healing pill is the *only* HP restoration in a run conflicts with monster combat-healing effects ([effect contracts](gdd_monsters.md#44-effect-and-board-operation-contracts)), healing passives ([Passives Library](gdd_monsters.md#5-passives)) and the proposed direct-healing tamer skill ([§6.4](#64-tamer-skills)). Whether the restriction means only between battles or the entire run is undecided; neither interpretation is adopted here.
 
 Healing pills create the **dungeon attrition loop**: HP persists between fights in an expedition → pills are logistics → deeper floors need better supply → feeds Producer. A battle always *starts* at the monster's current HP (never above its max).
 
@@ -572,7 +572,7 @@ Healing pills create the **dungeon attrition loop**: HP persists between fights 
 |       Wearer       |          Slots          |                                                                    Effects                                                                     |
 |--------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Monster**        | 1 (2nd at Epic+ rarity) | extra passive OR +1 to one stat, **never above stage caps**                                                                                    |
-| **Player (tamer)** | 2–3                     | tamer skill range / numeric-effect mods up to +1 (e.g. Spatial Pull range, Qi Suppression −3 instead of −2 — never extra uses), +1 day AP once/day, +spatial capacity, dungeon utility |
+| **Player (tamer)** | 2–3                     | tamer skill range / numeric-effect mods up to +1 (e.g. range of the own-monster repositioning skill, enemy initiative penalty −3 instead of −2; source skills in [§6.4](#64-tamer-skills), not blanket permission for other skills or effects; never extra uses), +1 day AP once/day, +spatial capacity, dungeon utility |
 
 **Unresolved slot access (T17):** the table ties the second monster artifact slot to Epic+; §6.3 additionally places it at Core. Tamer slot count and unlock timing remain undecided. Neither draft supersedes the other. [§6.9](#69-hard-caps) owns stat/damage limits.
 

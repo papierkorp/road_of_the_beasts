@@ -28,6 +28,7 @@ Road of the Beasts ist ein Spiel mit deterministischen, rundenbasierten Monsterk
 - Bedingungen, Einheiten, Kosten, Grenzen und Auflösungsreihenfolgen eindeutig benennen. Insbesondere Battle-AP, Tages-AP, Konstruktionspunkte, Schaden und EP nicht vermischen.
 - Status sichtbar unterscheiden: beschlossen, Arbeitsentwurf und noch nicht validiert. Nicht jede Aussage mit wiederholten Warntexten überladen; Status am zusammengehörigen Abschnitt oder an der Tabelle kennzeichnen.
 - Jede Regel, Formel, Preisliste und Datenstruktur hat genau einen zuständigen Abschnitt. Andere Stellen verlinken dorthin und beschreiben nur ihre eigene Schnittstelle, statt die Spezifikation zu kopieren.
+- Allgemeine Regeln und Kostenkomponenten mit präzisen Effekt- oder Skillklassen beschreiben, nicht mit wiederholten Listen konkreter Skillnamen. Konkrete Skills und ihre Ausnahmen einmal zentral definieren; Namen außerhalb davon nur für notwendige Inhaltsreferenzen, klar abgegrenzte Referenzrechnungen oder konkrete offene Aufgaben verwenden. Beim Verallgemeinern keine skillgebundene Ausnahme auf eine ganze Skillklasse übertragen.
 - Menschenlesbare Tabellen und strukturierte Beispiele dürfen keine voneinander unabhängigen Regelversionen bilden. Beispiele müssen aus den zentralen Regeln folgen.
 - Stabile, aussagekräftige Überschriften und relative Markdown-Links verwenden. Nach Verschiebungen betroffene Links und Abschnittsverweise aktualisieren.
 

@@ -40,7 +40,7 @@ This handoff supersedes earlier conversation histories and calculation checks. T
 ### Latest Decisions — Resume Here
 
 1. **Combination surcharges are removed entirely**, including within a skill. Total price = actual mechanical components + AP efficiency or passive availability. Do not reintroduce previously added synergy surcharges. Existing `combination_cost` fields remain 0. Still test interactions; if problems arise, review the responsible components/rules.
-2. **“Residue” means the ground change after Surge execution**, not props. Eruption → Lava I, Flood → Thornbed I, Rift → Blight I, with existing height/prop exceptions. This ground effect belongs to the concrete profiles; the general Surge lifecycle does not automatically require it. The residue-free reference does not replace these profiles.
+2. **“Residue” means the ground change after Surge execution**, not props. The [concrete profile definitions](gdd_monsters.md#surge) specify the resulting ground and height/prop exceptions. This ground effect belongs to those profiles; the general Surge lifecycle does not automatically require it. The residue-free reference does not replace these profiles.
 3. **Usable basic Surges, including their intended ground effect, should be possible at 1 Battle-AP.** Do not raise everything to 2 AP: movement already costs 2, and the initial AP stat is 2; that would impoverish action choices.
 4. Delayed Surge hazard residue now has an **agent-drafted price of 1 construction point/square**, rather than 4 for immediate hazard placement. No further 50% discount, second cast anchor or second AP-efficiency charge. The user approved the direction “cheaper, no combination costs”, **not this exact individual price separately**.
 
@@ -54,41 +54,35 @@ Complete prices/assumptions belong exclusively in [Monsters §4.5](gdd_monsters.
 |------|---------------|
 | Strikes | 11 shapes × 6 Kins tabulated; Spirit/Swarm/Ancient each +2 per potential hit square. Swarm/Ancient are especially provisional pending the prop/height revision. |
 | Movement | Fixed profile prices rather than per square travelled: Run 6, Leap/Glide/Burrow 8, Phase 7, Blink 10; each adds +6 AP efficiency at 2 Battle-AP. Swim is planned (7 + assumed 6); Step is slot-free/outside the skill budget. No free flag upgrades. |
-| Self/Passive | Focus 8 + 12 = 20; Adaptive 6 + 12 availability = 18. Focus remains a content draft; passive availability initially applies only to a self-bound continuous boolean permission, not all passives. |
-| Zones/Protection/Healing | Rates for stat modifiers, Push/Pull, Veil and Mend; normal AP-paid levelling/refresh is included in base rates. This does not decide allowed values/caps/healing triggers. |
-| Ground/Board | Package prices for permanent hazard/blessed ground, Raise Ground/Collapse and provisional props/Relocate. Do not charge permanent effects again as immediate damage/zones. Additional Cleanse sources are price placeholders only, not approval. |
+| Self/Passive | Self-bound initiative modifier and equipped rotation-permission references are costed centrally. Both remain drafts; passive availability initially covers a continuous self-bound boolean permission, not all passives. |
+| Zones/Protection/Healing | Rates for stat modifiers, displacement, zone-based Surge reduction and healing; normal AP-paid levelling/refresh is included in base rates. This does not decide allowed values/caps/healing triggers. |
+| Ground/Board | Package prices for permanent hazard/blessed ground, coupled height/reset, collapse and provisional prop creation/relocation. Do not charge permanent effects again as immediate damage/zones. Additional Cleanse sources are price placeholders only, not approval. |
 
-All six reference cases have initial calculations: **Beast Jab 14, Slow zone 23, residue-free Surge 24, Run 12, Focus 20, Adaptive 18**. No complete three-level development paths or content/balance approval.
+All six [central reference cases](gdd_monsters.md#47-complete-references-and-validation) have initial calculations. No complete three-level development paths or content/balance approval.
 
 ### Current Cross-check and Remaining Conflicts
 
-| Example | Points | Implication |
-|---------|--------|-------------|
-| Structural Surge: 2 squares, 3 damage, hazard residue, 1 AP | 23 | 6 damage cost + 2 residue + 1 marker + 2 anchor + 12 AP efficiency |
-| Same structural draft with 3 squares, 1 AP | 27 | 9 + 3 + 1 + 2 + 12; still above base budget 24 |
-| Veil / Quicken 1: 2 squares, 2 rounds, 1 AP | 22 | Small base candidates are arithmetically possible; no new footprints approved |
-| Mend 1: 2 squares, 2 rounds, 1 AP | 26 | Healing rules and base costs still need alignment |
-| Long Whirl / Long Cross as Beast at 5 AP | 42 | Largest legacy Strikes do not fit within 36; AP efficiency is already 0, so raising AP does not help |
+The [scoped 1-AP Surge comparison](gdd_monsters.md#basic-surge-profile-cross-check) includes the displacement-bearing profile's test price. It is not a complete-profile approval: special prop reactions and the collapse/ground final-state contract remain unresolved. The scoped two-cell displacement conflict is resolved by a designer price proposal, not user-selected balance or permission for other sources. The height-capable subset still exceeds the base ceiling; all three-cell subtotals exceed it. The table does not approve two-cell-only basic skills.
 
-**Not a complete Eruption/Flood/Rift evaluation:** the Surge examples above do not include special push, height or prop effects. Small base candidates are a recommendation, not a decision that “all basic skills use only two squares”. Do not hide price/budget changes merely to obtain a fitting result.
+Small support zones, healing and the largest legacy Strikes also retain the calibration conflicts documented in [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency). Do not hide price/budget changes merely to obtain a fitting result.
 
 ### Next Agent: Concrete Gameplay Assignment
 
 - First read this handoff and [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency); consult [§4.3](gdd_monsters.md#43-skill-execution-profiles)/[§4.4](gdd_monsters.md#44-effect-and-board-operation-contracts)/[§4.7](gdd_monsters.md#47-complete-references-and-validation) as needed. **Do not reopen** budget/AP/damage principles, props or removed combination costs as fundamental choices.
-- **First round off the latest Surge work:** calculate basic Eruption/Flood/Rift, including intended ground effects and existing additional mechanics, as a compact cross-check at **1 AP**. Identify remaining conflicts, especially Flood push/Rift height break; do not invent missing resolution rules. The exact residue price remains a test draft.
+- **First clarify the collapse/ground final-state contract with the user (T04 below).** Do not treat the conditional-cost draft as a runtime decision. Then reconcile the remaining height-capable Surge budget conflict and special prop-reaction valuation without advancing the full prop redesign. The profile-specific delayed-push test rate needs interaction validation, not another automatic timing discount. Damage/ground/displacement and collapse/residue ordering remain T04/T07; preserve damage/AP/budgets.
 - Then draft a few complete **same-AP development paths**: Run, a simple zone, Surge with intended ground effects, and Jab. Check budget limits, meaningful improvements and allowed patches. Jab needs meaningful development without damage/AP/range upgrades. Present unsolved legacy conflicts clearly for a decision rather than bypassing fundamental principles.
 - Only afterwards draft shared EP awards/costs for physical and slot development (T05). Do not mark T02 complete before full calculation/contract review; T13 requires actual tests.
 
 ### Keep Open / Validation Status
 
 - **Fundamentally revise props later (T04):** the concrete impact × prop determines destructibility and reaction; splinters/falls can cause visible damage, and a tree can split or burn differently. Initially use falling effects plus ground/visual residue, not movable tree halves. Everything must be deterministically predictable. [Battle §4.9](gdd_battle.md#49-props) contains this direction; old blanket Shatter rules are interim only. Do not bring the detailed discussion forward.
-- Effect caps/stacking/refresh across sources, death/removal, passive triggers/frequency/recursion, Focus refresh/content values, protection consumption, Flood/Tail Sweep order, Pull ties, collision, target loss, air/2×2 and Major/Signature access remain domain tasks. Price placeholders resolve none of them.
+- Effect caps/stacking/refresh across sources, death/removal, passive triggers/frequency/recursion, self-modifier refresh/content values, protection consumption, combined damage/displacement order, Pull ties, collision, target loss, air/2×2 and Major/Signature access remain domain tasks. Price placeholders resolve none of them.
 - EP amounts/unlocks, passive slot development/active-passive replacement, same-skill respec, EP refunds/transfers, relearning pill recipe/price and day-AP remain open; the old Normal award yields only 2 EP in total and is unverified.
 - Documentation only. Calculation sums (including 66 Strike totals and movement/buff/residue examples) and `git diff --check` were checked in earlier work; no engine/balance playtests. The earlier prototype does not automatically implement the current GDD state.
 
 ### Editorial Progress — Gameplay Sequence Unchanged
 
-- The approved editorial cleanup is complete: documentation is English, topic ownership and reference examples are consolidated, and historical/provisional status is explicit. The three GDD changelogs and manual GDD version/synchronization headers are removed. Their removal required no transfer of current rules; applicable information was already present in the owning sections. Necessary prototype comparisons remain explicitly historical.
+- The current editorial direction is to use precise effect/skill classes in general rules, not repeated named-skill examples. Specific profiles, necessary content references and scoped reference calculations retain names; source-specific permissions remain unchanged. Documentation is English, topic ownership and reference examples are consolidated, and historical/provisional status is explicit. The three GDD changelogs and manual GDD version/synchronization headers are removed. Their removal required no transfer of current rules; applicable information was already present in the owning sections. Necessary prototype comparisons remain explicitly historical.
 - Change tracking uses Git history, not this handoff or a separate changelog. Keep this handoff current. The Ambitious Standing comparison remains unresolved under T26; no editorial cleanup selects a design variant.
 - T35 remains open for ongoing synchronization and the eventual implementation-plan update. Existing decisions, working values, task IDs/checkmarks and dependencies are unchanged. Resume gameplay work in the same order: Surge cross-checks → same-AP development paths → shared EP economy. Editorial completion is not completion of T02/T05/T13 or gameplay/balance validation.
 
@@ -110,13 +104,13 @@ All six reference cases have initial calculations: **Beast Jab 14, Slow zone 23,
 - Shared model for all monster skills, central profiles/contracts and six references; no parallel skill sources or custom special structures. Designer-authored skills/upgrade choices instead of player construction.
 - Shared budget ceilings 24/30/36, AP efficiency 12/6/3/1/0, damage factor 2 and 50% exclusively for telegraphed, avoidable Surge damage as selected working drafts. **No combination surcharges.**
 - Draft tables for all Strikes/movement profiles, self/passive, zones/protection/healing and ground/board. Six references with initial totals, not yet full content/balance validation. Maintain prices only in [Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency), not duplicated here.
-- Surge residue = delayed ground change; Eruption/Flood/Rift retain their intended ground types. New designer test price of 1 point/square for delayed hazard residue (immediate Field 4/square); basic Surges should be possible at 1 AP including ground effects.
+- Surge residue = delayed ground change; concrete profiles retain their authored ground types. New designer test price of 1 point/square for delayed hazard residue (immediate Field 4/square); basic Surges should be possible at 1 AP including ground effects.
 
 **Still to do:**
-- Complete 1-AP cross-check for Eruption/Flood/Rift including additional mechanics; assign missing rules to T04/T07/T09, with no implicit defaults. The small structural cross-check fits within 24 at two squares; three squares cost 27. This is not automatic skill approval.
+- Complete the scoped [1-AP Surge comparison](gdd_monsters.md#basic-surge-profile-cross-check): the profile-specific delayed-push test rate resolves the scoped two-cell displacement conflict, pending validation. Conditional-outcome costing is drafted, but the height-changing profile needs an explicit collapse/ground final-state decision (T04) before applying it; its priced subset remains over the base ceiling. Special prop reactions remain unpriced; runtime order stays T04/T07 and unsupported spatial cases T09. No implicit defaults or automatic skill approval.
 - Resolve budget conflicts for large Strikes, healing and complex Surges specifically, without automatically changing budgets/AP/damage or introducing separate skill-type pools. No double-charging for area/flags/sources.
 - Draft complete development paths at original AP, especially Jab; larger shapes retain existing AP until a new decision. No direct damage, AP-reduction or cast-range upgrades. Then T05/EP.
-- Complete missing footprints/anchors/orientations, visibility/target validity, effect values/caps, triggers/end conditions and interaction order. Explicitly define self/passive stacking, source groups, death/removal and repetition/recursion. Focus remains a draft; no new mechanic is authorized solely by a schema field.
+- Complete missing footprints/anchors/orientations, visibility/target validity, effect values/caps, triggers/end conditions and interaction order. Explicitly define self/passive stacking, source groups, death/removal and repetition/recursion. The self-buff reference remains a draft; no new mechanic is authorized solely by a schema field.
 - Review combinations and repetition as balance/contract questions, **not as an additional price category**. Include props, healing, air and 2×2 under T04/T07–T09. Validate numbers only through suitable tests; T13 remains open.
 
 ### [ ] T03 · Review Stat Budgets, Frames and Progression Limits (V/K)
@@ -132,9 +126,9 @@ All six reference cases have initial calculations: **Beast Jab 14, Slow zone 23,
 **Prerequisites:** T01, T02.
 **Sources:** Battle [§2.2](gdd_battle.md#22-initiative-rules), [§4.1](gdd_battle.md#41-battlefield-generation), [§4.4](gdd_battle.md#44-square-data-model), [§4.8](gdd_battle.md#48-no-attunement), [§4.10](gdd_battle.md#410-damage-shatter--prop-types), [§6.1](gdd_battle.md#61-the-damage-law)–[§6.3](gdd_battle.md#63-collision-fall--debris); [Monsters §5](gdd_monsters.md#5-passives).
 - Collision: the damage law includes monster collisions, but the detailed rule says no damage. Cross-check Crashlander. Check Shockwave's existing +1 collision bonus against the fixed event-damage law; no exception has been approved.
-- Define the resolution order for Flood damage/residue/push and Tail Sweep damage/push; explicitly define Pull ties and behaviour when the anchor is already occupied.
-- Protection sources: define stacking, order and consumption when damage is reduced to 0; distinguish Ward, Veil and Hallowed. Coordinate tamer exceptions with T20.
-- Combined board operations: define the order of Collapse, Debris, Residue and Cleanse; specify Relocate distance, path, legal targets and reactions. Do not derive free defaults from data-field order.
+- Define the resolution order for Surge damage/residue/displacement and Strike damage/displacement; explicitly define Pull ties and behaviour when the anchor is already occupied. Preserve each source's explicit permissions.
+- Protection sources: define stacking, order and consumption when damage is reduced to 0; distinguish passive-, zone- and ground-based protection sources without transferring permissions between them. Coordinate tamer exceptions with T20.
+- Combined board operations: define the order of Collapse, Debris, Residue and Cleanse. For Rift on Elevated, explicitly decide whether collapse leaves Rubble or subsequent Blight replaces it; current wording does not establish mutually exclusive outcomes. Specify Relocate distance, path, legal targets and reactions. Do not derive free defaults from data-field order.
 - T01 removes the Attunement/Elevated conflict; check remaining combinations of height and concrete ground types.
 - Zone values without Attunement: keep hard caps for Slow (2) and Push/Pull (1) consistent with level scaling.
 - **Prop revision:** shared impact/reaction contracts; define broadly destructible props and concrete exceptions/resistances. Destruction type determines splinter/fall effects and residue instead of identical Shatter every time. A tree may split; initially use falling effects plus ground/visual residue, not separately movable halves. Predict fall direction, hit squares, damage and resulting state deterministically. Impact categories, prop catalogue, HP/damage matrix, chain reactions and event order remain open. Existing numbers are interim, with no new blanket hit permissions. For pricing, ordinary prop damage is provisionally a shared baseline without surcharge ([Monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency)); review special advantages and costs after the redesign.
@@ -170,7 +164,7 @@ All six reference cases have initial calculations: **Beast Jab 14, Slow zone 23,
 ### [ ] T07 · Align Ground Interactions and Healing (D/V)
 **Prerequisites:** T01, T02, T04.
 **Sources:** Battle [§4.6](gdd_battle.md#46-zones-effects-rules--opposites)–[§4.8](gdd_battle.md#48-no-attunement); Monsters [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit), [§4.4](gdd_monsters.md#44-effect-and-board-operation-contracts)–[§4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency).
-- Permanent residue: does the board fill too quickly, making Rift/Blight overpowered?
+- Permanent residue: does the board fill too quickly, making start-turn hazard placement overpowered?
 - Measure hazard coverage on 7×7 by round 5. If needed, examine Field at 2 AP or a maximum of N Field squares per monster as alternatives.
 - Without the triangle, define whether and how zones change existing ground; do not infer automatic superiority from monster themes.
 - T01 removes Attunement and painting snowball. Instead review counters to permanent hazard ground and their accessibility.
@@ -203,7 +197,7 @@ All six reference cases have initial calculations: **Beast Jab 14, Slow zone 23,
 - Define learnable skills (current target roughly 8) and available passives for each species: distinguish species binding from individual binding; free themes are not an additional learning restriction. Revise or remove formerly aspect-dependent passives.
 - The nine reference monsters currently have four active skills plus passives; reduce to four shared slots and handle the Epic+ additional slot separately.
 - Give every species a Species Twist instead of the shared placeholder, plus a concrete Strike shape and fixed Surge orientation.
-- Check descriptions such as “weak Flood”/“weaker Rift” against current damage and AP rules.
+- Check roster descriptions of weaker Surge variants against current damage and AP rules; descriptive wording grants no damage exception.
 
 ### [ ] T12 · Select the Launch Roster (D)
 **Prerequisites:** T11.
@@ -220,8 +214,8 @@ All six reference cases have initial calculations: **Beast Jab 14, Slow zone 23,
 - Residue: do Surges indirectly hit even when dodged, or force meaningful routes?
 - Readable combos: Current → Surge/Lava, Pull → Strike; check Pull anchors and push direction.
 - Strike from 2 AP: worthwhile or unused, melee too sticky?
-- Check no-cooldown spam and Double Veil (2 AP → level II, Shield 3). Fallback: level-up only once per turn and square.
-- Test Veil Shield 2, level/Attunement and Surge 3 for genuine counters. Attunement is a historical test reference, removed by T01; do not reintroduce it.
+- Check no-cooldown spam and repeated protection-zone casting (2 AP → level II, Shield 3). Fallback: level-up only once per turn and square.
+- Test zone-based Surge reduction 2, level/Attunement and Surge damage 3 for genuine counters. Attunement is a historical test reference, removed by T01; do not reintroduce it.
 - Check movement prices, Step-only viability and Movement cap 5.
 - Three Surge types against Elevated; props as tactical resources rather than obstacles.
 - 3v3/7×7: readability, round count, Collapse share and starting distances; test Reach 4 + Elevated = 5 against the promise of a safe opening.

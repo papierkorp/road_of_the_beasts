@@ -28,7 +28,7 @@ Modes follow the team size the player can field: 1v1 from the start, **3v3 and 2
 2. **Deterministic & readable** — before confirming, the player sees exactly which squares a cast takes, levels up, cancels, replaces or loses, what it does to ground and props, and where every pushed monster lands
 3. **Everything reacts, nothing deletes** — no delete button. Zone overlaps resolve by definition and opposite effects under [§4.6](#46-zones-effects-rules--opposites): opposite levels subtract, cancelling at equal levels. Concrete skill effects change ground and trigger prop reactions. Zone × ground has an unresolved contract ([temp_todo.md](temp_todo.md), T07). These are small, data-driven rules
 4. **The Surge is the burst** — big damage (3+) only comes from a declared, charging, autonomous Surge. Small damage comes from Strikes (max 2), hazard ground (max 2 per trigger), collisions, falls and debris (1). Zones never deal damage themselves
-5. **Every threat has a real answer** — leave, put a Veil over it, change the ground under it, pick the right height for that Surge type, block with props, answer with your own Surge
+5. **Every threat has a real answer** — leave, apply zone-based Surge damage reduction, change the ground under it, pick the right height for that Surge type, block with props, answer with your own Surge
 6. **Options, not luck** — fully deterministic and fully visible. Variety comes from many meaningful choices per turn (where to stand, which threat to create, which reaction to trigger), never from dice or hidden information
 7. **Low HP, high stakes** — one mistake can be fatal
 8. **Dynamic battlefields** — ground and props are resources; squares remember explicit board changes; Surges rewrite them only when their definition includes such effects
@@ -70,17 +70,17 @@ Modes follow the team size the player can field: 1v1 from the start, **3v3 and 2
 
 **Central generic timing reference.** Source-specific triggers come from the resolved definition; this table defines their integration into the battle schedule, not new source permissions.
 
-|    Trigger    |                          When                         |                                                         Examples                                                        |
+|    Trigger    |                          When                         |                                                         Effects / events                                                        |
 |---------------|-------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
 | on_timer      | start of the caster's next turn, before anything else | Surge detonation                                                                                                        |
-| start_of_turn | beginning of the occupant's turn                      | Voidscar, Blight                                                                                                        |
-| on_enter      | a monster enters the square (move, push, pull)        | Thornbed, Mossbed                                                                                                       |
-| while_inside  | continuous modifier or source availability             | slow, haste, drain_init, quicken, drain_range, extend; Shrine / Sigil; Hearth, Umbra; Veil protection is available while inside and applies on Surge damage |
-| end_of_turn   | end of the occupant's turn                            | 1. push / pull → 2. Lava (on the landing square) → 3. `mend`                                                            |
+| start_of_turn | beginning of the occupant's turn                      | start-turn ground damage (§4.7)                                                                                                        |
+| on_enter      | a monster enters the square (move, push, pull)        | entry-triggered ground damage or healing (§4.7)                                                                                                       |
+| while_inside  | continuous modifier or source availability             | Movement, initiative and Reach modifiers; zone-based Surge damage reduction is available while inside and applies on Surge damage |
+| end_of_turn   | end of the occupant's turn                            | 1. push / pull → 2. end-turn ground damage (on the landing square) → 3. `mend`                                                            |
 | round end     | after the last turn of the round                      | zones −1 round (expired zones are removed), burning props burn down, late-round Voidscar spreads, initiative re-sorted |
 | immediate / event-derived | on authored execution or the triggering event | Strike on use; collision / fall on impact; debris on shatter |
 
-Order inside a turn: due Surges (damage → explicitly authored residue, if present, under the [central profile](gdd_monsters.md#surge)) → start effects → AP → end effects (displacement, then Lava, then `mend`). Entry effects apply when a monster enters a square, including by push / pull.
+Order inside a turn: due Surges (damage → explicitly authored residue, if present, under the [central profile](gdd_monsters.md#surge)) → start effects → AP → end effects (displacement, then end-turn ground damage, then `mend`). Entry effects apply when a monster enters a square, including by push / pull.
 
 **Unresolved scheduling contract:** exceptional Surge queue timing and combined-event ordering remain open ([temp_todo.md](temp_todo.md), T04); the sequence above does not settle those cases. Source-specific activation windows for tamer/loadout effects remain T19/T20.
 
@@ -145,7 +145,7 @@ From a set round on, the square farthest from all living monsters converts to **
 **Rules:**
 - all layers can be active at once · **1 object, 1 pending Surge, 1 zone, 1 ground type** per square
 - zones may be placed on prop squares — the zone affects the prop only through the reaction table ([§4.11](#411-prop-reactions)); **Solid** props prevent monster occupancy, while **Field** props are enterable ([§4.9](#49-props))
-- Field and Raise Ground placement requires prop-free squares, subject to explicit prop reactions in [§4.11](#411-prop-reactions). Blocking flags are profile-scoped, not a universal empty-square test ([gdd_monsters §4.2](gdd_monsters.md#interaction-fields))
+- The existing immediate hazard-ground placement profile and the coupled height/reset operation (§4.7) require prop-free squares, subject to explicit prop reactions in [§4.11](#411-prop-reactions). These requirements remain source-specific under the [board-operation contracts](gdd_monsters.md#44-effect-and-board-operation-contracts). Blocking flags are profile-scoped, not a universal empty-square test ([gdd_monsters §4.2](gdd_monsters.md#interaction-fields))
 - a pending Surge may land on props and normally blocks voluntary movement; path blocking and landing legality depend on the resolved [movement profile](gdd_monsters.md#movement). Displacement (push / pull) **can** move monsters into its squares
 - **zones = what you do to a square for a while; ground = what the board remembers**
 
@@ -184,7 +184,7 @@ This state stores the zone level, not independent effect values. Runtime values 
 |----------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | **Zone** | the resolved skill's duration; ticking follows [§2.4](#24-effect-timing-reference) | on expiry the zone is removed; no repaint. Authoring and upgrades: [gdd_monsters chapter 4](gdd_monsters.md#4-skills) |
 | **Pending Surge** | scheduler integration: [§2.4](#24-effect-timing-reference) | charge, removal and authored aftermath follow the [central Surge profile](gdd_monsters.md#surge) |
-| **Ground**           | none — stays until changed | changed by Raise Ground, a new ground, Surge residue, shattered props, debris, Voidscar; former triangle-based zone interaction unresolved (§4.6, T07) |
+| **Ground**           | none — stays until changed | changed by authorized ground replacement/reset, authored Surge residue, shattered props, debris or Voidscar spread; source restrictions and Voidscar immunity apply (§4.7); former triangle-based zone interaction unresolved (§4.6, T07) |
 
 **Board persistence principle:** zones have a duration, pending Surges a detonation timer, and ground has no expiry clock. A Voidscar doesn't fade and neither does Lava; ground goes away because something changes it, subject to its exceptions. Effects belonging to one zone share that zone's clock; this does not prohibit separately authored status lifetimes.
 
@@ -248,7 +248,7 @@ Resolution examples by effect, not retired skill names: equal-level `(slow, pull
 - All ground is **permanent**: it stays until something changes it (§4.5)
 - **Same type** on the square → hazards +1 level (max II), blessed ground stays as it is
 - **Different type** → the new ground **replaces** the old one under the applicable ground/source rules; this is not automatic conversion by a skill name or theme
-- **Raise Ground** cleanses any ground except Voidscar → Plain, also Lava already on the square
+- **Coupled height/reset operation (Raise Ground):** raises the square to Elevated and resets its ground to Plain, including existing Lava but excluding Voidscar. This coupling belongs only to that source's [board-operation contract](gdd_monsters.md#44-effect-and-board-operation-contracts); changing height alone does not authorize a ground reset
 - Placing ground beneath an occupant is not entry; entry triggers occur when the occupant enters the square. Mossbed re-entry/healing limits remain central T07
 - Blessed ground works for **everyone** on it, like a zone: an enemy can use your Mossbed too
 - Damage from ground is capped at 2 per trigger; one ground per square, so hazards never stack
@@ -279,7 +279,7 @@ FLYING  → air layer only (later, with the air layer at Soul+)
 |------------|----|----------------|------------------------------------------------------------------------------------------------------------------------------------|
 | Wall       | 2  | brittle        | shatters into debris; explicit crumble effects damage it (§4.11)                                                                                             |
 | Tree       | 2  | flammable      | burns (§4.11)                                                                                                                      |
-| Rock       | 3  | heavy          | can't be moved (Relocate, Flood Surge); survives one Surge at 1 HP                                                                       |
+| Rock       | 3  | heavy          | cannot be moved; survives one ordinary 2-damage Surge hit at 1 HP; damage exemptions follow the [execution profiles](gdd_monsters.md#43-skill-execution-profiles) |
 | Pillar     | —  | indestructible | anchor (rare), nothing removes it                                                                                                  |
 | **Shrine** | 2  | solid, effect  | monsters orthogonally adjacent to it get `quicken 1` (initiative +1) — creation requires an authored prop source |
 | **Sigil**  | 1  | field, effect  | the monster standing on it gets `extend 1` (Reach +1) — creation requires an authored prop source; destroyed by any Surge or Strike on it |
@@ -288,14 +288,16 @@ FLYING  → air layer only (later, with the air layer at Soul+)
 
 **Interim reactions — status: [§4.9](#49-props).** Props stop being "just in the way": tags react to **explicit effects of the concrete skill**, never to a monster theme or a blanket aspect category. Reactions are data (`prop_def.reactions`, matched to skill effects) and are shown in the cast preview. A zone only triggers a reaction if its definition explicitly supplies the relevant effect.
 
-| Tag | Explicit skill effect / source | Reaction |
+| Tag | Explicit effect / interaction | Reaction |
 |-----|-------------------------------|----------|
-| **flammable** (Tree) | ignite (Lava Field, Eruption) | ignites; Eruption ignites instead of dealing prop damage; burns down at the next round end → Lava I |
-| **flammable** (Tree) | extinguish (Flood, or a zone explicitly carrying this effect) | extinguishes a burning Tree |
-| **brittle** (Wall) | crumble over time (Blight or a zone explicitly carrying this effect) | −1 HP per round while the effect is present |
-| **brittle** (Wall) | Rift's crumble on hit | −1 extra HP when hit |
-| **heavy** (Rock) | Flood's displacement / prop interaction | cannot be moved; Flood deals it no damage |
+| **flammable** (Tree) | ignite | ignites; burns down at the next round end → Lava I |
+| **flammable** (Tree) | extinguish | extinguishes a burning Tree |
+| **brittle** (Wall) | crumble over time | −1 HP per round while the effect is present |
+| **brittle** (Wall) | additional on-hit prop damage | applies the authored extra prop damage on hit |
+| **heavy** (Rock) | displacement | cannot be moved; damage exemptions follow the [execution profiles](gdd_monsters.md#43-skill-execution-profiles) |
 | **indestructible** (Pillar) | any | no reaction; cannot be removed |
+
+This table resolves reactions, not source eligibility. Concrete skill bindings, replacement of ordinary prop damage by a reaction, and profile-specific extra damage values belong only to [Monsters §4.3](gdd_monsters.md#43-skill-execution-profiles). The existing immediate Lava-placement source ignites flammable props; Blight causes ongoing crumble on brittle props. These bindings grant no such effects to other sources, ground or height changes.
 
 Zones on a prop square wait there: once the prop is gone, the zone works normally on that square.
 
@@ -358,7 +360,7 @@ The authoritative charge/detonation/autonomy and profile rules are in [gdd_monst
 
 ### 6.4 General Rules
 
-- No defense stat — damage reduction via Veils, Hallowed and passives
+- No defense stat — damage reduction via zone-based Surge reduction, ground-based Surge reduction (§4.7) and authored passives
 - All damage exact and previewed
 - Surge autonomy follows the [central Surge profile](gdd_monsters.md#surge); its caster's death does not cancel it, while exact dead-caster scheduling remains T04
 - Generic trigger scheduling and turn order have one reference: [§2.4](#24-effect-timing-reference); source-specific execution remains in the resolved definition
@@ -367,7 +369,7 @@ The authoritative charge/detonation/autonomy and profile rules are in [gdd_monst
 
 **Generic displacement:** cardinal and one square per trigger; the landing square is visible in the preview. Push uses the direction selected at cast (or with the Strike); pull uses the board anchor fixed at cast. Blocked moves follow [§6.3](#63-collision-fall--debris), and entry/end-event integration follows [§2.4](#24-effect-timing-reference).
 
-Zone effect behaviour belongs to [§4.6](#46-zones-effects-rules--opposites). Shove, Tail Sweep, Flood and authored pull twists supply recipients, bindings and triggers through the [central displacement contracts](gdd_monsters.md#44-effect-and-board-operation-contracts), not a second profile catalogue here. Unresolved ties and combined-effect order remain T04 ([temp_todo.md](temp_todo.md)).
+Zone effect behaviour belongs to [§4.6](#46-zones-effects-rules--opposites). Authorized direct displacement, on-hit push/pull and delayed footprint-bound displacement supply recipients, bindings and triggers through the [central displacement contracts](gdd_monsters.md#44-effect-and-board-operation-contracts), not a second profile catalogue here. Unresolved ties and combined-effect order remain T04 ([temp_todo.md](temp_todo.md)).
 
 **Why end of turn:** at the start of a turn the target simply walks away again. At the end of its turn it lands where you sent it — in Lava, through Thornbed, in front of your Strike, or in a Surge that detonates before it can move again. The counterplay is visible: don't end your turn on a current.
 
@@ -400,7 +402,7 @@ Zone effect behaviour belongs to [§4.6](#46-zones-effects-rules--opposites). Sh
 
 **Tools:** `godot/tests/` (gdUnit4 suites for the rules; project layout in `godot/README.md`), `godot/tools/sim.gd` (AI-vs-AI batch simulation with win rates per monster), `godot/tools/smoke_ui.gd` (plays the player's side through the real UI headless).
 
-**Historical v6.0 simulation (60 AI-vs-AI 3v3 battles, random teams):** sides win 50/50, ~14 rounds per battle with free rotation — **~19 rounds with fixed shapes**. Reported outlier: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue). Blight is the biggest damage source after Eruption, Veils absorb a lot (230 blocked hits), and ~1 in 5 battles is decided by the arena collapse. These results describe that historical ruleset, not current balance.
+**Historical v6.0 simulation (60 AI-vs-AI 3v3 battles, random teams):** sides win 50/50, ~14 rounds per battle with free rotation — **~19 rounds with fixed shapes**. Reported outlier: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue). Blight is the biggest damage source after Eruption, the historical Veil zones absorb a lot (230 blocked hits), and ~1 in 5 battles is decided by the arena collapse. These results describe that historical ruleset, not current balance.
 
 Playtest planning and outstanding checks: [temp_todo.md](temp_todo.md), T13.
 
