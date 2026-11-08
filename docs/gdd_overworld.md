@@ -542,7 +542,7 @@ Pills link progression, expedition supply and Producer economy. [§7.5](#75-mate
 
 | Array | Effect |
 |-------|--------|
-| High Ground Array | 1 start square begins Elevated |
+| High Ground Array | 1 start square begins as a Mountain |
 | Warding Array | the first Surge damage on the owner's side is 1 less |
 | Footing Array | one start square cannot be pushed or pulled onto/off |
 

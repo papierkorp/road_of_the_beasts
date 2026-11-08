@@ -103,7 +103,7 @@ The six stat shapes are frames of min–max values per stat, not fixed stats (§
 | AP                  | 2–5      | Action points per turn ([gdd_battle §2.3](gdd_battle.md#23-action-points))                                                                              |
 | Kin / Rarity / Size | —        | §3 and §7.2                                                                                                           |
 
-Zones and Elevated change these values during a fight: effective stats, [gdd_battle §3.1](gdd_battle.md#31-effective-stats).
+Zones and standing on a Mountain change these values during a fight: effective stats, [gdd_battle §3.1](gdd_battle.md#31-effective-stats).
 
 **Every stat is paid for:** monsters at the same stage/sub-tier share a budget, allocated by shape (§2.2). Acting first, possibly several times consecutively, costs HP or Reach; poor turn order buys HP, Reach or AP.
 
@@ -284,7 +284,7 @@ Cleave   Long Whirl   Long Cross
 | Scaled  | Tail Sweep | push the target 1 square (direction chosen with WASD)                                    |
 | Swarm   | Gnaw       | props take double (4)                                                                    |
 | Spirit  | Siphon     | target −1 initiative next round                                                          |
-| Ancient | Slam       | cracks Elevated under the target → Rubble                                                |
+| Ancient | Slam       | destroys the Mountain under the target (Mountain-destruction rule: [gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed); no ground change authored → Rubble) |
 
 ### 3.3 Movement by Kin
 
@@ -400,7 +400,7 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
 - **Required area data:** shape/profile, distinct integer offsets from a declared anchor/body origin, matching `cell_count`, authored orientation/selection policy, boundary and blocking/placement references. Reusable footprints may own offsets; family names/unexplained orientation numbers cannot reconstruct cells. Non-area skills use `area: none`, without cell count/artificial footprint.
 - **Anchor/caps:** [Footprints and Placement](#footprints-and-placement) lists tetris families/counts/orientations. Author the centre-most anchor's exact offset mapping; no runtime tie-break. Caps: [§4.5](#45-construction-points-and-ap-efficiency). Strike body footprints (§3.2) and Major Surge access/profile are not generic size overrides.
 - **Orientation:** normal tetris skills have one family and one fixed absolute board orientation for both teams, not facing, team mirroring or default rotation. Only the owner-scoped [passive permission](#non-area-and-passive-coverage-references) allows in-battle rotation; Strike separately selects eight directions (§4.2–§4.3). Push direction is not rotation; missing mappings remain T02.
-- **Boundaries:** all cells must be on-board (§4.2); no automatic trimming, shifting or rotation to fit. Keep profile-specific Strike solid-prop blocking, ground/prop occupancy and Elevated blanking separate ([gdd_battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); §4.2–§4.3 here), not universal obstacle clipping/resizing. Forced-movement collision uses [gdd_battle §6.3](gdd_battle.md#63-collision-fall--debris), not area placement.
+- **Boundaries:** all cells must be on-board (§4.2); no automatic trimming, shifting or rotation to fit. Keep profile-specific Strike solid-prop blocking, ground/prop occupancy and Mountain blanking separate ([gdd_battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); §4.2–§4.3 here), not universal obstacle clipping/resizing. Forced-movement collision uses [gdd_battle §6.3](gdd_battle.md#63-collision-fall--debris), not area placement.
 - **Hits/2×2:** cells are not automatically distinct hits. Reach origin/target distance, body-relative origins, partial overlap, deduplication/damage multiplicity, mixed ground/height/layer occupancy, landing and displacement remain insufficiently defined (T04/T09). Infer neither per-cell/per-unit hits, partial placement nor collision defaults; preview/validation must expose unsupported cases.
 
 **Temporal contract — execution, effect events and lifetime**
@@ -438,7 +438,7 @@ Blocking is scoped to placement, effect propagation or movement traversal; a sha
 | Field / responsibility | Meaning |
 |------------------------|---------|
 | `blocked_by_objects` | Profile-specific prop blocking; does not grant LOS or imply a universal empty-square test. |
-| `blocked_by_height` | Whether the relevant placement/effect/path can reach Elevated cells. |
+| `blocked_by_height` | Whether the relevant placement/effect/path can reach Mountain cells. |
 | `blocked_by_monsters`, `blocked_by_surges`, `ground_costs`, `distance_mod`, `path` | Movement-profile parameters (§4.3), resolved with path and landing rules. |
 
 Lifetimes belong to `persistence` and their effect references, not an interaction flag. Fixed profile values may be referenced instead of duplicated, but must resolve unambiguously.
@@ -464,7 +464,7 @@ Central monster-skill execution definitions; Battle chapter 5 links here. Generi
 | `strike` | squares around the body | small direct damage in a shape around the monster ([Strike profile](#strike))                               |
 | `surge`  | Surge layer; ground only via explicit `board_changes` | telegraphed delayed execution ([Surge profile](#surge)), including the existing burst profiles; optional, separately budgeted residue; only one charges per monster at a time |
 | `zone`   | zone layer          | timed control or support on squares ([gdd_battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites)), lasts for the skill's `duration`               |
-| `ground` | ground layer        | hazard ground or Elevated ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                                           |
+| `ground` | ground layer        | hazard ground or Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                                           |
 | `prop`   | object layer        | places or moves props ([gdd_battle §4.9](gdd_battle.md#49-props))                                                               |
 | `direct` | a unit              | unit/self-targeted immediate effects; existing Shove resolves under [gdd_battle §6.5](gdd_battle.md#65-displacement); new buffs require explicit effect contracts                                                               |
 | `move`   | the caster          | moves the caster ([Movement profile](#movement))                                                                    |
@@ -494,7 +494,7 @@ MINOR SURGE
                (hits every monster on its squares — allies and the caster included)
     prop     → ordinary interception instead of its occupant (Battle §4.10); profile exceptions below
                select reactions resolved under Battle §4.10–§4.11
-    Elevated → depends on the Surge type (table below)
+    Mountain → depends on the Surge profile (table below)
   afterwards: only if explicitly authored, apply the separately budgeted RESIDUE
               board_changes effect (permanent ground, gdd_battle §4.7), subject to its profile's
               height rules below; otherwise no residue; no repaint
@@ -515,16 +515,16 @@ MAJOR SURGE
 - Timing alone neither requires these profiles nor authorizes new combinations; validate definitions under chapter 4. These are mechanical profiles, not aspects/replacement elements; “Flood” is never a zone and need not resemble water.
 - Existing damage/residue/prop/height effects:
 
-|     Type     | Damage |     Residue (permanent, level I)      |                                                                     Props                                                                     |                            Elevated                           |
+|     Type     | Damage |     Residue (permanent, level I)      |                                                                     Props                                                                     |                            Mountain                           |
 |--------------|--------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
-| **Eruption** |      3 | **Lava I** — burns at end of turn | Trees ignite **instead of taking prop damage** | hit normally, **no residue** there (lava runs off) |
+| **Eruption** |      3 | **Lava I** — burns at end of turn | Trees ignite **instead of taking prop damage** | hit normally, cannot change ground on a Mountain (**no residue** there; lava runs off), does not destroy it |
 | **Flood** |      2 | **Thornbed I** — hurts when entered | extinguishes burning Trees; heavy props block it and are **neither damaged nor moved** | **can't reach it** (square blanked) |
-| **Rift** |      3 | **Blight I** — hurts at start of turn | brittle props take **1 extra HP damage** (crumble reaction) | **collapses** to Rubble, the monster on it still takes damage |
+| **Rift** |      3 | **Blight I** — hurts at start of turn | brittle props take **1 extra HP damage** (crumble reaction) | **destroys it** ([Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed)): the monster on it takes the Surge damage plus the environmental 1 collapse damage; its Blight I residue becomes the new ground |
 
 - **Push order:** damage-2/Thornbed also pushes struck monsters **1 square in the cast-fixed direction**, into newly laid ground. Damage precedes residue; exact damage/residue/push order remains T04/T07.
-- **Collapse state:** whether later Blight replaces collapse-created Rubble remains unresolved; the table establishes no exclusive final-state rule.
+- **Collapse state:** the final ground after a Mountain is destroyed follows the Mountain-destruction rule in Battle §4.7 (the destroying skill's own ground, otherwise Rubble). The exact order of Surge damage, collapse damage and residue remains T04.
 
-Elevated therefore offers profile-specific protection, not a universal Surge counter.
+A Mountain therefore offers profile-specific protection, not a universal Surge counter.
 
 **Runtime counter menu** (authoring validation of live counters: §4.2/§4.4/§4.5/§4.7):
 
@@ -532,9 +532,9 @@ Elevated therefore offers profile-specific protection, not a universal Surge cou
 |--------------------------------|----------------------------------------------------------------------------------------------------------------------|
 | **Leave**                      | move out of its squares before it fires — but mind any explicitly authored residue                                             |
 | **Zone shield** | `shield` over its squares: reduction 2 (up to 3 with level) cuts damage 1:1 per square; recast to level up |
-| **Pick the height** | Create Elevated where legal; protection, residue exclusion or collapse depends on the profile table above |
+| **Pick the height** | Create Mountain where legal; protection, residue exclusion or collapse depends on the profile table above |
 | **Stand on Hallowed** | Use its Surge reduction and replacement contract in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) |
-| **Fly over it**                | Existing Surge damage recipients exclude air; the air layer is out of reach (Winged, Soul+)                                       |
+| **Fly over it**                | Existing Surge damage recipients exclude air; the air layer is out of reach (Winged, Soul+), except from attackers standing on a Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                       |
 | **Props / debris** | Use the interception/destruction rules in [Battle §4.10](gdd_battle.md#410-damage-shatter--prop-types), subject to the interim prop status |
 | **Answer with your own Surge** | race it — but you can't claim squares already held by a charging Surge                                               |
 | **Control the tempo**          | slow / pull / push zones to steer where the target can stand; drain the caster's initiative to delay its next turn      |
@@ -551,7 +551,7 @@ Movement skills use **flag profiles**, not special-case lists. Modes are authori
 | `blocked_by_objects`   | solid props block the path                                                      |
 | `blocked_by_monsters`  | monsters block the path                                                         |
 | `blocked_by_surges`    | charging Surges block the path                                                  |
-| `blocked_by_height`    | can't start or end the move on Elevated                                         |
+| `blocked_by_height`    | can't start or end the move on Mountain                                         |
 | `ground_costs`         | Rubble, Water and climbing cost 2 movement, Thornbed fires on every square entered (walk only) |
 | `distance_mod`         | distance = Movement + this (min 1)                                              |
 
@@ -642,7 +642,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 
 - **Timed Kin modifier:** Spirit Strike applies target initiative −1 next round (§3.2), not `while_inside`. Its distinct timed `stat_change` definition preserves trigger/expiry; stacking/refresh remain open. This is neither a free timing override on zone `drain_init` nor arbitrary timed Initiative/Reach/Movement permission.
 
-- **Other sources:** Hearth/Shrine provide `quicken 1`, Umbra/Sigil `extend 1`, occupied Elevated +1 Reach. Keep ground/prop/height conditions, not zone expiry or free source substitution (gdd_battle §3.1/§4.7/§4.10).
+- **Other sources:** Hearth/Shrine provide `quicken 1`, Umbra/Sigil `extend 1`, occupied Mountain +1 Reach. Keep ground/prop/height conditions, not zone expiry or free source substitution (gdd_battle §3.1/§4.7/§4.10).
 - **Distinct contracts:** `shield` uses existing Surge reduction ([counter menu](#surge)), `mend` caps at max HP, `expose` is reserved without a zone. Reduction/healing/reserved definitions grant no generic stat edits.
 
 - **Prohibitions:** no general temporary **TPR/AP/max-HP/movement-rule/flag** edits. Species-specific timed boosts need definitions, duration, limits and validation (§4.1), not arbitrary stat permission. Base-skill Reach debuffs/positional buffs are temporary battle effects, not cast-range upgrades; slow is not AP reduction. Budgets never authorize slot damage increases, AP reductions or cast-range increases (§4.6).
@@ -706,8 +706,8 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
     - Surge aftermath follows its §4.3 profile.
     - Zone × ground remains T07; Water remains T08.
 - **Height change**
-  - Required data / source: Separate height definition, affected cells and authorized source: Elevated creation with coupled ground reset, profile-authored collapse or damage-derived debris collapse
-  - Binding lifetime, ordering and limits: Reference [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) for height state and the Elevated-creation source's coupled Plain reset, and [Battle §6.3](gdd_battle.md#63-collision-fall--debris) for fall/collapse consequences.
+  - Required data / source: Separate height definition, affected cells and authorized source: Mountain creation with coupled ground reset, or an explicit Mountain-destruction operation
+  - Binding lifetime, ordering and limits: Reference [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) for height state, the Mountain-creation source's coupled Plain reset and the Mountain-destruction rule (collapse damage, resulting ground), and [Battle §6.3](gdd_battle.md#63-collision-fall--debris) for fall consequences.
     - Declare coupled operations explicitly; height edits grant no generic damage or displacement payload.
     - Surge-specific height handling remains §4.3; no new height levels or timed expiry.
 - **Prop create / place**
@@ -727,7 +727,7 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
     - Direct deletion, salvage or suppressed debris requires a separately approved source; removal does not imply universal shatter.
 - **Cleanse**
   - Required data / source: Explicit source, exact affected layer/state, legal footprint/recipients and resulting state
-  - Binding lifetime, ordering and limits: The existing Elevated-creation source clears non-Voidscar ground to Plain as above; any additional monster zone-cleanse effect requires an explicit source-specific definition and validation (T02/T04); no such definition is established here.
+  - Binding lifetime, ordering and limits: The existing Mountain-creation source clears non-Voidscar ground to Plain as above; any additional monster zone-cleanse effect requires an explicit source-specific definition and validation (T02/T04); no such definition is established here.
     - Zone removal ends its effects, not ground/height/props or a charging Surge.
     - The combined zone-removal/Plain-reset exception is a tamer-source operation ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)), not a reusable monster permission.
     - No generic cleanse of all layers, negative effects, Injury or Voidscar; unresolved combinations/order remain T02/T04/T07/T20.
@@ -801,7 +801,7 @@ Maximums only: no spending targets, balance/component-price approval, EP prices 
 | Scaled | Push 1, including existing push-direction selection | +2 per potentially affected hit cell |
 | Spirit | Target Initiative −1 next round | +2 per potentially affected hit cell |
 | Swarm | Props take 4 rather than ordinary Strike damage 2 | +2 per potentially affected hit cell; provisional pending prop redesign |
-| Ancient | Elevated under the target becomes Rubble | +2 per potentially affected hit cell; provisional pending height/board resolution |
+| Ancient | Mountain under the target is destroyed (Rubble unless a ground change is authored); the environmental 1 collapse damage is not Strike damage | +2 per potentially affected hit cell; provisional pending height/board resolution |
 
 - **Kin packages:** bound, not interchangeable. Scaled includes push-direction choice, distinct from footprint direction; charge neither twice. Winged retreats once/use, not per target, without extra battle AP. Existing collision/fall/entry rules apply. Swarm grants no extra monster damage; Ancient no extra collapse/debris damage or arbitrary ground removal.
 - **Unresolved:** Spirit stacking/refresh/expiry, Winged multi-target reference/ties/legal retreat, Scaled damage/push order; board/prop and 2×2/layers remain T02/T04/T09. No blanket damage-plus-Kin surcharge; review specific combinations.
@@ -898,8 +898,8 @@ Maximums only: no spending targets, balance/component-price approval, EP prices 
 | Hearth / Umbra | 4 × C | Existing +1 Initiative / Reach while occupied, both sides |
 | Mossbed | 6 × C | Existing heal 1 on entry; provisional until re-entry limits are resolved |
 | Hallowed | 4 × C | Existing Surge reduction 1; no automatic hit consumption |
-| Elevated creation with coupled Plain reset | 5 × C | Elevated plus its existing non-Voidscar → Plain cleanse, one package |
-| Existing collapse-to-Rubble operation | 2 × C | Source-specific height change; no extra fall/debris damage granted |
+| Mountain creation with coupled Plain reset | 5 × C | Mountain plus its existing non-Voidscar → Plain cleanse, one package |
+| Mountain-destruction operation (final ground: [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | 2 × C | Source-specific; the operation is priced because it grants the capability; the environmental 1 collapse damage is not priced as skill damage; the price is the earlier draft, not re-derived |
 | Create Wall / Tree | 4 per created prop | Existing HP/tags/solid/reaction package; provisional pending prop redesign |
 | Create Rock | 6 per created prop | Existing heavy-prop package; provisional, source/access still required |
 | Create Shrine / Sigil | 8 / 6 per created prop | Existing prop/effect package; no duplicate permanent buff charge |
@@ -908,13 +908,13 @@ Maximums only: no spending targets, balance/component-price approval, EP prices 
 | Water, direct Rubble creation, Pillar creation, direct prop deletion | Not priced / not authorized by this table | Need explicit source/contract; Water remains planned T08 |
 | Voidscar alteration | Forbidden | No budget bypass |
 
-- **Props:** prices grant no catalogue/access; retain empty-cell, heavy/indestructible and interaction restrictions. Ordinary destruction has no generic surcharge; natural damage-derived debris/collapse is not a second authored operation. Ignition/extinguish/crumble, falling/splitting and mixed packages await prop redesign, not guessed defaults.
+- **Props:** prices grant no catalogue/access; retain empty-cell, heavy/indestructible and interaction restrictions. Ordinary destruction has no generic surcharge; natural damage-derived debris is not a second authored operation and never affects Mountains. Ignition/extinguish/crumble, falling/splitting and mixed packages await prop redesign, not guessed defaults.
 - **Cast fees/residue:** standalone ground/props add the applicable +2 anchor fee and AP-efficiency cost once. Residue means authored Surge **ground change, not prop creation**; [Surge profiles](#surge) own payloads/exceptions. Delayed hazard aftermath (rate in the table above) adds no second anchor/AP and gets no further 50% damage discount; immediate ground keeps its own rate. Source-specific height/prop exclusions remain binding.
 
 **Conditional-outcome costing — designer working draft:**
 - Price the most expensive explicitly mutually exclusive legal outcome; sum coexisting components within it. Maximize over legal board states for the authored skill, not the cast-time board; no probability weights/best-case discounts.
 - Sum per-cell maxima only if those outcomes can coexist across the footprint; count shared activation/anchor/marker once. Missing prices/unresolved order block a complete maximum, not zero-cost branches.
-- Valuation grants neither runtime exclusivity nor new effects. Collapse-to-Rubble may or may not exclude later hazards: resolve final state under T04/T07 before replacing its conservative additive bound.
+- Valuation grants neither runtime exclusivity nor new effects. Collapse and residue on one cell end in a single ground (Battle §4.7); the operation is priced as a capability, so both are charged (additive; a maximum is not adopted).
 
 #### Combination Policy and Basic Surge Target
 
@@ -938,12 +938,12 @@ Maximums only: no spending targets, balance/component-price approval, EP prices 
 
 **Scoped subtotals, not complete profile prices:** ordinary offensive prop damage/destruction has no generic surcharge, but ignition/extinguishing/extra brittle damage/other special reactions are not automatically free. Infer no reaction prices before prop review.
 
-- **Collapse/hazard:** damage-3/collapse/hazard includes collapse at **2 per potential cell**, with ground/height final state unresolved (§4.3). Two/three-cell **27/33** are conservative additive bounds for priced damage/collapse/residue, not complete profile prices.
-- If runtime exclusivity is established, `max(1 residue, 2 collapse)` gives **25/30** for that subset; this calculation approves no exclusive final-state rule. If both occur, charge both; authored collapse is never waived as ordinary damage-derived debris.
-- Extra brittle-prop damage remains unpriced. No-residue-on-Elevated/Elevated-exclusion rules grant no automatic credits.
+- **Collapse/hazard:** damage-3/collapse/hazard includes collapse at **2 per potential cell**, with the final ground fixed by the [Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed). Two/three-cell **27/33** are conservative additive bounds for priced damage/collapse/residue, not complete profile prices.
+- The final ground is exclusive, but skills that can destroy Mountains pay for that capability: collapse and residue are both charged (additive, 27/33); the `max(1 residue, 2 collapse)` reading (25/30) is not adopted. Authored collapse is never waived as ordinary damage.
+- Extra brittle-prop damage remains unpriced. No-residue-on-Mountain/Mountain-exclusion rules grant no automatic credits.
 
 - **Budget finding:** draft push pricing equates two-cell damage-2/entry-hazard/push with Low, prop-free damage-3/end-turn-hazard at 23; three cells cost 27. This resolves scoped arithmetic, not full-profile balance.
-- Damage-3/collapse/hazard fits 24 on Low only; its priced height-capable subset exceeds 24 even with conditional exclusivity. Decide runtime final state before approving full price/development. All three-cell subtotals exceed 24.
+- Damage-3/collapse/hazard fits 24 on Low only; its priced height-capable subset exceeds 24 even with conditional exclusivity. Full price/development approval remains T02. All three-cell subtotals exceed 24.
 - Preserve damage, 1-AP baselines, mechanics and shared ceilings; special prop reactions/event order remain T02/T04/T07 blockers.
 
 #### Calibration Examples
@@ -959,7 +959,7 @@ Maximums only: no spending targets, balance/component-price approval, EP prices 
 | Mend 1 zone: 3 cells, 2 rounds, existing 1 AP | healing 18 + anchor 2 + AP efficiency 12 | 32 |
 | Immediate hazard ground: 3 cells, existing 1 AP | hazard package 12 + anchor 2 + AP efficiency 12 | 26 |
 | Hallowed ground cast: 3 cells, existing 2 AP | ground package 12 + anchor 2 + AP efficiency 6 | 20 |
-| Elevated creation/Plain reset: 3 cells, existing 1 AP | height/cleanse package 15 + anchor 2 + AP efficiency 12 | 29 |
+| Mountain creation/Plain reset: 3 cells, existing 1 AP | height/cleanse package 15 + anchor 2 + AP efficiency 12 | 29 |
 
 - **Status:** paper calculations, not complete validation, approved content/paths or engine tests. Above 24/30/36 means calibration conflict, not automatic unlock/AP change/budget exception. No fractional-point rounding rule.
 - Hazard-Surge subtotals belong to the cross-check above; special reactions/profile interactions need review. Movement/self Initiative/passive rotation calculations stay in their respective tables.
@@ -1096,7 +1096,7 @@ Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference
 - **`area`**
   - Slowing Zone: Fixed horizontal I3; offsets `[[-1,0],[0,0],[1,0]]`; 3 cells; all cells on-board; no clipping/rotation
   - Beast Jab: `shape: Jab`; `offsets: [d]`, where selected `d` is exactly one of `(−1,−1), (0,−1), (1,−1), (−1,0), (1,0), (−1,1), (0,1), (1,1)`; `cell_count: 1`; orientation = selected direction; `orientation_policy: strike_direction_selection`; `boundary_rule: all_cells_on_board`; solid-prop blocking under §3.2
-  - Delayed Burst: `shape: I3`; `offsets: [[-1,0],[0,0],[1,0]]`; `cell_count: 3`; `orientation: horizontal`; `orientation_policy: fixed_board`; `boundary_rule: all_cells_on_board`; no clipping/rotation; props do not block placement; damage hits Elevated normally, without collapse
+  - Delayed Burst: `shape: I3`; `offsets: [[-1,0],[0,0],[1,0]]`; `cell_count: 3`; `orientation: horizontal`; `orientation_policy: fixed_board`; `boundary_rule: all_cells_on_board`; no clipping/rotation; props do not block placement; damage hits a Mountain square normally, without destroying it
 - **`effects`**
   - Slowing Zone: `stat_change: slow`; base 1/cap 2, same-zone levelling `min(2, 1 + level - 1)` (battle-zone level, not slot level); level I subtracts 1 Movement, minimum 1, Step unaffected; applied immediately on placement and continuously while inside, no damage/entry payload; all ground-layer occupants including allies/caster, no air, props, height or ground-state effect; existing zone stacking/level rules, shared created-zone lifetime; ends on exit/removal
   - Beast Jab: `damage`: Beast Strike under §3.2, fixed 2 against monsters/props; recipients = all struck monsters including allies, excluding caster, and struck props; evaluate/apply once at cast resolution, action lifetime none/no retained damage stack. Beast has no additional Kin effect
@@ -1256,7 +1256,7 @@ Cases per field below: **Run reference**; **Focus self-buff reference (DRAFT)**;
 
 **Position & Movement:**
 
-- Highlander (+2 init on Elevated)
+- Highlander (+2 init on a Mountain)
 - Turret (can't move, +1 Reach)
 - Skittish (free 1-square move after taking Surge damage — to the safest free neighbour)
 - Phasing (moves through props)

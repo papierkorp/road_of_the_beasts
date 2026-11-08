@@ -111,7 +111,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 |-------------|--------------------------------------------------------------|
 | Initiative  | `drain_init` / `quicken` (§4.6), Shrine (§4.10), Hearth (§4.7) |
 | Movement    | `slow` / `haste` (§4.6); Step is always 1 square             |
-| Reach       | +1 on Elevated, `drain_range` / `extend` (§4.6), Sigil (§4.10), Umbra (§4.7); min 1 |
+| Reach       | +1 on a Mountain, `drain_range` / `extend` (§4.6), Sigil (§4.10), Umbra (§4.7); min 1 |
 
 ### 3.2 Monster Identity & Skill Access
 
@@ -126,10 +126,10 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 ### 4.1 Battlefield Generation
 
 - Procedural ground + props, **point-symmetric around the centre** so both sides get the same distances (mirrored fairness check for every mode)
-- Contested Elevated squares near the centre, equidistant from both starts
+- Contested Mountain squares near the centre, equidistant from both starts
 - Pre-placed props shape the opening
 
-|   Mode  |  Board  |                    Start area per side                    |     Contested Elevated     | Props |
+|   Mode  |  Board  |                    Start area per side                    |     Contested Mountain     | Props |
 |---------|---------|-----------------------------------------------------------|----------------------------|-------|
 | 1v1     | 5×5     | opposite corners                                          | 2 near the centre          | 2–3   |
 | 2v2     | 6×6     | back row                                                  | 2 near the centre          | 3–4   |
@@ -146,12 +146,12 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 ### 4.3 The Square Stack: Zones & Ground
 
 ```
-[ AIR    ]  flying prop | flying monster | empty — immune to ground Surges
+[ AIR    ]  flying prop | flying monster | empty — immune to ground Surges (exception: attackers on a Mountain, §4.7)
 [ OBJECT ]  prop with tags (Tree: flammable · Wall: brittle · Rock: heavy · Pillar: indestructible) | empty
 [ SURGE  ]  pending Surge marker | empty — shares shapes/placement with zones, never merges with them
 [ ZONE   ]  ONE timed zone (the skill's `duration`) | empty — control and support
 [ GROUND ]  type (neutral: Plain | Rubble | Water | Voidscar | Hallowed — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra), always permanent
-            + height (Low | Elevated)
+            + height (Low | Mountain)
 ```
 
 - all layers can be active at once · **1 object, 1 pending Surge, 1 zone, 1 ground type** per square
@@ -170,7 +170,7 @@ Illustrative **runtime board state only**, not a skill-authoring schema: entries
   "ground": {
     "type": "lava",          // plain | rubble | water | voidscar | hallowed | lava | thornbed | blight | hearth | mossbed | umbra
     "level": 1,              // hazard grounds only (1–2) = damage per trigger
-    "height": 0              // 0 low | 1 Elevated (independent of type)
+    "height": 0              // 0 low | 1 Mountain (independent of type)
   },
   "object": { "name": "Tree", "hp": 2, "tags": ["flammable"], "burning": false },
   "air": null,
@@ -249,7 +249,7 @@ No merging: a square always shows exactly one zone with its real effects.
 | Group | Ground | Effect |
 |-------|--------|--------|
 | Neutral | **Plain** | move cost 1 |
-| Neutral | **Rubble** | move cost 2; left by shattered props and collapsed Elevated |
+| Neutral | **Rubble** | move cost 2; left by shattered props and destroyed Mountains (when the destroying skill authors no ground change) |
 | Neutral | **Water** *(planned)* | move cost 2, Swim crosses it at cost 1; traversal and Step exceptions: [movement profiles](gdd_monsters.md#movement). Water/Swim contract remains T08 |
 | Neutral | **Voidscar** | 1 damage at the **start** of your turn; permanent, spreads late-game (§4.2), nothing changes it |
 | Hazard | **Lava** I–II | damage = level at the **end** of your turn — *punishes staying* |
@@ -259,17 +259,19 @@ No merging: a square always shows exactly one zone with its real effects.
 | Blessed | **Mossbed** | heals 1 when you **enter** the square (move, push or pull), never above max HP — *rewards moving* |
 | Blessed | **Umbra** | Reach +1 while you stand on it (`extend 1`) |
 | Blessed | **Hallowed** | Surge damage on this square −1; replaced only if actual residue is laid there under the applicable ground rules. No automatic consumption on a Surge hit; without replacement it remains |
-| Height | **Elevated** | combines with any type; +1 Reach for the unit there; **climbing up costs 2 movement**, subject to [movement-profile exceptions](gdd_monsters.md#movement); **pushed off Elevated → 1 fall damage**; collapses to Rubble from debris under the interim prop rules; can be raised under a charging Surge. Type-specific Surge interactions: [central Surge profiles](gdd_monsters.md#surge) |
+| Height | **Mountain** | the only height state; combines with any ground type, but ground on a Mountain changes only through skills whose definition allows it; +1 Reach for the unit there; **climbing up costs 2 movement**, subject to [movement-profile exceptions](gdd_monsters.md#movement); **pushed off a Mountain → 1 fall damage**; removed only by an explicit Mountain-destruction operation (below); can be raised under a charging Surge. Type-specific Surge interactions: [central Surge profiles](gdd_monsters.md#surge) |
 
 **How ground is made:**
 
-- **Field effects** lay their specified level I hazard ground, also on Elevated
+- **Field effects** lay their specified level I hazard ground, also on Mountain
 - **Surge residue** applies the explicitly authored ground operation under the [central Surge profile](gdd_monsters.md#surge) and [board-operation contract](gdd_monsters.md#44-effect-and-board-operation-contracts); generic Surge execution alone lays no ground
 - **Blessing skills** lay blessed ground. It has no levels and is permanent; casting still spends the central authored AP price (§2.3)
 - All ground is **permanent**: it stays until something changes it (§4.5)
 - **Same type** on the square → hazards +1 level (max II), blessed ground stays as it is
 - **Different type** → the new ground **replaces** the old one under the applicable ground/source rules; this is not automatic conversion by a skill name or theme
-- **Coupled height/reset (Raise Ground):** raises to Elevated and resets ground to Plain, including Lava but excluding Voidscar. This source-specific [board-operation contract](gdd_monsters.md#44-effect-and-board-operation-contracts) grants no ground reset from height changes alone
+- **Coupled height/reset (Raise Ground):** every skill that creates height creates a Mountain; Raise Ground raises it and resets ground to Plain, including Lava but excluding Voidscar. This source-specific [board-operation contract](gdd_monsters.md#44-effect-and-board-operation-contracts) grants no ground reset from height changes alone
+- **Destroying a Mountain** *(user decision)*: only a skill whose definition authors an explicit Mountain-destruction `board_changes` operation does it; any skill may be authored with it, none has it implicitly. Resolution: (1) the occupant takes **1 collapse damage**, an environmental damage like Voidscar, independent of any skill and not part of the skill's own damage (the Strike and Surge damage laws are unaffected); (2) the Mountain is removed; (3) the square's ground becomes the ground that same skill authors for it, if its definition can change ground on Mountain squares, otherwise **Rubble**. Voidscar is never replaced. Props are separate: shattered props and debris never affect Mountains. Order against the skill's damage and residue: T04
+- **Air next to a Mountain** *(user decision, details T09)*: a ground-layer monster standing on a Mountain can hit air-layer monsters on the squares adjacent to its own square with all of its attacks. This is a board rule, not a skill property, and adds no skill price
 - Placing ground beneath an occupant is not entry; entry triggers occur when the occupant enters the square. Mossbed re-entry/healing limits remain central T07
 - Blessed ground works for **everyone** on it, like a zone: an enemy can use your Mossbed too
 
@@ -297,7 +299,7 @@ FLYING  → air layer only (later, with the air layer at Soul+)
 **Interim prop rules — pending T04 redesign ([§4.9](#49-props)).**
 
 - An ordinary Surge hit deals **2 damage to the prop**, intercepting the hit instead of hitting a monster there; shared Field-prop occupancy remains unresolved below. Strike prop damage and profile-specific exceptions: [central execution profiles](gdd_monsters.md#43-skill-execution-profiles); collision damage: [§6.3](#63-collision-fall--debris); reactions: [§4.11](#411-prop-reactions).
-- At 0 HP a prop **shatters**: neutral Rubble replaces the ground; **1 debris damage lands on the four neighbouring squares**, also collapsing Elevated neighbours to Rubble.
+- At 0 HP a prop **shatters**: neutral Rubble replaces the ground; **1 debris damage lands on the four neighbouring squares**. Debris does not affect Mountains.
 
 **Unresolved Field-prop hit contract (T04):** the Surge wording (**2 damage to the prop and does not hit a monster there**) does not settle shared occupancy: only Solid props exclude occupants; Field props such as Sigil are enterable ([temp_todo.md](temp_todo.md)).
 
@@ -374,7 +376,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 > **The Surge is the burst.** It is the only skill that deals more than 2 damage to monsters; prop damage has source-specific exceptions in the [central damage contracts](gdd_monsters.md#44-effect-and-board-operation-contracts).
 > - **Strike:** max 2 against monsters; body-relative execution and authored AP follow the [central Strike profile](gdd_monsters.md#strike)
 > - **Hazard ground:** its level (max 2) at its trigger; Voidscar: 1. Ground effects: [§4.7](#47-ground--neutral-hazard-and-blessed); generic schedule: [§2.4](#24-effect-timing-reference)
-> - **Collision** (pushed into a prop or monster), **fall** (pushed off Elevated) and **debris** (prop shattered next to you): 1 each
+> - **Collision** (pushed into a prop or monster), **fall** (pushed off a Mountain), **Mountain collapse** (environmental, independent of the destroying skill, §4.7) and **debris** (prop shattered next to you): 1 each
 > - **Zones never deal damage.** Nothing else deals damage the instant it is cast
 
 **Unresolved collision contract (T04):** the monster-collision wording above conflicts with [§6.3](#63-collision-fall--debris). Neither wording resolves that conflict or authorizes bonus collision damage.
@@ -390,8 +392,8 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 
 - Pushed or pulled into a **prop**: no move, 1 damage to the monster and 1 to the prop (heavy props take none)
 - Into a **monster**: no move, no damage · off the **board edge**: no move, no damage. Conflict with the §6.1 wording: see the unresolved collision contract there (T04); not a collision-bonus permission
-- **Off Elevated**: the move happens, 1 fall damage · onto Elevated from below: blocked like a prop, no damage
-- **Prop shattered**: resolve debris and collapse under the **interim** [§4.10](#410-damage-shatter--prop-types) rules; destruction-specific replacements remain T04
+- **Off a Mountain**: the move happens, 1 fall damage · onto Mountain from below: blocked like a prop, no damage
+- **Prop shattered**: resolve debris under the **interim** [§4.10](#410-damage-shatter--prop-types) rules; destruction-specific replacements remain T04
 
 ### 6.4 General Rules
 

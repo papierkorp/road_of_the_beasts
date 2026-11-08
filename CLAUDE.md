@@ -1,6 +1,7 @@
 # Project
 
 - **Road of the Beasts:** deterministische, rundenbasierte Monsterkämpfe mit Management und Kultivierung.
+- **Designziel:** „Easy to learn, hard to master“: wenige, einheitliche und gut lesbare Regeln; Tiefe entsteht aus Kombinationen und Entscheidungen, nicht aus Sonderregeln. Bei Designvorschlägen und Mechanik-Abwägungen als Maßstab nutzen (Ausnahmen und Sonderfälle begründen).
 - **Auftrag:** GDDs überarbeiten, vervollständigen und konsistent halten; keine Spielimplementierung.
 
 ## Safety
