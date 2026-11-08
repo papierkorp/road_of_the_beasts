@@ -14,7 +14,7 @@
 
 ### Einstieg und Zusammenarbeit
 
-- **Sprache:** Chat Deutsch, knapp und verständlich; alles unter `docs/` Englisch, einschließlich `temp_todo.md`. Englische GDD-Terminologie/Bezeichner konsistent halten; deutsche Bestandsabschnitte bei Überarbeitung übersetzen, ohne Regeln oder Entscheidungsstatus zu ändern.
+- **Sprache:** Chat Deutsch, knapp und verständlich; Dokumentation unter `docs/` Englisch, einschließlich `temp_todo.md`; Ausnahme: wiederverwendbare Chat-Prompts samt Unterüberschriften unter `AI Prompts` Deutsch. Englische GDD-Terminologie/Bezeichner konsistent halten; deutsche Bestandsabschnitte bei Überarbeitung übersetzen, ohne Regeln oder Entscheidungsstatus zu ändern.
 - **Wiedereinstieg:** in `docs/temp_todo.md` Verwendung, aktuelle Übergabe und betroffene Aufgabe lesen; danach gezielt zuständige GDD-Abschnitte.
 - **Priorität:** aktuelle Nutzeranweisung vor älterer Übergabe; veraltete Arbeitsanweisungen korrigieren.
 - **Entscheidungen:** grundlegendes Gameplay mit dem Nutzer klären; beschlossene Prinzipien nur bei neuem Anlass erneut öffnen.
@@ -39,7 +39,7 @@
 - **Bereinigung:** eindeutig verworfene/ersetzte Ideen dürfen entfallen; bei unklarem Status erst klären. Keine unnötigen Archive oder parallelen Alternativkataloge.
 - **Historie:** Git statt Changelogs/laufender Änderungshistorien in GDDs oder `temp_todo.md`. Vor Entfernen historischer Einträge ausschließlich dort vorhandene, weiterhin gültige Informationen in zuständige GDD-Abschnitte übernehmen.
 - **Prototyp/Versionen:** historische Abweichungen nur zur nötigen Abgrenzung vom aktuellen Design behalten, nie als aktive Spezifikation. Keine manuellen GDD-Versions-/Synchronisierungsversprechen ohne definierten Releaseprozess.
-- **Arbeitsstand:** offene Fragen, Alternativen, Prüfaufträge und jeweils aktuelle Übergabe nur in `docs/temp_todo.md`. GDDs enthalten aktuelles Design samt gekennzeichneten Inhaltsentwürfen, kein Gesprächsprotokoll; Übergabe ohne vollständige Preislisten/Regelkopien.
+- **Arbeitsstand:** offene Fragen, Alternativen, Prüfaufträge und jeweils aktuelle Übergabe nur in `docs/temp_todo.md`. GDDs enthalten aktuelles Design samt gekennzeichneten Inhaltsentwürfen, kein Gesprächsprotokoll; `Context Handoff` nach jeder Session auf den aktuellen Stand bringen: Fokus, offene Entscheidungen/Blocker, nächster Schritt, Git-/Validierungsstand; keine vollständigen Preislisten/Regelkopien oder laufende Historie. Wiederverwendbare Arbeitsaufträge unter `AI Prompts` pflegen.
 - **Nach Entscheidungen:** zuständiges GDD aktualisieren, betroffene Schnittstellen/Verweise prüfen und Aufgaben-/Übergabestand anpassen.
 - **Abschluss:** Aufgaben erst bei erfüllten Abschlussbedingungen abhaken; Validierungsaufgaben brauchen passende Tests und dokumentierte Ergebnisse.
 - **Prüfung:** fokussierter Diff, Verweise, gegebenenfalls Rechensummen und `git diff --check`; tatsächlich Geprüftes und offene Fragen berichten.
