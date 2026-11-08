@@ -21,7 +21,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 | **3v3** | **7×7** | **standard battle** — enough monsters for combos between allies, short enough for a session |
 | 5v5     | 9×9     | special battles only (bosses, tournaments), later                                           |
 
-The encounter chooses a mode within the player's available team size: 1v1 from the start, **3v3 and 2v2 from Foundation**, 5v5 special battles from Core Formation ([gdd_overworld §6.3](gdd_overworld.md#63-stage-unlock-table)).
+The encounter chooses a mode within the player's available team size; stage availability of each mode: [gdd_overworld §6.3](gdd_overworld.md#63-stage-unlock-table).
 
 - **Why 7×7 for 3v3:** 6 monsters on 49 squares is about as crowded as 2 on 25 (1v1), keeping pressure similar; 8×8 leaves more room to escape a 3–4 cell Surge ("too easy to dodge"). An odd size provides a **centre square** for contested high ground and mirror-fair starts.
 - Small kits aim to keep 3v3–5v5 readable; kit size and rarity exceptions: [gdd_monsters §4.1](gdd_monsters.md#41-the-kit).
@@ -272,7 +272,6 @@ No merging: a square always shows exactly one zone with its real effects.
 - **Coupled height/reset (Raise Ground):** raises to Elevated and resets ground to Plain, including Lava but excluding Voidscar. This source-specific [board-operation contract](gdd_monsters.md#44-effect-and-board-operation-contracts) grants no ground reset from height changes alone
 - Placing ground beneath an occupant is not entry; entry triggers occur when the occupant enters the square. Mossbed re-entry/healing limits remain central T07
 - Blessed ground works for **everyone** on it, like a zone: an enemy can use your Mossbed too
-- Damage from ground is capped at 2 per trigger; one ground per square, so hazards never stack
 
 ### 4.8 No Attunement
 
@@ -324,7 +323,7 @@ FLYING  → air layer only (later, with the air layer at Soul+)
 | **flammable** (Tree) | extinguish | extinguishes a burning Tree |
 | **brittle** (Wall) | crumble over time | −1 HP per round while the effect is present |
 | **brittle** (Wall) | additional on-hit prop damage | applies the authored extra prop damage on hit |
-| **heavy** (Rock) | displacement | cannot be moved; damage exemptions follow the [execution profiles](gdd_monsters.md#43-skill-execution-profiles) |
+| **heavy** (Rock) | displacement | cannot be moved (damage exemptions: Rock row in [§4.10](#410-damage-shatter--prop-types)) |
 | **indestructible** (Pillar) | any | no reaction; cannot be removed |
 
 - The table resolves reactions, not source eligibility. Concrete skill bindings, reaction replacement of ordinary prop damage and profile-specific extra damage values belong only to [Monsters §4.3](gdd_monsters.md#43-skill-execution-profiles).
@@ -390,7 +389,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 ### 6.3 Collision, Fall & Debris
 
 - Pushed or pulled into a **prop**: no move, 1 damage to the monster and 1 to the prop (heavy props take none)
-- Into a **monster**: no move, no damage · off the **board edge**: no move, no damage. The monster-collision damage wording in §6.1 conflicts with this detailed rule and remains central T04; it is not a new collision-bonus permission
+- Into a **monster**: no move, no damage · off the **board edge**: no move, no damage. Conflict with the §6.1 wording: see the unresolved collision contract there (T04); not a collision-bonus permission
 - **Off Elevated**: the move happens, 1 fall damage · onto Elevated from below: blocked like a prop, no damage
 - **Prop shattered**: resolve debris and collapse under the **interim** [§4.10](#410-damage-shatter--prop-types) rules; destruction-specific replacements remain T04
 

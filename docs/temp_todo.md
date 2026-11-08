@@ -19,16 +19,16 @@ Central list of open design decisions and validation tasks from the three GDDs. 
 
 ## Current State and Immediate Next Step
 
-- **Focus:** the full review of all three GDDs against this backlog was run on 2026-11-08. The backlog now carries a status and completion conditions per task, a recommended work order, the new task T36, and new findings in T02/T03/T10/T11/T13/T18/T20/T24/T35. Completed tasks (T01/T33/T34) moved to [Completed Tasks](#completed-tasks-ids-retained-for-references). **No GDD was changed and no gameplay decision was made.**
+- **Focus:** backlog reconciled with the current GDDs on 2026-11-08 (every task T02–T37 checked against its source sections; no task is closed, replaced or duplicated; IDs and dependencies unchanged). **No gameplay decision was made and no GDD rule, number, condition or status changed**; the GDDs were only compacted and deduplicated editorially (history in Git, remaining candidates in T37). Completed tasks (T01/T33/T34) are in [Completed Tasks](#completed-tasks-ids-retained-for-references).
 - **Next action (ask the user, in this order):**
   1. The post-collapse end state (Rubble, hazard ground such as Blight, or another outcome) — T04 / [Monsters §4.3](gdd_monsters.md#43-skill-execution-profiles). It is **undecided**: Rubble was only recommended in chat, and no current file documents a later approval.
   2. Whether physical evolution exists and what it does — T36 (new gap; T05 depends on it).
   3. Then resume the T02 sequence: Surge cross-check → same-AP development paths (Run, Slowing Zone, Surge with ground effect, Jab) → shared EP economy (T05).
   Small independent decision: the Ambitious Standing comparison (T26).
-- **Refactoring pass (uncommitted at last check):** editorial deduplication applied in all three GDDs without rule, number or status changes: Monsters §4.7 (YAML block removed, reference tables turned into per-field lists), §4.2/§4.4 (contract tables turned into lists, layer rules link to Battle §4.3), §4.4/§4.5/§4.7 (zone bounds, upgrade limits, combination policy, repeated “no defaults” clauses now stated once), Overworld §3.1/§2.6/§6.5/§7.5 (pointers instead of copies). Remaining candidates are listed in T37.
+- **Editorial state:** cross-document references are relative links; each rule, price or range has one owning section with pointers elsewhere (presentation only). Open editorial candidates: T37; GDD wording conflicts found in review are tracked in their content tasks (e.g. T03, T04, T13, T35, T36).
 - **Blockers:** user decisions above; T13 has no executed tests and the documented Godot build is the historical v6.0 ruleset.
-- **Git state observed at session end:** branch `docs/update_gdd`, HEAD `116494b`, three commits ahead of its remote-tracking branch (local observation, not a freshness guarantee). `CLAUDE.md` and `docs/temp_todo.md` were already modified before this session (user work, preserved); this session edited only `docs/temp_todo.md`. No commits, pulls, pushes, resets or branch changes. Recheck Git on every machine.
-- **Checks actually performed:** all three GDDs and this file read in full; every relative link and anchor in the four files checked by script (0 broken); recomputed by script or by hand: all 66 Strike construction totals, the calibration examples, the 1-AP Surge subtotals (23/27, 25/30, 27/33), movement/self-buff totals, the nine reference individuals (each 31 points, inside their frames), the stage-scaled frame ranges (see T03 findings) and the Core frame totals. **Not performed:** any gameplay, balance, XP or engine test; arithmetic agreement is not validation.
+- **Git state observed at session end:** branch `docs/update_gdd`, HEAD `973ed7e`, five commits ahead of its remote-tracking branch (local observation, not a freshness guarantee). `docs/gdd_battle.md`, `docs/gdd_monsters.md`, `docs/gdd_overworld.md` and this file are modified and uncommitted. No commits, pulls, pushes, resets or branch changes. Recheck Git on every machine.
+- **Checks actually performed:** this file read in full and every task compared with its cited GDD passages (T03 frame/unspent-point findings, T13 start-separation wording, T11 Empower, T36 physical-evolution wording, T35 validator/“physical Size path” notes re-verified); all three GDDs were read in full earlier in this working session, before the editorial edits, and only the passages cited by tasks were re-read afterwards; every `Tnn` reference in the GDDs exists here; every relative link and anchor in the four files checked by script (0 broken); Strike construction rows, Core budget totals and the earlier calibration/Surge subtotals recomputed (0 mismatches); `git diff --check` clean. **Not performed:** a second complete line-by-line re-read of all GDDs, and any gameplay, balance, XP or engine test; arithmetic agreement is not validation.
 
 ## Decisions Versus Drafts
 
@@ -64,6 +64,7 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 | 5 | Remaining resolution contracts | T04, T07, T08, T09 | Prerequisites for T10–T13 |
 | Parallel | City powers and non-battle catalogues | T15, T16 (non-battle part) | Independent of monster-skill work |
 | Parallel | Ambitious Standing comparison | T26 (user decision) | Small, independent decision |
+| Parallel | Remaining editorial deduplication | T37 | No prerequisites; coordinate with T35 |
 | Later | Skills/roster, battle tests, then meta numbers | T10–T14, T17–T35 | Follow the prerequisites in each task |
 
 ## Phase 1 — Clarify Foundations and Conflicting Rules
@@ -106,7 +107,7 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 **Status:** Open — **user decision pending:** end state after a height collapse (Rubble versus hazard ground such as Blight, or another outcome). Rubble was only a chat recommendation and is not approved; current files document no later explicit approval.
 **Prerequisites:** T01, T02.
 **Sources:** Battle [§2.2](gdd_battle.md#22-initiative-rules), [§4.1](gdd_battle.md#41-battlefield-generation), [§4.4](gdd_battle.md#44-square-data-model), [§4.8](gdd_battle.md#48-no-attunement), [§4.10](gdd_battle.md#410-damage-shatter--prop-types), [§6.1](gdd_battle.md#61-the-damage-law)–[§6.3](gdd_battle.md#63-collision-fall--debris); [Monsters §5](gdd_monsters.md#5-passives).
-- Collision: the damage law includes monster collisions, but the detailed rule says no damage. Cross-check Crashlander. Check Shockwave's existing +1 collision bonus against the fixed event-damage law; no exception has been approved.
+- Collision: the damage law includes monster collisions, but the detailed rule says no damage. Cross-check Crashlander. Retired collision bonuses (the roster still lists Shockwave as a utility skill) remain unapproved per [Monsters §4.4](gdd_monsters.md#44-effect-and-board-operation-contracts); no exception to the fixed event-damage law has been approved.
 - Define the resolution order for Surge damage/residue/displacement and Strike damage/displacement; explicitly define Pull ties and behaviour when the anchor is already occupied. Preserve each source's explicit permissions.
 - Protection sources: define stacking, order and consumption when damage is reduced to 0; distinguish passive-, zone- and ground-based protection sources without transferring permissions between them. Coordinate tamer exceptions with T20.
 - Combined board operations: define the order of Collapse, Debris, Residue and Cleanse. For Rift on Elevated, explicitly decide whether collapse leaves Rubble or subsequent Blight replaces it; current wording does not establish mutually exclusive outcomes. Specify Relocate distance, path, legal targets and reactions. Do not derive free defaults from data-field order.
@@ -153,7 +154,7 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 - Only Jab before Core: do interesting shapes arrive too late? Storm/5-AP shapes only reach late TPR-1 builds.
 - Test Whirl (4 squares) against Arc (3) at the same battle AP (3; their construction prices in §4.5 differ), and the value of Thrust's range. Naming is resolved: only “Thrust” remains in the GDDs.
 - Beast Bite: give it its own effect without violating the damage ceiling, or deliberately accept the lack of an effect.
-- **Done when:** every Kin's Strike shape access across the AP/stage gates and the Beast Bite effect question are decided, the Whirl/Arc/Thrust checks are documented, and [§3.2](gdd_monsters.md#32-strike-by-kin) and the §4.5 Strike table agree.
+- **Done when:** every Kin's Strike shape access across the AP/stage gates and the Beast Bite effect question are decided, the Whirl/Arc/Thrust checks are documented, and [§3.2](gdd_monsters.md#32-strike-by-kin) and the §4.5 Strike cost table (which takes its AP and hit cells from §3.2) agree.
 
 ### [ ] T07 · Align Ground Interactions and Healing (D/V)
 **Status:** Open — ordering questions wait for T04.
@@ -191,7 +192,7 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 **Sources:** Monsters [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit)–[§4.7](gdd_monsters.md#47-complete-references-and-validation).
 - Create concrete skills exclusively in the shared schema [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit) and validate under [§4.7](gdd_monsters.md#47-complete-references-and-validation); no new parallel blueprint/example table. Fully define effects, triggers, targeting, footprints, interactions, costs and authorized upgrade patches.
 - Species-exclusive and Signature skills use the same schema; express differences through access, authorship and explicit rules. Earlier named ideas are not promised content. Select concrete skills and sufficiently deep upgrade choices only after budgets are confirmed.
-- *New:* the reference roster ([Monsters §6.1](gdd_monsters.md#61-first-roster-draft--9-monsters)) names utility and prop skills (e.g. Lava Field, Shockwave, Raise Wall, Raise Ground, Bark Veil, Mire, Void Pull, Gale, Shade Veil, Thornbed) that have no central definition; each needs a complete record or removal. The same applies to Sanctify, Shove and Relocate mentioned in the Kin tables.
+- *New:* the reference roster ([Monsters §6.1](gdd_monsters.md#61-first-roster-draft--9-monsters)) names utility and prop skills (e.g. Lava Field, Shockwave, Raise Wall, Raise Ground, Bark Veil, Mire, Void Pull, Gale, Shade Veil, Thornbed) that have no central definition; each needs a complete record or removal. The same applies to Sanctify, Shove, Relocate and Raise Prop mentioned in the Kin tables.
 - **Done when:** the first concrete skills are complete records under [§4.2](gdd_monsters.md#42-data-oriented-skill-construction-kit)/[§4.7](gdd_monsters.md#47-complete-references-and-validation) with upgrade choices, fit the confirmed ceilings and carry no unresolved contract.
 
 ### [ ] T11 · Revise Learnlists, Passives and Reference Roster (D)
@@ -423,12 +424,13 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 
 ### [ ] T35 · Update GDD Synchronization and Implementation Plan (K)
 **Status:** Open — ongoing; closes last.
-**Prerequisites:** the respective affected decisions; overall completion after T01–T34 and T36.
+**Prerequisites:** the respective affected decisions; overall completion after T01–T34, T36 and T37.
 **Sources:** all three GDDs, especially technical notes and Development Phases.
 - Clearly distinguish decided rules, proposals, the existing prototype and later features.
 - Synchronize tables, schema fields, section references and version states. The technical validator currently requires Surge/Utility, although open kits require neither; reconcile species passives with slot-bound learnlists.
 - Update development phases based on clarified dependencies; do not mix implementation tasks with open design decisions.
 - Keep change history in Git, not in the GDDs or this task list. Maintain a current handoff and preserve only prototype comparisons needed to distinguish implementation from the current design.
+- *New:* reconcile the Overworld §6.3 “Monster unlock” column with [Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps) (it lists “physical Size path” at Core, a second artifact slot at Epic+ and a historical “Dual-aspect unlock removed” note for Immortal that §7.4 does not carry); keep historical removal notes out of active tables unless needed to delimit the current design.
 - *New:* keep the [Battle §7.1](gdd_battle.md#71-technical-notes-battle) legacy validator note consistent with the open kit rule; synchronize “physical Size path” wording (Overworld §6.3) after T36.
 - **Done when:** all other tasks are closed or consciously deferred, tables/schema fields/references are synchronized, the development phases are updated and prototype comparisons are limited to what distinguishes implementation from design.
 
@@ -436,12 +438,12 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 **Status:** Mostly done — see the handoff for the applied batches; the bullets below list what is still a candidate.
 **Prerequisites:** none; coordinate with T35.
 **Sources:** all three GDDs.
-- Monsters §4.7: the Slowing Zone is described three times (walkthrough bullets, YAML block, table column); the other reference cases partly twice. Keep one representation per case.
-- AP per Strike shape appears in [Monsters §3.2](gdd_monsters.md#32-strike-by-kin), the §4.5 Strike table and the §4.5 AP baseline table; Strike “max 2 damage” appears in Battle §6.1 and Monsters §3.2/§4.3/§4.4.
-- Monsters §4.2 spatial contracts (layer occupancy, fixed bindings) overlap Battle §4.3/§4.4/§6.5; the Surge prop/height table in §4.3 overlaps Battle §4.7/§4.10/§4.11.
-- Slot development is summarized in Monsters §4.6/§7.1 and Overworld §2.6/§4.3/§6.3.2; stage gains appear in Monsters §7.4, Overworld §6.3 and Battle §1.1; pill XP in Monsters §7.4 and Overworld §7.5.
+- *Done:* Monsters §4.7 Slowing Zone now has one representation (field entries plus paper checks); upgrade candidates are a list; Strike AP/hit cells live only in [Monsters §3.2](gdd_monsters.md#32-strike-by-kin).
+- Strike “max 2 damage” still appears in Battle §6.1 (law) and Monsters §3.2/§4.3/§4.4/§4.7 (restatements at profile and reference level); kept as interface statements unless the user wants links only.
+- Monsters §4.2 spatial contracts (layer occupancy, fixed bindings) still overlap Battle §4.3/§4.4/§6.5, and the Surge prop/height table in §4.3 overlaps Battle §4.7/§4.10/§4.11 (recipient rules and interaction-field rows are already merged).
+- Slot development is summarized in Monsters §4.6/§7.1 and Overworld §2.6/§4.3/§6.3.2; stage gains appear in Monsters §7.4 and Overworld §6.3 (the “Monster unlock” column partly differs from §7.4, e.g. “physical Size path”; reconcile under T35/T36); pill XP in Monsters §7.4 and Overworld §7.5 is already linked.
 - Repeated per-statement “unresolved Tnn” disclaimers (mostly Monsters §4.2–§4.4) could become one section status each, as CLAUDE.md prefers.
-- 11 table cells over ~450 characters (Monsters §4.2 spatial contract rows, §4.4 board-operation rows, §4.7 reference tables) could be split into lists. Prose paragraphs are already bulleted; no German text remains in the GDDs.
+- Table cells: none over ~450 characters remain; two list bullets (Monsters §4.2 `Fixed bindings`, §4.7 Slowing Zone `effects` entry) are ~460 characters including link markup and are kept.
 - **Done when:** each candidate is merged into one owning section with links elsewhere, or consciously kept; a before/after information check (conditions, exceptions, status) and the link check pass.
 
 ## Completed Tasks (IDs Retained for References)
@@ -473,6 +475,7 @@ flowchart TD
     B --> C[T03 Stats and T04 Resolution]
     C --> D[T05 to T11 Skills and Reference Roster]
     P[T36 Physical Evolution] --> D
+    Q[T37 Editorial Deduplication] --> N
     D --> E[T12 Launch Roster, T13 Battle Tests, T14 Reshape]
     A --> F[T16 Item and Recipe Catalogues]
     D --> F
