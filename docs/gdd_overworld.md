@@ -7,7 +7,7 @@
 
 - **Confirmed:** no fixed monster aspects, aspect triangle, replacement elements or Attunement. Free-form themes and concrete effects imply no affinity, matchup or learning restriction; species define learnlists. This supersedes older aspect-based proposals and prototype descriptions.
 
-- **Authority:** [gdd_monsters chapter 4](gdd_monsters.md#4-skills) alone defines monster skills: §4.1 kit/access, §4.2 shared data model/construction fields, §4.3 execution profiles, §4.4 effect/board contracts, §4.5 construction costs/AP efficiency, §4.6 slot development/replacement/upgrades, §4.7 complete references/validation.
+- **Authority:** [gdd_skills.md](gdd_skills.md) alone defines monster skills: §1 kit/access, §2 shared data model/construction fields, §3 execution profiles, §4 effect/board contracts, §5 construction costs/AP efficiency, §6 slot development/replacement/upgrades, §7 validation, §8 Kin Strikes/movement, §9 passives, §10 species assignments, §11 concrete skill records.
 - This document owns meta integration, progression economy, ritual logistics, still-open day-AP costs and independent tamer-skill/loadout systems; gdd_battle owns runtime execution/resolution. Historical prototype notes override neither.
 
 A wuxia **management + cultivation layer** around deterministic grid battles (gdd_battle.md) and monster collection (gdd_monsters.md): a disrespected clan beast tamer builds a city business empire and cultivates toward immortality.
@@ -26,7 +26,7 @@ A wuxia **management + cultivation layer** around deterministic grid battles (gd
 4. **One design language** — battle turns, city days, and building layouts all reward planning under visible constraints
 5. **Everything feeds power or story** — any management feature that outputs neither gets cut
 6. **Archetypes over uniques** — businesses, materials, structures, items: build the schema once, ship content as configurations
-7. **Choices, not damage** — monsters start with their stat shape's stats; players allocate every level-up's points within its frame and stage ceilings ([gdd_monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)). Skills, twists and gear add *options*; nothing outside battle ever raises Surge, Strike or ground damage.
+7. **Choices, not damage** — monsters start with their stat shape's stats; players allocate every level-up's points within its frame and stage ceilings ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)). Skills, twists and gear add *options*; nothing outside battle ever raises Surge, Strike or ground damage.
 
 ---
 
@@ -56,7 +56,7 @@ The overworld prepares a closed, deterministic fight and reads its result (rules
 
 | Interface | Responsible specification |
 |-----------|---------------------------|
-| Monster actions | [Monsters chapter 4](gdd_monsters.md#4-skills): kit, profiles, costs and development |
+| Monster actions | [gdd_skills.md](gdd_skills.md): kit, profiles, costs and development |
 | Tamer skills | [§6.4](#64-tamer-skills): authored effects and usage |
 | Medicines / arrays *(planned)* | [§6.6](#66-pills--medicines), [§6.8](#68-arrays-artifacts-for-places) and [§7.9](#79-inventory-and-loadout): items and pre-battle selection |
 
@@ -111,19 +111,19 @@ A day is one turn: spend AP in the city, the night resolves everything at once.
 XP turns into sub-tiers, sub-tiers into stat points, breakthroughs into new mechanics.
 
 1. Battles, pills and cultivation actions fill the XP bars (player and each monster)
-2. Full bar = sub-tier up (Lower → Middle → High); a monster gets **stat points** to spend ([gdd_monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))
+2. Full bar = sub-tier up (Lower → Middle → High); a monster gets **stat points** to spend ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))
 3. At High, a breakthrough trial / ritual leads to the next stage
 4. The stage-up unlocks mechanics (bigger teams, slot development, air layer, tamer slots), expands the Internal World, raises the stat ceilings, opens deeper dungeons
 
 | Progression interface | Responsible specification |
 |-----------------------|---------------------------|
-| XP, stat points and slot-development steps | [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups) and [§7.4](gdd_monsters.md#74-monster-progression-the-18-steps) |
+| XP, stat points and slot-development steps | [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups) and [§5.3](gdd_monsters.md#53-monster-progression-the-18-steps) |
 | Pills and idle cultivation | [§6.6](#66-pills--medicines) and [§4.3](#43-what-lives-in-the-spatial-space) |
 | Slot development and skill replacement | [§6.3.2](#632-permanent-skill-slot-development-confirmed): meta integration |
 | Breakthrough trials | [§6.3.1](#631-breakthrough-trials) |
 | Cultivate, Train and ritual costs | [§2.6](#26-action-catalog) |
 
-- **Ceiling:** monsters cannot exceed the player's stage ([gdd_monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)). Level-ups change stats/choices, never damage (§6.9); each breakthrough rewards a new mechanic (§6.3).
+- **Ceiling:** monsters cannot exceed the player's stage ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)). Level-ups change stats/choices, never damage (§6.9); each breakthrough rewards a new mechanic (§6.3).
 
 ### 2.5 Economy Loop
 
@@ -152,7 +152,7 @@ Business turns what dungeons bring into money, and money into speed and breadth.
 
 |              Action              |   Loop   |            Cost            |                       Needs                       |                    Notes                     |
 |----------------------------------|----------|----------------------------|---------------------------------------------------|----------------------------------------------|
-| Monster action / skill          | Battle | authored battle AP: [gdd_monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency) | in a fight | runtime: gdd_battle; no generic Unique price |
+| Monster action / skill          | Battle | authored battle AP: [Skills §5](gdd_skills.md#5-construction-points-and-ap-efficiency) | in a fight | runtime: gdd_battle; no generic Unique price |
 | Tamer skill                     | Battle | usage: [§6.4](#64-tamer-skills) | slotted before battle | independent tamer source / loadout |
 | Use a medicine / array           | Battle   | 1 medicine / 1 array from the loadout; battle-AP cost unresolved (T19) | human tamer | planned; medicine consumed, array consumption depends on its definition (T18) |
 | Bind a defeated wild monster     | Battle   | free + 1 Binding Seal      | win; seal tier and grade high enough (§5.1)       | in the result screen                         |
@@ -165,12 +165,12 @@ Business turns what dungeons bring into money, and money into speed and breadth.
 | Study a scroll                   | Cultivation | 1 AP                    | Scroll (§7.6)                                     | learns a tamer skill / recipe / blueprint    |
 | Take a pill (other than a relearning pill) | Cultivation | free + 1 pill        | pill                                              | XP, healing, cure; skill change has its own row |
 | Assign a monster to a spot       | Cultivation | free                    | spot in the Internal World                        | idle XP every night                          |
-| Spend stat points                | Cultivation | free                    | unspent points                                    | inside the stage ceilings ([gdd_monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))             |
+| Spend stat points                | Cultivation | free                    | unspent points                                    | inside the stage ceilings ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))             |
 | Change a monster skill    | Cultivation | relearning pill; day AP open | outside expeditions; unlocked species learnable list | no development step spent; progress rules: [§6.3.2](#632-permanent-skill-slot-development-confirmed) |
 | Develop a skill slot             | Cultivation | granted by an advancement step (no purchase) | breakthrough or listed advancement | directly grants a designer-authored, skill-specific upgrade choice (§6.3.2); where the choice is made and any day AP open |
 | Breakthrough                     | Cultivation | 1 AP + trial + materials | High sub-tier, Trial Pillar                      | prototype: 5 (player) / 3 (monster) materials |
-| Rarity ascension                 | Cultivation | 1 AP + rare materials   | Bloodline pill; ritual site open (temp_todo T30; [gdd_monsters §7.3](gdd_monsters.md#73-rarity-ascension))               | major event                                  |
-| Reshape (change stat shape)      | Cultivation | 1 AP + Reshape Elixir   | Trial Pillar                                      | rare item ([gdd_monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))                             |
+| Rarity ascension                 | Cultivation | 1 AP + rare materials   | Bloodline pill; ritual site open (temp_todo T30; [Monsters §5.2](gdd_monsters.md#52-rarity-ascension))               | major event                                  |
+| Reshape (change stat shape)      | Cultivation | 1 AP + Reshape Elixir   | Trial Pillar                                      | rare item ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))                             |
 | Rest an injured monster          | Cultivation | free                    | Recovery Spring or time                           | §5.2                                         |
 | Pair monsters / place an egg     | Cultivation | free                    | Breeding Den / Incubator                          | resolves over nights (§5.1)                  |
 | Work a facility                  | Economy  | 1 AP + inputs              | furnace, forge, workshop, stall                   | runs at once                                 |
@@ -186,7 +186,8 @@ Business turns what dungeons bring into money, and money into speed and breadth.
 | End the day                      | Day      | free                       | —                                                 | the night resolves everything                |
 
 - **Free planning:** walking, dialogue, browsing, ordering, assigning staff or monsters, queueing production, rearranging the Internal World, team selection, inspecting sheets, spending stat points and equipping artifacts.
-- **Execution:** normally 1 day AP as listed; skill replacement is not free re-slotting—it consumes a **relearning pill**, with its and slot development's day-AP costs open ([T05/T16/T31](temp_todo.md)). Recruitment also uses favor (§7.2); single-Deal scope remains T28.
+- **Execution:** normally 1 day AP as listed. Recruitment also uses favor (§7.2); single-Deal scope remains T28.
+- **Skill replacement and slot development:** replacement is not free re-slotting—it consumes a **relearning pill**. Neither action inherits default 1-day-AP execution or prototype ritual prices; their day-AP costs stay open ([T05/T16/T31](temp_todo.md)); meta integration: [§6.3.2](#632-permanent-skill-slot-development-confirmed).
 
 ---
 
@@ -363,7 +364,7 @@ STRUCTURE
 
 ### 4.4 Capacity and Growth
 
-- Growth ([gdd_monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps)): **grid per stage**, **monster capacity per sub-tier**. Bench = capacity − mode's team size; at Core+ it exceeds team size, enabling counter-picks.
+- Growth ([Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps)): **grid per stage**, **monster capacity per sub-tier**. Bench = capacity − mode's team size; at Core+ it exceeds team size, enabling counter-picks.
 
 **Proposal:**
 
@@ -386,7 +387,7 @@ Eggs in an Incubator do not count against capacity until they hatch.
 
 ### 5.1 Obtaining Monsters
 
-- Every acquisition yields an **individual** (shape rolled by species' Kin lean, [gdd_monsters §1.1](gdd_monsters.md#11-species-and-individual); rarity; stage). Rolls occur at individual creation, never in battle.
+- Every acquisition yields an **individual** (shape rolled by species' Kin lean, [Monsters §1.1](gdd_monsters.md#11-species-and-individual); rarity; stage). Rolls occur at individual creation, never in battle.
 
 |        Way        |                                          How                                          |                         Notes                          |
 |-------------------|---------------------------------------------------------------------------------------|--------------------------------------------------------|
@@ -398,7 +399,7 @@ Eggs in an Incubator do not count against capacity until they hatch.
 | **Quest / clan**  | story monsters, gifts from the clan leader, favor rewards                              | usually fixed individuals, often high rarity           |
 | **Hire**          | Guard Barracks lend beasts for a while                                                 | not owned, no stat growth                              |
 
-- **Binding Seal** (`kind: Seal`): tier = stage, grade = rarity (§7.5); target stage ≤ seal tier, rarity ≤ seal grade. **Player-stage ceiling** also applies ([gdd_monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)); stronger monsters stay wild until the next breakthrough.
+- **Binding Seal** (`kind: Seal`): tier = stage, grade = rarity (§7.5); target stage ≤ seal tier, rarity ≤ seal grade. **Player-stage ceiling** also applies ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)); stronger monsters stay wild until the next breakthrough.
 - Player chooses the defeated **0-HP** monster; only the seal is needed. Without one, it is released. Normal seals are cheap; higher grades come from dungeons, Guild or Array Workshop crafting.
 - Proposed tamer improvements belong to [§6.4](#64-tamer-skills), not the base seal (T20/T24). Auctions/breeding/eggs are long-term acquisition; seals underpin dungeon catching. Catching and Monster hall commerce remain separate loops (§7.1).
 
@@ -419,7 +420,7 @@ SUB-TIERS  Lower → Middle → High   (per stage)
 BREAKTHROUGH  High → next stage's Lower
 ```
 
-**Monsters use exactly the same stage and sub-tier names as the player**, so one table ([gdd_monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps)) covers both.
+**Monsters use exactly the same stage and sub-tier names as the player**, so one table ([Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps)) covers both.
 
 ### 6.2 Player Progression (3 layers)
 
@@ -434,7 +435,7 @@ BREAKTHROUGH  High → next stage's Lower
 
 ### 6.3 Stage Unlock Table
 
-- **[gdd_monsters §4.1](gdd_monsters.md#41-the-kit)** owns starting kit/legal access; table covers stage integration only, rarity slots remain §7.2. Progression adds *choices/modes*, not basic verbs—battles must never lack options.
+- **[Skills §1](gdd_skills.md#1-the-kit)** owns starting kit/legal access; table covers stage integration only, rarity slots remain §7.2. Progression adds *choices/modes*, not basic verbs—battles must never lack options.
 
 |     Stage      |                            Monster unlock                            |                                     Player unlock                                      |
 |----------------|----------------------------------------------------------------------|----------------------------------------------------------------------------------------|
@@ -443,14 +444,14 @@ BREAKTHROUGH  High → next stage's Lower
 | Core Formation | slot-development step · AP 3 · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer slot · **5v5** special battles |
 | Soul Tier      | Air layer access (Winged) · 2x2 size · TPR 3 possible · one foreign movement mode                | mid-battle **Beast Swap** access ([§6.4](#64-tamer-skills))                                       |
 | Immortal       | Dual-aspect unlock removed; no replacement mechanic confirmed (T34 completed)             | 3rd tamer slot                                                                         |
-| Sovereign      | Signature / Major Surge access: [gdd_monsters §4.1](gdd_monsters.md#41-the-kit) / §7.4; Ancient-only vs Legendary wording remains open (T02/T32) | full spatial arsenal                                                                   |
+| Sovereign      | Signature / Major Surge access: [Skills §1](gdd_skills.md#1-the-kit) / §7.4; Ancient-only vs Legendary wording remains open (T02/T32) | full spatial arsenal                                                                   |
 
 - Bigger teams, air layer, 2x2 and swap **are the rewards**: one mechanic per breakthrough also provides a natural tutorial.
 - **Encounter sets mode**, within fieldable team size: narrow corridor 1v1/2v2, dungeon hall 3v3, tournament 5v5; player needs at least that many monsters.
 
 #### 6.3.1 Breakthrough Trials
 
-- **Unvalidated proposal (T30):** trial advances High → next stage's Lower; requires monster at High, Internal World **Trial Pillar**, **next-tier** materials and table requirements below. Budgets/gains/XP: [gdd_monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps); costs/prototype quantities: [§2.6](#26-action-catalog) only.
+- **Unvalidated proposal (T30):** trial advances High → next stage's Lower; requires monster at High, Internal World **Trial Pillar**, **next-tier** materials and table requirements below. Budgets/gains/XP: [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps); costs/prototype quantities: [§2.6](#26-action-catalog) only.
 
 |        Breakthrough        |                               Trial                               |
 |----------------------------|-------------------------------------------------------------------|
@@ -465,15 +466,20 @@ BREAKTHROUGH  High → next stage's Lower
 
 #### 6.3.2 Permanent Skill-Slot Development (confirmed)
 
-- **[gdd_monsters §4.6](gdd_monsters.md#46-slot-levels-development-replacement-and-upgrades) alone defines** permanent slot development, development steps, replacement eligibility, retained progress/upgrade reselection, authored paths and budget/battle-AP policy. Construction points are internal authoring data, not §7.6 Blueprint items.
-- **Integration:** slot development is granted at advancement steps ([Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps)), not bought and not a focused-XP Train reward; where the choice is made (Trial Pillar at the breakthrough versus Evolution Pillar) is open. Skill replacement via **relearning pill** in monster management outside expeditions, under source eligibility. The [action catalog](#26-action-catalog), [item overview](#66-pills--medicines) and saved individual (§8) integrate, not redefine, these rules.
-- **Open:** neither action inherits default 1-day-AP execution or prototype ritual prices. Day AP/pill economy: [T05/T16/T31](temp_todo.md); step supply, slot unlocks and respec/replacement: T05 under [Monsters §4.6](gdd_monsters.md#46-slot-levels-development-replacement-and-upgrades). Monsters §7.2/§7.4 step tables do not validate the supply.
+- **[Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades) alone defines** permanent slot development, development steps, replacement eligibility, retained progress/upgrade reselection, authored paths and budget/battle-AP policy. Construction points are internal authoring data, not §7.6 Blueprint items.
+- **Integration:**
+  - Slot development is granted at advancement steps ([Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps)), not bought and not a focused-XP Train reward; where the choice is made (Trial Pillar at the breakthrough versus Evolution Pillar) is open.
+  - Skill replacement via **relearning pill** in monster management outside expeditions, under source eligibility.
+  - The [action catalog](#26-action-catalog), [item overview](#66-pills--medicines) and saved individual (§8) integrate, not redefine, these rules.
+- **Open:** day-AP costs of both actions: [§2.6](#26-action-catalog) (T05/T16/T31); step supply, slot unlocks and respec/replacement: T05 under [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades). [Monsters §5.1/§5.3](gdd_monsters.md#51-monster-rarity) step tables do not validate the supply.
 
 ### 6.4 Tamer Skills
 
 Tamer skills are **learned over the game**, then **slotted before each battle**; runtime: [gdd_battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout). *Proposal* rows are new.
 
-- **Shared contracts, separate source:** definitions reference [gdd_monsters §4.4 effects](gdd_monsters.md#44-effect-and-board-operation-contracts), [§4.2 data model](gdd_monsters.md#42-data-oriented-skill-construction-kit) and [§4.7 validation](gdd_monsters.md#47-complete-references-and-validation); explicit tamer permissions/unlocks/loadout/usage stay here and in [gdd_battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout). Table summarizes effects, not executable definitions.
+- **Shared contracts, separate source:** definitions reference [Skills §4 effects](gdd_skills.md#4-effect-and-board-operation-contracts), [§2 data model](gdd_skills.md#2-data-oriented-skill-construction-kit) and [§7 validation](gdd_skills.md#7-validation-and-concrete-skill-records).
+  - Explicit tamer permissions/unlocks/loadout/usage stay here and in [gdd_battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout).
+  - The table summarizes effects, not executable definitions.
 - **No permission transfer:** monster-profile permissions, species/Kin access, slot development and monster-action AP prices do not transfer to tamers. Tamer Surge-damage prevention, own-monster repositioning, zone clearing/ground reset and proposed direct healing do not authorize monster equivalents.
 - Source completion/validation: [T19/T20](temp_todo.md); unspecified details have no implicit defaults.
 
@@ -508,28 +514,29 @@ Pills link progression, expedition supply and Producer economy. [§7.5](#75-mate
 | Product family | Role / responsible rules |
 |----------------|--------------------------|
 | Cultivation | routine progression supply; XP curve validation T29 |
-| Relearning pill | deliberate skill replacement: [Monsters §4.6](gdd_monsters.md#46-slot-levels-development-replacement-and-upgrades), meta integration [§6.3.2](#632-permanent-skill-slot-development-confirmed); economy T05/T16/T31 |
+| Relearning pill | deliberate skill replacement: [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), meta integration [§6.3.2](#632-permanent-skill-slot-development-confirmed); economy T05/T16/T31 |
 | Breakthrough | stage-up ingredient / penalty relief in the [trial proposal](#631-breakthrough-trials); exact role unresolved (T30) |
 | Healing | expedition attrition supply line; catalog effect applies between battles |
 | Swift / Ward (battle prep) | pre-battle preparation; effects in §7.5 |
-| Bloodline | rarity-ascension sink: [Monsters §7.3](gdd_monsters.md#73-rarity-ascension) |
+| Bloodline | rarity-ascension sink: [Monsters §5.2](gdd_monsters.md#52-rarity-ascension) |
 | Revival / Soul Tether | defeat and permanent-loss logistics: [§5.2](#52-defeat-and-injury) |
 | Reshape Elixir | rare ritual input: [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups) |
 | Medicine *(planned)* | consumed in battle through the loadout; effects and item-kind treatment unresolved (T18/T19) |
 
-- **Healing scope unresolved (T22):** legacy “pills are the only run HP restoration” conflicts with monster [combat healing](gdd_monsters.md#44-effect-and-board-operation-contracts), [healing passives](gdd_monsters.md#5-passives) and proposed [tamer direct healing](#64-tamer-skills). Restriction may mean between battles or entire run; neither is adopted.
+- **Healing scope unresolved (T22):** legacy “pills are the only run HP restoration” conflicts with monster [combat healing](gdd_skills.md#4-effect-and-board-operation-contracts), [healing passives](gdd_skills.md#9-passives) and proposed [tamer direct healing](#64-tamer-skills). Restriction may mean between battles or entire run; neither is adopted.
 - **Attrition loop:** persistent expedition HP → pill logistics → deeper floors require better supply → Producer demand. Battles always start at current HP, never above max.
 
 ### 6.7 Artifacts (equipment = socketed passives)
 
-- **Equipment authority; unresolved (T17):** artifacts draw from the [Passives Library](gdd_monsters.md#5-passives), resolving into finished unit sheets. Legacy **passive + tier + tiny capped stat mod** conflicts with the table's **passive OR stat mod**; no permission to combine both.
+- **Equipment authority; unresolved (T17):** artifacts draw from the [Passives Library](gdd_skills.md#9-passives), resolving into finished unit sheets. Legacy **passive + tier + tiny capped stat mod** conflicts with the table's **passive OR stat mod**; no permission to combine both.
 - Recipes determine forging options; inputs: [§7.5](#75-materials-seeds-and-grades).
 
 |       Wearer       |          Slots          |                                                                    Effects                                                                     |
 |--------------------|-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Monster**        | 1 (2nd at Epic+ rarity) | extra passive OR +1 to one stat, **never above stage caps**                                                                                    |
-| **Player (tamer)** | 2–3                     | tamer skill range / numeric-effect mods up to +1 (e.g. range of the own-monster repositioning skill, enemy initiative penalty −3 instead of −2; source skills in [§6.4](#64-tamer-skills), not blanket permission for other skills or effects; never extra uses), +1 day AP once/day, +spatial capacity, dungeon utility |
+| **Player (tamer)** | 2–3                     | tamer skill range / numeric-effect mods up to +1 (see below), +1 day AP once/day, +spatial capacity, dungeon utility |
 
+- **Tamer skill mods:** e.g. range of the own-monster repositioning skill, enemy initiative penalty −3 instead of −2; source skills in [§6.4](#64-tamer-skills), not blanket permission for other skills or effects; never extra uses.
 - **Slot access unresolved (T17):** table requires Epic+ for second monster artifact slot; §6.3 also places it at Core. Tamer count/unlock timing undecided; neither draft supersedes the other. Stat/damage limits: [§6.9](#69-hard-caps).
 - **Intent, not validated:** monster artifacts deepen battle choices; tamer artifacts aid management/expeditions. Equipment/tactics should let a Normal beast rival an Epic.
 
@@ -710,15 +717,15 @@ Furnace, Array Workshop and the Forge are the same code with different stations 
 
 |        Family         |                  Effect                  |                    Recipe pattern (tier T)                    |
 |-----------------------|------------------------------------------|---------------------------------------------------------------|
-| Cultivation           | XP per tier: [Monsters §7.4](gdd_monsters.md#74-monster-progression-the-18-steps) | 3 herbs of tier T                                 |
+| Cultivation           | XP per tier: [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps) | 3 herbs of tier T                                 |
 | Healing               | restore 2 HP between battles             | 2 herbs of tier T                                             |
 | Revival               | injury recovery: [§5.2](#52-defeat-and-injury) | 2 herbs + 1 beast part |
 | Swift (battle prep)   | +1 initiative in the next battle         | 2 herbs + 1 ore                                               |
 | Ward (battle prep)    | first-hit immunity in the next battle    | 2 herbs + 1 beast part                                        |
 | Breakthrough          | removes the trial penalty (§6.3.1)       | 1 Rare herb of tier T+1 + 2 ore                               |
-| Bloodline             | rarity ascension ([gdd_monsters §7.3](gdd_monsters.md#73-rarity-ascension))                  | 1 Rare+ beast part of the Kin + 1 herb of tier T+1 + Upper stones |
+| Bloodline             | rarity ascension ([Monsters §5.2](gdd_monsters.md#52-rarity-ascension))                  | 1 Rare+ beast part of the Kin + 1 herb of tier T+1 + Upper stones |
 | Soul Tether           | permanent-loss protection: [§5.2](#52-defeat-and-injury) | 1 Epic herb + 1 beast part |
-| Reshape Elixir        | re-roll into another stat shape ([gdd_monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))   | 1 Epic essence + 3 herbs                                      |
+| Reshape Elixir        | re-roll into another stat shape ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups))   | 1 Epic essence + 3 herbs                                      |
 | *Medicine* *(planned)*| used in battle (planned)                 | not specified                                                          |
 
 - Aspect-matched cultivation pill/multiplier removed; no replacement effect/recipe. New catalog design: [temp_todo.md](temp_todo.md), T16.
@@ -761,7 +768,7 @@ All sources feed one item schema; money is only a partial input for top grades (
 | **Quests**           | any item, often unique ones                              | Notice Board, Watch Post, story            |
 | **Arena**            | favor, scrolls, seals                                    | ranking rewards                            |
 
-- **Rarity ascension** ([gdd_monsters §7.3](gdd_monsters.md#73-rarity-ascension)): draft new-grade material sources are dungeon bosses, quests, clan leader, auction. **Unresolved (T16/T30):** Legendary sources conflict with §7.5's story-only rule; neither list overrides the other. Dungeon rewards remain T22.
+- **Rarity ascension** ([Monsters §5.2](gdd_monsters.md#52-rarity-ascension)): draft new-grade material sources are dungeon bosses, quests, clan leader, auction. **Unresolved (T16/T30):** Legendary sources conflict with §7.5's story-only rule; neither list overrides the other. Dungeon rewards remain T22.
 
 ### 7.9 Inventory and Loadout
 
@@ -780,9 +787,9 @@ All sources feed one item schema; money is only a partial input for top grades (
 - **Species:** existing `MonsterDef` files hold Kin, free themes, learnlist, default kit and species passive; stage stats come from individuals, no longer species.
 - **Individual:** save record, **no battle rules**:
   - Identity/stats: species id, shape, stats, unspent points, rarity; progression: stage/sub-tier/XP, available development steps.
-  - Skills: permanent progress per slot, equipped skill and selected skill-specific upgrades; persist progress/resolved selections per [gdd_monsters §4.6](gdd_monsters.md#46-slot-levels-development-replacement-and-upgrades) (meta §6.3.2).
+  - Skills: permanent progress per slot, equipped skill and selected skill-specific upgrades; persist progress/resolved selections per [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades) (meta §6.3.2).
   - Equipment/health: artifacts, current HP. Blueprint points are internal design data, not saved player currency.
-  - Definitions/authorized patches use [§4.2 data model](gdd_monsters.md#42-data-oriented-skill-construction-kit) and [§4.7 references/validation](gdd_monsters.md#47-complete-references-and-validation), never a separate overworld skill model.
+  - Definitions/authorized patches use [§2 data model](gdd_skills.md#2-data-oriented-skill-construction-kit) and [§7 validation](gdd_skills.md#7-validation-and-concrete-skill-records) (concrete skills: [gdd_skills.md](gdd_skills.md)), never a separate overworld skill model.
 - **Slot-development paths, stat shapes, stage ceilings, items, structures, businesses, dungeons:** fixed-template data files, loaded/validated by the monster/skill/zone registry pattern; new content = new file.
 - **Battle request / result** is the single contract between the two halves:
   - Request: mode, board parameters, both teams as **finished unit sheets** (resolved stats, developed skills, passives, current HP), pre-battle modifiers (pills, arrays) and the battle loadout (tamer skills, medicines, arrays).
@@ -801,25 +808,16 @@ Earlier reported builds, excluded from active design tables:
 - **Structures:** Meditation Stone, Qi Spring, Herb Plot, Refining Furnace, Spirit Pond and Evolution Pillar.
 
 **Earlier development phases:**
-```
-PHASE 1  Battle system (done: 1v1 + 3v3, draft, 9 monsters) + individual monsters
-         (built: individuals, BattleRequest/Result, GameState, city map of places,
-         dungeon node map with full enemy sheets and team pick, loot, Trader with drifting
-         prices, cultivation pills → XP → sub-tier with stat snap;
-         placeholders: night heals everyone, flat rewards, prototype prices and XP curve)
-         (stat shapes, stage caps, XP → sub-tier snap) + node-based dungeon access
-         + Trader business (pure buy/sell) + money → power loop
-         (money → cultivation pills → XP → stronger stats)
-PHASE 2  Walkable city districts (first step built: Teleport Plaza, Market, Inner World;
-         WASD + E, iso camera, monster follows; visible dungeon (the ambush bonus is dropped from the design, still in the code); building system:
-         grid, blueprints + materials, cultivation spots, herb plots, adjacency; skill evolution at
-         the Evolution Pillar, breakthrough; Producer: Refining Furnace + Pill Stall, healing and
-         battle-prep pills; Favor with the Family, the Merchants' Guild and the City Watch: requests,
-         discounts, licenses, recruits; walkable Clan Compound),
-         Producer business, favor system with 2-3 factions
-PHASE 3  Dojo/faction staff, consigning at the Guild's auction hall, monster hall,
-         internal world growth stages, clan storyline
-```
+
+- **Phase 1:** battle system (done: 1v1 + 3v3, draft, 9 monsters) + individual monsters; node-based dungeon access; Trader business (pure buy/sell); money → power loop (money → cultivation pills → XP → stronger stats).
+  - Built: individuals, BattleRequest/Result, GameState, city map of places, dungeon node map with full enemy sheets and team pick, loot, Trader with drifting prices, cultivation pills → XP → sub-tier with stat snap (stat shapes, stage caps, XP → sub-tier snap).
+  - Placeholders: night heals everyone, flat rewards, prototype prices and XP curve.
+- **Phase 2:** Producer business; favor system with 2-3 factions.
+  - Walkable city districts: first step built (Teleport Plaza, Market, Inner World; WASD + E, iso camera, monster follows; visible dungeon — the ambush bonus is dropped from the design, still in the code); walkable Clan Compound.
+  - Building system: grid, blueprints + materials, cultivation spots, herb plots, adjacency; skill evolution at the Evolution Pillar, breakthrough.
+  - Producer: Refining Furnace + Pill Stall, healing and battle-prep pills.
+  - Favor with the Family, the Merchants' Guild and the City Watch: requests, discounts, licenses, recruits.
+- **Phase 3:** Dojo/faction staff, consigning at the Guild's auction hall, monster hall, internal world growth stages, clan storyline.
 
 - **Historical prototype values, not current progression/economy:** skill evolution at Evolution Pillar 1 AP each; HP/Initiative 75% / 90% / 100% by sub-tier; cultivation pill +30 XP for 80 stones; dungeon win +10 XP. Reversal/breakthrough quantities remain explicitly prototype in [§2.6](#26-action-catalog), never slot-development prices.
 
@@ -838,7 +836,7 @@ PHASE 3  Dojo/faction staff, consigning at the Guild's auction hall, monster hal
 ## 9. Design Tracking
 
 - Open decisions/dependencies/validation: [temp_todo.md](temp_todo.md). Local labels distinguish confirmed rules, drafts and conflicts; editing does not confirm proposals.
-- [Monsters chapter 4](gdd_monsters.md#4-skills) owns monster skills, including removal of combination surcharges; [§6.3.2](#632-permanent-skill-slot-development-confirmed) covers meta integration only.
+- [gdd_skills.md](gdd_skills.md) owns monster skills, including removal of combination surcharges; [§6.3.2](#632-permanent-skill-slot-development-confirmed) covers meta integration only.
 
 | Review area | Existing TODOs |
 |-------------|----------------|

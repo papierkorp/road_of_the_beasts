@@ -32,7 +32,7 @@
 - **Präzision:** Bedingungen, Kosten, Grenzen und Auflösungsreihenfolge eindeutig; Battle-AP, Tages-AP, Konstruktionspunkte, Schaden und EP trennen.
 - **Status:** beschlossen, Arbeitsentwurf und noch nicht validiert sichtbar unterscheiden. Abschnitts-/Tabellenstatus statt wiederholter Warnungen an jeder Aussage.
 - **Zuständigkeit:** jede Regel, Formel, Preisliste und Datenstruktur hat genau einen zuständigen Abschnitt. Anderswo verlinken und nur die eigene Schnittstelle beschreiben, keine Regelkopien.
-- **Skills:** allgemeine Regeln/Kosten über präzise Effekt-/Skillklassen statt Namenslisten beschreiben. Konkrete Skills samt Ausnahmen einmal zentral definieren; Namen sonst nur für nötige Inhaltsreferenzen, abgegrenzte Referenzrechnungen oder konkrete offene Aufgaben. Skill-Ausnahmen nie auf ganze Klassen übertragen.
+- **Skills:** allgemeine Regeln/Kosten über präzise Effekt-/Skillklassen statt Namenslisten beschreiben. Konkrete Skills samt Ausnahmen einmal zentral in `docs/gdd_skills.md` definieren; Namen sonst nur für nötige Inhaltsreferenzen, abgegrenzte Referenzrechnungen oder konkrete offene Aufgaben. Skill-Ausnahmen nie auf ganze Klassen übertragen.
 - **Navigation:** stabile, aussagekräftige Überschriften und relative Markdown-Links; nach Verschiebungen Links/Abschnittsverweise aktualisieren.
 
 ### Überarbeitung und Abschluss
@@ -52,24 +52,29 @@
 | Datei | Zuständigkeit | Abgrenzung |
 |---|---|---|
 | [`docs/gdd_battle.md`](docs/gdd_battle.md) | Kampfablauf, Initiative, Battle-AP-Laufzeit, Spielfeld, Zonen, Böden, Props, allgemeine Schadens-/Verschiebungsauflösung | Keine zweite Monster-Skill-, Kosten- oder Upgrade-Spezifikation |
-| [`docs/gdd_monsters.md`](docs/gdd_monsters.md) | Monsteridentität, Stats, Kins, Skills, Passives, Roster, Monsterentwicklung | Kapitel 4: zentrale Monster-Skills; generische Kampfauflösung in Battle |
+| [`docs/gdd_monsters.md`](docs/gdd_monsters.md) | Monsteridentität, Stats, Kins, Roster, Monsterentwicklung | Keine Skill-Regeln oder -Inhalte (siehe `gdd_skills.md`); generische Kampfauflösung in Battle |
+| [`docs/gdd_skills.md`](docs/gdd_skills.md) | Alles zu Monster-Skills: Kit, Datenmodell, Profile, Effektverträge, Preise/AP, Slotentwicklung, Validierung, Kin-Strike-/Bewegungstabellen, Passives, Spezies-Zuordnungen, konkrete Skill-Records | Monsteridentität/Stats/Roster in `gdd_monsters.md`; Kampfauflösung in Battle; Meta-Integration in Overworld |
 | [`docs/gdd_overworld.md`](docs/gdd_overworld.md) | Welt, Expeditionen, Monstererwerb/-unterbringung, Wirtschaft, Meta-Fortschritt, Tamer-Skills, Ausrüstung, Battle-Loadout | Nur Meta-Integration der Monster-Skills, nicht deren Konstruktion/Kampfauflösung |
 | [`docs/temp_todo.md`](docs/temp_todo.md) | Offene Entscheidungen, Abhängigkeiten, Validierungsaufträge, aktuelle Übergabe | Arbeitsorganisation, keine zusätzliche verbindliche Regelsammlung |
 | `CLAUDE.md` | Dauerhafte Arbeitsregeln und Agent-Wegweiser | Keine Balancewerte, detaillierten Spielregeln oder Übergabekopie |
 
 ### Zentrale Monster-Skill-Spezifikation
 
-`docs/gdd_monsters.md`, Kapitel 4:
+`docs/gdd_skills.md`:
 
 | Abschnitt | Thema |
 |---|---|
-| §4.1 | Kit und Zugang |
-| §4.2 | Gemeinsames Datenmodell und Konstruktionsfelder |
-| §4.3 | Ausführungsprofile |
-| §4.4 | Effekt- und Boardverträge |
-| §4.5 | Konstruktionspunkte, Preise und AP-Effizienz |
-| §4.6 | Slotentwicklung, Ersatz und Upgrades |
-| §4.7 | Vollständige Referenzen und Validierung |
+| §1 | Kit und Zugang |
+| §2 | Gemeinsames Datenmodell und Konstruktionsfelder |
+| §3 | Ausführungsprofile |
+| §4 | Effekt- und Boardverträge |
+| §5 | Konstruktionspunkte, Preise und AP-Effizienz |
+| §6 | Slotentwicklung, Ersatz und Upgrades |
+| §7 | Validierung |
+| §8 | Kin-Strike- und Bewegungstabellen |
+| §9 | Passives |
+| §10 | Spezies-Skill-Zuordnungen (Entwurf) |
+| §11 | Konkrete Skill-Records |
 
 - Wegweiser, keine zusätzliche Mechanikdefinition; bei Umstrukturierung Übersicht und betroffene Verweise mitführen.
 
