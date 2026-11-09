@@ -28,7 +28,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 
 ### 1.2 Battle Design Pillars
 
-1. **Control squares, not just units** — shaped skills claim squares; body-relative attacks and unit-targeted effects keep their own placement rules. The board is the weapon
+1. **Control squares, not just units** — attacks use spatial hit patterns and zones create shared positional opportunities/risks. Attack targeting, recipients and the boundary to unit-bound utility follow the [central square-control contract](gdd_monsters.md#42-data-oriented-skill-construction-kit). The board is the weapon
 2. **Deterministic & readable** — before confirming, see exactly which squares a cast takes, levels up, cancels, replaces or loses, its ground/prop effects and every pushed monster's landing
 3. **Everything reacts, nothing deletes** — no delete button; small, data-driven rules. Zone overlaps use definitions and opposite effects ([§4.6](#46-zones-effects-rules--opposites)): opposite levels subtract, cancelling at equal levels. Concrete skill effects change ground and trigger prop reactions; zone × ground remains unresolved ([temp_todo.md](temp_todo.md), T07).
 4. **The Surge is the burst** — big damage (3+) only comes from a declared, charging, autonomous Surge. Small damage comes from Strikes (max 2), hazard ground (max 2 per trigger), collisions, falls and debris (1). Zones never deal damage themselves
@@ -66,7 +66,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 
 - Pay the resolved monster action's authored Battle-AP cost: **at least 1 Battle-AP, never 0**. This does not redefine tamer/loadout usage.
 - AP evaluation and construction prices: [gdd_monsters §4.5](gdd_monsters.md#45-construction-points-and-ap-efficiency); skill execution, development and access: [§5.1](#51-monster-skills-central-specification). Tamer/loadout costs use their own Overworld sources ([§5.2](#52-tamer-skills-and-battle-loadout)), not monster-action prices.
-- **No cooldowns:** monster actions may repeat within a turn as AP, board and authored profile/usage limits permit, including **one charging Surge per monster** ([central execution profiles](gdd_monsters.md#43-skill-execution-profiles)); e.g. recast a zone to level it up before changing ground. Turns offer *repositioning*, *setting up* or *attacking*, not "whatever is off cooldown".
+- **Repetition:** use the resolved skill's [central repetition policy](gdd_monsters.md#usage-and-repetition) together with AP, board and profile limits; concurrent Surge casts follow the [central Surge profile](gdd_monsters.md#surge), not a monster-wide charging cap. A repeatable zone may be recast to level it up; a round-limited skill must satisfy its declared policy. No generic multi-round cooldown system; existing skills gain no new cap implicitly.
 - **Positioning:** [movement and Strike profiles](gdd_monsters.md#43-skill-execution-profiles) make repositioning compete with attacking for Battle-AP. Their authored prices, not a separate rule here, determine what fits in one turn; board control can place a target inside the Strike shape without a preceding move.
 
 ### 2.4 Effect Timing Reference
@@ -404,8 +404,8 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 
 ### 6.5 Displacement
 
-- **Generic displacement:** cardinal, one square per trigger, with previewed landing. Push uses the direction chosen at cast (or with the Strike); pull uses the board anchor fixed at cast. Blocked moves: [§6.3](#63-collision-fall--debris); entry/end-event integration: [§2.4](#24-effect-timing-reference).
-- Zone effects: [§4.6](#46-zones-effects-rules--opposites). Authorized direct displacement, on-hit push/pull and delayed footprint-bound displacement get recipients, bindings and triggers from the [central displacement contracts](gdd_monsters.md#44-effect-and-board-operation-contracts), not a second profile catalogue here. Ties and combined-effect order remain unresolved ([temp_todo.md](temp_todo.md), T04).
+- **Generic displacement:** cardinal, one square per trigger, with previewed landing. The scoped adjacent-hit eight-direction exception and coupled self retreat are defined only in [Monsters §4.3](gdd_monsters.md#body-relative-damage-and-movement-variants); they do not change zone/Surge direction rules. Other push sources use their authored cast/Strike direction; pull uses the board anchor fixed at cast. Blocked moves: [§6.3](#63-collision-fall--debris); entry/end-event integration: [§2.4](#24-effect-timing-reference).
+- Zone effects: [§4.6](#46-zones-effects-rules--opposites). Authored spatial on-hit push/pull and delayed footprint-bound displacement get recipients, bindings and triggers from the [central displacement contracts](gdd_monsters.md#44-effect-and-board-operation-contracts), not a second profile catalogue here. Ties and combined-effect order remain unresolved ([temp_todo.md](temp_todo.md), T04).
 
 **Why end of turn:** at turn start the target could simply walk away again; at turn end it lands in Lava, through Thornbed, in front of your Strike or in a Surge detonating before it can move again. Visible counterplay: don't end your turn on a current.
 

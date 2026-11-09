@@ -323,8 +323,8 @@ Monster = Step (always, no slot)
           at least one active      — Epic+ get a 5th, passive-only slot (§7.2)
 ```
 
-- **Slots:** all 4 open on day one; movement skills occupy a normal slot, unlike universal **Step** (1 square, 2 AP, slot-free). No skill kind is mandatory; repeats are legal (4 Surges, or two movement skills plus a Strike).
-- **Limits:** species learnable list, Kin lock-outs (§3.1/§3.3), one charging Surge at a time (§4.3).
+- **Slots:** all 4 open on day one; movement skills occupy a normal slot, unlike universal **Step** (1 square, 2 AP, slot-free). No skill kind is mandatory; repeats, including identical skills in separate legal slots, are allowed. Each copy occupies its own slot and has independent activation usage under [§4.2](#usage-and-repetition); access and passive-only slot restrictions still apply.
+- **Limits:** species learnable list and Kin lock-outs (§3.1/§3.3); each skill's [usage policy](#usage-and-repetition) and [Surge placement rules](#surge) remain binding. There is no monster-wide cap on simultaneously charging Surges.
 - **Default-kit tip:** pair a Surge with a *different effect family* of utility (protection, slowing or displacement), preserving an answer. Skills define zones/ground/effects; descriptive themes grant no bonuses or penalties. The prototype Tiger's 7 skills are a test bench, not a kit.
 
 #### Species-Specific and Signature Access
@@ -345,22 +345,22 @@ Monster = Step (always, no slot)
 
 Every resolved definition contains all groups below: `none`/`[]` where genuinely inapplicable; `pending` for unresolved drafts, blocking approval and never a runtime default. Names are documentation notation, not required engine serialization.
 
-| Field group | Required meaning |
-|-------------|------------------|
-| `metadata` | Stable id/name, descriptive tags, optional classification (`kind`) and optional reusable `rule_profile`. Classification is not an effect permission or price. |
-| `access` | Species learn-list/exclusivity, Kin, progression and slot restrictions. No skill rarity/rating. |
-| `usage_type` | `active` or `passive`; independent of theme, recipients or effect family. |
-| `execution` | Activation (`player_action`, `while_equipped`, or a defined event), qualifying condition, resolution timing, telegraph/charging and any autonomous delayed execution. Always-on and event-driven passives are distinguishable. |
-| `targeting` | What is selected (`self`, `unit`, `tile`, `prop`, or `none`), eligibility, distance source and sight. Event-driven effects may bind their recipient from the event without player selection. |
-| `placement` | Body/board anchor, selected destination/path, binding and direction, or `none`. A self buff does not create a board anchor. |
-| `area` | Explicit footprint/count/orientation and boundary rules, or `none` for non-area effects. Area is not cast range. |
-| `effects` | Typed effect definitions with parameters/value sources, per-effect recipients/layers, application event, conditions, lifetime reference, stacking/refresh and resolution dependencies. Includes stat modifiers and rule modifiers, not just attacks. |
-| `persistence` | Named lifetimes for created zones, states, props or pending actions: owner, duration/clock or end/consumption condition. Effects reference these entries; all effects of one zone share its clock. Delay is distinct from a buff's lifetime. |
-| `board_changes` | Explicit typed ground, height and prop operations with targets, trigger/order and lifetime references, or `[]`. Natural damage reactions are resolved by their existing source rules. |
-| `interactions` | Placement/effect/path blocking and other profile constraints. Recipient layers belong to each effect, not to global hit flags. |
-| `usage` | Active battle AP cost and usage limits. Passives use `ap_cost: none`, not a zero-AP active action. AP is the only battle-use resource for active monster skills; no generic mana or cooldown system. |
-| `upgrades` | Authored patches to these same fields, slot-level requirements, prerequisites/exclusions and explicit AP consequences. Empty while a draft's development path is unresolved. |
-| `evaluation` | Derived component costs, AP-efficiency or passive-availability cost, total points and required slot-level ceiling. Legacy `combination_cost` fields are fixed at 0, not an additional price channel. Not a player currency. |
+| Field group | Required meaning | Evaluation binding (derived, not a second input model) |
+|-------------|------------------|--------------------------------------------------------|
+| `metadata` | Stable id/name, descriptive tags, optional classification (`kind`) and optional reusable `rule_profile`. Classification is not an effect permission or price. | No name/tag/profile fee. |
+| `access` | Species learn-list/exclusivity, Kin, progression and slot restrictions. No skill rarity/rating. | Eligibility check, not a rarity/exclusivity budget bonus. |
+| `usage_type` | `active` or `passive`; independent of theme, recipients or effect family. | Select active or passive availability in [§4.5](#45-construction-points-and-ap-efficiency), never both. |
+| `execution` | Activation (`player_action`, `while_equipped`, or a defined event), qualifying condition, resolution timing, telegraph/charging and any autonomous delayed execution. Always-on and event-driven passives are distinguishable. | [Component prices](#component-price-sheet): timing and complete marker; [passive availability](#self-buff-and-passive-costs). Undefined event frequency/conditions block complete valuation. |
+| `targeting` | What is selected (`self`, `unit`, `tile`, `prop`, or `none`), eligibility, distance source and sight. Event-driven effects may bind their recipient from the event without player selection. | [Selection costs](#zone-protection-and-healing-costs), resolved together with placement; no second fee for the same selection. |
+| `placement` | Body/board anchor, selected destination/path, binding and direction, or `none`. A self buff does not create a board anchor. | [Anchor/direction costs](#component-price-sheet); movement path/destination is included in its [preset](#movement-costs), not an additional ranged anchor. |
+| `area` | Explicit footprint/count/orientation and boundary rules, or `none` for non-area effects. Area is not cast range. | Supplies potential cells/distant cells to component formulas, not a second area fee. `none` creates no artificial one-cell area charge. |
+| `effects` | Typed effect definitions with parameters/value sources, per-effect recipients/layers, application event, conditions, lifetime reference, stacking/refresh and resolution dependencies. Includes stat modifiers and rule modifiers, not just attacks. | Resolve [§4.4 contracts](#44-effect-and-board-operation-contracts) to the applicable §4.5 component: damage, displacement, modifiers, protection/healing, self movement or rule permission. Recipients determine authorized coverage. |
+| `persistence` | Named lifetimes for created zones, states, props or pending actions: owner, duration/clock or end/consumption condition. Effects reference these entries; all effects of one zone share its clock. Delay is distinct from a buff's lifetime. | Supplies duration/availability to the applicable component; permanent [board packages](#ground-and-board-costs) already include persistence. No duplicate timer or future-trigger charge. |
+| `board_changes` | Explicit typed ground, height and prop operations with targets, trigger/order and lifetime references, or `[]`. Natural damage reactions are resolved by their existing source rules. | [Ground/board components](#ground-and-board-costs); included reactions are not separate authored payloads. Missing special-reaction valuation is unresolved, not free. |
+| `interactions` | Placement/effect/path blocking and other profile constraints. Recipient layers belong to each effect, not to global hit flags. | Resolve the applicable effect/package constraints; no generic flag fee or automatic restriction discount. Changed permissions require an applicable rate. |
+| `usage` | Active battle AP cost and explicit activation/repetition limits for active or event-driven skills. A defined limit identifies what is counted, its owner/scope and reset event; absence of a new approved limit preserves the current profile rules. Passives use `ap_cost: none`, not a zero-AP active action. AP is the only battle-use resource for active monster skills; [shared repetition policies](#usage-and-repetition) apply without a generic mana or multi-round cooldown system. | [AP efficiency](#ap-efficiency-working-scale) once per active use; limits constrain valuation but grant no unpriced discount. |
+| `upgrades` | Authored patches to these same fields, slot-level requirements, prerequisites/exclusions and explicit AP consequences. Empty while a draft's development path is unresolved. | Re-evaluate the resolved patched definition, not a second upgrade-component model or duplicate enlargement charge. |
+| `evaluation` | Internal pre-release authoring/test report: derived component costs, AP-efficiency or passive-availability cost, total points and required slot-level ceiling. Legacy `combination_cost` fields are fixed at 0, not an additional price channel. Neither a runtime requirement nor a player currency. | Derived result under [§4.5](#45-construction-points-and-ap-efficiency), not independently editable mechanics, prices or permissions. |
 
 - **Profiles are reusable bundles, not a closed menu:** Strike supplies body-relative hits, Surge telegraphing/charging, Zone persistent board area, movement presets traversal. Fully defined self buffs/passives may use `rule_profile: none`, without bypassing damage delivery, access or hard limits.
 - Evaluate resolved mechanics once; `kind`/`rule_profile` are not separately purchased advantages.
@@ -375,11 +375,13 @@ Every resolved definition contains all groups below: `none`/`[]` where genuinely
 
 These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](gdd_battle.md#43-the-square-stack-zones--ground) and the central execution profiles (§4.3). References may supply fixed fields; an unresolved rule is not a configurable permission.
 
+**Confirmed square-control boundary:** attacks define affected squares through their authored footprint/body shape, not a generic directly selected-unit damage action. Eligible occupants are hit under the owning profile's caster/layer/blocking rules, without ally-only/enemy-only area filters. Zones retain their shared field effects for both sides. Self movement and source-defined unit-bound utility remain separate; this principle neither bans them nor authorizes new utility effects.
+
 - **`targeting` — what is selected**
   - Required resolved data: Selection type (`self`, `unit`, `tile`, `prop`, `none`), eligible target definition including side/layer where applicable, distance source and LOS rule
   - Binding rules / open cases: `none` means no player selection, not no effect recipient; event bindings must be explicit.
     - `self` selects the caster; `unit` selects an eligible monster; `tile` selects a board cell, not its occupant; `prop` selects an eligible existing prop, not permission to create or relocate it.
-    - Side eligibility must come from the source; no generic ally/enemy filter is granted.
+    - Side eligibility must come from the source; no generic ally/enemy filter is granted. Monster offensive push/pull selects affected squares through its authored spatial pattern, not a directly selected unit; source-defined self/tamer utility is not made into an attack by this restriction.
 - **`placement` — where it resolves**
   - Required resolved data: Binding from selection to board anchor or body footprint, required adjacency, occupancy/layer constraints and separately selected direction/pull anchor
   - Binding rules / open cases: Zone/ground/prop/Surge anchors use effective Reach, Manhattan distance from caster to anchor, not distance to every affected cell. There is no independent skill-range stat.
@@ -387,11 +389,11 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
     - Authored twist exceptions stay explicit.
 - **Effect `recipients` — what receives an effect**
   - Required resolved data: Referenced recipient rule per effect, spatial scope (self, selected unit, area occupants or event-bound), relationship/side, authorized `ground`/`air` layers, relevant prop eligibility and evaluation event/application condition
-  - Binding rules / open cases: Selection does not restrict an area to the selected unit or its side. Effects of one skill may differ; no automatic ally-only filtering or air access. Self-bound modifiers affect their owner in its legal layer unless explicitly narrowed.
+  - Binding rules / open cases: Selection does not restrict an area to the selected unit or its side. Effects of one skill may differ under their source contracts; ally-only/enemy-only area filtering is not an authoring option, and recipient data grants no new air access. Self-bound modifiers affect their owner in its legal layer unless explicitly narrowed.
     - Zones affect everyone occupying their cells; Strike hits allies but excludes its caster; Surge includes its caster and allies.
     - Ground affects ground-layer occupants; prop reactions and Surge prop/occupant handling use their own rules, not a generic occupant hit ([gdd_battle §4.6–4.7](gdd_battle.md#46-zones-effects-rules--opposites) and §4.3 here).
 
-- **LOS ≠ placement legality:** zone/ground/prop/Surge casts and self boosts need no LOS; existing direct unit-targeted displacement and species-specific effects on another monster need sight (§4.2). Reach, occupancy, layer and blocking checks still apply. Exact sight geometry/unspecified direct-target eligibility remain [temp_todo.md](temp_todo.md) T02/T04/T09.
+- **LOS ≠ placement legality:** zone/ground/prop/Surge casts and self boosts need no LOS; source-defined unit-targeted utility needs its explicit sight contract. Monster offensive push/pull uses spatial hit patterns, not direct unit selection. Reach, occupancy, layer and blocking checks still apply. Exact sight geometry/unspecified direct-target eligibility remain [temp_todo.md](temp_todo.md) T02/T04/T09.
 - **Layer-specific occupancy:** per-cell layer limits, props under zones/Surges and ground-on-prop rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground). Skill-side additions: prop creation needs empty cells; charging Surges cannot overlap (§4.3 here). FIELD occupants/air occupancy remain T04/T09: no universal cross-layer `empty` test.
 - **Fixed bindings:** board footprints stay at cast cells; push direction/pull anchor are fixed at cast ([gdd_battle §4.4](gdd_battle.md#44-square-data-model)/[§6.5](gdd_battle.md#65-displacement); §4.2 here). Selecting a unit grants no homing area, following zone, moving pull anchor or automatic retarget after movement/death. Author unspecified unit-target resolution/validity (T02/T04); immediate body-relative Strike placement is no tracking precedent.
 
@@ -413,6 +415,32 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
 
 - **Runtime bindings:** use turn/round sequence [Battle §2.1](gdd_battle.md#21-core-battle-loop), event meanings/order [Battle §2.4](gdd_battle.md#24-effect-timing-reference), ground entry [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed). Round duration does not count caster actions.
 - **Repetition:** persistence adds no undefined payload/repeat trigger; action repetition follows [Battle §2.3](gdd_battle.md#23-action-points). Missing trigger/lifetime/timing contracts remain [temp_todo.md](temp_todo.md) T02/T04/T07/T09/T19.
+
+#### Usage and Repetition
+
+**Confirmed shared authoring options:** every resolved active or event-driven skill declares its repetition policy through `usage`, directly or by an unambiguous profile reference. These are runtime capability limits read by the internal evaluation, not construction points spent during play. No existing skill is assigned a new limit by introducing these options.
+
+| Policy | Meaning |
+|--------|---------|
+| Repeatable | No additional repetition cap from this policy. Activation still requires its defined event/conditions and, for active actions, sufficient Battle-AP; all existing profile and usage limits remain binding. |
+| Once per global round | At most one cast/activation of each equipped skill instance in the global battle round. It becomes available in the next global round, not at the owner's next turn; extra turns within one round do not reset it. |
+
+- **Scope:** each equipped skill instance has its own usage allowance, not a shared allowance by skill name, monster or team. Two identical round-limited copies in two legal slots allow one activation from each per global round, each active cast paying its own Battle-AP. This deliberately trades kit flexibility for additional uses. Independent instance allowances do not override placement rules or separately authored profile-wide limits and grant no additional stacking of identical continuous permissions. Multiple pending Surge casts are separate actions, not stacking of a continuous permission.
+- **Activation versus effect:** the policy counts a cast or event-driven activation, not every recipient or subsequent application of an existing zone/state. Casting again to level/refresh a zone is another cast; the zone's scheduled/continuous effects retain their own trigger and lifetime contracts. The policy grants no new trigger or stacking permission.
+- **Consumption:** an invalid selection/activation attempt consumes neither Battle-AP nor the instance's usage allowance. A valid activation consumes its authored Battle-AP and one use of any applicable activation limit at activation, regardless of whether its effects later produce a benefit; a valid Surge whose targets leave still spent its activation. Passives spend no Battle-AP but consume their applicable instance allowance on valid activation. Subsequent effects of an existing zone/state do not consume another activation. This defines consumption, not unresolved target-validity, cancellation or event-order behaviour at later resolution.
+- **Other limits:** retain independent placement restrictions and existing once-per-battle profile limits. A pending Surge does not by itself prevent another Surge cast; its skill instance's policy determines repeat availability. These two repetition options do not remove them or create a multi-round cooldown system. Continuous permissions are not repeatedly activated actions.
+- **Evaluation:** read the declared policy before release; active round-limited availability uses the [selected calibration rule](#round-limited-availability-calibration). Runtime activation bookkeeping is not runtime construction costing. Repeatability does not settle recursion, simultaneous ordering, later-resolution target validity/cancellation or owner-removal cases (T02/T04).
+
+#### Evaluation Contract — One Definition, One Calculation
+
+Evaluation is an **internal, pre-release calculation/check of an authored definition**, not an in-battle calculation, player-facing resource or required runtime field. It can be produced by an authoring script/test before a skill is admitted to the game. The temporary [arithmetic checker](temp_kalkscript.py) covers only the explicitly supported reference subsets, not the full model or content admission. The calculation is part of this data model, not a parallel skill blueprint. The field table above binds authored mechanics to costing; [§4.4](#44-effect-and-board-operation-contracts) owns effect/operation contracts and [§4.5](#45-construction-points-and-ap-efficiency) owns their rates, units and package inclusions. Neither costing nor reference records redefine those contracts.
+
+1. Resolve the skill's authored fields and referenced profiles/contracts, including any selected upgrade patches, before release. Runtime trigger/usage definitions describe the capability being evaluated; actual casts, hits, destroyed props or observed trigger counts never determine its construction price.
+2. Derive each charge's quantity from those resolved fields and apply the owning §4.5 rate once. Attribute it to the source field/effect/operation and referenced rate; do not copy mechanics or introduce separately authored cost-only cell counts, durations, layers or timing flags.
+3. Keep distinct authorized effects additive, but omit charges already included in a package. Availability, selection and shared marker costs use their declared scope rather than repeating for every effect.
+4. Record component subtotals, availability, full unrounded total and comparison with the applicable working ceiling in the internal `evaluation` report. A missing rate or unresolved contract makes the result **incomplete**, not zero or a passing budget check. Numeric fit grants no progression access.
+
+A new mechanic extends its owning typed contract and the corresponding §4.5 valuation together, then uses the existing field groups. Standard rates apply to shared mechanics/conditions, not names. Legacy profile-scoped test prices remain explicitly scoped drafts, not general defaults or grounds for new exceptions. This contract adds no new effect permissions or numeric prices.
 
 #### Footprints and Placement
 
@@ -462,11 +490,11 @@ Central monster-skill execution definitions; Battle chapter 5 links here. Generi
 |   Kind   |      Writes to      |                                         In battle                                          |
 |----------|---------------------|--------------------------------------------------------------------------------------------|
 | `strike` | squares around the body | small direct damage in a shape around the monster ([Strike profile](#strike))                               |
-| `surge`  | Surge layer; ground only via explicit `board_changes` | telegraphed delayed execution ([Surge profile](#surge)), including the existing burst profiles; optional, separately budgeted residue; only one charges per monster at a time |
+| `surge`  | Surge layer; ground only via explicit `board_changes` | telegraphed delayed execution ([Surge profile](#surge)), including the existing burst profiles; optional, separately budgeted residue; multiple casts may charge concurrently under their skill-instance policies |
 | `zone`   | zone layer          | timed control or support on squares ([gdd_battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites)), lasts for the skill's `duration`               |
 | `ground` | ground layer        | hazard ground or Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                                           |
 | `prop`   | object layer        | places or moves props ([gdd_battle §4.9](gdd_battle.md#49-props))                                                               |
-| `direct` | a unit              | unit/self-targeted immediate effects; existing Shove resolves under [gdd_battle §6.5](gdd_battle.md#65-displacement); new buffs require explicit effect contracts                                                               |
+| `direct` | a unit / self | Only source-defined unit/self utility with explicit effect contracts; no generic direct unit-targeted damage or offensive push/pull. Shove uses a body-relative spatial pattern below. |
 | `move`   | the caster          | moves the caster ([Movement profile](#movement))                                                                    |
 
 Profiles are reusable, not a closed menu. Direct buffs/passives use the common model without posing as Strike/Surge/Zone; passive activation needs no separate format, and species exclusivity is access data, not `unique` execution.
@@ -476,9 +504,22 @@ Profiles are reusable, not a closed menu. Direct buffs/passives use the common m
 - **Immediate body shape:** starts adjacent to the monster, without anchor, range or Reach. Damage: [Battle §6.1](gdd_battle.md#61-the-damage-law); Swarm's existing 4-damage exception affects props, not monsters. Spend the selected shape's price (§3.2; costing §4.5); larger area never trades away damage.
 - **Selection/hits:** no facing; choose one of 8 directions (§3.2 shapes/Kin effects). Hit every monster/prop in the shape, including allies, excluding the striker. Solid props take the hit and block cells behind them.
 
+#### Body-Relative Damage and Movement Variants
+
+**Confirmed additional authoring direction, not a replacement for existing Kin Strikes or a priced skill catalogue.** Body-relative shaped actions may be authored as damage only, movement only with no direct damage, or damage plus movement. Each is a finished variant in the shared §4.2 model; no cast-time damage-for-movement exchange, free component choice or separate construction system. Shove names the movement-only direction, not a direct unit-targeted attack. Existing Strike damage, Kin effects and authored AP remain unchanged pending their reconciliation (T02/T06).
+
+- **Supported geometric scope:** attacker and target are 1×1 bodies; the hit square is adjacent to the attacker's origin. Its offset `d = (dx, dy)` is one of the eight neighbouring unit vectors, including diagonals. Preview the hit and destination before activation; there is no independently chosen displacement direction.
+- **Target-movement variant:** for a target on the hit square, destination = hit square + `d`, one square farther from the attacker. It is forced displacement under §4.4 and Battle §6.3/§6.5, not prop relocation or extra skill damage.
+- **Self-movement variant:** destination = attacker origin − the uniquely defined attack-direction vector, once per use, never once per struck target. It uses the self-movement contract, not an assumed copy of forced-movement collision behaviour. A larger/symmetric/otherwise ambiguous pattern without one unique geometric retreat direction has **no self movement**; do not choose a hit target, average offsets or add a free retreat-direction selector.
+- **Hit-independent retreat:** the authored self retreat is triggered by a valid activation, not by striking a monster/prop, dealing damage or destroying anything. An empty hit pattern still allows it as a movement tool, subject to the same unique-direction and legal-destination constraints. The attack/board payload resolves independently: prop damage requires its authorized damage source, and Mountain destruction requires an explicit authored operation (§4.4/Battle §4.7); retreat alone grants neither. The internal valuation must include this unconditional movement capability, not discount it by an assumed hit probability.
+- **Attack before self retreat:** resolve the attack payload first, then attempt the single retreat to its geometrically fixed destination using the resulting board state. If that destination is absent or illegal (including blocked/occupied/off-board), the attacker stays in place: no alternative destination, no retreat collision damage or other effect from the failed movement. The attack remains resolved and its activation costs/usage stay consumed. This scoped failed-retreat rule does not redefine forced push/pull collision consequences.
+- **Authored alternatives:** target movement or self movement is fixed by the skill, not selected after a hit. Preserve source-specific side/caster/layer permissions and legal landing rules. Blocked/occupied destinations grant no automatic alternative square. Collision, fall and entry consequences remain environmental/runtime consequences, not an extra authored damage component.
+- **Spatial boundary:** non-adjacent off-axis hits and 2×2 geometry have no inferred normalization/tie-break; affected variants need T09 before approval. This coupled eight-direction rule does not change existing cardinal zone/Surge push/pull or silently replace Scaled's selected direction and Winged's existing retreat package. Prices, AP, access and unresolved ordering within the attack payload/multi-target resolution remain T02/T04/T06; neither a damage value nor a damage-for-distance exchange is approved by this section.
+
 #### Surge
 
 - **Surge:** telegraphed delayed execution, pending marker/timer, zone shapes/placement but its own slot/lifecycle.
+- **Concurrent casts:** a monster may have multiple pending Surges from different equipped skills or repeated casts of the same skill instance when its [usage policy](#usage-and-repetition) permits. Each cast pays its own authored Battle-AP and creates its own pending marker/timer under the existing scheduling contract. No monster-wide charging cap applies. Placement still forbids overlap with any pending Surge; ordering when multiple casts resolve at the same event remains T04, not an implied cast-order rule.
 - **Aftermath:** optional, explicit, separately budgeted `board_changes`, never implied by Surge alone. Damage precedes authored ground aftermath. No new prices here; legality/evaluation/validation: §4.4/§4.5/§4.7.
 
 ```
@@ -498,7 +539,7 @@ MINOR SURGE
   afterwards: only if explicitly authored, apply the separately budgeted RESIDUE
               board_changes effect (permanent ground, gdd_battle §4.7), subject to its profile's
               height rules below; otherwise no residue; no repaint
-  usage: spend authored AP (§4.5); ONE charging Surge per monster
+  usage: spend authored AP (§4.5) per cast; repeat availability follows the equipped instance's usage policy (§4.2)
   claims squares: can't be placed on squares already holding any charging Surge (the first one claims them)
 
 MAJOR SURGE
@@ -609,21 +650,21 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 | Collision / fall / debris | Reference [Battle §6.3](gdd_battle.md#63-collision-fall--debris) for event damage and recipient exceptions | Derived runtime consequences, not free castable payloads. The unresolved collision conflict remains T04. |
 
 - **Damage permissions:** [Surge profiles](#surge) own prop exceptions, Battle §4.10–§4.11 generic reactions; indestructible props cannot be removed. Major/baseline twist exceptions need authored definitions/access/usage; no new damage values here.
-- **No zone damage, immediate ranged burst or new damage zones.** Retired collision bonuses remain unapproved (T04), not collision-law exceptions. Damage values are not slot-upgrade parameters (§4.6).
+- **No zone damage, immediate ranged burst, new damage zones or generic direct unit-targeted damage.** Retired collision bonuses remain unapproved (T04), not collision-law exceptions. Damage values are not slot-upgrade parameters (§4.6).
 
 **`displacement` — forced movement under an existing source**
 
-- **Required:** definition/source, `mode: push | pull`, recipients, `steps`, trigger/order, direction/anchor binding. Use [Battle §6.5](gdd_battle.md#65-displacement) for cardinal direction, step cap/fixed pull anchor; Scaled chooses push direction with its Strike. Preview landing; fields grant no beyond-cap distance upgrade.
+- **Required:** definition/source, `mode: push | pull`, recipients, `steps`, trigger/order, direction/anchor binding. Use [Battle §6.5](gdd_battle.md#65-displacement) for generic cardinal displacement and the scoped geometric exception in the [body-relative variants](#body-relative-damage-and-movement-variants); Scaled retains its existing chosen push direction pending reconciliation. Preview landing; fields grant no beyond-cap distance upgrade.
 
 | Existing source | Recipients and trigger | Binding constraints |
 |-----------------|------------------------|---------------------|
 | Zone `push` / `pull` | Occupants under [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites) | Bind direction/anchor and trigger to [Battle §6.5](gdd_battle.md#65-displacement), with ordering under [Battle §2.4](gdd_battle.md#24-effect-timing-reference). Persistence creates no additional trigger. |
-| Existing direct unit-targeted displacement source | Selected unit, one-time direct resolution | Sight required; legal target/layer restrictions must be authored, not borrowed from removed table flags. Generic displacement does not authorize prop relocation. |
+| Geometrically coupled body-relative target movement | Occupants struck by the authored hit pattern, not a selected unit | Adjacent 1×1 geometry and one-square outward direction: [body-relative variants](#body-relative-damage-and-movement-variants). No independent direction, new layer access or prop relocation. |
 | Scaled Strike | Struck monsters under the Kin push definition | Existing Kin twist (§3.2); chosen direction and Strike constraints. |
 | Surge profile with cast-direction push | Recipients, distance and trigger from the [Surge profile](#surge) | Preserve that profile's complete damage, residue, height and prop contract; unresolved ordering is not an override. |
 | Authored pull twist | Struck monsters, pull 1 toward cast anchor after damage | Existing twist (§4.3); no arbitrary extra target or trigger. |
 
-- **Consequences:** blocking/collision/fall [Battle §6.3](gdd_battle.md#63-collision-fall--debris), entry [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed), prop destruction [Battle §4.10](gdd_battle.md#410-damage-shatter--prop-types). No implied chain push, diagonal/extra step or air/prop eligibility.
+- **Consequences:** blocking/collision/fall [Battle §6.3](gdd_battle.md#63-collision-fall--debris), entry [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed), prop destruction [Battle §4.10](gdd_battle.md#410-damage-shatter--prop-types). No implied chain push, extra step or air/prop eligibility. Diagonal displacement is limited to the explicitly coupled adjacent-hit contract; other sources retain cardinal rules.
 - **Unresolved, no defaults:** collision conflicts, push-Surge damage/residue/push order, Scaled damage/push order and pull ties ([temp_todo.md](temp_todo.md) T04).
 
 **`stat_change` — referenced effective modifiers, not arbitrary stat edits**
@@ -737,6 +778,8 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
 
 ### 4.5 Construction Points and AP Efficiency
 
+**Evaluation rules for the [shared data model](#evaluation-contract--one-definition-one-calculation), not a second skill definition.** This section owns prices/calculation only; use the §4.2 field bindings and §4.4 effect/operation contracts rather than reproducing their fields or mechanics here.
+
 **Confirmed: one shared base budget, no skill ratings, upper bounds only.** All regular monster skills share construction; no Rare/Epic/Legendary/Mythical budget classes or automatic rarity/exclusivity bonus. Slot levels 1–3 raise ceilings. Major/Signature still need access/profile review, not a general higher-budget rating.
 
 ```text
@@ -753,7 +796,10 @@ skill point cost <= allowed ceiling
 ```
 
 - **AP efficiency:** fewer battle AP/use buys a powerful advantage, costing more construction points; higher AP leaves more effect room, never costs extra merely for spending AP. Author the finished skill/AP, then evaluate total points: AP cost is part of valuation, not an AP-class budget ladder or separate budget source.
+- **Confirmed costing structure:** combine one-time use/availability costs with effect-extent costs. Charge AP efficiency, free-anchor choice and the complete Surge marker once at their applicable scope, not per footprint cell. Price area effects per potentially affected cell; non-area effects use their authored package (e.g. movement). Duration, magnitude and other explicit effect dimensions remain part of the component formula. No generic activation surcharge per added effect or blanket area surcharge on top of its cell price.
 - **Shared component prices:** charge actual mechanics once, never redundant tags/flags or the same enlargement twice; no combination surcharge ([policy](#combination-policy-and-basic-surge-target)). Evaluate telegraphing/blocking/restrictions in context, without arbitrary negative credits or uncalibrated exceptions.
+- **Confirmed decimal-point handling:** construction prices and totals may be decimal values. Do not round components or totals for budget comparison; compare the full calculated value with the ceiling. Display-only rounding must not change that result. This applies to internal skill construction points, not combat damage, Battle-AP, stats or other currencies; it changes neither existing prices nor ceilings.
+- **Purpose:** construction costing screens for gross outliers and supports comparable skill power; numeric agreement does not guarantee equal strength, justify fitting every skill into a ceiling or replace interaction/balance tests.
 - **Residue:** optional, separately priced board operation including interactions; delay/damage implies no ground payload.
 - **Upper bound only:** no minimum, target band, exact spend or random budget; simpler skills may leave points unused. Unchanged skills get no automatic AP reduction; development at original AP and optional higher-AP extensions: [§4.6](#46-slot-levels-development-replacement-and-upgrades).
 - **Passives:** no AP spend/free efficiency; explicitly price availability, conditions, event frequency and repeat/recursion exposure under the same total/slot ceiling, not a separate budget or zero-AP active tier. Initial availability reference below; other/event-driven patterns need separate evaluation.
@@ -774,7 +820,7 @@ Maximums only: no spending targets, balance/component-price approval, step price
 
 | Component | Price | Scope |
 |-----------|-------|-------|
-| One-time damage | damage × cells × 2 | Area included; no second blanket area charge |
+| One-shot damage | damage × cells × 2 | One damage event; scales per potential cell, not a flat per-use fee. Area included; no second blanket area charge |
 | Immediate timing | 100% of damage base price | No blanket surcharge |
 | Telegraphed, avoidable Surge timing | 50% of damage base price | Discount on damage only, not other components |
 | Ground + air damage coverage | +2 per damage effect | Once, not per cell; authorized sources only |
@@ -787,8 +833,22 @@ Maximums only: no spending targets, balance/component-price approval, step price
 | Ordinary prop damage / derived destruction | No generic surcharge for now | Relevant offensive sources only; special advantages separate |
 | Optional residue / other board operations | Ground/board price sheet below | Never implied by Surge timing/damage |
 
-- **Geometry:** retain placement/occupancy/fixed orientation; constrained anchors/other targeting variants remain unpriced. Symmetric Strikes pay no direction fee when cells stay unchanged. A distant 1×1 Strike cell satisfies `max(abs(dx), abs(dy)) > 1`, not Manhattan Reach.
+- **Geometry:** retain placement/occupancy/fixed orientation; adjacent-anchor selection uses the [shared standard](#shared-valuation-standards); other unresolved targeting variants remain unpriced. Symmetric Strikes pay no direction fee when cells stay unchanged. A distant 1×1 Strike cell satisfies `max(abs(dx), abs(dy)) > 1`, not Manhattan Reach.
 - Equal-size/equal-mechanics non-Strike shapes start equally priced; review special advantages such as chokepoints. No rotation, range upgrade or new placement permission.
+
+#### Shared Valuation Standards
+
+**User-selected working standards, not validated balance or new mechanic permissions.** These standards use the [§4.2 evaluation bindings](#evaluation-contract--one-definition-one-calculation) and existing [§4.4 contracts](#44-effect-and-board-operation-contracts). Rates are comparison anchors, not measured value or prices reverse-engineered from a particular skill's budget. Arithmetic references follow the selected rates without content/development approval.
+
+**Timing/avoidability:** retain the existing damage-timing rates in the component sheet. For an authorized one-shot displacement that is telegraphed, fixed to board cells and avoidable by leaving those cells before resolution, use **50% of its immediate displacement component**, independent of profile name. No tracking, repetition or enhanced blocking is covered. This is a shared condition-based rate, not a profile-specific exception; it authorizes no additional source to push or pull.
+
+- All other components retain their own full rate unless a separately reviewed shared rate explicitly applies. No whole-skill multiplier, discount to AP efficiency/selection/marker, or discount inferred merely from a later application event.
+- Value delayed permanent ground at its immediate package rate: it still creates the persistent state. No delay discount is applied to that package. Test whether this overvalues lost immediate board control; selection is not balance validation.
+- Lifetime is already included in round-based formulas or permanent packages. Do not apply the one-shot timing factor to a whole zone, passive or future ground triggers. Undefined timing/avoidability remains incomplete, not assumed to qualify.
+
+**Selection:** use the existing free-anchor rate as the full board-selection component. Any source-defined non-offensive unit utility needs its own resolved selection contract/rate; it inherits no retired direct-Shove fee. For an authorized selected board anchor restricted to cells adjacent to the caster, use **1 point per use**; this modest reduction values fewer placement options, not lower effect strength. Self/body/event binding with no independent target choice adds **0 selection points**; this does not waive separately priced direction or effect coverage. Fixed body footprints and trail placement are not automatically adjacent-anchor casts. Undefined LOS, homing or new ground/air coverage have no generic rate or assumed discount; they first require their owning contracts. Ally-only/enemy-only area filters are excluded by the [square-control contract](#42-data-oriented-skill-construction-kit), not missing purchasable components. Do not derive a new cast-range upgrade from selection prices.
+
+Movement, passive and prop standards are maintained only in their owning sections below. Package replacements are alternatives, never extra fees on top of an unchanged package. Unrelated content drafts and the separate Mountain-price candidate remain unapproved.
 
 #### Strike Costs
 
@@ -844,7 +904,18 @@ Maximums only: no spending targets, balance/component-price approval, step price
 
 - **Package scope:** whole §4.3 presets, not additive flag prices/restriction exchange rates. Retain §3.3 Kin/stage access and the legal landing/occupancy/entry rules of the [§4.3 presets](#movement); self movement pays no ranged-anchor/ground-air-attack fee.
 - **Status:** all existing slotted modes fit 24 numerically, without new access, completed upgrades, progression unlock or balance approval. Swim stays planned. Unmodified baseline walk uses the table total, combination 0, passive availability inapplicable.
-- **Custom profiles/upgrades:** separately resolve costs for flag-flip/distance-penalty patches and added effects (§4.6); unused budget grants no free upgrade, base restrictions no second charge. Test low/high Movement including floor, barriers, hazards and exits; air/2×2 remain T09.
+- **Custom profiles/upgrades:** unused budget grants no free upgrade, base restrictions no second charge. Test low/high Movement including floor, barriers, hazards and exits; air/2×2 remain T09.
+
+**User-selected working standards, unvalidated:** evaluate an authorized patched preset as its base mechanical package plus the applicable increment below; add AP efficiency once. Preserve §4.6's one-patch limit. These are sensitivity-test anchors, not equal-value claims for every blocker or permission to change path mode, landing, air access or unsupported flags.
+
+| Existing patch dimension | Mechanical increment | Valuation boundary |
+|---|---:|---|
+| Lower an existing negative distance penalty by 1 | +2 once per movement use | Price the authored capability, not actual travelled cells; no extra Movement-stat charge |
+| Turn off one authorized blocking restriction | +2 once per movement use | Existing path and legal landing unchanged; different blocker types require separate comparative tests |
+| Turn off the existing extra ground-cost restriction, where authorized | +2 once per movement use | Does not grant immunity to entry effects; includes only that restriction change |
+| Other flags/path changes or combinations | No standard rate | Require a resolved contract and valuation, not extrapolation from the increments above |
+
+If the resolved variant exactly matches an already priced preset, use that preset's package instead of charging both the package and a patch increment. A different route to the same resolved mechanics must not produce two prices. Other variants are new package drafts; these increments do not establish a universal additive flag economy.
 
 #### Self-Buff and Passive Costs
 
@@ -864,6 +935,31 @@ Maximums only: no spending targets, balance/component-price approval, step price
 - **Rotation:** covers all owner's legal eligible-shape rotations while equipped, not each cast; identical boolean permissions do not stack. No mirroring, Strike geometry changes, cells, range or new profiles. Test equipped shapes, symmetry, action frequency, fixed-shape kits and placement options; equal value across kits is not guaranteed.
 - **Validation:** both fit 24 numerically, not unlocks/full paths. Test self Initiative against tempo/queue changes and paid refresh. Other passive mechanics/combined statuses need explicit follow-through, not unused-point-funded free additions.
 
+**User-selected working standard, unvalidated:** extend the existing passive-availability rate, without adding another numeric price, to a conditional self-scoped boolean permission only when its lifetime, reevaluation, stacking and removal contracts are resolved. Use the same availability rate as continuous self permission, with **no condition discount**; the hypothesis is a conservative upper bound because some conditions may be maintained deliberately. Mechanical permission cost remains separate. This does not price arbitrary stat passives or make the rotation rate a universal rule-modifier price. Event-driven combinations use the [availability table](#availability-by-activation-and-usage) only where a selected rate and resolved contracts exist; repeatable event-driven and team-wide availability remain unpriced. Do not multiply an invented expected trigger count by an active-skill price.
+
+#### Availability by Activation and Usage
+
+**User-selected approach and working values, not validated balance or new effect permissions.** Derive availability from the existing `usage_type`, `execution` and `usage` fields together, not from a new skill class. Event activation never implies a round cap: the skill's authored repetition policy supplies it explicitly.
+
+| Resolved activation / availability | Authored repetition policy | Availability component |
+|------------------------------------|----------------------------|------------------------|
+| AP-paid player action | Repeatable | [AP-efficiency scale](#ap-efficiency-working-scale) |
+| AP-paid player action | Once per global round | [Active round-limit calibration](#round-limited-availability-calibration), including its effective-restriction guard |
+| Continuous/conditional self-scoped boolean permission | Not a repeated activation | Existing [passive availability](#self-buff-and-passive-costs); no inferred activation limit |
+| Defined event, no Battle-AP payment, resolved non-team-wide availability | Explicitly once per global round | **12 points per equipped instance** |
+| Defined event, no Battle-AP payment | Repeatable | No general rate selected; not zero cost |
+| Undefined event/recipient contract or other availability pattern | Any | Incomplete until its contract and rate are resolved |
+
+For the selected event/once-per-round combination, add the independently priced maximum authorized effect package of one activation. Its availability component replaces active AP efficiency; it is not a zero-AP active action. Read trigger, recipients, limits and lifetime from the shared definition, not a second passive schema.
+
+- **Rationale:** the round cap gives a known activation bound, but the activation spends no Battle-AP and may preserve the owner's turn for other actions. The initial availability anchor matches continuous self-permission availability; that is a comparison hypothesis, not evidence of equal strength. The selected active round-limit factor does not apply: it discounts an AP-paid availability component, not every round-limited skill.
+- **No probability credit:** assume the authored trigger can occur each round when evaluating availability. No discount for being called reactive, situational or unlikely, and no live hit/destruction counters in the internal price. Where one activation has mutually exclusive outcomes, use the conditional-outcome draft; sum coexisting effects without a combination surcharge. The numeric price remains incomplete if any legal outcome lacks a contract or rate.
+- **Effect scope:** the round limit caps activations, not recipients, footprint or the lifetime of effects created by that activation. Include the full authored scope in its mechanical price. Do not multiply a one-activation package by invented battle length, discount persistent effects as one-shot outcomes or reuse a source-bound effect rate without its matching contract. Existing damage/healing/movement permissions remain unchanged.
+- **Instances and safety:** duplicate equipped copies are evaluated independently and keep their independent round allowances. This grants no automatic stacking of persistent states; stacking, recipient bounds, order, recursive interactions and owner removal must be resolved before admitting content. The selected availability charge alone does not certify a combination as safe.
+- **Excluded:** repeatable event-driven effects, undefined event/recipient scope, team-wide availability and continuous modifiers do not inherit this rate. Missing contracts remain blockers rather than zero-cost assumptions. No existing skill is assigned this policy or repriced here.
+
+**Arithmetic-only checks:** hypothetical, already-complete mechanical subtotals of 3, 6 and 12 would yield totals of 15, 18 and 24 respectively under the selected event/once-per-round rate. They define no actual skill, legal effect, trigger, unlock or balanced content. Compare AP-paid and reactive packages through later tests; numeric fit is not approval.
+
 #### Zone, Protection and Healing Costs
 
 **Designer test prices for §4.4 contracts, not new effect permissions.** C = potential cells, R = authored rounds, V = authored base magnitude. Add AP efficiency once/skill and applicable selection costs to these mechanical components; combination surcharge 0. Effects share one zone clock, not independently purchased timers.
@@ -874,16 +970,16 @@ Maximums only: no spending targets, balance/component-price approval, step price
 | drain_init / quicken | 2 × V × C × R | While inside; no immediate queue rewrite |
 | drain_range / extend | 2 × V × C × R | Effective Reach only, not a cast-range upgrade |
 | Zone push / pull | 2 × C × R | Existing one-square end-turn trigger; direction/fixed pull anchor included |
-| Immediate one-time displacement (existing direct unit-targeted / other authorized immediate sources) | 2 per potential recipient cell; existing direct unit-targeted source uses 1 recipient | Existing one-square trigger; direction/pull anchor included |
-| [Profile-scoped delayed footprint push](#basic-surge-profile-cross-check) | 1 per potential recipient cell | New designer test price **only for the existing one-square push of the damage-2/Thornbed Surge profile**; direction included, no additional timing multiplier |
+| Immediate one-time displacement under an authorized spatial source | 2 per potential recipient cell | Existing cardinal one-square component; direction/pull anchor included. New coupled eight-direction variants require separate calibration; no direct-unit Shove source is authorized |
+| Telegraphed, fixed-footprint, avoidable one-shot displacement | 50% of the immediate component above | [Shared timing conditions](#shared-valuation-standards); direction included, no second timing multiplier or new source permission |
 | Zone shield | 1 × V × C × R | Existing base 2, cap 3; Surge reduction, not shield HP |
 | Zone mend | 3 × V × C × R | Existing heal 1 reference; scaling/cap and repeat balance pending T07 |
 | expose | Not priced / reserved | No approved zone; no damage-boost permission |
 
-- **Scoped push draft:** only the table's delayed footprint-bound push, escapable before resolution, not an immediately selected target. No general 50% non-damage discount/all-delayed-displacement rate; immediate direct, Scaled Strike, zone and other Surge push/pull retain rates/contracts and all distances.
+- **Displacement timing:** only the shared standard's qualifying one-shot displacement gets the reduction. Existing immediate spatial, Scaled Strike and zone effects retain their own rates/contracts and distances; delay alone is insufficient.
 - Not applicable to repeated/tracking/unavoidable/enhanced displacement. Test the entry-hazard combination; budget fit does not validate the reduced rate.
 
-- **Selection:** ranged zones pay +2 board anchor once, no second direction/anchor-binding charge. Existing direct unit displacement provisionally pays +2 for eligible visible-unit selection **instead of** the no-LOS anchor fee; eligibility/LOS remain unresolved.
+- **Selection:** ranged zones pay +2 board anchor once, no second direction/anchor-binding charge. Body-relative Shove is not a ranged unit-selection source; calibrate its spatial components through the new variant contract rather than retaining a direct-target selection fee.
 - **Repetition/values:** normal AP-paid zone levelling/refresh included, extending Slow policy for calibration only. Resolve magnitude/cap/level formulas; no stronger values, heal scaling, extra triggers or ally-only filters. Test each effect's repetition independently.
 - **Healing/protection:** retain max HP, events/source permissions; no direct heal, revival, Injury cure, general immunity, tamer protection or item permission. Stacking/consumption/order (T04), mend/Mossbed loops (T07) block affected content. Prices set neither caps nor unbounded-healing permission.
 
@@ -893,8 +989,7 @@ Maximums only: no spending targets, balance/component-price approval, step price
 
 | Existing state / operation | Mechanical construction points | Included / unresolved scope |
 |----------------------------|--------------------------------|-----------------------------|
-| Lava I / Thornbed I / Blight I, immediate ground cast | 4 × C | Permanent hazard package; trigger risks to test |
-| Lava I / Thornbed I / Blight I, delayed Surge aftermath | 1 × C | New designer test rate for telegraphed ground aftermath; permanent after resolution |
+| Lava I / Thornbed I / Blight I, immediate cast or delayed aftermath | 4 × C | Permanent hazard package; no delay discount; trigger risks and loss of immediate control to test |
 | Hearth / Umbra | 4 × C | Existing +1 Initiative / Reach while occupied, both sides |
 | Mossbed | 6 × C | Existing heal 1 on entry; provisional until re-entry limits are resolved |
 | Hallowed | 4 × C | Existing Surge reduction 1; no automatic hit consumption |
@@ -909,6 +1004,11 @@ Maximums only: no spending targets, balance/component-price approval, step price
 | Voidscar alteration | Forbidden | No budget bypass |
 
 - **Props:** prices grant no catalogue/access; retain empty-cell, heavy/indestructible and interaction restrictions. Ordinary destruction has no generic surcharge; natural damage-derived debris is not a second authored operation and never affects Mountains. Ignition/extinguish/crumble, falling/splitting and mixed packages await prop redesign, not guessed defaults.
+
+**User-selected working standard, unvalidated:** for an existing authorized extra on-hit prop-damage effect, use **1 construction point per additional prop HP damage per potential affected cell**, above the source's included ordinary prop damage. This is a narrower damage channel than monster damage and preserves the current extra-prop-damage component's valuation scale; it is not a monster-damage discount. Do not also charge that same extra damage through a Kin package or generic damage component. Exact prop eligibility, interception and mutually exclusive outcomes still bind the calculation. No automatic timing discount applies.
+
+Ignition, extinguishing, ongoing crumble, redirected falling/splitting and altered debris are not assigned a generic premium: the interim [Battle reaction definitions](gdd_battle.md#411-prop-reactions) do not yet establish the complete redesigned outcomes. For a reaction that replaces ordinary damage, evaluate complete legal outcomes under the conditional-outcome draft, not damage plus an invented reaction surcharge. Existing ground packages include their source-bound reactions; no new source inherits them. Missing special-reaction valuation keeps the full package incomplete.
+
 - **Cast fees/residue:** standalone ground/props add the applicable +2 anchor fee and AP-efficiency cost once. Residue means authored Surge **ground change, not prop creation**; [Surge profiles](#surge) own payloads/exceptions. Delayed hazard aftermath (rate in the table above) adds no second anchor/AP and gets no further 50% damage discount; immediate ground keeps its own rate. Source-specific height/prop exclusions remain binding.
 
 **Conditional-outcome costing — designer working draft:**
@@ -921,30 +1021,45 @@ Maximums only: no spending targets, balance/component-price approval, step price
 - **No combination surcharges**, including former damage-plus-hazard/displacement-plus-hazard rates: sum mechanics + AP efficiency/passive availability; retained combination fields = 0. Additional effects still cost points; legal combinations still need validation.
 
 - **Target:** useful basic Surges with intended ground aftermath at **1 battle AP**. Concrete [profiles](#surge) include explicit `board_changes`; prop creation is separate, never a default. The generic residue-free reference remains, not a replacement.
-- **Draft status:** delayed ground at **1 point/cell** is a designer test price, not user-selected final balance; scoped subtotals below. Existing 1-AP costs stay; not every legacy shape/profile fits level 1. Complete prop/height/push-profile evaluation remains pending.
+- **Working status:** permanent aftermath uses the shared ground-package rate without a delay discount; scoped subtotals below. Existing 1-AP costs stay; budget conflicts remain unresolved, not grounds for an automatic price/AP change or content restriction.
 - Resolve conflicts by calibration, not automatic 2-AP basic Surges. Review avoidability under enhanced blocking/guaranteed hits; test internal/team synergies.
 
 #### Basic Surge Profile Cross-check
 
-**Paper calculation at existing 1 battle AP; designer test prices, not content/balance approval.**
-- Hypothetical fixed 2/3-cell footprints, not approved new shapes; potential ground recipients, no air permission. Every row includes anchor 2, normal marker 1, AP efficiency 12, intended level-I hazard aftermath 1/eligible cell.
-- No combination surcharge, second anchor/AP or extra displacement/ground timing multiplier. Only damage-2/entry-hazard/push uses the scoped delayed-push proposal; damage uses existing 50% avoidable-Surge pricing.
+**Paper calculation at existing 1 battle AP using current working rates; not content/balance approval.** Recalculated solely to keep these references consistent with the [shared standards](#shared-valuation-standards), not to resume skill-specific calibration before the foundation is complete.
+- Hypothetical fixed 2/3-cell footprints, not approved new shapes; potential ground recipients, no air permission. Every row includes anchor 2, normal marker 1, AP efficiency 12 and the authored level-I hazard package.
+- No combination surcharge or second anchor/AP. Damage uses existing avoidable-Surge pricing; qualifying displacement uses the shared timing rate. Permanent aftermath gets no timing discount.
 
 | Existing profile | Costed components on Low, prop-free cells | 2-cell subtotal | 3-cell subtotal | Remaining profile evaluation |
 |---|---|---|---|---|
-| Eruption | `15 + 3 × cells` damage + `1 × cells` Lava aftermath | 23 | 27 | Profile-specific ignition valuation is not yet defined (§4.3) |
-| Flood | `15 + 2 × cells` damage + `1 × cells` Thornbed aftermath + `1 × cells` one-square push | 23 | 27 | Sole profile eligible for the proposed push rate; prop review and damage/ground/push ordering remain unresolved |
-| Rift | `15 + 3 × cells` damage + `1 × cells` Blight aftermath | 23 | 27 | Profile-specific collapse and brittle-prop reaction are not included in these Low-cell subtotals (§4.3) |
+| Eruption | `15 + 3 × cells` damage + `4 × cells` Lava aftermath | 29 | 36 | Profile-specific ignition valuation is not yet defined (§4.3) |
+| Flood | `15 + 2 × cells` damage + `4 × cells` Thornbed aftermath + `1 × cells` one-square push | 29 | 36 | Qualifying push uses shared timing conditions; prop review and damage/ground/push ordering remain unresolved |
+| Rift | `15 + 3 × cells` damage + `4 × cells` Blight aftermath | 29 | 36 | Collapse and extra brittle-prop damage are excluded from these Low, prop-free subtotals (§4.3) |
 
-**Scoped subtotals, not complete profile prices:** ordinary offensive prop damage/destruction has no generic surcharge, but ignition/extinguishing/extra brittle damage/other special reactions are not automatically free. Infer no reaction prices before prop review.
+**Scoped subtotals, not complete profile prices:** ordinary offensive prop damage/destruction has no generic surcharge. Extra on-hit prop damage now has a shared rate, but legal combined outcomes/order and other special reactions still prevent complete pricing.
 
-- **Collapse/hazard:** damage-3/collapse/hazard includes collapse at **2 per potential cell**, with the final ground fixed by the [Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed). Two/three-cell **27/33** are conservative additive bounds for priced damage/collapse/residue, not complete profile prices.
-- The final ground is exclusive, but skills that can destroy Mountains pay for that capability: collapse and residue are both charged (additive, 27/33); the `max(1 residue, 2 collapse)` reading (25/30) is not adopted. Authored collapse is never waived as ordinary damage.
-- Extra brittle-prop damage remains unpriced. No-residue-on-Mountain/Mountain-exclusion rules grant no automatic credits.
-
-- **Budget finding:** draft push pricing equates two-cell damage-2/entry-hazard/push with Low, prop-free damage-3/end-turn-hazard at 23; three cells cost 27. This resolves scoped arithmetic, not full-profile balance.
-- Damage-3/collapse/hazard fits 24 on Low only; its priced height-capable subset exceeds 24 even with conditional exclusivity. Full price/development approval remains T02. All three-cell subtotals exceed 24.
+- **Collapse/hazard:** include the explicit destruction capability additively with residue under the [Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed). The priced subset is `15 + (3 + 2 + 4) × cells`: **33/42** for two/three cells. Environmental collapse damage is not separately priced as skill damage; ground exclusivity does not waive the destruction capability.
+- Extra brittle-prop damage uses the board standard when eligible, without a second Kin/damage charge. It is not included in the prop-free subtotals. No-residue-on-Mountain/Mountain-exclusion rules grant no automatic credits.
+- **Budget finding:** all three Low, prop-free two-cell subsets exceed 24; three cells reach 36 before additional capabilities/reactions. Height-capable Rift exceeds 24 in both shown cases and 36 for three cells. These are unresolved calibration conflicts, not automatic higher-level unlocks, content restrictions or approvals.
 - Preserve damage, 1-AP baselines, mechanics and shared ceilings; special prop reactions/event order remain T02/T04/T07 blockers.
+
+#### Mountain-Destruction Calibration Proposal
+
+**Separate unapproved sensitivity candidate, not selected by approval of the shared standards.** The current destruction rate remains in the price sheet. These comparisons use current permanent-ground pricing; no skill-specific budget repair is proposed.
+
+- **Constraint:** the two-cell Rift subset costs `15 + 2 × (3 + 4 + destruction rate)`. Even zero destruction cost gives 29, above 24. Lowering this component alone cannot resolve the base-budget conflict.
+- **Candidate:** test **0.5 point per potentially affected cell** for the explicit Mountain-destruction capability wherever it is authored, including Ancient Strike. Environmental collapse damage remains a consequence of the board operation, not a second skill-damage charge. This is a valuation hypothesis, not evidence that the capability is weak: removing height, changing ground and causing collapse can be tactically valuable.
+
+| Priced subset / component | Existing draft | Candidate | Interpretation |
+|---|---:|---:|---|
+| Rift, two cells, including collapse and Blight | 33 | 30 | Still exceeds the level-1 ceiling before special prop reactions |
+| Rift, three cells, including collapse and Blight | 42 | 37.5 | Still exceeds the level-3 working ceiling; no content approval |
+| Ancient Strike, destruction component per potential hit cell | 2 | 0.5 | Apply the shared component consistently; other Strike charges stay unchanged |
+| Eruption / Flood, two-cell Low subsets | 29 / 29 | 29 / 29 | No destruction component; complete special-reaction pricing remains unresolved |
+
+- **Recommendation:** retain this as a paper-test candidate, not a replacement price. It changes one shared capability rather than globally lowering AP availability or damage prices. Its large reduction and Ancient's collateral repricing require explicit review; the 0.5 rate is derived only from the desired budget fit and has no independent balance justification.
+- **Limit:** this candidate no longer yields a base-budget fit under current ground pricing; full profile pricing also remains unresolved. Compare the three-cell result of 37.5 without rounding. Do not remove reactions, restrict content, infer slot access or alter prices further merely to fit.
+- **Before adoption:** decide special-reaction valuation (T02), then compare the capability's actual impact on height-heavy and height-free boards, including Ancient Strike and combined ground effects (T04/T07/T13). No gameplay or balance tests have been performed for this proposal.
 
 #### Calibration Examples
 
@@ -961,7 +1076,7 @@ Maximums only: no spending targets, balance/component-price approval, step price
 | Hallowed ground cast: 3 cells, existing 2 AP | ground package 12 + anchor 2 + AP efficiency 6 | 20 |
 | Mountain creation/Plain reset: 3 cells, existing 1 AP | height/cleanse package 15 + anchor 2 + AP efficiency 12 | 29 |
 
-- **Status:** paper calculations, not complete validation, approved content/paths or engine tests. Above 24/30/36 means calibration conflict, not automatic unlock/AP change/budget exception. No fractional-point rounding rule.
+- **Status:** paper calculations, not complete validation, approved content/paths or engine tests. Above 24/30/36 means calibration conflict, not automatic unlock/AP change/budget exception. Decimal totals use the unrounded budget comparison defined above.
 - Hazard-Surge subtotals belong to the cross-check above; special reactions/profile interactions need review. Movement/self Initiative/passive rotation calculations stay in their respective tables.
 
 #### Included Behaviour and Validation Limits
@@ -971,6 +1086,15 @@ Maximums only: no spending targets, balance/component-price approval, step price
 - **Combinations:** [no surcharge](#combination-policy-and-basic-surge-target) within/between skills/monsters. Validate full interactions; revise responsible components/rules on evidence. Guaranteed hits do not automatically qualify for avoidable-damage discounts.
 - **Props:** ordinary interaction is baseline for relevant offensive sources only, not movement/support damage or universal destruction. Evaluate special damage, resistance bypass and enhanced reactions; revisit after Battle §4.9–§4.11 redesign (T04), without blocking unrelated calibration.
 - **Permissions:** prices override no access/profile/damage/targeting/layer limits. Missing spatial/event/stacking contracts block affected content (T02/T04–T06/T09/T13).
+
+#### Round-Limited Availability Calibration
+
+**User-selected authoring-time working standard, not validated balance or a new skill assignment.** Read the authored [repetition policy](#usage-and-repetition) from the same definition. For an active skill with an effective once-per-global-round restriction, use **75% of its AP-efficiency component**, leaving all mechanical, selection and marker components unchanged. Repeatable skills retain the full availability rate. The percentage is a conservative test anchor, not a measured frequency ratio or a discount on the entire skill.
+
+- **Effective restriction:** compare the authored policy with the same definition without that round cap across its legal users, including extra-turn users. If independent AP/profile limits already prevent more than one activation per round for every legal user, apply **no reduction**. If that comparison is unresolved, availability valuation is incomplete. This is a pre-release capability check, never a live cast count or per-individual price.
+- **Rationale/limits:** an active skill still spends AP for its one use and retains full single-use impact. The cap removes repeat opportunities, not damage, duration or footprint. AP already limits repetition, so no inverse-trigger-count multiplier or negative credit is introduced. Skills whose existing availability component is zero gain no budget credit from this rule.
+- **Other sources:** do not apply this factor to continuous boolean passives, event-driven availability without its own rate/contract, existing once-per-battle limits or an additional restriction that adds no independent limitation. Overlapping limits are not multiplied into extra rebates.
+- **Status:** selecting this rule does not assign a new policy to existing skills; their current totals remain unchanged. Test whether this anchor distinguishes repeatable and limited skills without funding overpowered single uses; independent duplicate-instance use and activation consumption follow §4.2; recursion and balance remain unresolved. Missing event-passive frequency contracts remain incomplete, not free.
 
 #### AP-Efficiency Working Scale
 
@@ -992,7 +1116,7 @@ Maximums only: no spending targets, balance/component-price approval, step price
 | Step (no slot) | 2 AP |
 | Slotted movement | 2 AP |
 | Zone / ordinary ground / prop / direct | 1 AP |
-| Minor Surge | 1 AP baseline; one charging Surge per monster |
+| Minor Surge | 1 AP baseline per cast; repetition follows the equipped instance's usage policy |
 | Strike | 2–5 AP by the selected authored shape (§3.2) |
 | Blessing ground | 2 AP; not the ordinary-ground default |
 | Major Surge | 2 AP; once per battle; access under §4.1 / §7.4 |
@@ -1123,7 +1247,7 @@ Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference
 - **`usage`**
   - Slowing Zone: `ap_cost: 1` proposed; existing zone limits
   - Beast Jab: `ap_cost: 2`; existing AP repetition, no charging limit
-  - Delayed Burst: `ap_cost: 1` proposed; one charging Surge per caster, existing AP spending/repetition rules; no cooldown/mana
+  - Delayed Burst: `ap_cost: 1` proposed; existing AP spending/repetition rules allow separate concurrent casts on legal non-overlapping footprints; no cooldown/mana
 - **`upgrades`**
   - Slowing Zone: `[]` in baseline; separate candidate patches below, no approved requirements
   - Beast Jab: `[]` in baseline; separate candidate patches below, none approved
@@ -1154,7 +1278,7 @@ Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference
 
 - **Status:** calibration/same-AP development incomplete ([temp_todo.md](temp_todo.md) T02/T05); order/large bodies remain T04/T09. Residue is a board component, not combination surcharge (§4.5); residue-free references do not replace [concrete profiles](#surge).
 - **Resolution:** resolve all definitions/required parameters before validation (§4.2–§4.7). No skill override of fixed fields; rules determine effect/operation order, never field-list position. Unsupported/unspecified cases remain central TODO.
-- **Upgrades:** authorized named-field patches with prerequisites/exclusions/budget/AP consequences (§4.6), not another schema. Revalidate profile, Kin/species access, execution, placement, footprint, effect/trigger legality, persistence, interactions, usage and budget. No cooldowns/mana/aspect/attunement; upgrade limits: §4.6.
+- **Upgrades:** authorized named-field patches with prerequisites/exclusions/budget/AP consequences (§4.6), not another schema. Revalidate profile, Kin/species access, execution, placement, footprint, effect/trigger legality, persistence, interactions, usage and budget. Shared repetition policies: [§4.2](#usage-and-repetition); no generic multi-round cooldowns/mana/aspect/attunement. Upgrade limits: §4.6.
 
 #### Non-Area and Passive Coverage References
 
