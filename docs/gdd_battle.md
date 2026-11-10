@@ -124,7 +124,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 
 - **Free themes**, not fixed aspects or replacement element categories: identity comes from species, Kin, stats, skills and passives. Themes impose no matchup triangle or combat modifiers; there is no attunement (§4.8).
 - Skill access and authored definitions: [gdd_skills.md](gdd_skills.md); battle integration: [§5](#5-skill-integration). Runtime ground types, zone effect tags, prop reactions and Surge behaviour use the resolved concrete definition, never the monster's theme.
-- Zone × zone compares effects (§4.6); the replacement for triangle-based zone × ground interaction is **not yet defined** ([temp_todo.md](temp_todo.md), T07).
+- Zone × zone compares effects (§4.6); zones never change ground ([§4.6](#46-zones-effects-rules--opposites)).
 
 ---
 
@@ -158,7 +158,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 [ OBJECT ]  prop with tags (Tree: flammable · Wall: brittle · Rock: heavy · Pillar: indestructible) | empty
 [ SURGE  ]  pending Surge marker | empty — shares shapes/placement with zones, never merges with them
 [ ZONE   ]  ONE timed zone (the skill's `duration`) | empty — control and support
-[ GROUND ]  type (neutral: Plain | Rubble | Water | Voidscar | Hallowed — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra), always permanent
+[ GROUND ]  type (neutral: Plain | Rubble | Water | Voidscar — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra | Hallowed), always permanent
             + height (Low | Mountain)
 ```
 
@@ -221,7 +221,7 @@ State stores zone level, not independent effect values; runtime values use effec
 |----------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | **Zone** | the resolved skill's duration; ticking follows [§2.4](#24-effect-timing-reference) | on expiry the zone is removed; no repaint. Authoring and upgrades: [gdd_skills.md](gdd_skills.md) |
 | **Pending Surge** | scheduler integration: [§2.4](#24-effect-timing-reference) | charge, removal and authored aftermath follow the [central Surge profile](gdd_skills.md#surge) |
-| **Ground**           | none — stays until changed | changed by authorized ground replacement/reset, authored Surge residue, shattered props, debris or Voidscar spread; source restrictions and Voidscar immunity apply (§4.7); former triangle-based zone interaction unresolved (§4.6, T07) |
+| **Ground**           | none — stays until changed | changed by authorized ground replacement/reset, authored Surge residue, shattered props, debris or Voidscar spread; source restrictions and Voidscar immunity apply (§4.7); zones never change ground (§4.6) |
 
 - **Persistence:** zones have a duration, pending Surges a detonation timer; ground has no expiry clock. Neither Voidscar nor Lava fades: ground requires a change to disappear, subject to its exceptions.
 - Effects in one zone share its clock; separately authored status lifetimes remain permitted.
@@ -245,13 +245,13 @@ State stores zone level, not independent effect values; runtime values use effec
 | `pull`                                                | end of your turn           | move 1 toward the **anchor square set at cast** | `push`        |
 | `shield`                                              | when you take Surge damage | damage on this square −value                    | `expose`      |
 | `expose` *(reserved)*                                 | when you take damage       | damage +1                                       | `shield`      |
-| `mend`                                                | end of your turn           | heal value, never above max HP                  | none          |
+| `mend`                                                | end of your turn           | heals `min(2, zone level)`, never above max HP  | none          |
 
 - Effects hit **everyone** on the square — allies, enemies and caster; placement matters because enemies can use your healing zone too.
 - `expose` remains reserved, with no approved zone.
 
 - **Level-to-value:** definitions supply base and cap. Where the existing level formula applies, **effective value** = `min(cap, base + level − 1)`, min 1 (slow capped at 2; push/pull always 1). Compute live, with no aspect modifier.
-- This formula is not a default for undefined scaling: `mend` level scaling and numeric healing cap remain unresolved (T07); other missing effect bounds remain T02/T04 ([temp_todo.md](temp_todo.md)).
+- This formula is not a default for undefined scaling: `mend` heals `min(2, zone level)` *(user decision 2026-11-10; zone-level price still open)*; other missing effect bounds remain T02/T04 ([temp_todo.md](temp_todo.md)).
 
 **When a zone lands on a square that already holds one:**
 
@@ -268,7 +268,7 @@ Examples by effect, not retired skill names:
 
 No merging: a square always shows exactly one zone with its real effects.
 
-**Zone × ground — unresolved:** the aspect triangle and its clearing / strengthening rules are removed; their replacement is **not yet defined** ([temp_todo.md](temp_todo.md), T07). No blanket replacement rule is implied; concrete ground-changing skill effects remain as specified (§4.7).
+**Zone × ground** *(user decision 2026-11-10)*: the aspect triangle and its clearing / strengthening rules are removed without replacement. Zones and ground stay independent: a zone never changes, suppresses or inverts ground, and ground never changes a zone. They combine only through their separate effects on the same square. Ground changes come only from the sources listed in §4.7; countering permanent hazard ground is a T13 test item.
 
 ### 4.7 Ground — neutral, hazard and blessed
 
@@ -308,7 +308,7 @@ No merging: a square always shows exactly one zone with its real effects.
   3. The square's ground becomes the ground that same skill authors for it, if its definition can change ground on Mountain squares, otherwise **Rubble**.
   - Voidscar is never replaced. Props are separate: shattered props and debris never affect Mountains. Order against the skill's damage and residue: T04.
 - **Air next to a Mountain** *(user decision; details 2026-11-10)*: a ground-layer monster standing on a Mountain can hit air-layer monsters on the **eight squares adjacent** to its own square with all of its attacks. For delayed Surges this is **fixed at cast**: the owner stands on a Mountain and the footprint square is adjacent to the owner's square at that moment; later movement or death of the owner changes nothing. A 2×2 attacker needs all four covered squares on Mountain (as for +1 Reach); adjacency is measured from the nearest covered square of each body, and an air-layer 2×2 is hit once if any covered square is adjacent. This is a board rule, not a skill property, and adds no skill price
-- Placing ground beneath an occupant is not entry; entry triggers occur when the occupant enters the square. Mossbed re-entry/healing limits remain central T07
+- Placing ground beneath an occupant is not entry; entry triggers occur when the occupant enters the square. Mossbed has no re-entry or per-turn limit *(user decision 2026-11-10)*: every entry heals 1, bounded only by movement
 - Blessed ground works for **everyone** on it, like a zone: an enemy can use your Mossbed too
 
 ### 4.8 No Attunement

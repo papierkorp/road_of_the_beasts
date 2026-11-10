@@ -419,8 +419,8 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 
 | Existing definition/source | Recipients and trigger | Lifetime, order and caps |
 |----------------------------|------------------------|--------------------------|
-| Zone `mend` | Reference recipients/trigger in [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites); existing reference magnitude: `mend 1` | Ordering uses [Battle §2.4](gdd_battle.md#24-effect-timing-reference); zone lifetime is shared. Level scaling and numeric healing cap remain open under T07, not implied by max zone level III. |
-| Mossbed | Reference occupants, entry trigger and heal amount in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) | No additional placement or continuous heal. Per-turn/re-entry limits remain T07; this contract does not approve arbitrary heal loops. |
+| Zone `mend` | Reference recipients/trigger in [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites); magnitude `min(2, zone level)` per Battle §4.6 (user decision 2026-11-10; price open) | Ordering uses [Battle §2.4](gdd_battle.md#24-effect-timing-reference); zone lifetime is shared. Level scaling and numeric healing cap remain open under T07, not implied by max zone level III. |
+| Mossbed | Reference occupants, entry trigger and heal amount in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) | No additional placement or continuous heal. No per-turn or re-entry limit (user decision 2026-11-10); every entry heals as in Battle §4.7. |
 
 - **Healing boundaries:** no generic immediate/direct monster heal, ally-only zone or new repeat trigger. The proposed tamer heal ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)) is no monster definition. Pills heal **between battles**; expedition HP persists; Revival ends Injury, not battle HP loss (gdd_overworld §5.2/§6.4–6.6).
 - Planned battle medicines/arrays need source, consumption, loadout and timing contracts (T18/T19), not generic `heal` permission. Economy/repeat-entry balance remain T07.
@@ -448,7 +448,7 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
   - Binding lifetime, ordering and limits: State, replacement/levelling, entry semantics and Voidscar exception: [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed).
     - Placement uses §2; prop reactions use [Battle §4.11](gdd_battle.md#411-prop-reactions).
     - Surge aftermath follows its §3 profile.
-    - Zone × ground remains T07; Water remains T08.
+    - Zones never change ground (Battle §4.6); Water remains T08.
 - **Height change**
   - Required data / source: Separate height definition, affected cells and authorized source: Mountain creation with coupled ground reset, or an explicit Mountain-destruction operation
   - Binding lifetime, ordering and limits: Reference [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) for height state, the Mountain-creation source's coupled Plain reset and the Mountain-destruction rule (collapse damage, resulting ground), and [Battle §6.3](gdd_battle.md#63-collision-fall--debris) for fall consequences.
@@ -689,7 +689,7 @@ For the selected event/once-per-round combination, add the independently priced 
 | Immediate one-time displacement under an authorized spatial source | 2 per potential recipient cell | Existing cardinal one-square component; direction/pull anchor included. New coupled eight-direction variants require separate calibration; no direct-unit Shove source is authorized |
 | Telegraphed, fixed-footprint, avoidable one-shot displacement | 50% of the immediate component above | [Shared timing conditions](#shared-valuation-standards); direction included, no second timing multiplier or new source permission |
 | Zone shield | 1 × V × C × R | Existing base 2, cap 3; Surge reduction, not shield HP |
-| Zone mend | 3 × V × C × R | Existing heal 1 reference; scaling/cap and repeat balance pending T07 |
+| Zone mend | 3 × V × C × R | Existing heal 1 reference; magnitude now `min(2, level)`, price for the scaling and repeat balance pending T07 |
 | expose | Not priced / reserved | No approved zone; no damage-boost permission |
 
 - **Displacement timing:** only the shared standard's qualifying one-shot displacement gets the reduction. Existing immediate spatial, Scaled Strike and zone effects retain their own rates/contracts and distances; delay alone is insufficient.
@@ -697,7 +697,7 @@ For the selected event/once-per-round combination, add the independently priced 
 
 - **Selection:** ranged zones pay +2 board anchor once, no second direction/anchor-binding charge. Body-relative Shove is not a ranged unit-selection source; calibrate its spatial components through the new variant contract rather than retaining a direct-target selection fee.
 - **Repetition/values:** normal AP-paid zone levelling/refresh included, extending Slow policy for calibration only. Resolve magnitude/cap/level formulas; no stronger values, heal scaling, extra triggers or ally-only filters. Test each effect's repetition independently.
-- **Healing/protection:** retain max HP, events/source permissions; no direct heal, revival, Injury cure, general immunity, tamer protection or item permission. Stacking/consumption/order (T04), mend/Mossbed loops (T07) block affected content. Prices set neither caps nor unbounded-healing permission.
+- **Healing/protection:** retain max HP, events/source permissions; no direct heal, revival, Injury cure, general immunity, tamer protection or item permission. Stacking/consumption/order (T04), `mend` scales `min(2, level)` and Mossbed has no loop limit (T07, decided); prices for the changed `mend` magnitude are still open. Prices set neither caps nor unbounded-healing permission.
 
 ### Ground and Board Costs
 
@@ -707,7 +707,7 @@ For the selected event/once-per-round combination, add the independently priced 
 |----------------------------|--------------------------------|-----------------------------|
 | Lava I / Thornbed I / Blight I, immediate cast or delayed aftermath | 4 × C | Permanent hazard package; no delay discount; trigger risks and loss of immediate control to test |
 | Hearth / Umbra | 4 × C | Existing +1 Initiative / Reach while occupied, both sides |
-| Mossbed | 6 × C | Existing heal 1 on entry; provisional until re-entry limits are resolved |
+| Mossbed | 6 × C | Existing heal 1 on every entry (no re-entry limit, user decision 2026-11-10); price provisional |
 | Hallowed | 4 × C | Existing Surge reduction 1; no automatic hit consumption |
 | Mountain creation with coupled Plain reset | 5 × C | Mountain plus its existing non-Voidscar → Plain cleanse, one package |
 | Mountain-destruction operation (final ground: [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | 2 × C | Source-specific; the operation is priced because it grants the capability; the environmental 1 collapse damage is not priced as skill damage; the price is the earlier draft, not re-derived |
