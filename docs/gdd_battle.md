@@ -148,7 +148,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 
 ### 4.2 Late-Round Pressure (Anti-Stalling)
 
-- From a set round, the square farthest from all living monsters becomes **Voidscar** each round (permanent, undestroyable). *Reading, to confirm:* each square's distance is measured to its nearest living monster and the largest value wins. **Ties** *(user decision 2026-11-10)*: all equally far squares become Voidscar together, with no tie-break. Start scales with board size (tunable: 1v1 round 6, 3v3 round 8).
+- From a set round, the square farthest from all living monsters becomes **Voidscar** each round (permanent, undestroyable). *Reading (user decision 2026-11-10):* each square's distance is measured to its nearest living monster and the largest value wins. **Ties** *(user decision 2026-11-10)*: all equally far squares become Voidscar together, with no tie-break. Start scales with board size (tunable: 1v1 round 6, 3v3 round 8).
 - **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round — so every battle ends.
 
 ### 4.3 The Square Stack: Zones & Ground
@@ -158,7 +158,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 [ OBJECT ]  prop with tags (Tree: flammable · Wall: brittle · Rock: heavy · Pillar: indestructible) | empty
 [ SURGE  ]  pending Surge marker | empty — shares shapes/placement with zones, never merges with them
 [ ZONE   ]  ONE timed zone (the skill's `duration`) | empty — control and support
-[ GROUND ]  type (neutral: Plain | Rubble | Water | Voidscar — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra | Hallowed), always permanent
+[ GROUND ]  type (neutral: Plain | Rubble | Voidscar — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra | Hallowed), always permanent
             + height (Low | Mountain)
 ```
 
@@ -194,7 +194,7 @@ Illustrative **runtime board state only**, not a skill-authoring schema: entries
 {
   "pos": [2,1],
   "ground": {
-    "type": "lava",          // plain | rubble | water | voidscar | hallowed | lava | thornbed | blight | hearth | mossbed | umbra
+    "type": "lava",          // plain | rubble | voidscar | hallowed | lava | thornbed | blight | hearth | mossbed | umbra
     "level": 1,              // hazard grounds only (1–2) = damage per trigger
     "height": 0              // 0 low | 1 Mountain (independent of type)
   },
@@ -276,7 +276,6 @@ No merging: a square always shows exactly one zone with its real effects.
 |-------|--------|--------|
 | Neutral | **Plain** | move cost 1 |
 | Neutral | **Rubble** | move cost 2; left by shattered props and destroyed Mountains (when the destroying skill authors no ground change) |
-| Neutral | **Water** *(planned)* | move cost 2, Swim crosses it at cost 1; traversal and Step exceptions: [movement profiles](gdd_skills.md#movement). Water/Swim contract remains T08 |
 | Neutral | **Voidscar** | 1 damage at the **start** of your turn; permanent, spreads late-game (§4.2), nothing changes it |
 | Hazard | **Lava** I–II | damage = level at the **end** of your turn — *punishes staying* |
 | Hazard | **Thornbed** I–II | damage = level when you **enter** the square (move, push or pull) — *punishes moving* |
@@ -325,25 +324,25 @@ FLYING  → air layer (air content at Soul+); some props may affect both layers 
 
 **Prop decisions** *(user, 2026-11-10)*:
 - **No Field class:** the enterable Field prop (Sigil) is removed because Umbra ground already provides "Reach +1 while standing"; ground-layer props are always Solid. Air-layer props are the only other class.
-- **Destruction aftermath per prop type:** each destructible prop type has its own fixed, previewed aftermath instead of one shared shatter. Concrete values are open drafts (idea: Wall keeps four-neighbour debris plus Rubble; Tree falls one square along the hit direction for 1 damage and leaves Plain; Rock leaves Rubble without debris).
+- **Destruction aftermath per prop type:** each destructible prop type has its own fixed, previewed aftermath instead of one shared shatter. Aftermath values *(user decision 2026-11-10)*: **Wall** leaves Rubble and deals 1 debris damage to monsters on the four neighbouring squares; **Tree** falls one square along the damaging hit's direction (the authored Strike/cast direction as for push, §6.5), deals 1 damage to a monster on that square and leaves Plain; **Rock** leaves Rubble without debris. **No chain reactions:** debris and falling trees damage monsters only, never props, so there is no recursion. *(Details, confirmed by the user 2026-11-10:)* a Tree destroyed without a defined hit direction, or whose fall square is off the board, solid or occupied by a prop, falls nowhere and deals no damage; a burning Tree becomes Lava I per §4.11 instead of falling; the aftermath is shown in the cast preview.
 - **Prop damage rights:** damaging offensive sources (Strike, Surge) hit props like monsters; movement, support and zones damage props only through an explicitly authorized prop effect.
 
 **Prop redesign — incomplete draft:**
 - Concrete mechanical influence should determine destructibility, resistance and destruction-specific aftermath. Most relevant offensive skills should interact with/destroy props; this grants no damage to utility or movement skills.
 - Splintering can damage previewed cells; trees may split or burn down with different aftermaths. Initially, falling/splitting uses deterministic fall effects plus ground/visual remains, not separately movable tree halves. Preview every outcome; no random scattering.
 
-**Unresolved destruction (T04):** reaction/destruction matrix and exact fall/aftermath definitions remain in [temp_todo.md](temp_todo.md). **§4.10–§4.11 and their debris references elsewhere are interim rules**, not final outcomes for every destruction method.
+**Unresolved destruction (T04):** the destruction method does not change the aftermath, with one exception *(user decision 2026-11-10)*: a burning Tree burns down at round end to Lava I only (no fall, no debris, no spread to neighbouring Trees, no neighbour damage), and a Wall reduced to 0 HP by crumble leaves the normal Wall aftermath. Any additional prop types and the HP/damage matrix remain in [temp_todo.md](temp_todo.md). §4.10 still states the shared interim shatter; the per-type aftermath above takes precedence for Wall, Tree and Rock.
 
 ### 4.10 Damage, Shatter & Prop Types
 
 **Interim prop rules — pending T04 redesign ([§4.9](#49-props)).**
 
 - An ordinary Surge hit deals **2 damage to the prop**, intercepting the hit instead of hitting a monster there; ground-layer props are always Solid, so no monster shares a square with them. Strike prop damage and profile-specific exceptions: [central execution profiles](gdd_skills.md#3-skill-execution-profiles); collision damage: [§6.3](#63-collision-fall--debris); reactions: [§4.11](#411-prop-reactions).
-- At 0 HP a prop **shatters**: neutral Rubble replaces the ground; **1 debris damage lands on the four neighbouring squares**. Debris does not affect Mountains.
+- At 0 HP a prop is destroyed with its type's aftermath ([§4.9](#49-props): Wall Rubble + 1 debris damage on the four neighbouring squares, Tree falls and leaves Plain, Rock Rubble). Debris does not affect Mountains or props.
 
 |    Prop    | HP |      Tags      |                                                                Notes                                                               |
 |------------|----|----------------|------------------------------------------------------------------------------------------------------------------------------------|
-| Wall       | 2  | brittle        | shatters into debris; explicit crumble effects damage it (§4.11)                                                                                             |
+| Wall       | 2  | brittle        | leaves Rubble and debris (§4.9); explicit crumble effects damage it (§4.11)                                                                                             |
 | Tree       | 2  | flammable      | burns (§4.11)                                                                                                                      |
 | Rock       | 3  | heavy          | cannot be moved; survives one ordinary 2-damage Surge hit at 1 HP; damage exemptions follow the [execution profiles](gdd_skills.md#3-skill-execution-profiles) |
 | Pillar     | —  | indestructible | anchor (rare), nothing removes it                                                                                                  |
@@ -439,11 +438,11 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 The order is fixed by this list, not by data-field position or per-skill authoring.
 
 **Legality at execution** *(user decision 2026-11-10)*: legality is checked per square and per operation on the board as it is at detonation, so a Surge can be countered by prop placement, height or ground changes made after the cast. A square or operation that is no longer legal (e.g. residue on a square now holding a prop, destroying a Mountain that is already gone) does nothing; everything else resolves normally. No retargeting, replacement square or refund of AP or usage.
-  - Whether a blocker also stops the rest of the footprint behind it depends on the Surge: line-type Surges may be blocked by a prop (a Wall on the middle square of a three-square line from one end also spares the squares beyond it), others lose only the blocked square. This is authored per Surge profile ([Skills §3](gdd_skills.md#surge)); no global rule is added here.
+  - Whether a blocker also stops the rest of the footprint behind it depends on the Surge: **line-shaped footprints** are stopped by the first prop along the line from the anchor end (a Wall on the middle square of a three-square line from one end also spares the squares beyond it), all other shapes lose only the blocked square *(user decision 2026-11-10)*. Which Surges are line-shaped is part of each Surge's authored shape and can differ from Surge to Surge ([Skills §3](gdd_skills.md#surge)); the prop's own interception and reactions follow the profile table.
 
-**Several Surges due at once** *(user decision 2026-11-10)*: Surges of one caster due at the same event resolve **phase by phase together**: all damage simultaneously, then defeat, then displacement (still furthest-first), then board operations in the category order above, then self retreats. No order between Surges is needed.
+**Several Surges due at once** *(user decision 2026-11-10; applies to Surges of any casters, e.g. dead-caster Surges at the same round start)*: Surges due at the same event resolve **phase by phase together**: all damage simultaneously, then defeat, then displacement (still furthest-first), then board operations in the category order above, then self retreats. No order between Surges is needed. **Ties** *(user decision 2026-11-10: simultaneous, no precedence)*: damage from several sources on one target is applied simultaneously and adds; they create no source priority. Displacements keep the furthest-first rule; when two displaced units compete for one destination square or lie equally far along different directions, *(user decision 2026-11-10)* they resolve in their current initiative-queue order, and the later one collides under [§6.3](#63-collision-fall--debris). No other precedence between sources exists.
 
-Still open (T04): Relocate and Cleanse details, damage-source ties. Confirmed autonomy is unchanged.
+Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). Confirmed autonomy is unchanged.
 
 ### 6.3 Collision, Fall & Debris
 
@@ -453,7 +452,7 @@ Still open (T04): Relocate and Cleanse details, damage-source ties. Confirmed au
 - **Blocked multi-step displacement:** a unit moves step by step and stops on the last free square. The blocked step is the collision (once per displacement; remaining steps are lost). A pull whose path or anchor square is occupied follows the same rule; no alternative square
 - **Off a Mountain**: the move happens, 1 fall damage · onto Mountain from below: blocked like a prop, no damage
 - **2×2 displacement** *(user decision 2026-11-10; details T09)*: a push/pull moves the whole body one square; if any newly covered square is blocked, there is **one collision** and no move: the 2×2 takes 1 damage once, and each blocking monster and each blocking prop takes 1 (heavy props none). Falling from a Mountain deals the 1 fall damage only if **all four** covered squares land lower; a partial fall moves without fall damage. Pushing a 2×2 up onto a Mountain from below is blocked, with no damage, as soon as any covered square would climb. Radial pushes and pulls for 2×2: [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants). Open: landing on mixed ground.
-- **Prop shattered**: resolve debris under the **interim** [§4.10](#410-damage-shatter--prop-types) rules; destruction-specific replacements remain T04
+- **Prop destroyed**: resolve the type's aftermath ([§4.9](#49-props)); the burning/crumble destruction matrix remains T04
 
 ### 6.4 General Rules
 
@@ -469,7 +468,7 @@ Still open (T04): Relocate and Cleanse details, damage-source ties. Confirmed au
   - Other push sources use their authored cast/Strike direction; pull uses the board anchor fixed at cast.
   - **Pull on an exact diagonal** *(user decision 2026-11-10)*: if the anchor lies exactly diagonally from the target (`|dx| = |dy|`), there is no unique cardinal direction and the pull does not move the target (other effects of the hit remain).
   - Blocked moves: [§6.3](#63-collision-fall--debris); entry/end-event integration: [§2.4](#24-effect-timing-reference).
-- Zone effects: [§4.6](#46-zones-effects-rules--opposites). Authored spatial on-hit push/pull and delayed footprint-bound displacement get recipients, bindings and triggers from the [central displacement contracts](gdd_skills.md#4-effect-and-board-operation-contracts), not a second profile catalogue here. Ties and combined-effect order remain unresolved ([temp_todo.md](temp_todo.md), T04).
+- Zone effects: [§4.6](#46-zones-effects-rules--opposites). Authored spatial on-hit push/pull and delayed footprint-bound displacement get recipients, bindings and triggers from the [central displacement contracts](gdd_skills.md#4-effect-and-board-operation-contracts), not a second profile catalogue here. Ties and combined-effect order: [§6.2](#62-surge-resolution-integration).
 
 **Why end of turn:** at turn start the target could simply walk away again; at turn end it lands in Lava, through Thornbed, in front of your Strike or in a Surge detonating before it can move again. Visible counterplay: don't end your turn on a current.
 

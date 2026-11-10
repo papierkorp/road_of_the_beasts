@@ -296,7 +296,7 @@ Movement skills use **flag profiles**, not special-case lists. Modes are authori
 | `blocked_by_monsters`  | monsters block the path                                                         |
 | `blocked_by_surges`    | charging Surges block the path                                                  |
 | `blocked_by_height`    | can't start or end the move on Mountain                                         |
-| `ground_costs`         | Rubble, Water and climbing cost 2 movement, Thornbed fires on every square entered (walk only) |
+| `ground_costs`         | Rubble and climbing cost 2 movement, Thornbed fires on every square entered (walk only) |
 | `distance_mod`         | distance = Movement + this (min 1)                                              |
 
 |       Preset       | path | objects | monsters | Surges | height | ground costs | distance_mod |
@@ -308,13 +308,12 @@ Movement skills use **flag profiles**, not special-case lists. Modes are authori
 | **Burrow**         | free | no      | no       | no     | yes    | no           | −1           |
 | **Phase**          | walk | no      | yes      | yes    | no     | yes          | −1           |
 | **Blink**          | teleport | no  | no       | no     | no     | no           | −2           |
-| **Swim** *(planned)* | walk | yes   | yes      | yes    | no     | yes, Water costs 1 | 0      |
 
 - **Price rule:** every restriction a preset drops is paid for in distance or in direction (Leap: straight line only). New modes follow it
 - Apply only the resolved, authorized movement variant; upgrade allowances and AP consequences belong to [§6](#6-slot-levels-development-replacement-and-upgrades), not a second battle upgrade rule
 - Min 1 square for every movement skill. Step ignores slow and extra ground costs, but still requires a legal unblocked destination
 - Ignoring path blockers permits no occupied landing. Walk processes entered cells; line/free/teleport only landing, with destination effects still applying.
-- Glide grants no persistent flight; flight rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); layer change/landing remain T09, Water/Swim T08.
+- Glide grants no persistent flight; flight rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); layer change/landing remain T09.
 
 ### Surge Constraints and Species Access
 
@@ -448,7 +447,7 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
   - Binding lifetime, ordering and limits: State, replacement/levelling, entry semantics and Voidscar exception: [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed).
     - Placement uses §2; prop reactions use [Battle §4.11](gdd_battle.md#411-prop-reactions).
     - Surge aftermath follows its §3 profile.
-    - Zones never change ground (Battle §4.6); Water remains T08.
+    - Zones never change ground (Battle §4.6).
 - **Height change**
   - Required data / source: Separate height definition, affected cells and authorized source: Mountain creation with coupled ground reset, or an explicit Mountain-destruction operation
   - Binding lifetime, ordering and limits: Reference [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) for height state, the Mountain-creation source's coupled Plain reset and the Mountain-destruction rule (collapse damage, resulting ground), and [Battle §6.3](gdd_battle.md#63-collision-fall--debris) for fall consequences.
@@ -462,7 +461,7 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
   - Required data / source: Authorized source, selected prop, origin/destination and applicable path/placement constraints
   - Binding lifetime, ordering and limits: Reference placement in §2 and prop restrictions in [Battle §4.10–§4.11](gdd_battle.md#410-damage-shatter--prop-types).
     - Generic unit push/pull is not a prop-move definition.
-    - The prop-relocation source's unresolved distance/path/reaction contract remains T02/T04.
+    - *Relocate contract (user-confirmed 2026-11-10; the source itself is not yet approved content):* an authorized source moves one selected eligible prop exactly one square orthogonally to a legal empty square (placement rules of Battle §4.9–§4.10; not onto monsters, props, edges or illegal ground); heavy props are not eligible; legality is checked at execution (Battle §6.2), an illegal move does nothing; a relocated prop keeps its HP, tags and lifetime and triggers no shatter or debris, only the entry/placement effects its type already defines. Longer distances or paths need a separate authorized contract.
 - **Prop destroy / remove**
   - Required data / source: Existing destruction/reaction definition and eligible prop; damage-derived destruction references the damage source, not a free deletion flag
   - Binding lifetime, ordering and limits: Reference the interim destruction/reaction rules in [Battle §4.9–§4.11](gdd_battle.md#49-props) and derived debris in [Battle §6.3](gdd_battle.md#63-collision-fall--debris).
@@ -470,7 +469,7 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
     - Direct deletion, salvage or suppressed debris requires a separately approved source; removal does not imply universal shatter.
 - **Cleanse**
   - Required data / source: Explicit source, exact affected layer/state, legal footprint/recipients and resulting state
-  - Binding lifetime, ordering and limits: The existing Mountain-creation source clears non-Voidscar ground to Plain as above; any additional monster zone-cleanse effect requires an explicit source-specific definition and validation (T02/T04); no such definition is established here.
+  - Binding lifetime, ordering and limits: The existing Mountain-creation source clears non-Voidscar ground to Plain as above; no further monster Cleanse source exists (user decision 2026-11-10); a new one needs an explicit definition and validation and is parked under Potential Extensions.
     - Zone removal ends its effects, not ground/height/props or a charging Surge.
     - The combined zone-removal/Plain-reset exception is a tamer-source operation ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)), not a reusable monster permission.
     - No generic cleanse of all layers, negative effects, Injury or Voidscar; unresolved combinations/order remain T02/T04/T07/T20.
@@ -615,11 +614,10 @@ Movement, passive and prop standards are maintained only in their owning section
 | Burrow | 8 | 6 | 14 | — |
 | Phase | 7 | 6 | 13 | — |
 | Blink | 10 | 6 | 16 | — |
-| Swim (planned, not approved content) | 7 | 6 (assumed 2 AP) | 13 (provisional) | Run-like walk with Water cost 1; access/Water rules remain T08 |
 | Step (universal, no slot) | Not budgeted | Not applicable | Not applicable | Existing 2 AP, exactly 1 cell; no skill upgrades |
 
 - **Package scope:** whole §3 presets, not additive flag prices/restriction exchange rates. Retain §8.2 Kin/stage access and the legal landing/occupancy/entry rules of the [§3 presets](#movement); self movement pays no ranged-anchor/ground-air-attack fee.
-- **Status:** all existing slotted modes fit 24 numerically, without new access, completed upgrades, progression unlock or balance approval. Swim stays planned. Unmodified baseline walk uses the table total, combination 0, passive availability inapplicable.
+- **Status:** all existing slotted modes fit 24 numerically, without new access, completed upgrades, progression unlock or balance approval. Unmodified baseline walk uses the table total, combination 0, passive availability inapplicable.
 - **Custom profiles/upgrades:** unused budget grants no free upgrade, base restrictions no second charge. Test low/high Movement including floor, barriers, hazards and exits; air/2×2 remain T09.
 
 **User-selected working standards, unvalidated:** evaluate an authorized patched preset as its base mechanical package plus the applicable increment below; add AP efficiency once. Preserve §6's one-patch limit. These are sensitivity-test anchors, not equal-value claims for every blocker or permission to change path mode, landing, air access or unsupported flags.
@@ -714,9 +712,8 @@ For the selected event/once-per-round combination, add the independently priced 
 | Create Wall / Tree | 4 per created prop | Existing HP/tags/solid/reaction package; provisional pending prop redesign |
 | Create Rock | 6 per created prop | Existing heavy-prop package; provisional, source/access still required |
 | Create Shrine | 8 per created prop | Existing prop/effect package; no duplicate permanent buff charge |
-| Relocate eligible prop | 6 per moved prop | Provisional component only; distance/path/destination/reactions remain undefined |
-| Additional ground-only Plain reset / zone-only cleanse | 3 × C / 4 × C | Pricing placeholders only; no new monster source is approved (§4) |
-| Water, direct Rubble creation, Pillar creation, direct prop deletion | Not priced / not authorized by this table | Need explicit source/contract; Water remains planned T08 |
+| Relocate eligible prop (one square, orthogonal; contract in §4) | 6 per moved prop | Provisional component; contract confirmed, price not recalibrated |
+| Direct Rubble creation, Pillar creation, direct prop deletion | Not priced / not authorized by this table | Need explicit source/contract |
 | Voidscar alteration | Forbidden | No budget bypass |
 
 - **Props:** prices grant no catalogue/access; retain empty-cell, heavy/indestructible and interaction restrictions. Ordinary destruction has no generic surcharge; natural damage-derived debris is not a second authored operation and never affects Mountains. Ignition/extinguish/crumble, falling/splitting and mixed packages await prop redesign, not guessed defaults.
@@ -982,7 +979,6 @@ Every monster has **Step**. Anything better is a movement skill in one of the 4 
 | **Burrow**          | Scaled, Swarm  |
 | **Phase**           | Spirit         |
 | **Blink**           | Spirit         |
-| **Swim** *(planned)* | not assigned |
 
 - **Foreign movement:** from **Soul Tier**, learn **one other Kin's mode** unless body-forbidden; Ancient never gets Glide/Blink.
 - Normal ends at Core, retaining only its Kin's modes: rarity = flexibility ([Monsters §5.1](gdd_monsters.md#51-monster-rarity)).
@@ -1012,13 +1008,13 @@ Points in Movement only pay off with a movement skill; a Step-only monster stays
 
 **Displacement:**
 
-- Crashlander (when pushed or pulled into a prop or monster, it takes no collision damage — the other side takes 1)
+- Crashlander (when it is pushed or pulled into a prop or monster, the collision damage *it* takes is reduced by 1, i.e. to 0; the other side still takes the fixed 1 under [Battle §6.3](gdd_battle.md#63-collision-fall--debris))
 - Immovable (ignores push/pull)
 - Counterweight (allies orthogonally adjacent to it can't be pushed or pulled)
 
 **Combat:**
 
-- Thick Hide (Strikes and collisions deal 1 less, min 0)
+- Thick Hide (damage this monster *receives* from Strikes and from collisions is reduced by 1; it is summed with other modifiers in one step and floored at 0 under [Battle §6.1](gdd_battle.md#61-the-damage-law); fall, collapse, debris and Surge damage are unaffected)
 - Pack Hunter (Strike costs 1 AP less if an ally is adjacent to the target)
 - First Blood (its first Strike each battle costs 1 AP less)
 - Vengeful (after taking Surge damage, its next Strike costs 1 AP less)
