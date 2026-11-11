@@ -21,23 +21,24 @@ A monster the player owns is **two layers**: a fixed *species* and a unique *ind
 ```
 SPECIES  (data file, shared by all individuals — §4.1)
   Kin · descriptive themes (free-form, no mechanical type) · default kit
-  (4 slots, active or passive) · learnable skills · blurb · art
-  Each concrete Surge skill defines its own behaviour, shape and twist.
+  and learnable-skill references (Skills §1) · blurb · art
+  Concrete Surge behaviour, shape and twist resolve from Skills §3.
 
 INDIVIDUAL  (one per monster the player owns or meets in the wild)
   stat shape      glass cannon | anvil | skirmisher | berserker | balanced | fragile
   stats           rolled inside the shape's frame, then spent by the player (§2.2)
   rarity          Normal | Rare | Epic | Legendary
   stage + sub-tier + XP
-  slot development  permanent development per skill slot, gained at advancement steps ([Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), §5.3)
-  slot loadout    equipped skill and its selected upgrades per slot; development survives skill replacement
-  artifact(s)     socketed passives (gdd_overworld §6.7)
-  current HP      persists between battles of an expedition
+  slot development  per-slot progress (Skills §6), supplied at advancement steps (§5.3)
+  slot loadout    equipped skill and selected upgrades per slot (Skills §6)
+  artifact(s)     equipment references (Overworld §6.7)
+  current HP      expedition state (Overworld §2.2)
 ```
 
+- **Referenced contracts:** [kit](gdd_skills.md#1-the-kit), [Surge profiles](gdd_skills.md#surge), [slot development/replacement](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), [artifacts](gdd_overworld.md#67-artifacts-equipment--socketed-passives), [expedition HP](gdd_overworld.md#22-expedition-loop).
 - **Stat shape is individual, not species-wide.** Two Blaze Tigers can be a fast skirmisher and a hard-hitting berserker: same Surge, different playstyle, collection depth without new art.
 - Wild/newly caught monsters roll shapes weighted by **Kin lean** (§3.1: Winged → glass cannon, Ancient → anvil, …); rare off-lean rolls are prized finds. §4.1 shows reference individuals: typical Core Formation rolls.
-- **Every stat is paid for** (§2.2). Shape allocates a fixed budget: speed costs HP; slow shapes recover HP and Reach. No shape is strictly better.
+- **Shape trade-offs:** use the [frame/budget rules](#22-frame-budget-level-ups); speed costs HP, while slow shapes recover HP and Reach. No shape is strictly better.
 
 ### 1.2 Monster Sheet
 
@@ -51,16 +52,16 @@ Stage         Qi Gathering ... Sovereign (capped by player stage)
 
 HP
 Initiative
-Movement      squares per movement skill (Step is always 1)
+Movement      squares per movement skill (Skills §3)
 Reach         cast range of all skills
 TurnsPerRound
 AP            action points per turn
               (ranges and stage ceilings: §2.1, §2.3)
 
-SKILLS: Step (no slot, 2 AP) + 4 slots, active or passive, at least one active ([Skills §1](gdd_skills.md#1-the-kit))
+SKILLS: resolved kit under Skills §1
 ```
 
-The battle only ever sees this finished sheet.
+Battle sees only this finished sheet, a presentation of [§1.1](#11-species-and-individual) and [§2.1](#21-the-stats), not a second data model. Skill fields resolve through [Skills §1](gdd_skills.md#1-the-kit)/[§3](gdd_skills.md#3-skill-execution-profiles).
 
 ### 1.3 Monster Identity — The 6 Axes
 
@@ -68,25 +69,25 @@ The battle only ever sees this finished sheet.
 1. STAT SHAPE   glass cannon / anvil / skirmisher / berserker / balanced / fragile   (per individual monster, rolled with the Kin's lean — §1.1)
 2. THEMES       free descriptive motifs; no fixed aspects, replacement element types or attunement
 3. KIN          creature type → Strike, layer, stat lean, which skill profiles it may take, Surge size access
-4. KIT          4 slots (active or passive, ≥ 1 active); each concrete Surge defines its behaviour, shape + size and at most ONE twist ([Skills §3](gdd_skills.md#3-skill-execution-profiles))
+4. KIT          authored skills and Surge identity (Skills §1/§3)
 5. PASSIVE      the rule-bender — biggest personality driver
 6. SIZE         1x1 vs 2x2
 ```
 
-**A shared construction kit builds a monster** — not everything is invented from scratch per monster:
+**A shared construction kit builds a monster** — not everything is invented from scratch per monster. Kit rules: [Skills §1](gdd_skills.md#1-the-kit); Surge behaviour/shape/twist contracts: [§3](gdd_skills.md#surge-constraints-and-species-access).
 
 |           Layer           |                                  Decides                                  |                                  Example                                   |
 |---------------------------|---------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | **Kin** (body)            | Strike, movement layer, stat lean, allowed skill profiles, Surge size         | Beast bites and is fast; only Ancient has a Major Surge (at Sovereign; Legendary ambiguity open, [Skills §1](gdd_skills.md#1-the-kit)) |
 | **Themes** (description)  | free-form flavour and visual identity, no mechanical eligibility rules   | fire, moss, shadows, storms — motifs may mix freely                        |
-| **Species** (the monster) | its default kit of 4 slots and its Species Surge ([Skills §3](gdd_skills.md#3-skill-execution-profiles))                  | Blaze Tiger: *Magma Pounce* — O4 Eruption that must land next to the tiger |
+| **Species** (the monster) | default kit and Species Surge references ([Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft)) | Blaze Tiger: *Magma Pounce* — O4 Eruption that must land next to the tiger |
 
 - **No fixed roles:** Kin is not class (Beast ≠ "damage dealer"); kits determine team function, so two Beasts can play completely differently.
 - Build teams from *combinations*: one monster pulls, another Strikes; one floods enemies into another's Eruption.
 
 **Design test:** one sentence per monster built from its kit. If two monsters read the same, change a Surge shape or twist, a skill or its descriptive theme.
 
-The six stat shapes are frames of min–max values per stat, not fixed stats (§2.2).
+Stat-shape frames: [§2.2](#22-frame-budget-level-ups).
 
 ---
 
@@ -98,7 +99,7 @@ The six stat shapes are frames of min–max values per stat, not fixed stats (§
 |---------------------|----------|-----------------------------------------------------------------------------------------------------------------------|
 | HP                  | 1–10     | No defense stat — dead is dead                                                                                        |
 | Initiative          | 0.1–10.0 | Position in the turn queue ([gdd_battle §2.2](gdd_battle.md#22-initiative-rules))                                                                          |
-| Movement            | int      | Squares per movement skill ([§3](gdd_skills.md#3-skill-execution-profiles)); Step is always 1                                                        |
+| Movement | int | Squares per movement skill; Step exception: [Skills §3](gdd_skills.md#movement) |
 | Reach               | 2–4      | Cast range of all skills ([§2](gdd_skills.md#2-data-oriented-skill-construction-kit)); Strikes don't use it                                                      |
 | TurnsPerRound (TPR) | 1–3      | Extra turns: queue entries and initiative penalty in [gdd_battle §2.2](gdd_battle.md#22-initiative-rules)                |
 | AP                  | 2–5      | Action points per turn ([gdd_battle §2.3](gdd_battle.md#23-action-points))                                                                              |
@@ -106,7 +107,7 @@ The six stat shapes are frames of min–max values per stat, not fixed stats (§
 
 Zones and standing on a Mountain change these values during a fight: effective stats, [gdd_battle §3.1](gdd_battle.md#31-effective-stats).
 
-**Every stat is paid for:** monsters at the same stage/sub-tier share a budget, allocated by shape (§2.2). Acting first, possibly several times consecutively, costs HP or Reach; poor turn order buys HP, Reach or AP.
+Budget/prices: [§2.2](#22-frame-budget-level-ups). Acting first, possibly several times consecutively, costs HP or Reach; poor turn order buys HP, Reach or AP.
 
 ### 2.2 Frame, Budget, Level-Ups
 
@@ -131,7 +132,8 @@ PRICE   stats cost points: a strong stat is paid for with the others
 | **Base total** |  |                                       |    **15** |
 
 - **Absolute costs:** TPR 1/2/3 = 3/8/15; AP 2/3/4/5 = 6/9/14/21.
-- **One AP ceiling for every monster** *(user decision 2026-11-11)*: the stage ceiling of §2.3 applies to all monsters alike; no TPR value lowers it and no AP value restricts TPR. Extra turns are limited by their price instead; the TPR price formula (the additive 3/8/15 above does not scale with the number of actions per round) is an open draft until simulator evidence (T03/T13). AP additionally unlocks larger Strike shapes ([Skills §8.1](gdd_skills.md#81-strike-by-kin)).
+- **One AP ceiling for every monster** *(user decision 2026-11-11)*: [§2.3](#23-stat-ceilings-per-stage) applies to all monsters; no TPR value lowers it and no AP value restricts TPR. Extra turns are limited by price instead. AP also gates [Strike shapes](gdd_skills.md#81-strike-by-kin).
+- **TPR price draft:** the additive costs above do not scale with actions per round; the formula remains open until simulator evidence (T03/T13).
 
 **Budget per stage and sub-tier** (points above the 15 base points; absolute total in brackets):
 
@@ -142,7 +144,7 @@ PRICE   stats cost points: a strong stat is paid for with the others
 | Core Formation      | 14 (29) | 15 (30) | 16 (31) |
 | Soul Tier and above | 18 (33) | 19 (34) | 20 (35) |
 
-So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Foundation**, because TPR 2 opens there). Immortal and Sovereign add no points; reason and replacement: [§5.3](#53-monster-progression-the-18-steps).
+Derived gains through Soul: sub-tier **+1 stat point**, breakthrough **+2** (**+4 into Foundation**, where TPR 2 opens). Immortal/Sovereign gains and rationale: [§5.3](#53-monster-progression-the-18-steps).
 
 **The six frames at Core Formation** (min–max). Total points are absolute totals with all stats at minimum/maximum; every shape contains the required Core budget (29 / 30 / 31).
 
@@ -183,7 +185,10 @@ So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Found
 
 Example, a Glass cannon at Core High (16 points above base): HP 2 (1) + Init 9 (8) + Move 3 (2) + TPR 2 (5) = 16.
 
-- **Stage scaling:** *(user decision 2026-11-11)* scale the Core frame limits with the ratio *(stage ceiling − 1) ÷ (Core ceiling − 1)* (§2.3) for Reach, applied as `1 + (Core limit − 1) × ratio`, and with *stage ceiling ÷ Core ceiling* for HP/Init/Movement; round half up, minimum 1. Cut TPR/AP limits to the ceiling; only Berserker's TPR frame grows, to 3 at Soul.
+- **Stage scaling** *(user decision 2026-11-11; ceilings: [§2.3](#23-stat-ceilings-per-stage))*:
+  - Reach ratio = *(stage ceiling − 1) ÷ (Core ceiling − 1)*; limit = `1 + (Core limit − 1) × ratio`.
+  - HP/Init/Movement: scale Core limits by *stage ceiling ÷ Core ceiling*.
+  - For both scaling formulas, round half up, minimum 1. Cut TPR/AP limits to the ceiling; only Berserker's TPR frame grows, to 3 at Soul.
 - **Frame applies only at roll:** new/wild individuals draw within it until their stage/sub-tier budget is spent. Two Anvils start differently, never stronger overall.
   - Each later level-up adds points for free player allocation (free action), limited only by stage ceilings (§2.3).
   - Save ceiling-blocked points for the next breakthrough.
@@ -206,8 +211,8 @@ Each stage defines hard caps, no shape and no point can go above them:
 
 Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 
-- **Lifetime scale:** HP 1–10, Init 0.1–10.0, TPR 1–3, AP 2–5 span the entire game; inflation would destroy its deterministic low-HP feel.
-- **Damage never scales by stage** ([gdd_battle §6.1](gdd_battle.md#61-the-damage-law)): Surge base, Strike (max 2) and ground damage stay equal from Qi Gathering to Sovereign.
+- **Lifetime scale:** [§2.1 ranges](#21-the-stats) span the whole game; inflation would destroy the deterministic low-HP feel.
+- **Damage never scales by stage:** Surge base, Strike and ground damage stay equal from Qi Gathering to Sovereign; source limits: [Battle §6.1](gdd_battle.md#61-the-damage-law).
 
 ---
 
@@ -223,7 +228,7 @@ Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 |     Kin     |      Body fantasy      |               Layer/Movement              |      Stat lean      |                        Surge access                        |      Locked out of      |
 |-------------|------------------------|-------------------------------------------|---------------------|------------------------------------------------------------|-------------------------|
 | **Beast**   | tiger, ape, wolf       | ground, high move                         | balanced/skirmisher | Minor                                                      | Major Surge, Sanctify   |
-| **Winged**  | bird, moth, wyvern     | **air** (Soul+), move 3+                  | glass cannon        | Minor; **ignores ground effects and ground-recipient Surges while airborne** (exceptions: authored air recipients, [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); attackers on a Mountain, [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | Raise Prop, Major Surge |
+| **Winged** | bird, moth, wyvern | **air** (Soul+), move 3+ | glass cannon | Minor; recipient/ground interface: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground), Mountain exception: [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) | Raise Prop, Major Surge |
 | **Scaled**  | serpent, turtle, drake | ground, low move                          | anvil               | Minor                                                      | —                       |
 | **Swarm**   | insects, rats          | ground, move 2                            | fragile, TPR 2+     | Minor, 2-cell shapes                                       | Major Surge, Relocate   |
 | **Spirit**  | ghost, wisp            | ground, **Phase / Blink** ([Skills §8.2](gdd_skills.md#82-movement-by-kin))        | low HP, high init   | Minor                                                      | Raise Prop              |
@@ -238,7 +243,7 @@ Strike shapes and Kin effects ([Skills §8.1](gdd_skills.md#81-strike-by-kin)), 
 ### 4.1 First Roster Draft — 9 monsters
 
 **Non-authoritative prior-draft ideas.** Names, descriptions and shapes are unvalidated; skill assignments are in [Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft).
-- **Reference individuals:** shape belongs to individuals (§1.1); these are typical species rolls at **Core Formation High**, each spending exactly 16 points within frame (caps HP 8, Init 9, TPR 2, Move 5, Reach 3, AP 3; §2.2–2.3).
+- **Reference individuals:** typical species rolls at **Core Formation High**, each spending exactly 16 points within its [frame/budget](#22-frame-budget-level-ups) and [stage ceilings](#23-stat-ceilings-per-stage); shape belongs to the individual ([§1.1](#11-species-and-individual)).
 
 | Monster | Kin | Descriptive themes | Shape · HP / Init / Move / TPR / Reach / AP |
 |---|---|---|---|
@@ -280,15 +285,13 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 
 |                                  |                       Normal                       |        Rare       |        Epic       |            Legendary            |
 |----------------------------------|----------------------------------------------------|-------------------|-------------------|---------------------------------|
-| Base kit                         | 4 slots (active or passive, ≥ 1 active)            | same              | same              | same (+ signature at max stage) |
-| Extra passive slot               | —                                                  | —                 | 1                 | 1                               |
 | Slot-development steps per advancement |                      1                             |         1         |         2         |                2                |
 | Max stage reachable              | Core                                               | Soul              | Immortal          | Sovereign                       |
 
+- Base kit, rarity-dependent passive slot and Legendary Signature access: [Skills §1](gdd_skills.md#1-the-kit); advancement unlocks: [§5.3](#53-monster-progression-the-18-steps).
 - "Max stage reachable" is the core axis — the wuxia "noble bloodline" trope, long-term potential over instant power
 - **No stat bonuses from rarity.** Soul+ caps already sit on the absolute scale ([§2.3](#23-stat-ceilings-per-stage)), so rarity buys slots, development steps and ceiling — never numbers
-- **High mechanics are Rare+ territory by design:** Air layer and 2x2 need Soul, TPR 3 needs Soul, the Ancient's Major Surge needs Sovereign.
-  - A Normal monster (max Core) has no Soul-tier air/2×2 or TPR-3 access; TPR 2 is already possible from Foundation (§5.3)
+- **High mechanics are Rare+ territory by design:** rarity ceilings gate the [advancement unlocks](#53-monster-progression-the-18-steps); a Normal monster stops at Core, before Soul-tier air/2×2 and TPR-3 access, but can reach Foundation's TPR 2.
 - Rarity does **not** decide the stat shape: any rarity can roll any shape (weighted by Kin lean, §1.1)
 - Slot development, superseded per-skill prices and replacement rules: [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades). This table supplies only rarity/progression working data, not slot-development prices.
 
@@ -304,29 +307,32 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 - **18 steps:** six stages × three sub-tiers. Sub-tiers grant freely allocated stat points within ceilings; stages open skills/mechanics.
 - Monsters exceed neither the player's stage (§2.2) nor rarity's max stage (§5.1). Player/monsters share this table; player XP bars may differ later.
 
-| # | Stage · Sub-tier  | Budget (above base) | Gain on reaching the step                                                                       | XP bar to the next step | 
-|---|-------------------|---------------------|--------------------------------------------------------------------------------------------------|-------------------------|
-| 1 | Qi Gathering Lower| 4                   | full kit (4 slots) · TPR 1 · AP 2 · 1v1                                       | 60                      |
-| 2 | Qi Gathering Middle| 5                  | +1 stat point                                                                                    | 120                     |
-| 3 | Qi Gathering High | 6                   | +1 stat point · breakthrough trial opens                                                         | 200 (+ trial)           |
-| 4 | Foundation Lower  | 10                  | **+4 points** · **slot-development step** · +1 learnable skill · TPR 2 · 3v3 / 2v2 · 1 tamer slot       | 150                     |
-| 5 | Foundation Middle | 11                  | +1 stat point                                                                                    | 300                     |
-| 6 | Foundation High   | 12                  | +1 stat point                                                                                    | 500 (+ trial)           |
-| 7 | Core Formation Lower | 14               | **+2 points** · **slot-development step** · +1 learnable skill · AP 3 · 5v5 special · 2nd tamer slot    | 400                     |
-| 8 | Core Formation Middle | 15              | +1 stat point                                                                                    | 800                     |
-| 9 | Core Formation High | 16                | +1 stat point                                                                                    | 1300 (+ trial)          |
-| 10| Soul Tier Lower   | 18                  | **+2 points** · **slot-development step** · +1 learnable skill · air layer, 2x2, TPR 3 · foreign movement mode ([Skills §8.2](gdd_skills.md#82-movement-by-kin)) · Beast Swap     | 1000                    |
-| 11| Soul Tier Middle  | 19                  | +1 stat point                                                                                    | 2000                    |
-| 12| Soul Tier High    | 20                  | +1 stat point                                                                                    | 3200 (+ trial)          |
-| 13| Immortal Lower    | 20                  | no points · **slot-development step** · +1 learnable skill · AP 4 · 3rd tamer slot | 2500 |
-| 14| Immortal Middle   | 20                  | +1 slot-development step                                                                                | 5000                    |
-| 15| Immortal High     | 20                  | +1 slot-development step                                                                                | 8000 (+ trial)          |
-| 16| Sovereign Lower   | 20                  | **slot-development step** · AP 5 · Signature skill (Legendary) · Major Surge (Ancient)   | 6000                    |
-| 17| Sovereign Middle  | 20                  | +1 slot-development step                                                                                | 12000                   |
-| 18| Sovereign High    | 20                  | +1 slot-development step · the end of the table                                                         | —                       |
+- Budgets and AP/TPR ceilings: [§2.2](#22-frame-budget-level-ups)/[§2.3](#23-stat-ceilings-per-stage); kit: [Skills §1](gdd_skills.md#1-the-kit). Player-specific mode, tamer-slot and Beast Swap unlocks: [Overworld §6.3](gdd_overworld.md#63-stage-unlock-table).
+- Stat-point gains below reference the budget table; development supply and XP bars are defined here. **Retained progression-draft budget:** Immortal and Sovereign each keep 20 points above base at all three sub-tiers. Reconciliation with the §2.2 “Soul Tier and above” row: [T03](temp_todo.md#open-tasks).
 
-- **Slot-development step** = the monster may develop one skill slot ([Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades)): 1 step for Normal / Rare, 2 for Epic / Legendary (§5.1).
-  - Normal reaches Core (steps 4 and 7: only 2 development steps in total, to be reviewed under T05), Rare reaches Soul (3 steps), Epic Immortal, Legendary Sovereign.
+| # | Stage · Sub-tier | Gain on reaching the step | XP bar to the next step |
+|---|------------------|---------------------------|-------------------------|
+| 1 | Qi Gathering Lower | starting kit and ceilings (sources above) | 60 |
+| 2 | Qi Gathering Middle | +1 stat point | 120 |
+| 3 | Qi Gathering High | +1 stat point · breakthrough trial opens | 200 (+ trial) |
+| 4 | Foundation Lower | **+4 points** · **slot-development step** · +1 learnable skill · TPR ceiling rises | 150 |
+| 5 | Foundation Middle | +1 stat point | 300 |
+| 6 | Foundation High | +1 stat point | 500 (+ trial) |
+| 7 | Core Formation Lower | **+2 points** · **slot-development step** · +1 learnable skill · AP ceiling rises | 400 |
+| 8 | Core Formation Middle | +1 stat point | 800 |
+| 9 | Core Formation High | +1 stat point | 1300 (+ trial) |
+| 10 | Soul Tier Lower | **+2 points** · **slot-development step** · +1 learnable skill · air layer, 2×2 · TPR ceiling rises · foreign movement ([Skills §8.2](gdd_skills.md#82-movement-by-kin)) | 1000 |
+| 11 | Soul Tier Middle | +1 stat point | 2000 |
+| 12 | Soul Tier High | +1 stat point | 3200 (+ trial) |
+| 13 | Immortal Lower | no points · **slot-development step** · +1 learnable skill · AP ceiling rises | 2500 |
+| 14 | Immortal Middle | +1 slot-development step | 5000 |
+| 15 | Immortal High | +1 slot-development step | 8000 (+ trial) |
+| 16 | Sovereign Lower | **slot-development step** · AP ceiling rises · Signature skill (Legendary) · Major Surge (Ancient) | 6000 |
+| 17 | Sovereign Middle | +1 slot-development step | 12000 |
+| 18 | Sovereign High | +1 slot-development step · end of the table | — |
+
+- **Development supply:** apply [§5.1 steps per advancement](#51-monster-rarity) at the steps marked above; step use: [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades).
+  - Derived totals: Normal reaches Core (steps 4 and 7: only 2 development steps, review T05); Rare reaches Soul (3 steps). Epic reaches Immortal, Legendary Sovereign ([§5.1](#51-monster-rarity)).
 - **Learnable skills:** the species list grows with the stages (4 defaults + 1 per breakthrough from Foundation to Immortal = 8). Kit access and replacement/development rules: [Skills §1](gdd_skills.md#1-the-kit)/[Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades)
 - **Why not points at Immortal / Sovereign:** the stat ceilings and the damage law are reached; more points would only be number inflation (pillar 1). Those sub-tiers give choices (slot-development steps) instead of numbers.
 
