@@ -534,7 +534,9 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
 
 **Unresolved implementation contracts:** T02/T07/T09 in [temp_todo.md](temp_todo.md); prototypes do not settle these current design gaps.
 
-**Historical v6.0 implementation notes — not the current authoring schema or complete current runtime:**
+**Implementation status (not a design source):** `godot/battle` implements the confirmed rules of this document with unvalidated test content; its layout, extension points and the commands for its automated checks are in [godot/README.md](../godot/README.md). Open rules are not implemented and the readings it had to choose and its other open points are tracked under [Implementation](temp_todo.md#implementation). The implementation approves no draft value.
+
+**Historical v6.0 implementation notes — the replaced battle core; the species Resources and `GameData` remain in use by the overworld only:**
 
 - One Resource per monster / skill / zone in `data/monsters`, `data/skills`, `data/zones`, typed by `MonsterDef`, `SkillDef`, `ZoneDef`.
   - `GameData` indexes by `id` (= file name); startup validation checks duplicate ids, missing Surge/utility, unknown shapes/passives, species learn-list references, concrete Surge types/effects and stat ranges.
@@ -545,15 +547,15 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
 
 ### 7.2 Prototype & Playtests
 
-**Historical implemented baseline (v6.0):**
+**Builds:**
 
-- `godot/`: main menu → draft (pick 3 of the 9 roster monsters, or 1 for a duel) → **3v3 on 7×7** or **1v1 on 5×5** against an AI team drawn from the rest; headless core (`godot/battle/core/`) implements historical v6.0, not the revised design.
-- `tools/html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference; neither prototype validates the current design.
+- `godot/`: main menu → draft sandbox (1, 2 or 3 of the nine reference monsters with the test kits of [Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft), optional test loadout) → placement → **1v1 on 5×5**, **2v2 on 6×6** or **3v3 on 7×7** against an AI team drawn from the rest; the overworld starts battles through the same request. The headless core (`godot/battle/core/`) follows the confirmed rules of this document; all content is test data and nothing is validated.
+- `tools/html_prototype/battle-prototype-v5-zones-ground.html` is the historical v5 reference and validates nothing of the current design.
 
 **Tools:**
 
-- `godot/tests/`: gdUnit4 suites for the rules; project layout in `godot/README.md`.
-- `godot/tools/sim.gd`: AI-vs-AI batch simulation with win rates per monster.
+- `godot/tests/`: gdUnit4 suites; `tests/battle` checks rules, resolution order and determinism with concrete expected results. Project layout: `godot/README.md`.
+- `godot/tools/sim.gd`: AI-vs-AI batch runs on the test kits with win rates per monster.
 - `godot/tools/smoke_ui.gd`: plays the player's side through the real UI headless.
 
 **Historical v6.0 simulation (60 AI-vs-AI 3v3 battles, random teams):**
@@ -562,7 +564,7 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
 - Reported outlier: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue).
 - Blight is the biggest damage source after Eruption; historical Veil zones absorb many hits (230 blocked); arena collapse decides ~1 in 5 battles.
 
-These results describe that historical ruleset, not current balance.
+These results describe that historical ruleset, not current balance. No gameplay or balance test of the current design has been run.
 
 Playtest planning and outstanding checks: [temp_todo.md](temp_todo.md), T13.
 

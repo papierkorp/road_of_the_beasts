@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleZoneDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_gvdw7"]
+[ext_resource type="Script" path="res://battle/defs/battle_zone_def.gd" id="2_8jeh6"]
+
+[sub_resource type="Resource" id="Resource_knx5f"]
+script = ExtResource("1_gvdw7")
+tag = "shield"
+base = 2
+cap = 3
+
+[resource]
+script = ExtResource("2_8jeh6")
+id = &"shade_veil"
+display_name = "Shade Veil"
+effects = Array[ExtResource("1_gvdw7")]([SubResource("Resource_knx5f")])
+color = Color(0.5, 0.46, 0.7, 1)

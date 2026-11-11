@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_7ia0d"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_vbj5k"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_hipo3"]
+
+[resource]
+script = ExtResource("3_hipo3")
+id = &"phase"
+display_name = "Phase"
+kind = "move"
+description = "Walk through props up to Movement -1; monsters and charging Surges block."
+status = "GDD movement preset (Skills §3/§8.2)"
+ap_cost = 2
+blocked_by_objects = false
+distance_mod = -1

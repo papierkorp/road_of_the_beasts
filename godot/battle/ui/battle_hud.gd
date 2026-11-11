@@ -158,7 +158,7 @@ func _build_inspector(root: Control) -> void:
 	_inspector_title = _card_label(box, 17, UiTheme.ACCENT)
 	_inspector_grid = _make_grid(box)
 	_inspector = Label.new()
-	_inspector.custom_minimum_size = Vector2(320, 0)
+	_inspector.custom_minimum_size = Vector2(260, 0)
 	_inspector.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_inspector.add_theme_font_size_override("font_size", 14)
 	_inspector.add_theme_color_override("font_color", UiTheme.DIM)
@@ -197,7 +197,7 @@ func _make_grid(parent: Control) -> GridContainer:
 
 
 ## Renders [[label, value], ...] as a two-column table.
-func _fill_grid(g: GridContainer, rows: Array, value_width: float = 300.0) -> void:
+func _fill_grid(g: GridContainer, rows: Array, value_width: float = 270.0) -> void:
 	for c in g.get_children():
 		g.remove_child(c)
 		c.queue_free()
@@ -254,7 +254,7 @@ func _build_preview(root: Control) -> void:
 	_ignore(_preview_panel)
 	root.add_child(_preview_panel)
 	_preview = Label.new()
-	_preview.custom_minimum_size = Vector2(380, 0)
+	_preview.custom_minimum_size = Vector2(260, 0)
 	_preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_preview.add_theme_font_size_override("font_size", 15)
 	_preview.add_theme_color_override("font_color", UiTheme.ACCENT)
@@ -360,7 +360,7 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 	_inspector_panel.visible = not inspector.is_empty()
 	if not inspector.is_empty():
 		_inspector_title.text = inspector.get("title", "")
-		_fill_grid(_inspector_grid, inspector.get("rows", []), 330.0)
+		_fill_grid(_inspector_grid, inspector.get("rows", []), 270.0)
 		_inspector.text = inspector.get("text", "")
 		_inspector.visible = _inspector.text != ""
 		_place_inspector.call_deferred()

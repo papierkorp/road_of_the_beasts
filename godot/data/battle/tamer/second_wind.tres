@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1_bnkt2"]
+
+[resource]
+script = ExtResource("1_bnkt2")
+id = &"second_wind"
+display_name = "Second Wind"
+effect = "second_wind"
+description = "One own monster +1 HP."

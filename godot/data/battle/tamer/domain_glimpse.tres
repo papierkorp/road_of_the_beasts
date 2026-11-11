@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1_wr7fh"]
+
+[resource]
+script = ExtResource("1_wr7fh")
+id = &"domain_glimpse"
+display_name = "Domain Glimpse"
+effect = "domain_glimpse"
+description = "Clears zones and ground on a tetromino."

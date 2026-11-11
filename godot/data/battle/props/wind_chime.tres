@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_ik684"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_3nxol"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_qfj8a"]
+
+[resource]
+script = ExtResource("3_qfj8a")
+id = &"wind_chime"
+display_name = "Wind Chime"
+layer = "air"
+color = Color(0.7, 0.86, 0.9, 1)
+description = "Air layer only: blocks flight and air occupancy."

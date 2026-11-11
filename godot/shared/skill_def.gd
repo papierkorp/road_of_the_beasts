@@ -1,9 +1,12 @@
 class_name SkillDef
 extends Resource
-## Skill schema (GDD §9.7). Lives in res://data/skills/*.tres.
-## Move and Strike are universal actions of every monster and are not SkillDefs.
+## LEGACY species skill of the overworld model (skill evolution, datasheets). Lives in
+## res://data/skills/*.tres. The battle no longer resolves these: it reads BattleSkillDef
+## records (res://data/battle/skills) through the unit-sheet adapter (battle/core/unit_sheets.gd).
 
 enum Kind { SURGE, ZONE, GROUND, HEIGHT, PROP }
+## Ground laid by a legacy Field skill (numbers are stored in the .tres files).
+enum GroundType { PLAIN, RUBBLE, VOIDSCAR, LAVA, THORNBED, BLIGHT }
 enum SurgeType { NONE, ERUPTION, FLOOD, RIFT }
 enum Twist { NONE, POUNCE, TRAIL, RING, LOB, WIDE, SLOW_BURN, LINGERING, CONSTRICT }
 
@@ -18,7 +21,7 @@ const SURGE_BASE_DAMAGE := {SurgeType.ERUPTION: 3, SurgeType.FLOOD: 2, SurgeType
 ## kind ZONE
 @export var zone: ZoneDef
 ## kind GROUND (Field): the hazard ground it lays
-@export var ground_type: Square.GroundType = Square.GroundType.LAVA
+@export var ground_type: GroundType = GroundType.LAVA
 ## Exactly one shape family. Its orientation is fixed in battle (absolute on the board);
 ## shapes are tuned outside battle (overworld). Passive Adaptive may rotate in battle.
 @export var shapes: Array[StringName] = []
@@ -37,15 +40,15 @@ var duration_bonus := 0     # zones last +1 round
 var damage_penalty := 0     # a widened Surge deals less
 
 
-func placement() -> Board.Placement:
-	match kind:
-		Kind.SURGE:
-			return Board.Placement.SURGE
-		Kind.PROP:
-			return Board.Placement.PROP
-		Kind.GROUND, Kind.HEIGHT:
-			return Board.Placement.GROUND
-	return Board.Placement.AREA
+static func ground_aspect_of(t: GroundType) -> Aspect.Type:
+	match t:
+		GroundType.LAVA:
+			return Aspect.Type.FORCE
+		GroundType.THORNBED:
+			return Aspect.Type.NATURE
+		GroundType.BLIGHT:
+			return Aspect.Type.DARK
+	return Aspect.Type.NONE
 
 
 func orientations() -> Array[Dictionary]:

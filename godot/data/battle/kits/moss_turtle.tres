@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BattleKitDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_kit_def.gd" id="1_lgc60"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2_7mrnc"]
+[ext_resource type="Resource" path="res://data/battle/skills/run.tres" id="3_n3qr2"]
+[ext_resource type="Resource" path="res://data/battle/skills/strike_jab.tres" id="4_iwcql"]
+[ext_resource type="Resource" path="res://data/battle/skills/tidal_shell.tres" id="5_34u4g"]
+[ext_resource type="Resource" path="res://data/battle/skills/bark_veil.tres" id="6_5248v"]
+
+[resource]
+script = ExtResource("1_lgc60")
+species_id = &"moss_turtle"
+skills = Array[ExtResource("2_7mrnc")]([ExtResource("3_n3qr2"), ExtResource("4_iwcql"), ExtResource("5_34u4g"), ExtResource("6_5248v")])
+surge_slot = 2
+utility_slot = 3
+hp = 8
+initiative = 3.0
+reach = 3
+ap = 3
+notes = "Slow-burn twist and Deep Roots omitted: undecided / placeholder (T11)."

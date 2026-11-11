@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_qwrtt"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_n31w1"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_k4wbo"]
+
+[resource]
+script = ExtResource("3_k4wbo")
+id = &"paper_lantern"
+display_name = "Paper Lantern"
+prop_class = "residue"
+ground_left = &"lava"
+color = Color(0.95, 0.6, 0.3, 1)
+description = "Destroyed: leaves Lava I."

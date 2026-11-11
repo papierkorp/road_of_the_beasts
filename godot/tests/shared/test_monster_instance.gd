@@ -95,7 +95,7 @@ func test_battle_monster_starts_at_the_individuals_current_hp() -> void:
 	inst.current_hp = 3
 	var other := MonsterInstance.of_species(BattleSetup.load_def(&"ember_hawk"))
 	var b := BattleSetup.create_from_units(&"1v1", [inst] as Array[MonsterInstance], [other] as Array[MonsterInstance])
-	var golem: Monster = b.monsters[&"p0_forge_golem"]
+	var golem: BattleUnit = b.units[&"p0_forge_golem"]
 	assert_int(golem.hp).is_equal(3)
 	assert_int(golem.max_hp).is_equal(8)
 
@@ -104,10 +104,10 @@ func test_create_by_ids_still_builds_the_same_battle() -> void:
 	var p: Array[StringName] = [&"blaze_tiger", &"moss_turtle", &"gloom_wolf"]
 	var e: Array[StringName] = [&"hollow_serpent", &"grove_wisp", &"ember_hawk"]
 	var b := BattleSetup.create(&"3v3", p, e)
-	assert_int(b.monsters.size()).is_equal(6)
-	var tiger: Monster = b.monsters[&"p0_blaze_tiger"]
+	assert_int(b.units.size()).is_equal(6)
+	var tiger: BattleUnit = b.units[&"p0_blaze_tiger"]
 	assert_int(tiger.hp).is_equal(5)
-	assert_float(tiger.def.initiative).is_equal(7.0)
+	assert_float(tiger.sheet.initiative).is_equal(7.0)
 
 
 func test_dictionary_round_trip() -> void:

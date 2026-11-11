@@ -170,16 +170,13 @@ func test_range_and_duration_reach_the_skill() -> void:
 
 
 func test_a_longer_zone_lasts_a_round_more_in_the_battle() -> void:
-	var board := Board.new(5)
-	var plain := _def("gloom_wolf").utility
-	var longer: SkillDef = plain.duplicate()
-	longer.duration_bonus = 1
-	var cells: Array[Vector2i] = [Vector2i(1, 1)]
-	Rules.cast(board, &"a", plain, cells, "g1", Vector2i.UP, Vector2i(1, 1))
-	var cells2: Array[Vector2i] = [Vector2i(3, 3)]
-	Rules.cast(board, &"a", longer, cells2, "g2", Vector2i.UP, Vector2i(3, 3))
-	assert_int(board.at(Vector2i(1, 1)).zone["duration"]).is_equal(Rules.ZONE_TURNS)
-	assert_int(board.at(Vector2i(3, 3)).zone["duration"]).is_equal(Rules.ZONE_TURNS + 1)
+	# the unit-sheet adapter carries the duration pick into the battle skill (battle/core/unit_sheets.gd)
+	var plain := MonsterInstance.of_species(_def("gloom_wolf"))
+	var longer := MonsterInstance.of_species(_def("gloom_wolf"))
+	longer.evolutions.append({"slot": 0, "skill": "utility", "family": "value", "arg": "duration"})
+	var slot := BattleContent.shared().kit(&"gloom_wolf").utility_slot
+	assert_int(UnitSheets.from_instance(plain).skills[slot].duration).is_equal(2)
+	assert_int(UnitSheets.from_instance(longer).skills[slot].duration).is_equal(3)
 
 
 func test_a_swapped_utility_replaces_the_skill() -> void:

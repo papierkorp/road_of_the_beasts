@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="BattleZoneDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_fbkp5"]
+[ext_resource type="Script" path="res://battle/defs/battle_zone_def.gd" id="2_i34fe"]
+
+[sub_resource type="Resource" id="Resource_8bakh"]
+script = ExtResource("1_fbkp5")
+
+[sub_resource type="Resource" id="Resource_8dsdi"]
+script = ExtResource("1_fbkp5")
+tag = "drain_init"
+base = 2
+cap = 3
+
+[sub_resource type="Resource" id="Resource_pf8a2"]
+script = ExtResource("1_fbkp5")
+tag = "drain_range"
+
+[resource]
+script = ExtResource("2_i34fe")
+id = &"mire"
+display_name = "Mire"
+effects = Array[ExtResource("1_fbkp5")]([SubResource("Resource_8bakh"), SubResource("Resource_8dsdi"), SubResource("Resource_pf8a2")])
+color = Color(0.46, 0.36, 0.6, 1)

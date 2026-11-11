@@ -139,7 +139,7 @@ static func _validate_all() -> void:
 				elif s.zone.aspect != s.aspect:
 					_problems.append(where + " aspect differs from its zone's aspect")
 			SkillDef.Kind.GROUND:
-				if Square.ground_aspect_of(s.ground_type) != s.aspect:
+				if SkillDef.ground_aspect_of(s.ground_type) != s.aspect:
 					_problems.append(where + " lays ground of another aspect")
 	for id in _monsters:
 		var m: MonsterDef = _monsters[id]

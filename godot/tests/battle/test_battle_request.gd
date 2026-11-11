@@ -1,121 +1,147 @@
 extends GdUnitTestSuite
-## BattleRequest in, BattleResult out (gdd_overworld §1.3).
+## The battle request / result contract and the unit-sheet adapter (gdd_overworld §2.1, §8).
+
+const H := preload("res://tests/battle/helpers.gd")
 
 
-func _ids(list: Array) -> Array[StringName]:
-	var out: Array[StringName] = []
-	for id in list:
-		out.append(StringName(id))
-	return out
-
-
-func _play(b: Battle, seed_value := 5) -> void:
+func _rolled(species: StringName, stage := Stage.Type.QI_GATHERING) -> MonsterInstance:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed_value
-	b.begin()
-	var guard := 0
-	while not b.over and guard < 400:
-		AiBrain.play_turn(b, b.turn_owner, rng)
-		guard += 1
+	rng.seed = 5
+	return MonsterInstance.roll(GameData.monster(species), rng, StatShape.Id.NONE, stage, Stage.SubTier.LOWER)
 
 
-func test_default_request_is_a_valid_3v3() -> void:
-	var r := BattleRequest.default()
-	assert_str(r.problem()).is_empty()
-	assert_int(r.player_team.size()).is_equal(3)
-	var b := BattleSetup.build(r)
-	assert_int(b.board.size).is_equal(7)
-	assert_int(b.monsters.size()).is_equal(6)
-
-
-func test_build_cuts_the_teams_to_the_mode_size() -> void:
-	var r := BattleRequest.from_ids(&"1v1", _ids(["blaze_tiger", "moss_turtle", "gloom_wolf"]), _ids(["hollow_serpent", "grove_wisp", "ember_hawk"]))
-	var b := BattleSetup.build(r)
-	assert_int(b.board.size).is_equal(5)
-	assert_int(b.monsters.size()).is_equal(2)
-	assert_bool(b.monsters.has(&"p0_blaze_tiger")).is_true()
-
-
-func test_request_without_a_team_is_rejected() -> void:
-	var r := BattleRequest.from_ids(&"3v3", _ids([]), _ids(["ember_hawk"]))
-	assert_str(r.problem()).is_not_empty()
-
-
-func test_units_know_their_place_in_the_team() -> void:
-	var b := BattleSetup.build(BattleRequest.default())
-	assert_int((b.monsters[&"p0_blaze_tiger"] as Monster).team_index).is_equal(0)
-	assert_int((b.monsters[&"p2_gloom_wolf"] as Monster).team_index).is_equal(2)
-	assert_int((b.monsters[&"e1_grove_wisp"] as Monster).team_index).is_equal(1)
-
-
-func test_result_reports_winner_and_hp_in_team_order() -> void:
-	var r := BattleRequest.default()
-	var b := BattleSetup.build(r)
-	_play(b)
-	assert_bool(b.over).is_true()
-	var res := BattleSetup.make_result(b)
-	assert_bool(res.over).is_true()
-	assert_int(res.winner_side).is_equal(b.winner_side)
-	assert_int(res.rounds).is_equal(b.round_number)
-	assert_int(res.player.size()).is_equal(3)
-	assert_int(res.enemy.size()).is_equal(3)
-	for i in 3:
-		assert_int(res.player[i]["index"]).is_equal(i)
-		assert_str(String(res.player[i]["species"])).is_equal(String(r.player_team[i].species_id))
-		var m: Monster = b.monsters[StringName("p%d_%s" % [i, r.player_team[i].species_id])]
-		assert_int(res.player[i]["hp_left"]).is_equal(maxi(m.hp, 0))
-		assert_bool(res.player[i]["alive"]).is_equal(m.is_alive())
-	# the loser has nobody left
-	if res.winner_side == 0:
-		assert_int(res.survivors(1)).is_equal(0)
-	elif res.winner_side == 1:
-		assert_int(res.survivors(0)).is_equal(0)
-
-
-func test_apply_hp_writes_back_into_the_individuals() -> void:
-	var r := BattleRequest.default()
-	var b := BattleSetup.build(r)
-	_play(b)
-	var res := BattleSetup.make_result(b)
-	res.apply_hp(r.player_team, 0)
-	for i in 3:
-		assert_int(r.player_team[i].current_hp).is_equal(res.player[i]["hp_left"])
-
-
-func test_wounded_individual_enters_the_battle_wounded() -> void:
+func test_build_fields_teams_at_mirrored_starts_with_their_current_hp() -> void:
 	var r := BattleRequest.default()
 	r.player_team[0].current_hp = 2
 	var b := BattleSetup.build(r)
-	assert_int((b.monsters[&"p0_blaze_tiger"] as Monster).hp).is_equal(2)
-	# the request is not changed by fighting
-	_play(b)
-	assert_int(r.player_team[0].current_hp).is_equal(2)
+	assert_int(b.board.size).is_equal(7)
+	assert_int(b.living(0).size()).is_equal(3)
+	assert_int(b.living(1).size()).is_equal(3)
+	var tiger: BattleUnit = b.units[&"p0_blaze_tiger"]
+	assert_array([tiger.hp, tiger.max_hp]).is_equal([2, 5])
+	for i in 3:
+		assert_that(b.living(1)[i].pos).is_equal(b.board.mirrored(b.living(0)[i].pos))
+	assert_int(b.voidscar_from).is_equal(8)
+	var duel := BattleSetup.build(BattleRequest.from_ids(&"1v1", [&"blaze_tiger"] as Array[StringName], [&"gloom_wolf"] as Array[StringName]))
+	assert_int(duel.board.size).is_equal(5)
+	assert_int(duel.voidscar_from).is_equal(6)
+	assert_array([BattleRequest.team_size_of(&"1v1"), BattleRequest.team_size_of(&"2v2"), BattleRequest.team_size_of(&"3v3"),
+		BattleRequest.team_size_of(&"5v5")]).is_equal([1, 2, 3, 5])
 
 
-func _first_init(b: Battle, id: StringName) -> float:
-	for e in b.queue:
-		if e["id"] == id:
-			return e["init"]
-	return -1.0
+func test_reference_individuals_use_the_gdd_reference_sheet() -> void:
+	var sheet := UnitSheets.from_instance(MonsterInstance.of_species(GameData.monster(&"forge_golem")))
+	assert_array([sheet.hp, sheet.movement, sheet.tpr, sheet.reach, sheet.ap]).is_equal([8, 1, 1, 3, 3])
+	assert_float(sheet.initiative).is_equal(4.0)
+	assert_array(sheet.skills.map(func(s): return s.id)).is_equal([&"strike_jab", &"crucible", &"raise_ground", &"immovable"])
+	assert_bool(sheet.airborne).is_false()
 
 
-func test_an_ambush_gives_the_attacking_side_round_one_initiative() -> void:
+func test_rolled_individuals_keep_their_stats_with_base_ap_and_minimum_reach() -> void:
+	var inst := _rolled(&"blaze_tiger")
+	inst.current_hp = 1
+	var sheet := UnitSheets.from_instance(inst)
+	assert_int(sheet.hp).is_equal(inst.max_hp())
+	assert_float(sheet.initiative).is_equal(float(inst.stats["initiative"]))
+	assert_int(sheet.movement).is_equal(int(inst.stats["move"]))
+	assert_int(sheet.tpr).is_equal(int(inst.stats["tpr"]))
+	assert_int(sheet.ap).is_equal(2)             # the overworld model has no AP stat: GDD base value
+	assert_int(sheet.reach).is_equal(maxi(2, int(inst.stats["reach"])))
+	assert_int(sheet.current_hp).is_equal(1)
+	assert_array(sheet.problems()).is_empty()
+	assert_bool(sheet.notes.size() >= 1).is_true()
+
+
+func test_winged_individuals_fly_from_soul_tier() -> void:
+	assert_bool(UnitSheets.from_instance(_rolled(&"ember_hawk", Stage.Type.CORE_FORMATION)).airborne).is_false()
+	assert_bool(UnitSheets.from_instance(_rolled(&"ember_hawk", Stage.Type.SOUL)).airborne).is_true()
+	assert_bool(UnitSheets.from_instance(_rolled(&"blaze_tiger", Stage.Type.SOUL)).airborne).is_false()
+
+
+func test_only_gdd_legal_evolution_picks_reach_the_battle() -> void:
+	var inst := MonsterInstance.of_species(GameData.monster(&"gloom_wolf"))
+	inst.evolutions = [
+		{"slot": 0, "skill": "surge", "family": "shape", "arg": "L3:0"},      # Shape: same cell count
+		{"slot": 1, "skill": "surge", "family": "twist", "arg": "LOB"},       # range +2 / damage -1: not legal
+		{"slot": 2, "skill": "utility", "family": "value", "arg": "duration"},  # zone duration +1: legal
+		{"slot": 3, "skill": "surge", "family": "value", "arg": "range"},     # cast range: never
+	]
+	var sheet := UnitSheets.from_instance(inst)
+	var kit := H.content().kit(&"gloom_wolf")
+	var rift: BattleSkillDef = sheet.skills[kit.surge_slot]
+	assert_array(rift.footprint).is_equal(UnitSheets.legacy_footprint(&"L3", 0))
+	assert_int(rift.surge_damage).is_equal(3)    # no evolution changes damage
+	assert_int(sheet.skills[kit.utility_slot].duration).is_equal(3)
+	assert_int(H.content().skill(&"mire").duration).is_equal(2)             # the shared record is untouched
+	assert_int(H.content().skill(&"gloom_rift").footprint.size()).is_equal(3)
+	assert_int(sheet.notes.size()).is_equal(2)   # the twist and the range pick are reported, not applied
+	# a utility swap maps onto the battle record with the same id
+	var swapped := MonsterInstance.of_species(GameData.monster(&"gloom_wolf"))
+	swapped.evolutions = [{"slot": 0, "skill": "utility", "family": "swap", "arg": "bog"}]
+	assert_str(UnitSheets.from_instance(swapped).skills[kit.utility_slot].id).is_equal("bog")
+
+
+func test_prep_pill_is_a_pre_battle_initiative_modifier_and_ambush_is_ignored() -> void:
 	var plain := BattleSetup.build(BattleRequest.default())
-	plain.begin()
 	var r := BattleRequest.default()
-	r.ambush_side = 0
-	var ambush := BattleSetup.build(r)
-	ambush.begin()
-	assert_float(_first_init(ambush, &"p0_blaze_tiger")).is_equal(_first_init(plain, &"p0_blaze_tiger") + Battle.AMBUSH_BONUS)
-	assert_float(_first_init(ambush, &"e0_hollow_serpent")).is_equal(_first_init(plain, &"e0_hollow_serpent"))
+	r.prep_init = {0: 2}
+	r.ambush_side = 1                            # legacy field: the ambush bonus is not part of the design
+	var prepared := BattleSetup.build(r)
+	var a: BattleUnit = plain.units[&"p0_blaze_tiger"]
+	var c: BattleUnit = prepared.units[&"p0_blaze_tiger"]
+	assert_float(BattleStats.initiative(prepared, c)).is_equal(BattleStats.initiative(plain, a) + 2.0)
+	for id in plain.roster:
+		if plain.units[id].side == 1:
+			assert_float(BattleStats.initiative(prepared, prepared.units[id])).is_equal(BattleStats.initiative(plain, plain.units[id]))
 
 
-func test_the_ambush_bonus_lasts_one_round_only() -> void:
+func test_chosen_start_squares_must_lie_in_the_start_area() -> void:
 	var r := BattleRequest.default()
-	r.ambush_side = 1
+	r.player_starts = [Vector2i(0, 6), Vector2i(3, 2), Vector2i(0, 6)] as Array[Vector2i]
+	var b := BattleSetup.build(r)
+	assert_that(b.units[&"p0_blaze_tiger"].pos).is_equal(Vector2i(0, 6))    # back two rows: legal
+	assert_that(b.units[&"p1_moss_turtle"].pos).is_equal(Vector2i(3, 6))    # outside: default square
+	assert_that(b.units[&"p2_gloom_wolf"].pos).is_equal(Vector2i(5, 5))     # repeated square: default
+	assert_bool(BattleBoards.in_start_area(&"3v3", Vector2i(2, 5))).is_true()
+	assert_bool(BattleBoards.in_start_area(&"3v3", Vector2i(2, 4))).is_false()
+	assert_bool(BattleBoards.in_start_area(&"1v1", Vector2i(0, 4))).is_true()
+	assert_bool(BattleBoards.in_start_area(&"1v1", Vector2i(1, 4))).is_false()
+
+
+func test_loadout_and_bench_come_from_the_request() -> void:
+	var r := BattleRequest.default()
+	r.player_tamer = [&"second_wind", &"beast_swap", &"unknown_skill"] as Array[StringName]
+	r.player_bench = [MonsterInstance.of_species(GameData.monster(&"dusk_moth"))] as Array[MonsterInstance]
+	var b := BattleSetup.build(r)
+	assert_array(b.tamer_loadout[0].map(func(d): return d.id)).is_equal([&"second_wind", &"beast_swap"])
+	assert_array(b.tamer_loadout[1]).is_empty()  # wild monsters have no tamer
+	var bench: BattleUnit = b.units[&"pb0_dusk_moth"]
+	assert_bool(bench.on_field).is_false()
+	assert_int(b.living(0).size()).is_equal(3)
+
+
+func test_result_reports_facts_and_writes_hp_back() -> void:
+	var r := BattleRequest.default()
 	var b := BattleSetup.build(r)
 	b.begin()
-	var round_one := _first_init(b, &"e0_hollow_serpent")
-	b.round_number = 2
-	b._build_queue()
-	assert_float(_first_init(b, &"e0_hollow_serpent")).is_equal(round_one - Battle.AMBUSH_BONUS)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4
+	var guard := 0
+	while not b.over and guard < 500:
+		AiBrain.play_turn(b, b.turn_owner, rng)
+		guard += 1
+	assert_bool(b.over).is_true()
+	var result := BattleSetup.make_result(b)
+	assert_bool(result.over).is_true()
+	assert_int(result.rounds).is_equal(b.round_number)
+	assert_int(result.player.size()).is_equal(3)
+	assert_int(result.enemy.size()).is_equal(3)
+	if not result.draw:
+		assert_int(result.survivors(1 - result.winner_side)).is_equal(0)
+		assert_bool(result.survivors(result.winner_side) >= 1).is_true()
+	for e in result.player:
+		assert_bool(e["hp_left"] >= 0 and e["hp_left"] <= e["max_hp"]).is_true()
+		assert_bool(e["alive"] == (e["hp_left"] > 0)).is_true()
+	result.apply_hp(r.player_team, 0)
+	for i in 3:
+		assert_int(r.player_team[i].current_hp).is_equal(result.player[i]["hp_left"])

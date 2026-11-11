@@ -1,7 +1,8 @@
 class_name BattleView
 extends Node3D
 ## 3D presentation of a Battle: orbit camera (orthographic), shadows, glow, tiles, monsters,
-## props, zone/Surge/highlight overlays, direction arrows and small animations. No rules (GDD §16).
+## props, zone/Surge/highlight overlays, direction arrows and small animations.
+## It only reads the battle state and never decides a rule (gdd_battle §7.1).
 ##
 ## Camera: Q / E rotate by 90°, mouse wheel zooms, middle-mouse drag orbits freely.
 
@@ -9,20 +10,22 @@ const CELL := 1.0
 const TILE := 0.92
 const FLAT_H := 0.12
 const HIGH_H := 0.45
+const AIR_H := 1.05                # height of the air layer above the tile top
 const ROMAN := ["I", "II", "III"]
 
 const PITCH := 40.0
 const ZOOM_MIN := 5.0
-const ZOOM_MAX := 16.0
+const ZOOM_MAX := 20.0
 
 const SIDE_COLORS := [Color(0.35, 0.62, 1.0), Color(1.0, 0.38, 0.35)]
+const SURGE_COLOR := Color(1.0, 0.62, 0.2)
 
 var battle: Battle
 var camera: Camera3D
 var highlights := {}           # Vector2i -> Color
 var preview_arrows := {}       # Vector2i -> Vector2i (direction shown while aiming)
 var _tiles := {}               # Vector2i -> Dictionary of nodes
-var _pieces := {}              # monster id -> Node3D
+var _pieces := {}              # unit id -> Node3D
 var _pivot: Node3D
 var _yaw := 45.0
 var _yaw_target := 45.0
@@ -31,20 +34,16 @@ var _zoom_target := 8.5
 var _time := 0.0
 
 
-static func aspect_color(a: Aspect.Type) -> Color:
-	return MonsterLook.aspect_color(a)
-
-
 func build(p_battle: Battle) -> void:
 	battle = p_battle
 	_zoom = battle.board.size * 1.25 + 2.2
 	_zoom_target = _zoom
 	_build_environment()
 	_build_base()
-	for sq: Square in battle.board.all_squares():
-		_tiles[sq.pos] = _make_tile(sq.pos)
+	for cell in battle.board.cells:
+		_tiles[cell.pos] = _make_tile(cell.pos)
 	for id in battle.roster:
-		_pieces[id] = _make_monster(battle.monsters[id])
+		_pieces[id] = _make_monster(battle.units[id])
 	refresh()
 
 
@@ -105,8 +104,22 @@ func _cell_pos(p: Vector2i) -> Vector3:
 	return Vector3((p.x - half) * CELL, 0.0, (p.y - half) * CELL)
 
 
-func _top(sq: Square) -> float:
-	return HIGH_H if sq.elevated else FLAT_H
+func _top(cell: BoardCell) -> float:
+	return HIGH_H if cell.is_mountain() else FLAT_H
+
+
+## Centre of a body (1x1 or 2x2) on the board plane.
+func _body_pos(u: BattleUnit) -> Vector3:
+	var a := _cell_pos(u.pos)
+	var c := _cell_pos(u.pos + Vector2i(u.size - 1, u.size - 1))
+	return (a + c) / 2.0
+
+
+func _body_top(u: BattleUnit) -> float:
+	var h := FLAT_H
+	for p in u.cells():
+		h = maxf(h, _top(battle.board.at(p)))
+	return h + (AIR_H if u.layer == Board.AIR else 0.0)
 
 
 ## Board cell under a screen position, or null.
@@ -186,6 +199,8 @@ func floating_text(p: Vector2i, text: String, color: Color) -> void:
 	l.text = text
 	l.modulate = color
 	var start := _cell_pos(p) + Vector3(0, _top(battle.board.at(p)) + 1.4, 0)
+	if battle.board.unit_id_at(p, Board.GROUND) == &"" and battle.board.unit_id_at(p, Board.AIR) != &"":
+		start.y += AIR_H
 	l.position = start
 	var tw := create_tween()
 	tw.set_parallel(true)
@@ -263,30 +278,29 @@ func _make_tile(p: Vector2i) -> Dictionary:
 		"zone": _make_overlay(root), "surge": _make_overlay(root), "hl": _make_overlay(root),
 		"arrow": _make_arrow(root),
 		"surge_on": false, "surge_col": Color.WHITE,
-		"prop_key": "", "prop_node": null,
+		"prop_key": "", "prop_node": null, "air_prop_key": "", "air_prop_node": null,
 	}
 
 
-func _kin_mesh(kin: MonsterDef.Kin) -> Mesh:
-	return MonsterLook.kin_mesh(kin)
-
-
-func _make_monster(m: Monster) -> Node3D:
+## A simple body per Kin; the colour is a look hint of the species, never a rule.
+func _make_monster(u: BattleUnit) -> Node3D:
 	var root := Node3D.new()
-	root.name = str(m.id)
+	root.name = str(u.id)
+	var scale_f := float(u.size)
 	var mi := MeshInstance3D.new()
 	mi.name = "Body"
-	mi.mesh = _kin_mesh(m.kin())
+	mi.mesh = MonsterLook.kin_mesh(u.kin())
 	mi.position.y = 0.4
+	mi.scale = Vector3.ONE * (1.0 if u.size == 1 else 1.7)
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = aspect_color(m.aspect())
+	mat.albedo_color = MonsterLook.aspect_color(u.sheet.look.aspect) if u.sheet.look != null else Color(0.62, 0.62, 0.66)
 	mat.roughness = 0.55
-	if m.kin() == MonsterDef.Kin.SPIRIT:
+	if u.kin() == MonsterDef.Kin.SPIRIT:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		mat.albedo_color.a = 0.75
 	mi.material_override = mat
 	root.add_child(mi)
-	if m.kin() == MonsterDef.Kin.SWARM:
+	if u.kin() == MonsterDef.Kin.SWARM:
 		for off in [Vector3(0.22, -0.05, 0.12), Vector3(-0.2, -0.08, 0.16)]:
 			var extra := MeshInstance3D.new()
 			extra.mesh = mi.mesh
@@ -297,20 +311,20 @@ func _make_monster(m: Monster) -> Node3D:
 
 	var disc := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.36
-	cyl.bottom_radius = 0.36
+	cyl.top_radius = 0.36 * scale_f
+	cyl.bottom_radius = 0.36 * scale_f
 	cyl.height = 0.03
 	disc.mesh = cyl
 	disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	disc.material_override = _unshaded(SIDE_COLORS[m.side], false)
+	disc.material_override = _unshaded(SIDE_COLORS[u.side], false)
 	disc.position.y = 0.02
 	root.add_child(disc)
 
 	var ring := MeshInstance3D.new()
 	ring.name = "Ring"
 	var torus := TorusMesh.new()
-	torus.inner_radius = 0.40
-	torus.outer_radius = 0.48
+	torus.inner_radius = 0.40 * scale_f
+	torus.outer_radius = 0.48 * scale_f
 	ring.mesh = torus
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ring.material_override = _unshaded(Color(1.0, 0.85, 0.45), false)
@@ -319,8 +333,8 @@ func _make_monster(m: Monster) -> Node3D:
 
 	var label := _make_label(root, 26)
 	label.name = "Label"
-	label.position.y = 1.25
-	label.modulate = SIDE_COLORS[m.side].lerp(Color.WHITE, 0.6)
+	label.position.y = 1.25 + 0.5 * (scale_f - 1.0)
+	label.modulate = SIDE_COLORS[u.side].lerp(Color.WHITE, 0.6)
 	add_child(root)
 	return root
 
@@ -331,42 +345,38 @@ func refresh() -> void:
 	for p in _tiles:
 		_update_tile(p, _tiles[p], battle.board.at(p))
 	for id in _pieces:
-		var m: Monster = battle.monsters[id]
+		var u: BattleUnit = battle.units[id]
 		var node: Node3D = _pieces[id]
-		node.visible = m.is_alive()
-		if not m.is_alive():
+		node.visible = u.is_alive()
+		if not u.is_alive():
+			node.remove_meta("target")
 			continue
-		var target := _cell_pos(m.pos) + Vector3(0, _top(battle.board.at(m.pos)), 0)
+		var target := _body_pos(u) + Vector3(0, _body_top(u), 0)
 		if not node.has_meta("target"):
 			node.position = target
 		elif node.get_meta("target") != target:
 			var tw := create_tween()
 			tw.tween_property(node, "position", target, 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		node.set_meta("target", target)
-		var charging := "  ⚠" if battle.has_charging(id) else ""
-		(node.get_node("Label") as Label3D).text = "%s%s\n%d/%d" % [m.display_name(), charging, m.hp, m.max_hp]
+		var marks := ""
+		if not battle.surges_of(id).is_empty():
+			marks += "  ⚠"
+		if u.nullify or u.life_thread:
+			marks += "  ◈"
+		if u.layer == Board.AIR:
+			marks += "  ↟"
+		(node.get_node("Label") as Label3D).text = "%s%s\n%d/%d" % [u.display_name(), marks, u.hp, u.max_hp]
 		(node.get_node("Ring") as Node3D).visible = id == battle.turn_owner and not battle.over
 
 
-func _ground_color(sq: Square) -> Color:
-	var base := Color(0.17, 0.18, 0.21)
-	match sq.ground:
-		Square.GroundType.RUBBLE:
-			base = Color(0.29, 0.26, 0.21)
-		Square.GroundType.VOIDSCAR:
-			base = Color(0.10, 0.08, 0.13)
-		Square.GroundType.LAVA:
-			base = Color(0.55, 0.20, 0.08) if sq.level == 1 else Color(0.80, 0.25, 0.08)
-		Square.GroundType.THORNBED:
-			base = Color(0.20, 0.33, 0.16) if sq.level == 1 else Color(0.24, 0.45, 0.16)
-		Square.GroundType.BLIGHT:
-			base = Color(0.25, 0.13, 0.30) if sq.level == 1 else Color(0.36, 0.14, 0.42)
-	if sq.elevated and not sq.is_aspect_ground():
-		base = Color(0.18, 0.35, 0.41)
-	elif sq.elevated:
-		base = base.lerp(Color(0.18, 0.35, 0.41), 0.35)
-	if sq.attunement != Aspect.Type.NONE and sq.ground == Square.GroundType.PLAIN:
-		return base.lerp(aspect_color(sq.attunement), 0.30)
+func _ground_color(cell: BoardCell) -> Color:
+	var g := battle.content.ground(cell.ground)
+	var base := g.color if g != null else Color(0.3, 0.3, 0.3)
+	base = base.darkened(0.45)
+	if g != null and g.max_level > 1 and cell.level > 1:
+		base = base.lightened(0.18)
+	if cell.is_mountain():
+		base = base.lerp(Color(0.18, 0.35, 0.41), 0.55 if cell.ground == GroundDef.PLAIN else 0.3)
 	return base
 
 
@@ -387,41 +397,46 @@ func _set_arrow(ov: Dictionary, y: float, dir: Vector2i, color: Color) -> void:
 	(ov["mat"] as StandardMaterial3D).albedo_color = color
 
 
-func _zone_arrow(sq: Square) -> Vector2i:
-	if sq.zone == null:
+## Direction a zone square moves its occupant (push direction or one step toward the anchor).
+func _zone_arrow(cell: BoardCell) -> Vector2i:
+	var z := cell.zone
+	if z == null:
 		return Vector2i.ZERO
-	var def: ZoneDef = sq.zone["def"]
-	if def.has_tag(ZoneEffect.Tag.PUSH):
-		return sq.zone["dir"]
-	if def.has_tag(ZoneEffect.Tag.PULL):
-		return Battle._step_toward(sq.pos, sq.zone["anchor"])
+	if z.def.has_tag(FieldEffect.PUSH):
+		return z.dir
+	if z.def.has_tag(FieldEffect.PULL):
+		var v := z.anchor - cell.pos
+		if v == Vector2i.ZERO or absi(v.x) == absi(v.y):
+			return Vector2i.ZERO
+		return Vector2i(signi(v.x), 0) if absi(v.x) > absi(v.y) else Vector2i(0, signi(v.y))
 	return Vector2i.ZERO
 
 
-func _update_tile(p: Vector2i, t: Dictionary, sq: Square) -> void:
-	var h := _top(sq)
+func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
+	var h := _top(cell)
 	(t["mesh"] as BoxMesh).size = Vector3(TILE, h, TILE)
 	(t["body"] as MeshInstance3D).position.y = h / 2.0
 	var mat := t["mat"] as StandardMaterial3D
-	mat.albedo_color = _ground_color(sq)
-	mat.emission_enabled = sq.ground == Square.GroundType.LAVA
+	mat.albedo_color = _ground_color(cell)
+	var g := battle.content.ground(cell.ground)
+	mat.emission_enabled = g != null and g.is_hazard()
 	if mat.emission_enabled:
-		mat.emission = Color(0.9, 0.3, 0.1)
-		mat.emission_energy_multiplier = 0.35 * sq.level
+		mat.emission = g.color
+		mat.emission_energy_multiplier = 0.18 * cell.level
 
 	var zc := Color(1, 1, 1, 0)
-	if sq.zone != null:
-		zc = aspect_color(sq.zone["def"].aspect)
-		zc.a = 0.45
-	_set_overlay(t["zone"], h + 0.01, zc, sq.zone != null)
+	if cell.zone != null:
+		zc = cell.zone.def.color
+		zc.a = 0.3 + 0.1 * cell.zone.level
+	_set_overlay(t["zone"], h + 0.01, zc, cell.zone != null)
 
-	t["surge_on"] = sq.surge != null
+	t["surge_on"] = cell.surge >= 0
 	var sc := Color(1, 1, 1, 0)
-	if sq.surge != null:
-		sc = aspect_color(sq.surge["aspect"])
+	if cell.surge >= 0:
+		sc = SURGE_COLOR
 		t["surge_col"] = sc
 		sc.a = 0.8
-	_set_overlay(t["surge"], h + 0.02, sc, sq.surge != null)
+	_set_overlay(t["surge"], h + 0.02, sc, cell.surge >= 0)
 
 	_set_overlay(t["hl"], h + 0.03, highlights.get(p, Color(1, 1, 1, 0)), highlights.has(p))
 
@@ -429,84 +444,93 @@ func _update_tile(p: Vector2i, t: Dictionary, sq: Square) -> void:
 		_set_arrow(t["arrow"], h + 0.12, preview_arrows[p], Color(1.0, 0.9, 0.55, 0.95))
 	else:
 		var zc2 := Color(1, 1, 1, 0.85)
-		if sq.zone != null:
-			zc2 = aspect_color(sq.zone["def"].aspect).lightened(0.4)
-		_set_arrow(t["arrow"], h + 0.12, _zone_arrow(sq), zc2)
+		if cell.zone != null:
+			zc2 = cell.zone.def.color.lightened(0.4)
+		_set_arrow(t["arrow"], h + 0.12, _zone_arrow(cell), zc2)
 
 	var lines := ""
-	if sq.surge != null:
-		lines += "⚠ %s · %d\n" % [sq.surge["name"], sq.surge["turns_left"]]
-	if sq.zone != null:
-		lines += "%s %s · %dr\n" % [sq.zone["def"].display_name, ROMAN[sq.zone["level"] - 1], sq.zone["duration"]]
-	if sq.is_aspect_ground():
-		lines += "%s %s%s\n" % [Square.ground_name(sq.ground), ROMAN[sq.level - 1],
-				" · %dr" % sq.timer if sq.timer != Square.PERMANENT else ""]
-	elif sq.ground == Square.GroundType.VOIDSCAR:
-		lines += "Voidscar\n"
-	elif sq.attunement != Aspect.Type.NONE and sq.ground == Square.GroundType.PLAIN:
-		lines += Aspect.ATTUNEMENT_NAMES[sq.attunement] + "\n"
+	if cell.surge >= 0:
+		var surge := battle.surge_by_id(cell.surge)
+		if surge != null:
+			lines += "⚠ %s · %d\n" % [surge.skill.display_name, surge.skill.surge_damage]
+	if cell.zone != null:
+		lines += "%s %s · %dr\n" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1], cell.zone.duration]
+	if g != null and cell.ground != GroundDef.PLAIN:
+		lines += g.label(cell.level) + "\n"
 	var label: Label3D = t["label"]
 	label.text = lines.strip_edges()
 	label.position.y = h + 0.12
-	_update_prop(t, sq, h)
+	_update_prop(t, "prop", cell.prop, h)
+	_update_prop(t, "air_prop", cell.air_prop if cell.air_prop != cell.prop else null, h + AIR_H)
 
 
-func _update_prop(t: Dictionary, sq: Square, h: float) -> void:
-	var key := ""
-	if sq.object != null:
-		key = "%s:%d:%s" % [sq.object["name"], sq.object["hp"], sq.object["burning"]]
-	if key == t["prop_key"]:
+## Rebuilds the node of a prop when its identity or HP changed. The shape follows the prop's
+## catalogue class; a both-layer prop is drawn as a tall column through both layers.
+func _update_prop(t: Dictionary, slot: String, prop: BoardProp, y: float) -> void:
+	var key := "" if prop == null else "%d:%d" % [prop.uid, prop.hp]
+	if key == t[slot + "_key"]:
 		return
-	t["prop_key"] = key
-	if t["prop_node"] != null:
-		(t["prop_node"] as Node).queue_free()
-		t["prop_node"] = null
-	if sq.object == null:
+	t[slot + "_key"] = key
+	if t[slot + "_node"] != null:
+		(t[slot + "_node"] as Node).queue_free()
+		t[slot + "_node"] = null
+	if prop == null:
 		return
+	var def := prop.def
 	var root := Node3D.new()
-	root.position.y = h
+	root.position.y = y
 	var mi := MeshInstance3D.new()
 	var mat := StandardMaterial3D.new()
 	mat.roughness = 0.85
-	match sq.object["name"]:
-		"Tree":
+	mat.albedo_color = def.color.darkened(0.35) if prop.hp <= 0 else def.color
+	var height := 0.6
+	match def.prop_class:
+		"aura":
+			var col := CylinderMesh.new()
+			col.top_radius = 0.16
+			col.bottom_radius = 0.26
+			col.height = 0.9
+			mi.mesh = col
+			height = 0.9
+			mat.emission_enabled = true
+			mat.emission = def.color
+			mat.emission_energy_multiplier = 0.5
+		"burst":
+			var sp := SphereMesh.new()
+			sp.radius = 0.3
+			sp.height = 0.6
+			mi.mesh = sp
+		"residue":
 			var cone := CylinderMesh.new()
 			cone.top_radius = 0.0
-			cone.bottom_radius = 0.34
-			cone.height = 0.95
+			cone.bottom_radius = 0.32
+			cone.height = 0.85
 			mi.mesh = cone
-			mi.position.y = 0.475
-			mat.albedo_color = Color(0.20, 0.42, 0.24)
-			if sq.object["burning"]:
-				mat.albedo_color = Color(0.55, 0.25, 0.08)
-				mat.emission_enabled = true
-				mat.emission = Color(1.0, 0.45, 0.1)
-				mat.emission_energy_multiplier = 1.6
-		"Rock":
-			var box := BoxMesh.new()
-			box.size = Vector3(0.6, 0.5, 0.6)
-			mi.mesh = box
-			mi.position.y = 0.25
-			mat.albedo_color = Color(0.45, 0.47, 0.52)
-		"Pillar":
-			var col := CylinderMesh.new()
-			col.top_radius = 0.25
-			col.bottom_radius = 0.28
-			col.height = 1.1
-			mi.mesh = col
-			mi.position.y = 0.55
-			mat.albedo_color = Color(0.7, 0.68, 0.62)
+			height = 0.85
+		"push":
+			var disc := CylinderMesh.new()
+			disc.top_radius = 0.36
+			disc.bottom_radius = 0.36
+			disc.height = 0.3
+			mi.mesh = disc
+			height = 0.3
+		"spawn":
+			var pillar := CylinderMesh.new()
+			pillar.top_radius = 0.25
+			pillar.bottom_radius = 0.28
+			pillar.height = 1.1
+			mi.mesh = pillar
+			height = 1.1
 		_:
-			var wall := BoxMesh.new()
-			wall.size = Vector3(0.8, 0.7, 0.8)
-			mi.mesh = wall
-			mi.position.y = 0.35
-			mat.albedo_color = Color(0.40, 0.36, 0.30)
+			var box := BoxMesh.new()
+			box.size = Vector3(0.62, 0.52, 0.62) if def.layer != "both" else Vector3(0.7, AIR_H + 0.6, 0.7)
+			mi.mesh = box
+			height = box.size.y
+	mi.position.y = height / 2.0
 	mi.material_override = mat
 	root.add_child(mi)
 	var l := _make_label(root, 22)
-	l.position.y = 1.15
-	var hp_text := "" if sq.has_tag("indestructible") else " %d/%d" % [sq.object["hp"], sq.object["max_hp"]]
-	l.text = "%s%s%s" % [sq.object["name"], hp_text, " 🔥" if sq.object["burning"] else ""]
+	l.position.y = height + 0.25
+	l.text = "%s %d/%d" % [def.display_name, prop.hp, def.hp]
 	(t["root"] as Node3D).add_child(root)
-	t["prop_node"] = root
+	t[slot + "_node"] = root

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_5ygbn"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_qrtjc"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_r12dq"]
+
+[resource]
+script = ExtResource("3_r12dq")
+id = &"delayed_burst_reference"
+display_name = "Delayed Burst"
+kind = "surge"
+description = "Residue-free Minor Surge: 3 damage on a horizontal I3, no board change."
+status = "GDD reference record (Skills §11), draft"
+footprint = Array[Vector2i]([Vector2i(-1, 0), Vector2i(0, 0), Vector2i(1, 0)])

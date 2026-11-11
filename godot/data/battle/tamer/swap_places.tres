@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1_2w50a"]
+
+[resource]
+script = ExtResource("1_2w50a")
+id = &"swap_places"
+display_name = "Swap Places"
+description = "Two own monsters trade squares."

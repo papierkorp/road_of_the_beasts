@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1_kpcpq"]
+
+[resource]
+script = ExtResource("1_kpcpq")
+id = &"life_thread"
+display_name = "Life Thread"
+effect = "life_thread"
+description = "One own monster survives its first fall at 1 HP."

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1_4k4ee"]
+
+[resource]
+script = ExtResource("1_4k4ee")
+id = &"beast_swap"
+display_name = "Beast Swap"
+effect = "beast_swap"
+description = "Swap a monster with one from the bench."

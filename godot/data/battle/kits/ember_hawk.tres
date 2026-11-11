@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BattleKitDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_kit_def.gd" id="1_76vw4"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2_7xkrp"]
+[ext_resource type="Resource" path="res://data/battle/skills/glide.tres" id="3_xbppf"]
+[ext_resource type="Resource" path="res://data/battle/skills/strike_jab.tres" id="4_48ytl"]
+[ext_resource type="Resource" path="res://data/battle/skills/cinder_dive.tres" id="5_bmye1"]
+[ext_resource type="Resource" path="res://data/battle/skills/shockwave.tres" id="6_8ycyt"]
+
+[resource]
+script = ExtResource("1_76vw4")
+species_id = &"ember_hawk"
+skills = Array[ExtResource("2_7xkrp")]([ExtResource("3_xbppf"), ExtResource("4_48ytl"), ExtResource("5_bmye1"), ExtResource("6_8ycyt")])
+surge_slot = 2
+utility_slot = 3
+hp = 2
+initiative = 9.0
+movement = 3
+tpr = 2
+notes = "Passive Skittish omitted: automatic target selection is unresolved (T11). Shockwave without the retired collision bonus."

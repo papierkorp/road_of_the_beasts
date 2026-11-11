@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_02snt"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_8uhm3"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_3hk7f"]
+
+[sub_resource type="Resource" id="Resource_14n0b"]
+script = ExtResource("1_02snt")
+op = "raise_mountain"
+
+[resource]
+script = ExtResource("3_3hk7f")
+id = &"raise_ground"
+display_name = "Raise Ground"
+kind = "ground"
+description = "Raises a Mountain on its squares and resets their ground to Plain (not Voidscar)."
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+board_ops = Array[ExtResource("1_02snt")]([SubResource("Resource_14n0b")])

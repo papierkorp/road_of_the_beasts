@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_325sm"]
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="2_h400a"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="3_unw1d"]
+
+[sub_resource type="Resource" id="Resource_bvaub"]
+script = ExtResource("1_325sm")
+tag = "shield"
+
+[resource]
+script = ExtResource("2_h400a")
+id = &"hallowed"
+display_name = "Hallowed"
+group = "blessed"
+effects = Array[ExtResource("1_325sm")]([SubResource("Resource_bvaub")])
+color = Color(0.88, 0.88, 0.74, 1)
+description = "Surge damage on this square -1. Stays until ground is actually laid over it."

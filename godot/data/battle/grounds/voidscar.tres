@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_espbe"]
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="2_77qdu"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="3_vhlwm"]
+
+[sub_resource type="Resource" id="Resource_qgmnr"]
+script = ExtResource("3_vhlwm")
+timing = "start_of_turn"
+amount = 1
+
+[resource]
+script = ExtResource("2_77qdu")
+id = &"voidscar"
+display_name = "Voidscar"
+immutable = true
+triggers = Array[ExtResource("3_vhlwm")]([SubResource("Resource_qgmnr")])
+color = Color(0.16, 0.1, 0.22, 1)
+description = "1 damage at the start of your turn. Permanent: nothing changes it."

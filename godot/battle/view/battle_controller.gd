@@ -1,12 +1,28 @@
 extends Node3D
 ## Wires Battle (rules), BattleView (3D) and BattleHud (UI) together and handles input.
+## It turns clicks into action dictionaries, asks `Battle.check` / `Battle.preview` what they
+## would do and applies them with `Battle.apply`; it holds no rule of its own.
 ## You control side 0 whenever one of your monsters is next in the queue; side 1 is the AI.
 ## Start with `--autoplay` (after `--`) to let the AI play both sides.
 
 const PLAYER_SIDE := 0
 const NOWHERE := Vector2i(-1, -1)
-const ACT_MOVE := &"__move"
-const ACT_STRIKE := &"__strike"
+const ACT_STEP := &"__step"
+const ACT_START := &"__start"
+const TAMER_PREFIX := "__tamer:"
+const SLOT_PREFIX := "__slot:"
+
+const COL_MOVE := Color(0.36, 0.56, 0.85, 0.5)
+const COL_HARM := Color(0.85, 0.45, 0.3, 0.55)
+const COL_HIT := Color(0.95, 0.35, 0.3, 0.55)
+const COL_AREA := Color(0.79, 0.64, 0.36, 0.65)
+const COL_LEVEL := Color(0.92, 0.8, 0.36, 0.7)       # levels up
+const COL_REPLACE := Color(0.36, 0.56, 0.85, 0.65)    # replaces what is there
+const COL_CANCEL := Color(0.35, 0.82, 0.77, 0.65)     # weakens or cancels an opposite zone
+const COL_NOTHING := Color(0.5, 0.5, 0.5, 0.5)        # legal cast, but nothing happens on this square
+const COL_RANGE := Color(0.79, 0.64, 0.36, 0.14)
+const COL_BAD := Color(0.85, 0.33, 0.33, 0.6)
+const COL_PICK := Color(0.45, 0.85, 0.6, 0.55)
 
 var request: BattleRequest
 var battle: Battle
@@ -14,12 +30,17 @@ var view: BattleView
 var hud: BattleHud
 var rng := RandomNumberGenerator.new()
 
-var mode := &""                    # &"" | &"move" | &"strike" | &"place"
-var skill: SkillDef = null
-var orient := 0
-var aim_dir := Vector2i.UP         # board direction for pushes / Floods / Tail Sweep
+var mode := &""                    # &"" | &"step" | &"skill" | &"tamer"
+var slot := -1                     # kit slot while mode is &"skill"
+var tamer_id: StringName = &""     # loadout skill while mode is &"tamer"
+var picked: Array[StringName] = [] # units chosen so far for a tamer skill
+var rot := 0                       # quarter turns (Adaptive) / tetromino index (Domain Glimpse)
+var aim_dir := Vector2i(0, -1)     # cardinal direction for pushes
 var hover := NOWHERE
+var placing := false               # pre-battle placement phase (gdd_battle §2.1 step 2)
+var placing_pick: StringName = &""
 var _ai_running := false
+var _tetrominoes: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -31,6 +52,7 @@ func _ready() -> void:
 	GameSession.request = request
 	battle = BattleSetup.build(request)
 	battle.event_emitted.connect(_on_event)
+	_tetrominoes = Shapes.orientations([&"I4", &"O4", &"T4", &"S4", &"L4"])
 	view = BattleView.new()
 	view.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(view)
@@ -44,30 +66,41 @@ func _ready() -> void:
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	hud.resume_pressed.connect(_toggle_pause)
 	hud.menu_pressed.connect(_to_menu)
-	hud.log_line("%s on %d×%d — zones steer, ground scars, Surges burn and repaint." % [
-		request.mode, battle.board.size, battle.board.size])
-	for id in battle.roster:
-		var pm: Monster = battle.monsters[id]
-		if pm.prep_init > 0:
-			hud.log_line("%s is prepared: +%d initiative this battle." % [pm.display_name(), pm.prep_init])
-	if battle.ambush_side >= 0:
-		hud.log_line("%s struck from behind: +%d initiative in round 1." % ["You" if battle.ambush_side == PLAYER_SIDE else "The wild monsters", int(Battle.AMBUSH_BONUS)])
+	hud.log_line("%s on %d×%d" % [request.mode, battle.board.size, battle.board.size])
+	for u in battle.living(PLAYER_SIDE):
+		var notes: PackedStringArray = []
+		if u.sheet.init_bonus > 0.0:
+			notes.append("+%d init (prepared)" % int(u.sheet.init_bonus))
+		notes.append_array(PackedStringArray(u.sheet.notes))
+		if not notes.is_empty():
+			hud.log_line("%s: %s" % [u.display_name(), BattleText.SEP.join(notes)])
+	placing = not GameSession.autoplay and _start_squares().size() > battle.living(PLAYER_SIDE).size()
+	if placing:
+		hud.log_line("Place your monsters, then start.")
+		_refresh()
+	else:
+		_begin()
+
+
+func _begin() -> void:
+	placing = false
+	placing_pick = &""
 	battle.begin()
 	_refresh()
 	_check_ai()
 
 
-func _active() -> Monster:
+func _active() -> BattleUnit:
 	return battle.active()
 
 
 func _is_player_turn() -> bool:
-	var m := _active()
-	return m != null and m.side == PLAYER_SIDE and not GameSession.autoplay
+	var u := _active()
+	return u != null and u.side == PLAYER_SIDE and not GameSession.autoplay
 
 
 func _my_turn() -> bool:
-	return not battle.over and not _ai_running and not get_tree().paused and _is_player_turn()
+	return not placing and not battle.over and not _ai_running and not get_tree().paused and _is_player_turn()
 
 
 func _toggle_pause() -> void:
@@ -112,21 +145,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_D, KEY_RIGHT:
 				_set_dir(Vector2i(1, 0))
 			KEY_1:
-				_on_action(ACT_MOVE)
-			KEY_2:
-				_on_action(ACT_STRIKE)
-			KEY_3, KEY_4:
-				var m := _active()
-				if m != null:
-					var list := m.skills()
-					var i: int = event.keycode - KEY_3
-					if i < list.size():
-						_on_action(list[i].id)
-			KEY_SPACE:
-				_on_end_turn()
+				_on_action(ACT_STEP)
+			KEY_2, KEY_3, KEY_4, KEY_5, KEY_6:
+				_on_action(StringName(SLOT_PREFIX + str(event.keycode - KEY_2)))
+			KEY_SPACE, KEY_ENTER:
+				if placing:
+					_on_action(ACT_START)
+				else:
+					_on_end_turn()
 			KEY_ESCAPE:
-				if mode != &"":
+				if mode != &"" or placing_pick != &"":
 					_clear_mode()
+					placing_pick = &""
 					_refresh()
 				else:
 					_toggle_pause()
@@ -139,61 +169,177 @@ func _set_dir(screen: Vector2i) -> void:
 
 func _clear_mode() -> void:
 	mode = &""
-	skill = null
+	slot = -1
+	tamer_id = &""
+	picked.clear()
+	rot = 0
+
+
+func _skill() -> BattleSkillDef:
+	return battle.skill_in_slot(_active(), slot) if mode == &"skill" else null
 
 
 func _on_action(id: StringName) -> void:
+	if placing:
+		if id == ACT_START:
+			_begin()
+		return
 	if not _my_turn():
 		return
-	var m := _active()
-	if id == ACT_MOVE:
-		mode = &"" if mode == &"move" else &"move"
-		skill = null
-	elif id == ACT_STRIKE:
-		mode = &"" if mode == &"strike" else &"strike"
-		skill = null
-	else:
-		var s := m.skill_by_id(id)
-		if s == null or not battle.can_cast(m.id, s):
+	var u := _active()
+	var text := String(id)
+	if id == ACT_STEP:
+		var again := mode == &"step"
+		_clear_mode()
+		mode = &"" if again else &"step"
+	elif text.begins_with(SLOT_PREFIX):
+		var i := int(text.trim_prefix(SLOT_PREFIX))
+		var s := battle.skill_in_slot(u, i)
+		if s == null or not s.is_active():
 			return
-		if mode == &"place" and skill == s:
-			_clear_mode()
+		var again := mode == &"skill" and slot == i
+		_clear_mode()
+		if again:
+			pass
+		elif s.kind == BattleSkillDef.BUFF:
+			if battle.apply({"type": &"skill", "slot": i}):      # no target to choose
+				_after_action()
+				return
 		else:
-			mode = &"place"
-			skill = s
-			orient = battle.effective_orientation(m, s, 0)
+			mode = &"skill"
+			slot = i
+	elif text.begins_with(TAMER_PREFIX):
+		var tid := StringName(text.trim_prefix(TAMER_PREFIX))
+		var again := mode == &"tamer" and tamer_id == tid
+		_clear_mode()
+		if not again and battle.tamer_skill(PLAYER_SIDE, tid) != null and not battle.tamer_used[PLAYER_SIDE].has(tid):
+			mode = &"tamer"
+			tamer_id = tid
 	_refresh()
 
 
 func _rotate() -> void:
-	if mode != &"place" or skill == null or not battle.can_rotate(battle.turn_owner, skill):
-		return
-	orient = (orient + 1) % skill.orientations().size()
+	if mode == &"tamer":
+		rot = (rot + 1) % maxi(1, _tetrominoes.size())
+	elif mode == &"skill" and _skill() != null and _skill().is_placed() and BattleStats.can_rotate(_active()):
+		rot = (rot + 1) % 4
 	_refresh()
 
 
-func _click() -> void:
-	if not _my_turn() or hover == NOWHERE:
-		return
-	var m := _active()
-	var done := false
+## The action the current aim describes, or an empty Dictionary while nothing is aimed.
+func _aimed_action() -> Dictionary:
+	if not _my_turn():
+		return {}
+	var u := _active()
 	match mode:
-		&"move":
-			done = battle.move(m.id, hover)
-		&"strike":
-			done = battle.strike(m.id, hover, aim_dir)
-		&"place":
-			if skill != null:
-				done = battle.cast(m.id, skill, orient, _anchor_for(skill), aim_dir)
-	if done:
+		&"step":
+			return {"type": &"step", "to": hover} if hover != NOWHERE else {}
+		&"skill":
+			var s := _skill()
+			if s == null:
+				return {}
+			match s.kind:
+				BattleSkillDef.MOVE:
+					return {"type": &"skill", "slot": slot, "to": hover} if hover != NOWHERE else {}
+				BattleSkillDef.STRIKE:
+					var aim := _strike_aim(u, s)
+					if aim.is_empty():
+						return {}
+					return {"type": &"skill", "slot": slot, "dir": aim["dir"], "origin": aim["origin"], "push_dir": aim_dir}
+				_:
+					if s.anchor_mode == "caster_ring":
+						return {"type": &"skill", "slot": slot, "anchor": u.pos, "dir": aim_dir, "rot": rot}
+					if hover == NOWHERE:
+						return {}
+					return {"type": &"skill", "slot": slot, "anchor": hover, "dir": aim_dir, "rot": rot}
+		&"tamer":
+			return _tamer_action()
+	return {}
+
+
+## Strike direction from the hovered square: the eight directions seen from the body square
+## nearest to it. Symmetric shapes need no direction.
+func _strike_aim(u: BattleUnit, s: BattleSkillDef) -> Dictionary:
+	var shape := StringName(s.strike_shape)
+	if StrikeShapes.directions(shape) == StrikeShapes.NO_DIR:
+		return {"dir": Vector2i.ZERO, "origin": u.pos}
+	if hover == NOWHERE or u.covers(hover):
+		return {}
+	var origin := u.pos
+	var best := 1 << 20
+	for c in u.cells():
+		var d := Board.chebyshev(c, hover)
+		if d < best:
+			best = d
+			origin = c
+	var v := hover - origin
+	if v.x != 0 and v.y != 0 and absi(v.x) != absi(v.y):
+		return {}
+	var dir := Vector2i(signi(v.x), signi(v.y))
+	return {"dir": dir, "origin": origin} if StrikeShapes.is_legal_dir(shape, dir) else {}
+
+
+func _tamer_action() -> Dictionary:
+	var def := battle.tamer_skill(PLAYER_SIDE, tamer_id)
+	if def == null:
+		return {}
+	var a := {"type": &"tamer", "side": PLAYER_SIDE, "skill": tamer_id}
+	var target := battle.any_unit_at(hover) if hover != NOWHERE else null
+	match def.effect:
+		TamerSkillDef.DOMAIN_GLIMPSE:
+			if hover == NOWHERE or _tetrominoes.is_empty():
+				return {}
+			var cells: Array = []
+			cells.assign(Shapes.footprint(_tetrominoes[rot % _tetrominoes.size()], hover))
+			a["cells"] = cells
+		TamerSkillDef.SWAP_PLACES:
+			if picked.is_empty() or target == null:
+				return {}
+			a["unit"] = picked[0]
+			a["other"] = target.id
+		TamerSkillDef.BEAST_SWAP:
+			var incoming := _bench_pick(target)
+			if target == null or incoming == null:
+				return {}
+			a["unit"] = target.id
+			a["other"] = incoming.id
+		_:
+			if target == null:
+				return {}
+			a["unit"] = target.id
+	return a
+
+
+## The bench monster Beast Swap would bring in for `outgoing` (same body size, in bench order).
+func _bench_pick(outgoing: BattleUnit) -> BattleUnit:
+	if outgoing == null:
+		return null
+	for id in battle.roster:
+		var u: BattleUnit = battle.units[id]
+		if u.side == PLAYER_SIDE and not u.on_field and not u.defeated and u.size == outgoing.size:
+			return u
+	return null
+
+
+func _click() -> void:
+	if placing:
+		_placement_click()
+		return
+	if not _my_turn():
+		return
+	if mode == &"tamer" and hover != NOWHERE:
+		var def := battle.tamer_skill(PLAYER_SIDE, tamer_id)
+		var target := battle.any_unit_at(hover)
+		if def != null and def.effect == TamerSkillDef.SWAP_PLACES and picked.is_empty():
+			if target != null and target.side == PLAYER_SIDE:
+				picked.append(target.id)
+				_refresh()
+			return
+	var a := _aimed_action()
+	if a.is_empty():
+		return
+	if battle.apply(a):
 		_after_action()
-
-
-## Ring Surges have no aim: they always centre on the caster.
-func _anchor_for(s: SkillDef) -> Vector2i:
-	if s.twist == SkillDef.Twist.RING:
-		return _active().pos
-	return hover
 
 
 func _on_end_turn() -> void:
@@ -208,13 +354,64 @@ func _on_end_turn() -> void:
 func _after_action() -> void:
 	_clear_mode()
 	_refresh()
-	if battle.over or battle.ap > 0:
+	if battle.over:
+		return
+	if not _is_player_turn():
+		_check_ai()                # a tamer swap or a defeat can hand the turn over
+		return
+	if battle.ap > 0:
 		return
 	await get_tree().create_timer(0.5, false).timeout
-	if _my_turn() and battle.ap <= 0:
+	if _my_turn() and battle.ap <= 0 and mode == &"":
 		battle.end_turn()
 		_refresh()
 		_check_ai()
+
+
+# ---------- pre-battle placement ----------
+
+## Free squares of the player's start area.
+func _start_squares() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for cell in battle.board.cells:
+		if BattleBoards.in_start_area(request.mode, cell.pos) and cell.prop == null:
+			out.append(cell.pos)
+	return out
+
+
+func _placement_click() -> void:
+	if hover == NOWHERE:
+		return
+	var here := battle.unit_at(hover, Board.GROUND)
+	if here == null:
+		here = battle.unit_at(hover, Board.AIR)
+	if placing_pick == &"":
+		if here != null and here.side == PLAYER_SIDE:
+			placing_pick = here.id
+	else:
+		var u: BattleUnit = battle.units[placing_pick]
+		if here != null and here.side == PLAYER_SIDE and here.id != u.id and here.size == u.size and here.layer == u.layer:
+			var a := u.pos
+			var c := here.pos
+			battle.lift(u)
+			battle.lift(here)
+			battle.put(u, c)
+			battle.put(here, a)
+		elif here == null and _can_start_at(u, hover):
+			battle.relocate(u, hover)
+		placing_pick = &""
+	_refresh()
+
+
+func _can_start_at(u: BattleUnit, origin: Vector2i) -> bool:
+	for c in u.cells_at(origin):
+		var cell := battle.board.at(c)
+		if cell == null or not BattleBoards.in_start_area(request.mode, c) or battle.board.prop_at(c, u.layer) != null:
+			return false
+		var other := battle.board.unit_id_at(c, u.layer)
+		if other != &"" and other != u.id:
+			return false
+	return true
 
 
 # ---------- AI turns ----------
@@ -225,16 +422,20 @@ func _check_ai() -> void:
 	_ai_running = true
 	while not battle.over and not _is_player_turn():
 		var who := battle.turn_owner
+		var entry := battle.queue_idx
+		var round_no := battle.round_number
 		_refresh()
 		await get_tree().create_timer(0.6, false).timeout
 		var guard := 0
-		while battle.can_act(who) and guard < 6:
+		while not battle.over and battle.turn_owner == who and battle.queue_idx == entry and battle.round_number == round_no \
+				and guard < AiBrain.MAX_ACTIONS_PER_TURN:
 			guard += 1
-			if not AiBrain.execute(battle, who, AiBrain.decide(battle, who, rng)):
+			var a := AiBrain.decide(battle, rng)
+			if a["type"] == &"end_turn" or not battle.apply(a):
 				break
 			_refresh()
 			await get_tree().create_timer(0.55, false).timeout
-		if not battle.over and battle.turn_owner == who:
+		if not battle.over and battle.turn_owner == who and battle.queue_idx == entry and battle.round_number == round_no:
 			battle.end_turn()
 		_refresh()
 	_ai_running = false
@@ -252,284 +453,305 @@ func _refresh() -> void:
 
 
 func _ap_text() -> String:
+	var u := _active()
+	if u == null or placing:
+		return "AP"
+	var total := BattleStats.ap(u)
 	var left := battle.ap if _is_player_turn() else 0
-	return "AP  " + "●".repeat(left) + "○".repeat(maxi(0, Battle.AP_PER_TURN - left))
+	return "AP  " + "●".repeat(left) + "○".repeat(maxi(0, total - left))
 
 
 func _highlights(arrows: Dictionary) -> Dictionary:
 	var out := {}
+	if placing:
+		for p in _start_squares():
+			out[p] = COL_RANGE if placing_pick == &"" else COL_MOVE
+		if placing_pick != &"":
+			for c in battle.units[placing_pick].cells():
+				out[c] = COL_PICK
+		return out
 	if not _my_turn():
 		return out
-	var m := _active()
+	var u := _active()
 	match mode:
-		&"move":
-			var opts := battle.move_options(m)
-			for c in opts:
-				out[c] = Color(0.85, 0.45, 0.3, 0.55) if opts[c]["thorn"] > 0 else Color(0.36, 0.56, 0.85, 0.5)
-		&"strike":
-			for c in battle.strike_targets(m.id):
-				out[c] = Color(0.95, 0.35, 0.3, 0.55)
-			if m.kin() == MonsterDef.Kin.SCALED and hover != NOWHERE and battle.can_strike(m.id, hover):
-				arrows[hover] = aim_dir
-		&"place":
-			if skill == null:
+		&"step":
+			_move_highlights(BattleMoves.options(battle, u, BattleMoves.step_profile()), out)
+		&"skill":
+			var s := _skill()
+			if s == null:
 				return out
-			if skill.twist != SkillDef.Twist.RING and skill.twist != SkillDef.Twist.POUNCE:
-				var r := battle.skill_range(m, skill)
-				for sq: Square in battle.board.all_squares():
-					if Board.manhattan(m.pos, sq.pos) <= r:
-						out[sq.pos] = Color(0.79, 0.64, 0.36, 0.16)
-			if hover == NOWHERE and skill.twist != SkillDef.Twist.RING:
-				return out
-			var cells := battle.placement_cells(m.id, skill, orient, _anchor_for(skill))
-			if cells.is_empty():
-				if not skill.orientations().is_empty():
-					for c in Shapes.footprint(skill.orientations()[battle.effective_orientation(m, skill, orient)], hover):
-						if battle.board.in_bounds(c):
-							out[c] = Color(0.85, 0.33, 0.33, 0.6)
-				return out
-			for c in cells:
-				out[c] = _cast_color(Rules.preview_cell(skill, battle.board.at(c))["kind"])
-				if skill.needs_direction():
-					arrows[c] = aim_dir
-				elif skill.is_pull() or skill.twist == SkillDef.Twist.CONSTRICT:
-					arrows[c] = Battle._step_toward(c, _anchor_for(skill))
+			match s.kind:
+				BattleSkillDef.MOVE:
+					_move_highlights(BattleMoves.options(battle, u, BattleMoves.profile_of(s)), out)
+				BattleSkillDef.STRIKE:
+					var aim := _strike_aim(u, s)
+					if aim.is_empty():
+						return out
+					var legal := battle.strike_error(u, s, aim["dir"], aim_dir if _needs_push(u, s) else Vector2i(0, -1), aim["origin"]) == ""
+					for h in StrikeShapes.hits(StringName(s.strike_shape), aim["dir"]):
+						var cell: Vector2i = aim["origin"] + h["o"]
+						if battle.board.in_bounds(cell) and not u.covers(cell):
+							out[cell] = COL_HIT if legal else COL_BAD
+							if legal and _needs_push(u, s) and battle.any_unit_at(cell) != null:
+								arrows[cell] = aim_dir
+				_:
+					_placement_highlights(u, s, out, arrows)
+		&"tamer":
+			_tamer_highlights(out)
 	return out
 
 
-func _cast_color(kind: StringName) -> Color:
-	match kind:
-		&"level":
-			return Color(0.88, 0.75, 0.38, 0.65)
-		&"replace":
-			return Color(0.36, 0.56, 0.85, 0.65)
-		&"cancel":
-			return Color(0.35, 0.82, 0.77, 0.65)
-		&"lost":
-			return Color(0.85, 0.33, 0.33, 0.65)
-		&"ignite":
-			return Color(1.0, 0.5, 0.15, 0.7)
-	return Color(0.79, 0.64, 0.36, 0.65)
+func _needs_push(u: BattleUnit, s: BattleSkillDef) -> bool:
+	return s.kin_effect and KinRules.strike(u.kin()).get("push", false)
 
 
-func _side_tag(m: Monster) -> String:
-	return "◆" if m.side == PLAYER_SIDE else "◇"
+func _move_highlights(opts: Dictionary, out: Dictionary) -> void:
+	var u := _active()
+	for origin: Vector2i in opts:
+		for c in u.cells_at(origin):
+			if not out.has(c) or int(opts[origin]["harm"]) <= 0:
+				out[c] = COL_HARM if int(opts[origin]["harm"]) > 0 else COL_MOVE
+
+
+func _placement_highlights(u: BattleUnit, s: BattleSkillDef, out: Dictionary, arrows: Dictionary) -> void:
+	if s.anchor_mode == "reach":
+		var reach := BattleStats.reach(battle, u)
+		for cell in battle.board.cells:
+			if u.manhattan_to(cell.pos) <= reach:
+				out[cell.pos] = COL_RANGE
+	var anchor := u.pos if s.anchor_mode == "caster_ring" else hover
+	if anchor == NOWHERE:
+		return
+	var legal := BattleCasting.error(battle, u, s, anchor, aim_dir, rot) == ""
+	for c in BattleCasting.cells(u, s, anchor, rot):
+		if not battle.board.in_bounds(c):
+			continue
+		out[c] = _outcome_color(s, battle.board.at(c)) if legal else COL_BAD
+		if not legal:
+			continue
+		if s.needs_direction():
+			arrows[c] = aim_dir
+		elif (s.kind == BattleSkillDef.ZONE and s.zone != null and s.zone.has_tag(FieldEffect.PULL)) or s.surge_displacement == "pull":
+			var v := anchor - c
+			if v != Vector2i.ZERO and absi(v.x) != absi(v.y):
+				arrows[c] = Vector2i(signi(v.x), 0) if absi(v.x) > absi(v.y) else Vector2i(0, signi(v.y))
+
+
+## Colour of one footprint square by what the cast does there (new / levels up / replaces /
+## weakens or cancels / nothing), read from the same outcome functions the resolution uses.
+func _outcome_color(s: BattleSkillDef, cell: BoardCell) -> Color:
+	if s.kind == BattleSkillDef.ZONE and s.zone != null:
+		match BattleBoardOps.zone_outcome(cell, s.zone)["kind"]:
+			&"level":
+				return COL_LEVEL
+			&"replace":
+				return COL_REPLACE
+			&"weaken", &"cancel":
+				return COL_CANCEL
+	elif s.kind == BattleSkillDef.GROUND:
+		for op in s.ops_of(BoardOp.GROUND):
+			if cell.is_mountain() and not op.on_mountain:
+				return COL_NOTHING
+			match BattleBoardOps.ground_outcome(battle, cell, op.ground):
+				&"level":
+					return COL_LEVEL
+				&"replace":
+					return COL_REPLACE
+				&"kept", &"immutable":
+					return COL_NOTHING
+		if s.has_op(BoardOp.RAISE_MOUNTAIN) and cell.is_mountain():
+			return COL_NOTHING
+	return COL_AREA
+
+
+func _tamer_highlights(out: Dictionary) -> void:
+	var def := battle.tamer_skill(PLAYER_SIDE, tamer_id)
+	if def == null:
+		return
+	if def.effect == TamerSkillDef.DOMAIN_GLIMPSE:
+		var a := _tamer_action()
+		if a.is_empty():
+			return
+		var legal := battle.check(a) == ""
+		for c: Vector2i in a["cells"]:
+			if battle.board.in_bounds(c):
+				out[c] = COL_AREA if legal else COL_BAD
+		return
+	for u in battle.living(PLAYER_SIDE):
+		for c in u.cells():
+			out[c] = COL_PICK if picked.has(u.id) else COL_MOVE
+
+
+func _side_tag(u: BattleUnit) -> String:
+	return "◆" if u.side == PLAYER_SIDE else "◇"
 
 
 func _order_text() -> String:
-	var s := "ROUND %d   ·   %s\n" % [battle.round_number, "your side ◆ / enemy ◇"]
+	if placing:
+		return "PLACEMENT"
+	var s := "ROUND %d\n" % battle.round_number
 	for i in battle.queue.size():
 		var e: Dictionary = battle.queue[i]
-		var m: Monster = battle.monsters[e["id"]]
-		if not m.is_alive() and not e["ghost"]:
+		var u: BattleUnit = battle.units[e["id"]]
+		if not u.is_alive():
 			continue
 		var mark := "▶ " if i == battle.queue_idx and not battle.over else ("   " if i > battle.queue_idx else " ✓ ")
-		var extra := " (Surge only)" if e["ghost"] else ""
-		s += "%s%s %s  %.1f  HP %d/%d%s\n" % [mark, _side_tag(m), m.display_name(), e["init"], m.hp, m.max_hp, extra]
+		s += "%s%s %s  %.1f  %d/%d\n" % [mark, _side_tag(u), u.display_name(), e["init"], u.hp, u.max_hp]
+	var orphans := 0
+	for sg in battle.surges:
+		if sg.orphaned:
+			orphans += 1
+	if orphans > 0:
+		s += "⚠ %d Surge%s next round\n" % [orphans, "" if orphans == 1 else "s"]
 	return s.strip_edges()
 
 
 func _portrait_text() -> String:
-	var m := _active()
-	if m == null:
+	var u := _active()
+	if u == null or placing:
 		return ""
-	var d := m.def
-	var s := "%s %s — %s %s\n" % [_side_tag(m), d.display_name, Aspect.NAMES[d.aspect], MonsterDef.kin_name(d.kin)]
-	s += "HP %d/%d · Init %.1f · Move %d · Reach %d · TPR %d\n" % [m.hp, m.max_hp,
-			battle.effective_stat(m, Battle.Stat.INIT), int(battle.effective_stat(m, Battle.Stat.MOVE)),
-			battle.reach(m), d.tpr]
-	s += "Passive: %s · hover a skill for its card" % d.passive_name()
-	return s
+	return "%s %s%sMove %d%sReach %d" % [_side_tag(u), u.display_name(), BattleText.SEP, BattleStats.movement(battle, u),
+		BattleText.SEP, BattleStats.reach(battle, u)]
 
 
 func _hint_text() -> String:
+	if placing:
+		return "Click a monster, then a start square · Space starts" if placing_pick == &"" else "Click a start square or a monster to swap"
 	if battle.over:
 		return ""
 	if not _is_player_turn():
-		return "%s is acting…" % _active().display_name() if _active() != null else ""
+		return "%s…" % _active().display_name() if _active() != null else ""
+	var u := _active()
 	match mode:
-		&"move":
-			return "Blue squares — click to move (orange = Thornbed on the way). Esc cancels."
-		&"strike":
-			var t := "Red squares — click to Strike."
-			if _active().kin() == MonsterDef.Kin.SCALED:
-				t += " WASD sets the Tail Sweep push direction."
-			return t
-		&"place":
-			if skill == null:
+		&"step":
+			return "Click a blue square"
+		&"skill":
+			var s := _skill()
+			if s == null:
 				return ""
-			var t2 := "Aim %s." % skill.display_name
-			if battle.can_rotate(_active().id, skill):
-				t2 += " R / right-click rotates (Adaptive)."
-			else:
-				t2 += " Fixed shape."
-			if skill.needs_direction():
-				t2 += " WASD sets the push direction (%s)." % _dir_name(aim_dir)
-			if skill.is_pull():
-				t2 += " Pulls toward the anchor (centre cell)."
-			return t2 + " Click casts · Esc cancels."
-	return "1 Move · 2 Strike · 3 Surge · 4 Utility · Space ends turn · Q/E camera · Esc pause"
-
-
-func _dir_name(d: Vector2i) -> String:
-	match d:
-		Vector2i(0, -1):
-			return "north"
-		Vector2i(0, 1):
-			return "south"
-		Vector2i(-1, 0):
-			return "west"
-	return "east"
+			match s.kind:
+				BattleSkillDef.MOVE:
+					return "Click a blue square"
+				BattleSkillDef.STRIKE:
+					return "Aim and click" + (" · WASD push" if _needs_push(u, s) else "")
+				_:
+					var t := "Click to cast"
+					if BattleStats.can_rotate(u) and s.anchor_mode != "caster_ring" and s.anchor_mode != "trail":
+						t += " · R rotates"
+					return t + (" · WASD direction" if s.needs_direction() else "")
+		&"tamer":
+			var def := battle.tamer_skill(PLAYER_SIDE, tamer_id)
+			if def == null:
+				return ""
+			match def.effect:
+				TamerSkillDef.DOMAIN_GLIMPSE:
+					return "R changes shape · click places"
+				TamerSkillDef.SWAP_PLACES:
+					return "Click the %s monster" % ("first" if picked.is_empty() else "second")
+				TamerSkillDef.BEAST_SWAP:
+					return "Click the monster that leaves"
+			return "Click one of your monsters"
+	return "1 Step · 2–5 Skills · Space End turn"
 
 
 func _actions() -> Array:
 	var out: Array = []
-	var m := _active()
-	if m == null or m.side != PLAYER_SIDE:
+	if placing:
+		out.append({"id": ACT_START, "text": "Start Battle\nSpace", "enabled": true, "selected": false,
+			"card": {"title": "Start Battle", "rows": []}})
+		return out
+	var u := _active()
+	if u == null or u.side != PLAYER_SIDE:
 		return out
 	var mine := _my_turn()
-	out.append({"id": ACT_MOVE, "text": "Move\n1 AP", "enabled": mine and battle.ap >= 1,
-		"selected": mode == &"move", "card": {"title": "Move", "rows": InfoText.move_rows(battle, m)}})
-	var can_strike := mine and not battle.strike_targets(m.id).is_empty()
-	var strike_rows := InfoText.strike_rows(battle, m)
-	if mine and not can_strike:
-		strike_rows.push_front(["Unavailable", "no enemy or prop within Reach %d%s" % [battle.reach(m),
-				" (or not enough AP)" if battle.ap < 2 else ""]])
-	out.append({"id": ACT_STRIKE, "text": "%s\n%s" % [m.def.strike_name(), "2 AP"], "enabled": can_strike,
-		"selected": mode == &"strike", "card": {"title": "Strike — " + m.def.strike_name(), "rows": strike_rows}})
-	for s in m.skills():
-		var rows := InfoText.skill_rows(s, battle, m)
-		var why := battle.cast_error(m.id, s) if mine else ""
+	out.append({"id": ACT_STEP, "text": "Step\n%d AP" % BattleMoves.STEP_AP,
+		"enabled": mine and battle.ap >= BattleMoves.STEP_AP and not BattleStats.is_rooted(u),
+		"selected": mode == &"step", "card": {"title": "Step", "rows": BattleText.step_rows()}})
+	for i in u.sheet.skills.size():
+		var s := u.sheet.skills[i]
+		var rows := BattleText.skill_rows(battle.content, s, u.kin())
+		var why := ""
+		if s.is_active() and mine:
+			if battle.ap < s.cost():
+				why = "needs %d AP, %d left" % [s.cost(), battle.ap]
+			else:
+				why = battle.usage_error(u, i)
 		if why != "":
-			rows.push_front(["Unavailable", why])
-		var charging := s.kind == SkillDef.Kind.SURGE and battle.has_charging(m.id)
-		out.append({"id": s.id, "text": s.display_name + ("\ncharging" if charging else "\n1 AP"),
-			"enabled": mine and battle.can_cast(m.id, s), "selected": mode == &"place" and skill == s,
-			"card": {"title": s.display_name, "rows": rows}})
+			rows.push_front(["", "✗ " + why])
+		var label := s.display_name
+		if s.kind == BattleSkillDef.STRIKE:
+			label = "%s (%s)" % [KinRules.strike_name(u.kin()) if s.kin_effect else s.display_name, StrikeShapes.shape_name(StringName(s.strike_shape))]
+		out.append({"id": StringName(SLOT_PREFIX + str(i)), "text": "%s\n%s" % [label, "passive" if not s.is_active() else "%d AP" % s.cost()],
+			"enabled": mine and s.is_active() and why == "", "selected": mode == &"skill" and slot == i,
+			"card": {"title": label, "rows": rows}})
+	for def: TamerSkillDef in battle.tamer_loadout[PLAYER_SIDE]:
+		var used: bool = battle.tamer_used[PLAYER_SIDE].has(def.id)
+		out.append({"id": StringName(TAMER_PREFIX + String(def.id)), "text": "%s\n%s" % [def.display_name, "used" if used else "tamer"],
+			"enabled": mine and not used, "selected": mode == &"tamer" and tamer_id == def.id,
+			"card": {"title": def.display_name, "rows": [["", def.description], ["", "tamer · 1/battle"]]}})
 	return out
 
 
 func _banner_text() -> String:
 	if not battle.over:
 		return ""
-	if battle.winner_side == PLAYER_SIDE:
-		return "Victory"
-	return "Draw" if battle.winner_side < 0 else "Defeat"
+	if battle.draw:
+		return "Draw"
+	return "Victory" if battle.winner_side == PLAYER_SIDE else "Defeat"
 
 
 func _preview_text() -> String:
-	if not _my_turn() or hover == NOWHERE:
+	if mode == &"" or not _my_turn():
 		return ""
-	var m := _active()
-	if mode == &"strike":
-		if not battle.can_strike(m.id, hover):
-			return "Strike — " + battle.strike_error(m.id, hover)
-		var t := battle.monster_at(hover)
-		var dmg := battle.strike_damage(m.id, hover)
-		var who: String = t.display_name() if t != null else battle.board.at(hover).object["name"]
-		return "%s on %s — %d damage%s · %d AP" % [m.def.strike_name(), who, dmg,
-				" (kills)" if t != null and dmg >= t.hp else "", battle.strike_cost(m.id, hover)]
-	if mode == &"move":
-		var opts := battle.move_options(m)
-		if opts.has(hover) and opts[hover]["thorn"] > 0:
-			return "Move — %d Thornbed damage on the way" % opts[hover]["thorn"]
+	var a := _aimed_action()
+	if a.is_empty():
 		return ""
-	if mode != &"place" or skill == null:
-		return ""
-	var anchor := _anchor_for(skill)
-	var cells := battle.placement_cells(m.id, skill, orient, anchor)
-	if cells.is_empty():
-		return "%s — can't place here:\n%s" % [skill.display_name, battle.placement_error(m.id, skill, orient, anchor)]
-	var s := "%s — %d squares" % [skill.display_name, cells.size()]
-	if skill.kind == SkillDef.Kind.SURGE:
-		s += " · %s %d dmg, fires at the start of your %s" % [SkillDef.surge_type_name(skill.surge_type),
-				skill.surge_value() + m.momentum_bonus, "next turn" if skill.fire_delay() == 1 else "turn after next"]
-	for line in CastPreview.lines(battle, m, skill, cells, aim_dir, anchor):
-		s += "\n• " + line
-	return s
+	var lines := BattleText.preview_lines(battle, battle.preview(a))
+	if mode == &"tamer" and a.has("other") and battle.tamer_skill(PLAYER_SIDE, tamer_id).effect == TamerSkillDef.BEAST_SWAP:
+		lines.push_front("%s enters" % BattleText.unit_name(battle, a["other"]))
+	return "\n".join(PackedStringArray(lines))
 
 
+## Only what is notable under the cursor: monsters first, then ground, zone, Surge and props.
+## An empty Plain square shows nothing.
 func _inspector() -> Dictionary:
 	if hover == NOWHERE:
 		return {}
-	var sq := battle.board.at(hover)
-	var occ := battle.monster_at(hover)
 	var rows: Array = []
-	var title := "Square [%d, %d]" % [hover.x, hover.y]
-	if occ != null:
-		title = "%s %s  ·  [%d, %d]" % [_side_tag(occ), occ.display_name(), hover.x, hover.y]
-		rows = InfoText.monster_rows(occ.def, occ, battle)
-		rows.append(["", ""])
-	rows.append_array(InfoText.square_rows(battle, sq))
-	return {"title": title, "rows": rows, "text": ""}
+	var title := ""
+	for layer in [Board.GROUND, Board.AIR]:
+		var occ := battle.unit_at(hover, layer)
+		if occ == null:
+			continue
+		var name_line := "%s %s" % [_side_tag(occ), BattleText.unit_title(occ)]
+		if title == "":
+			title = name_line
+		else:
+			rows.append(["", name_line])
+		rows.append_array(BattleText.unit_rows(battle, occ))
+	rows.append_array(BattleText.cell_rows(battle, hover))
+	if rows.is_empty():
+		return {}
+	return {"title": title if title != "" else "[%d, %d]" % [hover.x, hover.y], "rows": rows, "text": ""}
 
 
 # ---------- log ----------
 
-func _name(id: StringName) -> String:
-	var m: Monster = battle.monsters.get(id)
-	return m.display_name() if m != null else String(id)
-
-
 func _on_event(e: Dictionary) -> void:
-	if GameSession.autoplay and e["type"] in [&"round_started", &"battle_over", &"slain"]:
+	if GameSession.autoplay and e["type"] in [&"round_started", &"battle_over", &"defeated"]:
 		print("[autoplay] ", e)
 	match e["type"]:
-		&"moved":
-			hud.log_line("%s moves to [%d,%d]" % [_name(e["who"]), e["to"].x, e["to"].y])
-		&"cast":
-			var sk: SkillDef = battle.monsters[e["who"]].skill_by_id(e["skill"])
-			var verb := "declares" if sk.kind == SkillDef.Kind.SURGE else "casts"
-			var detail := ""
-			if e.has("result"):
-				var parts := []
-				var names := {&"new": "new", &"level": "levelled up", &"replace": "replaced",
-					&"cancel": "cancelled (opposite)", &"lost": "no effect", &"ignite": "ignited"}
-				for k in e["result"]["counts"]:
-					parts.append("%d %s" % [e["result"]["counts"][k], names.get(k, String(k))])
-				for k in ["cleared", "boosted", "ignited", "extinguished", "healed"]:
-					if e["result"][k] > 0 and not (k == "ignited" and e["result"]["counts"].has(&"ignite")):
-						parts.append("%d ground/prop %s" % [e["result"][k], k])
-				detail = ": " + ", ".join(PackedStringArray(parts))
-			elif e.get("lost", 0) > 0:
-				detail = ": %d squares already claimed" % e["lost"]
-			hud.log_line("%s %s %s%s" % [_name(e["who"]), verb, sk.display_name, detail])
-		&"surge_fired":
-			hud.log_line("%s's %s fires!" % [_name(e["who"]), e["name"]])
-		&"strike":
-			hud.log_line("%s strikes [%d,%d]" % [_name(e["who"]), e["target"].x, e["target"].y])
 		&"damage":
-			view.floating_text(battle.monsters[e["target"]].pos, "-%d" % e["amount"], Color(1.0, 0.45, 0.4))
-			hud.log_line("%s takes %d (%s)" % [_name(e["target"]), e["amount"], e["source"]])
-		&"absorbed":
-			view.floating_text(battle.monsters[e["target"]].pos, "blocked", Color(0.6, 0.85, 1.0))
-			hud.log_line("%s is unharmed." % _name(e["target"]))
-		&"blanked":
-			hud.log_line("The Flood can't reach the high ground at [%d,%d]." % [e["pos"].x, e["pos"].y])
-		&"ignite":
-			hud.log_line("A Tree catches fire at [%d,%d]." % [e["pos"].x, e["pos"].y])
-		&"extinguish":
-			hud.log_line("A burning Tree is put out.")
-		&"burned_down":
-			hud.log_line("A Tree burns down → Lava at [%d,%d]." % [e["pos"].x, e["pos"].y])
-		&"shatter":
-			hud.log_line("A prop shatters → Rubble, debris flies!")
-		&"collapse":
-			hud.log_line("The high ground at [%d,%d] collapses." % [e["pos"].x, e["pos"].y])
-		&"slain":
-			hud.log_line("%s is slain!" % _name(e["who"]))
-		&"displaced":
-			hud.log_line("%s is moved to [%d,%d]" % [_name(e["who"]), e["to"].x, e["to"].y])
-		&"collision":
-			hud.log_line("%s slams into the %s!" % [_name(e["who"]), e["prop"]])
-		&"pinned":
-			hud.log_line("%s is pinned against the edge." % _name(e["who"]))
-		&"zones_faded":
-			hud.log_line("%d zone squares fade and repaint the ground." % e["count"])
-		&"voidscar":
-			hud.log_line("Voidscar spreads to [%d,%d]." % [e["pos"].x, e["pos"].y])
-		&"round_started":
-			hud.log_line("Round %d — %s acts first." % [e["round"], _name(e["first"])])
+			var t: BattleUnit = battle.units[e["target"]]
+			view.floating_text(t.pos, "-%d" % e["amount"] if int(e["amount"]) > 0 else "blocked",
+				Color(1.0, 0.45, 0.4) if int(e["amount"]) > 0 else Color(0.6, 0.85, 1.0))
+		&"healed":
+			var t2: BattleUnit = battle.units[e["target"]]
+			view.floating_text(t2.pos, "+%d" % e["amount"], Color(0.5, 0.95, 0.6))
 		&"battle_over":
 			GameSession.last_result = BattleSetup.make_result(battle)
-			hud.log_line("The battle is over.")
+	if e["type"] in [&"turn_started", &"turn_ended", &"zone_changed", &"effect_refreshed", &"queue_changed", &"swapped", &"protected"]:
+		return
+	var line := BattleText.event_line(battle, e)
+	if line != "":
+		hud.log_line(line)

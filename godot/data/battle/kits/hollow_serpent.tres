@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BattleKitDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_kit_def.gd" id="1_wht1q"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2_rqxly"]
+[ext_resource type="Resource" path="res://data/battle/skills/burrow.tres" id="3_5s1ri"]
+[ext_resource type="Resource" path="res://data/battle/skills/strike_jab.tres" id="4_gu5pg"]
+[ext_resource type="Resource" path="res://data/battle/skills/coiling_rift.tres" id="5_l5tic"]
+[ext_resource type="Resource" path="res://data/battle/skills/void_pull.tres" id="6_2re0a"]
+
+[resource]
+script = ExtResource("1_wht1q")
+species_id = &"hollow_serpent"
+skills = Array[ExtResource("2_rqxly")]([ExtResource("3_5s1ri"), ExtResource("4_gu5pg"), ExtResource("5_l5tic"), ExtResource("6_2re0a")])
+surge_slot = 2
+utility_slot = 3
+hp = 7
+initiative = 4.0
+reach = 3
+ap = 3
+notes = "Thick Hide omitted: no free slot (T11)."

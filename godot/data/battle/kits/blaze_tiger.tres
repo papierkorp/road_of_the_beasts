@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleKitDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_kit_def.gd" id="1_08whn"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2_kfted"]
+[ext_resource type="Resource" path="res://data/battle/skills/leap.tres" id="3_sb2cf"]
+[ext_resource type="Resource" path="res://data/battle/skills/strike_jab.tres" id="4_dy68v"]
+[ext_resource type="Resource" path="res://data/battle/skills/magma_pounce.tres" id="5_x82fi"]
+[ext_resource type="Resource" path="res://data/battle/skills/lava_field.tres" id="6_08kyy"]
+
+[resource]
+script = ExtResource("1_08whn")
+species_id = &"blaze_tiger"
+skills = Array[ExtResource("2_kfted")]([ExtResource("3_sb2cf"), ExtResource("4_dy68v"), ExtResource("5_x82fi"), ExtResource("6_08kyy")])
+surge_slot = 2
+utility_slot = 3
+initiative = 7.0
+movement = 4
+ap = 3
+notes = "Passive Momentum omitted: no free slot and its damage bonus is unresolved (T11)."

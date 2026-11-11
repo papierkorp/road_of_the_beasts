@@ -263,14 +263,14 @@ func test_a_prep_pill_adds_initiative_for_the_whole_battle() -> void:
 	r.prep_init = {0: ItemCatalog.PREP_INIT}
 	var prepared := BattleSetup.build(r)
 	prepared.begin()
-	var mon: Monster = prepared.monsters[&"p0_blaze_tiger"]
-	assert_int(mon.prep_init).is_equal(ItemCatalog.PREP_INIT)
-	assert_float(prepared.effective_stat(mon, Battle.Stat.INIT)).is_equal(
-		plain.effective_stat(plain.monsters[&"p0_blaze_tiger"], Battle.Stat.INIT) + float(ItemCatalog.PREP_INIT))
-	var other: Monster = prepared.monsters[&"p1_moss_turtle"]
-	assert_int(other.prep_init).is_equal(0)
+	var mon: BattleUnit = prepared.units[&"p0_blaze_tiger"]
+	assert_float(mon.sheet.init_bonus).is_equal(float(ItemCatalog.PREP_INIT))
+	assert_float(BattleStats.initiative(prepared, mon)).is_equal(
+		BattleStats.initiative(plain, plain.units[&"p0_blaze_tiger"]) + float(ItemCatalog.PREP_INIT))
+	var other: BattleUnit = prepared.units[&"p1_moss_turtle"]
+	assert_float(other.sheet.init_bonus).is_equal(0.0)
 	# it does not touch the enemy side
-	assert_int((prepared.monsters[&"e0_hollow_serpent"] as Monster).prep_init).is_equal(0)
+	assert_float((prepared.units[&"e0_hollow_serpent"] as BattleUnit).sheet.init_bonus).is_equal(0.0)
 
 
 func test_the_new_structures_are_production_structures() -> void:

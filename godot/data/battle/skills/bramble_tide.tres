@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_w1mxk"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_71ocy"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_e06uu"]
+
+[sub_resource type="Resource" id="Resource_88nl3"]
+script = ExtResource("1_w1mxk")
+ground = &"thornbed"
+
+[resource]
+script = ExtResource("3_e06uu")
+id = &"bramble_tide"
+display_name = "Bramble Tide"
+kind = "surge"
+description = "Flood on 2 squares: 2 damage, push 1, leaves Thornbed I. (Deep Residue not applied: undecided.)"
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
+surge_damage = 2
+surge_mountain = "blank"
+surge_displacement = "push"
+board_ops = Array[ExtResource("1_w1mxk")]([SubResource("Resource_88nl3")])

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_pqgv8"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_pab8w"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_0hpqd"]
+[ext_resource type="Resource" path="res://data/battle/zones/slowing.tres" id="4_034xu"]
+
+[resource]
+script = ExtResource("3_0hpqd")
+id = &"slowing_zone_example"
+display_name = "Slowing Zone"
+description = "Slow 1 (2 at level II) on a horizontal I3 for 2 rounds."
+status = "GDD reference record (Skills §11), draft"
+footprint = Array[Vector2i]([Vector2i(-1, 0), Vector2i(0, 0), Vector2i(1, 0)])
+zone = ExtResource("4_034xu")

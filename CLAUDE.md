@@ -2,12 +2,12 @@
 
 - **Road of the Beasts:** deterministische, rundenbasierte Monsterkämpfe mit Management und Kultivierung.
 - **Designziel:** „Easy to learn, hard to master“: wenige, einheitliche und gut lesbare Regeln; Tiefe entsteht aus Kombinationen und Entscheidungen, nicht aus Sonderregeln. Bei Designvorschlägen und Mechanik-Abwägungen als Maßstab nutzen (Ausnahmen und Sonderfälle begründen).
-- **Auftrag:** GDDs überarbeiten, vervollständigen und konsistent halten; keine Spielimplementierung.
+- **Auftrag:** GDDs überarbeiten, vervollständigen und konsistent halten; Spielimplementierung nur im Rahmen einer ausdrücklichen Nutzerfreigabe (siehe Safety).
 
 ## Safety
 
-- **Branch:** ausschließlich `docs/update_gdd`. Vor Änderungen Branch/Git-Status prüfen; bei anderem Branch anhalten und nachfragen, nicht selbst wechseln.
-- **Schreibbereich:** `docs/`, `tools/simulator/` (Python-Simulator, vom Nutzer 2026-11-11 freigegeben) und die Pflege dieser `CLAUDE.md`. Keine Änderungen an `godot/`, `tools/html_prototype/` oder anderen Pfaden.
+- **Branch:** `docs/update_gdd` für reine GDD-Arbeit; `main` für den Battle-Implementierungsauftrag (Nutzerfreigabe 2026-11-11). Vor Änderungen Branch/Git-Status prüfen; bei anderem Branch anhalten und nachfragen, nicht selbst wechseln.
+- **Schreibbereich:** `docs/`, `tools/simulator/` (Python-Simulator, vom Nutzer 2026-11-11 freigegeben) und die Pflege dieser `CLAUDE.md`. `godot/` nur für den Battle-Implementierungsauftrag (Nutzerfreigabe 2026-11-11): Battle-System und dessen notwendige Anbindung (`godot/battle/`, Battle-Verträge in `godot/shared/`, `godot/data/`, `godot/tests/`, `godot/tools/`, `godot/README.md`); die Overworld (`godot/overworld/`) bleibt funktional unverändert. Keine Änderungen an `tools/html_prototype/` oder anderen Pfaden.
 - **Git/Nutzerarbeit:** keine Commits, Branchwechsel, Pulls, Resets oder sonstigen eingreifenden Git-Aktionen ohne ausdrücklichen Auftrag. Nutzeränderungen erhalten; nichts automatisch synchronisieren.
 - **Validierung:** Prototypen bestätigen nicht das aktuelle Design; Dokumentationsprüfung und Rechenproben sind keine Gameplay-/Balancevalidierung.
 - **Werkzeuge:** `tools/simulator/` (reduzierter Python-Bot-Simulator samt Preisrechner `pricing.py`, nur Standardbibliothek; Kontext, Umfang und Plan in `tools/simulator/README.md`) liefern nur Indizien, keine Balance-/Preisfreigabe und keine Spielimplementierung (Godot-Portierung erst nach dem Battle-Gate und nur mit eigenem Auftrag). Der Simulator ist ein schlankes Wegwerf-Experiment für schnelle Preisindizien, keine zweite Kampf-App und kein Vollständigkeitsprojekt; keine separate dauerhafte Simulator-Testsuite oder Legacy-Regressionsdateien ausbauen. JSON-Skill-/Monster-Vorlagen und Papier-Rechenwerte dürfen wiederverwendbar bleiben (Nutzerklärung 2026-11-11). Abweichungen in README/Docstring benennen, offene Regeln nicht erfinden, Ergebnisse nur in `docs/temp_todo.md` (T13) festhalten.

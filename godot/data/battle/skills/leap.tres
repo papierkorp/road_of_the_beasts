@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_pcyfy"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_cm0jk"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_44ko8"]
+
+[resource]
+script = ExtResource("3_44ko8")
+id = &"leap"
+display_name = "Leap"
+kind = "move"
+description = "Straight line up to Movement squares; only the landing square counts."
+status = "GDD movement preset (Skills §3/§8.2)"
+ap_cost = 2
+move_path = "line"
+blocked_by_objects = false
+blocked_by_monsters = false
+blocked_by_surges = false
+ground_costs = false

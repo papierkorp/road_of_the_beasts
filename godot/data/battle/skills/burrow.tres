@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_47vbf"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_vgbwq"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_i0kuf"]
+
+[resource]
+script = ExtResource("3_i0kuf")
+id = &"burrow"
+display_name = "Burrow"
+kind = "move"
+description = "Any path up to Movement -1; cannot start or end on a Mountain."
+status = "GDD movement preset (Skills §3/§8.2)"
+ap_cost = 2
+move_path = "free"
+blocked_by_objects = false
+blocked_by_monsters = false
+blocked_by_surges = false
+blocked_by_height = true
+ground_costs = false
+distance_mod = -1

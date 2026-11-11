@@ -1,971 +1,511 @@
 class_name Battle
 extends RefCounted
-## Headless battle (GDD §3, §4, §9.3, §11, §12, §14). No nodes; the view listens to `event_emitted`.
+## One headless, deterministic battle (gdd_battle.md): the mutable state of an encounter and
+## the single entry point for everything that changes it.
 ##
-## A turn: due Surges of the active monster fire → start-of-turn ground (Voidscar, Blight)
-## → 2 AP → end of turn: zone push/pull, then Lava. Round end: zones and timed ground tick,
-## burning Trees burn down, brittle props crumble, Voidscar spreads, the queue is rebuilt.
+##   definitions  battle/defs  (data, shared by all battles)        → `content`
+##   state        this object, Board, BattleUnit, PendingSurge       (plain data, cloneable)
+##   rules        Battle* modules in this folder (static functions on a Battle)
+##   presentation battle/view, battle/ui: they call `check` / `apply` and read `events`
+##
+## Determinism: the rules use no randomness, no time and no engine nodes. The same start
+## state, the same content and the same ordered actions always give the same events and the
+## same `state_hash()`. `actions` is the replayable log of everything that was applied.
+##
+## Actions are Dictionaries:
+##   {type: &"step", to}                                    universal Step, 2 AP
+##   {type: &"skill", slot, ...}                            a kit skill of the active monster
+##        move:   to            strike: dir, push_dir, origin
+##        surge / zone / ground: anchor, dir, rot           buff: nothing else
+##   {type: &"end_turn"}
+##   {type: &"tamer", side, skill, unit, other, cells}      battle loadout (gdd_battle §5.2)
 
 signal event_emitted(e: Dictionary)
 
-const AP_PER_TURN := 2
-const EXTRA_TURN_INIT_PENALTY := 3.0
-## Round-1 initiative of the side that struck first on the overworld (gdd_overworld §6.2).
+## Legacy display constant of the overworld's ambush text. The ambush bonus itself was dropped
+## from the design (gdd_overworld §2.2) and is not applied by the battle.
 const AMBUSH_BONUS := 1.0
+const PLAYER := 0
+const ENEMY := 1
 
-enum Stat { MOVE, INIT, RANGE }
-
+var content: BattleContent
 var board: Board
-var monsters := {}                  # id -> Monster
-var roster: Array[StringName] = []  # stable order (tie-break of last resort)
-var queue: Array[Dictionary] = []   # this round: [{id, init, base, side, ghost}]
+var units := {}                          # id -> BattleUnit
+var roster: Array[StringName] = []       # stable order: player slots, enemy slots, benches
+var queue: Array[Dictionary] = []        # this round's entries (BattleQueue)
+var prev_queue: Array[Dictionary] = []   # the finished round's queue (orphaned Surge order)
 var queue_idx := 0
 var turn_owner: StringName = &""
 var ap := 0
 var round_number := 1
 var over := false
-var winner_side := -1
-var voidscar_from := 6
-var ambush_side := -1               # side with the round-1 initiative bonus (-1 = nobody)
+var winner_side := -1                    # 0 player, 1 enemy, -1 none / Draw
+var draw := false
+## Side that wins the next cross-side initiative tie (-1 = not decided yet).
+var tie_side := -1
+## Late-round pressure starts at the end of this round (gdd_battle §4.2).
+var voidscar_from := 8
+var voidscar_ground: StringName = &"voidscar"
+var surges: Array[PendingSurge] = []
+## Loadouts per side: slotted tamer skills and the ids used this battle.
+var tamer_loadout: Array = [[], []]
+var tamer_used: Array[Dictionary] = [{}, {}]
+## Events collected for event-driven passives during a payload (gdd_battle §2.4).
+var reaction_events: Array[Dictionary] = []
 var events: Array[Dictionary] = []
-var _gid := 0
-var _tie_side := -1                 # side that wins the next initiative tie (-1 = not decided yet)
+var actions: Array[Dictionary] = []
+## Dry runs stay silent: no signal, so the view never shows a simulated outcome.
+var muted := false
+
+var _next_gid := 0
+var _next_surge := 0
+var _next_prop := 0
 
 
-func _init(p_board: Board, p_monsters: Array[Monster], p_voidscar_from: int = 6) -> void:
-	board = p_board
-	voidscar_from = p_voidscar_from
-	for m in p_monsters:
-		monsters[m.id] = m
-		roster.append(m.id)
-		board.occupants[m.pos] = m.id
+func _init(p_board: Board = null, p_content: BattleContent = null) -> void:
+	board = p_board if p_board != null else Board.new(7)
+	content = p_content if p_content != null else BattleContent.shared()
 
 
-func _emit(e: Dictionary) -> void:
-	events.append(e)
-	event_emitted.emit(e)
+# ---------- setup ----------
+
+## Adds a unit. `fielded` false puts it on the bench (Beast Swap).
+func add_unit(u: BattleUnit, fielded := true) -> BattleUnit:
+	units[u.id] = u
+	roster.append(u.id)
+	u.on_field = fielded
+	if fielded:
+		put(u, u.pos)
+	return u
+
+
+func add_prop(prop_id: StringName, p: Vector2i) -> BoardProp:
+	return BattleBoardOps.place_prop(self, content.prop(prop_id), p)
+
+
+func set_ground(p: Vector2i, ground: StringName, level := 1) -> void:
+	var c := board.at(p)
+	c.ground = ground
+	c.level = level
 
 
 func begin() -> void:
-	_build_queue()
-	queue_idx = 0
-	_emit({"type": &"round_started", "round": round_number, "first": queue[0]["id"]})
-	_start_turn(queue[0])
+	BattleTurn.begin(self)
 
 
-func active() -> Monster:
-	return monsters.get(turn_owner)
+# ---------- events ----------
+
+func emit(type: StringName, data: Dictionary = {}) -> void:
+	var e := data.duplicate()
+	e["type"] = type
+	events.append(e)
+	if not muted:
+		event_emitted.emit(e)
 
 
-func allies_of(m: Monster) -> Array[Monster]:
-	var out: Array[Monster] = []
+# ---------- queries ----------
+
+func active() -> BattleUnit:
+	var u: BattleUnit = units.get(turn_owner)
+	return u if u != null and u.is_alive() and not over else null
+
+
+## Living units on the field in roster order (`side` -1 = both).
+func living(side := -1) -> Array[BattleUnit]:
+	var out: Array[BattleUnit] = []
 	for id in roster:
-		var o: Monster = monsters[id]
-		if o.side == m.side and o.id != m.id and o.is_alive():
-			out.append(o)
+		var u: BattleUnit = units[id]
+		if u.is_alive() and (side < 0 or u.side == side):
+			out.append(u)
 	return out
 
 
-func enemies_of(m: Monster) -> Array[Monster]:
-	var out: Array[Monster] = []
-	for id in roster:
-		var o: Monster = monsters[id]
-		if o.side != m.side and o.is_alive():
-			out.append(o)
+func unit_at(p: Vector2i, layer: int) -> BattleUnit:
+	var id := board.unit_id_at(p, layer)
+	return units[id] if id != &"" else null
+
+
+## Any unit on the square: the ground layer first, then the air layer.
+func any_unit_at(p: Vector2i) -> BattleUnit:
+	var u := unit_at(p, Board.GROUND)
+	return u if u != null else unit_at(p, Board.AIR)
+
+
+func queue_rank(id: StringName) -> int:
+	return BattleQueue.rank_in(queue, id)
+
+
+## Order of a payload source among simultaneous sources: a living caster's place in the
+## current queue, a defeated or removed caster's place in the previous round's queue.
+func source_rank(owner: StringName) -> int:
+	var u: BattleUnit = units.get(owner)
+	if u != null and u.is_alive():
+		return queue_rank(owner)
+	return BattleQueue.rank_in(prev_queue, owner)
+
+
+func tamer_skill(side: int, id: StringName) -> TamerSkillDef:
+	if side < 0 or side > 1:
+		return null
+	for def: TamerSkillDef in tamer_loadout[side]:
+		if def.id == id:
+			return def
+	return null
+
+
+func surge_by_id(id: int) -> PendingSurge:
+	for s in surges:
+		if s.id == id:
+			return s
+	return null
+
+
+func surges_of(owner: StringName) -> Array[PendingSurge]:
+	var out: Array[PendingSurge] = []
+	for s in surges:
+		if s.owner == owner:
+			out.append(s)
 	return out
 
 
-func monster_at(p: Vector2i) -> Monster:
-	var id = board.occupants.get(p)
-	return monsters[id] if id != null else null
+func skill_in_slot(u: BattleUnit, slot: int) -> BattleSkillDef:
+	if u == null or slot < 0 or slot >= u.sheet.skills.size():
+		return null
+	return u.sheet.skills[slot]
 
 
-# ---------- effective stats ----------
-
-func _zone_value(sq: Square, tag: ZoneEffect.Tag) -> int:
-	if sq.zone == null:
-		return 0
-	return sq.zone["def"].value_of(tag, sq.zone["level"], sq.attunement, sq.zone["native"])
-
-
-func effective_stat(m: Monster, stat: Stat) -> float:
-	var sq := board.at(m.pos)
-	match stat:
-		Stat.MOVE:
-			if m.has_passive(&"sure_footed"):
-				return float(m.def.move + _zone_value(sq, ZoneEffect.Tag.HASTE))
-			return maxf(0.0, m.def.move - _zone_value(sq, ZoneEffect.Tag.SLOW) + _zone_value(sq, ZoneEffect.Tag.HASTE))
-		Stat.INIT:
-			return maxf(0.1, m.def.initiative + m.prep_init - _zone_value(sq, ZoneEffect.Tag.DRAIN_INIT)
-					+ _zone_value(sq, ZoneEffect.Tag.QUICKEN))
-	# RANGE modifier
-	return float((1 if sq.elevated else 0) - _zone_value(sq, ZoneEffect.Tag.DRAIN_RANGE)
-			+ _zone_value(sq, ZoneEffect.Tag.EXTEND))
+## Repetition policy per equipped instance (gdd_skills §2 Usage and Repetition).
+func usage_error(u: BattleUnit, slot: int) -> String:
+	var s := skill_in_slot(u, slot)
+	if s == null:
+		return "no such skill slot"
+	match s.repetition:
+		"once_per_round":
+			if int(u.used_round.get(slot, 0)) == round_number:
+				return "%s was already used this round" % s.display_name
+		"once_per_battle":
+			if u.used_battle.has(slot):
+				return "%s was already used this battle" % s.display_name
+	return ""
 
 
-func skill_range(m: Monster, skill: SkillDef) -> int:
-	return maxi(1, skill.base_range() + int(effective_stat(m, Stat.RANGE)))
+# ---------- low-level state changes used by the rule modules ----------
+
+func next_prop_uid() -> int:
+	_next_prop += 1
+	return _next_prop
 
 
-func reach(m: Monster) -> int:
-	return maxi(1, m.def.reach + int(effective_stat(m, Stat.RANGE)))
+func lift(u: BattleUnit) -> void:
+	for c in u.cells():
+		if board.occupants[u.layer].get(c, &"") == u.id:
+			board.occupants[u.layer].erase(c)
 
 
-# ---------- movement ----------
-
-func _step_cost(from: Vector2i, to: Vector2i) -> int:
-	var a := board.at(from)
-	var b := board.at(to)
-	if b.ground == Square.GroundType.RUBBLE or (b.elevated and not a.elevated):
-		return 2
-	return 1
+func put(u: BattleUnit, p: Vector2i) -> void:
+	u.pos = p
+	for c in u.cells():
+		board.occupants[u.layer][c] = u.id
 
 
-func _thorn_damage(m: Monster, p: Vector2i) -> int:
-	var sq := board.at(p)
-	if sq.ground != Square.GroundType.THORNBED or m.has_passive(&"thornwalker"):
-		return 0
-	return sq.level
+func relocate(u: BattleUnit, to: Vector2i) -> void:
+	lift(u)
+	put(u, to)
 
 
-## Reachable squares with the least Thornbed damage on the way: {Vector2i: {cost, thorn}}.
-## Props, monsters and pending Surges block (Spirit / Phasing pass through props but can't stop on them).
-func move_options(m: Monster, budget: int = -1) -> Dictionary:
-	if budget < 0:
-		budget = int(effective_stat(m, Stat.MOVE))
-	var best := {}                       # Vector2i -> {cost, thorn}
-	var frontier: Array = [[m.pos, 0, 0]]
-	var seen := {}                       # "x,y,cost" -> thorn
-	while not frontier.is_empty():
-		var cur: Array = frontier.pop_front()
-		var p: Vector2i = cur[0]
-		var cost: int = cur[1]
-		var thorn: int = cur[2]
-		for n in board.neighbors(p):
-			var nsq := board.at(n)
-			if board.occupants.has(n) or nsq.surge != null:
-				continue
-			var passing_prop: bool = nsq.object != null
-			if passing_prop and not m.phases():
-				continue
-			var c := cost + _step_cost(p, n)
-			if c > budget:
-				continue
-			var t := thorn + _thorn_damage(m, n)
-			var key := "%d,%d,%d" % [n.x, n.y, c]
-			if seen.has(key) and seen[key] <= t:
-				continue
-			seen[key] = t
-			frontier.append([n, c, t])
-			if not passing_prop and n != m.pos:
-				if not best.has(n) or t < best[n]["thorn"] or (t == best[n]["thorn"] and c < best[n]["cost"]):
-					best[n] = {"cost": c, "thorn": t}
-	return best
+## Timed unit effect lasting until the round end of the N-th following round. The same key
+## (same effect of the same owner) only refreshes the duration (gdd_battle §3.1).
+func apply_effect(u: BattleUnit, key: String, tag: String, value: int, rounds: int) -> void:
+	var ends := round_number + rounds
+	for fx in u.effects:
+		if fx["key"] == key and fx["tag"] == tag:
+			fx["ends_round"] = maxi(int(fx["ends_round"]), ends)
+			emit(&"effect_refreshed", {"target": u.id, "tag": tag, "value": fx["value"], "ends_round": fx["ends_round"]})
+			return
+	u.effects.append({"key": key, "tag": tag, "value": value, "ends_round": ends})
+	emit(&"effect_applied", {"target": u.id, "tag": tag, "value": value, "ends_round": ends})
 
 
-func reachable(m: Monster) -> Array[Vector2i]:
-	var out: Array[Vector2i] = []
-	for p in move_options(m):
-		out.append(p)
-	return out
+## Unit-bound effects end when their bearer is defeated or removed (gdd_battle §2.2).
+func end_unit_effects(u: BattleUnit) -> void:
+	u.effects.clear()
+	u.nullify = false
+	u.life_thread = false
 
 
-# ---------- action checks ----------
-
-func can_act(who: StringName) -> bool:
-	return not over and turn_owner == who and ap >= 1
-
-
-func has_charging(owner: StringName) -> bool:
-	for sq: Square in board.all_squares():
-		if sq.surge != null and sq.surge["owner"] == owner:
-			return true
-	return false
-
-
-func can_cast(who: StringName, skill: SkillDef) -> bool:
-	if not can_act(who):
-		return false
-	return not (skill.kind == SkillDef.Kind.SURGE and has_charging(who))
+## Zones, ground, props and Surges stay when their caster falls; its Surges become orphaned
+## and detonate at the start of the next round.
+func defeat(u: BattleUnit) -> void:
+	u.hp = 0
+	u.defeated = true
+	lift(u)
+	end_unit_effects(u)
+	for s in surges:
+		if s.owner == u.id:
+			s.orphaned = true
+	emit(&"defeated", {"who": u.id})
 
 
-## Why a skill can't be used at all right now ("" = usable).
-func cast_error(who: StringName, skill: SkillDef) -> String:
+func remove_surge(s: PendingSurge) -> void:
+	surges.erase(s)
+	for c in s.cells:
+		var cell := board.at(c)
+		if cell != null and cell.surge == s.id:
+			cell.surge = -1
+
+
+## The battle ends when a side has no monsters left on the field; checked only after a
+## payload or phase has fully resolved. Both sides empty at once is a Draw. Pending Surges
+## and autonomous aftermath lapse (gdd_battle §2.1).
+func check_over() -> bool:
 	if over:
-		return "the battle is over"
-	if turn_owner != who:
-		return "not this monster's turn"
-	if ap < 1:
-		return "no AP left"
-	if skill.kind == SkillDef.Kind.SURGE and has_charging(who):
-		return "this monster already has a charging Surge (one at a time)"
-	return ""
-
-
-## Why a placement is illegal ("" = legal). Same checks as placement_cells, in readable form.
-func placement_error(who: StringName, skill: SkillDef, orient_idx: int, anchor: Vector2i) -> String:
-	var e := cast_error(who, skill)
-	if e != "":
-		return e
-	var m: Monster = monsters[who]
-	if skill.kind == SkillDef.Kind.SURGE and skill.twist == SkillDef.Twist.RING:
-		return "" if not board.neighbors(m.pos).is_empty() else "no free neighbours"
-	var orients := skill.orientations()
-	if orients.is_empty():
-		return "this skill has no shape"
-	var cells := Shapes.footprint(orients[effective_orientation(m, skill, orient_idx)], anchor)
-	match skill.twist:
-		SkillDef.Twist.POUNCE:
-			if Board.manhattan(m.pos, anchor) != 1:
-				return "Pounce: the anchor (centre cell) must be right next to %s" % m.display_name()
-		SkillDef.Twist.TRAIL:
-			if not _is_trail(m.pos, cells):
-				return "Trail: the line must start next to %s and point straight away from it" % m.display_name()
-		_:
-			if not board.in_bounds(anchor):
-				return "the anchor is off the board"
-			var r := skill_range(m, skill)
-			var d := Board.manhattan(m.pos, anchor)
-			if d > r:
-				return "out of range: anchor is %d away, range is %d" % [d, r]
-	for c in cells:
-		if not board.in_bounds(c):
-			return "the shape doesn't fit on the board"
-	var allow_flammable := skill.kind == SkillDef.Kind.GROUND and skill.aspect == Aspect.Type.FORCE
-	for c in cells:
-		var sq := board.at(c)
-		match skill.placement():
-			Board.Placement.PROP:
-				if sq.object != null:
-					return "[%d,%d] already holds a %s — props need empty squares" % [c.x, c.y, sq.object["name"]]
-				if board.occupants.has(c):
-					return "[%d,%d] is occupied by %s — props need empty squares" % [c.x, c.y, monster_at(c).display_name()]
-				if sq.surge != null:
-					return "[%d,%d] holds a charging Surge — props need empty squares" % [c.x, c.y]
-			Board.Placement.GROUND:
-				if sq.object != null and not (allow_flammable and sq.has_tag("flammable")):
-					return "[%d,%d] holds a %s — ground skills need prop-free squares%s" % [c.x, c.y,
-							sq.object["name"], " (only Force Fields may target Trees)" if sq.has_tag("flammable") else ""]
-	if cells.has(m.pos) and skill.kind == SkillDef.Kind.PROP:
-		return "can't raise a Wall on your own square"
-	return ""
-
-
-## Cells of a placement or empty if illegal (range, shape, twists, placement rule).
-func placement_cells(who: StringName, skill: SkillDef, orient_idx: int, anchor: Vector2i) -> Array[Vector2i]:
-	var none: Array[Vector2i] = []
-	var m: Monster = monsters[who]
-	var cells: Array[Vector2i] = []
-	if skill.kind == SkillDef.Kind.SURGE and skill.twist == SkillDef.Twist.RING:
-		cells = board.neighbors(m.pos)
-		return cells if not cells.is_empty() else none
-	var orients := skill.orientations()
-	if orients.is_empty():
-		return none
-	var o: Dictionary = orients[effective_orientation(m, skill, orient_idx)]
-	cells = Shapes.footprint(o, anchor)
-	match skill.twist:
-		SkillDef.Twist.POUNCE:
-			if Board.manhattan(m.pos, anchor) != 1:
-				return none
-		SkillDef.Twist.TRAIL:
-			if not _is_trail(m.pos, cells):
-				return none
-		_:
-			if not board.in_bounds(anchor) or Board.manhattan(m.pos, anchor) > skill_range(m, skill):
-				return none
-	var allow_flammable := skill.kind == SkillDef.Kind.GROUND and skill.aspect == Aspect.Type.FORCE
-	if not board.cells_allowed(skill.placement(), cells, allow_flammable):
-		return none
-	if cells.has(m.pos) and skill.kind == SkillDef.Kind.PROP:
-		return none
-	return cells
-
-
-## Shapes are fixed in battle (the skill's own orientation); only Adaptive may pick another.
-func effective_orientation(m: Monster, skill: SkillDef, requested: int) -> int:
-	var n := skill.orientations().size()
-	if n == 0:
-		return 0
-	if m.has_passive(&"adaptive"):
-		return posmod(requested, n)
-	return clampi(skill.orientation, 0, n - 1)
-
-
-func can_rotate(who: StringName, skill: SkillDef) -> bool:
-	return monsters[who].has_passive(&"adaptive") and skill.orientations().size() > 1
-
-
-## Trail: a straight line that starts next to the caster and leads away from it.
-func _is_trail(caster: Vector2i, cells: Array[Vector2i]) -> bool:
-	var same_x := true
-	var same_y := true
-	var nearest := 99
-	for c in cells:
-		same_x = same_x and c.x == caster.x
-		same_y = same_y and c.y == caster.y
-		nearest = mini(nearest, Board.manhattan(caster, c))
-		if c == caster:
-			return false
-	return (same_x or same_y) and nearest == 1
-
-
-## Every legal placement of a skill: [{oi, anchor, cells}] (Ring: a single one).
-func all_placements(who: StringName, skill: SkillDef) -> Array[Dictionary]:
-	var out: Array[Dictionary] = []
-	if skill.kind == SkillDef.Kind.SURGE and skill.twist == SkillDef.Twist.RING:
-		var cells := placement_cells(who, skill, 0, monsters[who].pos)
-		if not cells.is_empty():
-			out.append({"oi": 0, "anchor": monsters[who].pos, "cells": cells})
-		return out
-	var n := skill.orientations().size()
-	var choices: Array[int] = []
-	if can_rotate(who, skill):
-		for oi in n:
-			choices.append(oi)
-	else:
-		choices.append(effective_orientation(monsters[who], skill, 0))
-	for oi in choices:
-		for y in board.size:
-			for x in board.size:
-				var cells := placement_cells(who, skill, oi, Vector2i(x, y))
-				if not cells.is_empty():
-					out.append({"oi": oi, "anchor": Vector2i(x, y), "cells": cells})
-	return out
+		return true
+	var alive := [living(PLAYER).size(), living(ENEMY).size()]
+	if alive[0] > 0 and alive[1] > 0:
+		return false
+	over = true
+	draw = alive[0] == 0 and alive[1] == 0
+	winner_side = -1 if draw else (PLAYER if alive[0] > 0 else ENEMY)
+	for s in surges.duplicate():
+		remove_surge(s)
+	ap = 0
+	emit(&"battle_over", {"winner_side": winner_side, "draw": draw, "round": round_number})
+	return true
 
 
 # ---------- actions ----------
 
-func move(who: StringName, to: Vector2i) -> bool:
-	if not can_act(who):
-		return false
-	var m: Monster = monsters[who]
-	var opts := move_options(m)
-	if not opts.has(to):
-		return false
-	var full: bool = opts[to]["cost"] >= int(effective_stat(m, Stat.MOVE))
-	board.occupants.erase(m.pos)
-	m.pos = to
-	board.occupants[to] = who
-	ap -= 1
-	if full and m.has_passive(&"momentum"):
-		m.momentum_bonus = 1
-	_emit({"type": &"moved", "who": who, "to": to})
-	if opts[to]["thorn"] > 0:
-		_hurt(who, opts[to]["thorn"], "Thornbed")
-	return true
+## Why an action is illegal right now ("" = legal). Never changes state: an invalid attempt
+## consumes neither AP nor usage.
+func check(a: Dictionary) -> String:
+	if over:
+		return "the battle is over"
+	var type: StringName = a.get("type", &"")
+	if type == &"tamer":
+		return BattleTamer.error(self, a)
+	if type == &"end_turn":
+		return "" if turn_owner != &"" else "no turn is running"
+	var u := active()
+	if u == null:
+		return "no monster is acting"
+	if a.has("unit") and a["unit"] != u.id:
+		return "it is not this monster's turn"
+	match type:
+		&"step":
+			if ap < BattleMoves.STEP_AP:
+				return "Step needs %d AP, %d left" % [BattleMoves.STEP_AP, ap]
+			if BattleStats.is_rooted(u):
+				return "%s cannot move" % u.display_name()
+			if not BattleMoves.options(self, u, BattleMoves.step_profile()).has(a.get("to")):
+				return "Step moves exactly 1 square onto a free, unblocked square"
+			return ""
+		&"skill":
+			return _skill_error(u, a)
+	return "unknown action"
 
 
-func cast(who: StringName, skill: SkillDef, orient_idx: int, anchor: Vector2i,
-		dir: Vector2i = Vector2i.UP) -> bool:
-	if not can_cast(who, skill):
-		return false
-	var cells := placement_cells(who, skill, orient_idx, anchor)
-	if cells.is_empty():
-		return false
-	var m: Monster = monsters[who]
-	if skill.twist == SkillDef.Twist.RING:
-		anchor = m.pos
-	_gid += 1
-	var gid := "g%d" % _gid
-	var native := m.has_passive(&"native_ground")
-	if skill.kind == SkillDef.Kind.SURGE:
-		var lost := 0
-		for c in cells:
-			var sq := board.at(c)
-			if sq.surge != null:
-				lost += 1
-				continue
-			sq.surge = {"owner": who, "type": skill.surge_type, "aspect": skill.aspect,
-				"name": skill.display_name, "value": skill.surge_value() + m.momentum_bonus,
-				"turns_left": skill.fire_delay(), "dir": dir, "anchor": anchor, "gid": gid,
-				"twist": skill.twist, "residue": skill.residue_rounds(), "native": native,
-				"painter": m.has_passive(&"painter")}
-		m.momentum_bonus = 0
-		ap -= 1
-		_emit({"type": &"cast", "who": who, "skill": skill.id, "cells": cells, "lost": lost})
-		return true
-	var result := Rules.cast(board, who, skill, cells, gid, dir, anchor, native)
-	ap -= 1
-	_emit({"type": &"cast", "who": who, "skill": skill.id, "cells": cells, "result": result})
-	return true
-
-
-## AP cost of a Strike at `target` (2, or 1 with Pack Hunter when an ally is next to the target).
-func strike_cost(who: StringName, target: Vector2i) -> int:
-	var m: Monster = monsters[who]
-	if m.has_passive(&"pack_hunter"):
-		for a in allies_of(m):
-			if Board.manhattan(a.pos, target) == 1:
-				return 1
-	return 2
-
-
-## A legal Strike target: an enemy monster or a prop within Reach, line of sight from Reach 2.
-func can_strike(who: StringName, target: Vector2i) -> bool:
-	if not can_act(who) or not board.in_bounds(target):
-		return false
-	var m: Monster = monsters[who]
-	if ap < strike_cost(who, target):
-		return false
-	var d := Board.manhattan(m.pos, target)
-	if d < 1 or d > reach(m):
-		return false
-	var t := monster_at(target)
-	var sq := board.at(target)
-	if t == null and sq.object == null:
-		return false
-	if t != null and t.side == m.side:
-		return false
-	if sq.object != null and sq.has_tag("indestructible"):
-		return false
-	return d == 1 or has_line_of_sight(m.pos, target)
-
-
-## Why a Strike at `target` is illegal ("" = legal).
-func strike_error(who: StringName, target: Vector2i) -> String:
-	if not can_act(who):
-		return "no AP left" if turn_owner == who else "not this monster's turn"
-	var m: Monster = monsters[who]
-	var sq := board.at(target)
-	var t := monster_at(target)
-	if t == null and sq.object == null:
-		return "nothing to hit here"
-	if t != null and t.side == m.side:
-		return "can't strike your own side"
-	if sq.object != null and sq.has_tag("indestructible"):
-		return "the %s is indestructible" % sq.object["name"]
-	var d := Board.manhattan(m.pos, target)
-	if d > reach(m):
-		return "out of Reach: %d away, Reach is %d" % [d, reach(m)]
-	if ap < strike_cost(who, target):
-		return "needs %d AP, %d left" % [strike_cost(who, target), ap]
-	if d > 1 and not has_line_of_sight(m.pos, target):
-		return "no line of sight (a prop is in the way)"
+func _skill_error(u: BattleUnit, a: Dictionary) -> String:
+	var slot: int = int(a.get("slot", -1))
+	var s := skill_in_slot(u, slot)
+	if s == null:
+		return "no such skill slot"
+	if not s.is_active():
+		return "%s is a passive" % s.display_name
+	if ap < s.cost():
+		return "%s needs %d AP, %d left" % [s.display_name, s.cost(), ap]
+	var usage := usage_error(u, slot)
+	if usage != "":
+		return usage
+	match s.kind:
+		BattleSkillDef.MOVE:
+			if BattleStats.is_rooted(u):
+				return "%s cannot move" % u.display_name()
+			if not BattleMoves.options(self, u, BattleMoves.profile_of(s)).has(a.get("to")):
+				return "%s cannot reach that square" % s.display_name
+		BattleSkillDef.STRIKE:
+			return strike_error(u, s, a.get("dir", Vector2i.ZERO), a.get("push_dir", Vector2i.ZERO), a.get("origin", u.pos))
+		BattleSkillDef.SURGE, BattleSkillDef.ZONE, BattleSkillDef.GROUND:
+			return BattleCasting.error(self, u, s, a.get("anchor", u.pos), a.get("dir", Vector2i.ZERO), int(a.get("rot", 0)))
 	return ""
 
 
-func strike_targets(who: StringName) -> Array[Vector2i]:
-	var out: Array[Vector2i] = []
-	for sq: Square in board.all_squares():
-		if can_strike(who, sq.pos):
-			out.append(sq.pos)
+## A Strike is legal whenever its direction fits the shape and the whole shape lies on the
+## board (gdd_skills §2 area contract); an empty hit pattern is allowed.
+func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, push_dir: Vector2i, origin: Vector2i) -> String:
+	var shape := StringName(s.strike_shape)
+	if not StrikeShapes.is_legal_dir(shape, dir):
+		return "%s cannot be aimed in that direction" % StrikeShapes.shape_name(shape)
+	if not u.covers(origin):
+		return "the shape must start at a square of the striker"
+	for h in StrikeShapes.hits(shape, dir):
+		if not board.in_bounds(origin + h["o"]):
+			return "the shape does not fit on the board"
+	if s.kin_effect and KinRules.strike(u.kin()).get("push", false) and not Board.CARDINAL.has(push_dir):
+		return "choose the push direction"
+	return ""
+
+
+## Applies a legal action. Returns false (and changes nothing) if it is illegal.
+func apply(a: Dictionary) -> bool:
+	if check(a) != "":
+		return false
+	actions.append(a.duplicate(true))
+	var type: StringName = a["type"]
+	if type == &"end_turn":
+		BattleTurn.end_turn(self)
+		return true
+	if type == &"tamer":
+		BattleTamer.apply(self, a)
+	else:
+		var u := active()
+		if type == &"step":
+			ap -= BattleMoves.STEP_AP
+			BattleMoves.execute(self, u, BattleMoves.step_profile(), a["to"], "Step")
+		else:
+			_use_skill(u, a)
+		check_over()
+	# a monster that fell during its own turn has nothing left to do: the queue moves on
+	if not over and turn_owner != &"" and active() == null:
+		BattleTurn.end_turn(self)
+	return true
+
+
+func _use_skill(u: BattleUnit, a: Dictionary) -> void:
+	var slot: int = int(a["slot"])
+	var s := skill_in_slot(u, slot)
+	# a valid activation spends its AP and one use at activation, whatever happens later
+	ap -= s.cost()
+	u.used_round[slot] = round_number
+	u.used_battle[slot] = true
+	match s.kind:
+		BattleSkillDef.MOVE:
+			BattleMoves.execute(self, u, BattleMoves.profile_of(s), a["to"], s.display_name)
+		BattleSkillDef.STRIKE:
+			BattlePayload.resolve(self, [BattlePayload.strike(self, u, s, a.get("origin", u.pos),
+				a.get("dir", Vector2i.ZERO), a.get("push_dir", Vector2i.ZERO))])
+		BattleSkillDef.SURGE:
+			_declare_surge(u, s, a)
+		BattleSkillDef.ZONE:
+			var cells := BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
+			_next_gid += 1
+			emit(&"cast", {"who": u.id, "skill": s.id, "cells": cells.duplicate()})
+			for c in cells:
+				BattleBoardOps.land_zone(self, board.at(c), s.zone, _next_gid, u.id, s.duration,
+					a.get("dir", Vector2i.ZERO), a.get("anchor", u.pos))
+		BattleSkillDef.GROUND:
+			var cells := BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
+			emit(&"cast", {"who": u.id, "skill": s.id, "cells": cells.duplicate()})
+			BattlePayload.resolve(self, [BattlePayload.board(self, u, s, cells)])
+		BattleSkillDef.BUFF:
+			emit(&"cast", {"who": u.id, "skill": s.id, "cells": u.cells()})
+			for e in s.buff_effects:
+				apply_effect(u, "buff:%s:%s" % [s.id, u.id], e.tag, e.value_at(1), s.duration)
+
+
+func _declare_surge(u: BattleUnit, s: BattleSkillDef, a: Dictionary) -> void:
+	var ps := PendingSurge.new()
+	_next_surge += 1
+	ps.id = _next_surge
+	ps.owner = u.id
+	ps.skill = s
+	ps.cells = BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
+	ps.dir = a.get("dir", Vector2i.ZERO)
+	ps.anchor = a.get("anchor", u.pos)
+	ps.air_cells = BattleCasting.mountain_air_cells(self, u, ps.cells)
+	ps.cast_round = round_number
+	surges.append(ps)
+	for c in ps.cells:
+		board.at(c).surge = ps.id
+	emit(&"surge_declared", {"who": u.id, "skill": s.id, "cells": ps.cells.duplicate(), "surge": ps.id})
+
+
+func end_turn() -> bool:
+	return apply({"type": &"end_turn"})
+
+
+# ---------- preview and replay support ----------
+
+## A deep copy of the state that shares definitions and unit sheets. Used for dry runs by
+## the cast preview and the AI, so both read exactly what the resolution would do.
+func clone() -> Battle:
+	var b := Battle.new(board.clone(), content)
+	for id in roster:
+		b.units[id] = units[id].clone()
+	b.roster = roster.duplicate()
+	b.queue = queue.duplicate(true)
+	b.prev_queue = prev_queue.duplicate(true)
+	b.queue_idx = queue_idx
+	b.turn_owner = turn_owner
+	b.ap = ap
+	b.round_number = round_number
+	b.over = over
+	b.winner_side = winner_side
+	b.draw = draw
+	b.tie_side = tie_side
+	b.voidscar_from = voidscar_from
+	b.voidscar_ground = voidscar_ground
+	for s in surges:
+		b.surges.append(s.clone())
+	b.tamer_loadout = [tamer_loadout[0].duplicate(), tamer_loadout[1].duplicate()]
+	b.tamer_used = [tamer_used[0].duplicate(), tamer_used[1].duplicate()]
+	b._next_gid = _next_gid
+	b._next_surge = _next_surge
+	b._next_prop = _next_prop
+	b.muted = true
+	return b
+
+
+## Simulates an action on a copy: {ok, error, events, after}. For a Surge, `forecast` holds
+## the events of its detonation if nothing on the board changed until then.
+func preview(a: Dictionary) -> Dictionary:
+	var why := check(a)
+	if why != "":
+		return {"ok": false, "error": why, "events": [], "forecast": [], "after": null}
+	var sim := clone()
+	sim.apply(a)
+	var out := {"ok": true, "error": "", "events": sim.events.duplicate(true), "forecast": [], "after": sim}
+	if a.get("type") == &"skill" and not sim.surges.is_empty():
+		var s := skill_in_slot(active(), int(a["slot"]))
+		if s != null and s.kind == BattleSkillDef.SURGE:
+			var ahead := sim.clone()
+			var mine: Array[PendingSurge] = [ahead.surges[ahead.surges.size() - 1]]
+			BattleTurn.detonate(ahead, mine)
+			out["forecast"] = ahead.events.duplicate(true)
 	return out
 
 
-## Props on squares strictly between a and b block the line (sampled along the segment).
-func has_line_of_sight(a: Vector2i, b: Vector2i) -> bool:
-	var steps := 24
-	for i in range(1, steps):
-		var t := float(i) / steps
-		var p := Vector2(a).lerp(Vector2(b), t)
-		var cell := Vector2i(roundi(p.x), roundi(p.y))
-		if cell == a or cell == b:
-			continue
-		if board.at(cell).object != null:
-			return false
-	return true
-
-
-## Expected Strike damage (before the target's own reductions are known to the caller).
-func strike_damage(who: StringName, target: Vector2i) -> int:
-	var m: Monster = monsters[who]
-	var t := monster_at(target)
-	var sq := board.at(target)
-	if t == null:
-		match m.kin():
-			MonsterDef.Kin.BEAST, MonsterDef.Kin.SWARM, MonsterDef.Kin.ANCIENT:
-				return 2
-		return 1
-	var dmg := 2 if m.kin() == MonsterDef.Kin.BEAST else 1
-	if t.has_passive(&"thick_hide"):
-		dmg -= 1
-	if sq.zone != null:
-		dmg -= sq.zone["def"].strike_shield
-	return maxi(0, dmg)
-
-
-func strike(who: StringName, target: Vector2i, dir: Vector2i = Vector2i.UP) -> bool:
-	if not can_strike(who, target):
-		return false
-	var m: Monster = monsters[who]
-	ap -= strike_cost(who, target)
-	var t := monster_at(target)
-	var dmg := strike_damage(who, target)
-	_emit({"type": &"strike", "who": who, "target": target, "amount": dmg})
-	if t == null:
-		_damage_prop(board.at(target), dmg)
-	else:
-		if dmg > 0:
-			_hurt(t.id, dmg, m.def.strike_name())
-		if t.is_alive():
-			match m.kin():
-				MonsterDef.Kin.SCALED:
-					_displace(t, dir, 0)
-				MonsterDef.Kin.SPIRIT:
-					t.init_penalty_next += 1
-	if m.kin() == MonsterDef.Kin.ANCIENT and board.at(target).elevated:
-		board.at(target).make_rubble()
-		_emit({"type": &"collapse", "pos": target})
-	if m.kin() == MonsterDef.Kin.WINGED and m.is_alive():
-		_step_away(m, target)
-	_check_over()
-	return true
-
-
-func end_turn() -> void:
-	if over:
-		return
-	var m: Monster = monsters.get(turn_owner)
-	if m != null and m.is_alive():
-		_end_of_turn(m)
-	if over:
-		return
-	_next_turn()
-
-
-# ---------- turn flow ----------
-
-func _build_queue() -> void:
-	var entries: Array[Dictionary] = []
+## Canonical description of the whole mutable state, independent of presentation.
+func snapshot() -> Dictionary:
+	var us := []
 	for id in roster:
-		var m: Monster = monsters[id]
-		if not m.is_alive():
-			if has_charging(id):     # a dead caster's Surges still fire in its slot
-				entries.append({"id": id, "init": m.def.initiative, "base": m.def.initiative, "side": m.side, "ghost": true})
-			continue
-		var eff := maxf(0.1, effective_stat(m, Stat.INIT) - m.init_penalty_next)
-		if round_number == 1 and m.side == ambush_side:
-			eff += AMBUSH_BONUS
-		m.init_penalty_next = 0
-		entries.append({"id": id, "init": eff, "base": m.def.initiative, "side": m.side, "ghost": false})
-		for k in range(1, m.def.tpr):
-			entries.append({"id": id, "init": maxf(0.1, eff - EXTRA_TURN_INIT_PENALTY * k),
-				"base": m.def.initiative, "side": m.side, "ghost": false})
-	if _tie_side < 0:
-		var totals := [0.0, 0.0]
-		for e in entries:
-			totals[e["side"]] += e["init"]
-		_tie_side = 0 if totals[0] <= totals[1] else 1
-	entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if a["init"] != b["init"]:
-			return a["init"] > b["init"]
-		if a["base"] != b["base"]:
-			return a["base"] > b["base"]
-		return roster.find(a["id"]) < roster.find(b["id"]))
-	# ties between the sides alternate (GDD §4.3)
-	var i := 0
-	while i < entries.size() - 1:
-		var a: Dictionary = entries[i]
-		var b: Dictionary = entries[i + 1]
-		if a["init"] == b["init"] and a["base"] == b["base"] and a["side"] != b["side"]:
-			if a["side"] != _tie_side:
-				entries[i] = b
-				entries[i + 1] = a
-			_tie_side = 1 - _tie_side
-			i += 2
-		else:
-			i += 1
-	queue = entries
+		var u: BattleUnit = units[id]
+		us.append([String(id), u.side, u.slot, u.pos, u.layer, u.hp, u.max_hp, u.on_field, u.defeated,
+			u.nullify, u.life_thread, u.effects.duplicate(true), u.used_round.duplicate(), u.used_battle.keys()])
+	var cs := []
+	for c in board.cells:
+		var z := []
+		if c.zone != null:
+			z = [String(c.zone.def.id), c.zone.gid, String(c.zone.owner), c.zone.level, c.zone.duration, c.zone.dir, c.zone.anchor]
+		var p := [] if c.prop == null else [String(c.prop.def.id), c.prop.hp, c.prop.uid]
+		var air := [] if c.air_prop == null else [String(c.air_prop.def.id), c.air_prop.hp, c.air_prop.uid]
+		cs.append([String(c.ground), c.level, c.height, p, air, z, c.surge])
+	var ss := []
+	for s in surges:
+		ss.append([s.id, String(s.owner), String(s.skill.id), s.cells.duplicate(), s.dir, s.anchor, s.air_cells.duplicate(), s.orphaned])
+	var qs := []
+	for e in queue:
+		qs.append([String(e["id"]), e["init"], e["extra"]])
+	return {"round": round_number, "turn": String(turn_owner), "ap": ap, "idx": queue_idx, "over": over,
+		"winner": winner_side, "draw": draw, "tie": tie_side, "units": us, "cells": cs, "surges": ss,
+		"queue": qs, "tamer_used": [tamer_used[0].keys(), tamer_used[1].keys()]}
 
 
-func _start_turn(entry: Dictionary) -> void:
-	if over:
-		return
-	turn_owner = entry["id"]
-	ap = 0
-	var m: Monster = monsters[turn_owner]
-	_fire_due_surges(turn_owner)
-	if over:
-		return
-	if entry["ghost"] or not m.is_alive():
-		_next_turn()
-		return
-	var sq := board.at(m.pos)
-	if sq.ground == Square.GroundType.VOIDSCAR:
-		_hurt(m.id, 1, "Voidscar")
-	elif sq.ground == Square.GroundType.BLIGHT and not m.has_passive(&"void_touched"):
-		_hurt(m.id, sq.level, "Blight")
-	if over:
-		return
-	if not m.is_alive():
-		_next_turn()
-		return
-	ap = AP_PER_TURN
-	m.momentum_bonus = 0
-	_emit({"type": &"turn_started", "who": m.id})
+func state_hash() -> String:
+	return var_to_str(snapshot()).sha256_text()
 
 
-func _next_turn() -> void:
-	if over:
-		return
-	queue_idx += 1
-	if queue_idx >= queue.size():
-		_end_round()
-	else:
-		_start_turn(queue[queue_idx])
-
-
-func _end_of_turn(m: Monster) -> void:
-	var sq := board.at(m.pos)
-	if sq.zone != null:
-		var z: Dictionary = sq.zone
-		var def: ZoneDef = z["def"]
-		if def.has_tag(ZoneEffect.Tag.PUSH):
-			_displace(m, z["dir"], def.collision_bonus)
-		elif def.has_tag(ZoneEffect.Tag.PULL):
-			_displace(m, _step_toward(m.pos, z["anchor"]), def.collision_bonus)
-	if not m.is_alive():
-		return
-	sq = board.at(m.pos)
-	if sq.ground == Square.GroundType.LAVA and not m.has_passive(&"heatproof"):
-		if not (sq.zone != null and sq.zone["def"].ignores_lava):
-			_hurt(m.id, sq.level, "Lava")
-
-
-func _end_round() -> void:
-	round_number += 1
-	var faded := Rules.tick_zones(board)
-	if faded > 0:
-		_emit({"type": &"zones_faded", "count": faded})
-	Rules.tick_ground(board)
-	for sq: Square in board.all_squares():
-		if sq.object == null:
-			continue
-		if sq.object["burning"]:
-			sq.object = null
-			sq.clear_ground()
-			sq.lay_ground(Square.GroundType.LAVA, 2)
-			_emit({"type": &"burned_down", "pos": sq.pos})
-		elif sq.has_tag("brittle") and (sq.ground == Square.GroundType.BLIGHT
-				or (sq.zone != null and sq.zone["def"].aspect == Aspect.Type.DARK)):
-			_damage_prop(sq, 1)
-	if over:
-		return
-	_late_game_hazard()
-	_build_queue()
-	if queue.is_empty():
-		_check_over()
-		return
-	queue_idx = 0
-	_emit({"type": &"round_started", "round": round_number, "first": queue[0]["id"]})
-	_start_turn(queue[0])
-
-
-# ---------- Surges (GDD §9.3, §11.2) ----------
-
-func _fire_due_surges(owner: StringName) -> void:
-	var groups := {}                       # gid -> Array[Square]
-	for sq: Square in board.all_squares():
-		if sq.surge == null or sq.surge["owner"] != owner:
-			continue
-		sq.surge["turns_left"] -= 1
-		if sq.surge["turns_left"] <= 0:
-			if not groups.has(sq.surge["gid"]):
-				groups[sq.surge["gid"]] = []
-			groups[sq.surge["gid"]].append(sq)
-	for gid in groups:
-		_detonate(groups[gid])
-		if over:
-			return
-
-
-func _detonate(squares: Array) -> void:
-	var sg: Dictionary = squares[0].surge
-	var type: SkillDef.SurgeType = sg["type"]
-	_emit({"type": &"surge_fired", "who": sg["owner"], "name": sg["name"],
-		"cells": squares.map(func(s: Square): return s.pos)})
-	var hits: Array = []                   # [Monster id, damage]
-	var debris: Array[Vector2i] = []
-	var residue_cells: Array[Square] = []
-	var paint_cells: Array[Square] = []
-	var collapse_cells: Array[Square] = []
-	var struck: Array[StringName] = []
-	for sq: Square in squares:
-		sq.surge = null
-		if type == SkillDef.SurgeType.FLOOD and sq.elevated:
-			_emit({"type": &"blanked", "pos": sq.pos})
-			continue
-		if sq.object != null:
-			_surge_hits_prop(sq, type, debris)
-			paint_cells.append(sq)
-			continue
-		var target := monster_at(sq.pos)
-		if target != null:
-			var dmg := surge_damage_at(sq, sg, target)
-			hits.append([target.id, dmg])
-			struck.append(target.id)
-		if sq.elevated:
-			if type == SkillDef.SurgeType.RIFT:
-				collapse_cells.append(sq)
-			paint_cells.append(sq)
-			continue
-		residue_cells.append(sq)
-		paint_cells.append(sq)
-	for h in hits:
-		if h[1] > 0:
-			_hurt(h[0], h[1], sg["name"])
-		else:
-			_emit({"type": &"absorbed", "target": h[0]})
-	for sq in collapse_cells:
-		sq.make_rubble()
-		_emit({"type": &"collapse", "pos": sq.pos})
-	var gt := _residue_ground(type)
-	for sq in residue_cells:
-		sq.lay_ground(gt, sg["residue"])
-	for sq in paint_cells:
-		sq.set_attunement(sg["aspect"])
-		if sg["painter"]:
-			for n in board.neighbors(sq.pos):
-				board.at(n).set_attunement(sg["aspect"])
-	_debris(debris)
-	# displacement after the damage (Flood pushes, Constrict pulls)
-	for id in struck:
-		var m: Monster = monsters[id]
-		if not m.is_alive():
-			continue
-		if type == SkillDef.SurgeType.FLOOD:
-			_displace(m, sg["dir"], 0)
-		elif sg["twist"] == SkillDef.Twist.CONSTRICT:
-			_displace(m, _step_toward(m.pos, sg["anchor"]), 0)
-	for h in hits:
-		var m: Monster = monsters[h[0]]
-		if h[1] > 0 and m.is_alive() and m.has_passive(&"skittish"):
-			_step_away(m, m.pos)
-	_check_over()
-
-
-## Damage of a pending Surge on a square for a monster standing there (preview-safe, no side effects).
-func surge_damage_at(sq: Square, sg: Dictionary, target: Monster = null) -> int:
-	if sg["type"] == SkillDef.SurgeType.FLOOD and sq.elevated:
-		return 0
-	var dmg: int = sg["value"] + Aspect.attunement_mod(sg["aspect"], sq.attunement, sg["native"])
-	if sq.zone != null:
-		dmg -= _zone_value(sq, ZoneEffect.Tag.SHIELD)
-	if target != null:
-		for a in allies_of(target):
-			if a.has_passive(&"bulwark") and Board.manhattan(a.pos, sq.pos) == 1:
-				dmg -= 1
-				break
-	return maxi(0, dmg)
-
-
-static func _residue_ground(type: SkillDef.SurgeType) -> Square.GroundType:
-	match type:
-		SkillDef.SurgeType.FLOOD:
-			return Square.GroundType.THORNBED
-		SkillDef.SurgeType.RIFT:
-			return Square.GroundType.BLIGHT
-	return Square.GroundType.LAVA
-
-
-func _surge_hits_prop(sq: Square, type: SkillDef.SurgeType, debris: Array[Vector2i]) -> void:
-	var obj: Dictionary = sq.object
-	if sq.has_tag("indestructible"):
-		return
-	if type == SkillDef.SurgeType.ERUPTION and sq.has_tag("flammable"):
-		if not obj["burning"]:
-			obj["burning"] = true
-			_emit({"type": &"ignite", "pos": sq.pos})
-		return
-	if type == SkillDef.SurgeType.FLOOD:
-		if obj["burning"]:
-			obj["burning"] = false
-			_emit({"type": &"extinguish", "pos": sq.pos})
-		if sq.has_tag("heavy"):
-			return
-	var dmg := Rules.SURGE_PROP_DAMAGE + (1 if type == SkillDef.SurgeType.RIFT and sq.has_tag("brittle") else 0)
-	if _damage_prop(sq, dmg, false):
-		debris.append(sq.pos)
-
-
-## Damages a prop; on 0 HP it shatters (Rubble). Returns true if it shattered.
-## With `debris_now` the debris is resolved immediately (otherwise the caller collects it).
-func _damage_prop(sq: Square, amount: int, debris_now: bool = true) -> bool:
-	if sq.object == null or sq.has_tag("indestructible") or amount <= 0:
-		return false
-	sq.object["hp"] -= amount
-	_emit({"type": &"prop_hit", "pos": sq.pos, "hp": maxi(0, sq.object["hp"])})
-	if sq.object["hp"] > 0:
-		return false
-	sq.object = null
-	sq.make_rubble()
-	_emit({"type": &"shatter", "pos": sq.pos})
-	if debris_now:
-		var one: Array[Vector2i] = [sq.pos]
-		_debris(one)
-	return true
-
-
-func _debris(origins: Array[Vector2i]) -> void:
-	var seen := {}
-	for d in origins:
-		for n in board.neighbors(d):
-			if seen.has(n):
-				continue
-			seen[n] = true
-			var m := monster_at(n)
-			if m != null:
-				_hurt(m.id, 1, "Debris")
-			var nsq := board.at(n)
-			if nsq.elevated:
-				nsq.make_rubble()
-				_emit({"type": &"collapse", "pos": n})
-
-
-# ---------- displacement (GDD §11.3, §12) ----------
-
-static func _step_toward(from: Vector2i, to: Vector2i) -> Vector2i:
-	var v := to - from
-	if v == Vector2i.ZERO:
-		return Vector2i.ZERO
-	if absi(v.x) >= absi(v.y):
-		return Vector2i(signi(v.x), 0)
-	return Vector2i(0, signi(v.y))
-
-
-func can_be_displaced(m: Monster) -> bool:
-	if m.has_passive(&"immovable"):
-		return false
-	if m.has_passive(&"deep_roots") and board.at(m.pos).attunement == m.aspect():
-		return false
-	for a in allies_of(m):
-		if a.has_passive(&"counterweight") and Board.manhattan(a.pos, m.pos) == 1:
-			return false
-	return true
-
-
-## Moves a monster 1 square by push/pull. Pending Surges don't block displacement —
-## pushing someone into a charging Surge is the point (GDD §12).
-func _displace(m: Monster, step: Vector2i, collision_bonus: int) -> void:
-	if step == Vector2i.ZERO or not m.is_alive() or not can_be_displaced(m):
-		return
-	var from := m.pos
-	var to := from + step
-	if not board.in_bounds(to):
-		_emit({"type": &"pinned", "who": m.id})
-		return
-	var tsq := board.at(to)
-	if tsq.object != null:
-		_emit({"type": &"collision", "who": m.id, "prop": tsq.object["name"]})
-		if not tsq.has_tag("heavy"):
-			_damage_prop(tsq, 1)
-		var dmg := 0 if m.has_passive(&"crashlander") else 1 + collision_bonus
-		if m.has_passive(&"thick_hide"):
-			dmg -= 1
-		if dmg > 0:
-			_hurt(m.id, dmg, "Collision")
-		return
-	var other := monster_at(to)
-	if other != null:
-		if m.has_passive(&"crashlander"):
-			_hurt(other.id, 1, "Collision")
-		return
-	if tsq.elevated and not board.at(from).elevated:
-		return
-	var fall := board.at(from).elevated and not tsq.elevated
-	board.occupants.erase(from)
-	m.pos = to
-	board.occupants[to] = m.id
-	_emit({"type": &"displaced", "who": m.id, "to": to})
-	if fall:
-		_hurt(m.id, 1, "Fall")
-	var thorn := _thorn_damage(m, to)
-	if thorn > 0 and m.is_alive():
-		_hurt(m.id, thorn, "Thornbed")
-
-
-## Free step to the free neighbour farthest from `away_from` (Dive, Skittish). Deterministic.
-func _step_away(m: Monster, away_from: Vector2i) -> void:
-	var best := m.pos
-	var best_score := -999.0
-	for n in board.neighbors(m.pos):
-		var sq := board.at(n)
-		if sq.object != null or board.occupants.has(n) or sq.surge != null:
-			continue
-		var score := float(Board.manhattan(n, away_from)) - _ground_risk(m, n)
-		if score > best_score:
-			best_score = score
-			best = n
-	if best == m.pos:
-		return
-	board.occupants.erase(m.pos)
-	m.pos = best
-	board.occupants[best] = m.id
-	_emit({"type": &"displaced", "who": m.id, "to": best})
-	var thorn := _thorn_damage(m, best)
-	if thorn > 0:
-		_hurt(m.id, thorn, "Thornbed")
-
-
-func _ground_risk(m: Monster, p: Vector2i) -> float:
-	var sq := board.at(p)
-	match sq.ground:
-		Square.GroundType.LAVA:
-			return 0.0 if m.has_passive(&"heatproof") else float(sq.level)
-		Square.GroundType.BLIGHT:
-			return 0.0 if m.has_passive(&"void_touched") else float(sq.level)
-		Square.GroundType.VOIDSCAR:
-			return 1.0
-	return 0.0
-
-
-# ---------- damage ----------
-
-func _hurt(id: StringName, amount: int, source: String) -> void:
-	var m: Monster = monsters[id]
-	if not m.is_alive() or amount <= 0:
-		return
-	m.hp = maxi(0, m.hp - amount)
-	_emit({"type": &"damage", "target": id, "amount": amount, "source": source})
-	if m.hp == 0:
-		board.occupants.erase(m.pos)
-		_emit({"type": &"slain", "who": id})
-		_check_over()
-
-
-func _check_over() -> void:
-	if over:
-		return
-	var alive := [0, 0]
-	for id in roster:
-		if monsters[id].is_alive():
-			alive[monsters[id].side] += 1
-	if alive[0] == 0 or alive[1] == 0:
-		over = true
-		winner_side = -1 if alive[0] == alive[1] else (0 if alive[0] > 0 else 1)
-		_emit({"type": &"battle_over", "winner_side": winner_side})
-
-
-# ---------- anti-stalling (GDD §13.1) ----------
-
-func _late_game_hazard() -> void:
-	if round_number < voidscar_from:
-		return
-	var best: Square = null
-	var best_score := -1
-	for sq: Square in board.all_squares():
-		if sq.ground == Square.GroundType.VOIDSCAR or sq.object != null \
-				or board.occupants.has(sq.pos) or sq.surge != null:
-			continue
-		var score := 0
-		for id in roster:
-			var m: Monster = monsters[id]
-			if m.is_alive():
-				score += Board.manhattan(sq.pos, m.pos)
-		if score > best_score:
-			best_score = score
-			best = sq
-	if best != null:
-		best.ground = Square.GroundType.VOIDSCAR
-		best.level = 1
-		best.timer = Square.PERMANENT
-		best.elevated = false
-		best.attunement = Aspect.Type.NONE
-		best.zone = null
-		_emit({"type": &"voidscar", "pos": best.pos})
-	else:
-		# the arena is fully consumed: everyone left takes 1 per round, so every battle ends
-		for id in roster:
-			if monsters[id].is_alive():
-				_hurt(id, 1, "Collapse")
+## Replays a recorded action log on this (freshly set up, not yet begun) battle.
+func replay(action_log: Array) -> void:
+	begin()
+	for a: Dictionary in action_log:
+		apply(a)

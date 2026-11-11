@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_4q4fx"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_r7ltp"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_vk6pf"]
+
+[sub_resource type="Resource" id="Resource_sllox"]
+script = ExtResource("1_4q4fx")
+pattern = "cardinal4"
+
+[resource]
+script = ExtResource("3_vk6pf")
+id = &"bamboo_stand"
+display_name = "Bamboo Stand"
+prop_class = "burst"
+hp = 2
+aftermath = Array[ExtResource("1_4q4fx")]([SubResource("Resource_sllox")])
+ground_left = &"plain"
+color = Color(0.56, 0.7, 0.36, 1)
+description = "Destroyed: 1 damage to monsters on the 4 cardinal neighbours. Leaves Plain."

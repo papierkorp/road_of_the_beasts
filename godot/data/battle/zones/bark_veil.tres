@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleZoneDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_qf3yp"]
+[ext_resource type="Script" path="res://battle/defs/battle_zone_def.gd" id="2_4icmj"]
+
+[sub_resource type="Resource" id="Resource_pq2vj"]
+script = ExtResource("1_qf3yp")
+tag = "shield"
+base = 2
+cap = 3
+
+[resource]
+script = ExtResource("2_4icmj")
+id = &"bark_veil"
+display_name = "Bark Veil"
+effects = Array[ExtResource("1_qf3yp")]([SubResource("Resource_pq2vj")])
+color = Color(0.56, 0.74, 0.5, 1)

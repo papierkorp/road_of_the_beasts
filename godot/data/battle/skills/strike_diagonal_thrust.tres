@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_q1wcm"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_liqxh"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_g8phx"]
+
+[resource]
+script = ExtResource("3_g8phx")
+id = &"strike_diagonal_thrust"
+display_name = "Diagonal Thrust"
+kind = "strike"
+description = "2 damage to every monster and prop in the shape (allies too), plus the Kin effect."
+status = "GDD Strike shape (Skills §8.1)"
+ap_cost = 3
+strike_shape = "diagonal_thrust"

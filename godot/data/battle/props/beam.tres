@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_2um16"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_acy38"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_jttno"]
+
+[resource]
+script = ExtResource("3_jttno")
+id = &"beam"
+display_name = "Beam"
+creatable_by_skill = false
+ground_left = &"plain"
+color = Color(0.56, 0.4, 0.28, 1)
+description = "Child prop of the Pagoda Column. Leaves Plain."

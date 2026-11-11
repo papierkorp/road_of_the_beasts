@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="BattleKitDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_kit_def.gd" id="1_c7nrx"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2_j577r"]
+[ext_resource type="Resource" path="res://data/battle/skills/run.tres" id="3_44j3c"]
+[ext_resource type="Resource" path="res://data/battle/skills/strike_jab.tres" id="4_2j5nt"]
+[ext_resource type="Resource" path="res://data/battle/skills/gloom_rift.tres" id="5_iovjs"]
+[ext_resource type="Resource" path="res://data/battle/skills/mire.tres" id="6_fo3ub"]
+
+[resource]
+script = ExtResource("1_c7nrx")
+species_id = &"gloom_wolf"
+skills = Array[ExtResource("2_j577r")]([ExtResource("3_44j3c"), ExtResource("4_2j5nt"), ExtResource("5_iovjs"), ExtResource("6_fo3ub")])
+surge_slot = 2
+utility_slot = 3
+initiative = 6.0
+reach = 3
+ap = 3
+notes = "Pack Hunter omitted: AP discounts are unresolved (T11)."
