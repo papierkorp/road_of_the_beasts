@@ -708,10 +708,61 @@ For the selected event/once-per-round combination, add the independently priced 
 | Hallowed | 4 × C | Existing Surge reduction 1; no automatic hit consumption |
 | Mountain creation with coupled Plain reset | 5 × C | Mountain plus its existing non-Voidscar → Plain cleanse, one package |
 | Mountain-destruction operation (final ground: [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | 2 × C | Source-specific; the operation is priced because it grants the capability; the environmental 1 collapse damage is not priced as skill damage; the price is the earlier draft, not re-derived |
-| Create prop (any [catalogue](gdd_battle.md#410-prop-catalogue-and-damage) entry) | Not priced (T02) | The earlier Wall/Tree 4, Rock 6 and Shrine 8 packages belonged to the removed catalogue. Open: one price per prop class and the valuation of `on_destroy` operations, aura effects and Beam spawning; a missing price never means zero |
+| Create prop (catalogue entry) | Draft: see [prop creation drafts](#prop-creation-price-drafts) | Per created prop; open items listed there; a missing price never means zero |
 | Relocate eligible prop (one square, orthogonal; contract in §4) | 6 per moved prop | Provisional component; contract confirmed, price not recalibrated |
 | Direct Rubble creation, direct prop deletion | Not priced / not authorized by this table | Need explicit source/contract |
 | Voidscar alteration | Forbidden | No budget bypass |
+
+#### Prop creation price drafts
+
+**Working draft derived from existing rates, not validated balance and not a content approval (T02, tests T13).** Price per created prop = base + extras; the cast adds the usual anchor fee and AP efficiency once. Aftermath that only happens when someone destroys the prop uses the 50 % rate of the telegraphed, avoidable Surge timing (it is previewed and avoidable); aftermath ground uses the permanent-state rates above for one cell.
+
+| Component | Draft price | Derived from |
+|-----------|-------------|--------------|
+| Base prop (solid, 1–2 HP) | 4 | former Wall/Tree package |
+| Sturdy prop (3 HP and/or `heavy`) | 6 | former Rock package |
+| Air layer instead of ground | +2 | ground/air coverage component |
+| Both layers | +2 on top of base | same component, once |
+| Aftermath damage | 1 per potentially hit square (`damage × cells × 2 × 50 %`) | one-shot damage, telegraphed timing |
+| Aftermath push (1 square) | 1 per potentially hit square | shared push timing rate |
+| Aftermath ground | permanent-state rate of the ground type (Lava I / Thornbed I / Blight I / Hearth / Umbra / Hallowed 4, Mossbed 6); Plain and Rubble free | ground package table |
+| Beam spawn | 4 per potential Beam at 50 % = 2 per cardinal square | base prop, conditional |
+| Aura (orthogonal neighbours) | 4 per aura prop (all four auras) | former Shrine package 8 minus base 4 |
+
+| Prop | Draft total |
+|------|-------------|
+| Stone Lion | 6 |
+| Clay Urn (8 squares) | 4 + 8 = 12 |
+| Bamboo Stand (4 squares) | 4 + 4 = 8 |
+| Paper Lantern | 4 + 4 = 8 |
+| Peach Tree | 4 + 6 = 10 |
+| Ancestor Tablet | 4 + 4 = 8 |
+| Bronze Gong (8 squares) | 4 + 8 = 12 |
+| Pagoda Column (4 Beams) | 6 + 8 = 14 |
+| Beam | not creatable separately |
+| Shrine / Totem / Banner / Wardstone | 4 + 4 = 8 each |
+| Wind Chime / Thunder Cloud (8 squares) / Gale Banner | 4 + 2 = 6 / 4 + 2 + 8 = 14 / 4 + 2 + 4 = 10 |
+| Pagoda Bridge | 6 + 2 = 8 |
+
+- **Open:** the aura price (4) is far below the matching ground package (4 per square, 16 for four neighbours) and must be tested for a prop-versus-zone choice (T13); whether aftermath on allies deserves any discount; the Beam spawn at 50 % is an analogy, not a derived rate.
+
+#### Price completion sketch for the remaining gaps
+
+**Working sketch derived only from existing rates (user asked for a complete draft on 2026-11-11 without further questions); not validated balance, no content approval, tests T13.** It fills the gaps named in T02 so that affected records can be evaluated; every row may change after tests.
+
+| Gap | Draft price | Derivation |
+|-----|-------------|------------|
+| Monster **Nullify** (next Surge damage on one monster becomes 0, one use) | 9 per protected monster | zone `shield` rate 1 × V × C × R with V = 3 (the Surge damage cap), one cell, one round = 3, times a ×3 premium because it ignores all later damage increases and all values |
+| **Level-II residue start** (hazard ground starts at level II) | 8 per cell (twice the level-I hazard package 4) | hazard damage equals level, so the package scales linearly; Hearth/Umbra/blessed ground have no levels and are unaffected |
+| Zone **`mend`** with `min(2, level)` | 3 × V × C × R with V = 2 (the cap) = 6 × C × R | priced at its maximum magnitude, as levelling is AP-paid recasting |
+| **Air recipients** for a zone effect or Surge damage | +2 per effect, once | the existing ground + air coverage component, applied by analogy to non-damage effects |
+| **Relocate** a prop one square | 6 per moved prop (unchanged) | kept provisional; the one-shot displacement rate 2 plus placement legality does not yet justify a change |
+| **2×2 body variants** (attacker or target) | +0 over the 1×1 reference | geometry mapping only; footprint is already priced per potential cell and a 2×2 is struck once per use |
+| Direct Rubble creation, direct prop deletion, Voidscar alteration | still not authorized | need an explicit source and contract |
+| Repeatable or team-wide event availability | still unpriced | event valuation remains T02/T04; no automatic round cap |
+
+- **Reading:** Nullify at 9 for one monster compares with zone shield V = 3 over three cells for one round (also 9) and is therefore not cheap; test with Spirit Shield-like loadouts in T13.
+- Tamer skills (Spirit Shield, Life Thread, Domain Glimpse and the others) are not priced: tamer skills have no construction points and use the once-per-battle loadout slot instead.
 
 - **Props:** prices grant no catalogue/access; retain empty-cell, `heavy` and interaction restrictions. Ordinary destruction has no generic surcharge; a prop's aftermath is part of its type, not a second authored operation, and never destroys Mountains.
 

@@ -10,6 +10,7 @@
 - **Schreibbereich:** nur `docs/`; einzige erlaubte Root-Ausnahme ist die Pflege dieser `CLAUDE.md`. Keine Änderungen an `godot/`, `html_prototype/` oder anderen Pfaden.
 - **Git/Nutzerarbeit:** keine Commits, Branchwechsel, Pulls, Resets oder sonstigen eingreifenden Git-Aktionen ohne ausdrücklichen Auftrag. Nutzeränderungen erhalten; nichts automatisch synchronisieren.
 - **Validierung:** Prototypen bestätigen nicht das aktuelle Design; Dokumentationsprüfung und Rechenproben sind keine Gameplay-/Balancevalidierung.
+- **Docs-Werkzeuge:** `docs/tools/battle_sim.py` (reduzierter Bot-Simulator, nur Standardbibliothek, vom Nutzer 2026-11-11 für die Zukunft freigegeben) und `docs/temp_kalkscript.py` (Rechenprüfung) liegen in `docs/` und liefern nur Indizien, keine Balance-/Preisfreigabe und keine Spielimplementierung. Der Simulator bildet den aktuellen GDD-Entwurf reduziert ab; bei Regeländerungen mitpflegen (Umfang im Docstring), Ergebnisse nur in `docs/temp_todo.md` (T13) festhalten.
 
 ## Working style
 
@@ -56,6 +57,7 @@
 | [`docs/gdd_skills.md`](docs/gdd_skills.md) | Alles zu Monster-Skills: Kit, Datenmodell, Profile, Effektverträge, Preise/AP, Slotentwicklung, Validierung, Kin-Strike-/Bewegungstabellen, Passives, Spezies-Zuordnungen, konkrete Skill-Records | Monsteridentität/Stats/Roster in `gdd_monsters.md`; Kampfauflösung in Battle; Meta-Integration in Overworld |
 | [`docs/gdd_overworld.md`](docs/gdd_overworld.md) | Welt, Expeditionen, Monstererwerb/-unterbringung, Wirtschaft, Meta-Fortschritt, Tamer-Skills, Ausrüstung, Battle-Loadout | Nur Meta-Integration der Monster-Skills, nicht deren Konstruktion/Kampfauflösung |
 | [`docs/temp_todo.md`](docs/temp_todo.md) | Offene Entscheidungen, Abhängigkeiten, Validierungsaufträge, aktuelle Übergabe | Arbeitsorganisation, keine zusätzliche verbindliche Regelsammlung |
+| `docs/tools/`, `docs/temp_kalkscript.py` | Temporäre Prüfwerkzeuge (Bot-Simulator, Rechenchecker) | Indizien, keine Regel- oder Preisquelle |
 | `CLAUDE.md` | Dauerhafte Arbeitsregeln und Agent-Wegweiser | Keine Balancewerte, detaillierten Spielregeln oder Übergabekopie |
 
 ### Zentrale Monster-Skill-Spezifikation
