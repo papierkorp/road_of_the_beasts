@@ -1,0 +1,25 @@
+{
+ "name": "test_mite_beast_jab",
+ "kin": "beast",
+ "stage": "core",
+ "subtier": "high",
+ "note": "test sheet for price comparison, not a roster entry or reachability claim",
+ "stats": {
+  "hp": 2,
+  "init": 9.0,
+  "move": 3,
+  "reach": 2,
+  "tpr": 2,
+  "ap": 2
+ },
+ "slots": [
+  {
+   "skill": "Beast Jab",
+   "level": 1
+  },
+  {
+   "skill": "Leap",
+   "level": 1
+  }
+ ]
+}

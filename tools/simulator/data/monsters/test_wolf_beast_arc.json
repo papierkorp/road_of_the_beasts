@@ -1,0 +1,25 @@
+{
+ "name": "test_wolf_beast_arc",
+ "kin": "beast",
+ "stage": "core",
+ "subtier": "high",
+ "note": "test sheet for price comparison, not a roster entry or reachability claim",
+ "stats": {
+  "hp": 8,
+  "init": 3.0,
+  "move": 2,
+  "reach": 3,
+  "tpr": 1,
+  "ap": 3
+ },
+ "slots": [
+  {
+   "skill": "Beast Arc",
+   "level": 1
+  },
+  {
+   "skill": "Run",
+   "level": 1
+  }
+ ]
+}

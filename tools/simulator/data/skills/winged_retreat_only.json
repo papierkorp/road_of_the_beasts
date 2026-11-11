@@ -1,0 +1,17 @@
+{
+ "name": "Winged retreat only",
+ "usage": "active",
+ "ap": 2,
+ "components": [
+  {
+   "type": "strike_extras",
+   "kin": "winged",
+   "kin_cells": 1,
+   "direction": true
+  }
+ ],
+ "sim": {
+  "action": "strike",
+  "shape": "jab"
+ }
+}

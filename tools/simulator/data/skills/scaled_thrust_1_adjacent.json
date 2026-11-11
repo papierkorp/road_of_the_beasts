@@ -1,0 +1,25 @@
+{
+ "name": "Scaled Thrust (1 adjacent)",
+ "usage": "active",
+ "ap": 3,
+ "components": [
+  {
+   "type": "damage",
+   "damage": 2,
+   "cells": 2,
+   "ground_air": true
+  },
+  {
+   "type": "strike_extras",
+   "kin": "scaled",
+   "kin_cells": 1,
+   "distant_cells": 1,
+   "direction": true
+  }
+ ],
+ "sim": {
+  "action": "strike",
+  "shape": "thrust",
+  "push": "adjacent"
+ }
+}

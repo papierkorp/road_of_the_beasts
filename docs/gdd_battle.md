@@ -1,5 +1,5 @@
 # GDD — BATTLE SYSTEM
-*Working Draft v6.0 — Options, not luck · companion file: gdd_overworld.md · playable reference: Godot project `godot/` (implements **v6**: 3v3 on 7×7, 1v1 duel, draft, 9 monsters) · `html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference · see §19 for what changed*
+*Working Draft — Options, not luck · companion specifications: [Monsters](gdd_monsters.md), [Skills](gdd_skills.md), [Overworld & Meta](gdd_overworld.md) · historical prototypes and test results: [§7](#7-technical--prototype)*
 
 ---
 
@@ -7,824 +7,567 @@
 
 Turn-based, isometric monster battles about **grid control**, fully deterministic and readable. Inspired by *Into the Breach*.
 
-**Battle modes:**
+- **This document:** general turns/events, runtime board state/interactions and generic damage/displacement.
+- **Monster definitions:** [gdd_monsters.md](gdd_monsters.md); **skills, costs and upgrades:** [gdd_skills.md](gdd_skills.md).
+- **Meta progression, tamer skills and loadout:** [gdd_overworld.md](gdd_overworld.md).
+- **Open decisions and validation tasks:** [temp_todo.md](temp_todo.md); working values here are not gameplay-validated.
 
-| Mode | Board | Role |
-|---|---|---|
-| 1v1 | 5×5 | duel / tutorial, early game |
-| 2v2 | 6×6 | step between duel and team battle |
+### 1.1 Battle Modes
+
+|   Mode  |  Board  |                                             Role                                            |
+|---------|---------|---------------------------------------------------------------------------------------------|
+| 1v1     | 5×5     | duel / tutorial, early game                                                                 |
+| 2v2     | 6×6     | step between duel and team battle                                                           |
 | **3v3** | **7×7** | **standard battle** — enough monsters for combos between allies, short enough for a session |
-| 5v5 | 9×9 | special battles only (bosses, tournaments), later |
+| 5v5     | 9×9     | special battles only (bosses, tournaments), later                                           |
 
-Modes follow the team size the player can field: 1v1 from the start, **3v3 and 2v2 from Foundation**, 5v5 special battles from Core Formation (gdd_overworld §4.5). The encounter chooses the mode.
+The encounter chooses a mode within the player's available team size; stage availability of each mode: [gdd_overworld §6.3](gdd_overworld.md#63-stage-unlock-table).
 
-**Why 7×7 for 3v3:** 6 monsters on 49 squares is about as crowded as 2 on 25 (1v1), so the pressure stays similar. 8×8 gives each monster more room to step out of a 3–4 cell Surge — exactly the "too easy to dodge" problem. An odd size also has a **centre square** for contested high ground and mirror-fair starts. Small kits (§9.5) keep 3v3–5v5 readable: every monster brings Move + Strike + its Surge + 1–2 utilities, not a skill bar.
+- **Why 7×7 for 3v3:** 6 monsters on 49 squares is about as crowded as 2 on 25 (1v1), keeping pressure similar; 8×8 leaves more room to escape a 3–4 cell Surge ("too easy to dodge"). An odd size provides a **centre square** for contested high ground and mirror-fair starts.
+- Small kits aim to keep 3v3–5v5 readable; kit size and rarity exceptions: [Skills §1](gdd_skills.md#1-the-kit).
 
-Setting, progression, economy, overworld: see **gdd_overworld.md**.
+### 1.2 Battle Design Pillars
 
----
-
-## 2. Battle Design Pillars
-
-1. **Control squares, not just units** — every skill claims several squares in a tetris shape; the board is the weapon
-2. **Deterministic & readable** — before confirming, the player sees exactly which squares a cast takes, levels up, cancels, replaces or loses, what it does to ground and props, and where every pushed monster lands
-3. **Everything reacts, nothing deletes** — no delete button. Zones with **opposite effects** cancel, the same zone levels up, anything else replaces. Zones change ground by the aspect triangle, props react to aspects. All of it is small, data-driven rules. Nobody is ever locked out by their aspect
-4. **The Surge is the burst** — big damage (3+) only comes from a declared, charging, autonomous Surge. Small damage comes from Strikes (max 2), aspect ground (max 2 per trigger), collisions, falls and debris (1). Zones never deal damage themselves
-5. **Every threat has a real answer** — leave, put a Veil over it, change the ground under it, pick the right height for that Surge type, block with props, answer with your own Surge
-6. **Options, not luck** — fully deterministic and fully visible. Variety comes from many meaningful choices per turn (where to stand, which threat to create, which reaction to trigger), never from dice or hidden information
+1. **Control squares, not just units** — attacks use spatial hit patterns and zones create shared positional opportunities/risks. Attack targeting, recipients and the boundary to unit-bound utility follow the [central square-control contract](gdd_skills.md#2-data-oriented-skill-construction-kit). The board is the weapon
+2. **Deterministic & readable** — before confirming, see exactly which squares a cast takes, levels up, cancels, replaces or loses, its ground/prop effects and every pushed monster's landing
+3. **Everything reacts, nothing deletes** — no delete button; small, data-driven rules. Zone overlaps use definitions and opposite effects ([§4.6](#46-zones-effects-rules--opposites)): opposite levels subtract, cancelling at equal levels. Concrete skill effects change ground and props; zones and ground are independent ([§4.6](#46-zones-effects-rules--opposites)). Prop aftermath is fixed per type ([§4.10](#410-prop-catalogue-and-damage)).
+4. **The Surge is the burst** — big damage (3+) only comes from a declared, charging, autonomous Surge; all smaller damage sources and the zone rule: [§6.1](#61-the-damage-law) themselves
+5. **Every threat has a real answer** — leave, apply zone-based Surge damage reduction, change the ground under it, pick the right height for that Surge type, block with props, answer with your own Surge
+6. **Options, not luck** — fully deterministic and visible; variety comes from many meaningful turn choices (position, threat, reaction), never dice or hidden information
 7. **Low HP, high stakes** — one mistake can be fatal
-8. **Dynamic battlefields** — ground and props are resources; squares remember what happened on them, and Surges rewrite them
-9. **Archetypes over uniques** — 16 skill archetypes × 3 aspects × parameters; uniques for special monsters
+8. **Dynamic battlefields** — ground and props are resources; squares remember explicit board changes; Surges rewrite them only when their definition includes such effects
+9. **One skill source** — monster-skill authoring/access: [gdd_skills.md](gdd_skills.md), linked from [§5](#5-skill-integration). No fixed aspect or replacement element categories
 
 ---
 
-## 3. Core Battle Loop
+## 2. Battle Flow
 
-1. Battlefield generated (ground, props, contested high ground — §13)
-2. Pre-battle: draft monsters, place them in your start area, apply pills / arrays. Monsters start at their **current HP** (never above max; below max after earlier fights of an expedition, gdd_overworld §10.2). An **ambush** (attacking a wild monster from behind) gives the attacker's side a small round-1 initiative bonus (value tuned in playtest, proposed +1)
-3. **Each round:** one queue for all monsters of both sides, highest effective initiative first (§4.3)
-4. **On a monster's turn:**
-   1. its own Surges that are due **fire** (§9.3): damage, then residue, then repaint
-   2. start-of-turn ground effects on its square (Voidscar, Blight)
-   3. spend **2 AP** (Move / Strike / cast a zone or terrain / declare a Surge) — actions may repeat, no cooldowns (§4.4)
-   4. end of turn: zone displacement (push / pull, §12), then end-of-turn ground on the square it now stands on (Lava). *Thornbed fires whenever a monster enters it, including by push / pull*
-5. Round ends → zones and timed ground tick down (a fading zone repaints its squares), burning props burn down, late-game Voidscar spreads, initiative recalculated
-6. Battle ends when one side has no monsters left
+### 2.1 Core Battle Loop
 
----
+1. Battlefield generated (ground, props, contested high ground — §4.1)
+2. Pre-battle: choose monsters and place them in your start area; preparation/loadout: Overworld sources in [§5.2](#52-tamer-skills-and-battle-loadout). Start at **current HP** ([gdd_overworld §6.6](gdd_overworld.md#66-pills--medicines)).
+3. **Each round:** one queue for all monsters of both sides, highest effective initiative first (§2.2)
+4. **Monster's turn:** dispatch due events/effects, spend its **AP** on legal actions ([§2.3](#23-action-points)), then resolve end effects in [§2.4](#24-effect-timing-reference) order.
+5. Round ends → resolve the round-end events in [§2.4](#24-effect-timing-reference)
+6. Battle ends when one side has no monsters left. *(User decision 2026-11-11:)* the check happens after a payload/phase has fully resolved, including its defeats; the battle then ends immediately and pending Surges and autonomous aftermath lapse. If both sides have no monsters left after the same resolution, the result is a **Draw**; its BattleResult handling is defined with T19/T23.
 
-## 4. Monsters
-
-### 4.1 Monster Sheet
-
-```
-NAME | Size (1x1 / 2x2)
-──────────────────────────────────
-Kin           Beast | Winged | Scaled | Swarm | Spirit | Ancient
-Aspect        Force | Nature | Dark
-Rarity        Normal | Rare | Epic | Legendary
-Stage         Qi Gathering ... Sovereign (capped by player stage)
-
-HP            1–10
-Initiative    0.1–10.0
-Movement      squares per Move action
-Reach         1–3   Strike distance
-TurnsPerRound 1–3
-
-SKILLS: Move + Strike + 1 Surge + 1 utility (2 from Foundation) + 1 passive (§9.5)
-```
-
-### 4.2 Stats
-
-| Stat | Range | Function |
-|---|---|---|
-| HP | 1–10 | No defense stat — dead is dead |
-| Initiative | 0.1–10.0 | Position in the turn queue; **zones can drain it** |
-| Movement | int | Squares per Move action; zones can slow it |
-| Skill range | derived | Base per skill; **+1 on Elevated ground; zones can drain it** |
-| Reach | 1–3 | Strike distance (Manhattan); +1 on Elevated; `drain_range` lowers it (min 1); Reach ≥ 2 needs line of sight (props block) |
-| TurnsPerRound | 1–3 | Extra turns re-enter the queue at −3 initiative per extra turn |
-| Aspect | F/N/D | Triangle position, Surge type, zone family |
-| Kin / Rarity / Size | — | see §6 and gdd_overworld |
-
-Stat ceilings per stage: HP 4/6/8/10, Init 5/7/9/10, TPR 1/2/2/3, Move 3/3/4/4, Reach 1/2/2/3.
-
-**Every stat is paid for.** The stat shapes (§4.5) spend the same budget in different places: a fast monster acts first and may act several times in a row, so it must have less HP, less Reach or a weaker kit. A slow monster is punished in the turn order and gets that back in HP, Reach or a stronger Surge.
-
-**Effective stats** = base + modifiers from the zone on the square the monster currently stands on (+ Elevated bonus). Only one zone per square, so modifiers never stack in a pile — a square tells you exactly what it does.
-
-### 4.3 Initiative Rules
+### 2.2 Initiative Rules
 
 - **One queue for all monsters of both sides**, strictly by effective initiative, **recalculated every round**
 - A side may act several times in a row — that is the reward for initiative, not a bug
-- **Ties:** higher base initiative first; still tied → the sides alternate (the first tie of a battle goes to the side with the lower total initiative)
-- A drain zone (e.g. Mire: −2 init) can flip the order, giving a monster two turns back to back across the round boundary — a real tempo weapon
+- **Ties:** higher base initiative first; still tied → the sides alternate (the first tie of a battle goes to the side with the lower total initiative; if the totals are equal, to the player's side). *(User decision 2026-11-11:)* tied units of the same side act in their fixed loadout/start slot order (slot 1 first); an extra-turn entry follows its unit's main entry. EXP and other meta state never break ties.
+- An initiative-draining zone can flip the order, giving a monster two turns back to back across the round boundary — a real tempo weapon
 - Multi-turn monsters get one extra queue entry per extra turn, each at −3 initiative (min 0.1)
-- **Surge clock:** a Surge fires **at the start of its caster's next turn** (§9.3). In 1v1 that is the same moment as "the end of the opponent's turn"; in team battles every other monster has had its turn in between
+- **Surge clock:** dispatch under [§2.4](#24-effect-timing-reference) and the [central Surge profile](gdd_skills.md#surge). Initiative changes/extra turns mean other monsters are not guaranteed a turn before detonation.
+  - **Extra turns** *(user decision 2026-11-10)*: a Surge detonates at the caster's next queue entry, including an extra-turn entry, before that turn's start effects.
+  - **Dead caster** *(user decision 2026-11-10)*: a Surge whose caster was defeated is not cancelled and detonates at the **start of the next round**, before the queue; several such Surges resolve together phase by phase ([§6.2](#62-surge-resolution-integration)).
+  - **Unit-bound effects and caster death** *(user decision 2026-11-10)*: effects bound to a unit (buffs, debuffs, marks, self-boosts) end immediately when that unit is defeated or removed. Zones, ground, props and Surges stay with their remaining duration when their caster dies; there is no owner expiry.
+  - Each Surge is bound to its own caster's queue entry, so Surges of different casters are never due at the same event; same-event ties arise only among Surges of one caster or among orphaned Surges.
+  - **Tie reference for orphaned Surges** *(user decision 2026-11-11)*: the new round's initiative is computed before orphaned Surges detonate and serves as the queue reference for displaced units. Ties between sources (board operations) follow the dead caster's position in the previous round's queue; several Surges of one caster follow their cast order.
 
-### 4.4 Action Points
+### 2.3 Action Points
 
-```
-2 AP per turn
-Move                          1 AP
-Cast a zone / terrain skill   1 AP
-Declare a Surge               1 AP
-Self skills                   1 AP
-Strike                        2 AP  (the whole turn)
-Major Surge                   2 AP  (once per battle)
-```
+**Battle-AP per turn = the monster's AP stat** (2–5, [Monsters §2.1](gdd_monsters.md#21-the-stats)).
 
-**Every action costs at least 1 AP.** There are no 0-AP actions.
+- Pay the resolved monster action's authored Battle-AP cost: **at least 1 Battle-AP, never 0**. This does not redefine tamer/loadout usage.
+- AP evaluation and construction prices: [Skills §5](gdd_skills.md#5-construction-points-and-ap-efficiency); skill execution, development and access: [§5.1](#51-monster-skills-central-specification). Tamer/loadout costs use their own Overworld sources ([§5.2](#52-tamer-skills-and-battle-loadout)), not monster-action prices.
+- **Repetition:** use the resolved skill's [central repetition policy](gdd_skills.md#usage-and-repetition) together with AP, board and profile limits.
+  - Concurrent Surge casts follow the [central Surge profile](gdd_skills.md#surge), not a monster-wide charging cap.
+  - A repeatable zone may be recast to level it up; a round-limited skill must satisfy its declared policy.
+  - No generic multi-round cooldown system; existing skills gain no new cap implicitly.
+- **Positioning:** [movement and Strike profiles](gdd_skills.md#3-skill-execution-profiles) make repositioning compete with attacking for Battle-AP. Their authored prices, not a separate rule here, determine what fits in one turn; board control can place a target inside the Strike shape without a preceding move.
 
-**No cooldowns.** Any action may be used again in the same turn as long as AP last (Move + Move, Bog + Bog, Lava Field + Raise Ground …). The limiters are AP, the board, and one hard rule: **one charging Surge per monster**. A turn becomes a real choice between *repositioning*, *setting up* and *attacking*, instead of "whatever is off cooldown".
+### 2.4 Effect Timing Reference
 
-**Why Strike costs 2 AP:** a Strike can't be combined with a Move, so the target must already be within your Reach at the start of your turn — usually because a pull or the enemy's own position put it there. Hitting is a reward for board control, not something you can always do.
+**Generic timing reference:** integrates source-specific triggers from resolved definitions into the battle schedule; grants no new source permissions.
 
-### 4.5 Monster Identity — The 6 Axes
+|    Trigger    |                          When                         |                                                         Effects / events                                                        |
+|---------------|-------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| on_timer      | start of the caster's next turn, before anything else | Surge detonation                                                                                                        |
+| start_of_turn | beginning of the occupant's turn                      | start-turn ground damage (§4.7)                                                                                                        |
+| on_enter      | a monster enters the square (move, push, pull)        | entry-triggered ground damage or healing (§4.7)                                                                                                       |
+| while_inside  | continuous modifier or source availability             | Movement, initiative and Reach modifiers; zone-based Surge damage reduction is available while inside and applies on Surge damage |
+| end_of_turn   | end of the occupant's turn                            | 1. push / pull → 2. end-turn ground damage (on the landing square) → 3. `mend`                                                            |
+| round end     | after the last turn of the round                      | zones −1 round (expired zones are removed), burning props burn down, late-round Voidscar spreads, initiative re-sorted |
+| immediate / event-derived | on authored execution or the triggering event | Strike on use; collision / fall on impact; aftermath on prop destruction |
 
-```
-1. STAT SHAPE   glass cannon / anvil / skirmisher / berserker   (per individual monster, rolled with the Kin's lean — gdd_overworld §4.3)
-2. ASPECT       Force / Nature / Dark → Surge TYPE (Eruption / Flood / Rift), zone family, hazard ground, the colour it paints
-3. KIN          creature type → Strike, layer, stat lean, which utility archetypes it may take, Surge size access
-4. SURGE        its own named burst: type from aspect, shape + size from species, at most ONE twist (§9.4.2)
-5. PASSIVE      the rule-bender — biggest personality driver
-6. SIZE         1x1 vs 2x2
-```
+Order inside a turn:
 
-**Three layers build a monster** — nothing is invented from scratch per monster:
+1. Due Surges: damage → explicitly authored residue, if present, under the [central profile](gdd_skills.md#surge).
+2. Start effects.
+3. AP.
+4. End effects: displacement → end-turn ground damage → `mend`.
 
-| Layer | Decides | Example |
-|---|---|---|
-| **Kin** (body) | Strike, movement layer, stat lean, allowed utility archetypes, Surge size | Beast bites and is fast; only Ancient has a Major Surge |
-| **Aspect** (energy) | Surge type, zone family, hazard ground, attunement colour | Force → Eruption, Lava, Scorched |
-| **Species** (the monster) | its Surge (shape + ≤1 twist), 1 utility from the matrix, 1 passive | Blaze Tiger: *Magma Pounce* — O4 Eruption that must land next to the tiger |
+Entry effects apply when a monster enters a square, including by push / pull.
 
-**No fixed roles.** A Kin is not a class (Beast ≠ "damage dealer"). What a monster does for a team comes from its kit, so two Beasts can play completely differently. Team building means picking *combinations* — one monster pulls, another one Strikes; one floods the enemy into the other's Eruption.
+**Event-driven reactions** *(user decision 2026-11-11)*: reactions of event-driven passives collect during a payload and resolve after its step 5 (self retreat), one at a time in the initiative-queue order of the reacting units, on the board as it then stands. Their consequences (entry or ground damage, healing) apply normally but trigger no further passive reactions; each passive reacts at most once per triggering event. Defeated units do not react. Order within a turn is unchanged.
 
-**Design test:** one sentence per monster built from its Surge + its utility. If two monsters read the same, change the Surge shape or twist, the aspect or the utility.
-
-| Shape | HP | Init | TPR | Move | Reach | Feel |
-|---|---|---|---|---|---|---|
-| Glass cannon | 2 | 9.0 | 2 | 3 | 1 | commits fast, dies if its Surge is cut away |
-| Anvil | 8 | 2.0 | 1 | 1 | 2 | slow, hard to dislodge, threatens a radius it can't leave |
-| Skirmisher | 4 | 6.0 | 1 | 4 | 1 | never in its own Surge when it fires |
-| Berserker | 5 | 7.0 | 2 *(3 from Soul)* | 2 | 1 | escalates one Surge with Empower; TPR 3 opens with the Soul cap |
-| Balanced | 5 | 6.0 | 1 | 2 | 1 | no weakness, no spike — the kit decides |
-| Fragile | 3 | 6.0 | 2 | 2 | 1 | weak body, many turns; lives on its Surge |
+**Scheduling references:** exceptional Surge queue timing: [§2.2](#22-initiative-rules); combined-event ordering: [§6.2](#62-surge-resolution-integration); tamer/loadout activation windows: [§5.2](#52-tamer-skills-and-battle-loadout); remaining loadout details: T19/T20 in [temp_todo.md](temp_todo.md).
 
 ---
 
-## 5. Aspects (The Triangle)
+## 3. Monsters in Battle
 
-```
-        FORCE
-       ↗     ↘
-    DARK  ←  NATURE
-```
-**Force beats Nature · Nature beats Dark · Dark beats Force**
+Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, roster, progression): [gdd_monsters.md](gdd_monsters.md); skills (Strikes, kits, passives): [gdd_skills.md](gdd_skills.md); loadout integration: [§5.2](#52-tamer-skills-and-battle-loadout).
 
-| Aspect | Identity | Hazard ground | Zones (§9.5) | Surge type | Attunement |
-|---|---|---|---|---|---|
-| **Force** | aggression, heat | Lava | Ash Snare, Shockwave, Glare, Kiln Shell | **Eruption** | Scorched |
-| **Nature** | growth, flow | Thornbed | Bog, Gale, Spore Cloud, Bark Veil | **Flood** | Overgrown |
-| **Dark** | corruption, drain | Blight | Grasping Shade, Void Pull, Mire, Shade Veil | **Rift** | Cursed |
+### 3.1 Effective Stats
 
-### 5.1 Where aspect matters
+**Effective stats** combine the base sheet with all applicable, authorized modifiers, including zone, ground, height, prop and skill/passive sources.
 
-1. **Skills and zones** carry an aspect — the colour a zone or Surge repaints with
-2. **Surge type** — Eruption, Flood or Rift (§9.3)
-3. **Ground** — each aspect has one hazard ground; zones change ground by the triangle (§7.3)
-4. **Attunement** on squares (§7.5) — neutral at the start of every battle. Zones and Surges are **+1 on squares of their own aspect, −1 on squares of the aspect that beats them** (min 1 for zone values, min 0 for damage)
+- One zone per square limits zone occupancy, not cross-source stacking. Modifier contracts: [Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts); stacking and expiry *(user decision 2026-11-11)*: the same source (same effect of the same owner) only refreshes duration and never adds magnitude; different sources (zone, ground, prop, skill, passive) add without a cap; only the existing stat floors apply (Movement and Reach min 1, Initiative min 0.1). A timed unit effect with a duration of N rounds lasts from application until the round end of the N-th following round (round-end tick, [§2.4](#24-effect-timing-reference)); it ends earlier with its defeated or removed bearer ([§2.2](#22-initiative-rules)).
+- Board sources below are not an exhaustive modifier catalogue.
 
-Nothing is locked out: attunement only nudges by ±1 and can always be repainted, and every aspect has a way to replace any ground. Fights between zones are **not** aspect checks — opposite effects cancel, the same zone levels up, otherwise replace.
+|     Stat    |                     Changed in battle by                     |
+|-------------|--------------------------------------------------------------|
+| Initiative  | `drain_init` / `quicken` (§4.6), Shrine (§4.10), Hearth (§4.7) |
+| Movement    | `slow` / `haste` (§4.6), Banner (§4.10); Step is always 1 square |
+| Reach       | +1 on a Mountain, `drain_range` / `extend` (§4.6), Umbra (§4.7), Totem (§4.10); min 1 |
 
----
+### 3.2 Monster Identity & Skill Access
 
-## 6. Kins (Monster Grouping)
-
-> **Aspect = what energy a monster wields. Kin = what kind of creature it is.**
-
-Kin maps to **Strike, Surge size, stat lean, movement layer and allowed utilities** — never to damage multipliers. There is only ONE weakness system (the triangle).
-
-| Kin | Body fantasy | Layer/Movement | Stat lean | Surge access | Locked out of |
-|---|---|---|---|---|---|
-| **Beast** | tiger, ape, wolf | ground, high move | balanced/skirmisher | Minor | Major Surge, Sanctify |
-| **Winged** | bird, moth, wyvern | **air** (Soul+), move 3+ | glass cannon | Minor; **immune to ground-anchored Surges while airborne** | Raise Prop, Major Surge |
-| **Scaled** | serpent, turtle, drake | ground, low move | anvil | Minor | Reposition |
-| **Swarm** | insects, rats | ground, move 2 | fragile, TPR 2+ | Minor, 2-cell shapes | Major Surge, Relocate |
-| **Spirit** | ghost, wisp | ground, **phasing** (moves through props) | low HP, high init | Minor | Raise Prop |
-| **Ancient** | golem, treant | ground, move 1 | max HP, TPR 1 | Minor + **only Kin with Major Surge** | Reposition, Air |
-
-### 6.1 Strike by Kin
-
-Every monster has a **Strike** (§9.4 #16): target = an enemy monster or a prop within **Reach** (Manhattan, §4.2; Reach ≥ 2 needs line of sight), **2 AP**, max 2 damage. Kin gives it a twist, never more damage than 2:
-
-| Kin | Strike | Effect |
-|---|---|---|
-| Beast | Bite | 2 damage |
-| Winged | Dive | 1 damage, then move 1 square away for free (the free neighbour farthest from the target) |
-| Scaled | Tail Sweep | 1 damage, push the target 1 square (direction chosen with WASD) |
-| Swarm | Gnaw | 1 damage, props take double (2) |
-| Spirit | Siphon | 1 damage, target −1 initiative next round |
-| Ancient | Slam | 2 damage to a prop or 1 to a monster, cracks Elevated under the target → Rubble |
-
-### 6.2 First Roster Draft — 9 monsters, 3 per aspect
-
-The stat shape is a property of the **individual monster** (gdd_overworld §4.3); the shapes below are the **reference individuals** — the typical roll of each species. Numbers are **Core Formation**-stage values (caps: HP 8, Init 9, TPR 2, Move 4, Reach 2 — gdd_overworld §4.6). Every monster also has **Move** and its Kin **Strike** (§6.1). Skills come from the matrix (§9.5); twists from §9.4.2.
-
-| Monster | Kin | Aspect | Shape · HP / Init / Move / TPR / Reach | Surge (type · shape · twist) | Utility | Passive |
-|---|---|---|---|---|---|---|
-| **Blaze Tiger** | Beast | Force | skirmisher · 5 / 7.0 / 3 / 1 / 1 | *Magma Pounce* · Eruption · O4 · **Pounce** | Lava Field | Momentum |
-| **Ember Hawk** | Winged | Force | glass cannon · 2 / 9.0 / 3 / 2 / 1 | *Cinder Dive* · Eruption · I3 · **Trail** | Shockwave | Skittish |
-| **Forge Golem** | Ancient | Force | anvil · 8 / 2.0 / 1 / 1 / 2 | *Crucible* · Eruption · ring of 4 · **Ring** | Raise Wall | Immovable |
-| **Moss Turtle** | Scaled | Nature | anvil · 8 / 3.0 / 1 / 1 / 2 | *Tidal Shell* · Flood · I3 · **Slow-burn** | Bark Veil | Deep Roots |
-| **Thorn Mites** | Swarm | Nature | fragile · 3 / 6.0 / 2 / 2 / 1 | *Bramble Tide* · Flood · I2 · **Lingering** | Thornbed | Thornwalker |
-| **Grove Wisp** | Spirit | Nature | skirmisher · 3 / 8.0 / 3 / 1 / 1 | *Spring Burst* · Flood · L3 · **Lob** | Gale | Adaptive |
-| **Gloom Wolf** | Beast | Dark | balanced · 5 / 6.0 / 2 / 1 / 1 | *Gloom Rift* · Rift · I3 / L3 · — (baseline) | Mire | Pack Hunter |
-| **Dusk Moth** | Winged | Dark | glass cannon · 2 / 9.0 / 3 / 2 / 1 | *Eclipse* · Rift · I3 → 4 cells · **Wide** | Shade Veil | Native Ground |
-| **Hollow Serpent** | Scaled | Dark | anvil-ish · 6 / 4.0 / 2 / 1 / 2 | *Coiling Rift* · Rift · L4 · **Constrict** | Void Pull | Thick Hide |
-
-One sentence each (design test):
-- **Blaze Tiger** — dives into melee range, lays Lava behind the enemy and pounces with a big Eruption next to itself.
-- **Ember Hawk** — strafes a burning line from where it stands, pushes enemies with Shockwave, and dodges away after taking a hit.
-- **Forge Golem** — walls itself in and erupts around its own body; you have to come to it.
-- **Moss Turtle** — a slow, heavy Flood that hits one turn later but harder, behind Bark Veils, and can't be pushed off its own ground.
-- **Thorn Mites** — weak little Floods that leave thorns for 3 rounds, on top of a permanent Thornbed they walk through unharmed.
-- **Grove Wisp** — throws weak Floods from far away, phases through props, and is the only one that can turn its shapes in battle.
-- **Gloom Wolf** — the baseline: Mire flips the turn order, its Rift does the rest; much stronger with an ally next to the target.
-- **Dusk Moth** — a wide, weaker Rift on Cursed squares, under a Shade Veil.
-- **Hollow Serpent** — pulls you in with Void Pull, then its Rift drags everything it hits toward the centre.
-
-Gaps on purpose (filled later): Swarm and Spirit in Force/Dark, Ancient in Nature/Dark, Snare/Hex for Force, Raise Ground, Sanctify, Shove, Reposition.
-
-**Kin × Aspect grid (launch roster ≈ 15 of 18):**
-
-```
-         Force            Nature           Dark
-Beast    Blaze Tiger      Vine Panther     Gloom Wolf
-Winged   Ember Hawk       Gale Crane       Dusk Moth
-Scaled   Magma Drake      Moss Turtle      Hollow Serpent
-Swarm    Cinder Wasps     Thorn Mites      Grave Rats
-Spirit   War Echo         Grove Wisp       Wailing Shade
-Ancient  Forge Golem      Elder Treant     Bone Colossus
-```
+- **Free themes**, not fixed aspects or replacement element categories: identity comes from species, Kin, stats, skills and passives. Themes impose no matchup triangle or combat modifiers; there is no attunement (§4.8).
+- Skill access and authored definitions: [gdd_skills.md](gdd_skills.md); battle integration: [§5](#5-skill-integration). Runtime ground types, zone effect tags, prop reactions and Surge behaviour use the resolved concrete definition, never the monster's theme.
+- Zone × zone compares effects (§4.6); zones never change ground ([§4.6](#46-zones-effects-rules--opposites)).
 
 ---
 
-## 7. The Square Stack: Zones & Ground
+## 4. Battlefield
+
+### 4.1 Battlefield Generation
+
+- Procedural ground + props, **point-symmetric around the centre** so both sides get the same distances (mirrored fairness check for every mode)
+- Contested Mountain squares near the centre, equidistant from both starts
+- Pre-placed props shape the opening
+- **Prop symmetry** *(user decision 2026-11-11)*: props are placed only as point-mirrored pairs, so the count is always even; the centre square of an odd board never holds a prop. The prop counts in the table below are draft values reduced to even numbers, not balance approval.
+- **Board distance** *(user decision 2026-11-10)*: Chebyshev, `max(|dx|, |dy|)` (diagonals count like orthogonal steps). Rules that need another measure name it explicitly.
+
+|   Mode  |  Board  |                    Start area per side                    |     Contested Mountain     | Props |
+|---------|---------|-----------------------------------------------------------|----------------------------|-------|
+| 1v1     | 5×5     | opposite corners                                          | 2 near the centre          | 2     |
+| 2v2     | 6×6     | back row                                                  | 2 near the centre          | 2 or 4 |
+| **3v3** | **7×7** | back two rows; players place their monsters in pre-battle | 3: the centre + 2 flanking | 4 or 6 |
+| 5v5     | 9×9     | back two rows                                             | 3–5                        | 6 or 8 |
+
+**Unvalidated opening target:** on 7×7, intended 5–6-row start separation should reward acting first with position, not a free hit: no Strike or Surge reaching the enemy line in round 1. The start-area table does not guarantee this; validation remains T13 in [temp_todo.md](temp_todo.md).
+
+### 4.2 Late-Round Pressure (Anti-Stalling)
+
+- From a set round, the square farthest from all living monsters becomes **Voidscar** each round (permanent, undestroyable). *Reading (user decision 2026-11-10):* each square's distance is measured to its nearest living monster and the largest value wins. **Ties** *(user decision 2026-11-10)*: all equally far squares become Voidscar together, with no tie-break. Start scales with board size (tunable: 1v1 round 6, 3v3 round 8).
+- **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round — so every battle ends.
+
+### 4.3 The Square Stack: Zones & Ground
 
 ```
-[ AIR    ]  flying prop | flying monster | empty — immune to ground Surges
-[ OBJECT ]  prop with tags (Tree: flammable · Wall: brittle · Rock: heavy · Pillar: indestructible) | empty
+[ AIR    ]  flying prop | flying monster | empty — immune to ground Surges (exception: attackers on a Mountain, §4.7)
+[ OBJECT ]  prop (§4.10; tag heavy = cannot be moved) | empty
 [ SURGE  ]  pending Surge marker | empty — shares shapes/placement with zones, never merges with them
-[ ZONE   ]  ONE timed zone (2 rounds) | empty — movement & tempo control
-[ GROUND ]  type (neutral: Plain | Rubble | Voidscar — aspect: Lava | Thornbed | Blight, lvl I–II, permanent or timed)
-            + height (Low | Elevated) + ATTUNEMENT (neutral | F | N | D)
+[ ZONE   ]  ONE timed zone (the skill's `duration`) | empty — control and support
+[ GROUND ]  type (neutral: Plain | Rubble | Voidscar — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra | Hallowed), always permanent
+            + height (Low | Mountain)
 ```
 
-**Rules:**
 - all layers can be active at once · **1 object, 1 pending Surge, 1 zone, 1 ground type** per square
-- zones may be placed on prop squares — the zone affects the prop only through the reaction table (§8.2); a monster can't stand there anyway
-- skills that create ground (Field, Raise Ground) need prop-free squares, except for the prop reactions in §8.2 (Lava Field on a Tree ignites it instead of laying Lava)
-- a pending Surge blocks *voluntary* movement like a temporary object and may land on props; displacement (push / pull / Flood) **can** move monsters into it — that is the combo
-- **zones = what you do to movement; ground = what the board remembers**
+- zones may be placed on prop squares — the zone affects the prop only through the reaction table ([§4.11](#411-prop-reactions)); **Solid** props prevent monster occupancy ([§4.9](#49-props))
+- The existing immediate hazard-ground placement profile and coupled height/reset operation (§4.7) require prop-free squares, subject to explicit [§4.11 prop reactions](#411-prop-reactions). These are source-specific [board-operation requirements](gdd_skills.md#4-effect-and-board-operation-contracts); blocking flags are profile-scoped, not a universal empty-square test ([Skills §2](gdd_skills.md#interaction-fields))
+- pending Surges may land on props and normally block voluntary movement; path blocking/landing legality use the resolved [movement profile](gdd_skills.md#movement). Displacement (push / pull) **can** move monsters into their squares
+- **zones = what you do to a square for a while; ground = what the board remembers**
+- **2×2 bodies** *(user decision 2026-11-10; details below)*: a 2×2 monster occupies four squares of this stack.
+  - **Distance/Reach:** measured from the nearest covered square, for attacker and target.
+  - **Ground and zone triggers** (`start_of_turn`, `on_enter`): fire once per event if any covered square qualifies, never once per square.
+  - **Mixed ground** *(user decision 2026-11-10; supersedes a single “worst square” ground)*: every ground type present under the body takes effect **once**, hazards and blessings alike, whether it covers one square or several; no stacking. Several levels of the same hazard type: the highest level applies once.
+  - **Mountain** *(user decision 2026-11-10)*: +1 Reach only if all four squares are Mountain; climbing up costs 2 if any covered square climbs; displacement falls: [§6.3](#63-collision-fall--debris).
+  - **Movement and legality** *(user decision 2026-11-10)*: a step costs the highest movement cost among the newly covered squares (this includes the Mountain climb cost above). A stand or step is legal only if all four covered squares are legal; the body occupies one layer (ground or air) as a whole, and a Solid prop, a monster of the same layer or the board edge on any covered square makes it illegal. Squares in other layers do not block.
+  - **Overlap and shapes:** any overlapping covered square suffices (once per event or use); shape origin and pull direction for 2×2: [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants).
+  - **Entry and simultaneous ground triggers** *(user decision 2026-11-10)*: entry triggers (Thornbed, Mossbed) use only the ground types of **newly covered** squares, each type once; leaving a square triggers nothing. Damage and healing from ground triggers at the same timing point resolve **simultaneously and net**: HP = min(max HP, HP − damage + healing); the monster dies only if HP ≤ 0 afterwards. End-of-turn ground triggers use the squares covered after displacement. Scope: ground triggers of a 2×2 body; general combined-event ordering: [§2.4](#24-effect-timing-reference) and [§6.2](#62-surge-resolution-integration).
+  - **Several zones under one body** *(user decision 2026-11-11)*: every distinct zone (cast group) covering at least one square of the body takes effect **once**, regardless of how many covered squares it occupies; no per-square multiplication and no highest-level selection. Continuous stat modifiers, `shield` and end-of-turn `mend` of different zones add as different sources ([§3.1](#31-effective-stats), floors apply; `mend` nets with other same-timing ground triggers as above). Zone push/pull at turn end: each qualifying zone contributes one cardinal direction; opposite directions cancel, and the body moves one square only if exactly one cardinal direction remains (equal directions do not add distance); a zero or non-cardinal (perpendicular) sum means no movement, as for an exact-diagonal pull ([§6.5](#65-displacement)).
+  - **Healing, protection and adjacency** *(user decision 2026-11-11)*: Hallowed reduces Surge damage once if any covered square is Hallowed; Mossbed heals 1 once per entry if a newly covered square is Mossbed; zone `shield` and `mend` apply once per zone (see above) and add with Hallowed; Nullify is per monster regardless of body size. Nothing multiplies with the number of covered squares. Adjacency-based effects (Bulwark, Counterweight, aura props) treat a 2×2 as adjacent if at least one covered square is orthogonally adjacent to the source (nearest covered squares when the source is also a 2×2); the effect applies once.
+  - **Open (T09):** none left for the 2×2 board rules; air-layer open items are listed in the next bullet.
+- **Air layer** *(user decision 2026-11-10; air content needs Soul+)*:
+  - **Recipients:** every zone effect and every Surge/board effect authors its recipient layers explicitly; there is no default, and a definition without them is invalid. Strike recipients stay as in [Skills §8.1](gdd_skills.md#81-strike-by-kin).
+  - **Ground under flyers:** an air-layer monster ignores ground effects by default (hazards, blessings, movement cost, Mountain bonuses and fall damage). A ground type could be authored to affect the air layer, like zones and Surges; **none does for now** (content later).
+  - **Flight movement:** blocked only by air-layer occupants (air props, other flying monsters) and the board edge; Solid props, ground monsters and height do not block. Each square costs 1; Step stays 1 square.
+  - **Layer change:** a Soul+ Winged stays on the air layer permanently; there is no landing effect in the current scope *(user decision 2026-11-11)*.
+  - **Air props** *(user decision 2026-11-11; entries draft)*: air-layer props and one both-layer prop are part of the catalogue ([§4.10](#410-prop-catalogue-and-damage)). An air prop occupies only the air layer of its square: it blocks flight movement and air occupancy but not ground monsters, ground Surges or ground movement. Strikes hit it (ground and air coverage); a Surge hits it only with authored air recipients.
+  - **Air recipients beyond Strike** *(user decision 2026-11-10)*: zone stat effects, zone push/pull, healing/protection zones and Surge damage may each be authored with air recipients (explicit per effect, priced by the [air coverage component](gdd_skills.md#5-construction-points-and-ap-efficiency)); a Surge profile with air recipients is an explicit exception to the ground-only default of the stack above. Existing definitions keep their current recipients.
+  - **Winged counters:** no extra guarantee; Strikes, the Mountain rule and authorized zones/Surges are the counters, to be tested in T13.
+  - **Open (T09/T02):** concrete air-capable zone/Surge definitions and the prices of air coverage and air props.
 
-### 7.1 Square Data Model
+### 4.4 Square Data Model
 
-```json
+Illustrative **runtime board state only**, not a skill-authoring schema: entries store ownership, cast bindings, levels and remaining lifetime. Definitions resolve through the [shared monster-skill data model](gdd_skills.md#2-data-oriented-skill-construction-kit) and [validation](gdd_skills.md#7-validation-and-concrete-skill-records) (concrete skills: [gdd_skills.md](gdd_skills.md)) (reference map §5).
+
+```jsonc
 {
   "pos": [2,1],
   "ground": {
-    "type": "lava",          // plain | rubble | voidscar | lava | thornbed | blight
-    "level": 1,              // aspect grounds only (1–2) = damage per trigger
-    "timer": 2,              // null = permanent (Field skill) | rounds left (Surge residue)
-    "height": 0,             // 0 low | 1 Elevated (independent of type)
-    "attunement": "f"        // null | "f" | "n" | "d"   — see §7.5
+    "type": "lava",          // plain | rubble | voidscar | hallowed | lava | thornbed | blight | hearth | mossbed | umbra
+    "level": 1,              // hazard grounds only (1–2) = damage per trigger
+    "height": 0              // 0 low | 1 Mountain (independent of type)
   },
-  "object": { "name": "Tree", "hp": 2, "tags": ["flammable"], "burning": false },
+  "object": { "name": "Stone Lion", "hp": 3, "tags": ["heavy"] },
   "air": null,
-  "surge": { "owner":"wolf", "type":"rift", "aspect":"d", "name":"Gloom Rift", "value":3, "turns_left":1, "dir":null, "gid":"g78" },
+  "surge": { "def":"surge_definition_id", "owner":"wolf", "due":"next_owner_turn_start", "dir":null, "gid":"g78" },
   "zone": {
-    "def": "bog",            // zone definition id (aspect + effect list live there)
+    "def": "zone_definition_id", // reference to authored definition, not an embedded schema
     "gid": "g77",            // patch id: all cells of one cast
     "owner": "tiger",
     "level": 1,              // 1–3
-    "duration": 2,           // rounds left
+    "duration": 2,           // rounds left, starts at the skill's `duration`
     "dir": [1,0],            // push direction chosen at cast
     "anchor": [2,2]          // pull point chosen at cast
   }
 }
 ```
 
-Zone definitions are data: `"bog": { "aspect":"n", "effects":[ {"tag":"slow","base":1,"cap":2}, {"tag":"pull","base":1,"cap":1} ] }`. **Effective value** = `min(cap, base + level − 1) ± attunement`, min 1 (slow capped at 2; push/pull always 1). Values are computed live, so attunement changes show immediately.
+State stores zone level, not independent effect values; runtime values use effect definitions and [§4.6](#46-zones-effects-rules--opposites). This example supplies no missing caps or scaling rules.
 
-### 7.2 Lifecycles
+### 4.5 Lifecycles
 
-| Thing | Clock | Notes |
-|---|---|---|
-| **Zone** | 2 rounds by default (a skill may carry +1 from evolution, max 3, gdd_overworld §4.7), ticks at round end | on expiry the square is **repainted** with the zone's aspect |
-| **Pending Surge** | fires at the start of its caster's next turn (§9.3) | then removed; damage, then its **residue**, then **repaint** |
-| **Timed ground** | 2 rounds (Lingering: 3), ticks at round end | the residue of a Surge: its aspect's hazard ground at level I; on expiry → Plain (attunement stays) |
-| **Permanent ground** | none — stays until changed | changed by Raise Ground, the triangle rule (§7.3), a new ground, shattered props, debris, Voidscar |
+|         Thing        |                                                   Clock                                                  |                                                Notes                                                |
+|----------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| **Zone** | the resolved skill's duration; ticking follows [§2.4](#24-effect-timing-reference) | on expiry the zone is removed; no repaint. Authoring and upgrades: [gdd_skills.md](gdd_skills.md) |
+| **Pending Surge** | scheduler integration: [§2.4](#24-effect-timing-reference) | charge, removal and authored aftermath follow the [central Surge profile](gdd_skills.md#surge) |
+| **Ground**           | none — stays until changed | changed by authorized ground replacement/reset, authored Surge residue, destroyed props' aftermath ground or Voidscar spread; source restrictions and Voidscar immunity apply (§4.7); zones never change ground (§4.6) |
 
-**Principle:** *zones are temporary control, ground is the board's memory.* One clock per zone or timed ground — effects never carry their own timers (the clock's length is a property of the cast zone, not of its effects).
+- **Persistence:** zones have a duration, pending Surges a detonation timer; ground has no expiry clock. Neither Voidscar nor Lava fades: ground requires a change to disappear, subject to its exceptions.
+- Effects in one zone share its clock; separately authored status lifetimes remain permitted.
 
-### 7.3 Zones: Effects, Rules & Opposites
+### 4.6 Zones: Effects, Rules & Opposites
 
-**Effects** — zones are built only from these tags. Every effect has an **opposite**; zones are compared by effects, never by name.
+**Runtime zone effects** resolve referenced definitions using the tags below; authoring legality and effect contracts: [gdd_skills.md](gdd_skills.md); generic event order: [§2.4](#24-effect-timing-reference).
 
-| Effect | Trigger | Action | Opposite |
-|---|---|---|---|
-| `slow` | while inside | Move −value | `haste` |
-| `haste` *(reserved)* | while inside | Move +value | `slow` |
-| `drain_init` | while inside | initiative −value (turn order!) | `quicken` |
-| `quicken` *(reserved for zones; used by Shrine §8)* | while inside | initiative +value | `drain_init` |
-| `drain_range` | while inside | skill range and Reach −value (min 1) | `extend` |
-| `extend` *(reserved for zones; used by Sigil §8)* | while inside | skill range and Reach +value | `drain_range` |
-| `push` | end of your turn | move 1 in the **direction set at cast** | `pull` |
-| `pull` | end of your turn | move 1 toward the **anchor square set at cast** | `push` |
-| `shield` | when you take Surge damage | damage on this square −value | `expose` |
-| `expose` *(reserved)* | when you take damage | damage +1 | `shield` |
+- Every effect but `mend` has an **opposite**; compare zones by effects, never name.
+- Effects hinder or help; support zones use `haste`, `quicken`, `extend`, `shield` and `mend`.
 
-Effects hit **everyone** on the square — allies, enemies and the caster. Reserved effects have no zone yet; they exist so the table is complete. *(`mend` — heal at end of turn — stays reserved without an opposite.)*
+|                         Effect                        |           Trigger          |                      Action                     |    Opposite   |
+|-------------------------------------------------------|----------------------------|-------------------------------------------------|---------------|
+| `slow`                                                | while inside               | Movement −value (never below 1, Step unaffected) | `haste`       |
+| `haste`                                               | while inside               | Movement +value                                 | `slow`        |
+| `drain_init`                                          | while inside               | initiative −value (turn order!)                 | `quicken`     |
+| `quicken` *(also Shrine, §4.10)*                      | while inside               | initiative +value                               | `drain_init`  |
+| `drain_range`                                         | while inside               | Reach −value (min 1)                            | `extend`      |
+| `extend`                                              | while inside               | Reach +value                                    | `drain_range` |
+| `push`                                                | end of your turn           | move 1 in the **direction set at cast**         | `pull`        |
+| `pull`                                                | end of your turn           | move 1 toward the **anchor square set at cast** | `push`        |
+| `shield`                                              | when you take Surge damage | damage on this square −value                    | `expose`      |
+| `expose` *(reserved)*                                 | when you take damage       | damage +1                                       | `shield`      |
+| `mend`                                                | end of your turn           | heals `min(2, zone level)`, never above max HP  | none          |
+
+- Effects hit **everyone** on the square — allies, enemies and caster; placement matters because enemies can use your healing zone too.
+- `expose` remains reserved, with no approved zone.
+
+- **Level-to-value:** definitions supply base and cap. Where the existing level formula applies, **effective value** = `min(cap, base + level − 1)`, min 1 (slow capped at 2; push/pull always 1). Compute live, with no aspect modifier.
+- This formula is not a default for undefined scaling: `mend` heals `min(2, zone level)` *(user decision 2026-11-10; zone-level price still open)*; other missing effect bounds remain T02/T04 ([temp_todo.md](temp_todo.md)).
 
 **When a zone lands on a square that already holds one:**
 
-| Existing zone | Result |
-|---|---|
-| none | **new** |
-| **same zone** (same definition) | **levels up** (max III) and refreshes to 2 rounds; the patch id becomes the new cast |
-| **opposite** — any effect of one is the opposite of any effect of the other | both **cancel** — the square is empty |
-| anything else | **replaced** (level I) |
+|                                Existing zone                                |                                        Result                                        |
+|-----------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| none                                                                        | **new**                                                                              |
+| **same zone** (same definition)                                             | **levels up** (max III) and refreshes to its full `duration`; the patch id becomes the new cast |
+| **opposite** — any effect of one is the opposite of any effect of the other | **levels subtract:** equal levels cancel and the square is empty; otherwise the higher zone stays with the difference, its clock unchanged |
+| anything else                                                               | **replaced** (level I)                                                               |
 
-Examples: Bog (slow, pull) on Gale (push) → cancel · Shockwave (push) on Void Pull (pull) → cancel · Mire on Bog → replaced. There is no merging, so a square always shows exactly one zone with its real effects.
+Examples by effect, not retired skill names:
+- Equal-level `(slow, pull)` versus `(push)` → cancel; `(quicken, haste)` versus `(drain_init, slow)` → cancel.
+- Level I `(push)` versus level III `(slow, pull)` → the latter stays at level II; different definitions without opposite effects → replaced.
 
-**Zone × ground — the triangle rule.** When a zone is cast on an aspect ground:
+No merging: a square always shows exactly one zone with its real effects.
 
-| Zone aspect vs. ground aspect | Result |
-|---|---|
-| the zone's aspect **beats** the ground's (Force > Nature > Dark > Force) | ground **cleared** → Plain, attuned to the zone's aspect |
-| **same** aspect | ground **+1 level** (max II), timer unchanged |
-| the ground's aspect beats the zone's | nothing |
+**Zone × ground** *(user decision 2026-11-10)*: the aspect triangle and its clearing / strengthening rules are removed without replacement. Zones and ground stay independent: a zone never changes, suppresses or inverts ground, and ground never changes a zone. They combine only through their separate effects on the same square. Ground changes come only from the sources listed in §4.7; countering permanent hazard ground is a T13 test item.
 
-So a Force zone burns Thornbed away, a Nature zone cleanses Blight, a Dark zone smothers Lava. Neutral ground (Plain, Rubble, Voidscar) ignores zones. Nobody is locked out: every aspect also has Raise Ground and its own Surge residue to replace any ground (§7.4).
+### 4.7 Ground — neutral, hazard and blessed
 
-### 7.4 Ground — neutral + one hazard per aspect
+| Group | Ground | Effect |
+|-------|--------|--------|
+| Neutral | **Plain** | move cost 1 |
+| Neutral | **Rubble** | move cost 2; left by several destroyed props (catalogue, §4.10) and destroyed Mountains (when the destroying skill authors no ground change) |
+| Neutral | **Voidscar** | 1 damage at the **start** of your turn; permanent, spreads late-game (§4.2), nothing changes it |
+| Hazard | **Lava** I–II | damage = level at the **end** of your turn — *punishes staying* |
+| Hazard | **Thornbed** I–II | damage = level when you **enter** the square (move, push or pull) — *punishes moving* |
+| Hazard | **Blight** I–II | damage = level at the **start** of your turn — *punishes being there when your turn begins* |
+| Blessed | **Hearth** | initiative +1 while you stand on it (`quicken 1`) |
+| Blessed | **Mossbed** | heals 1 when you **enter** the square (move, push or pull), never above max HP — *rewards moving* |
+| Blessed | **Umbra** | Reach +1 while you stand on it (`extend 1`) |
+| Blessed | **Hallowed** | Surge damage on this square −1; replaced only if actual residue is laid there under the applicable ground rules. No automatic consumption on a Surge hit; without replacement it remains |
+| Height | **Mountain** | the only height state; combines with any ground type; +1 Reach for the unit there; **climbing up costs 2 movement**; **pushed off → 1 fall damage** (details below) |
 
-| Group | Ground | Effect | Attunement |
-|---|---|---|---|
-| Neutral | **Plain** | move cost 1 | any |
-| Neutral | **Rubble** | move cost 2; left by shattered props and collapsed Elevated | none |
-| Neutral | **Voidscar** | 1 damage at the **start** of your turn; permanent, spreads late-game (§13.1), nothing changes it | none |
-| **Force** | **Lava** I–II | damage = level at the **end** of your turn — *punishes staying* | Force |
-| **Nature** | **Thornbed** I–II | damage = level when you **enter** the square (move, push or pull) — *punishes moving* | Nature |
-| **Dark** | **Blight** I–II | damage = level at the **start** of your turn — *punishes being there when your turn begins* | Dark |
-| Height | **Elevated** | combines with any type. Effect on Surges depends on the type: Flood can't reach it, Rift collapses it, Eruption hits but lays no residue (§9.3). +1 skill range and +1 Reach for the unit there; **climbing up costs 2 movement**; **pushed off Elevated → 1 fall damage**; collapses to Rubble from debris; can be raised under a charging Surge | none |
+**Mountain rules:**
 
-**How aspect ground is made:**
+- Ground on a Mountain changes only through skills whose definition allows it.
+- Climbing up costs 2 movement, subject to [movement-profile exceptions](gdd_skills.md#movement); pushed off a Mountain → 1 fall damage ([§6.3](#63-collision-fall--debris)).
+- Removed only by an explicit Mountain-destruction operation (below); can be raised under a charging Surge. Type-specific Surge interactions: [central Surge profiles](gdd_skills.md#surge).
 
-- **Field skills** (Lava Field / Thornbed / Blight Field) lay **permanent** level I ground
-- **Surge residue** lays the Surge aspect's ground at level I as **timed** ground (2 rounds)
-- **Same type** on the square → +1 level (max II); the longer lifetime wins (permanent beats timed)
-- **Different type** → the new ground **replaces** the old one (a Flood on Lava leaves timed Thornbed — the Lava is gone)
-- **Raise Ground** cleanses any ground except Voidscar → Plain, neutral
-- Damage from ground is capped at 2 per trigger; one ground per square, so hazards never stack
+**How ground is made:**
 
-### 7.5 Attunement (the board's memory)
+- **Field effects** lay their specified level I hazard ground, also on Mountain
+- **Surge residue** applies the explicitly authored ground operation under the [central Surge profile](gdd_skills.md#surge) and [board-operation contract](gdd_skills.md#4-effect-and-board-operation-contracts); generic Surge execution alone lays no ground
+- **Blessing skills** lay blessed ground. It has no levels and is permanent; casting still spends the central authored AP price (§2.3)
+- All ground is **permanent**: it stays until something changes it (§4.5)
+- **Same type** on the square → hazards +1 level (max II), blessed ground stays as it is
+- **Different type** → the new ground **replaces** the old one under the applicable ground/source rules; this is not automatic conversion by a skill name or theme
+- **Coupled height/reset (Raise Ground):** every skill that creates height creates a Mountain; Raise Ground raises it and resets ground to Plain, including Lava but excluding Voidscar. This source-specific [board-operation contract](gdd_skills.md#4-effect-and-board-operation-contracts) grants no ground reset from height changes alone
+- **Destroying a Mountain** *(user decision)*: only a skill whose definition authors an explicit Mountain-destruction `board_changes` operation does it; any skill may be authored with it, none has it implicitly. Resolution:
+  1. The occupant takes **1 collapse damage**, an environmental damage like Voidscar, independent of any skill and not part of the skill's own damage (the Strike and Surge damage laws are unaffected).
+  2. The Mountain is removed.
+  3. The square's ground becomes the ground that same skill authors for it, if its definition can change ground on Mountain squares, otherwise **Rubble**.
+  - Voidscar is never replaced. Props are separate: prop aftermath damage and pushes never destroy Mountains (the ground a destroyed prop leaves never changes a Mountain square, [§4.10](#410-prop-catalogue-and-damage)). Order against the skill's damage and residue: [§6.2](#62-surge-resolution-integration) step 4.
+- **Air next to a Mountain** *(user decision; details 2026-11-10)*: a ground-layer monster standing on a Mountain can hit air-layer monsters on the **eight squares adjacent** to its own square with all of its attacks. For delayed Surges this is **fixed at cast**: the owner stands on a Mountain and the footprint square is adjacent to the owner's square at that moment; later movement or death of the owner changes nothing. A 2×2 attacker needs all four covered squares on Mountain (as for +1 Reach); adjacency is measured from the nearest covered square of each body, and an air-layer 2×2 is hit once if any covered square is adjacent. This is a board rule, not a skill property, and adds no skill price
+- Placing ground beneath an occupant is not entry; entry triggers occur when the occupant enters the square. Mossbed has no re-entry or per-turn limit *(user decision 2026-11-10)*: every entry heals 1, bounded only by movement
+- Blessed ground works for **everyone** on it, like a zone: an enemy can use your Mossbed too
 
-Every square has an **attunement**: neutral at the start, later Force / Nature / Dark.
+### 4.8 No Attunement
 
-| Event | Effect |
-|---|---|
-| A **Surge fires** on a square | square → the Surge's aspect |
-| A **zone fades** | its squares → the zone's aspect |
-| An **aspect ground** is laid (Field or residue) | square → that ground's aspect |
-| The triangle rule clears a ground | square → the zone's aspect |
-| **Raise Ground**, prop destroyed (Rubble), Elevated collapse | square → neutral |
-| Voidscar / Rubble / Elevated | cannot hold attunement |
+- Attunement is entirely removed: no square field, repaint events, strength modifiers or display. This section number remains as a reference note.
+- Ground types and height remain concrete board state; zone expiry only removes the zone. Surge aftermath applies residue only if explicitly authored as a `board_changes` effect.
 
-**Strength rule** (live, per square): a zone or Surge is **+1** on squares of **its own aspect**, **−1** on squares of the **aspect that beats it**, 0 otherwise (Force > Nature > Dark > Force). Zone values never drop below 1; Surge damage never below 0.
+### 4.9 Props
 
-**Why it works:** the board starts neutral so no monster is born disadvantaged. The *Surge is the main painter*: you deal damage, then your colour is left behind and strengthens your next zones and Surges there. The enemy repaints by firing Surges onto your territory. Display: a coloured strip with the name (Scorched / Overgrown / Cursed) on every attuned square.
+```
+SOLID   → cannot enter (every ground-layer prop)
+FLYING  → air layer (air content at Soul+); the Pagoda Bridge occupies both layers (§4.10)
+```
 
-### 7.6 Shapes (tetris)
+**Prop principles** *(user, 2026-11-10/11)*:
+- **No Field class:** ground-layer props are always Solid (Umbra ground already provides "Reach +1 while standing"). Air-layer props are the only other class.
+- **Fixed, previewed aftermath:** every prop has its own aftermath, fixed by its type and independent of who or what destroyed it and from which direction. It is shown in the cast preview. **No chain reactions:** aftermath damage hits monsters only, never props.
+- **Creatable by skill:** every prop type may be created by an authored prop source (empty cell required); creation prices are unvalidated drafts ([Skills §5](gdd_skills.md#prop-creation-price-drafts), T02). Board generation may pre-place any type.
+- **Prop damage rights:** damaging offensive sources (Strike, Surge) hit props like monsters; movement, support and zones damage props only through an explicitly authorized prop effect.
+- **No indestructible prop** *(user decision 2026-11-11)*: every prop can be destroyed; the former Pillar, Wall, Tree and Rock are replaced by the catalogue below.
+- **Timing, conflicts and symmetry:** destruction and aftermath order: [§6.2](#62-surge-resolution-integration) step 4; placement symmetry: [§4.1](#41-battlefield-generation).
 
-Every Surge, zone and terrain skill controls **several squares in a fixed shape family** (Move, Strike and Self skills don't use shapes):
+### 4.10 Prop Catalogue and Damage
 
-| Family | Cells | Orientations (incl. mirror) |
-|---|---|---|
-| I2 | 2 | 2 |
-| I3 | 3 | 2 |
-| L3 | 3 | 4 |
-| O4 | 4 | 1 |
-| T4 | 4 | 4 |
-| S4 / Z4 | 4 | 4 |
-| L4 / J4 | 4 | 8 |
+**Status: working draft** *(user chose the concept 2026-11-11; names, HP and aftermath values are calibration drafts until T13; creation prices T02)*. Classes: **inert** (nothing beyond ground), **burst** (damage on neighbouring squares), **residue** (leaves ground), **push** (displaces neighbours), **spawn** (creates child props), **aura** (works while standing).
 
-**Fixed shapes:** every skill has exactly **one shape family and one fixed orientation**, absolute on the board for both teams (e.g. Gloom Rift: vertical I3; Mire: T4). Shapes are tuned outside battle (overworld: skill variants / evolution, gdd_overworld §4.7) — in battle you only pick *where* to place it, plus the push direction for Currents, Floods and Tail Sweep. Only the passive **Adaptive** may rotate shapes in battle (`R` / right-click). Place by the **anchor** — the shape's centre-most cell — which must be within range (Manhattan, base + Elevated bonus − drains). All cells must be on the board; ground skills need prop-free squares; props need empty squares; zones and Surges may land on props. Directional skills (Currents, Flood) also take a direction, pull skills an anchor. The cast preview colours each square (**new / levels up / replaces / cancels / blocked**) and lists attunement strength (+1/−1 counts), ground and prop reactions, landing squares of displaced monsters and, for Surges, damage after ground and Veils.
+| Prop | Class | HP | While standing | On destruction | Ground left |
+|------|-------|----|----------------|----------------|-------------|
+| Stone Lion | inert | 3 | `heavy`: cannot be moved | nothing | Rubble |
+| Clay Urn | burst | 1 | — | 1 damage to monsters on the 8 neighbouring squares | Plain |
+| Bamboo Stand | burst | 2 | — | 1 damage to monsters on the 4 cardinal neighbours | Plain |
+| Paper Lantern | residue | 1 | — | nothing | Lava I |
+| Peach Tree | residue | 2 | — | nothing | Mossbed |
+| Ancestor Tablet | residue | 2 | — | nothing | Hallowed |
+| Bronze Gong | push | 2 | — | monsters on the 8 neighbouring squares are pushed 1 square away from the gong | Plain |
+| Pagoda Column | spawn | 3 | — | creates a Beam on each of the 4 cardinal neighbours that is free of props and monsters | Rubble |
+| Beam | inert | 1 | child prop, created only by the Column | nothing, spawns nothing | Plain |
+| Wind Chime *(air)* | inert | 1 | air layer only: blocks flight and air occupancy | nothing | — (ground unchanged) |
+| Thunder Cloud *(air)* | burst | 1 | air layer only | 1 damage to air-layer monsters on the 8 neighbouring squares | — (ground unchanged) |
+| Gale Banner *(air)* | aura | 2 | air layer only: air-layer monsters on orthogonal neighbours get `quicken 1` | aura ends | — (ground unchanged) |
+| Pagoda Bridge *(both layers, draft)* | inert | 3 | occupies ground and air layer of its square, blocks both | nothing | Rubble |
+| Shrine | aura | 2 | orthogonal neighbours get `quicken 1` | aura ends | Rubble |
+| Totem | aura | 2 | orthogonal neighbours get `extend 1` | aura ends | Rubble |
+| Banner | aura | 2 | orthogonal neighbours get `haste 1` | aura ends | Rubble |
+| Wardstone | aura | 2 | orthogonal neighbours take 1 less Surge damage (summed under [§6.1](#61-the-damage-law)) | aura ends | Rubble |
+
+**Air and both-layer props** *(user decisions 2026-11-11)*: air props never change ground; their aftermath damage reaches only air-layer monsters. The Pagoda Bridge is a draft concept: it needs an empty square in both layers, is hit by Strikes and by any Surge whose recipients include ground or air, takes a hit once per payload, and is the only prop with two layers. Its details, and all air-prop prices, are to be confirmed in T09/T02.
+
+**Aura props** *(user: auras add tactical depth and a prop-versus-zone choice)*: all four share one template (solid, 2 HP, orthogonal-adjacent, work for everyone including enemies) with one stat effect each from [§3.1](#31-effective-stats); the template is meant to be one parameterized definition. Wardstone needs early cap checking in T13.
+
+**Data model (draft)**
+
+```yaml
+prop_def:
+  id: clay_urn
+  class: burst            # inert | burst | residue | push | spawn | aura
+  layer: ground | air | both   # default ground
+  hp: 1                   # every prop is destructible
+  solid: true             # ground-layer props are always solid
+  tags: []                # heavy = cannot be moved
+  creatable_by_skill: true
+  aura: null              # class aura only: { area: orthogonal_adjacent, effect: { stat, modifier } }
+  on_destroy:             # fixed, previewed, direction-independent typed operations
+    - damage: { pattern: ring8 | cardinal4, amount: 1, recipients: monsters }
+    - push:   { pattern: ring8, direction: outward, distance: 1 }
+    - spawn:  { prop: beam, pattern: cardinal4, skip_if_occupied: true }
+    - ground: { set: plain | rubble | lava_1 | mossbed | hallowed }
+  reactions: []           # explicit-effect reactions (§4.11)
+  price_ref: TBD          # Skills §5 creation price, not defined
+```
+
+**Damage to props** *(draft)*: an ordinary Surge hit deals **2 damage** and intercepts the hit instead of hitting a monster there (ground-layer props are always Solid, so no monster shares the square); Strike damage and profile exceptions follow the [central execution profiles](gdd_skills.md#3-skill-execution-profiles); collision deals 1 to the prop (a `heavy` prop takes none, [§6.3](#63-collision-fall--debris)); fall, collapse and aftermath damage never affect props.
+
+**Aftermath resolution** *(user decisions 2026-11-11)*:
+- Ground left behind is laid in category (e) of [§6.2](#62-surge-resolution-integration) step 4; the Gong push resolves directly after (a) (before Cleanse), using the §6.2 tie rules.
+- Ground left behind never changes a Mountain square and never replaces Voidscar; on such squares the prop's damage, push and spawn still resolve, only the ground stays.
+- The Pagoda Column's Beams are the only prop-creating aftermath; Beams spawn nothing.
+- **Open (T02):** validation of the creation price drafts ([Skills §5](gdd_skills.md#prop-creation-price-drafts)) and valuation of `on_destroy` operations.
+
+### 4.11 Prop Reactions
+
+**Status: reduced to the one remaining tag.** The catalogue above defines aftermath, so the former ignite, extinguish and crumble reactions (Tree/Wall) no longer have a prop to act on.
+
+- Tags react only to **explicit effects of the concrete skill**, never monster themes or blanket aspect categories. Reactions are data (`prop_def.reactions`) and shown in the cast preview.
+- **`heavy`** (Stone Lion): cannot be moved by displacement or relocation.
+- The Surge profiles carry no prop-specific exceptions *(user decision 2026-11-11)*; see [Skills §3](gdd_skills.md#surge).
+- Zones on prop squares wait; once the prop is gone, the zone works normally there.
 
 ---
 
-## 8. Props
+## 5. Skill Integration
 
-```
-SOLID   → cannot enter (Wall, Rock, Tree, Pillar, Shrine)
-FIELD   → enterable, applies an effect to the monster on it (Sigil)
-FLYING  → air layer only (later, with the air layer at Soul+)
-```
+### 5.1 Monster Skills: Central Specification
 
-### 8.1 Damage, Shatter & Prop Types
+**Monster-skill definitions and skill-specific execution rules live only in [gdd_skills.md](gdd_skills.md).**
 
-A Surge square that contains a prop deals **2 damage to the prop and does not hit a monster there** (solid props can't be occupied). Props also take damage from Strikes (§6.1), collisions (1, §12) and reactions (§8.2). If a prop's HP reaches 0 it **shatters**: Rubble replaces the ground (neutral), and **1 debris damage lands on the four neighbouring squares** (also collapsing Elevated neighbours to Rubble).
+Battle resolves finished skills against the turn/event system (§2), board state (§4) and generic damage, displacement and collision (§6); no second skill schema, profile catalogue, point budget or AP price list.
 
-| Prop | HP | Tags | Notes |
-|---|---|---|---|
-| Wall | 2 | brittle | shatters into debris; Dark crumbles it |
-| Tree | 2 | flammable | burns (§8.2) |
-| Rock | 3 | heavy | can't be moved (Relocate, Flood); survives one Surge at 1 HP |
-| Pillar | — | indestructible | anchor (rare), nothing removes it |
-| **Shrine** | 2 | solid, effect | monsters orthogonally adjacent to it get `quicken 1` (initiative +1) — placed by Sanctify |
-| **Sigil** | 1 | field, effect | the monster standing on it gets `extend 1` (skill range and Reach +1) — placed by Sanctify; destroyed by any Surge or Strike on it |
+| Topic | Central source |
+|-------|----------------|
+| Kit, access and species/Signature restrictions | [§1](gdd_skills.md#1-the-kit) |
+| Data fields, footprint/placement, interaction flags and sight | [§2](gdd_skills.md#2-data-oriented-skill-construction-kit) |
+| Strike, Surge, movement presets and execution constraints | [§3](gdd_skills.md#3-skill-execution-profiles) |
+| Effects and explicit ground/height/prop operations | [§4](gdd_skills.md#4-effect-and-board-operation-contracts) |
+| Construction points, AP efficiency and budget ceilings | [§5](gdd_skills.md#5-construction-points-and-ap-efficiency) |
+| Slot levels 1–3, development, upgrades and replacement | [§6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades) |
+| Validation of skill records | [§7](gdd_skills.md#7-validation-and-concrete-skill-records); concrete skills: [gdd_skills.md](gdd_skills.md) |
 
-### 8.2 Prop Reactions
+Missing rules remain in [temp_todo.md](temp_todo.md), not implicit runtime defaults.
 
-Props stop being "just in the way": each tag reacts to a few aspect sources. Reactions are data (`prop_def.reactions`) and are shown in the cast preview.
+### 5.2 Tamer Skills and Battle Loadout
 
-| Tag | Force (Force zones, Lava Field, Eruption) | Nature (Nature zones, Flood) | Dark (Dark zones, Blight, Rift) |
-|---|---|---|---|
-| **flammable** (Tree) | **ignites** when a Force skill hits it (an Eruption ignites it instead of dealing prop damage): burns down at the next round end → Rubble + timed Lava I on its square | a Nature zone or Flood **extinguishes** a burning Tree; Bark Veil: +1 HP | — |
-| **brittle** (Wall) | — | — | crumbles: −1 HP per round while a Dark zone or Blight is on it, −1 extra when hit by a Rift |
-| **heavy** (Rock) | — | can't be moved by Flood; Flood deals it no damage | — |
-| **indestructible** (Pillar) | — | — | — |
+Battle resolves explicit effects from the human tamer's prepared loadout under general event/board rules, deterministically and with previews. Wild monsters retain monster skills, but have no tamer skills or human loadout.
 
-Zones on a prop square wait there: once the prop is gone, the zone works normally on that square.
+**Authoritative Overworld sources** (no monster-skill AP prices or permissions transfer):
+- [§6.4 Tamer Skills](gdd_overworld.md#64-tamer-skills): definitions, slots, access and usage.
+- [§2.1 Battle Loop](gdd_overworld.md#21-battle-loop) and [§7.9 Inventory and Loadout](gdd_overworld.md#79-inventory-and-loadout): preparation, visibility and loadout logistics.
+- Planned medicines and arrays: [§6.6](gdd_overworld.md#66-pills--medicines) and [§6.8](gdd_overworld.md#68-arrays-artifacts-for-places).
 
-**Bank shots:** aim a Surge so that a prop next to the enemy shatters — the debris hits the square beside it even if the enemy dodged out of the footprint. **A Wall you raise beside yourself will hurt you if a Surge breaks it.**
+**Tamer activation and confirmed skill rules** *(user decisions 2026-11-11)*:
+- **Window:** a slotted skill (once per battle, free) may be used during the turn of one of the tamer's own monsters, never inside a payload resolution or during enemy turns; it costs no AP and no turn and has a normal preview.
+- **Swap Places:** two own 1×1 ground-layer monsters trade squares; no range or LOS. Each counts as entering its new square (ground entry effects fire, as for move/push/pull).
+- **Urgent Order:** an own monster that has not acted this round is inserted directly after the current turn; its original entry of this round is removed (no double action). Extra-turn entries are not affected; the round-end re-sort is unchanged.
+- **Second Wind:** one own monster on the field regains 1 HP (never above max); it unlocks no monster healing.
+- **Life Thread:** set on one chosen own monster, effect and consumption as in [§6.1](#61-the-damage-law); it also protects in Deadly dungeons (death/injury details T23).
+- **Beast Swap:** the incoming monster takes the square and queue entry of the swapped-out monster (it acts this round only if that entry is still pending), arrives with its current HP and must have the same body size (1×1 for 1×1, 2×2 for 2×2). The swapped-out monster is not defeated and may be swapped back later; its pending Surges stay and detonate like orphaned Surges at the next round start ([§2.2](#22-initiative-rules)). Soul Tier gate unchanged.
+- Remaining integration details (other skills, loadout, source-specific resolution): T18–T20.
 
----
-
-## 9. Skills
-
-### 9.1 Skill Types
-
-```
-STRIKE   → small direct damage within Reach; universal (every monster, Kin twist)
-SURGE    → the burst damage; deals damage, lays residue, then repaints. One per monster.
-ZONE     → timed movement/tempo control (2 rounds): Snare, Current, Hex, Veil
-TERRAIN  → writes the ground/object layers: Field, Raise Ground (Elevated), Raise Prop (Wall), Sanctify (Shrine / Sigil)
-DIRECT   → one-time effect on a unit or prop: Shove, Relocate
-SELF     → Reposition, Channel, Ward, Empower
-```
-
-### 9.2 Skill Tiers
-
-ARCHETYPE (~80%) · UNIQUE (~20%) · SIGNATURE (Legendary, usually a Major Surge)
-
-### 9.3 The Surge Archetype
-
-A **Surge is a pending marker with a timer** — same shapes and placement as zones, its own slot, different lifecycle. **It changes the board twice: damage now, ground afterwards.**
-
-```
-MINOR SURGE
-  shape: per species (I2 … L4, see the roster §6.2), one family in a fixed orientation (§7.6); twists may change it (§9.4.2)
-  range: 3 (anchor), +1 on Elevated ground; twists may change it
-  charging: visible, blocks movement through its squares
-  fires: at the START of the caster's next turn (1v1: = end of the opponent's turn)
-         if the caster died, it fires when the caster's slot in the queue would have come up
-  autonomous: not cancelled by displacing / killing the caster
-  per-square result:
-    monster  → value, +1 on own-aspect squares, −1 on squares of the aspect that beats it, − Veil shield
-               (hits every monster on its squares — allies and the caster included)
-    prop     → 2 damage, shatters if destroyed (debris), plus the prop reaction (§8.2)
-    Elevated → depends on the Surge type (table below)
-  afterwards: every struck square gets the type's RESIDUE (timed ground, §7.4)
-              and is REPAINTED in the Surge's aspect (Scorched / Overgrown / Cursed)
-  cost: 1 AP — limiter is ONE charging Surge per monster
-  claims squares: can't be placed on squares already holding any charging Surge (the first one claims them)
-
-MAJOR SURGE (Ancient / Legendary Signature only)
-  shape: large area (up to half the board), range: long
-  cost: 2 AP, once per battle
-```
-
-**Surge types by aspect.** Same lifecycle for all three; they differ in residue, props and height:
-
-| Type | Aspect | Damage | Residue (timed ground, 2 rounds) | Props | Elevated |
-|---|---|---|---|---|---|
-| **Eruption** | Force | 3 | **Lava I** — burns at end of turn | Trees ignite | hit normally, **no residue** there (lava runs off) |
-| **Flood** | Nature | 2 | **Thornbed I** — hurts when entered | pushes struck monsters 1 square in the direction set at cast (into the thorns it just laid); extinguishes burning Trees; heavy props block it | **can't reach it** (square blanked) |
-| **Rift** | Dark | 3 | **Blight I** — hurts at start of turn | brittle props crumble | **collapses** to Rubble, the monster on it still takes damage |
-
-So Elevated is a real decision: high ground is safe against a Flood, normal against an Eruption, and a trap against a Rift.
-
-**The Surge counter menu** (a Surge with fewer than 3 live counters isn't finished):
-
-| Counter | How |
-|---|---|
-| **Leave** | move out of its squares before it fires — but mind the residue it leaves |
-| **Veil it** | a Veil over its squares: shield 2 (±1 attunement, up to 3 with level) cuts damage 1:1 per square; recast to level up |
-| **Pick the height** | Raise Ground: blanks a Flood, no residue from an Eruption — useless against a Rift |
-| **Re-attune** | change the square's colour before it fires: remove the Surge's +1, or give it a hostile −1 |
-| **Fly over it** | the air layer is immune to ground Surges (Winged, Soul+) |
-| **Props / debris** | use props to soak squares — but remember the shatter hits next to them |
-| **Answer with your own Surge** | race it — but you can't claim squares already held by a charging Surge |
-| **Control the tempo** | Mire / Bog / Currents to steer where the target can stand; drain the caster's initiative to delay its next turn |
-
-### 9.4 The Archetype System
-
-The archetypes are the rule system; concrete skills come from the matrix (§9.5); monsters pick from it (§6.2). Three groups:
-
-| Group | Who has it | Archetypes |
-|---|---|---|
-| **Universal actions** | every monster | Move, Strike (#16, Kin twist §6.1) |
-| **Surge** | every monster, one each | #1 — type from aspect, shape from species, ≤1 twist (§9.4.2) |
-| **Utility pool** | 1 per monster (2 from Foundation stage, gdd_overworld §4.5), limited by Kin | #2–#15 |
-
-#### 9.4.1 All archetypes
-
-| # | Archetype | Type | What it does | Parameters |
-|---|---|---|---|---|
-| 1 | **Surge** | Surge | burst damage, residue, repaint | type, shape, size, twist |
-| 2 | **Field** | Terrain (ground) | permanent hazard ground: Lava / Thornbed / Blight | aspect, shape |
-| 3 | **Snare** | Zone | `slow` (+ optional side effect) | aspect, value, shape |
-| 4 | **Current** | Zone | `push` (direction set at cast) or `pull` (anchor set at cast), fires at end of turn | mode, shape |
-| 5 | **Hex** | Zone | `drain_init` / `drain_range` / `slow` bundle | which stats, amount |
-| 6 | **Veil** | Zone | `shield` vs Surges (+ aspect side effect) | aspect, amount |
-| 7 | **Raise Prop** | Terrain | places solid props (Wall) in a shape | prop HP, shape |
-| 8 | **Raise Ground** | Terrain | Elevated + cleanses ground | shape |
-| 9 | **Sanctify** | Terrain | places one effect prop (Shrine or Sigil, §8.1) | which prop |
-| 10 | **Shove** | Direct | one-time push/pull of a unit (needs sight) | distance, collision dmg |
-| 11 | **Reposition** | Self | blink / dash | distance |
-| 12 | **Channel** | Self | cleanse your square's zone, or +1 to your next cast | which |
-| 13 | **Ward** | Self | the next Surge damage on you −2 | amount |
-| 14 | **Relocate** | Direct | move a non-heavy prop | distance |
-| 15 | **Empower** | Self | +1 level on **your own** zone or +1 value on your charging Surge | boost, own-aspect only |
-| 16 | **Strike** | Universal | enemy monster or prop within Reach, 2 AP, max 2 damage, Kin twist (§6.1) | damage, twist |
-
-#### 9.4.2 Surge Twists
-
-A twist is **one** extra rule on a species' Surge. It must stay readable in the preview, and every twist pays for its advantage:
-
-| Twist | Rule | Price |
-|---|---|---|
-| — (baseline) | normal Surge | — |
-| **Pounce** | anchor must be adjacent to the caster; may use a 4-cell shape | range 1, you stand next to your own blast |
-| **Trail** | the shape must start on a square adjacent to the caster, in a straight line | no free aiming |
-| **Ring** | the shape is the caster's 4 neighbours (caster's square excluded) | range 0, the enemy must come close |
-| **Lob** | range +2 | damage −1 |
-| **Wide** | +1 cell | damage −1 |
-| **Slow-burn** | fires one caster turn later, damage +1 | the enemy gets a whole extra turn to answer |
-| **Lingering** | residue lasts 3 rounds instead of 2 | damage −1 |
-| **Constrict** | struck monsters are pulled 1 toward the anchor after the damage | damage −1 |
-
-### 9.5 Skill Matrix — archetype × aspect
-
-Aspect-flavoured archetypes get one concrete skill per aspect. Same archetype = same core rule, the aspect adds **one** side effect. Names are working titles.
-
-| Archetype | Force | Nature | Dark |
-|---|---|---|---|
-| **Field** (hazard ground) | **Lava Field** — damage at end of turn | **Thornbed** — damage when you *enter* | **Blight Field** — damage at *start* of turn |
-| **Snare** (slow) | **Ash Snare** — slow 1, ignites flammable props | **Bog** — slow + pull | **Grasping Shade** — slow 1 + range −1 |
-| **Current** (push / pull) | **Shockwave** — push (direction set), collision +1 | **Gale** — push (direction set), extinguishes burning Trees | **Void Pull** — pull to the anchor |
-| **Hex** (drain) | **Glare** — range −2 | **Spore Cloud** — initiative −1, slow 1 | **Mire** — slow, initiative −2, range −1 |
-| **Veil** (shield) | **Kiln Shell** — shield 2, occupants ignore Lava | **Bark Veil** — shield 2, props on it +1 HP | **Shade Veil** — shield 2, also cuts Strike damage by 1 |
-
-**Neutral archetypes** (Raise Prop, Raise Ground, Sanctify, Shove, Reposition, Channel, Ward, Relocate, Empower) have no aspect variant: the aspect only decides the attunement interaction (+1/−1) and the colour. Kin decides who may take them (§6, "Locked out of").
-
-**Kit rule:**
-
-```
-Monster = Move + Strike (Kin)                      — universal
-        + 1 Surge (aspect type, species shape, ≤1 twist)
-        + 1 utility from the matrix / neutral pool  — 2nd utility from Foundation
-        + 1 passive                                  — 2nd passive at Epic+ (gdd_overworld §5)
-```
-
-**Kit design tip:** pair the Surge with a utility of a *different effect family* (a Veil, a Snare, a Current) so there is always an answer in the kit. Aspects are **flavour + territory**: they decide which squares you paint and which zones get +1 there. The prototype Tiger's 7 skills are a test bench, not a kit.
-
-### 9.6 Sight
-
-Zone, terrain and Surge casts are placed by **range from the caster to the anchor** — no line of sight. Sight is needed for Shove and for Strikes with Reach ≥ 2; Self skills never need it.
-
-### 9.7 Skill Schema
-
-```json
-{
-  "id": "bog",
-  "name": "Bog",
-  "kind": "zone",                    // strike | surge | zone | ground | height | prop | direct | self
-  "aspect": "nature",
-  "zone": "bog",                     // zone definition id (kind: zone)
-  "ground": null,                    // kind: ground → lava | thornbed | blight
-  "archetype": "Snare",              // §9.4.1
-  "shapes": ["L3"],                  // exactly one tetris family
-  "orientation": 0,                  // fixed orientation index (absolute on the board)
-  "range": 3,                        // anchor range (Manhattan)
-  "cost": 1,                         // AP, always ≥ 1 (Strike / Major Surge: 2)
-  "surge_type": null,                // eruption | flood | rift — kind: surge only
-  "twist": null,                     // kind: surge only, §9.4.2
-  "directional": false               // Currents / Flood: caster sets a direction at cast
-}
-```
-**Rules:** no cooldowns (§4.4) · only `kind: surge` deals burst damage · ground damage capped at 2 per trigger · zone effect values/caps live on the **zone definition**, not on the skill · every zone must carry ≥1 effect tag · zones last 2 rounds by default (global constant, tunable); an evolved skill may add +1 round (max 3).
-
-### 9.8 Unique Skill Examples
-
-Mirror Step · Spatial Rend (remove a square 2 rounds) · Exile · Anchor (square immune to enemy displacement) · Conversion (your ground becomes another aspect) · Inversion (swap two rows' ground) · Mimicry · Devour Prop · Curse of Sight · Gravity Well (pull toward a square) · Twin Surge (Signature).
+**Unresolved integration contract:** source-specific resolution of the remaining tamer skills and loadout details are tracked in [temp_todo.md](temp_todo.md), T18–T20; this section supplies no default timing or cost.
 
 ---
 
-## 10. Passives Library
+## 6. Damage & Displacement
 
-**Terrain Identity:** Native Ground (your zones and Surges get +2 instead of +1 on own-aspect squares; ignores the −1) · Painter (fired Surges also repaint adjacent squares) · Adaptive (may rotate its skill shapes in battle) · Trailblazer (repaints squares it walks over) · Deep Roots (undisplaceable on own-aspect squares) · Purifier (adjacent enemy zones lose 1 round at round end) · Overgrowth (your zones start at level II)
+### 6.1 The Damage Law
 
-**Position & Movement:** Highlander (+2 init on Elevated) · Turret (can't move, +1 range and Reach) · Skittish (free 1-square move after taking Surge damage — to the safest free neighbour) · Phasing (moves through props) · Momentum (after a max-distance move, the next Surge this turn deals +1)
-
-**Displacement:** Crashlander (when pushed or pulled into a prop or monster, it takes no collision damage — the other side takes 1) · Immovable (ignores push/pull) · Counterweight (allies orthogonally adjacent to it can't be pushed or pulled)
-
-**Combat:** Thick Hide (Strikes and collisions deal 1 less, min 0) · Pack Hunter (Strike costs 1 AP if an ally is adjacent to the target) · First Blood (its first Strike each battle costs 1 AP) · Vengeful (after taking Surge damage, its next Strike costs 1 AP) · Scavenger (heals 1 when a prop within its Reach shatters) · Frenzy (+1 shape cell at 1–2 HP) · Bulwark (team: allies orthogonally adjacent to it take 1 less Surge damage)
-
-**Ground & Zone Resistance:** Sure-footed (ignores `slow`) · Clear Mind (ignores `drain_*`) · Heatproof (ignores Lava) · Thornwalker (ignores Thornbed) · Void-touched (ignores Blight) — the unit-level way of shrugging a specific effect.
-
----
-
-## 11. Damage System
-
-### 11.1 The Damage Law
-
-> **The Surge is the burst.** It is the only skill that deals more than 2 damage.
-> - **Strike:** max 2, the only attack that lands the instant it is used — it needs the target within Reach and the whole turn (2 AP)
-> - **Aspect ground:** its level (max 2) at its trigger — Lava at the end of your turn, Thornbed when you enter, Blight at the start of your turn. Voidscar: 1 at the start of your turn
-> - **Collision** (pushed into a prop or monster), **fall** (pushed off Elevated) and **debris** (prop shattered next to you): 1 each
+> **The Surge is the burst.** It is the only skill that deals more than 2 damage to monsters; prop damage has source-specific exceptions in the [central damage contracts](gdd_skills.md#4-effect-and-board-operation-contracts).
+> - **Strike:** max 2 against monsters; body-relative execution and authored AP follow the [central Strike profile](gdd_skills.md#strike)
+> - **Hazard ground:** its level (max 2) at its trigger; Voidscar: 1. Ground effects: [§4.7](#47-ground--neutral-hazard-and-blessed); generic schedule: [§2.4](#24-effect-timing-reference)
+> - **Collision** (pushed into a prop or monster; contract: [§6.3](#63-collision-fall--debris)), **fall** (pushed off a Mountain), **Mountain collapse** (environmental, independent of the destroying skill, §4.7) and **prop aftermath damage** (Clay Urn, Bamboo Stand; air-layer Thunder Cloud; §4.10): 1 each
 > - **Zones never deal damage.** Nothing else deals damage the instant it is cast
 
-### 11.2 Surge Lifecycle
+**Damage modifiers** *(user decision 2026-11-10)*:
+- **One calculation:** damage = authored/derived base + all applicable increases − all applicable reductions, summed in one step, then floored at 0. Order-independent; several sources **add** without a cap. Each source modifies only the damage types it names (zone `shield` and Hallowed: Surge damage; passives such as Thick Hide: as worded in [Skills §9](gdd_skills.md#9-passives)); no permissions transfer between zone-, ground- and passive-based sources.
+- **Zero damage still hits:** a hit reduced to 0 damage still applies its Kin effect, displacement, retreat and board operations; nothing is consumed (Hallowed remains).
+- **Ceilings apply to the base only** *(user decision 2026-11-11)*: the maxima above (Strike 2, hazard level, etc.) limit the authored/derived base damage; increases add on top afterwards, still floored at 0. This approves no increase source (`expose` stays reserved) and does not change skill prices or the no-damage-upgrade policy.
+- **Two protection kinds** *(user decision 2026-11-11)*: **value reduction** (zone `shield`, Hallowed, passives) joins the sum above. **Nullify** (e.g. the tamer skill Spirit Shield, and monster-skill equivalents) is an override applied *after* the sum: the Surge damage on the protected monster becomes 0 whatever increases exist. It is consumed by the first Surge damage instance that would deal at least 1 after the sum; a hit already reduced to 0 consumes nothing; one Nullify per monster, no stacking. Nullify is priced far above value reduction (Skills §5, open T02).
+- **Survive effect** (tamer skill Life Thread): at the defeat step ([§6.2](#62-surge-resolution-integration) step 2 and after category (a)) the first time the protected monster would fall, from any damage source, its HP becomes 1 and the effect is consumed; further simultaneous damage of that round changes nothing; later lethal damage defeats it normally.
 
-```
-1. DECLARE   → shape appears on the board: squares, damage, fire time shown
-2. CHARGE    → blocks movement through its squares
-3. WAIT      → every other monster gets its turn: leave, Veil, change the height, re-attune, ...
-4. DETONATE  → at the start of the caster's next turn, per square:
-               Elevated → by Surge type (§9.3)
-               prop     → 2 dmg, shatter + debris, prop reaction
-               monster  → value ±1 by attunement − Veil shield
-5. AFTERMATH → residue (timed ground) on every struck square, then the square is repainted in the Surge's aspect
-```
+### 6.2 Surge Resolution Integration
 
-**Autonomy:** a Surge is not cancelled by displacing, staggering or killing its caster. Only the counter menu (§9.3) stops it.
+- Charge/detonation/autonomy and profile rules: [Skills §3](gdd_skills.md#3-skill-execution-profiles); no second lifecycle here.
+- The turn scheduler (§2.1–§2.4) dispatches due Surges; board state/reactions (§4) and generic damage/displacement (§6) resolve their declared effects.
 
-### 11.3 Collision, Fall & Debris
+**Payload resolution order** *(user decision, applies to every Strike and Surge detonation payload)*:
+
+1. **Damage** to all struck monsters/props simultaneously.
+2. **Defeat:** units reduced to 0 HP are removed before anything else resolves, so they are neither displaced nor affected by later steps.
+3. **Displacement** (push/pull) of the survivors, one unit at a time, **the unit furthest along the movement direction first** (for pull: nearest the anchor first), so units in a line do not block each other needlessly.
+   - Sideways units use independent lanes; radial pushes of 1×1 targets from one body-relative shape have pairwise distinct destinations ([Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants)).
+   - Collision, fall and entry effects fire at the moment of each move ([§6.3](#63-collision-fall--debris), [§2.4](#24-effect-timing-reference)).
+4. **Board operations and residue** (ground, height, prop, Mountain destruction incl. its collapse damage; the destruction sequence is in [§4.7](#47-ground--neutral-hazard-and-blessed)). Fixed category order *(user decision 2026-11-10, (d) added 2026-11-11)*: (a) **removals** (prop destruction with its aftermath damage/push/spawn per [§4.10](#410-prop-catalogue-and-damage), Mountain destruction with its collapse damage), (b) **Cleanse**, (c) **height creation** (with its Plain reset), (d) **prop placement/relocation** *(user decision 2026-11-11; sees the final height)*, (e) **ground placement / residue**. Residue therefore lands after displacement: pushed units do not end in residue laid by the same payload unless they stand there afterwards, and entering it is not retroactive.
+   - **Prop destruction timing** *(user decision 2026-11-11)*: a prop reduced to 0 HP in steps 1–3 (payload damage or collision) stays on the board and keeps blocking until (a); further collisions with it change nothing. At (a) all 0-HP props are removed simultaneously, their aftermaths are evaluated against the board as it stands at the start of (a) (a 0-HP prop still counts as a prop, so a Beam is not created on its square), damage from several aftermaths on one monster adds, and monsters reduced to 0 HP are then defeated. A destroyed Bronze Gong's push resolves right after (a) and before (b), under the displacement and tie rules of steps 3 and this section; its collisions resolve as usual ([§4.10](#410-prop-catalogue-and-damage)).
+   - **Environmental damage in (a)** *(user decision 2026-11-11)*: prop aftermath damage and Mountain collapse damage form one simultaneous damage round on the occupants as they stand after displacement (step 3) and add. Defeat follows immediately after (a); only then (b) Cleanse, (c) height creation, (d) prop placement/relocation and (e) ground placement resolve, and defeated units receive none of them.
+   - **Same-category conflicts on one square** *(user decision 2026-11-11)*: within categories (c), (d) and (e), competing operations resolve one after another in current initiative-queue order (as for displacement ties). Each checks legality on the board left by the previous one: same hazard ground +1 level (max II), different ground replaces under the applicable ground rules, a second prop on an occupied square or a second height creation on a Mountain does nothing. Category (a) removals stay simultaneous.
+5. **Self retreat** ([Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants)) on the resulting board state.
+
+The order is fixed by this list, not by data-field position or per-skill authoring.
+
+**Legality at execution** *(user decision 2026-11-10)*: legality is checked per square and per operation on the board as it is at detonation, so a Surge can be countered by prop placement, height or ground changes made after the cast. A square or operation that is no longer legal (e.g. residue on a square now holding a prop, destroying a Mountain that is already gone) does nothing; everything else resolves normally. No retargeting, replacement square or refund of AP or usage.
+  - Whether a blocker also stops the rest of the footprint behind it depends on the Surge: **line-shaped footprints** are stopped by the first prop along the line from the anchor end (a Stone Lion on the middle square of a three-square line from one end also spares the squares beyond it), all other shapes lose only the blocked square *(user decision 2026-11-10)*. Which Surges are line-shaped is part of each Surge's authored shape and can differ from Surge to Surge ([Skills §3](gdd_skills.md#surge)); the prop's own interception and reactions follow the profile table.
+
+**Several Surges due at once** *(user decision 2026-11-10; applies to Surges of any casters, e.g. dead-caster Surges at the same round start)*: Surges due at the same event resolve **phase by phase together**: all damage simultaneously, then defeat, then displacement (still furthest-first), then board operations in the category order above, then self retreats. No order between Surges is needed. **Ties** *(user decision 2026-11-10: simultaneous, no precedence)*: damage from several sources on one target is applied simultaneously and adds; they create no source priority. Displacements keep the furthest-first rule; when two displaced units compete for one destination square or lie equally far along different directions, *(user decision 2026-11-10)* they resolve in their current initiative-queue order, and the later one collides under [§6.3](#63-collision-fall--debris). No other precedence between sources exists.
+
+Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). Confirmed autonomy is unchanged.
+
+### 6.3 Collision, Fall & Debris
 
 - Pushed or pulled into a **prop**: no move, 1 damage to the monster and 1 to the prop (heavy props take none)
-- Into a **monster**: no move, no damage · off the **board edge**: no move, no damage
-- **Off Elevated**: the move happens, 1 fall damage · onto Elevated from below: blocked like a prop, no damage
-- **Prop shattered**: 1 debris damage to the four neighbouring squares; Elevated neighbours collapse to Rubble
+- Into a **monster**: no move, **1 damage to each of the two monsters** · off the **board edge**: no move, no damage
+- **Collision contract** *(user decision)*: the monster-collision damage is derived runtime damage, not an authored component, and grants no bonus collision damage or retired collision perks. Passive modifiers such as Crashlander or Thick Hide change only the damage of the monster they name.
+- **Blocked multi-step displacement:** a unit moves step by step and stops on the last free square. The blocked step is the collision (once per displacement; remaining steps are lost). A pull whose path or anchor square is occupied follows the same rule; no alternative square
+- **Off a Mountain**: the move happens, 1 fall damage · onto Mountain from below: blocked like a prop, no damage
+- **2×2 displacement** *(user decision 2026-11-10; details T09)*: a push/pull moves the whole body one square; if any newly covered square is blocked, there is **one collision** and no move: the 2×2 takes 1 damage once, and each blocking monster and each blocking prop takes 1 (heavy props none). Falling from a Mountain deals the 1 fall damage only if **all four** covered squares land lower; a partial fall moves without fall damage. Pushing a 2×2 up onto a Mountain from below is blocked, with no damage, as soon as any covered square would climb. Radial pushes and pulls for 2×2: [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants). Landing on mixed ground: entry triggers use the newly covered squares ([§4.3](#43-the-square-stack-zones--ground)).
+- **Prop destroyed**: resolve the type's aftermath ([§4.10](#410-prop-catalogue-and-damage)); removal timing: [§6.2](#62-surge-resolution-integration) step 4(a); no destruction-method exceptions remain
 
-### 11.4 General Rules
+### 6.4 General Rules
 
-- No defense stat — resistances via attunement, Veils and passives
+- No defense stat — damage reduction via zone-based Surge reduction, ground-based Surge reduction (§4.7) and authored passives
 - All damage exact and previewed
-- A Surge whose caster died still resolves
+- Surge autonomy follows the [central Surge profile](gdd_skills.md#surge); its caster's death does not cancel it, and dead-caster timing is in [§2.2](#22-initiative-rules)
+- Generic trigger scheduling and turn order have one reference: [§2.4](#24-effect-timing-reference); source-specific execution remains in the resolved definition
 
-| Source | Fires |
-|---|---|
-| Surge detonation | start of the caster's next turn |
-| Strike | instantly (2 AP, within Reach) |
-| Lava | end of the occupant's own turn |
-| Thornbed | when a monster enters the square |
-| Blight / Voidscar | start of the occupant's own turn |
-| Collision / fall / debris | on impact / on shatter |
+### 6.5 Displacement
 
----
+- **Generic displacement:** cardinal, one square per trigger, with previewed landing.
+  - The scoped adjacent-hit eight-direction exception and coupled self retreat are defined only in [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants); they do not change zone/Surge direction rules.
+  - Other push sources use their authored cast/Strike direction; pull uses the board anchor fixed at cast.
+  - **Pull on an exact diagonal** *(user decision 2026-11-10)*: if the anchor lies exactly diagonally from the target (`|dx| = |dy|`), there is no unique cardinal direction and the pull does not move the target (other effects of the hit remain).
+  - Blocked moves: [§6.3](#63-collision-fall--debris); entry/end-event integration: [§2.4](#24-effect-timing-reference).
+- Zone effects: [§4.6](#46-zones-effects-rules--opposites). Authored spatial on-hit push/pull and delayed footprint-bound displacement get recipients, bindings and triggers from the [central displacement contracts](gdd_skills.md#4-effect-and-board-operation-contracts), not a second profile catalogue here. Ties and combined-effect order: [§6.2](#62-surge-resolution-integration).
 
-## 12. Displacement
-
-| Type | Mechanic |
-|---|---|
-| **Zone push** (Current) | at the **end of the occupant's turn**, 1 square in the **direction the caster set at cast** |
-| **Zone pull** (Snare / Current) | at the **end of the occupant's turn**, 1 square toward the **anchor** the caster set at cast |
-| **Shove** | direct, one-time, precise (needs sight) |
-| **Tail Sweep** (Scaled Strike) | push 1, direction chosen |
-| **Flood** | pushes struck monsters 1 in the direction set at cast |
-| **Constrict** (twist) | pulls struck monsters 1 toward the anchor |
-
-Always cardinal and one square per trigger; the landing square is visible in the preview. Blocked moves: §11.3.
-
-**Why end of turn:** at the start of a turn the target simply walks away again. At the end of its turn it lands where you sent it — in Lava, through Thornbed, in front of your Strike, or in a Surge that detonates before it can move again. The counterplay is visible: don't end your turn on a current.
+**Why end of turn:** at turn start the target could simply walk away again; at turn end it lands in Lava, through Thornbed, in front of your Strike or in a Surge detonating before it can move again. Visible counterplay: don't end your turn on a current.
 
 ---
 
-## 13. Battlefield Generation
+## 7. Technical & Prototype
 
-- Procedural ground + props, **point-symmetric around the centre** so both sides get the same distances (mirrored fairness check for every mode)
-- Contested Elevated squares near the centre, equidistant from both starts
-- Pre-placed props shape the opening
+### 7.1 Technical Notes (Battle)
 
-| Mode | Board | Start area per side | Contested Elevated | Props |
-|---|---|---|---|---|
-| 1v1 | 5×5 | opposite corners | 2 near the centre | 2–3 |
-| 2v2 | 6×6 | back row | 2 near the centre | 3–4 |
-| **3v3** | **7×7** | back two rows; players place their monsters in pre-battle | 3: the centre + 2 flanking | 4–6 |
-| 5v5 | 9×9 | back two rows | 3–5 | 6–8 |
+**Current design requirements (not an implementation-completeness claim):**
 
-On 7×7 the sides start 5–6 rows apart: no Strike and no Surge reaches the enemy line in round 1, so acting first gives position, not a free hit.
+- Godot 4 · **3D square grid, orthogonal camera ~45°** — never hex. Art pipeline: low-poly Blender + AI textures
+- Skill authoring follows the [shared data model](gdd_skills.md#2-data-oriented-skill-construction-kit), [effect contracts](gdd_skills.md#4-effect-and-board-operation-contracts) and [validation](gdd_skills.md#7-validation-and-concrete-skill-records) (concrete skills: [gdd_skills.md](gdd_skills.md)), not the historical Resource layout below
+- Battle logic should remain headless and engine-independent; runtime state: [§4.4](#44-square-data-model). Queue, board interactions and damage follow their owning sections here
+- Preview, AI and resolution must share deterministic rules and expose board reactions, authored aftermath and displacement landings; generic timing in [§2.4](#24-effect-timing-reference) does not imply complete event ordering
+- Effect comparisons, explicit prop reactions, scoped interaction fields and authored footprints/anchors resolve from their definitions. Movement blocking uses the resolved [movement profile](gdd_skills.md#movement), not a blanket marker rule
 
-### 13.1 Late-Round Pressure (Anti-Stalling)
+**Unresolved implementation contracts:** T02/T07/T09 in [temp_todo.md](temp_todo.md); prototypes do not settle these current design gaps.
 
-From a set round on, the square farthest from all living monsters converts to **Voidscar** each round (permanent, undestroyable). The start round scales with the board (tunable: 1v1 round 6, 3v3 round 8). **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round — so every battle ends.
+**Historical v6.0 implementation notes — not the current authoring schema or complete current runtime:**
 
----
+- One Resource per monster / skill / zone in `data/monsters`, `data/skills`, `data/zones`, typed by `MonsterDef`, `SkillDef`, `ZoneDef`.
+  - `GameData` indexes by `id` (= file name); startup validation checks duplicate ids, missing Surge/utility, unknown shapes/passives, species learn-list references, concrete Surge types/effects and stat ranges.
+  - The legacy Surge/utility requirement does not override the [open kit rules](gdd_skills.md#1-the-kit)
+- The headless board uses a 2D array of Square objects storing `{ ground{type, level, height}, object, surge, zone }`, with level-derived zone effect values. These fields are not an alternative current schema
+- Documented preview architecture: pure `preview_cell(skill, cell)` returns `new | level | replace | weaken | cancel | lost`, shared by preview, AI and unit tests. This does not establish implementation of revised contracts or optional residue
+- Shape orientations use base shapes (rotate + mirror, de-duplicated), anchor nearest the centroid. Current design instead requires explicit [footprint/anchor mappings](gdd_skills.md#footprints-and-placement); missing mappings remain T02
 
-## 14. Effect Timing Reference
+### 7.2 Prototype & Playtests
 
-| Trigger | When | Examples |
-|---|---|---|
-| on_timer | start of the caster's next turn, before anything else | Surge detonation |
-| start_of_turn | beginning of the occupant's turn | Voidscar, Blight |
-| on_enter | a monster enters the square (move, push, pull) | Thornbed |
-| while_inside | continuous modifier | slow, drain_init, drain_range, shield; Shrine / Sigil |
-| end_of_turn | end of the occupant's turn | 1. push / pull → 2. Lava (on the landing square) |
-| round end | after the last turn of the round | zones and timed ground −1 round (fading zones repaint), burning props burn down, Voidscar spreads, initiative re-sorted |
+**Historical implemented baseline (v6.0):**
 
-Order inside a turn: due Surges (damage → residue → repaint) → start effects → AP → end effects (displacement, then Lava).
+- `godot/`: main menu → draft (pick 3 of the 9 roster monsters, or 1 for a duel) → **3v3 on 7×7** or **1v1 on 5×5** against an AI team drawn from the rest; headless core (`godot/battle/core/`) implements historical v6.0, not the revised design.
+- `tools/html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference; neither prototype validates the current design.
 
----
+**Tools:**
 
-## 15. Tamer Skills (Player Influence)
+- `godot/tests/`: gdUnit4 suites for the rules; project layout in `godot/README.md`.
+- `godot/tools/sim.gd`: AI-vs-AI batch simulation with win rates per monster.
+- `godot/tools/smoke_ui.gd`: plays the player's side through the real UI headless.
 
-The tamer shapes; monsters fight. Each tamer skill can be used **once per battle**. The player brings a limited number of **slotted** skills into a battle (slots grow with cultivation stage, gdd_overworld §4.8).
+**Historical v6.0 simulation (60 AI-vs-AI 3v3 battles, random teams):**
 
-| Skill | Effect |
-|---|---|
-| Spatial Pull | move an own monster to any empty square |
-| Qi Suppression | an enemy monster −2 initiative next round |
-| Spirit Shield | the next Surge damage on one own monster is 0 |
-| Domain Glimpse | clear a tetromino of zones and reset its ground to Plain/neutral |
-| Beast Swap | (Soul+) exchange an active monster with one from the spatial space |
+- Sides win 50/50, ~14 rounds per battle with free rotation — **~19 rounds with fixed shapes**.
+- Reported outlier: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue).
+- Blight is the biggest damage source after Eruption; historical Veil zones absorb many hits (230 blocked); arena collapse decides ~1 in 5 battles.
+
+These results describe that historical ruleset, not current balance.
+
+Playtest planning and outstanding checks: [temp_todo.md](temp_todo.md), T13.
 
 ---
 
-## 16. Technical Notes (Battle)
+## 8. Design Tracking
 
-- Godot 4 · **3D square grid, orthogonal camera ~45°** — never hex
-- **Content = data files with a fixed template:** one Resource per monster / skill / zone in `data/monsters`, `data/skills`, `data/zones`, typed by its script class (`MonsterDef`, `SkillDef`, `ZoneDef` — only their exported fields exist, the inspector shows them as a form). `GameData` is the single registry: it finds every file automatically, indexes it by `id` (= file name) and validates the set on startup (duplicate ids, missing Surge/utility, unknown shapes or passives, aspect mismatches, stat ranges). A new monster = a new file
-- Battle logic **headless & engine-independent**: 2D array of Square objects; each square stores `{ ground{type, level, timer, height, attunement}, object, surge, zone }`; zone definitions are a data table (aspect + effect list with base/cap), values computed live from level and attunement
-- Resolution is deterministic and order-defined (§14); casting is a pure function `preview_cell(skill, cell)` returning `new | level | replace | cancel | lost` plus ground and prop reactions, residue and landing squares of displacement — the same function drives the preview, the AI and the unit tests
-- Opposite effects (§7.3), the triangle rule for zone × ground, the source × prop-tag table (§8.2), Surge types and twists are data (Resources), not code branches; the zone × zone check compares effect tags, never zone ids
-- One turn queue for all monsters (§4.3); a pending Surge stores its caster and fires on the caster's next turn start
-- A pending Surge is a marker on the square with its own slot (not a zone); it blocks movement like a temporary object
-- Shape orientations are generated once from base shapes (rotate + mirror, de-duplicated); anchor = cell nearest the centroid
-- Art pipeline: low-poly Blender + AI textures
-
----
-
-## 17. Prototype & Playtests
-
-**Current build (v6):** the Godot project in `godot/` — main menu → draft (pick 3 of the 9 roster monsters, or 1 for a duel) → **3v3 on 7×7** or **1v1 on 5×5** against an AI team drawn from the rest. All v6 rules of this document are implemented in the headless core (`godot/core/`). The HTML prototype is the older v5 reference.
-
-**Tools:** `godot/tests/` (gdUnit4 suites for the rules; project layout in `godot/README.md`), `godot/tools/sim.gd` (AI-vs-AI batch simulation with win rates per monster), `godot/tools/smoke_ui.gd` (plays the player's side through the real UI headless).
-
-**First simulation (60 AI-vs-AI 3v3 battles, random teams):** sides win 50/50, ~14 rounds per battle with free rotation — **~19 rounds with fixed shapes**. Outliers to look at: **Dusk Moth wins 87%** (Native Ground + Wide Eclipse + Blight residue), Blight is the biggest damage source after Eruption, Veils absorb a lot (230 blocked hits), and ~1 in 5 battles is decided by the arena collapse (§13.1).
-
-**Next playtest — what to check once v6 is built:**
-
-1. Does the residue make Surges *land* (the enemy takes damage even when it dodges, or has to walk around it)?
-2. Does end-of-turn displacement with a chosen direction create readable combos (current → Surge, current → Lava, pull → Strike)?
-3. Is Strike at 2 AP worth using, or does it never happen? Does it make close range too sticky?
-4. Do no-cooldown turns create more interesting choices, or does one action get spammed (especially double Veils)?
-5. Do the three Surge types make Elevated a real decision?
-6. Do props now get *used* (burned, crumbled, smashed for debris) instead of just being in the way?
-7. Is 3v3 on 7×7 readable, and do fights end in a reasonable number of rounds?
-8. Is Dusk Moth really that strong for a human player, or is it the AI? (simulation: 87% win rate)
-
----
-
-## 18. Open Questions (Battle)
-
-**Rules to tune**
-- **Double Veil:** without cooldowns a Veil can be cast twice in one turn → level II, shield 3, a full answer to a 3-damage Surge for 2 AP. Fine, or a new Dispel loop? (watch in playtest; fallback: a zone can level up only once per turn per square)
-- **Strike cost:** keep 2 AP, or 1 AP but only if you didn't move this turn?
-- **Residue numbers:** timed level-I ground for 2 rounds — too strong together with the Surge, too weak to matter?
-- **Triangle rule for ground:** Bog no longer cools Lava (Force beats Nature) — Lava is answered by Dark zones, Raise Ground and any Surge residue. Feels right, or does Nature need a water exception?
-- **Opposite effects:** should cancelling ever leave a remainder (e.g. a level-III zone beats a level-I opposite)?
-- **Zone duration:** 2 rounds for everything — should strong zones (Mire) be shorter, weak ones longer?
-- **Veil strength:** shield 2 vs Surge 3 (up to 3 with level, ±1 attunement) — too weak or too strong?
-- **Attunement scale:** ±1 only bites on values ≥2 (zone values clamp at 1). Rescale zone base values?
-- **Surge as the painter:** is repainting fast enough to claw back territory, or does the first Surge snowball? Optional decay after N rounds?
-- **Ground clutter:** do permanent Field grounds clutter the board by round 5? Optional cap of N Field squares per monster?
-- **Lava on Elevated:** legal (Raise Ground cleanses it, Dark zones smother it) — does Elevated need to resist Lava?
-- **Pull point / Flood direction:** pull to the anchor and one push direction per Flood (current rules) — or more freedom?
-
-**Teams & scale**
-- **Board sizes:** do Surge range 3 and 3–4 cell shapes still work on 7×7, or do ranges need +1?
-- **Initiative chains:** one side can chain several turns; is the Mire cap (−3) enough?
-- **Zone ownership:** zones hit everyone — does that make allied zone play too risky in 3v3?
-- **Surge vs Surge:** the first Surge claims a square; is declaring first too strong in initiative order?
-- **Reach budget:** is Reach 2 worth less Move / Initiative, or does it make anvils too safe?
-- **Voidscar:** start round per mode — still needed in 3v3?
-
-**Content**
-- **Roster gaps:** which of the remaining 9 Kin × Aspect cells come next, and which stay empty at launch
-- **Major Surge:** shape and size
-- **Winged air layer:** how zones and ground affect air units (Soul+)
-- **Domain Glimpse tuning:** how big
-
----
-
-## 19. Version History
-
-**v6.0 — Options, not luck (current, designed, not built).** Playtests of the Godot port showed the v5 loop wasn't fun: the Surge was the only damage source and easy to dodge on 5×5, props were just obstacles, and Elevated was a blanket "Surge immune" rule. v6 stays fully deterministic but adds:
-- **Surge residue** (timed hazard ground) and **Surge types by aspect** (Eruption / Flood / Rift) with their own rules for props and height
-- **Strike** (2 AP, max 2 damage, Kin twist) and the **Reach** stat
-- **Directional displacement** (direction / anchor set at cast) firing at the **end** of the occupant's turn
-- **Prop tags and reactions** (flammable, brittle, heavy, indestructible); zones may be placed on props; Shrine and Sigil as effect props
-- **Ground = neutral + one hazard per aspect** (Lava / Thornbed / Blight); zones change ground by the triangle; zones fight zones by **opposite effects** instead of name pairs
-- **No cooldowns**, every action ≥ 1 AP, one charging Surge per monster
-- **Team battles:** standard 3v3 on 7×7, one initiative queue, Surges fire at the start of the caster's next turn
-- **Monster identity** in three layers (Kin / Aspect / Species), Surge twists, skill matrix (archetype × aspect) and a first 9-monster roster
-
-**v5.0 — Zones + Ground.** v4 had deleted zones; v5 brought them back with a clean split. **Zones** were timed (2 rounds), one per square, and did movement and tempo control (slow, push/pull, initiative/range drain, shield). **Ground** was permanent and did damage terrain (Lava) plus the board's memory (Elevated, Rubble, Voidscar, attunement). The **Surge** got its own slot: damage first, then it repaints the ground it hit. Pairs like Bog ↔ Gale cancelled by name; Bog cooled Lava, Gale fanned it; Elevated blanked every Surge; skills had cooldowns. Playtest questions were: do zones steer the fight, does permanent Lava change where you stand, does repainting make territory matter, do Veils make Surges answerable without a Dispel loop, and is one zone / one ground / one attunement per square honest to read.
-
-**v3.1** fixed misleading hybrid zones (one zone per square instead of merge arithmetic) and explained attunement as ground, not a hidden zone modifier. Kept: tetris shapes, no Dispel, Surge as the only big burst, props/shatter, 2 AP.
-
-**Earlier:** v4 ground-only (zones deleted: effects became permanent terraforming; clutter risk, push/pull lost its timed role) · v3.0 aspect-triangle overwrites (wrong-aspect monster locked out) · v2.2 square interactions · v2.1 anti-loop tweaks · v2 Surge-only damage · v1 wind-up. *(v3.0 also removed Dispel, Rupture, Bind and HexField.)*
+Open decisions/playtest checks: [temp_todo.md](temp_todo.md). This GDD records the current working design; moving review tasks does not finalize provisional values.

@@ -1,0 +1,24 @@
+{
+ "name": "Beast Pincer",
+ "usage": "active",
+ "ap": 3,
+ "components": [
+  {
+   "type": "damage",
+   "damage": 2,
+   "cells": 2,
+   "ground_air": true
+  },
+  {
+   "type": "strike_extras",
+   "kin": "beast",
+   "kin_cells": 2,
+   "distant_cells": 0,
+   "direction": true
+  }
+ ],
+ "sim": {
+  "action": "strike",
+  "shape": "pincer"
+ }
+}

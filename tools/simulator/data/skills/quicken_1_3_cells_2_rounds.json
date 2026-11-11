@@ -1,0 +1,24 @@
+{
+ "name": "Quicken 1, 3 cells, 2 rounds",
+ "usage": "active",
+ "ap": 1,
+ "note": "Arithmetic reference Skills section 5. Only base level I is covered; caps/scaling unresolved, engine must reject level > I.",
+ "sim": {
+  "action": "zone",
+  "offsets": [[-1, 0], [0, 0], [1, 0]],
+  "effects": [{"effect": "quicken", "base": 1, "cap": null}],
+  "fixture": "Fixed centred horizontal I3 for the three-cell paper reference; geometry not specified/approved by the GDD."
+ },
+ "components": [
+  {
+   "type": "zone",
+   "effect": "quicken",
+   "value": 1,
+   "cells": 3,
+   "rounds": 2
+  },
+  {
+   "type": "anchor"
+  }
+ ]
+}

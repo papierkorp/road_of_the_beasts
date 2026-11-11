@@ -1,0 +1,19 @@
+{
+ "name": "Residue-free Surge",
+ "usage": "active",
+ "ap": 1,
+ "components": [
+  {
+   "type": "damage",
+   "damage": 3,
+   "cells": 3,
+   "timing": "telegraphed_avoidable"
+  },
+  {
+   "type": "anchor"
+  },
+  {
+   "type": "marker"
+  }
+ ]
+}

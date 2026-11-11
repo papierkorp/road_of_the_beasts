@@ -1,0 +1,13 @@
+{
+ "name": "test_golem_mend",
+ "kin": "beast",
+ "stage": "core",
+ "subtier": "high",
+ "note": "Mend uses the level-I price draft (32) in slot level 3, but heals min(2, zone level). Fixed I3 is an unapproved simulation fixture; no roster/access/progression approval.",
+ "stats": {"hp": 8, "init": 4.0, "move": 1, "reach": 3, "tpr": 1, "ap": 3},
+ "slots": [
+  {"skill": "Beast Jab", "level": 1},
+  {"skill": "Mend 1, 3 cells, 2 rounds", "level": 3},
+  {"skill": "Run", "level": 1}
+ ]
+}

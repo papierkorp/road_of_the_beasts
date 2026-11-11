@@ -1,0 +1,15 @@
+{
+ "name": "Immediate hazard ground",
+ "usage": "active",
+ "ap": 1,
+ "components": [
+  {
+   "type": "ground",
+   "ground": "lava_1",
+   "cells": 3
+  },
+  {
+   "type": "anchor"
+  }
+ ]
+}

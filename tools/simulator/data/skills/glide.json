@@ -1,0 +1,15 @@
+{
+ "name": "Glide",
+ "usage": "active",
+ "ap": 2,
+ "sim": {
+  "action": "move",
+  "preset": "glide"
+ },
+ "components": [
+  {
+   "type": "move",
+   "preset": "glide"
+  }
+ ]
+}

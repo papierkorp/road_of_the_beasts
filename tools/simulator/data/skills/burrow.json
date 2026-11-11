@@ -1,0 +1,15 @@
+{
+ "name": "Burrow",
+ "usage": "active",
+ "ap": 2,
+ "sim": {
+  "action": "move",
+  "preset": "burrow"
+ },
+ "components": [
+  {
+   "type": "move",
+   "preset": "burrow"
+  }
+ ]
+}

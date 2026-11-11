@@ -1,0 +1,15 @@
+{
+ "name": "Self Initiative +1, 2 rounds",
+ "usage": "active",
+ "ap": 1,
+ "note": "Focus draft, Skills sections 5/11; Initiative only, same-source refresh without magnitude stacking; Battle section 3.1 controls round-end expiry and bearer removal.",
+ "sim": {"action": "buff"},
+ "components": [
+  {
+   "type": "self_buff",
+   "stat": "initiative",
+   "magnitude": 1,
+   "rounds": 2
+  }
+ ]
+}

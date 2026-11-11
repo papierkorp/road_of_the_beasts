@@ -1,0 +1,24 @@
+{
+ "name": "Scaled Jab",
+ "usage": "active",
+ "ap": 2,
+ "components": [
+  {
+   "type": "damage",
+   "damage": 2,
+   "cells": 1,
+   "ground_air": true
+  },
+  {
+   "type": "strike_extras",
+   "kin": "scaled",
+   "kin_cells": 1,
+   "distant_cells": 0,
+   "direction": true
+  }
+ ],
+ "sim": {
+  "action": "strike",
+  "shape": "jab"
+ }
+}

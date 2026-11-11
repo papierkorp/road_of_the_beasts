@@ -1,0 +1,15 @@
+{
+ "name": "Hallowed cast",
+ "usage": "active",
+ "ap": 2,
+ "components": [
+  {
+   "type": "ground",
+   "ground": "hallowed",
+   "cells": 3
+  },
+  {
+   "type": "anchor"
+  }
+ ]
+}
