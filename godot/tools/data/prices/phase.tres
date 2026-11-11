@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PriceRecord" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/price_component.gd" id="1_0wbvc"]
+[ext_resource type="Script" path="res://tools/defs/price_record.gd" id="2_46ycn"]
+[ext_resource type="Resource" path="res://data/battle/skills/phase.tres" id="3_kiupc"]
+
+[sub_resource type="Resource" id="Resource_xh0hi"]
+script = ExtResource("1_0wbvc")
+type = "move"
+preset = "phase"
+
+[resource]
+script = ExtResource("2_46ycn")
+display_name = "Phase"
+ap = 2
+components = Array[ExtResource("1_0wbvc")]([SubResource("Resource_xh0hi")])
+paper_total = 13.0
+skill = ExtResource("3_kiupc")

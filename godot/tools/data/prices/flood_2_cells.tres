@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="PriceRecord" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/price_component.gd" id="1_fag3m"]
+[ext_resource type="Script" path="res://tools/defs/price_record.gd" id="2_jtsci"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="3_p0cml"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="4_xhomx"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="5_4xjdd"]
+
+[sub_resource type="Resource" id="Resource_ih877"]
+script = ExtResource("1_fag3m")
+cells = 2
+timing = "telegraphed_avoidable"
+damage = 2
+
+[sub_resource type="Resource" id="Resource_4caj7"]
+script = ExtResource("1_fag3m")
+type = "anchor"
+
+[sub_resource type="Resource" id="Resource_ivf1k"]
+script = ExtResource("1_fag3m")
+type = "marker"
+
+[sub_resource type="Resource" id="Resource_ac4ts"]
+script = ExtResource("1_fag3m")
+type = "displacement"
+cells = 2
+timing = "telegraphed_avoidable"
+
+[sub_resource type="Resource" id="Resource_gqomr"]
+script = ExtResource("1_fag3m")
+type = "ground"
+cells = 2
+ground = "thornbed_1"
+
+[sub_resource type="Resource" id="Resource_1wp4a"]
+script = ExtResource("3_p0cml")
+ground = &"thornbed"
+
+[sub_resource type="Resource" id="Resource_ivntd"]
+script = ExtResource("5_4xjdd")
+id = &"flood_2_cells"
+display_name = "Flood 2 cells"
+kind = "surge"
+status = "simulation fixture of the price record tools/data/prices/flood_2_cells.tres"
+footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
+surge_damage = 2
+surge_displacement = "push"
+board_ops = Array[ExtResource("3_p0cml")]([SubResource("Resource_1wp4a")])
+
+[resource]
+script = ExtResource("2_jtsci")
+display_name = "Flood 2 cells"
+components = Array[ExtResource("1_fag3m")]([SubResource("Resource_ih877"), SubResource("Resource_4caj7"), SubResource("Resource_ivf1k"), SubResource("Resource_ac4ts"), SubResource("Resource_gqomr")])
+paper_total = 29.0
+skill = SubResource("Resource_ivntd")

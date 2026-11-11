@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PriceRecord" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/price_component.gd" id="1_3p87o"]
+[ext_resource type="Script" path="res://tools/defs/price_record.gd" id="2_5hiex"]
+[ext_resource type="Resource" path="res://data/battle/skills/adaptive_reference.tres" id="3_1ra8y"]
+
+[sub_resource type="Resource" id="Resource_2u0rp"]
+script = ExtResource("1_3p87o")
+type = "rotation"
+
+[resource]
+script = ExtResource("2_5hiex")
+display_name = "Adaptive (rotation)"
+usage = "passive_boolean"
+components = Array[ExtResource("1_3p87o")]([SubResource("Resource_2u0rp")])
+paper_total = 18.0
+note = "Continuous owner-only rotation while equipped and participating (Skills section 11), boolean/idempotent across duplicate equipped copies. No mirroring, Strike changes, new layers or range. No event, cast or round limit. Content/balance remains draft."
+skill = ExtResource("3_1ra8y")

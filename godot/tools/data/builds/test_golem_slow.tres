@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SimBuildDef" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/sim_build_def.gd" id="1_vwopr"]
+[ext_resource type="Script" path="res://tools/defs/sim_build_slot.gd" id="2_wnbnh"]
+[ext_resource type="Resource" path="res://tools/data/prices/beast_jab.tres" id="3_tx6gb"]
+[ext_resource type="Resource" path="res://tools/data/prices/slow_zone_2_rounds.tres" id="4_ni27i"]
+[ext_resource type="Resource" path="res://tools/data/prices/run.tres" id="5_yik0x"]
+
+[sub_resource type="Resource" id="Resource_2wsvb"]
+script = ExtResource("2_wnbnh")
+record = ExtResource("3_tx6gb")
+
+[sub_resource type="Resource" id="Resource_fuv0j"]
+script = ExtResource("2_wnbnh")
+record = ExtResource("4_ni27i")
+
+[sub_resource type="Resource" id="Resource_y0e1g"]
+script = ExtResource("2_wnbnh")
+record = ExtResource("5_yik0x")
+
+[resource]
+script = ExtResource("1_vwopr")
+note = "Legal test sheet for the section 11 Slow draft; no roster/species access or reachability approval."
+hp = 8
+initiative = 4.0
+movement = 1
+reach = 3
+ap = 3
+slots = Array[ExtResource("2_wnbnh")]([SubResource("Resource_2wsvb"), SubResource("Resource_fuv0j"), SubResource("Resource_y0e1g")])

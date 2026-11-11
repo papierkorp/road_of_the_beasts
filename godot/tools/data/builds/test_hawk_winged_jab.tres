@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="SimBuildDef" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/sim_build_def.gd" id="1_t6d6o"]
+[ext_resource type="Script" path="res://tools/defs/sim_build_slot.gd" id="2_27h68"]
+[ext_resource type="Resource" path="res://tools/data/prices/winged_jab.tres" id="3_lmc0k"]
+[ext_resource type="Resource" path="res://tools/data/prices/glide.tres" id="4_8e4kk"]
+
+[sub_resource type="Resource" id="Resource_6k53t"]
+script = ExtResource("2_27h68")
+record = ExtResource("3_lmc0k")
+
+[sub_resource type="Resource" id="Resource_ekx1o"]
+script = ExtResource("2_27h68")
+record = ExtResource("4_8e4kk")
+
+[resource]
+script = ExtResource("1_t6d6o")
+kin = 1
+note = "test sheet for price comparison, not a roster entry or reachability claim"
+hp = 2
+initiative = 9.0
+movement = 3
+tpr = 2
+slots = Array[ExtResource("2_27h68")]([SubResource("Resource_6k53t"), SubResource("Resource_ekx1o")])

@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="SimBuildDef" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/sim_build_def.gd" id="1_h3g21"]
+[ext_resource type="Script" path="res://tools/defs/sim_build_slot.gd" id="2_ldi4o"]
+[ext_resource type="Resource" path="res://tools/data/prices/beast_jab.tres" id="3_ijtf3"]
+[ext_resource type="Resource" path="res://tools/data/prices/shield_2_3_cells_2_rounds.tres" id="4_ke5px"]
+[ext_resource type="Resource" path="res://tools/data/prices/run.tres" id="5_1kdbb"]
+
+[sub_resource type="Resource" id="Resource_1yqe6"]
+script = ExtResource("2_ldi4o")
+record = ExtResource("3_ijtf3")
+
+[sub_resource type="Resource" id="Resource_udoq3"]
+script = ExtResource("2_ldi4o")
+record = ExtResource("4_ke5px")
+level = 2
+
+[sub_resource type="Resource" id="Resource_753th"]
+script = ExtResource("2_ldi4o")
+record = ExtResource("5_1kdbb")
+
+[resource]
+script = ExtResource("1_h3g21")
+note = "Same 31 stat / 52 skill points and slot levels as test_golem_shield; different stat allocation. Price experiment, not approved roster or progression. Shield I3 is an unapproved simulation fixture."
+initiative = 7.0
+movement = 4
+ap = 3
+slots = Array[ExtResource("2_ldi4o")]([SubResource("Resource_1yqe6"), SubResource("Resource_udoq3"), SubResource("Resource_753th")])

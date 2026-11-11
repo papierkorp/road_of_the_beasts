@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SimBuildDef" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/sim_build_def.gd" id="1_i1h1d"]
+[ext_resource type="Script" path="res://tools/defs/sim_build_slot.gd" id="2_nvnb5"]
+[ext_resource type="Resource" path="res://tools/data/prices/beast_jab.tres" id="3_t7557"]
+[ext_resource type="Resource" path="res://tools/data/prices/run.tres" id="4_gp6qm"]
+
+[sub_resource type="Resource" id="Resource_r4yto"]
+script = ExtResource("2_nvnb5")
+record = ExtResource("3_t7557")
+
+[sub_resource type="Resource" id="Resource_f8d4g"]
+script = ExtResource("2_nvnb5")
+record = ExtResource("4_gp6qm")
+
+[resource]
+script = ExtResource("1_i1h1d")
+note = "test sheet for price comparison, not a roster entry or reachability claim"
+initiative = 7.0
+movement = 4
+ap = 3
+slots = Array[ExtResource("2_nvnb5")]([SubResource("Resource_r4yto"), SubResource("Resource_f8d4g")])

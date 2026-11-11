@@ -212,11 +212,18 @@ func _validate_skill(s: BattleSkillDef) -> void:
 func fingerprint() -> String:
 	var parts: PackedStringArray = [VERSION]
 	for table: Dictionary in [grounds, props, zones, skills, tamer, kits]:
-		var ids := table.keys()
-		ids.sort()
-		for id in ids:
+		for id in sorted_ids(table):
 			parts.append(_describe(table[id]))
 	return "\n".join(parts).sha256_text()
+
+
+## The ids of a definition table in alphabetical order. StringNames do not sort by their text
+## (`Array.sort()` orders them by an internal value that changes with whatever else is loaded),
+## so a fingerprint built on that order would differ between tools for the same content.
+static func sorted_ids(table: Dictionary) -> Array:
+	var ids := table.keys()
+	ids.sort_custom(func(a: StringName, c: StringName) -> bool: return String(a) < String(c))
+	return ids
 
 
 static func _describe(res: Resource) -> String:

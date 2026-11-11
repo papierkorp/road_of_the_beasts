@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="PriceRecord" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/price_component.gd" id="1_mu1rs"]
+[ext_resource type="Script" path="res://tools/defs/price_record.gd" id="2_pujwo"]
+[ext_resource type="Resource" path="res://data/battle/skills/strike_long_whirl.tres" id="3_fjnsd"]
+
+[sub_resource type="Resource" id="Resource_b05ve"]
+script = ExtResource("1_mu1rs")
+cells = 8
+damage = 2
+ground_air = true
+
+[sub_resource type="Resource" id="Resource_4o4tp"]
+script = ExtResource("1_mu1rs")
+type = "strike_extras"
+kin_cells = 8
+distant_cells = 4
+
+[resource]
+script = ExtResource("2_pujwo")
+display_name = "Beast Long Whirl"
+ap = 5
+components = Array[ExtResource("1_mu1rs")]([SubResource("Resource_b05ve"), SubResource("Resource_4o4tp")])
+paper_total = 42.0
+skill = ExtResource("3_fjnsd")

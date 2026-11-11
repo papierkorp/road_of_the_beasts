@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="SimBuildDef" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/sim_build_def.gd" id="1_mm48i"]
+[ext_resource type="Script" path="res://tools/defs/sim_build_slot.gd" id="2_j0uxy"]
+[ext_resource type="Resource" path="res://tools/data/prices/beast_jab.tres" id="3_na28h"]
+[ext_resource type="Resource" path="res://tools/data/prices/flood_2_cells.tres" id="4_ng1bo"]
+[ext_resource type="Resource" path="res://tools/data/prices/run.tres" id="5_lg7dy"]
+
+[sub_resource type="Resource" id="Resource_n07xr"]
+script = ExtResource("2_j0uxy")
+record = ExtResource("3_na28h")
+
+[sub_resource type="Resource" id="Resource_s33mk"]
+script = ExtResource("2_j0uxy")
+record = ExtResource("4_ng1bo")
+level = 2
+
+[sub_resource type="Resource" id="Resource_wn0rt"]
+script = ExtResource("2_j0uxy")
+record = ExtResource("5_lg7dy")
+
+[resource]
+script = ExtResource("1_mm48i")
+note = "test sheet for price comparison, not a roster entry or reachability claim"
+hp = 8
+initiative = 4.0
+movement = 1
+reach = 3
+ap = 3
+slots = Array[ExtResource("2_j0uxy")]([SubResource("Resource_n07xr"), SubResource("Resource_s33mk"), SubResource("Resource_wn0rt")])

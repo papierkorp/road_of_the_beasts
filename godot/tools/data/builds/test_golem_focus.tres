@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="SimBuildDef" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/sim_build_def.gd" id="1_4fo3u"]
+[ext_resource type="Script" path="res://tools/defs/sim_build_slot.gd" id="2_yccbr"]
+[ext_resource type="Resource" path="res://tools/data/prices/beast_jab.tres" id="3_4snpd"]
+[ext_resource type="Resource" path="res://tools/data/prices/self_initiative_1_2_rounds.tres" id="4_xxeel"]
+[ext_resource type="Resource" path="res://tools/data/prices/run.tres" id="5_vf4ra"]
+
+[sub_resource type="Resource" id="Resource_5s40j"]
+script = ExtResource("2_yccbr")
+record = ExtResource("3_4snpd")
+
+[sub_resource type="Resource" id="Resource_m700c"]
+script = ExtResource("2_yccbr")
+record = ExtResource("4_xxeel")
+
+[sub_resource type="Resource" id="Resource_kjate"]
+script = ExtResource("2_yccbr")
+record = ExtResource("5_vf4ra")
+
+[resource]
+script = ExtResource("1_4fo3u")
+note = "Legal test sheet for the Focus Initiative-only draft; Battle section 3.1 refresh/expiry applies. No roster/species access or reachability approval."
+hp = 8
+initiative = 4.0
+movement = 1
+reach = 3
+ap = 3
+slots = Array[ExtResource("2_yccbr")]([SubResource("Resource_5s40j"), SubResource("Resource_m700c"), SubResource("Resource_kjate")])

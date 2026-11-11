@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="PriceRecord" format=3]
+
+[ext_resource type="Script" path="res://tools/defs/price_component.gd" id="1_h5dl6"]
+[ext_resource type="Script" path="res://tools/defs/price_record.gd" id="2_bs33h"]
+[ext_resource type="Resource" path="res://data/battle/skills/strike_jab.tres" id="3_muqq5"]
+
+[sub_resource type="Resource" id="Resource_agihb"]
+script = ExtResource("1_h5dl6")
+cells = 1
+damage = 2
+ground_air = true
+
+[sub_resource type="Resource" id="Resource_yp7v6"]
+script = ExtResource("1_h5dl6")
+type = "strike_extras"
+kin = "winged"
+kin_cells = 1
+direction = true
+
+[resource]
+script = ExtResource("2_bs33h")
+display_name = "Winged Jab"
+ap = 2
+components = Array[ExtResource("1_h5dl6")]([SubResource("Resource_agihb"), SubResource("Resource_yp7v6")])
+paper_total = 17.0
+skill = ExtResource("3_muqq5")

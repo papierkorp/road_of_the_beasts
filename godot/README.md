@@ -26,8 +26,11 @@ game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameS
 data/        content as Resource files (a new file = new content)
   battle/    grounds/ props/ zones/ skills/ tamer/ kits/  — what the battle resolves
   monsters/ skills/ zones/   legacy species data of the overworld model
-tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game
-tools/       sim.gd (AI-vs-AI runs), smoke_ui.gd (plays the real UI headless)
+tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game, tests/tools
+tools/       headless tools (tools/README.md): sim.gd (AI-vs-AI runs), compare.gd (equal-cost build
+             comparison), price.gd (construction-point calculator), smoke_ui.gd (plays the real UI);
+             defs/ and lib/ their Resource classes and shared scripts, data/ price records and
+             test builds as Resource files
 ```
 
 ## Dependency rule
@@ -92,5 +95,9 @@ is the working draft of gdd_battle §4.10, and seed 0 boards are fixed test layo
 godot --headless --path godot --import
 godot --headless --path godot -s -d res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c -a res://tests < /dev/null
 godot --headless --path godot -s res://tools/smoke_ui.gd -- 3v3 7      # draft → placement → battle through the real UI
-godot --headless --path godot -s res://tools/sim.gd -- 20 3v3 1        # AI vs AI on the test kits (not a balance test)
+godot --headless --path godot -s res://tools/sim.gd -- 20 3v3 1 "$(git rev-parse --short HEAD)"   # AI vs AI; prints a run block for docs/simulation_log.md
+godot --headless --path godot -s res://tools/compare.gd -- --bot rush                             # equal-cost, side-swapped test builds
+godot --headless --path godot -s res://tools/price.gd -- --example "Scaled Arc" --slot-level 2    # construction points of a price record
 ```
+
+Options, test builds, bots and the limits of these runs: [tools/README.md](tools/README.md). None of them is a balance test.
