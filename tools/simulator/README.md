@@ -1,6 +1,13 @@
 # Temporary price experiment (Python)
 
-Small, disposable CLI tools for **quick construction-price indications**, not a second game implementation. Standard library only; always invoke with `python3 -I`. The game is built in Godot. No persistent battle-test suite, legacy result fixtures, compatibility framework or full-design coverage target is maintained here.
+Small, disposable CLI tools for **quick construction-price indications**, not a second game implementation. Standard library only; always invoke with `python3 -I`. The game is built in Godot.
+
+## Scope and lifetime
+
+- **Answer a concrete price question, then stop.** Model only what that experiment needs; complete GDD coverage, a second battle application and production architecture are not goals. There is no automatic port or synchronization promise with Godot.
+- **JSON is the deliberate reusable exception:** keep skill records, monster sheets and paper calculation totals as reusable inputs or templates. They need not be discarded with an experiment. Reuse in Godot still requires mapping and checking the compact record format; it is not a ready-made production schema.
+- **Checks stay lightweight:** retain the small inline price/sheet checks and perform experiment-specific smoke or arithmetic checks as needed. Do not build a permanent battle-test suite, legacy regression fixtures or a compatibility framework. `data/golden.json` checks paper prices; a `legacy_golden.json` of old battle outcomes is not maintained.
+- **The GDDs remain authoritative.** Missing rules are not invented and incomplete simulation is not evidence against a price. Document the experiment's exclusions here; record measurements and their limits only under T13 in [`docs/temp_todo.md`](../../docs/temp_todo.md), not as a second results catalogue in this README.
 
 ## Tools and reusable data
 
@@ -43,4 +50,6 @@ python3 -I tools/simulator/compare.py --builds test_tiger_shield,test_golem_shie
 
 `compare.py` requires equal exact stat spend, summed skill prices and slot-level distribution; it refuses illegal/partially supported inputs. Each build fields one monster. Each individual seed plays **twice with swapped sides**, using mirrored start squares, no props and the same bot. Seed blocks generate distinct 64-bit game seeds. A draw, including a timeout, scores 0.5. The table reports wins, draws, mean score, rounds and timeouts; SD/min/max describe **seed-block mean scores**, not confidence intervals.
 
-Different stat allocation is allowed at equal spend. Such a comparison probes the whole test build, **not the marginal value of its shared skill**. High Draw rates or bot stalling can make a 50/50 score meaningless for price valuation. Run only the experiments needed for the current question; do not expand this into a validation application. Record results and limits only in `docs/temp_todo.md` (T13). No price, budget or rule change follows automatically.
+Different stat allocation is allowed at equal spend. Such a comparison probes the whole test build, **not the marginal value of its shared skill**. High Draw rates or bot stalling can make a 50/50 score meaningless for price valuation. No price, budget or rule change follows automatically.
+
+For a quick experiment: choose priced JSON inputs, check their spend and unsupported components, run only the relevant side-swapped comparison, then record the command, seed setup, game count and limitations in T13. Stop there unless a specific price question needs another measurement; a simulation gap is not automatically an implementation backlog.

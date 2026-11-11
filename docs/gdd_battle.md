@@ -114,7 +114,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 
 **Effective stats** combine the base sheet with all applicable, authorized modifiers, including zone, ground, height, prop and skill/passive sources.
 
-- One zone per square limits zone occupancy, not cross-source stacking. Modifier contracts: [Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts); stacking and expiry *(user decision 2026-11-11)*: the same source (same effect of the same owner) only refreshes duration and never adds magnitude; different sources (zone, ground, prop, skill, passive) add without a cap; only the existing stat floors apply (Movement and Reach min 1, Initiative min 0.1). A timed unit effect with a duration of N rounds lasts from application until the round end of the N-th following round (round-end tick, [§2.4](#24-effect-timing-reference)); it ends earlier with its defeated or removed bearer ([§2.2](#22-initiative-rules)). Skills §4 wording to be synchronized (T35).
+- One zone per square limits zone occupancy, not cross-source stacking. Modifier contracts: [Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts); stacking and expiry *(user decision 2026-11-11)*: the same source (same effect of the same owner) only refreshes duration and never adds magnitude; different sources (zone, ground, prop, skill, passive) add without a cap; only the existing stat floors apply (Movement and Reach min 1, Initiative min 0.1). A timed unit effect with a duration of N rounds lasts from application until the round end of the N-th following round (round-end tick, [§2.4](#24-effect-timing-reference)); it ends earlier with its defeated or removed bearer ([§2.2](#22-initiative-rules)).
 - Board sources below are not an exhaustive modifier catalogue.
 
 |     Stat    |                     Changed in battle by                     |
@@ -171,7 +171,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 - The existing immediate hazard-ground placement profile and coupled height/reset operation (§4.7) require prop-free squares, subject to explicit [§4.11 prop reactions](#411-prop-reactions). These are source-specific [board-operation requirements](gdd_skills.md#4-effect-and-board-operation-contracts); blocking flags are profile-scoped, not a universal empty-square test ([Skills §2](gdd_skills.md#interaction-fields))
 - pending Surges may land on props and normally block voluntary movement; path blocking/landing legality use the resolved [movement profile](gdd_skills.md#movement). Displacement (push / pull) **can** move monsters into their squares
 - **zones = what you do to a square for a while; ground = what the board remembers**
-- **2×2 bodies** *(user decision 2026-11-10; details marked open below)*: a 2×2 monster occupies four squares of this stack.
+- **2×2 bodies** *(user decision 2026-11-10; details below)*: a 2×2 monster occupies four squares of this stack.
   - **Distance/Reach:** measured from the nearest covered square, for attacker and target.
   - **Ground and zone triggers** (`start_of_turn`, `on_enter`): fire once per event if any covered square qualifies, never once per square.
   - **Mixed ground** *(user decision 2026-11-10; supersedes a single “worst square” ground)*: every ground type present under the body takes effect **once**, hazards and blessings alike, whether it covers one square or several; no stacking. Several levels of the same hazard type: the highest level applies once.
@@ -311,7 +311,7 @@ No merging: a square always shows exactly one zone with its real effects.
   1. The occupant takes **1 collapse damage**, an environmental damage like Voidscar, independent of any skill and not part of the skill's own damage (the Strike and Surge damage laws are unaffected).
   2. The Mountain is removed.
   3. The square's ground becomes the ground that same skill authors for it, if its definition can change ground on Mountain squares, otherwise **Rubble**.
-  - Voidscar is never replaced. Props are separate: prop aftermath damage and pushes never destroy Mountains (ground left by a destroyed prop on a Mountain square: open, [§4.10](#410-prop-catalogue-and-damage)). Order against the skill's damage and residue: [§6.2](#62-surge-resolution-integration) step 4.
+  - Voidscar is never replaced. Props are separate: prop aftermath damage and pushes never destroy Mountains (the ground a destroyed prop leaves never changes a Mountain square, [§4.10](#410-prop-catalogue-and-damage)). Order against the skill's damage and residue: [§6.2](#62-surge-resolution-integration) step 4.
 - **Air next to a Mountain** *(user decision; details 2026-11-10)*: a ground-layer monster standing on a Mountain can hit air-layer monsters on the **eight squares adjacent** to its own square with all of its attacks. For delayed Surges this is **fixed at cast**: the owner stands on a Mountain and the footprint square is adjacent to the owner's square at that moment; later movement or death of the owner changes nothing. A 2×2 attacker needs all four covered squares on Mountain (as for +1 Reach); adjacency is measured from the nearest covered square of each body, and an air-layer 2×2 is hit once if any covered square is adjacent. This is a board rule, not a skill property, and adds no skill price
 - Placing ground beneath an occupant is not entry; entry triggers occur when the occupant enters the square. Mossbed has no re-entry or per-turn limit *(user decision 2026-11-10)*: every entry heals 1, bounded only by movement
 - Blessed ground works for **everyone** on it, like a zone: an enemy can use your Mossbed too
@@ -331,7 +331,7 @@ FLYING  → air layer (air content at Soul+); the Pagoda Bridge occupies both la
 **Prop principles** *(user, 2026-11-10/11)*:
 - **No Field class:** ground-layer props are always Solid (Umbra ground already provides "Reach +1 while standing"). Air-layer props are the only other class.
 - **Fixed, previewed aftermath:** every prop has its own aftermath, fixed by its type and independent of who or what destroyed it and from which direction. It is shown in the cast preview. **No chain reactions:** aftermath damage hits monsters only, never props.
-- **Creatable by skill:** every prop type may be created by an authored prop source (empty cell required); creation prices are open (T02). Board generation may pre-place any type.
+- **Creatable by skill:** every prop type may be created by an authored prop source (empty cell required); creation prices are unvalidated drafts ([Skills §5](gdd_skills.md#prop-creation-price-drafts), T02). Board generation may pre-place any type.
 - **Prop damage rights:** damaging offensive sources (Strike, Surge) hit props like monsters; movement, support and zones damage props only through an explicitly authorized prop effect.
 - **No indestructible prop** *(user decision 2026-11-11)*: every prop can be destroyed; the former Pillar, Wall, Tree and Rock are replaced by the catalogue below.
 - **Timing, conflicts and symmetry:** destruction and aftermath order: [§6.2](#62-surge-resolution-integration) step 4; placement symmetry: [§4.1](#41-battlefield-generation).
@@ -391,7 +391,7 @@ prop_def:
 - Ground left behind is laid in category (e) of [§6.2](#62-surge-resolution-integration) step 4; the Gong push resolves directly after (a) (before Cleanse), using the §6.2 tie rules.
 - Ground left behind never changes a Mountain square and never replaces Voidscar; on such squares the prop's damage, push and spawn still resolve, only the ground stays.
 - The Pagoda Column's Beams are the only prop-creating aftermath; Beams spawn nothing.
-- **Open (T02):** creation prices and valuation of `on_destroy` operations.
+- **Open (T02):** validation of the creation price drafts ([Skills §5](gdd_skills.md#prop-creation-price-drafts)) and valuation of `on_destroy` operations.
 
 ### 4.11 Prop Reactions
 
@@ -453,7 +453,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 > **The Surge is the burst.** It is the only skill that deals more than 2 damage to monsters; prop damage has source-specific exceptions in the [central damage contracts](gdd_skills.md#4-effect-and-board-operation-contracts).
 > - **Strike:** max 2 against monsters; body-relative execution and authored AP follow the [central Strike profile](gdd_skills.md#strike)
 > - **Hazard ground:** its level (max 2) at its trigger; Voidscar: 1. Ground effects: [§4.7](#47-ground--neutral-hazard-and-blessed); generic schedule: [§2.4](#24-effect-timing-reference)
-> - **Collision** (pushed into a prop or monster; contract: [§6.3](#63-collision-fall--debris)), **fall** (pushed off a Mountain), **Mountain collapse** (environmental, independent of the destroying skill, §4.7) and **prop aftermath damage** (Clay Urn, Bamboo Stand; §4.10): 1 each
+> - **Collision** (pushed into a prop or monster; contract: [§6.3](#63-collision-fall--debris)), **fall** (pushed off a Mountain), **Mountain collapse** (environmental, independent of the destroying skill, §4.7) and **prop aftermath damage** (Clay Urn, Bamboo Stand; air-layer Thunder Cloud; §4.10): 1 each
 > - **Zones never deal damage.** Nothing else deals damage the instant it is cast
 
 **Damage modifiers** *(user decision 2026-11-10)*:
@@ -497,7 +497,7 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
 - **Collision contract** *(user decision)*: the monster-collision damage is derived runtime damage, not an authored component, and grants no bonus collision damage or retired collision perks. Passive modifiers such as Crashlander or Thick Hide change only the damage of the monster they name.
 - **Blocked multi-step displacement:** a unit moves step by step and stops on the last free square. The blocked step is the collision (once per displacement; remaining steps are lost). A pull whose path or anchor square is occupied follows the same rule; no alternative square
 - **Off a Mountain**: the move happens, 1 fall damage · onto Mountain from below: blocked like a prop, no damage
-- **2×2 displacement** *(user decision 2026-11-10; details T09)*: a push/pull moves the whole body one square; if any newly covered square is blocked, there is **one collision** and no move: the 2×2 takes 1 damage once, and each blocking monster and each blocking prop takes 1 (heavy props none). Falling from a Mountain deals the 1 fall damage only if **all four** covered squares land lower; a partial fall moves without fall damage. Pushing a 2×2 up onto a Mountain from below is blocked, with no damage, as soon as any covered square would climb. Radial pushes and pulls for 2×2: [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants). Open: landing on mixed ground.
+- **2×2 displacement** *(user decision 2026-11-10; details T09)*: a push/pull moves the whole body one square; if any newly covered square is blocked, there is **one collision** and no move: the 2×2 takes 1 damage once, and each blocking monster and each blocking prop takes 1 (heavy props none). Falling from a Mountain deals the 1 fall damage only if **all four** covered squares land lower; a partial fall moves without fall damage. Pushing a 2×2 up onto a Mountain from below is blocked, with no damage, as soon as any covered square would climb. Radial pushes and pulls for 2×2: [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants). Landing on mixed ground: entry triggers use the newly covered squares ([§4.3](#43-the-square-stack-zones--ground)).
 - **Prop destroyed**: resolve the type's aftermath ([§4.10](#410-prop-catalogue-and-damage)); removal timing: [§6.2](#62-surge-resolution-integration) step 4(a); no destruction-method exceptions remain
 
 ### 6.4 General Rules

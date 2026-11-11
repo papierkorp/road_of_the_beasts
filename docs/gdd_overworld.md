@@ -1,5 +1,5 @@
 # GDD — OVERWORLD & META
-*Working Draft · companion specifications: [Battle System](gdd_battle.md) (battle rules), [Monsters & Skills](gdd_monsters.md) (monsters, stats and skills)*
+*Working Draft · companion specifications: [Battle System](gdd_battle.md) (battle rules), [Monsters](gdd_monsters.md) (monster identity, stats, Kins, roster), [Skills](gdd_skills.md) (monster skills)*
 
 ---
 
@@ -52,7 +52,7 @@ The overworld prepares a closed, deterministic fight and reads its result (rules
 2. Player picks team and **battle loadout** (tamer skills, medicines, arrays), viewing both teams' full sheets. Who carries inventory/loadouts: [§7.9](#79-inventory-and-loadout).
 3. Monsters and loadout resolve into finished **unit sheets**; fight starts.
 4. Rounds continue until one side has no monsters left ([gdd_battle §2.1](gdd_battle.md#21-core-battle-loop)).
-5. Battle returns winner, HP left per monster and kills; overworld awards XP, loot and catches.
+5. Battle returns winner (or a **Draw** when the last monsters of both sides fall simultaneously, [Battle §2.1](gdd_battle.md#21-core-battle-loop)), HP left per monster and kills; overworld awards XP, loot and catches. The result schema and the consequences of a Draw are open (T19/T23).
 
 | Interface | Responsible specification |
 |-----------|---------------------------|
@@ -383,7 +383,7 @@ Eggs in an Incubator do not count against capacity until they hatch.
 
 ## 5. Monsters in the Overworld
 
-**gdd_monsters.md** owns individuals, stats, skills, slot development and rarity; this chapter owns acquisition/defeat. Battle sees only the finished unit sheet (§2.1).
+[gdd_monsters.md](gdd_monsters.md) owns individuals, stats, Kins, roster and rarity; [gdd_skills.md](gdd_skills.md) owns skills and slot development ([Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades)); this chapter owns acquisition/defeat. Battle sees only the finished unit sheet (§2.1).
 
 ### 5.1 Obtaining Monsters
 
@@ -435,7 +435,7 @@ BREAKTHROUGH  High → next stage's Lower
 
 ### 6.3 Stage Unlock Table
 
-- **[Skills §1](gdd_skills.md#1-the-kit)** owns starting kit/legal access; table covers stage integration only, rarity slots remain §7.2. Progression adds *choices/modes*, not basic verbs—battles must never lack options.
+- **[Skills §1](gdd_skills.md#1-the-kit)** owns starting kit/legal access; table covers stage integration only; rarity slots and development steps: [Monsters §5.1](gdd_monsters.md#51-monster-rarity)/[§5.3](gdd_monsters.md#53-monster-progression-the-18-steps). Progression adds *choices/modes*, not basic verbs—battles must never lack options.
 
 |     Stage      |                            Monster unlock                            |                                     Player unlock                                      |
 |----------------|----------------------------------------------------------------------|----------------------------------------------------------------------------------------|
@@ -444,7 +444,7 @@ BREAKTHROUGH  High → next stage's Lower
 | Core Formation | slot-development step · AP 3 · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer slot · **5v5** special battles |
 | Soul Tier      | Air layer access (Winged) · 2x2 size · TPR 3 possible · one foreign movement mode                | mid-battle **Beast Swap** access ([§6.4](#64-tamer-skills))                                       |
 | Immortal       | Dual-aspect unlock removed; no replacement mechanic confirmed (T34 completed)             | 3rd tamer slot                                                                         |
-| Sovereign      | Signature / Major Surge access: [Skills §1](gdd_skills.md#1-the-kit) / §7.4; Ancient-only vs Legendary wording remains open (T02/T32) | full spatial arsenal                                                                   |
+| Sovereign      | Signature / Major Surge access: [Skills §1](gdd_skills.md#1-the-kit) / [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps); Ancient-only vs Legendary wording remains open (T02/T32) | full spatial arsenal                                                                   |
 
 - Bigger teams, air layer, 2x2 and swap **are the rewards**: one mechanic per breakthrough also provides a natural tutorial.
 - **Encounter sets mode**, within fieldable team size: narrow corridor 1v1/2v2, dungeon hall 3v3, tournament 5v5; player needs at least that many monsters.

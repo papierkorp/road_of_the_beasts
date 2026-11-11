@@ -100,7 +100,7 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
 - **Anchor/caps:** [Footprints and Placement](#footprints-and-placement) lists tetris families/counts/orientations. Author the centre-most anchor's exact offset mapping; no runtime tie-break. Caps: [§5](#5-construction-points-and-ap-efficiency). Strike body footprints (§8.1) and Major Surge access/profile are not generic size overrides.
 - **Orientation:** normal tetris skills have one family and one fixed absolute board orientation for both teams, not facing, team mirroring or default rotation. Only the owner-scoped [passive permission](#non-area-and-passive-coverage-references) allows in-battle rotation; Strike separately selects eight directions (§2–§3). Push direction is not rotation; missing mappings remain T02.
 - **Boundaries:** all cells must be on-board (§2); no automatic trimming, shifting or rotation to fit. Keep profile-specific Strike solid-prop blocking, ground/prop occupancy and Mountain blanking separate ([gdd_battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); §2–§3 here), not universal obstacle clipping/resizing. Forced-movement collision uses [gdd_battle §6.3](gdd_battle.md#63-collision-fall--debris), not area placement.
-- **Hits/2×2:** a monster covered by several hit cells is struck once per use ([§3](#body-relative-damage-and-movement-variants)); cells are not otherwise distinct hits. 2×2 geometry is decided in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground) and the *2×2 bodies* entry below; layer mixing, landing and the remaining cases stay open (T04/T09). Infer neither per-cell/per-unit hits, partial placement nor collision defaults; preview/validation must expose unsupported cases.
+- **Hits/2×2:** a monster covered by several hit cells is struck once per use ([§3](#body-relative-damage-and-movement-variants)); cells are not otherwise distinct hits. 2×2 geometry is decided in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground) and the *2×2 bodies* entry below; no 2×2 board case is left open; the remaining open part is concrete air-capable definitions and prices (T09/T02). Infer neither per-cell/per-unit hits, partial placement nor collision defaults; preview/validation must expose unsupported cases.
 
 **Temporal contract — execution, effect events and lifetime**
 
@@ -214,15 +214,15 @@ Profiles are reusable, not a closed menu. Direct buffs/passives use the common m
 - **Multi-cell shapes** *(user decision, 1×1 targets)*: the target-movement variant applies **per struck monster standing on a hit cell adjacent to the attacker's origin**, each pushed one square along its own offset `d` away from the attacker (Whirl/Storm push outward, Arc fans out). Monsters on non-adjacent hit cells (e.g. Thrust tip, Cleave rear row, Long Whirl/Cross) are damaged as usual but **not moved**; no direction normalization is added. Radial destinations of 1×1 targets are pairwise distinct, so no destination ties arise. Self retreat is unchanged: it still needs one uniquely defined attack direction, and no multi-cell shape gains a retreat by this rule.
 - **Retreat direction for shapes** *(user decision)*: the retreat goes **opposite to the centre of the hit shape**, one cell from the attacker's origin. The direction is the geometric centre (mean of the shape's hit-cell offsets) relative to the origin and exists only if that centre lies on one of the eight directions (on an axis or exactly diagonal); the retreat is then the opposite unit vector. Shapes whose centre is the origin (Pincer, Whirl, Cross, Storm, Long Whirl/Cross) or lies off all eight directions have **no self retreat**. Jab, Thrust, Diagonal Thrust, Arc and cardinal Cleave qualify. A retreat variant needs a hit shape (a movement-only retreat uses a damage-free hit shape, no empty pattern), and the direction is the Strike direction selection already priced. The user confirmed this reading on 2026-11-10.
 - **One hit per monster** *(user decision)*: a monster covered by several hit cells (mainly 2×2 bodies) is struck **once per use**: damage, Kin effect and push/retreat trigger once, regardless of covered cells. Construction prices stay per potential cell (hit multiplicity is not priced). 2×2 specifics: see *2×2 bodies* below.
-- **2×2 bodies** *(user decision 2026-11-10; body rules in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground))*: for a 2×2 **target**, the push offset `d` is the mean of the offsets of its covered hit cells adjacent to the attacker's origin; it applies only if that mean lies on one of the eight directions, otherwise the body takes damage and Kin effect but is not pushed. A 2×2 **attacker** with a retreat variant retreats with its whole body one square along the opposite unit vector; legal only if all four destination squares are legal, else it stays in place (failed-retreat rule above). A 2×2 attacker chooses one of its four covered squares as the shape origin together with the direction, shown in the preview; its own body squares are not hit. A 2×2 target of a pull moves one cardinal step of the whole body, with the direction taken from the covered square nearest the anchor (ties as for 1×1, T04). A 2×2 is affected by any zone, Surge footprint or hit shape that overlaps at least one covered square, once per event or use. Open (T09): Mountain air rule for 2×2 and entry/exit details.
+- **2×2 bodies** *(user decision 2026-11-10; body rules in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground))*: for a 2×2 **target**, the push offset `d` is the mean of the offsets of its covered hit cells adjacent to the attacker's origin; it applies only if that mean lies on one of the eight directions, otherwise the body takes damage and Kin effect but is not pushed. A 2×2 **attacker** with a retreat variant retreats with its whole body one square along the opposite unit vector; legal only if all four destination squares are legal, else it stays in place (failed-retreat rule above). A 2×2 attacker chooses one of its four covered squares as the shape origin together with the direction, shown in the preview; its own body squares are not hit. A 2×2 target of a pull moves one cardinal step of the whole body, with the direction taken from the covered square nearest the anchor (ties as for 1×1, T04). A 2×2 is affected by any zone, Surge footprint or hit shape that overlaps at least one covered square, once per event or use. Mountain, entry and landing rules for 2×2 are decided in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground) and [§6.3](gdd_battle.md#63-collision-fall--debris).
 - **Access** *(user decision)*: the variants are **Kin-bound**: target-movement (push) variants, damage-plus-push or movement-only, only for Scaled; self-retreat variants only for Winged. The existing Kin Strikes (Scaled push 1 with its push-direction choice, Winged retreat 1) stay unchanged and are separate skills. No variant is open to other Kin, and no Kin package is transferred. Shape AP and stage limits follow [§8.1](#81-strike-by-kin); concrete species lists remain content work (T11).
 - **Authored alternatives:** target movement or self movement is fixed by the skill, not selected after a hit. Preserve source-specific side/caster/layer permissions and legal landing rules. Blocked/occupied destinations grant no automatic alternative square. Collision, fall and entry consequences remain environmental/runtime consequences, not an extra authored damage component.
-- **Spatial boundary:** non-adjacent off-axis hits have no inferred normalization/tie-break; 2×2 geometry follows the *2×2 bodies* entry above, but the 2×2 variants stay unapproved until the price calculator and cost notes cover them (T09/T02). This coupled eight-direction rule does not change existing cardinal zone/Surge push/pull or silently replace Scaled's selected direction and Winged's existing retreat package. Prices, AP, access and unresolved ordering within the attack payload/multi-target resolution remain T02/T04/T06; neither a damage value nor a damage-for-distance exchange is approved by this section.
+- **Spatial boundary:** non-adjacent off-axis hits have no inferred normalization/tie-break; 2×2 geometry follows the *2×2 bodies* entry above, but the 2×2 variants stay unapproved until the price calculator and cost notes cover them (T09/T02). This coupled eight-direction rule does not change existing cardinal zone/Surge push/pull or silently replace Scaled's selected direction; Winged's Dive uses the same centre-based retreat. Prices, AP, access and unresolved ordering within the attack payload/multi-target resolution remain T02/T04/T06; neither a damage value nor a damage-for-distance exchange is approved by this section.
 
 ### Surge
 
 - **Surge:** telegraphed delayed execution, pending marker/timer, zone shapes/placement but its own slot/lifecycle.
-- **Concurrent casts:** a monster may have multiple pending Surges from different equipped skills or repeated casts of the same skill instance when its [usage policy](#usage-and-repetition) permits. Each cast pays its own authored Battle-AP and creates its own pending marker/timer under the existing scheduling contract. No monster-wide charging cap applies. Placement still forbids overlap with any pending Surge; ordering when multiple casts resolve at the same event remains T04, not an implied cast-order rule.
+- **Concurrent casts:** a monster may have multiple pending Surges from different equipped skills or repeated casts of the same skill instance when its [usage policy](#usage-and-repetition) permits. Each cast pays its own authored Battle-AP and creates its own pending marker/timer under the existing scheduling contract. No monster-wide charging cap applies. Placement still forbids overlap with any pending Surge; several Surges due at the same event resolve phase by phase together, with no cast-order rule ([Battle §6.2](gdd_battle.md#62-surge-resolution-integration)).
 - **Aftermath:** optional, explicit, separately budgeted `board_changes`, never implied by Surge alone. Damage precedes authored ground aftermath. No new prices here; legality/evaluation/validation: §4/§5/§7.
 
 ```
@@ -264,7 +264,7 @@ MAJOR SURGE
 | **Flood** |      2 | **Thornbed I** — hurts when entered | ordinary prop handling | **can't reach it** (square blanked) |
 | **Rift** |      3 | **Blight I** — hurts at start of turn | ordinary prop handling | **destroys it** ([Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed)): the monster on it takes the Surge damage plus the environmental 1 collapse damage; its Blight I residue becomes the new ground |
 
-- **Push order:** damage-2/Thornbed also pushes struck monsters **1 square in the cast-fixed direction**, toward the squares that will receive residue afterwards. The order damage → push → residue follows the [payload resolution order](gdd_battle.md#62-surge-resolution-integration), so struck monsters are pushed before the residue is laid and do not enter it through this push; T07 only reviews the ground interactions.
+- **Push order:** damage-2/Thornbed also pushes struck monsters **1 square in the cast-fixed direction**. The order damage → push → residue follows the [payload resolution order](gdd_battle.md#62-surge-resolution-integration), so struck monsters are pushed before the residue is laid and do not enter it through this push; T07 only reviews the ground interactions.
 - **Collapse state:** the final ground after a Mountain is destroyed follows the Mountain-destruction rule in Battle §4.7 (the destroying skill's own ground, otherwise Rubble). Order of Surge damage, displacement and board operations (incl. collapse damage and residue): [payload resolution order](gdd_battle.md#62-surge-resolution-integration).
 
 A Mountain therefore offers profile-specific protection, not a universal Surge counter.
@@ -418,7 +418,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 
 | Existing definition/source | Recipients and trigger | Lifetime, order and caps |
 |----------------------------|------------------------|--------------------------|
-| Zone `mend` | Reference recipients/trigger in [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites); magnitude `min(2, zone level)` per Battle §4.6 (user decision 2026-11-10; price open) | Ordering uses [Battle §2.4](gdd_battle.md#24-effect-timing-reference); zone lifetime is shared. Level scaling and numeric healing cap remain open under T07, not implied by max zone level III. |
+| Zone `mend` | Reference recipients/trigger in [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites); magnitude `min(2, zone level)` per Battle §4.6 (user decision 2026-11-10); priced at its level-I value (draft, below) | Ordering uses [Battle §2.4](gdd_battle.md#24-effect-timing-reference); zone lifetime is shared. The healing cap is decided (`min(2, zone level)`); the price is a draft at the level-I value (T02). |
 | Mossbed | Reference occupants, entry trigger and heal amount in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) | No additional placement or continuous heal. No per-turn or re-entry limit (user decision 2026-11-10); every entry heals as in Battle §4.7. |
 
 - **Healing boundaries:** no generic immediate/direct monster heal, ally-only zone or new repeat trigger. The proposed tamer heal ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)) is no monster definition. Pills heal **between battles**; expedition HP persists; Revival ends Injury, not battle HP loss (gdd_overworld §5.2/§6.4–6.6).
@@ -432,7 +432,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 
 - **Step:** resolves as the universal one-square action under the [Movement profile](#movement) (slot-free, 2 AP, exactly 1 square); not freely upgradable.
 - **Slotted movement:** authorized [preset](#movement) (path, blocking, ground-cost and landing rules there), AP baseline (§5), **Movement, not Reach**.
-- **Access:** §8.2 owns presets/foreign modes, body/stage restrictions. `path: teleport` grants no access without an authorized profile; free paths grant neither persistent flight nor air access. Winged air requires Soul; flight movement and air occupancy: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground), layer change/landing remain T09. Planned Water/Swim remain T08, not legal for unspecified Kins.
+- **Access:** §8.2 owns presets/foreign modes, body/stage restrictions. `path: teleport` grants no access without an authorized profile; free paths grant neither persistent flight nor air access. Winged air requires Soul; flight movement and air occupancy: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground), a Soul+ Winged stays on the air layer with no landing effect. Water/Swim is removed.
 - **Custom modes/upgrades:** satisfy distance/direction pricing and access; fields are no player bypasses. §6's named one-flag-flip/distance-penalty patches grant no unrestricted path-mode, flight, teleport, extra action or range upgrade. Validate complete profile, entry order and destination preview; large-body/movement gaps remain T04/T09.
 
 Tamer-source unit relocation and unit-swap effects retain their separate definitions (including proposal status where applicable), not self-movement presets or a shortcut around monster access rules ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills); T19/T20).
@@ -577,7 +577,7 @@ Movement, passive and prop standards are maintained only in their owning section
 - **Reading:** damage + push/retreat totals equal the existing Scaled/Winged Jab totals above because the rates are the same anchors; the new geometry adds no points. Movement-only variants are cheaper only because the absent damage is not paid for. All fit slot level 1 (24) numerically. This is arithmetic, not balance, and grants no unlock.
 - **Multi-cell push drafts** *(draft)*: push is priced 2 per **adjacent** hit cell only, since only those cells can move a recipient; all other components follow the formula below (Beast values from the table). Damage + push totals: Jab 16, Pincer 19, Arc 25, Whirl 29, Cross 29, Storm 51 (equal to the Scaled column, as all hit cells are adjacent) and Thrust 19 (Scaled 21), Cleave 40 (46), Long Whirl/Long Cross 50 (58), because distant cells are not moved. Movement-only variants omit damage 4 per cell and the ground/air 2. Budget fit follows the existing Beast/Scaled budget findings and is not a recommendation.
 - **Multi-cell retreat drafts** *(draft)*: retreat is 3 once per use, so damage + retreat equals the Winged column above for qualifying shapes: Jab 17, Thrust 20, Diagonal Thrust 20, Arc 22, cardinal Cleave 37. Pincer, Whirl, Cross, Storm and Long Whirl/Cross have no retreat variant (their existing Winged Strikes are unchanged). Retreat-only is priced only for the 1-cell Jab shape (11 above); damage-free multi-cell shapes are not priced.
-- **Open:** diagonal Cleave and 2×2/layers need T09; hit multiplicity for retreat is decided as once per use. The [price calculator](../tools/simulator/pricing.py) prices them only through the Scaled/Winged package rows.
+- **Open:** 2×2/layers need T09; Cleave is cardinal-only (decided); hit multiplicity for retreat is decided as once per use. The [price calculator](../tools/simulator/pricing.py) prices them only through the Scaled/Winged package rows.
 
 - **Construction-point formula, 1×1 references:** `4 × hit cells + 2 × cells outside the adjacent eight-cell ring + effective footprint-direction cost + 2 ground/air coverage + AP-efficiency cost + Kin component`. Direction costs 2 only if cells change; ordinary prop interaction has no generic surcharge. Table values are **not damage** and decide no 2×2 hit multiplicity.
 
@@ -596,7 +596,7 @@ Movement, passive and prop standards are maintained only in their owning section
 | Long Cross | 4 | 0 | 42 | 45 | 58 | 58 | 58 | 58 |
 
 - **Inputs:** hit cells and existing battle AP per shape are the Squares and AP columns of [§8.1](#81-strike-by-kin).
-- **Geometry:** Arc uses the adjacent row/wedge; Cleave the illustrated cardinal two rows (three adjacent/three distant cells). Exact offsets for every selectable orientation remain T02/T06; no diagonal Cleave inferred. Symmetric forms pay no redundant direction selector.
+- **Geometry:** Arc uses the adjacent row/wedge; Cleave the illustrated cardinal two rows (three adjacent/three distant cells). Cleave is selectable in the 4 straight directions only (user decision 2026-11-11); no diagonal Cleave exists or is inferred. Symmetric forms pay no redundant direction selector.
 - **Scope:** paper calculation, not legal-content catalogue, completed upgrade path or engine test.
 - **Budget findings (24/30/36):** all Jabs fit level 1 numerically; per-cell-Kin Arc/Whirl/Cross need at least level 2. Only Beast Storm/cardinal Cleave fit 36; other variants and all Long Whirl/Long Cross exceed it.
 - **Legacy reconciliation:** T02/T05/T06 after broader calibration; preserve neither content by automatic budget/AP changes, damage reductions, waived Kin costs nor over-budget approvals. Numeric fit grants no slot/progression access; every skill still needs a complete original-AP development path.
@@ -686,7 +686,7 @@ For the selected event/once-per-round combination, add the independently priced 
 | Immediate one-time displacement under an authorized spatial source | 2 per potential recipient cell | Existing cardinal one-square component; direction/pull anchor included. New coupled eight-direction variants require separate calibration; no direct-unit Shove source is authorized |
 | Telegraphed, fixed-footprint, avoidable one-shot displacement | 50% of the immediate component above | [Shared timing conditions](#shared-valuation-standards); direction included, no second timing multiplier or new source permission |
 | Zone shield | 1 × V × C × R | Existing base 2, cap 3; Surge reduction, not shield HP |
-| Zone mend | 3 × V × C × R | Existing heal 1 reference; magnitude now `min(2, level)`, price for the scaling and repeat balance pending T07 |
+| Zone mend | 3 × V × C × R with V = 1 (level-I healing) | Level II (healing 2) comes from AP-paid recasting, as for Slow/Quicken *(user decision 2026-11-11, draft)*; repeat balance tested in T07/T13 |
 | expose | Not priced / reserved | No approved zone; no damage-boost permission |
 
 - **Displacement timing:** only the shared standard's qualifying one-shot displacement gets the reduction. Existing immediate spatial, Scaled Strike and zone effects retain their own rates/contracts and distances; delay alone is insufficient.
@@ -694,7 +694,7 @@ For the selected event/once-per-round combination, add the independently priced 
 
 - **Selection:** ranged zones pay +2 board anchor once, no second direction/anchor-binding charge. Body-relative Shove is not a ranged unit-selection source; calibrate its spatial components through the new variant contract rather than retaining a direct-target selection fee.
 - **Repetition/values:** normal AP-paid zone levelling/refresh included, extending Slow policy for calibration only. Resolve magnitude/cap/level formulas; no stronger values, heal scaling, extra triggers or ally-only filters. Test each effect's repetition independently.
-- **Healing/protection:** retain max HP, events/source permissions; no direct heal, revival, Injury cure, general immunity, tamer protection or item permission. Stacking and order: [Battle §3.1](gdd_battle.md#31-effective-stats)/[§6.2](gdd_battle.md#62-surge-resolution-integration) (decided); `mend` scales `min(2, level)` and Mossbed has no loop limit (T07, decided); prices for the changed `mend` magnitude are still open. Prices set neither caps nor unbounded-healing permission.
+- **Healing/protection:** retain max HP, events/source permissions; no direct heal, revival, Injury cure, general immunity, tamer protection or item permission. Stacking and order: [Battle §3.1](gdd_battle.md#31-effective-stats)/[§6.2](gdd_battle.md#62-surge-resolution-integration) (decided); `mend` scales `min(2, level)` and Mossbed has no loop limit (T07, decided); the `mend` price is the level-I draft of the completion sketch (unvalidated). Prices set neither caps nor unbounded-healing permission.
 
 ### Ground and Board Costs
 
@@ -754,7 +754,7 @@ For the selected event/once-per-round combination, add the independently priced 
 |-----|-------------|------------|
 | Monster **Nullify** (next Surge damage on one monster becomes 0, one use) | 9 per protected monster | zone `shield` rate 1 × V × C × R with V = 3 (the Surge damage cap), one cell, one round = 3, times a ×3 premium because it ignores all later damage increases and all values |
 | **Level-II residue start** (hazard ground starts at level II) | 8 per cell (twice the level-I hazard package 4) | hazard damage equals level, so the package scales linearly; Hearth/Umbra/blessed ground have no levels and are unaffected |
-| Zone **`mend`** with `min(2, level)` | 3 × V × C × R with V = 2 (the cap) = 6 × C × R | priced at its maximum magnitude, as levelling is AP-paid recasting |
+| Zone **`mend`** with `min(2, level)` | 3 × V × C × R with V = 1 (level-I healing) = 3 × C × R | priced at its base value like Slow/Quicken, as levelling is AP-paid recasting *(user decision 2026-11-11, draft)*; the earlier cap-based variant (6 × C × R; 3 cells, 2 rounds = 50 points, above every slot ceiling) is dropped |
 | **Air recipients** for a zone effect or Surge damage | +2 per effect, once | the existing ground + air coverage component, applied by analogy to non-damage effects |
 | **Relocate** a prop one square | 6 per moved prop (unchanged) | kept provisional; the one-shot displacement rate 2 plus placement legality does not yet justify a change |
 | **2×2 body variants** (attacker or target) | +0 over the 1×1 reference | geometry mapping only; footprint is already priced per potential cell and a 2×2 is struck once per use |
@@ -959,7 +959,7 @@ Every Strike is a **shape around the body** plus a **Kin twist** (rule: [§3](#3
 |       4 |  3 | the 4 neighbours of `M`                                 | **Whirl**                              |
 |       4 |  3 | the 4 diagonals of `M`                                  | **Cross**                              |
 |       8 |  4 | all 8 squares around `M`                                | **Storm**                              |
-|       6 |  5 | the 3 squares in front of `M` and the 3 behind those    | **Cleave**                             |
+|       6 |  5 | the 3 squares in front of `M` and the 3 behind those (4 straight directions only, *user decision 2026-11-11*) | **Cleave**                             |
 |       8 |  5 | 2 forward in each of the 4 directions                   | **Long Whirl**                         |
 |       8 |  5 | 2 forward in each of the 4 diagonals                    | **Long Cross**                         |
 
@@ -983,6 +983,19 @@ Cleave   Long Whirl   Long Cross
 ```
 `M` is the monster, `x` a hit square. Straight shapes are drawn for "up", diagonal ones for "up-right"; the player turns them to any of the 8 directions.
 
+**Offsets per orientation** *(derived from the table above, adds no shape; origin `M = (0,0)`, direction `d = (dx, dy)`, `d⊥ = (|dy|, |dx|)` for straight `d`)*:
+
+| Shape | Legal directions | Hit offsets |
+|-------|------------------|-------------|
+| Jab | 8 | `d` |
+| Thrust | 4 straight | `d`, `2d` |
+| Diagonal Thrust | 4 diagonal | `d`, `2d` |
+| Pincer | 8 | `d`, `−d` |
+| Arc | 4 straight / 4 diagonal | straight: `d`, `d + d⊥`, `d − d⊥`; diagonal: `(dx,0)`, `d`, `(0,dy)` |
+| Whirl / Cross / Storm | symmetric | the 4 neighbours / the 4 diagonals / all 8 |
+| Cleave | 4 straight (decided) | `k·d⊥ + d` and `k·d⊥ + 2d` for `k ∈ {−1, 0, 1}` |
+| Long Whirl / Long Cross | symmetric | `c` and `2c` for each of the 4 neighbours / 4 diagonals `c` |
+
 **Self-retreat cell for the body-relative variants** *(draft illustration of the rule in [§3](#body-relative-damage-and-movement-variants))*: `R` is the single cell the attacker moves to, opposite the centre of the hit shape. Only shapes whose centre lies on one of the eight directions have it; the cell is checked and entered as defined in §3.
 
 ```
@@ -994,10 +1007,10 @@ R      R         R                R      R                   R
 Jab    Thrust    Diag Thrust    Arc      Arc (diagonal)    Cleave
 ```
 
-- **No retreat cell:** Pincer, Whirl, Cross, Storm, Long Whirl and Long Cross (centre is the attacker itself); a diagonal Cleave is not defined (T09).
-- The existing Winged Strike (Dive, below) keeps its own package and is not replaced by these illustrations.
+- **No retreat cell:** Pincer, Whirl, Cross, Storm, Long Whirl and Long Cross (centre is the attacker itself); Cleave is cardinal-only, like Thrust (its diagonal counterpart would be a separate shape): a diagonal Cleave does not exist (user decision 2026-11-11).
+- The Winged Strike (Dive, below) uses this same retreat cell *(user decision 2026-11-11)*.
 
-- **AP decides when:** AP 2 is the ceiling until Core, so Qi and Foundation Strikes are all Jabs and differ by Kin twist only. AP 3 opens at Core, AP 4 at Immortal and AP 5 at Sovereign, the last two only with TPR 1 ([Monsters §2.3](gdd_monsters.md#23-stat-ceilings-per-stage))
+- **AP decides when:** AP 2 is the ceiling until Core, so Qi and Foundation Strikes are all Jabs and differ by Kin twist only. AP 3 opens at Core, AP 4 at Immortal and AP 5 at Sovereign ([Monsters §2.3](gdd_monsters.md#23-stat-ceilings-per-stage))
 - **Every shape hits allies too.** The bigger the shape, the more of them stand in it. A 2×2 monster starts the shape at a chosen covered square ([2×2 bodies](#body-relative-damage-and-movement-variants))
 - The shape is part of the species and changes through slot-development upgrades (Shape and Size, §6)
 
@@ -1007,8 +1020,8 @@ Jab    Thrust    Diag Thrust    Arc      Arc (diagonal)    Cleave
 
 |   Kin   |   Strike   |                                          Effect                                          |
 |---------|------------|------------------------------------------------------------------------------------------|
-| Beast   | Bite       | no effect                                                                   |
-| Winged  | Dive       | then move 1 square away for free (the free neighbour farthest from the target)           |
+| Beast   | Bite       | no effect *(user decision 2026-11-11: Beast stays the unpriced baseline)*                |
+| Winged  | Dive       | then retreat 1 square for free, opposite the centre of the hit shape, once per use (rule and failed-retreat handling: [§3](#body-relative-damage-and-movement-variants); no retreat for shapes without a unique centre direction) |
 | Scaled  | Tail Sweep | push the target 1 square (direction chosen with WASD)                                    |
 | Swarm   | Gnaw       | props take double (4)                                                                    |
 | Spirit  | Siphon     | target −1 initiative next round                                                          |

@@ -20,6 +20,7 @@
 - **Wiedereinstieg:** in `docs/temp_todo.md` Verwendung, aktuelle Übergabe und betroffene Aufgabe lesen; danach gezielt zuständige GDD-Abschnitte.
 - **Priorität:** aktuelle Nutzeranweisung vor älterer Übergabe; veraltete Arbeitsanweisungen korrigieren.
 - **Entscheidungen:** grundlegendes Gameplay mit dem Nutzer klären; beschlossene Prinzipien nur bei neuem Anlass erneut öffnen.
+- **Rückfragen:** Wo eine Nutzerentscheidung nötig ist, das AskUserQuestion-Tool verwenden (Optionen mit Empfehlung zuerst, Entscheidungen gebündelt), nicht als Fließtextfrage im Chat. Nicht nach dem nächsten Arbeitsschritt fragen: diesen selbst aus Übergabe und Aufgabenliste vorgeben.
 - **Entwürfe:** zusammengehörige Kosten/Rechenbeispiele gesammelt ausarbeiten. Neue Zahlen/Empfehlungen als Entwurf kennzeichnen; keine Freigabe neuer Mechaniken oder grundlegender Gameplayänderungen daraus ableiten.
 - **Lücken:** fehlende Regeln/Widersprüche benennen, keine Standardannahmen erfinden. Budget-Fit ist keine Content-/Balancefreigabe.
 
