@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """Reduced CLI battle simulator for Road of the Beasts (temporary docs tool).
 
-Purpose: cheap bot-vs-bot indications for the CURRENT DRAFT rules (docs/gdd_battle.md,
+Primary purpose (user, 2026-11-11): obtain an INITIAL BALANCING signal for the construction-point
+prices in docs/gdd_skills.md section 5 (do skills of equal cost perform comparably?). Props are
+considered good enough for now; do not extend them further before the skill coverage below.
+Current skill coverage: Jab Strike, Walk, one 2-cell Surge profile, props. Missing: other Kin Strikes,
+movement presets, zones/protection/healing, self buffs, ALL passives, tamer skills (one intervention
+per battle that can swing a fight), species and many different monsters.
+
+Also: cheap bot-vs-bot indications for the CURRENT DRAFT rules (docs/gdd_battle.md,
 docs/gdd_skills.md). It is NOT the game, NOT balance validation and NOT price validation.
-Standard library only. Usage: python3 -I docs/tools/battle_sim.py --help
+Context and plan: tools/simulator/README.md. Standard library only. Usage: python3 -I tools/simulator/battle_sim.py --help
 
 Modelled (reduced): square board, Plain/Rubble/Lava/Thornbed/Blight/Mossbed/Hallowed/Hearth/
 Umbra/Voidscar ground, ground-layer prop catalogue (Battle 4.10) with aftermath, initiative
@@ -74,6 +81,22 @@ class Battle:
         s.stats = Counter()
         s.first_tie_done = False
         s.over, s.winner = False, None
+
+    def clone(s):
+        c = object.__new__(Battle)
+        c.__dict__.update(s.__dict__)
+        c.ground = dict(s.ground)
+        c.props = {k: dict(v) for k, v in s.props.items()}
+        c.mons = []
+        cmap = {}
+        for m in s.mons:
+            n = object.__new__(Mon)
+            n.__dict__.update(m.__dict__)
+            c.mons.append(n)
+            cmap[m.uid] = n
+        c.surges = [dict(x, caster=cmap[x["caster"].uid]) for x in s.surges]
+        c.stats = Counter(s.stats)
+        return c
 
     # ---------- helpers ----------
     def inb(s, p):
@@ -286,7 +309,26 @@ class Battle:
             if d == top:
                 s.ground[c] = ("voidscar", 0)
 
+    def render(s):
+        rows = []
+        sym = {"plain": ".", "rubble": ",", "lava": "L", "thorn": "T", "blight": "B", "mossbed": "m",
+               "hallowed": "h", "hearth": "H", "umbra": "u", "voidscar": "#"}
+        for y in range(s.n):
+            row = ""
+            for x in range(s.n):
+                m = s.mon_at((x, y))
+                if m:
+                    row += m.uid[0].lower() if m.side else m.uid[0]
+                elif (x, y) in s.props:
+                    row += s.props[(x, y)]["name"][0].upper()
+                else:
+                    row += sym[s.ground[(x, y)][0]]
+            rows.append(row)
+        return "\n".join(rows)
+
     def turn(s, m):
+        if getattr(s, "trace", False):
+            print(f"-- round {s.round} {m.uid} hp {m.hp}\n{s.render()}")
         mine = [x for x in s.surges if x["caster"] is m]
         if mine:
             hits = [(c, SURGES[x["kind"]][0], True) for x in mine for c in x["cells"]]
@@ -500,17 +542,16 @@ def evaluate(b, side):
     e = [m for m in b.living(1 - side)]
     mine = b.living(side)
     if e and mine:
-        score -= 0.1 * min(max(abs(a.pos[0] - c.pos[0]), abs(a.pos[1] - c.pos[1])) for a in mine for c in e)
+        score -= 0.15 * sum(min(max(abs(a.pos[0] - c.pos[0]), abs(a.pos[1] - c.pos[1])) for c in e) for a in mine)
     return score
 
 
 def bot_greedy(b, m, ap):
     """One-step lookahead on a deep copy: picks the action with the best heuristic board score."""
-    import copy
     base = evaluate(b, m.side)
     best, best_score = None, base + 0.05
     for act in candidates(b, m, ap):
-        c = copy.deepcopy(b)
+        c = b.clone()
         cm = next(x for x in c.mons if x.uid == m.uid)
         c.bots = [lambda *a: None, lambda *a: None]
         c.do(cm, act)
@@ -536,7 +577,7 @@ def make_props(size, names, rng):
     return out
 
 
-def play(args, seed, names, surge=None, swap=False):
+def play(args, seed, names, surge=None, swap=False, trace=False):
     rng = random.Random(seed)
     bots = [BOTS[args.bot_a], BOTS[args.bot_b]]
     if args.arch == "random":
@@ -544,6 +585,7 @@ def play(args, seed, names, surge=None, swap=False):
     else:
         archs = [args.arch.split(","), args.arch.split(",")]
     b = Battle(args.size, make_props(args.size, names, rng), archs, surge or args.surge, bots, rng)
+    b.trace = trace
     w = b.run()
     return w, b
 
@@ -573,13 +615,15 @@ def main():
     ap.add_argument("--bot-b", choices=sorted(BOTS), default="rush")
     ap.add_argument("--arch", default="random", help="'random' (one random archetype per side per game) or a comma list used by both sides, e.g. brawler,caster,balanced")
     ap.add_argument("--props", default="", help="comma list of prop names, one mirrored pair each")
+    ap.add_argument("--pairs", type=int, default=2, help="mirrored pairs per prop in --experiment props")
+    ap.add_argument("--trace", action="store_true", help="print the board before each turn of one game (seed)")
     ap.add_argument("--experiment", choices=["props", "surges", "bots", "none"], default="none")
     args = ap.parse_args()
     if args.experiment == "props":
         experiment(args, "no props", [])
         for name in PROPS:
             if name != "beam":
-                experiment(args, f"pair of {name}", [name])
+                experiment(args, f"{args.pairs} pair(s) of {name}", [name] * args.pairs)
     elif args.experiment == "surges":
         for k in SURGES:
             experiment(args, f"surge {k}", [x for x in args.props.split(",") if x], k)
@@ -588,6 +632,9 @@ def main():
             for c in BOTS:
                 args.bot_a, args.bot_b = a, c
                 experiment(args, f"{a} vs {c}", [x for x in args.props.split(",") if x])
+    elif args.trace:
+        w, b = play(args, args.seed, [x for x in args.props.split(",") if x], trace=True)
+        print("winner", w, "rounds", b.round, dict(b.stats))
     else:
         experiment(args, "custom", [x for x in args.props.split(",") if x])
 

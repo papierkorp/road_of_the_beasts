@@ -548,7 +548,7 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
 **Historical implemented baseline (v6.0):**
 
 - `godot/`: main menu → draft (pick 3 of the 9 roster monsters, or 1 for a duel) → **3v3 on 7×7** or **1v1 on 5×5** against an AI team drawn from the rest; headless core (`godot/battle/core/`) implements historical v6.0, not the revised design.
-- `html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference; neither prototype validates the current design.
+- `tools/html_prototype/battle-prototype-v5-zones-ground.html` is the older v5 reference; neither prototype validates the current design.
 
 **Tools:**
 
