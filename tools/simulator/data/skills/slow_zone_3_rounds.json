@@ -2,6 +2,12 @@
  "name": "Slow zone 3 rounds",
  "usage": "active",
  "ap": 1,
+ "note": "Draft duration candidate from Skills section 11; fixed horizontal I3, no automatic slot-level effect upgrades.",
+ "sim": {
+  "action": "zone",
+  "offsets": [[-1, 0], [0, 0], [1, 0]],
+  "effects": [{"effect": "slow", "base": 1, "cap": 2}]
+ },
  "components": [
   {
    "type": "zone",

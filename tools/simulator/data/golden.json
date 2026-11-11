@@ -1,5 +1,5 @@
 {
- "_note": "Expected totals copied from docs/gdd_skills.md section 5 paper examples; update together with the rate table in pricing.py.",
+ "_note": "Expected totals from docs/gdd_skills.md section 5 paper examples; update together with pricing.py. Mend uses its level-I price (32); runtime healing is min(2, zone level). These are reusable arithmetic references, not gameplay regression fixtures.",
  "skills": {
   "beast_jab.json": "14",
   "winged_jab.json": "17",
@@ -25,6 +25,7 @@
   "quicken_1_3_cells_2_rounds.json": "26",
   "shield_2_3_cells_2_rounds.json": "26",
   "mend_1_3_cells_2_rounds.json": "32",
+
   "immediate_hazard_ground.json": "26",
   "hallowed_cast.json": "20",
   "mountain_creation_reset.json": "29",
@@ -47,6 +48,7 @@
   "burrow.json": "14",
   "phase.json": "13"
  },
+
  "props": [
   {
    "component": {

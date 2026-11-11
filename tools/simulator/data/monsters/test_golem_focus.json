@@ -1,0 +1,13 @@
+{
+ "name": "test_golem_focus",
+ "kin": "beast",
+ "stage": "core",
+ "subtier": "high",
+ "note": "Legal test sheet for the Focus Initiative-only draft; Battle section 3.1 refresh/expiry applies. No roster/species access or reachability approval.",
+ "stats": {"hp": 8, "init": 4.0, "move": 1, "reach": 3, "tpr": 1, "ap": 3},
+ "slots": [
+  {"skill": "Beast Jab", "level": 1},
+  {"skill": "Self Initiative +1, 2 rounds", "level": 1},
+  {"skill": "Run", "level": 1}
+ ]
+}

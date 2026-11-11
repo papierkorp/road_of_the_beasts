@@ -2,6 +2,13 @@
  "name": "Mend 1, 3 cells, 2 rounds",
  "usage": "active",
  "ap": 1,
+ "note": "Level-I price draft from Skills section 5: 32 points. Runtime healing is min(2, zone level); fixed horizontal I3 below is a simulation fixture, not approved content.",
+ "sim": {
+  "action": "zone",
+  "offsets": [[-1, 0], [0, 0], [1, 0]],
+  "effects": [{"effect": "mend", "base": 1, "cap": 2}],
+  "fixture": "Horizontal I3 for the three-cell paper calculation; shape not specified by the price example."
+ },
  "components": [
   {
    "type": "zone",

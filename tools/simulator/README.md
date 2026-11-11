@@ -1,54 +1,46 @@
-# Battle simulator (Python, temporary tool)
+# Temporary price experiment (Python)
 
-A small, reduced bot-vs-bot simulator for the **current draft rules** in `docs/` (Battle, Skills). Standard library only.
+Small, disposable CLI tools for **quick construction-price indications**, not a second game implementation. Standard library only; always invoke with `python3 -I`. The game is built in Godot. No persistent battle-test suite, legacy result fixtures, compatibility framework or full-design coverage target is maintained here.
 
-```sh
-python3 -I tools/simulator/battle_sim.py --help
-python3 -I tools/simulator/battle_sim.py --games 300 --bot-a greedy --bot-b greedy --size 7 \
-        --arch brawler,caster,balanced --pairs 2 --experiment props
-python3 -I tools/simulator/battle_sim.py --bot-a greedy --bot-b greedy --size 7 --props gong,gong --seed 3 --trace
-```
+## Tools and reusable data
 
-## Purpose
+| File | Purpose |
+|---|---|
+| `pricing.py` | Calculate Skills §5 draft prices; unknown/unpriced components fail closed. Its small inline self-test checks paper arithmetic, not gameplay. |
+| `monsters.py` | Assemble JSON test sheets, check stat/slot spend, report unsupported effects as **NOT SIMULATED**. |
+| `battle_sim.py` | Reduced bot-vs-bot experiment; no claim to implement the complete GDD. |
+| `compare.py` | Short equal-cost, side-swapped experiment; prints a result table without writing files. |
+| `data/skills/*.json` | Reusable price records and optional `sim` hints; templates, not a production Godot schema or approved catalogue. |
+| `data/monsters/*.json` | Reusable stat/kit examples with explicit slot levels; no species-access or progression-reachability claims. |
+| `data/golden.json` | Expected **paper construction totals** corresponding to skill records; useful arithmetic references, not battle regression results. |
 
-- **First job:** an *initial balancing signal* for the construction-point prices in `docs/gdd_skills.md` §5: do skills of equal cost perform comparably?
-- It gives **indications only**. It is neither balance validation nor price approval and does not count as a T13 test run (`docs/temp_todo.md`). Results are written down only in `docs/temp_todo.md` (T13).
-
-## Why Python and not Godot (decision context, 2026-11-11)
-
-- The rules still change daily. A small script is cheap to change; the Godot battle core is not.
-- The Godot project already separates a headless battle core (`godot/battle/core/`) and has its own AI-vs-AI simulator (`godot/tools/sim.gd`), so a simulator there could share the GUI's logic. But that core still implements the historical v6.0 rules; bringing it to the current draft is game implementation, which needs a separate authorization.
-- **Plan:** Python now for fast signal; after the Battle completion gate (stable rules) port the logic to `godot/battle/core` and lift `sim.gd`; Python then remains at most a cross-checker.
-- **Risk:** two implementations drift apart. Countermeasures: keep skills as **data records** (JSON in the shared Skills §2 model) and only the resolution as code, so the same records can later feed Godot; reuse the T04 walkthroughs in `docs/temp_todo.md` as shared golden test cases.
-
-## Current coverage
-
-Modelled: square boards, ground types, ground-layer prop catalogue with aftermath, initiative queue with ties, AP, Walk and the movement presets (Step, Run, Leap, Glide, Burrow, Phase, Blink), all 11 Strike shapes with the Kin effects of Scaled (push), Winged (retreat), Spirit (initiative −1 next round) and Swarm (prop damage 4), one 2-cell Surge profile (Eruption/Flood/Rift), payload order (damage, defeat, removals incl. aftermath/Gong push, ground), late-round Voidscar pressure, battle end/Draw. Bots: `rush`, `kite`, `random`, `greedy` (one-step lookahead).
-
-**Missing:** zones/protection/healing, self buffs, **all passives**, the **tamer skills** (the once-per-battle intervention that can swing a fight), Ancient's Mountain destruction, Mountains/height, air layer, 2×2 bodies, extra turns (TPR), Nullify, skill-created props, diverse monsters/species. **Simplifications:** Scaled push is always "away" from the attacker, Phase triggers only landing entry effects, Strike cells off the board are clipped, legacy `--arch` monsters keep the old 1-AP walk. `monsters.py --self-test` also checks that engine shape geometry equals the priced hit/distant cells.
-
-## Next step
-
-Extend the engine to execute more record components (zones, protection/healing, self buffs), then add passives and the tamer intervention as switchable building blocks, then compare win rates of equal-cost builds (monster builder and JSON records exist, see above). Props are considered good enough for now and are not extended further.
-
-## Price calculator (`pricing.py`)
-
-Replaces the retired `docs/temp_kalkscript.py`. Rates are a data table mirroring `docs/gdd_skills.md` §5 (not a price authority); `--self-test` compares them with the GDD's paper examples. Unknown or unpriced components fail closed. When §5 rates change, update the table and the golden numbers together. Usage: see the module docstring.
-
-## Data files and monster builder
-
-- `data/skills/*.json`: one skill record per file (compact notation of `pricing.py`; optional `sim` hint tells the simulator what it can execute: `jab`, or `surge` + profile). `data/golden.json`: expected totals copied from Skills §5 paper examples (`pricing.py --self-test` checks table and files against each other).
-- `data/monsters/*.json`: **test sheets** (stats + up to 4 slots with explicit slot levels), no roster entries and no claim about reachable slot levels (T05).
-- `monsters.py` validates a sheet (stat points vs budget, stage ceilings, AP 4–5 needs TPR 1, kit legality, skill price ≤ slot-level ceiling via `pricing.py`, skill AP ≤ monster AP, Strike Kin = monster Kin) and reports skills the simulator cannot execute as NOT SIMULATED.
-- `battle_sim.py --mon-a a,b,c --mon-b d,e,f` plays legal sheets (refuses illegal ones). Per-monster capabilities today: Strikes, movement presets, one Surge profile. Everything else in a record is priced but ignored by the engine.
+Rules and prices remain in the GDDs, not these tools. A numeric budget fit grants no content/access/balance approval. When the owning price draft changes, update the calculator and JSON totals together. Mend uses its level-I price (32 for three cells/two rounds), while runtime healing remains `min(2, zone level)`.
 
 ```sh
-python3 -I tools/simulator/monsters.py --list
+python3 -I tools/simulator/pricing.py --self-test
+python3 -I tools/simulator/pricing.py --example "Slow zone 2 rounds"
 python3 -I tools/simulator/monsters.py --self-test
-python3 -I tools/simulator/battle_sim.py --games 300 --size 7 --bot-a greedy --bot-b greedy \
-        --mon-a test_golem_eruption,test_tiger_eruption --mon-b test_golem_rift,test_tiger_eruption
+python3 -I tools/simulator/monsters.py test_golem_shield
+python3 -I tools/simulator/battle_sim.py --games 10 --size 7 --bot-a greedy --bot-b greedy \
+        --mon-a test_golem_slow --mon-b test_golem_mend
+python3 -I tools/simulator/compare.py --seeds 1,2,3 --pairs-per-seed 10 --sizes 5,7 --bot greedy
+python3 -I tools/simulator/compare.py --builds test_tiger_shield,test_golem_shield --bot rush
 ```
 
-## Maintenance
+## Reduced coverage
 
-Keep the simulator in sync with rule changes in the GDDs (coverage list above and the module docstring), and never use it as a source of rules or prices.
+- Flat square boards, 1×1 ground-layer monsters, ground/entry triggers, ground-layer props and aftermath, AP, movement presets, Strike shapes and their reduced Kin effects, one two-cell Surge profile per monster, late Voidscar pressure and Draws.
+- Zones: same definition levels to III and refreshes; opposites subtract levels; otherwise replace. Duration ticks at round end; zones and ground stay independent. Slow is base 1/cap 2; Shield base 2/cap 3 reduces only Surge damage; Mend heals `min(2, level)` after end-turn displacement and ground damage. Mossbed heals on every entry, never on placement.
+- Haste, initiative and Reach modifiers have base-level support only where bounds/scaling are unresolved. A cap is never inferred from zone level III. The Quicken record is retained as a priced template but its levelled behaviour is **NOT SIMULATED**; `compare.py` rejects partial coverage.
+- Only the Focus example is a self-buff: +1 Initiative, two following rounds, same effect/owner refreshes without magnitude stacking. Adaptive is the only passive represented: boolean permission to rotate the owner's centred I3 zones, no mirroring or Strike changes. Other passive candidates stay **NOT SIMULATED**; generic event-order decisions do not supply their missing prices/content.
+- Zone push/pull uses a cast-fixed cardinal direction/anchor at turn end; an exactly diagonal pull does not move. There is no concrete push/pull skill record beyond the generic priced component; deterministic bots do not evaluate its future displacement well.
+
+**Not simulated:** Mountains/height and Ancient destruction, air, 2×2 bodies, extra turns, other passives, tamer/loadout/Nullify effects, skill-created props, full species/upgrade content. Tamer effects have no construction points, so their begun implementation was removed when the user narrowed this to a price experiment. TPR > 1 is reported as unsupported, not banned by an obsolete AP/TPR restriction. No game implementation or Godot changes are authorized here.
+
+**Important simplifications:** Scaled always pushes away; Phase applies only landing entry effects; Strike cells off-board are clipped. Bots avoid hazards, use a one-step heuristic, and do not reliably refresh timed effects or plan healing/displacement loops. Pending Surges remain limited to one per caster; dead-caster detonation, simultaneous multiple payloads, complete queue tie policy and Surge reblocking are not faithfully reproduced. The legacy `--arch` mode retains its historical one-AP walk. The existing Flood shortcut lacks its authored push and is not exposed by a `sim`-enabled JSON record. Prop targeting, payload/collision ordering and anti-stalling are approximations. None of these shortcuts is a GDD rule.
+
+## Reading comparisons
+
+`compare.py` requires equal exact stat spend, summed skill prices and slot-level distribution; it refuses illegal/partially supported inputs. Each build fields one monster. Each individual seed plays **twice with swapped sides**, using mirrored start squares, no props and the same bot. Seed blocks generate distinct 64-bit game seeds. A draw, including a timeout, scores 0.5. The table reports wins, draws, mean score, rounds and timeouts; SD/min/max describe **seed-block mean scores**, not confidence intervals.
+
+Different stat allocation is allowed at equal spend. Such a comparison probes the whole test build, **not the marginal value of its shared skill**. High Draw rates or bot stalling can make a 50/50 score meaningless for price valuation. Run only the experiments needed for the current question; do not expand this into a validation application. Record results and limits only in `docs/temp_todo.md` (T13). No price, budget or rule change follows automatically.

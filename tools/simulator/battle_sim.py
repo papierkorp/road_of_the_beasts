@@ -1,34 +1,28 @@
 #!/usr/bin/env python3
-"""Reduced CLI battle simulator for Road of the Beasts (temporary docs tool).
+"""Throwaway price experiment for Road of the Beasts (stdlib only, not the Godot game).
 
-Primary purpose (user, 2026-11-11): obtain an INITIAL BALANCING signal for the construction-point
-prices in docs/gdd_skills.md section 5 (do skills of equal cost perform comparably?). Props are
-considered good enough for now; do not extend them further before the skill coverage below.
-Current skill coverage: all 11 Strike shapes (ray-blocked by solid props, diagonal Cleave undefined/illegal) with
-Kin effects (Scaled push away from the attacker, Winged retreat opposite the shape centre, Spirit initiative -1
-next round, Swarm prop damage 4), movement presets (legacy/Step/Run/Leap/Glide/Burrow/Phase/Blink), one 2-cell
-Surge profile, props. Missing: Ancient's Mountain destruction (no Mountains), zones/protection/healing, self
-buffs, ALL passives, tamer skills (one intervention per battle that can swing a fight), species and many
-different monsters. Simplifications: Scaled push direction is always 'away'; Phase triggers only landing
-entry effects; Strike cells off the board are clipped; legacy --arch monsters keep the old 1-AP walk.
+Run: python3 -I tools/simulator/battle_sim.py --help
+Equal-cost, side-swapped runs: python3 -I tools/simulator/compare.py --help
+Reusable inputs: data/skills/*.json and data/monsters/*.json; rules/prices remain in docs/.
 
-Also: cheap bot-vs-bot indications for the CURRENT DRAFT rules (docs/gdd_battle.md,
-docs/gdd_skills.md). It is NOT the game, NOT balance validation and NOT price validation.
-Context and plan: tools/simulator/README.md. Standard library only. Usage: python3 -I tools/simulator/battle_sim.py --help
+Reduced coverage: 1x1 ground bodies, flat square boards, props/aftermath, ground triggers,
+AP, movement presets, Strike shapes, one two-cell Surge profile per monster, zones
+(Slow/Shield/Mend scaling, base-only unresolved stat effects, end-turn push/pull), Focus,
+and Adaptive rotation of centred I3 zones. Mossbed heals on every entry; Mend heals
+min(2, zone level). Same-effect Focus copies refresh, never stack. Bots are crude.
 
-Modelled (reduced): square board, Plain/Rubble/Lava/Thornbed/Blight/Mossbed/Hallowed/Hearth/
-Umbra/Voidscar ground, ground-layer prop catalogue (Battle 4.10) with aftermath, initiative
-queue with ties, AP, Walk/movement presets, Strikes, one-cell-pair Surge profiles (Eruption/Flood/Rift),
-payload order 6.2 (damage, defeat, removals incl. aftermath/Gong push, ground), late-round
-Voidscar pressure, battle end/Draw.
-NOT modelled: Mountains/height, air layer, 2x2 bodies, zones, extra turns (TPR), passives,
-tamer skills, skill-created props, Ancient Mountain effect, upgrades, Nullify.
+NOT SIMULATED: Mountains, air, 2x2, extra turns, tamer/loadout effects, Nullify, other
+passives, full Surge scheduling/geometry and skill-created props. Unknown effect scaling
+is not invented. Legacy --arch retains its old 1-AP walk and simplified rules; no durable
+regression harness. More limitations in README.md. No full-model completion target:
+this gives price indications only, never rule, content, balance or price approval.
 """
 import argparse
 import random
 import sys
 from pathlib import Path
 from collections import Counter, defaultdict
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 DIRS8 = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
@@ -59,6 +53,17 @@ ARCH = {
 }
 
 
+ZONE_OPPOSITE = {"slow": "haste", "haste": "slow", "drain_init": "quicken", "quicken": "drain_init",
+                 "drain_range": "extend", "extend": "drain_range", "push": "pull", "pull": "push",
+                 "shield": "expose", "expose": "shield"}  # Battle 4.6; mend has none
+ZONE_MAX_LEVEL = 3  # Battle 4.6: same zone levels up to III
+
+
+
+class NotSimulated(ValueError):
+    """The record/rule needs behaviour that no GDD decision defines; the engine fails closed instead of guessing."""
+
+
 class Mon:
     def __init__(s, uid, side, slot, pos, arch):
         s.uid, s.side, s.slot, s.pos = uid, side, slot, pos
@@ -71,11 +76,27 @@ class Mon:
         s.surge_ap = arch.get("surge_ap", 1)
         s.pen, s.pen_next = 0, 0  # Spirit Strike: initiative -1 next round
         s.skind = arch.get("surge", "default")  # 'default' = global --surge, 'none' = cannot cast
+        s.zone_kit = arch.get("zones", [])  # monsters.py engine handoff (record-driven zones)
+        s.rotate = arch.get("rotate", False)  # Adaptive: owner-only boolean permission, while participating
+        s.buff_kit = arch.get("buffs", [])  # self Initiative buffs
+        s.buffs = {}  # effect id -> dict(mag, expire); owner is implicit, equipped copies refresh
+        s.last_cast = {}  # kit index -> round of the last cast (once_per_round)
+
+
+    def copy(s):
+        n = object.__new__(Mon)
+        n.__dict__.update(s.__dict__)
+        n.buffs = {k: dict(v) for k, v in s.buffs.items()}
+        n.last_cast = dict(s.last_cast)
+        return n
 
 
 class Battle:
     def __init__(s, size, props, archs, surge, bots, rng, voidscar_round=None, max_rounds=40):
         s.n, s.rng, s.surge_kind, s.bots = size, rng, surge, bots
+        s.zones = {}  # cell -> dict(defn, level, left, aim, side, caster)
+
+        s.zone_serial = 0
         s.ground = {(x, y): ("plain", 0) for x in range(size) for y in range(size)}
         s.props = {}
         for pos, name in props.items():
@@ -100,14 +121,17 @@ class Battle:
         c.__dict__.update(s.__dict__)
         c.ground = dict(s.ground)
         c.props = {k: dict(v) for k, v in s.props.items()}
+        c.zones = {k: dict(v, aim=dict(v["aim"])) for k, v in s.zones.items()}
+        c.rng = random.Random(0)
+        c.rng.setstate(s.rng.getstate())
         c.mons = []
         cmap = {}
         for m in s.mons:
-            n = object.__new__(Mon)
-            n.__dict__.update(m.__dict__)
+            n = m.copy()
             c.mons.append(n)
             cmap[m.uid] = n
-        c.surges = [dict(x, caster=cmap[x["caster"].uid]) for x in s.surges]
+        c.surges = [dict(x, caster=cmap[x["caster"].uid], cells=list(x["cells"])) for x in s.surges]
+
         c.stats = Counter(s.stats)
         return c
 
@@ -135,18 +159,140 @@ class Battle:
                 c += 1
         return c
 
+    # ---------- zones (Battle 4.6) ----------
+    def zone_val(s, ent, effect):
+        """Effective value of one effect of a zone entry. mend = min(2, level) (decided); a missing cap means only level I is
+        authored, so any higher level fails closed instead of inferring a scaling."""
+        if effect["effect"] == "mend":
+            return min(2, ent["level"])
+        if effect["effect"] in ("push", "pull"):
+            return 1
+        if effect["cap"] is None:
+            if ent["level"] > 1:
+                raise NotSimulated(f"{effect['effect']}: level {ent['level']} has no authored cap/scaling")
+            return effect["base"]
+        return max(1, min(effect["cap"], effect["base"] + ent["level"] - 1))
+
+    def zone_at(s, p, effect):
+        """Sum of the effective values of `effect` on square p (0 without a zone). One zone per square."""
+        ent = s.zones.get(p)
+        if not ent:
+            return 0
+        return sum(s.zone_val(ent, e) for e in ent["defn"]["effects"] if e["effect"] == effect)
+
     def eff_init(s, m):
         v = m.init - m.pen + s.aura_near(m.pos, "init") + (1 if s.ground[m.pos][0] == "hearth" else 0)
+        v += s.zone_at(m.pos, "quicken") - s.zone_at(m.pos, "drain_init") + sum(b["mag"] for b in m.buffs.values())
         return max(0.1, v)
 
     def eff_move(s, m):
-        return max(1, m.move + s.aura_near(m.pos, "move"))
+        return max(1, m.move + s.aura_near(m.pos, "move") + s.zone_at(m.pos, "haste") - s.zone_at(m.pos, "slow"))
 
     def eff_reach(s, m):
-        return max(1, m.reach + s.aura_near(m.pos, "reach") + (1 if s.ground[m.pos][0] == "umbra" else 0))
+        return max(1, m.reach + s.aura_near(m.pos, "reach") + (1 if s.ground[m.pos][0] == "umbra" else 0)
+                   + s.zone_at(m.pos, "extend") - s.zone_at(m.pos, "drain_range"))
 
     def surge_cut(s, m):
-        return s.aura_near(m.pos, "ward") + (1 if s.ground[m.pos][0] == "hallowed" else 0)
+        """Value reductions of Surge damage (zone shield, Hallowed, Wardstone) add (Battle 6.1)."""
+        return s.aura_near(m.pos, "ward") + (1 if s.ground[m.pos][0] == "hallowed" else 0) + s.zone_at(m.pos, "shield")
+
+    def zone_cells(s, defn, anchor):
+        cells = [(anchor[0] + dx, anchor[1] + dy) for dx, dy in defn["offsets"]]
+        return cells if all(s.inb(c) for c in cells) else None  # fixed footprint, all on board, no clipping
+
+    def zone_opposite(s, a, b):
+        ta = {e["effect"] for e in a["effects"]}
+        tb = {e["effect"] for e in b["effects"]}
+        return any(ZONE_OPPOSITE.get(t) in tb for t in ta)
+
+    def zone_land(s, cell, new):
+        """Battle 4.6 table: none -> new; same definition -> level up (max III) and full duration; opposite -> levels
+        subtract (equal cancel, higher stays with the difference); anything else -> replaced (level I)."""
+        ex = s.zones.get(cell)
+        if ex is None:
+            s.zones[cell] = new
+        elif ex["defn"]["id"] == new["defn"]["id"]:
+            ent = dict(new, level=min(ZONE_MAX_LEVEL, ex["level"] + 1))
+            for e in ent["defn"]["effects"]:
+                s.zone_val(ent, e)  # fail closed when a level > I has no authored scaling
+            s.zones[cell] = ent
+        elif s.zone_opposite(ex["defn"], new["defn"]):
+            diff = ex["level"] - new["level"]
+            if diff == 0:
+                del s.zones[cell]
+            elif diff > 0:
+                s.zones[cell] = dict(ex, level=diff)  # clock unchanged
+            else:
+                s.zones[cell] = dict(new, level=-diff)
+        else:
+            s.zones[cell] = new
+
+    def zone_castable(s, m, z, anchor):
+        """Anchor within effective Reach (Manhattan, Skills 2/4), whole footprint on board, no level > I for cap-less effects."""
+        if abs(anchor[0] - m.pos[0]) + abs(anchor[1] - m.pos[1]) > s.eff_reach(m):
+            return False
+        cells = s.zone_cells(z, anchor)
+        if cells is None:
+            return False
+        if any(e["cap"] is None for e in z["effects"] if e["effect"] not in ("push", "pull", "mend")):
+            for c in cells:
+                ex = s.zones.get(c)
+                if ex and ex["defn"]["id"] == z["id"]:
+                    return False  # would reach level II of a cap-less effect
+        return True
+
+    def cast_zone(s, m, z, anchor, aim):
+        if not s.zone_castable(m, z, anchor):
+            raise NotSimulated("illegal zone cast")
+        if any(e["effect"] == "push" for e in z["effects"]) and aim.get("dir") not in DIRS4:
+            raise NotSimulated("zone push needs a cardinal cast direction")
+        if any(e["effect"] == "pull" for e in z["effects"]) and not s.inb(aim["anchor"]):
+            raise NotSimulated("zone pull needs a fixed on-board anchor")
+        s.zone_serial += 1
+        for c in s.zone_cells(z, anchor):
+            s.zone_land(c, dict(defn=z, level=1, left=z["rounds"], aim=dict(aim), side=m.side,
+                               caster=m.uid, gid=s.zone_serial))
+
+    def end_displace(s, m):
+        """End of turn, step 1 (Battle 2.4/6.5): zone push/pull moves one cardinal square; pull toward the anchor fixed at cast
+        (no move on an exact diagonal or when already on the anchor)."""
+        ent = s.zones.get(m.pos)
+        if not ent:
+            return
+        vx = vy = 0
+        for e in ent["defn"]["effects"]:
+            if e["effect"] == "push":
+                vx, vy = vx + ent["aim"]["dir"][0], vy + ent["aim"]["dir"][1]
+            elif e["effect"] == "pull":
+                dx, dy = ent["aim"]["anchor"][0] - m.pos[0], ent["aim"]["anchor"][1] - m.pos[1]
+                if (dx == 0 and dy == 0) or abs(dx) == abs(dy):
+                    continue
+                if abs(dx) > abs(dy):
+                    vx += (dx > 0) - (dx < 0)
+                else:
+                    vy += (dy > 0) - (dy < 0)
+        if abs(vx) + abs(vy) == 1:  # opposite directions cancel; a perpendicular sum is no cardinal move
+            s.push(m, (vx, vy))
+            s.defeat()
+
+    def end_mend(s, m):
+        """End of turn, step 3: heal min(2, zone level) from the zone on the (post-displacement) square; never revives."""
+        if m.alive:
+            h = s.zone_at(m.pos, "mend")
+            if h:
+                before = m.hp
+                s.heal(m, h)
+                s.stats["healed_mend"] += m.hp - before
+
+    def round_end(s):
+        """Battle 2.4 round end: zones -1 round (removed at 0). Timed unit effects (Battle 3.1): a buff of N rounds lasts until the
+        round end of the N-th following round."""
+        for c in list(s.zones):
+            s.zones[c]["left"] -= 1
+            if s.zones[c]["left"] <= 0:
+                del s.zones[c]
+        for m in s.mons:
+            m.buffs = {k: b for k, b in m.buffs.items() if b["expire"] > s.round}
 
     def living(s, side=None):
         return [m for m in s.mons if m.alive and (side is None or m.side == side)]
@@ -158,12 +304,16 @@ class Battle:
         s.stats["dmg_" + tag] += amt
 
     def heal(s, m, amt):
-        m.hp = min(m.maxhp, m.hp + amt)
+        if m.alive and m.hp > 0:
+            m.hp = min(m.maxhp, m.hp + max(0, amt))
 
     def defeat(s):
         for m in s.mons:
             if m.alive and m.hp <= 0:
+
                 m.alive = False
+                m.buffs.clear()
+
                 s.stats["defeats"] += 1
 
     def check_end(s):
@@ -174,8 +324,9 @@ class Battle:
             s.surges = []
 
     # ---------- payload resolution (Battle 6.2) ----------
+
     def payload(s, hits, residue, kind):
-        """hits: list of (cell, amount, is_surge). residue: (cell list, ground) or None."""
+        """hits: (cell, amount, is_surge[, prop damage]); residue: (cells, ground) or None."""
         for hit in hits:
             cell, amt, is_surge = hit[:3]
             m = s.mon_at(cell)
@@ -270,6 +421,7 @@ class Battle:
             s.heal(m, 1)
 
     # ---------- Strikes (Skills 8.1) ----------
+
     def strike(s, m, sk, d):
         cells, _ = strike_cells(s, m, sk["shape"], d)
         amt, kin = sk["dmg"], sk["kin"]
@@ -303,6 +455,7 @@ class Battle:
         s.check_end()
         return sk["ap"]
 
+
     # ---------- turn flow ----------
     def queue(s):
         ms = s.living()
@@ -329,14 +482,14 @@ class Battle:
             s.stats["rounds"] = s.round
             for m in s.mons:
                 m.pen, m.pen_next = m.pen_next, 0
-            q = s.queue()
-            for m in q:
+            for m in s.queue():
                 if s.over:
                     break
                 if m.alive:
                     s.turn(m)
             if s.over:
                 break
+            s.round_end()
             s.pressure()
             s.check_end()
         if not s.over:
@@ -376,6 +529,7 @@ class Battle:
             rows.append(row)
         return "\n".join(rows)
 
+
     def turn(s, m):
         if getattr(s, "trace", False):
             print(f"-- round {s.round} {m.uid} hp {m.hp}\n{s.render()}")
@@ -400,16 +554,22 @@ class Battle:
             return
         ap = m.ap
         for _ in range(12):
+
             act = s.bots[m.side](s, m, ap)
             if not act:
                 break
             ap -= s.do(m, act)
             if s.over or not m.alive:
                 return
+        s.end_displace(m)  # end of turn: 1. push/pull -> 2. end-turn ground damage -> 3. mend
+        s.check_end()
+        if s.over or not m.alive:
+            return
         g, lvl = s.ground[m.pos]
         if g == "lava":
             s.damage(m, lvl, "lava")
         s.defeat()
+        s.end_mend(m)
         s.check_end()
 
     def do(s, m, act):
@@ -434,7 +594,79 @@ class Battle:
         if kind == "surge":
             s.surges.append(dict(caster=m, cells=act[1], kind=s.surge_kind if m.skind == "default" else m.skind))
             return m.surge_ap
+        if kind == "zone":
+            z = m.zone_kit[act[1]]
+            if z.get("once_per_round") and m.last_cast.get(act[1]) == s.round:
+                raise NotSimulated("zone equipped copy has already been used this round")
+            z = zone_variant(m, z, act[3].get("rotation", 0))
+            s.cast_zone(m, z, act[2], act[3])
+            if z.get("once_per_round"):
+                m.last_cast[act[1]] = s.round
+            s.stats["cast_zone"] += 1
+            return z["ap"]
+        if kind == "buff":
+            b = m.buff_kit[act[1]]
+            # Battle 3.1: same effect of the same owner refreshes, even from another equipped copy.
+            m.buffs[b["id"]] = dict(mag=b["magnitude"], expire=s.round + b["rounds"])
+            s.stats["cast_buff"] += 1
+            return b["ap"]
         return 99
+
+
+def zone_variant(m, z, turns=0):
+    """Adaptive rotates the owner's eligible fixed I3 only; no mirrors or Strike edits."""
+    if type(turns) is not int or turns not in (0, 1, 2, 3):
+        raise NotSimulated("rotation must be an integer number of quarter turns")
+    if not turns:
+        return z
+    eligible = ({(-1, 0), (0, 0), (1, 0)}, {(0, -1), (0, 0), (0, 1)})
+    if not m.alive or not m.rotate or set(z["offsets"]) not in eligible:
+        raise NotSimulated("Adaptive rotation NOT SIMULATED for this owner/shape")
+    offsets = list(z["offsets"])
+    for _ in range(turns):
+        offsets = [(-y, x) for x, y in offsets]
+    return dict(z, offsets=offsets)
+
+
+def utility_candidates(b, m, ap):
+    out = []
+    for i, z in enumerate(m.zone_kit):
+        if ap < z["ap"] or (z.get("once_per_round") and m.last_cast.get(i) == b.round):
+            continue
+        variants, seen = [], set()
+        for turns in (range(4) if m.rotate else (0,)):
+            variant = zone_variant(m, z, turns)
+            geometry = frozenset(variant["offsets"])
+            if geometry not in seen:
+                seen.add(geometry)
+                variants.append((turns, variant))
+        for x in range(b.n):
+            for y in range(b.n):
+                anchor = (x, y)
+                for turns, variant in variants:
+                    if not b.zone_castable(m, variant, anchor):
+                        continue
+                    dirs = DIRS4 if any(e["effect"] == "push" for e in z["effects"]) else [(1, 0)]
+                    for d in dirs:
+                        out.append(("zone", i, anchor, dict(dir=d, anchor=anchor, rotation=turns)))
+    for i, buff in enumerate(m.buff_kit):
+        if ap >= buff["ap"]:
+            out.append(("buff", i))
+    return out
+
+
+def best_utility(b, m, ap):
+    best, score = None, evaluate(b, m.side) + 0.05
+    for act in utility_candidates(b, m, ap):
+        c = b.clone()
+        cm = next(t for t in c.mons if t.uid == m.uid)
+        c.do(cm, act)
+        value = evaluate(c, m.side)
+        if value > score:
+            best, score = act, value
+    return best
+
+
 
 
 # ---------- Strike shapes (Skills 8.1; rays are ordered outward so a solid prop stops the rest of its ray) ----------
@@ -618,7 +850,7 @@ def bot_rush(b, m, ap):
     e = nearest(b, m)
     if not e:
         return None
-    act = best_strike(b, m, ap)
+    act = best_strike(b, m, ap) or best_utility(b, m, ap)
     if act:
         return act
     if ap >= m.surge_ap and m.skind != "none" and not any(x["caster"] is m for x in b.surges):
@@ -668,7 +900,7 @@ def bot_kite(b, m, ap):
 
 
 def bot_random(b, m, ap):
-    opts = []
+    opts = utility_candidates(b, m, ap)
     opts += [("strike", i, d) for i, sk in enumerate(m.strikes) if ap >= sk["ap"] for d in strike_dirs(sk["shape"])]
     if ap >= m.surge_ap:
         for _ in range(6 if m.skind != "none" else 0):
@@ -688,7 +920,7 @@ def bot_random(b, m, ap):
 
 
 def candidates(b, m, ap):
-    out = []
+    out = utility_candidates(b, m, ap)
     out += [("strike", i, d) for i, sk in enumerate(m.strikes) if ap >= sk["ap"] for d in strike_dirs(sk["shape"])]
     if ap >= m.surge_ap:
         if m.skind != "none" and not any(x["caster"] is m for x in b.surges):
@@ -709,6 +941,18 @@ def evaluate(b, side):
     me = sum(max(0, m.hp) for m in b.living(side))
     foe = sum(max(0, m.hp) for m in b.living(1 - side))
     score = me - foe
+    for m in b.living():
+        sign = 1 if m.side == side else -1
+        score += sign * 0.5 * sum(v["mag"] for v in m.buffs.values())
+        z = b.zones.get(m.pos)
+        if z:
+            weights = {"slow": -0.2, "haste": 0.2, "drain_init": -0.45, "quicken": 0.45,
+                       "drain_range": -0.25, "extend": 0.25, "shield": 0.15}
+            for e in z["defn"]["effects"]:
+                val = b.zone_val(z, e)
+                score += sign * weights.get(e["effect"], 0) * val
+                if e["effect"] == "mend":
+                    score += sign * 0.6 * min(val, m.maxhp - m.hp)
     for x in b.surges:  # pending surges: expected damage on current occupants
         for c in x["cells"]:
             t = b.mon_at(c)
@@ -777,6 +1021,8 @@ def play(args, seed, names, surge=None, swap=False, trace=False):
         archs = [[rng.choice(sorted(ARCH))], [rng.choice(sorted(ARCH))]]
     else:
         archs = [args.arch.split(","), args.arch.split(",")]
+    if swap:
+        archs, bots = list(reversed(archs)), list(reversed(bots))
     b = Battle(args.size, make_props(args.size, names, rng), archs, surge or args.surge, bots, rng)
     b.trace = trace
     w = b.run()
@@ -809,11 +1055,15 @@ def main():
     ap.add_argument("--arch", default="random", help="'random' (one random archetype per side per game) or a comma list used by both sides, e.g. brawler,caster,balanced")
     ap.add_argument("--mon-a", default="", help="comma list of data/monsters names for side A (legal sheets only); overrides --arch")
     ap.add_argument("--mon-b", default="", help="same for side B (defaults to side A's list)")
+
     ap.add_argument("--props", default="", help="comma list of prop names, one mirrored pair each")
     ap.add_argument("--pairs", type=int, default=2, help="mirrored pairs per prop in --experiment props")
     ap.add_argument("--trace", action="store_true", help="print the board before each turn of one game (seed)")
     ap.add_argument("--experiment", choices=["props", "surges", "bots", "none"], default="none")
     args = ap.parse_args()
+
+    if args.games < 1:
+        ap.error("--games must be positive")
     if args.experiment == "props":
         experiment(args, "no props", [])
         for name in PROPS:
@@ -835,4 +1085,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        sys.exit(main())
+    except NotSimulated as exc:
+        print(f"NOT SIMULATED: {exc}", file=sys.stderr)
+        sys.exit(2)

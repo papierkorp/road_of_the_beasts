@@ -18,6 +18,9 @@ Record notation (compact, derived from the Skills section 2 field groups; not an
    "components": [ {"type": ..., ...}, ... ]}
 Exit codes: 0 fits the ceiling, 1 over the ceiling, 2 incomplete/unsupported/invalid.
 Unknown or unpriced components FAIL CLOSED (never zero cost). A numeric fit is not approval.
+Mend V1 remains the arithmetic-only 32-point paper reference. The current capped-mend sketch
+is a separate V2 record (50), with a derived-paper-source in data/golden.json; no repricing or
+budget-fit exception. Runtime sim hints/geometry are validated by monsters.py, not this calculator.
 """
 import argparse
 import json
@@ -53,9 +56,18 @@ def dec(v, name="value"):
     if isinstance(v, bool) or v is None:
         raise Incomplete(f"{name}: expected a number")
     try:
-        return D(str(v))
+        out = D(str(v))
     except Exception as exc:
         raise Incomplete(f"{name}: invalid number") from exc
+    if not out.is_finite():
+        raise Incomplete(f"{name}: expected a finite number")
+    return out
+
+
+def positive_int(v, name):
+    if type(v) is not int or v < 1:
+        raise Incomplete(f"{name}: expected a positive integer")
+    return v
 
 
 def req(c, *keys):
@@ -85,7 +97,7 @@ def c_damage(c):  # one-shot damage; ground_air +2 once for Strikes / authorized
 def c_strike_extras(c):  # direction choice, distant cells, Kin package
     req(c, "kin", "kin_cells")
     kin = c["kin"]
-    if kin not in KIN_PER_CELL:
+    if not isinstance(kin, str) or kin not in KIN_PER_CELL:
         raise Incomplete(f"unknown Kin: {kin}")
     pts = KIN_PER_CELL[kin] * dec(c["kin_cells"]) + KIN_ONCE.get(kin, D(0))
     pts += 2 * dec(c.get("distant_cells", 0)) + (2 if c.get("direction") else 0)
@@ -95,7 +107,7 @@ def c_strike_extras(c):  # direction choice, distant cells, Kin package
 def c_anchor(c):
     modes = {"free": D(2), "adjacent": D(1), "none": D(0)}
     mode = c.get("mode", "free")
-    if mode not in modes:
+    if not isinstance(mode, str) or mode not in modes:
         raise Incomplete(f"anchor mode not priced: {mode}")
     return "anchor", modes[mode]
 
@@ -107,7 +119,13 @@ def c_marker(c):
 def c_zone(c):
     req(c, "effect", "value", "cells", "rounds")
     e = c["effect"]
+    if not isinstance(e, str):
+        raise Incomplete("zone effect must be a name")
+    for key in ("value", "cells", "rounds"):
+        positive_int(c[key], f"zone {key}")
     if e in ("push", "pull"):
+        if c["value"] != 1:
+            raise Incomplete("zone push/pull always moves exactly one square")
         return f"zone {e}", 2 * dec(c["cells"]) * dec(c["rounds"])
     if e not in ZONE_RATE:
         raise Incomplete(f"zone effect not priced: {e}")
@@ -122,14 +140,14 @@ def c_displacement(c):  # immediate 2/cell; telegraphed fixed-footprint avoidabl
 def c_ground(c):
     req(c, "ground", "cells")
     g = c["ground"]
-    if g not in GROUND_PER_CELL:
+    if not isinstance(g, str) or g not in GROUND_PER_CELL:
         raise Incomplete(f"ground not priced: {g}")
     return f"ground {g}", GROUND_PER_CELL[g] * dec(c["cells"])
 
 
 def c_move(c):
     req(c, "preset")
-    if c["preset"] not in MOVE_PRESET:
+    if not isinstance(c["preset"], str) or c["preset"] not in MOVE_PRESET:
         raise Incomplete(f"movement preset not priced: {c['preset']}")
     return f"move {c['preset']}", MOVE_PRESET[c["preset"]] + 2 * dec(c.get("patches", 0))
 
@@ -179,7 +197,7 @@ HANDLERS = {"damage": c_damage, "strike_extras": c_strike_extras, "anchor": c_an
 def availability(rec):
     usage = rec.get("usage")
     if usage == "active":
-        ap = int(dec(rec.get("ap"), "ap"))
+        ap = positive_int(rec.get("ap"), "ap")
         if ap not in AP_EFFICIENCY:
             raise Incomplete("ap must be 1..5")
         base = AP_EFFICIENCY[ap]
@@ -202,6 +220,8 @@ def evaluate(rec, slot_level=1):
         raise Incomplete("slot level 1..3")
     parts = []
     for c in rec["components"]:
+        if not isinstance(c, dict) or not isinstance(c.get("type"), str):
+            raise Incomplete("component needs an object with a type name")
         h = HANDLERS.get(c.get("type"))
         if h is None:
             raise Incomplete(f"unsupported component: {c.get('type')}")
@@ -237,6 +257,41 @@ class GoldenTests(unittest.TestCase):
         for f, expected in golden.items():
             with self.subTest(f):
                 self.assertEqual(evaluate(skills[f])["total"], D(expected))
+
+
+    def test_zone_and_buff_reference_totals_unchanged(self):
+        for name, expected in (("Slow zone 2 rounds", "23"), ("Slow zone 3 rounds", "27.5"),
+                               ("Quicken 1, 3 cells, 2 rounds", "26"), ("Shield 2, 3 cells, 2 rounds", "26"),
+                               ("Mend 1, 3 cells, 2 rounds", "32"), ("Self Initiative +1, 2 rounds", "20"),
+                               ("Adaptive (rotation)", "18")):
+            with self.subTest(name):
+                self.assertEqual(evaluate(load_skills()[name][0])["total"], D(expected))
+
+    def test_zone_invalid_parameters_and_ap_not_truncated(self):
+        for key in ("value", "cells", "rounds"):
+            for bad in (0, -1, True, 1.5, "2", None):
+                c = dict(type="zone", effect="slow", value=1, cells=3, rounds=2)
+                c[key] = bad
+                with self.subTest(key=key, bad=bad), self.assertRaises(Incomplete):
+                    c_zone(c)
+        for effect in ("push", "pull"):
+            with self.assertRaises(Incomplete):
+                c_zone(dict(type="zone", effect=effect, value=2, cells=3, rounds=2))
+        for bad in (True, 1.5, "2", 0, 6):
+            with self.subTest(ap=bad), self.assertRaises(Incomplete):
+                evaluate(dict(usage="active", ap=bad, components=[{"type": "marker"}]))
+        for bad in (float("nan"), float("inf"), "NaN", "-Infinity"):
+            with self.subTest(number=bad), self.assertRaises(Incomplete):
+                dec(bad)
+        for c in ({"type": "zone", "effect": [], "value": 1, "cells": 3, "rounds": 2},
+                  {"type": "move", "preset": []}, {"type": "anchor", "mode": []},
+                  {"type": "strike_extras", "kin": [], "kin_cells": 1},
+                  {"type": "ground", "ground": [], "cells": 3}):
+            with self.subTest(component=c), self.assertRaises(Incomplete):
+                evaluate(dict(usage="active", ap=1, components=[c]))
+        for bad in (None, "damage", {}, {"type": []}):
+            with self.subTest(component=bad), self.assertRaises(Incomplete):
+                evaluate(dict(usage="active", ap=1, components=[bad]))
 
     def test_prop_drafts(self):
         for row in load_golden()["props"]:
