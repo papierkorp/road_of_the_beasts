@@ -1,12 +1,12 @@
 # Temporary Clarification List — Road of the Beasts
 
-Central list of open design decisions and validation tasks from the three GDDs. The order below is a proposed work sequence, not a new game rule. **Work only in `docs/` and on `docs/update_gdd`.**
+Central list of open design decisions and validation tasks from Battle, Monsters, Overworld and the central Skills GDD. **User priority: finish Battle first, then adapt the Overworld to its requirements.** The sequence below organizes work; it does not approve new gameplay rules. **Work only in `docs/` and on `docs/update_gdd`.**
 
 ## Usage
 
 - The GDDs describe the current working state; existing proposals and numbers are **not automatically approved** by moving open tasks here.
 - Open questions, alternatives and review tasks are maintained exclusively here. The GDDs hold the current design, including labelled content drafts and prototype deviations needed to distinguish it from historical implementations. Use Git history to trace changes; do not maintain changelogs in the GDDs or this file. Keep the handoff current rather than appending a running change history.
-- Complete the items listed under “Prerequisites” before deciding the topic. Independent items in the same phase may be worked on in parallel.
+- Prerequisites apply to the named deliverable, not automatically to the whole task. **D/K** contracts can precede pricing/content; **V** closes only after suitable executed tests. Do not make test inputs depend on the completion of their own validation. Independent work within the current priority may proceed in parallel; meta-only Overworld work is queued until the Battle gate.
 - **Session close:** refresh [Context Handoff](#context-handoff) after every session so another agent/computer can resume without chat history. Reusable instructions belong under [AI Prompts](#ai-prompts), not in the active task list.
 - On completion: incorporate the decision into the specified GDD sections, synchronize affected companion files and check off the item here. For playtests, document measurements and results before changing rules if necessary.
 - **Task fields:** every editable task carries **Status**, **Prerequisites**, **Sources**, the concrete gap/decision bullets and **Done when** (completion conditions). Status values: *Open* (no decision yet), *Partly drafted/decided* (working draft or partial decision exists, not validated), *Blocked* (named prerequisite or user decision missing). Completed tasks move to [Completed Tasks](#completed-tasks-ids-retained-for-references) with their IDs retained; IDs are never reused for other topics. Validation tasks close only with tests actually performed and documented.
@@ -15,72 +15,98 @@ Central list of open design decisions and validation tasks from the three GDDs. 
 
 # Context Handoff
 
-**Last updated: 2026-11-10 (end of session).** Read this section when changing agents or computers; do not rely on earlier chat history. **Update it at the end of every session**, replacing stale context rather than appending a log. Keep rules and prices in their owning GDDs.
+**Last updated: 2026-11-11 (Battle-first prioritization).** Resume from current files, not chat history. Replace this handoff at session end; keep rules/prices in their owners.
 
 ## Current State and Immediate Next Step
 
-- **Focus/result:** decision session on the Battle foundations (all decisions by the user, 2026-11-10; owner sections hold the rules). Closed: T08 (Water ground and Swim removed from Battle/Skills; parked under [Potential Extensions](#potential-extensions-and-improvements); Overworld "water" building tags untouched, follow-up question parked there). Progressed, **not complete**: T04 (resolution ties, Surge prop blocking, Cleanse, Relocate, prop aftermath), T07, T09; T02/T05/T06/T13 untouched this session. Redactional: Thick Hide/Crashlander wording aligned to the damage law (Skills §9, still prior drafts).
-  - 2×2 bodies: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground), [§6.3](gdd_battle.md#63-collision-fall--debris), [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants).
-  - Air layer and Mountain air rule: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground), [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed).
-  - Board distance and ties: [§4.1](gdd_battle.md#41-battlefield-generation), [§4.2](gdd_battle.md#42-late-round-pressure-anti-stalling), [§6.5](gdd_battle.md#65-displacement).
-  - Payload, board-operation order, execution-time legality, several Surges: [§6.2](gdd_battle.md#62-surge-resolution-integration). Surge scheduling and dead caster: [§2.2](gdd_battle.md#22-initiative-rules). Damage modifiers: [§6.1](gdd_battle.md#61-the-damage-law).
-  - Props (no Field class, per-type aftermath for Wall/Tree/Rock, no chain reactions, burning/crumble exceptions, damage rights): [§4.9](gdd_battle.md#49-props). Resolution ties, line-footprint prop blocking, Cleanse: [§6.2](gdd_battle.md#62-surge-resolution-integration). Voidscar reading: [§4.2](gdd_battle.md#42-late-round-pressure-anti-stalling). Prop Relocate contract: [Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts). Ground/healing (T07): Hallowed is blessed, Mossbed unlimited, zone `mend` scaling, zones and ground independent ([§4.6](gdd_battle.md#46-zones-effects-rules--opposites), [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)).
-  - All monster-skill content lives in [gdd_skills.md](gdd_skills.md).
-- **Next actions (in order):**
-  1. T04 remaining gaps: further prop types and the HP/damage matrix; ceiling-versus-modifier order; tamer exceptions (with T20).
-  2. T09 leftovers: authored landing effects, both-layer/air props (with T07/T04), concrete air-capable zone/Surge definitions and prices.
-  3. T07 leftovers: Blessing price/AP question, level-II residue, price of the changed `mend` magnitude ([Skills §5](gdd_skills.md#zone-protection-and-healing-costs)); hazard-coverage and counter tests belong to T13.
-  4. Then extend [the checker](temp_kalkscript.py) to the new variants and re-verify the 2×2 cost notes in [Skills §5](gdd_skills.md#5-construction-points-and-ap-efficiency); continue with T02 same-AP development paths and T05 (step/slot mapping, supply, deferral, choice location, respec: [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed)). T26's Ambitious Standing comparison is an independent user decision.
-- **Blockers:** T04 leftovers and T09 leftovers need user decisions (nothing is assumed); the 2×2 variants, the changed `mend` magnitude and the Relocate price stay unpriced/unapproved until the checker and Skills §5 cover them. Existing budget conflicts are not approved restrictions. T13 has no executed current-design tests; neither historical prototype is a validation baseline.
-- **Git/commit observation (observed at handoff):** branch `docs/update_gdd`; HEAD `3b10d20`; uncommitted user-session edits in `docs/gdd_battle.md`, `docs/gdd_skills.md`, `docs/temp_todo.md`. No commit, branch change or synchronization performed; ahead/behind not checked. Recheck Git on the next machine; commits need an explicit user order.
-- **Validation actually performed:** Git branch/status; `git diff --check`; anchor check of all `docs/*.md` links (0 broken) after the prop edits; grep for leftover Water/Swim (only the parked entry, Overworld tags and an invalid-ground checker test remain). **Not performed:** checker rerun, full content audit, any gameplay or balance test. Passing arithmetic or links is not design validation.
+- **Focus/result:** user-selected Battle-first work order: finish combat rules, battle-facing monster/skill development, content, loadout and validation before Overworld systems/economy. Only this file changed; all 37 IDs and existing completion states retained. The reusable full-GDD audit prompt also preserves this priority, the Battle/Meta split and the completion gate. This schedules work, not gameplay approval. The earlier full four-GDD audit remains the content baseline; scheduling work reread affected tasks/interfaces, and the latest prompt-only follow-up checked the prompt against that work order, not all four GDDs again.
+- **Next actions:**
+  1. **Next discussion: T04** — prop catalogue/HP matrix, same-category board conflicts/destruction timing, complete queue ties/battle-end handling and damage ceilings versus modifiers. T35/T37 combat corrections and T02 checker repair (separately authorized) support this work, not a general editorial detour.
+  2. Finish affected T03/T06/T07/T09 contracts and T20-D interfaces, including multiple zones under a 2×2 body, air/landing, healing and protection. Preserve confirmed geometry, flight, mixed-ground triggers and unlimited Mossbed entries; no extra Winged-counter guarantee was approved.
+  3. T02 shared prices, complete Surge checks and original-AP paths → T05 battle-facing development mapping/supply/choices → T10/T11 records/kits → T12 roster and T32 late-game battle content. Include T17–T20 combat effects/loadout and T21 board inputs before their final tests; do not wait for recipes, shops or XP pacing.
+  4. Execute T13 in core and full-scope passes, including relevant T03/T06/T07/T20 V and T32 content; check the [Battle Completion Gate](#battle-completion-gate). Only then resume T14/T15/T16, meta parts of split tasks, expeditions, housing, staff, economy, XP/trials and day AP. No independent Overworld topic is currently scheduled in parallel.
+- **Blockers:** complete pricing still lacks special reactions/event availability and some spatial contracts. The 2×2 variants remain unapproved; Relocate has a confirmed contract but only a provisional price, whereas changed `mend` scaling lacks a complete price. Budget conflicts are not approved restrictions; T13 has no executed current-design battle tests. See [Recommended Work Order](#recommended-work-order) for contract-versus-test prerequisites.
+- **Height-collapse status:** not left open by this audit: current [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) expressly labels the destruction result a user decision, reinforced by the existing 2026-11-10 T04 handoff and [Skills §3](gdd_skills.md#surge). Use that owning rule; do not reopen Rubble versus the destroying skill's authored ground without a new reason. Its interaction/order gaps remain T04.
+- **Git observation:** branch `docs/update_gdd`, HEAD `0a9dc4b`; `docs/temp_todo.md` already modified at this follow-up's entry by the preceding audit. Those edits are preserved; it remains the only changed file. No commit, branch switch, pull/push/reset or synchronization; ahead/behind not checked.
+- **Checks:** preceding full four-GDD audit and independent arithmetic remain valid as recorded in T03/T02; no balance approval follows. This scheduling follow-up checks affected source interfaces, links/anchors, task fields/references, dependency diagram, preservation of IDs/completion states/prompts and focused diff/`git diff --check`; no arithmetic/checker rerun, full-GDD reread, gameplay test or implementation audit. Earlier HTML inspection is preserved under T13, not repeated.
+- **Checker failure actually reproduced:** `python3 docs/temp_kalkscript.py --self-test` (repository root command): 17 tests, **1 failure and 15 errors** (including subtest errors); `--example slow`: exit 2, missing `#### Zone, Protection and Healing Costs`. Script still reads Monsters and pre-migration headings rather than Skills. No repair within this task's write scope; independent arithmetic is not a passing checker run.
 
 ## Decisions Versus Drafts
 
 | Class | Content (owner section holds the details) |
 |-------|-------------------------------------------|
-| Decided by the user (2026-11-10) | Rules are in the owners listed under Focus/result; this row only names the topics: 2×2 bodies, air layer (recipients authored per effect, flyers ignore ground, flight movement, permanent air for Soul+ Winged), Mountain air rule, Chebyshev distance and ties, payload/board-operation order, execution-time legality, Surge scheduling, damage-modifier stacking, prop principles with the Field class removed, Hallowed blessed, Mossbed unlimited, `mend` scaling, zones independent of ground, Water/Swim removed, Voidscar reading, simultaneous damage ties, initiative-order displacement tie-break, line-footprint prop blocking, no further Cleanse source, Relocate contract, Wall/Tree/Rock aftermath without chain reactions. Earlier in the session: one skills file, body-relative variants ([Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants)), [payload order](gdd_battle.md#62-surge-resolution-integration), [monster collision](gdd_battle.md#63-collision-fall--debris). |
+| Decided by the user (2026-11-10) | Rules are in the owning GDD sections linked by the tasks below; this row only names the topics: 2×2 bodies, air layer (recipients authored per effect, flyers ignore ground, flight movement, permanent air for Soul+ Winged), Mountain air rule, Chebyshev distance and ties, payload/board-operation order, execution-time legality, Surge scheduling, damage-modifier stacking, prop principles with the Field class removed, Hallowed blessed, Mossbed unlimited, `mend` scaling, zones independent of ground, Water/Swim removed, Voidscar reading, simultaneous damage ties, initiative-order displacement tie-break, line-footprint prop blocking, no further Cleanse source, Relocate contract, Wall/Tree/Rock aftermath without chain reactions. Also confirmed: one skills file, body-relative variants ([Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants)), [payload order](gdd_battle.md#62-surge-resolution-integration), [monster collision](gdd_battle.md#63-collision-fall--debris). |
 | Earlier confirmed design / scope | [§2](gdd_skills.md#2-data-oriented-skill-construction-kit): one model and internal evaluation, independent activation/repetition fields, per-equipped-copy allowances, shared zones, no generic team filters or direct unit-targeted attacks. [§3](gdd_skills.md#3-skill-execution-profiles): concurrent Surges, spatial no-overlap. Skill rarity rejected; [shared-budget principles](gdd_skills.md#5-construction-points-and-ap-efficiency) and [slot-development policy](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades) remain. No aspect/Attunement system (T01/T33/T34); no physical evolution/EP currency (T36); Mountain end state in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed); Staff model B and Favor + Standing principles with numbers open; Expedition HP/retreat is the working design. |
 | User-selected calibration, not validated balance | [Shared standards](gdd_skills.md#shared-valuation-standards), [availability by activation and usage](gdd_skills.md#availability-by-activation-and-usage), [active round-limit calibration](gdd_skills.md#round-limited-availability-calibration). The event rate applies only when the authored usage policy supplies its round cap. |
-| Drafts / proposals, not approved | Tree-fall edge cases ([Battle §4.9](gdd_battle.md#49-props)), the body-relative variant cost drafts in [Skills §5](gdd_skills.md#strike-costs), other labelled §5 packages, [conditional-outcome costing](gdd_skills.md#ground-and-board-costs), the [Mountain-price candidate](gdd_skills.md#mountain-destruction-calibration-proposal), the six [records](gdd_skills.md#11-concrete-skill-records), [passives](gdd_skills.md#9-passives) and [species assignments](gdd_skills.md#10-species-skill-assignments-prior-draft). Day-AP values stay a proposal. Missing contracts/prices never mean zero. |
-| Validation / tool boundary | [temp_kalkscript.py](temp_kalkscript.py) is the authorized temporary checker inside docs, not an engine change or a second price authority; it rejects unsupported effects and does not cover the new variants or passives. No task closes from a numeric fit. |
+| Drafts / proposals, not approved | Remaining prop catalogue/HP matrix ([Battle §4.9](gdd_battle.md#49-props)); the tree-fall edge cases there are explicitly confirmed, not drafts. The body-relative variant cost drafts in [Skills §5](gdd_skills.md#strike-costs), other labelled §5 packages, [conditional-outcome costing](gdd_skills.md#ground-and-board-costs), the [Mountain-price candidate](gdd_skills.md#mountain-destruction-calibration-proposal), the six [records](gdd_skills.md#11-concrete-skill-records), [passives](gdd_skills.md#9-passives) and [species assignments](gdd_skills.md#10-species-skill-assignments-prior-draft). Day-AP values stay a proposal. Missing contracts/prices never mean zero. |
+| Validation / tool boundary | [temp_kalkscript.py](temp_kalkscript.py) is an authorized temporary docs tool, not an engine change/price authority. Its current source/heading bindings are broken (T02); even repaired baseline coverage excludes new variants/passives. No task closes from a numeric fit. |
 
 - Preserve the [basic-Surge AP target](gdd_skills.md#combination-policy-and-basic-surge-target) and the [Strike damage contract](gdd_skills.md#81-strike-by-kin). New movement variants authorize neither direct-damage upgrades nor a damage/movement exchange.
 
 ## Working Practices
 
-- Follow [CLAUDE.md](../CLAUDE.md): only `docs/update_gdd`, docs-only writes, preserve user work, no unrequested Git actions (commit and synchronization need an explicit order). The checker exception is confined to the temporary script in docs.
+- Follow [CLAUDE.md](../CLAUDE.md): only `docs/update_gdd`, preserve user work, no unrequested Git actions. **This audit writes only `docs/temp_todo.md`;** GDD corrections and checker repairs below are follow-up tasks, not permission to edit them now. The earlier checker authorization covers only the temporary docs script, never engine/prototype implementation.
 - Resume from the current tasks and linked owners, not prior chat. Use the existing Skills §2 fields/contracts and §5 rates, never a parallel model, copied price list or name-specific budget-fit exception. Skill content is edited only in [gdd_skills.md](gdd_skills.md).
 - New recommendations/numbers need explicit status; general design changes need user decisions. Keep history in Git and replace stale handoff text rather than appending a log.
 
 # Open Tasks
 
-## Recommended Work Order (2026-11-08 review)
+## Recommended Work Order
 
-The order is a proposal, not a rule. Statuses and prerequisites below are authoritative per task.
+**Selected work priority: Battle first, Overworld second.** The task sections below are thematic groups, not execution phases; this table and the scoped prerequisites determine execution order. Parallel work stays within the Battle workstream unless the user changes priority.
 
-| Step | Work | Tasks | Reason |
-|------|------|-------|--------|
-| 1 | Complete shared valuation coverage and draft standards through the existing data model | T02 (part) | Current user priority: finish the foundation before calibrating existing skills; no duplicated effect schema or skill-specific fit exceptions |
-| 2 | Finish the Surge cross-check, then draft same-AP development paths (Run, Slowing Zone, Surge with ground effect, Jab) | T02 | Established sequence; do not reopen budget/AP/damage principles |
-| 3 | Draft the slot-development step model (steps granted at advancements, no EP currency) | T05 | T36 is decided; T05 needs the T02 development paths |
-| 4 | Editorial and consistency corrections that need no gameplay decision | T03 (K findings), T06 naming, T13 wording | Can run in parallel; report each fix |
-| 5 | Remaining resolution contracts | T04, T07, T09 | Prerequisites for T10–T13 |
-| Parallel | City powers and non-battle catalogues | T15, T16 (non-battle part) | Independent of monster-skill work |
-| Parallel | Ambitious Standing comparison | T26 (user decision) | Small, independent decision |
-| Parallel | Remaining editorial deduplication | T37 | No prerequisites; coordinate with T35 |
-| Later | Skills/roster, battle tests, then meta numbers | T10–T14, T17–T35 | Follow the prerequisites in each task |
+| Order | Deliverable | Tasks | Boundary |
+|-------|-------------|-------|----------|
+| B1 — next | Deterministic battle rules, board interactions and legal monster inputs | T04; D/K of T03/T06/T07/T09 | Start with T04; use the confirmed model, not completed pricing/tests. Combat T35/T37 corrections and authorized T02 tool repair can run alongside |
+| B2 | Shared valuation, complete Surge comparisons and original-AP development paths | T02 | Relevant B1 contracts first; no budget-fit exceptions or reopening confirmed AP/damage principles |
+| B3 | Battle-facing progression, concrete skills, passives, kits and roster | T05 battle deliverable; T10/T11/T12; T06 content | Decide reachable stat/skill/loadout states and development supply/mapping; defer XP duration, pill prices and ritual sites, not combat upgrade choices |
+| B4 | All battle-facing external effects and request/result interfaces | Battle parts of T17–T21 and T22/T23 conflicts | Tamer skills, artifacts, medicine/array effects, loadout limits, swap/HP/defeat and board inputs belong here even when their owner is Overworld. No full catalogue, economy or expedition prerequisite |
+| B5 | Core tests, then Major/Signature content and full-scope interaction tests | T13 with T03/T06/T07/T20 V; T32 | Core tests can start with reference kits; use their findings for T32, then include late-game/equipment/loadout interactions in a final T13 pass |
+| B6 | Battle acceptance and combat-source synchronization | Battle gate; battle deliverables of T35/T37 | Every in-scope combat feature needs complete contracts/content and documented suitable tests; no silent deferral |
+| O1 — after Battle gate | Translate battle requirements into acquisition, progression execution and world systems | T14/T15/T16; meta parts of T05/T17–T25/T30 | Recipes/prices/availability, expeditions, injuries, catching, housing, ritual sites and replacement logistics follow the combat specification |
+| O2 | Management, progression pacing and day economy | T26–T31; final T35/T37 | Use tested battle states and resource demands to tune supply/XP/day AP; run cross-loop checks rather than assume battle balance proves meta balance |
 
-## Phase 1 — Clarify Foundations and Conflicting Rules
+### Battle Completion Gate
+
+**Status:** Open. A rules draft is not a validated Battle completion. This milestone does not close mixed Battle/Overworld tasks wholesale or authorize implementation.
+**Prerequisites:** Battle deliverables in B1–B5 and their combat-source corrections; no completion of meta-only tasks.
+**Sources:** [Battle §7](gdd_battle.md#7-technical--prototype), [Skills §6–§7](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), [Monsters §2](gdd_monsters.md#2-stats), [Overworld §6.4–§6.9](gdd_overworld.md#64-tamer-skills); detailed owning links remain under each task.
+**Done when:** all four acceptance conditions below are met for the user-agreed combat scope; unresolved test failures or unapproved omissions keep the gate open.
+
+- **Design ready:** T02–T07/T09–T12 combat deliverables, combat parts of T17–T23, T32 and related T35/T37 corrections specify legal battle inputs, actions, developed variants, passives, external effects, board generation, timing, preview and result outputs. Final intended battle scope must be explicit; a reduced roster, omitted items or deferred air/2×2/late-game mechanics need user approval, not an assumed shortcut.
+- **Validated:** T13 executes and documents suitable current-design tests across the agreed scope, including developed/high-stage states, core and full loadouts, source-specific exceptions and T03/T06/T07/T20 V. A matching harness remains a separate authorized implementation need; the current historical prototypes and arithmetic checker do not satisfy this gate.
+- **Handoff to Overworld:** record the accepted combat constraints and still-open **meta-only** questions against their existing IDs. Use finished test sheets/loadouts without simulating the whole economy; keep reachable state/slot/upgrade limits explicit. Acquisition frequency, XP pacing, recipes, ritual locations and day AP stay open for Overworld, not invented free/instant defaults.
+- **Integration safeguard:** resolve T22/T23 restrictions that could alter in-battle healing, HP or fall prevention before acceptance; defer their run/recovery economy. Later meta tuning must respect accepted battle contracts; any proposed combat change needs an explicit decision and affected regression tests.
+
+### Audit Coverage and Disposition
+
+Every existing ID was reconciled with its owner; none was renumbered, merged or closed by arithmetic. Links and detailed acceptance criteria remain in the task entries.
+
+| Tasks | Current disposition |
+|-------|---------------------|
+| T01, T08, T33, T34, T36 | Confirmed removals retained as reference IDs; remaining integration wording belongs to T35/T37, not new gameplay work |
+| T02 | Partly decided/drafted; incomplete valuation and original-AP paths; checker currently broken |
+| T03, T06 | Open D/K/content issues and unexecuted comparative validation; consistency work can start now |
+| T04, T07, T09 | Partly decided; remove obsolete questions, keep remaining contracts/prices/tests open |
+| T05 | Confirmed development/replacement principles; mapping, supply and logistics incomplete |
+| T10–T14 | Blocked for final content/tests/selection; six draft records and nine stat references are not complete skills/validated kits |
+| T15, T16 | Queued after the Battle gate; combat effect records are handled first under T17–T20, catalogue/acquisition details later |
+| T17–T20 | Combat effects/slots/loadout promoted into Battle-first work; meta-only gear bonuses, acquisition and recipes follow later; T20-D precedes tests |
+| T21–T25 | Battle board/HP/healing/defeat interfaces first; expedition, acquisition, recovery and housing details after the gate; first-Pillar conflict retained for meta integration |
+| T26–T31 | Confirmed staff/Favor principles amid open parameters, access conflicts, pacing and day-AP validation |
+| T32 | Unfinished Major/Signature content/access/slot treatment, now required before full-scope Battle acceptance unless explicitly deferred by the user |
+| T35, T37 | Open synchronization/editorial work; current migration left concrete duplicates and stale decision labels |
+
+## Battle Foundations — Resolution, Stats and Valuation
 
 ### [ ] T02 · Complete the Data Model, Point Calculation and AP Efficiency (D/K)
 **Status:** Partly decided/drafted — internal authoring-only evaluation and two repetition policies confirmed; skill rarity removed. Active round-limited and event/explicit-once-per-round availability selected, still unvalidated; repeatable/other event valuation and remaining event-order/recursion and later-resolution contracts are unresolved. Integrated model/evaluation bindings and shared-standards extension selected by the user; numeric balance remains unvalidated. Affected paper references are synchronized, budget conflicts unresolved and special-reaction/event/utility-targeting coverage incomplete. Skill-specific recalibration is deferred until the shared foundation is complete.
-**Prerequisites:** T01.
+**Prerequisites:** T01 (decided); use the confirmed model now. Complete affected runtime/effect/geometry contracts from T04/T06/T07/T09 before their valuation, not full completion of those tasks. T05 follows the reference development paths; balance approval remains T13.
 **Sources:** Skills [§1](gdd_skills.md#1-the-kit)–[§7](gdd_skills.md#7-validation-and-concrete-skill-records); Battle [§2.3](gdd_battle.md#23-action-points)/[§5.1](gdd_battle.md#51-monster-skills-central-specification); [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed).
 
 **Drafted and documented:**
 - Shared model for all monster skills, central profiles/contracts and six references; no parallel skill sources or custom special structures. Designer-authored skills/upgrade choices instead of player construction.
-- Shared budget ceilings 24/30/36, AP efficiency 12/6/3/1/0, damage factor 2 and 50% exclusively for telegraphed, avoidable Surge damage as selected working drafts. **No combination surcharges.**
+- Shared ceilings, AP efficiency and damage prices are selected working drafts in [Skills §5](gdd_skills.md#5-construction-points-and-ap-efficiency), not validated balance. The avoidable-Surge damage factor applies to damage only; qualifying one-shot displacement has its separate selected timing standard. **No combination surcharges.**
 - Draft tables for all Strikes/movement profiles, self/passive, zones/protection/healing and ground/board. Six references with initial totals, not yet full content/balance validation. Maintain prices only in [Skills §5](gdd_skills.md#5-construction-points-and-ap-efficiency), not duplicated here.
 - Surge residue = delayed ground change; concrete profiles retain their authored ground types. Permanent aftermath uses the selected no-delay-discount standard in Skills §5. Basic Surges retain the 1-AP target; budget conflicts remain open.
 
@@ -93,12 +119,12 @@ The order is a proposal, not a rule. Statuses and prerequisites below are author
 
 **Body-relative damage/movement foundations (T02/T04/T06/T09):**
 - Confirmed geometry and variant options are owned by [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants), not repeated here. New variants are additional authored skills, not replacements for all Strikes or a freely adjustable damage/movement trade.
-- Self retreat's hit independence is confirmed in Skills §3; do not reopen it or price it using hit probability. Attack-before-retreat and no-effect blocked retreat are also confirmed there. Define remaining path/entry/height behaviour; distinguish self movement from forced displacement. Battle §6.3 still damages monster/prop on blocked prop push, so the user's “like push” analogy is not a blanket collision-law change; clarify separately if the user wants that broader change. Retreat does not implicitly damage props or destroy Mountains; authored payload permissions remain binding.
+- Hit independence, attack-before-retreat, failed retreat, destination-only diagonal traversal, blocked upward movement, no voluntary fall damage and entry triggers are confirmed in [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants). Do not reopen or discount by hit probability. Retreat is self movement, not forced displacement: Battle §6.3 still damages monster/prop on blocked prop push. The earlier “like push” analogy grants no blanket collision-law change, prop damage or Mountain destruction; authored permissions remain binding.
 - Access is decided (Kin-bound; see Skills §3). Remaining reconciliation: Scaled's chosen push direction and Winged's existing retreat are not automatically replaced by the new coupled geometry. Preserve existing definitions/prices until explicitly decided; no transfer of all Kin packages to all skills.
-- Calibrate AP and component prices together after these contracts; the existing cardinal displacement/retreat rows are not automatically the prices of coupled eight-direction variants. No approved direct-damage reduction upgrade or distance increase follows. Multi-target ordering is decided (Battle §6.2) and once-per-monster hits are decided; remaining are unsupported non-adjacent/2×2 mappings in T09; no direction normalization or retreat for ambiguous shapes.
-- The temporary checker still supports cardinal zone push/pull only, not this new geometry. Extend it after contracts/prices are resolved; do not use its old cardinal examples as validation of diagonal behaviour.
+- Calibrate AP/components together after the relevant contracts; existing cardinal rates are only anchors for the coupled-variant cost drafts, not content approval. Multi-target ordering and once-per-monster hits are decided (Battle §6.2); adjacent-only push, non-adjacent no-push, centre-derived retreat and 2×2 mappings are decided in Skills §3. Diagonal Cleave remains undefined (T06). No direction normalization, ambiguous-shape retreat, direct-damage reduction upgrade or distance increase is implied.
+- The temporary checker's intended baseline supports cardinal zone push/pull only, not this new geometry, and its GDD bindings currently fail. Extend it after contracts/prices are resolved; do not use its old cardinal examples as validation of diagonal behaviour.
 
-**Temporary arithmetic checker:** [temp_kalkscript.py](temp_kalkscript.py), Python 3 standard library. From the repository root:
+**Temporary arithmetic checker — currently blocked:** [temp_kalkscript.py](temp_kalkscript.py), Python 3 standard library. The 2026-11-11 run fails because `GDD` still points to `gdd_monsters.md` and the parser expects pre-migration heading levels/numbers. Restore binding to the owning Skills sections and audit parser/test substitutions before extending geometry; keep fail-closed behaviour and no duplicate price authority. This audit must not edit the script. Commands below are retained for a separately authorized repair/verification session, from the repository root:
 
 ```sh
 python3 docs/temp_kalkscript.py --self-test
@@ -113,7 +139,7 @@ python3 docs/temp_kalkscript.py --example jab --export-example
 python3 docs/temp_kalkscript.py docs/temp_skill.json --slot-level 1
 ```
 
-`--export-example` prints editable JSON using the same 14 field groups, not a new engine schema. Input `-` reads stdin. Set `usage.repetition` to `once_per_global_round` to test the selected active limit on reference geometry; Slow duration 3 demonstrates fractional totals. Decimal report values are JSON strings to preserve precision. Exit codes: **0** numeric fit, **1** over ceiling, **2** incomplete/unsupported/invalid input or failed self-tests. The script does not write files. Supported arithmetic for 1×1 bodies: Slow zones (2/3 rounds), fixed one-square cardinal zone push or cast-anchor pull (alone or combined with Slow), residue-free Surge, cardinal Beast Jab, standalone Lava/Thornbed/Blight I, Hearth/Umbra/Hallowed and Mountain creation including its coupled Plain reset. Board packages include persistence and ordinary source-bound occupant consequences; do not add a second damage/buff/cleanse charge. Blessed standalone ground retains its owning AP price. `ground`, `hallowed`, `mountain`, `zone_push` and `zone_pull` export examples using the existing fields. The effect list can combine one Slow and one displacement without repeating shared fees; the sum is not interaction/order/content approval. Mossbed/re-entry, Voidscar edits, prop packages/special reactions, direct unit displacement, authored Surge aftermath/push/collapse combinations, other Kins and passive/event evaluation remain unsupported. Missing contracts/prices are not zero-cost defaults. It does not prove footprint legality, access or interaction contracts. Do not omit unsupported components to obtain a passing result. GDD heading/table changes intentionally fail closed until parser review; the script owns no alternative price list. Full coverage is still T02, battle validation T13.
+**Intended baseline coverage after repair, not a claim that the current script passes:** `--export-example` prints editable JSON using the same 14 field groups, not a new engine schema. Input `-` reads stdin. Set `usage.repetition` to `once_per_global_round` to test the selected active limit on reference geometry; Slow duration 3 demonstrates fractional totals. Decimal report values are JSON strings to preserve precision. Exit codes: **0** numeric fit, **1** over ceiling, **2** incomplete/unsupported/invalid input or failed self-tests. The script does not write files. Supported arithmetic for 1×1 bodies: Slow zones (2/3 rounds), fixed one-square cardinal zone push or cast-anchor pull (alone or combined with Slow), residue-free Surge, cardinal Beast Jab, standalone Lava/Thornbed/Blight I, Hearth/Umbra/Hallowed and Mountain creation including its coupled Plain reset. Board packages include persistence and ordinary source-bound occupant consequences; do not add a second damage/buff/cleanse charge. Blessed standalone ground retains its owning AP price. `ground`, `hallowed`, `mountain`, `zone_push` and `zone_pull` export examples using the existing fields. The effect list can combine one Slow and one displacement without repeating shared fees; the sum is not interaction/order/content approval. Mossbed/re-entry, Voidscar edits, prop packages/special reactions, direct unit displacement, authored Surge aftermath/push/collapse combinations, other Kins and passive/event evaluation remain unsupported. Missing contracts/prices are not zero-cost defaults. It does not prove footprint legality, access or interaction contracts. Do not omit unsupported components to obtain a passing result. GDD heading/table changes intentionally fail closed until parser review; the script owns no alternative price list. Full coverage is still T02, battle validation T13.
 
 **Shared repetition — decisions and remaining gaps (T02/T04/T05):**
 
@@ -130,7 +156,7 @@ python3 docs/temp_kalkscript.py docs/temp_skill.json --slot-level 1
 | `persistence` | Existing state/zone lifetime is separate from usage reset; reapplying/levelling/refreshing rules need consistent integration |
 | `evaluation` | Derive authoring-time availability from these declared limits; no live counters or observed event probabilities in the price calculation |
 
-Select the policy explicitly for future authored skills; do not assume all zones/passives share one limit or alter existing content without review. Recursion safety, simultaneous order and owner removal still need T04; no causal-chain cap was approved. Apply the [selected active round-limit calibration](gdd_skills.md#round-limited-availability-calibration) only within its scope; it excludes ineffective caps and unresolved event-driven availability. Skill rarity is removed; monster rarity is unchanged.
+Select the policy explicitly for future authored skills; do not assume all zones/passives share one limit or alter existing content without review. Recursion safety, remaining event-passive order and removal/swap dependencies still need T04; no causal-chain cap was approved. Preserve Battle §2.2's confirmed unit-bound termination and board-effect/Surge persistence on caster death. Apply the [selected active round-limit calibration](gdd_skills.md#round-limited-availability-calibration) only within its scope; it excludes ineffective caps and unresolved event-driven availability. Skill rarity is removed; monster rarity is unchanged.
 
 **Cost-structure review (documentation only, not price approval):**
 
@@ -158,11 +184,11 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 - Complete missing footprints/anchors/orientations, visibility/target validity, effect values/caps, triggers/end conditions and interaction order. Explicitly define self/passive stacking, source groups, death/removal and repetition/recursion. The self-buff reference remains a draft; no new mechanic is authorized solely by a schema field.
 - Review combinations and repetition as balance/contract questions, **not as an additional price category**. Include props, healing, air and 2×2 under T04/T07–T09. Validate numbers only through suitable tests; T13 remains open.
 - **Decided:** costing structure and decimal-point handling are defined in [§5](gdd_skills.md#5-construction-points-and-ap-efficiency). This resolves the fractional-point policy gap, not the documented calibration conflicts above the working ceilings (large Strikes, mend zone, longer Slow zone, height-capable Surge); arithmetic consistency is not balance validation.
-- **Done when:** (a) the scoped [1-AP Surge comparison](gdd_skills.md#basic-surge-profile-cross-check) is re-run without unresolved profile gaps; (b) each budget/calibration conflict is either resolved by an explicit user decision or documented as an accepted content restriction, with no hidden price, budget, AP or damage change; (c) same-AP development paths for Run, the Slowing Zone, a Surge with intended ground effect and Beast Jab are drafted and reviewed; (d) the footprint/anchor/orientation, effect-value, trigger, stacking contracts are decided or explicitly handed to T04/T07/T09; (e) [§5](gdd_skills.md#5-construction-points-and-ap-efficiency)/[§7](gdd_skills.md#7-validation-and-concrete-skill-records) are recalculated. Balance approval stays with T13.
+- **Done when:** checker source/heading bindings and intended baseline self-tests are restored with documented results, unsupported cases still fail closed, and (a) the scoped [1-AP Surge comparison](gdd_skills.md#basic-surge-profile-cross-check) is re-run without unresolved profile gaps; (b) each budget/calibration conflict is either resolved by an explicit user decision or documented as an accepted content restriction, with no hidden price, budget, AP or damage change; (c) same-AP development paths for Run, the Slowing Zone, a Surge with intended ground effect and Beast Jab are drafted and reviewed; (d) the footprint/anchor/orientation, effect-value, trigger, stacking contracts are decided or explicitly handed to T04/T07/T09; (e) [§5](gdd_skills.md#5-construction-points-and-ap-efficiency)/[§7](gdd_skills.md#7-validation-and-concrete-skill-records) are recalculated. Balance approval stays with T13.
 
 ### [ ] T03 · Review Stat Budgets, Frames and Progression Limits (V/K)
-**Status:** Open — consistency findings confirmed by the 2026-11-08 review (see bullets marked *new*); no frame/budget playtests run.
-**Prerequisites:** T02.
+**Status:** Open — consistency conflicts remain; Core frame and roster arithmetic rechecked, no frame/budget gameplay tests.
+**Prerequisites:** D/K review can start from current Monsters rules; relevant T02 costs/content for comparative testing. V closes with T13, not before T11 can supply test kits.
 **Sources:** Monsters [§2.1](gdd_monsters.md#21-the-stats)–[§2.3](gdd_monsters.md#23-stat-ceilings-per-stage), [§5.3](gdd_monsters.md#53-monster-progression-the-18-steps); Overworld [§1.2](gdd_overworld.md#12-design-pillars), [§2.4](gdd_overworld.md#24-cultivation-loop).
 - Check prices, budgets and all scaled frames; Reach costs 3 points per level and now affects all casts. Test Reach-2 individuals against current Surge footprints and Reach ceilings (the former “old Surge radius 3” reference no longer appears in any GDD).
 - Init on roll: 1 point = 1.0; on level-up: 0.1. Equal points received do not necessarily mean equal resulting strength; compare freshly rolled and raised individuals.
@@ -170,39 +196,39 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 - Some Overworld texts still limit spent points by the frame; the monster GDD limits only the roll by the frame.
 - Step-only monsters: explicitly resolve random Movement points versus “stays at frame minimum”.
 - *New (K):* the stage-scaling text in [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups) says Reach scales with *stage ceiling ÷ Core ceiling*, but the all-stages table is reproduced only with a ratio of (ceiling − 1) ÷ (Core ceiling − 1) and round-half-up (e.g. Reach 2 becomes 3 at Soul+); the literal text gives Reach 2 and lowers the Soul+ ranges by up to 3 points. Rounding is unspecified. Fix either the rule text or the table.
-- *Done (K):* the “unspent points” note in Monsters §2.2 now also lists Qi Balanced/Fragile (max 20 against Qi High 21, 1 point unspent), checked against the all-stages table.
+- **Arithmetic checked:** base total, all six Core frame ranges/headrooms and all nine Core High individuals match the listed prices/budget. The “unspent points” note includes Qi Balanced/Fragile correctly. The full all-stages table is reproducible using the alternative Reach ratio and round-half-up, but that is a diagnostic assumption, not an approved rule or balance test.
 - *New (D/K):* “TPR 2+ frames cap AP at 2” versus “TPR 2+ caps AP at 3”: clarify whether a TPR 2 body may spend level-up points on AP 3 from Core.
 - **Done when:** each finding above is resolved in its owning section (Monsters §2.2/§2.3/§5.3, Overworld §1.2/§2.6) or consciously deferred; the V part closes only after documented frame/price/budget/ceiling tests (shared with T13).
 
 ### [ ] T04 · Make Resolution Rules and Edge Cases Consistent (D/K)
-**Status:** Open — the height-collapse end state is decided (user, 2026-11-08, applied in Battle §4.7); combined-order, Strike-plus-collapse damage and prop-redesign questions remain.
-**Prerequisites:** T01, T02.
-**Sources:** Battle [§2.2](gdd_battle.md#22-initiative-rules), [§4.1](gdd_battle.md#41-battlefield-generation), [§4.4](gdd_battle.md#44-square-data-model), [§4.8](gdd_battle.md#48-no-attunement), [§4.10](gdd_battle.md#410-damage-shatter--prop-types), [§6.1](gdd_battle.md#61-the-damage-law)–[§6.3](gdd_battle.md#63-collision-fall--debris); [Skills §9](gdd_skills.md#9-passives).
-- Collision conflict is decided ([Battle §6.1/§6.3](gdd_battle.md#61-the-damage-law): monster collision 1 damage to each, blocked pull and multi-step stop before the obstacle). Retired collision bonuses (the roster still lists Shockwave as a utility skill) remain unapproved per [Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts); no exception to the fixed event-damage law has been approved.
-- Payload order (damage → defeat → displacement furthest-first → board/residue → self retreat) is decided in [Battle §6.2](gdd_battle.md#62-surge-resolution-integration). Pull with an occupied path/anchor is decided ([Battle §6.3](gdd_battle.md#63-collision-fall--debris)); simultaneous Surges of any casters and damage-source ties are decided (user, 2026-11-10), with the displacement tie-break by initiative-queue order confirmed. Board-operation category order and phase-wise resolution of several Surges of one caster are decided (user, 2026-11-10; [Battle §6.2](gdd_battle.md#62-surge-resolution-integration)). Preserve each source's explicit permissions.
-- Protection sources: stacking, order and zero-damage behaviour are decided (user, 2026-11-10, [Battle §6.1](gdd_battle.md#61-the-damage-law)): reductions and increases add in one step, floor 0; a zero-damage hit still applies its non-damage effects; nothing is consumed. Still open: ceiling versus modifier order once increases exist, and tamer exceptions (T20).
-- Combined board operations: the order of Mountain collapse, Residue, Debris and Cleanse is decided (removals → Cleanse → height → ground, [Battle §6.2](gdd_battle.md#62-surge-resolution-integration)); the final ground is decided too (destroying skill's own ground, otherwise Rubble). Prop Relocate has a confirmed contract ([Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts): one square orthogonal, non-heavy props, no shatter; price still provisional); Cleanse has no monster source beyond the Mountain reset (user, 2026-11-10); line-shaped Surge footprints are stopped by the first prop, other shapes lose only the blocked square. Do not derive free defaults from data-field order.
-- Ancient Slam destroys a Mountain: the 1 collapse damage is environmental (like Voidscar), so it is not Strike damage and the “Strike: max 2” law is unaffected.
-- T01 removes the Attunement/Elevated conflict; check remaining combinations of height and concrete ground types.
-- **Elevation / Mountain (user decisions, applied to the GDDs):** Elevated stays and is renamed **Mountain** (all height-creating skills create one). Destroying one needs an explicit authored operation; the occupant takes **1 environmental collapse damage** (independent of skills, like Voidscar damage; not skill damage); the ground then becomes the destroying skill's own ground if it can change ground on a Mountain, otherwise Rubble. Creating one keeps the Plain reset (non-Voidscar). **Props and Mountains are independent** (debris no longer collapses neighbouring Mountains). Ground-layer monsters on a Mountain can hit air-layer monsters on squares adjacent to their own square with all attacks, at no extra price (details T09). Yardstick: “easy to learn, hard to master” ([CLAUDE.md](../CLAUDE.md)). Remaining: check the Raise Ground Plain-reset wording and the per-profile Surge Mountain behaviour (Eruption: no ground change on a Mountain; Flood: cannot reach; Rift: destroys) against this rule once pricing is decided.
-- Zone values without Attunement: keep hard caps for Slow (2) and Push/Pull (1) consistent with level scaling.
-- **Prop revision (principles decided 2026-11-10: per-type fixed aftermath, damaging offensive sources hit props, no Field class; aftermath for Wall/Tree/Rock decided and no chain reactions, user 2026-11-10; burning/crumble decided; catalogue and HP/damage matrix remain open):** shared impact/reaction contracts; define broadly destructible props and concrete exceptions/resistances. Destruction type determines splinter/fall effects and residue instead of identical Shatter every time. A tree may split; initially use falling effects plus ground/visual residue, not separately movable halves. Predict fall direction, hit squares, damage and resulting state deterministically. Impact categories, prop catalogue, HP/damage matrix and event order remain open (chain reactions: none). Existing numbers are interim, with no new blanket hit permissions. For pricing, ordinary prop damage is provisionally a shared baseline without surcharge ([Skills §5](gdd_skills.md#5-construction-points-and-ap-efficiency)); review special advantages and costs after the redesign.
+**Status:** Partly decided — height-collapse result, payload/category order, collision, execution legality, Surge scheduling, damage-source ties, prop principles and Wall/Tree/Rock aftermath are documented decisions; remaining runtime conflicts below need decisions or synchronization.
+**Prerequisites:** T01 (decided) and the confirmed T02 model, not completion of its pricing. Coordinate source-specific contracts with T07/T09 and T20-D; no dependency on their later tests.
+**Sources:** Battle [§2.1](gdd_battle.md#21-core-battle-loop)–[§2.4](gdd_battle.md#24-effect-timing-reference), [§4.1](gdd_battle.md#41-battlefield-generation), [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed), [§4.9](gdd_battle.md#49-props)–[§4.11](gdd_battle.md#411-prop-reactions), [§6.1](gdd_battle.md#61-the-damage-law)–[§6.5](gdd_battle.md#65-displacement); Skills [§4](gdd_skills.md#4-effect-and-board-operation-contracts), [§9](gdd_skills.md#9-passives); [Overworld §6.4](gdd_overworld.md#64-tamer-skills).
+- **Already decided, not fresh questions:** collision/blocked pull/multi-step stopping ([Battle §6.3](gdd_battle.md#63-collision-fall--debris)); payload/category order, same-event Surges, simultaneous damage, queue-based displacement ties, line-footprint prop blocking and execution legality ([§6.2](gdd_battle.md#62-surge-resolution-integration)); additive damage modifiers and zero-damage non-damage effects ([§6.1](gdd_battle.md#61-the-damage-law)). Keep source permissions and environmental versus skill damage distinct; Shockwave/retired collision bonuses remain unapproved.
+- **Mountain:** explicit creation/destruction, environmental collapse, final ground, prop independence, Plain-reset/Voidscar exception and adjacent-air rule are decided in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed). Verify Raise Ground and each Surge profile against those source-specific permissions, not a generic height/ground reset. Ancient collapse is not extra Strike damage. No renewed Rubble-versus-hazard choice follows from an obsolete T04 marker.
+- **Source contracts:** [Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts) confirms Relocate's restricted move/no-shatter contract; its price remains provisional. No monster Cleanse beyond the Mountain reset was approved. Preserve Slow/displacement caps and per-effect scaling instead of extrapolating from zone level.
+- **Still open:** damage ceilings before/after modifiers once increases exist; tamer prevention/other exceptions (T20-D). Confirmed reduction stacking alone does not settle these.
+- **Prop revision:** preserve [Battle §4.9](gdd_battle.md#49-props)'s fixed per-type aftermath, damage rights, no Field class/no chain reactions and confirmed Tree fallback/burning/Wall-crumble exceptions. Destruction method does **not** generally select a different aftermath; only the explicit burning exception does. Earlier splinter/split language is not additional approved aftermath, and no movable halves are implied. Remaining: additional prop types, Shrine aftermath, HP/damage/resistance matrix, special-reaction valuation and event timing; existing HP/damage numbers are interim. Ordinary offensive prop interaction remains the provisional shared baseline in Skills §5, not blanket permissions for movement/support.
 - Field props (Sigil) are removed (user, 2026-11-10; [Battle §4.9](gdd_battle.md#49-props)), so no hit order for monsters on props is needed. The Skills §5 prop price row now lists Shrine only.
-- Clarify target validity on resolution: moved, fallen or removed unit/prop targets and placements that have become invalid. No implicit tracking, retargeting or invented cancellation/refund defaults. Define simultaneous events and expiry/trigger order deterministically.
-- Legality is checked at execution per square/operation (illegal parts do nothing, the rest resolves, no refund; Battle §6.2). Unit-bound effects end with the unit; zones, ground, props and Surges outlive a dead caster (user, 2026-11-10, [Battle §2.2](gdd_battle.md#22-initiative-rules)). Surge scheduling is decided (user, 2026-11-10, [Battle §2.2](gdd_battle.md#22-initiative-rules)): the caster's next queue entry including extra turns, a dead caster's Surge at the next round start; “next caster turn” does not guarantee everyone else acts first. Multiple concurrent casts are allowed; several due Surges of one caster resolve phase by phase together (decided); different casters are never due at the same event (each Surge follows its own caster's queue entry). Do not infer cast-order resolution or simultaneous snapshot evaluation.
+- **Remaining event gaps:** unit-targeted utility's moved/removed targets and source-specific cancellation; generic event/passive recursion, reapplication, source groups and expiry order. Surge square/operation legality and no-refund behaviour are already decided; do not reopen them as a generic target-validity question.
+- **Board conflicts/timing:** Battle §6.2 fixes categories, but not competing ground placements/height operations/prop relocations within the same category and square. It also places damage-derived prop destruction/debris among later board removals: specify when a prop reduced to 0 HP in phase 1 stops blocking, when its aftermath damages/removes survivors, and how simultaneous directional Tree hits resolve. Clarify environmental damage/defeat between these subevents, including which occupant takes collapse after displacement. No source-priority, snapshot or cast-order default is approved.
+- **Queue and end state:** Battle §2.2 leaves equal-total-initiative first-side ties and ties among same-side units/extra entries unspecified; orphaned-Surge displacement ties need a usable queue reference before the next queue. Battle §2.1 does not define simultaneous defeat of both sides or whether due autonomous aftermath completes before battle exit. Define deterministic outcomes and BattleResult handling with T19/T23.
+- **Modifier bounds:** damage reductions/increases are additive as decided; continuous stat-source stacking/caps and timed Spirit Strike refresh/expiry remain open (Battle §3.1, Skills §4), separate from the confirmed damage-modifier law.
+- Legality is checked at execution per square/operation (illegal parts do nothing, the rest resolves, no refund; Battle §6.2). Unit-bound effects end with the unit; zones, ground, props and Surges outlive a dead caster (user, 2026-11-10, [Battle §2.2](gdd_battle.md#22-initiative-rules)). Surge scheduling is decided (user, 2026-11-10, [Battle §2.2](gdd_battle.md#22-initiative-rules)): the caster's next queue entry including extra turns, a dead caster's Surge at the next round start; “next caster turn” does not guarantee everyone else acts first. Multiple concurrent casts are allowed; several due Surges of one caster resolve phase by phase together (decided); living casters' Surges follow separate queue-entry events, while **orphaned Surges of different dead casters can be due together at round start** and use the same phase-wise rule. Do not infer cast-order resolution or simultaneous snapshot evaluation.
 - Ties are decided for Voidscar selection (all equally far squares, Chebyshev distance) and exact-diagonal pulls (no movement) (user, 2026-11-10; Battle §4.1/§4.2/§6.5). The Voidscar reading is confirmed; damage-source ties are simultaneous without precedence; “free dodge squares” is dropped as a term (user, 2026-11-10). Push/pull destination ties: initiative-queue order ([Battle §6.2](gdd_battle.md#62-surge-resolution-integration)).
 - Check point-symmetric generation against odd prop counts; define legal central single objects for each board size.
-- **Done when:** the user's end-state decision is recorded in [Skills §3](gdd_skills.md#3-skill-execution-profiles) and Battle §4.7/§4.9; every contract listed above has a deterministic rule in Battle §2.4/§4/§6 with the Skills §4 interfaces updated; the interim prop rules are replaced or explicitly kept; no resolved item still carries a T04 marker in the GDDs.
+- **Done when:** every remaining contract above has a deterministic owning rule and matching Skills §4/tamer interfaces; the prop catalogue/matrix and interim-rule status are explicit; stale T04 claims about already-decided order/scheduling are corrected under T35. Exercise documented edge-case walkthroughs for same-event board conflicts, lethal aftermath, complete queue ties and simultaneous defeat. Gameplay balance remains T13; the height-collapse result is already recorded and is not a new decision gate.
 
-## Phase 2 — Skills, Development and Monster Identity
+## Battle Content — Skills, Development and Monster Identity
 
 ### [ ] T05 · Complete Skill Improvements (D)
 **Status:** Partly decided — principles confirmed (slot development granted at advancement steps, no EP currency, pill-based replacement, no damage/AP/range upgrades); step-to-level mapping, supply, deferral and respec rules open. Needs T02.
-**Prerequisites:** T02.
+**Prerequisites:** T02 reference development paths for the Battle deliverable. Meta logistics follow the Battle gate with relevant T16/T25/T30/T31 outputs; they do not block specification/testing of developed skills.
 **Sources:** [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades) (slot development), [§5.1](gdd_monsters.md#51-monster-rarity)/[§5.3](gdd_monsters.md#53-monster-progression-the-18-steps) (step supply/progression draft); [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed) (integration).
 - **Decided (user, 2026-11-08):** permanent skill-slot development is granted only at advancement steps ([Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps): the five breakthroughs plus the listed later sub-tier steps) as an option to develop one slot; there is no EP currency, no purchase and no physical evolution. Each step directly grants a designer-authored, skill-dependent upgrade choice; no additional player point currency. Rarity sets steps per advancement (1 Normal/Rare, 2 Epic/Legendary, legacy values).
 - **Decided:** replacing a skill from the unlocked species learnlist outside expeditions costs a valuable relearning pill. Slot development is preserved; suitable upgrades for the new skill are reselected within the existing development extent. No free re-slotting or step-paid swap path.
 
+- **Battle deliverable first:** decide reachable upgrade choices, step supply/slot-level mapping, deferral, retained/reselected development and legal active/passive states. These constrain tested battle sheets. **Meta deliverable later:** pill acquisition/recipe/price, day AP and where development/replacement/respec happens; keep existing pill/advancement requirements, without assuming free respec or execution.
 - **Next step:** draft the step model: steps per advancement, Normal's total of only two steps (Foundation and Core), how steps relate to slot levels 1–3 (ceilings 24/30/36), whether the choice may be deferred, and whether the Evolution Pillar keeps a role or the choice happens at the breakthrough (Trial Pillar). Check investment across multiple slots.
 - **Decided:** slot levels 1–3 with increasing budget ceilings, no skill ratings. Define unlocks and possible intermediate development within these levels; do not assume another rank hierarchy.
 - **Decided:** retain small fixed damage values. Slot upgrades do not increase direct damage, lower AP costs or increase cast range. Allowed improvement types: area, shape/orientation, duration, movement/displacement and explicitly designed additional effects, each with skill-dependent limits. Still check total impact through more targets or triggers.
@@ -214,42 +240,43 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 - **Done when:** step supply (including the Normal rarity), step-to-level mapping, deferral, unlocks, upgrade offers per reference skill, passive-slot and active/passive replacement rules, same-skill respec/refund/transfer decisions, the Evolution Pillar's role and the relearning pill's acquisition path are decided; [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), [Monsters §5.1/§5.3](gdd_monsters.md#51-monster-rarity) and [Overworld §6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed) are synchronized.
 
 ### [ ] T06 · Complete Strike Shapes and Kin Effects (D/V)
-**Status:** Open.
-**Prerequisites:** T02, T03, T05.
-**Sources:** [Skills §8.1](gdd_skills.md#81-strike-by-kin).
+**Status:** Open — shape/variant geometry partly decided; access/content and comparative tests incomplete.
+**Prerequisites:** Geometry/Kin-effect contract work can start now using Skills §3/§8.1; T02 costs, T03 D/K and T05 for development/access offers. V is executed with T13, not a prerequisite to its own test kits.
+**Sources:** Skills [§3](gdd_skills.md#body-relative-damage-and-movement-variants), [§5](gdd_skills.md#strike-costs), [§8.1](gdd_skills.md#81-strike-by-kin).
+- Define exact offsets for all legal orientations, especially diagonal Cleave, without changing the decided adjacent-only push, centre-based retreat or once-per-monster hit contract. Distinguish existing Winged/Scaled Kin packages from new variants; existing Winged retreat still needs multi-target/tie/legal-destination rules. Geometry belongs here, not a deferred air-only question in T09.
 - Only Jab before Core: do interesting shapes arrive too late? Storm/5-AP shapes only reach late TPR-1 builds.
 - Test Whirl (4 squares) against Arc (3) at the same battle AP (3; their construction prices in Skills §5 differ), and the value of Thrust's range. Naming is resolved: only “Thrust” remains in the GDDs.
 - Beast Bite: give it its own effect without violating the damage ceiling, or deliberately accept the lack of an effect.
-- **Done when:** every Kin's Strike shape access across the AP/stage gates and the Beast Bite effect question are decided, the Whirl/Arc/Thrust checks are documented, and [§8.1](gdd_skills.md#81-strike-by-kin) and the Skills §5 Strike cost table (which takes its AP and hit cells from §3.2) agree.
+- **Done when:** every Kin's Strike shape access across the AP/stage gates and the Beast Bite effect question are decided, the Whirl/Arc/Thrust checks are documented, and [§8.1](gdd_skills.md#81-strike-by-kin) and the Skills §5 Strike cost table (which takes its AP and hit cells from §8.1) agree; offsets and existing Kin-package resolution are explicit.
 
 ### [ ] T07 · Align Ground Interactions and Healing (D/V)
-**Status:** Open — ordering questions wait for T04.
-**Prerequisites:** T01, T02, T04.
+**Status:** Partly decided — zone/ground independence, Hallowed classification, `mend` scaling and unlimited Mossbed entries confirmed; prices/content choices and healing/hazard tests remain open.
+**Prerequisites:** T01 (decided); use the confirmed T02 model for effect contracts now. Relevant T04 ordering and T02 prices for affected content; V closes with T13, not before it.
 **Sources:** Battle [§4.6](gdd_battle.md#46-zones-effects-rules--opposites)–[§4.8](gdd_battle.md#48-no-attunement); Skills [§2](gdd_skills.md#2-data-oriented-skill-construction-kit), [§4](gdd_skills.md#4-effect-and-board-operation-contracts)–[§5](gdd_skills.md#5-construction-points-and-ap-efficiency).
 - Permanent residue: does the board fill too quickly, making start-turn hazard placement overpowered?
 - Measure hazard coverage on 7×7 by round 5. If needed, examine Field at 2 AP or a maximum of N Field squares per monster as alternatives.
 - Zone × ground is decided (user, 2026-11-10; [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites)): zones and ground stay independent; the earlier suppress/invert drafts were dropped. Test in T13 whether the existing ground operations (Raise Ground, residue, Cleanse) are enough to counter permanent hazard ground; if not, prefer a targeted board operation over a zone effect.
 - T01 removes Attunement and painting snowball. Instead review counters to permanent hazard ground and their accessibility.
-- Blessing: is 2 AP appropriate for 3–4 permanent squares? Limit Mossbed per turn?
+- Blessing: review the existing AP price for 3–4 permanent squares and counter accessibility; no automatic AP change. Mossbed's lack of a per-turn/re-entry limit is decided, not an unanswered design choice.
 - Zone `mend` heals `min(2, zone level)` and Mossbed has no re-entry/per-turn limit (user, 2026-11-10; [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites)/[§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)); persistence grants no additional healing triggers. Still to check: healing at HP 1–10 and Mossbed loops in the T13 tests, and the price of the changed `mend` magnitude.
 - Evaluate level-II residue as a concrete extension; the former name “Deep Residue” and +1 AP are not confirmed universal rules.
 - Hallowed is **blessed ground** (user, 2026-11-10); Battle §4.3 corrected.
-- **Done when:** hazard coverage is measured (with T13), and the permanent-residue and counter questions above are decided or tested.
+- **Done when:** D/K resolves Blessing calibration scope, level-II-residue decision and `mend` scaling valuation/source interfaces; V documents hazard coverage, permanent-residue counter accessibility and healing/entry-loop measurements with T13. Consider limits only if new test evidence gives a reason; do not silently retract unlimited Mossbed entries.
 
 ### [ ] T09 · Specify the Air Layer and 2×2 Rules (D/K)
-**Status:** Open — blocks Winged air content, 2×2 content and Beast Swap.
-**Prerequisites:** T02, T04, T06, T07.
+**Status:** Partly decided — basic 2×2 geometry/mixed-ground rules and flight are confirmed; remaining air/source interactions and concrete pricing block affected content/Beast Swap, not all board rules.
+**Prerequisites:** Use the confirmed T02 schema now; affected T04/T07/T20-D interfaces before air content, T02 for valuation. Diagonal-Cleave geometry is T06; no full-task T06/T07 validation prerequisite.
 **Sources:** Battle [§4.3](gdd_battle.md#43-the-square-stack-zones--ground), [§5.1](gdd_battle.md#51-monster-skills-central-specification) (integration); Monsters [§3.1](gdd_monsters.md#31-kin-table), [§2](gdd_skills.md#2-data-oriented-skill-construction-kit), [§3](gdd_skills.md#3-skill-execution-profiles), [§4](gdd_skills.md#4-effect-and-board-operation-contracts), [§7](gdd_skills.md#7-validation-and-concrete-skill-records).
-- Which effects besides Strike may have air recipients? Define layers per effect, not as a global `affects_air` authoring flag. Ensure at least sufficiently readable counters to Winged from Soul onward.
-- Specify flight movement, occupancy and interaction with props/ground. For 2×2, also define distance origin, area overlap, recipient deduplication and entry/exit evaluation across multiple squares; the generic area model does not decide these cases.
+- **Already decided:** eligible air-recipient effect families are listed in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground), authored per effect with no global `affects_air` flag/default. Existing recipients remain unchanged; concrete air-capable definitions and prices still need T02/T10. Counters are tested in T13; no additional Winged-counter guarantee is approved.
+- **Remaining air contracts:** authored landing/layer changes, air-prop sources/HP/reactions and both-layer occupancy/interception. Preserve confirmed flight traversal and ground immunity; reconcile the broad stack/Kin immunity wording with the explicit Mountain and authored-air exceptions under T35.
 - *Mountain air rule (decided 2026-11-10, owner [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)):* eight neighbours, delayed Surges fixed at cast, 2×2 needs all four squares on Mountain and uses nearest covered squares; it changes no skill price.
-- Additional analysis finding: 2×2 is announced, but area hits, damage multiplication, placement, movement and displacement are insufficiently defined. Occupying multiple squares must not create an implicit multiple-damage rule.
-- **2×2 decisions (user, 2026-11-10; owner [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground)):** distance from the nearest covered square; ground/zone triggers once per event; every ground type under the body takes effect once (highest level per hazard type); Mountain bonuses need all four squares on Mountain, climbing costs more if any square climbs; a step costs the highest cost among newly covered squares; stand/step legal only if all four squares are legal in the body's single layer. Displacement ([Battle §6.3](gdd_battle.md#63-collision-fall--debris)): one collision with all blockers taking 1, fall damage only if all four squares land lower. Upward displacement onto a Mountain blocked if any square would climb. Body-relative push/retreat for 2×2 ([Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants)): push `d` = mean of covered adjacent hit cells (none if off-axis), 2×2 attacker retreats whole-body if all four squares legal. Shape origin (chosen covered square), pull direction (nearest covered square) and partial overlap (any overlapping square, once) decided in Skills §3. Entry triggers use newly covered squares only; same-timing ground damage and healing resolve simultaneously and net (Battle §4.3). The 2×2 board rules are complete for now; Air layer decided: recipients are authored per effect with no default, flyers ignore ground unless authored, flight is blocked only by air occupants and the edge at cost 1 per square. Remaining T09: authored landing, air/both-layer props, concrete air-capable zone/Surge definitions and prices.
-- **Done when:** air-layer and 2×2 contracts are specified in Battle §4.3 and Skills §2–§4, or air/2×2 content is explicitly gated as deferred.
+- **New residual interface gap, not a geometry reopening:** a 2×2 can cover different zone definitions/levels at once. Battle §4.3 confirms once-per-event overlap and mixed **ground**, but does not clearly select/aggregate multiple continuous zone modifiers, shield, end-turn `mend` or opposing push/pull sources under one body. Specify this with T04/T07; do not copy the highest-hazard-level rule into zones or multiply an effect by occupied cells.
+- **2×2 baseline is decided, not generally missing:** distance, body legality, mixed ground, newly covered entry squares, net same-timing ground damage/healing and Mountain movement/bonuses belong to [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); blocking/collision/fall to [§6.3](gdd_battle.md#63-collision-fall--debris); shape-origin, partial overlap, recipient deduplication and body-relative push/pull/retreat to [Skills §3](gdd_skills.md#body-relative-damage-and-movement-variants). Preserve these conditions rather than selecting one worst ground square or per-cell hits. Remaining variant valuation/checker coverage is T02, not evidence that the geometry is undecided.
+- **Done when:** remaining air/prop/landing and multi-zone-body contracts have owning rules and matching Skills/tamer interfaces; affected air/2×2 records are priced with T02 or explicitly gated as deferred. Remove obsolete “open mixed ground/Mountain air/entry” labels under T35 without changing confirmed geometry; counter/balance tests remain T13.
 
 ### [ ] T10 · Build Concrete Skills in the Shared Schema (D)
-**Status:** Open — blocked until T05–T07 and T09 are decided.
-**Prerequisites:** T05–T09.
+**Status:** Blocked for complete approved content — six structural/calibration records exist, none has a complete development path or full validation.
+**Prerequisites:** Relevant D/K deliverables of T02/T05/T06/T07/T09, not their unexecuted V closure; T08 is completed removal, not a pending gate.
 **Sources:** Skills [§2](gdd_skills.md#2-data-oriented-skill-construction-kit)–[§7](gdd_skills.md#7-validation-and-concrete-skill-records); records live in [gdd_skills.md](gdd_skills.md).
 - Create concrete skills as records in [gdd_skills.md](gdd_skills.md), exclusively in the shared schema [§2](gdd_skills.md#2-data-oriented-skill-construction-kit) and validate under [§7](gdd_skills.md#7-validation-and-concrete-skill-records); no new parallel blueprint/example table. Fully define effects, triggers, targeting, footprints, interactions, costs and authorized upgrade patches.
 - Species-exclusive and Signature skills use the same schema; express differences through access, authorship and explicit rules. Earlier named ideas are not promised content. Select concrete skills and sufficiently deep upgrade choices only after budgets are confirmed.
@@ -257,37 +284,37 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 - **Done when:** the first concrete skills are complete records in [gdd_skills.md](gdd_skills.md) under [§2](gdd_skills.md#2-data-oriented-skill-construction-kit)/[§7](gdd_skills.md#7-validation-and-concrete-skill-records) with upgrade choices, fit the confirmed ceilings and carry no unresolved contract.
 
 ### [ ] T11 · Revise Learnlists, Passives and Reference Roster (D)
-**Status:** Open — blocked by T03, T06, T10.
-**Prerequisites:** T03, T06, T10.
-**Sources:** Skills [§1](gdd_skills.md#1-the-kit), [§9](gdd_skills.md#9-passives), [§4.1](gdd_monsters.md#41-first-roster-draft--9-monsters), [§5.3](gdd_monsters.md#53-monster-progression-the-18-steps).
+**Status:** Blocked for final kits — nine prior-draft assignments exist; no legal revised reference kits/learnlists are complete.
+**Prerequisites:** T03/T06 D/K results and T10 records; use draft test kits before T13 and keep their validation status explicit. T03/T06 V does not have to close first.
+**Sources:** Skills [§1](gdd_skills.md#1-the-kit), [§9](gdd_skills.md#9-passives), [Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft); Monsters [§4.1](gdd_monsters.md#41-first-roster-draft--9-monsters), [§5.3](gdd_monsters.md#53-monster-progression-the-18-steps).
 - Define learnable skills (current target roughly 8) and available passives for each species: distinguish species binding from individual binding; free themes are not an additional learning restriction. Revise or remove formerly aspect-dependent passives.
 - The nine reference monsters currently have four active skills plus passives; reduce to four shared slots and handle the Epic+ additional slot separately.
-- Give every species a Species Twist instead of the shared placeholder, plus a concrete Strike shape and fixed Surge orientation.
+- Resolve each species' Surge identity/constraint, concrete Strike shape and fixed Surge orientation. A distinct twist is an authoring goal to review, not permission to require more than one twist or to turn a baseline/no-twist draft into a decided mechanic.
 - Check roster descriptions of weaker Surge variants against current damage and AP rules; descriptive wording grants no damage exception.
 - *New:* the Berserker frame text says it “escalates one Surge with Empower”, but no section defines Empower; define it through the shared model or remove the wording.
 - **Done when:** learnlists and passives for the reference species are decided with legal 4-slot kits, each species has a one-sentence identity, and legacy passives and undefined names (see bullets) are redefined or removed.
 
 ### [ ] T12 · Select the Launch Roster (D)
-**Status:** Open — blocked by T11.
+**Status:** Blocked — T11 identities/coverage are not ready; candidate names alone are not launch selection.
 **Prerequisites:** T11.
 **Sources:** Monsters [§4.1](gdd_monsters.md#41-first-roster-draft--9-monsters)–[§4.2](gdd_monsters.md#42-additional-species-candidates).
 - Without a mandatory Kin×aspect matrix, select a diverse roster from the nine reference monsters and additional name ideas (previous target about 15); prioritize free themes and distinct playstyles over category completeness.
 - Check missing blueprint/movement coverage and distinct one-sentence identities.
 - **Done when:** the launch roster is recorded in [Monsters §4](gdd_monsters.md#4-roster) with a documented coverage and identity review.
 
-## Phase 3 — Validate Battle Before the Meta Fixes Numbers
+## Battle Validation and the Post-Battle Reshape Follow-up
 
 ### [ ] T13 · Plan and Evaluate Battle Tests with the Revised Rules (V)
 **Status:** Open — blocked; **no battle tests have been run** and the documented Godot build is the historical v6.0 ruleset, not the current design.
-**Prerequisites:** T04, T07, T11; T09 for Soul tests.
-**Sources:** [Battle §7.2](gdd_battle.md#72-prototype--playtests); historical Battle §8; [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups), historical Monsters §6.
+**Prerequisites:** Core pass: relevant T02 pricing/content, T04 runtime, T07-D and T11 reference kits; T09-D for Soul/air/2×2. Full-scope pass: T12 roster, T17 combat artifacts, T18–T20 effects/loadout, T21 board inputs, T22/T23 combat-scope conflicts and T32 content. Execute T03/T06/T07/T20 V here; core results can inform T32 before the final pass. Neither full meta tasks nor test-dependent V closure are prerequisites to core tests.
+**Sources:** Battle [§4.1](gdd_battle.md#41-battlefield-generation), [§7.2](gdd_battle.md#72-prototype--playtests); Monsters [§2.2](gdd_monsters.md#22-frame-budget-level-ups); Skills [§5](gdd_skills.md#included-behaviour-and-validation-limits), [§7](gdd_skills.md#7-validation-and-concrete-skill-records). Current Battle §8/Monsters §6 are tracking pointers, not historical test-result sections.
 - First ensure that the tested build implements the draft under examination: the documented Godot baseline is the historical battle v6.0 ruleset, not the current GDD design. Code changes are outside this documentation task.
-- **HTML calculator/test suitability (read-only inspection):** [`battle-prototype-v5-zones-ground.html`](../html_prototype/battle-prototype-v5-zones-ground.html) has no construction-budget evaluator/shared Skills §2 record. Its `SKILLS` records use aspect/range/cooldown fields (lines 390–407); `castSkill` writes cooldowns (550–568); `fireDue` uses old timing/height/Attunement outcomes (632–652); the UI prevents a second pending Surge (802). It cannot validate current construction arithmetic, round-limited event skills or current battle balance unchanged. The temporary [authoring checker](temp_kalkscript.py) now covers a limited arithmetic subset, not a battle simulation or full-model evaluator. Adapting the battle harness remains a separate implementation task; no browser/playtest was run.
+- **Prior-handoff-only evidence — HTML calculator/test suitability (read-only inspection reported earlier, not repeated in this audit):** [`battle-prototype-v5-zones-ground.html`](../html_prototype/battle-prototype-v5-zones-ground.html) has no construction-budget evaluator/shared Skills §2 record. Its `SKILLS` records use aspect/range/cooldown fields (lines 390–407); `castSkill` writes cooldowns (550–568); `fireDue` uses old timing/height/Attunement outcomes (632–652); the UI prevents a second pending Surge (802). It cannot validate current construction arithmetic, round-limited event skills or current battle balance unchanged. The temporary [authoring checker](temp_kalkscript.py) is intended for a limited arithmetic subset only and currently fails on stale GDD bindings (T02); it is never a battle simulation/full-model evaluator. Adapting the battle harness remains a separate implementation task; no browser/playtest was run.
 - Residue: do Surges indirectly hit even when dodged, or force meaningful routes? (Measurement only; no rule term such as “free dodge squares”.)
 - Readable combos: Current → Surge/Lava, Pull → Strike; check Pull anchors and push direction.
 - Strike from 2 AP: worthwhile or unused, melee too sticky?
 - Check no-cooldown spam and repeated protection-zone casting (two 1-AP casts → level II, Shield 3). Fallback: level-up only once per turn and square.
-- Test zone-based Surge reduction 2, level/Attunement and Surge damage 3 for genuine counters. Attunement is a historical test reference, removed by T01; do not reintroduce it.
+- Test base/levelled zone Surge reduction against current damage, Hallowed and applicable passive stacking, including zero-damage non-damage effects. Attunement is removed, not a current test dimension.
 - Check movement prices, Step-only viability and Movement cap 5.
 - Three Surge types against Mountains; props as tactical resources rather than obstacles.
 - 3v3/7×7: readability, round count, Collapse share and starting distances; test Reach 4 + Mountain = 5 against the promise of a safe opening.
@@ -295,21 +322,22 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 - Compare Dusk Moth (historical 87% simulation win rate) with humans and AI; examine Native Ground/Wide/Blight separately.
 - Evaluate stat/Strike/healing tests from T03/T06/T07 together; adjust prices only based on results.
 - *New (K):* [Battle §4.1](gdd_battle.md#41-battlefield-generation) states an intended “5–6-row” start separation on 7×7, but back-two-row start areas give a minimum front-line distance of 4 rows (rows 2 and 6) and a maximum of 6. Correct the wording or the start areas, then test the “no hit on the enemy line in round 1” target against Reach 3–4.
-- Test the profile-specific delayed one-square push of the damage-2/Thornbed Surge profile together with the entry hazard ([Skills §5](gdd_skills.md#zone-protection-and-healing-costs)); budget fit does not validate the reduced rate, and no further automatic timing discount applies.
-- **Done when:** a test plan is executed on a build that implements the drafts under test, results are documented before any rule or price change, and [Battle §7.2](gdd_battle.md#72-prototype--playtests) is updated.
+- Test the damage-2/Thornbed profile's delayed one-square push with its **decided damage → displacement → residue order**: it does not enter residue created afterward by that same payload. Test entry into pre-existing hazards and later traversal separately. [Skills §5](gdd_skills.md#zone-protection-and-healing-costs)'s timing rate remains unvalidated; no second automatic timing discount.
+- Include T03/T06/T07/T09/T20 scenarios and metrics explicitly: rolled versus raised stats, shape value, healing at HP 1–10, Mossbed re-entry loops, round-5 hazard coverage on 7×7, air/Mountain exceptions, 2×2 multi-zone interactions and per-instance repetition. Preserve resolved rules while collecting evidence.
+- **Done when:** core and full-scope test passes are executed on a build implementing the agreed combat scope, including developed states and in-scope artifacts/items/tamer/Major/Signature interactions; results and remaining limitations are documented before any rule/price change, and [Battle §7.2](gdd_battle.md#72-prototype--playtests) is updated. Core-only success does not close T13 or the Battle gate.
 
 ### [ ] T14 · Safeguard Reshape Against Reroll Exploitation (D/V)
-**Status:** Open — blocked by T03, T13.
-**Prerequisites:** T03, T13.
+**Status:** Open — queued for post-Battle meta integration; reroll access/cost safeguards remain unvalidated.
+**Prerequisites:** Battle gate, T03 and T13 results for legal stat states; relevant T16/T30/T31 economy/ritual inputs before declaring costs sufficient. T03 still checks rolled-versus-raised combat strength before the gate.
 **Sources:** [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups); Overworld [§2.6](gdd_overworld.md#26-action-catalog), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades).
 - Are a rare elixir and ritual costs sufficient, or is a cap/cooldown needed against repeated optimization rolls?
 - **Done when:** the elixir/ritual cost is confirmed sufficient or a cap/cooldown is decided, backed by documented T13 results.
 
-## Phase 4 — World, Catalogues and Equipment (Partly Parallel to Phase 2/3)
+## Cross-Document Tasks — Combat Effects First, World Catalogues Later
 
 ### [ ] T15 · Define City Powers, Responsibilities and Content (D)
-**Status:** Open — independent of battle design; can start now.
-**Prerequisites:** none; may run in parallel with battle design.
+**Status:** Open — queued after the Battle gate by user priority; technically independent, not a combat blocker.
+**Prerequisites:** no gameplay dependency on Battle; scheduling waits for its gate. Do not divert the current workstream into city design.
 **Sources:** Overworld [§3.1](gdd_overworld.md#31-the-city)–[§3.2](gdd_overworld.md#32-the-powers-of-the-city), [§7.2](gdd_overworld.md#72-favor--faction).
 - Define faction names, profiles and offerings for the three families.
 - Confirm operators of Arena, Teleport Plaza and Business District: proposal is City Lord, City Lord, Guild.
@@ -317,67 +345,71 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 - **Done when:** faction profiles, district operators, Rival Compound access and the Slums purpose are recorded in Overworld §3.1/§3.2/§7.2.
 
 ### [ ] T16 · Complete Material, Item and Recipe Catalogues (D)
-**Status:** Open — can start for non-battle products; battle-related products wait for T10.
-**Prerequisites:** T01; T10 for battle-related products.
+**Status:** Open — catalogue/recipe/acquisition work queued after the Battle gate; combat effects are defined first under T17–T20.
+**Prerequisites:** T01 (decided); Battle gate as scheduling prerequisite; relevant T10/T17–T20 outputs for battle-related products. Full recipes/material catalogues are not prerequisites to defining those combat effects.
 **Sources:** Overworld [§6.6](gdd_overworld.md#66-pills--medicines)–[§6.8](gdd_overworld.md#68-arrays-artifacts-for-places), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades)–[§7.8](gdd_overworld.md#78-acquisition-sources).
 - Derive concrete materials, herbs, seeds, recipes, seals, scrolls and blueprints from patterns; determine counts, tiers and grades.
-- Reconcile the quantity assumption “four tiers/~40 pills” with six cultivation stages and missing Sovereign XP values.
+- Reconcile the legacy catalogue-count assumption (~40 pills, previously four tiers) with the current six-stage tier model, the §7.5 “ten families” wording, relearning pill and missing Sovereign XP value. Neither a full tier mapping nor a promised catalogue count is established.
 - Check grade dependencies and acquisition sources against “money never buys exclusive power”; Legendary bloodline ingredients are currently described both as story-only and as boss/quest/auction rewards.
-- Confirm Array recipes and the Forge route (Ore + Beast Parts); decide whether Upper Stones are currency only or also ritual materials.
+- Confirm Array recipes and the Forge route (Ore + Beast Parts); decide whether Upper Stones are currency only or also ritual materials. Align Bloodline requirements: Monsters §5.2 does not list the Upper-stone input in Overworld §7.5; do not adopt it from the optional ritual proposal.
 - **Done when:** catalogue counts, tiers and grades are defined and the listed conflicts (pill count versus stages, Legendary sources, Upper-stone role, Array/Forge routes) are resolved in Overworld §6.6–§7.8.
 
 ### [ ] T17 · Define Artifact Rules and Stacking (D/K)
-**Status:** Open — blocked by T03, T11, T16; slot-access conflict between Overworld §6.3 and §6.7 is unresolved.
-**Prerequisites:** T03, T11, T16.
+**Status:** Partly drafted — battle-facing slots/effects/stacking prioritized before the Battle gate; acquisition and meta-only gear bonuses remain later work.
+**Prerequisites:** Relevant T03 stat rules, T11 passive definitions and T20 tamer interfaces for combat equipment; no full T16 catalogue prerequisite. T16/T25/T31 for later forging/acquisition, capacity and day-AP bonuses.
 **Sources:** Overworld [§6.7](gdd_overworld.md#67-artifacts-equipment--socketed-passives), [§6.9](gdd_overworld.md#69-hard-caps), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades); [Monsters §5.1](gdd_monsters.md#51-monster-rarity).
+- **Battle deliverable:** legal equipment slots/Stage gates, effects/stat limits and passive stacking, including modifiers of tamer skills, must resolve into tested sheets/loadouts. **Meta deliverable:** forging/availability and day-AP/capacity/expedition-only bonuses follow after the gate; they remain open, not removed.
 - Tamer: two or three slots, and when? Monster: second slot at Epic+, or additionally only from Core? Synchronize tables.
 - Clarify passive OR stat modifier versus the schema “passive + small stat modifier”; limit duplicate passives and multiple artifacts.
 - Check +1 AP/day, capacity and skill modifiers against day economy, Stage caps and the options-not-numbers rule.
 - **Done when:** slot counts and unlock timing, the passive-versus-stat rule and stacking limits are decided and Overworld §6.3/§6.7/§6.9 agree.
 
 ### [ ] T18 · Specify Medicines and Arrays (D)
-**Status:** Open — blocked by T07, T10, T16.
-**Prerequisites:** T07, T10, T16.
+**Status:** Partly drafted — medicine and battle-array contracts/classification prioritized for the Battle gate; recipe and non-combat Array work stays open afterward.
+**Prerequisites:** Relevant T07-D/T10 effect contracts for battle definitions, not completed healing tests or the T16 catalogue. T16 supplies recipes/acquisition later; T19 consumes resolved combat effects/costs.
 **Sources:** Overworld [§6.6](gdd_overworld.md#66-pills--medicines), [§6.8](gdd_overworld.md#68-arrays-artifacts-for-places), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades)–[§7.6](gdd_overworld.md#76-item-schema).
+- **Battle deliverable:** concrete medicine/array/battle-prep effects, item classification, consumption/durability, placement and source-specific timing feed T19 and T13. **Meta deliverable:** recipes, purchase/crafting supply and Internal World/business-protection Array content follow after the gate.
 - Determine Medicine effects, recipes, item kind and distinction from pills. Protection/healing/board effects need their own source, consumption and timing contracts in the shared data model; monster-effect contracts do not automatically approve items.
 - Which Arrays are consumable, and which reusable? Define durability, placement and battle effects.
-- Confirm pre-battle Arrays as a limited exception to a neutral/point-symmetric start; review the four existing Array drafts.
+- Confirm pre-battle Arrays as a limited exception to a neutral/point-symmetric start; review the three listed battle Array drafts and separately define the claimed Internal World/business-protection scope; no additional Array record is currently supplied.
 - *New:* the battle-prep pills Swift (+1 initiative next battle) and Ward (first-hit immunity next battle) in [Overworld §7.5](gdd_overworld.md#75-materials-seeds-and-grades) are neither medicines nor arrays; decide their item treatment, timing and effect contract. “Immunity” sits against the shared protection model (reduction, no generic immunity) in [Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts); Warding Array (“first Surge damage −1”) and Spirit Shield (“next Surge damage is 0”) use different wording again. Also reconcile “pre-battle modifiers (pills, arrays)” in the Battle request ([Overworld §8](gdd_overworld.md#8-technical-notes-overworld--development-phases)) with the loadout categories.
 - **Done when:** Medicine/Array item kinds, effects, recipes, consumption and timing contracts are specified in the shared model, and the Swift/Ward pill classification is decided.
 
 ### [ ] T19 · Complete Battle Loadout and Timing (D)
-**Status:** Open — blocked by T18 (item effects/costs first, then loadout limits).
-**Prerequisites:** T18.
+**Status:** Partly drafted — visibility, pre-battle selection and BattleResult consumption fields exist; counts, activation windows and source handling remain blocked by T18 effects/costs.
+**Prerequisites:** T18 combat effects and Battle-AP/consumption contracts, not recipes or market prices; coordinate T17/T20 loadout interfaces. Complete before full-scope T13.
 **Sources:** [Battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout) (integration); Overworld [§2.1](gdd_overworld.md#21-battle-loop), [§7.9](gdd_overworld.md#79-inventory-and-loadout), [§8](gdd_overworld.md#8-technical-notes-overworld--development-phases).
 - Define Medicine/Array counts, activation windows (own turn or anytime), AP costs and consumption.
 - Apply the same rules to human opponents; specify visibility, preview, pre-battle locking and reporting consumed items in BattleResult.
-- Dependency is directional: item effects/costs first, then loadout limits; do not let them block each other mutually.
+- Dependency is directional: item combat effects/Battle-AP costs first, then loadout limits; no dependency on spirit-stone prices/recipes or mutual blocking. Acquisition frequency is tuned later against the accepted per-battle limits.
 - **Done when:** loadout counts, activation windows, AP costs, consumption, human-opponent visibility and BattleResult reporting are specified in Overworld §7.9/§8 and Battle §5.2.
 
 ### [ ] T20 · Validate Tamer Skills Including Beast Swap (D/V)
-**Status:** Open — blocked by T09, T13, T19; tamer rows marked *proposal* are unconfirmed.
-**Prerequisites:** T09, T13, T19.
+**Status:** Partly drafted — baseline summary table exists; *proposal* rows are unconfirmed. D can proceed on missing source contracts; V waits for the matching T13 tests.
+**Prerequisites:** D uses existing shared contracts and only affected T09/T18/T19 interfaces; coordinate tamer exceptions with T04 now. V requires testable definitions/loadout timing and T13 execution, not a blanket T13 prerequisite to design.
 **Sources:** [Overworld §6.4](gdd_overworld.md#64-tamer-skills); [Battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout) (integration).
+- **Battle deliverable:** slots/Stage gates, in-battle effects, activation windows, swap/queue/HP/defeat handling and their T13 tests. Catching-only skills still need explicit loadout-slot/usage/output contracts; their seal supply/acquisition tuning follows with T24. Scroll availability/learning costs and permanent-loss logistics follow the gate, without changing combat permissions.
 - Confirm/change/reject proposed Swap Places, Urgent Order, Second Wind, Life Thread, Double Bind and Seal Mastery; T01 removed Attune. Explicitly define tamer sources in the shared effect model without transferring monster-skill permissions or AP classes.
 - Test Life Thread against Spirit Shield and Urgent Order against initiative; define usage timing for free skills.
 - Beast Swap: define HP, injury, queue, own charging Surges, 2×2 space requirements and replacement-entry rules.
-- Scrolls teach skills earlier; Beast Swap may only be slotted from Soul: clearly distinguish learning from use and Stage gates.
+- Scrolls teach skills earlier; Beast Swap may only be slotted from Soul: preserve this explicit gate. Define whether other early-learned later-stage skills may also be used early; do not silently extend the Beast Swap exception to all skills or waive it.
 - *New:* Domain Glimpse (not marked as proposal) has no specification: footprint family/orientation, range, and whether it affects Voidscar, props, Mountains or charging Surge markers. Skills §4 states there is no generic cleanse of Voidscar and calls the combined zone-removal/Plain reset a tamer-source operation, but §6.4 does not exclude Voidscar. Coordinate with T04.
 - **Done when:** each tamer skill is confirmed, changed or rejected, tamer sources exist in the shared effect model, and Beast Swap and Domain Glimpse rules are specified and tested against the listed interactions.
 
-## Phase 5 — Expeditions, Collection and the Spatial World
+## Battle Interfaces and Post-Battle Expeditions, Collection and Housing
 
 ### [ ] T21 · Define the Dungeon Node ↔ Board Generator Contract (D)
-**Status:** Open — blocked by T04, T12.
-**Prerequisites:** T04, T12.
+**Status:** Open — board-generation/BattleRequest contract prioritized for Battle; dungeon-node content and healthy-team availability follow afterward.
+**Prerequisites:** T04 board rules for generator inputs now; T12 for final opponent/roster coverage tests. No full dungeon/loot/capacity design prerequisite to the board contract.
 **Sources:** [Overworld §3.3](gdd_overworld.md#33-dungeons); [Battle §4.1](gdd_battle.md#41-battlefield-generation).
-- What does the node fix, and what does the generator generate? Proposal: node determines mode, theme/ground families and prop-count range; generator places everything point-symmetrically.
+- **Battle deliverable:** finish the allowed board-generation inputs, mode/team-size constraints and deterministic placement responsibility before final T13; test requests can supply these without a whole dungeon run. **Meta deliverable:** populate dungeon nodes and check healthy-team/capacity access after the gate.
+- Node-owned mode and wild-monster count are already the working design in Overworld §3.3. Define the remaining parameters: theme/ground families, prop-count ranges, start areas and seed/placement responsibility. Point-symmetric generation remains Battle §4.1's constraint; assigning all these parameters to the node is only a proposal.
 - Check encounter access against required team size and available healthy monsters.
 - **Done when:** the node ↔ generator contract is recorded in Overworld §3.3 and Battle §4.1.
 
 ### [ ] T22 · Complete Expeditions and Loot Tables (D/V)
-**Status:** Open — blocked by T16, T19, T21; HP persistence and free retreat with loot are the working state.
-**Prerequisites:** T16, T19, T21.
+**Status:** Partly drafted — persistent HP/free retreat with loot remain working design; run depth/rewards and healing-scope conflict unresolved. Final tuning waits for T16/T19/T21.
+**Prerequisites:** Resolve the run-healing restriction's **in-battle** scope with T07/T20 before the Battle gate; do not wait for full expeditions to settle that conflict. Run/reward/supply tuning follows the gate with T16/T19/T21.
 **Sources:** Overworld [§2.2](gdd_overworld.md#22-expedition-loop), [§7.8](gdd_overworld.md#78-acquisition-sources).
 - Determine floors/battles per run, deeper entry (1/2 day-AP), retreat and reward tables per floor/boss.
 - HP persistence and free retreat with loot are already the working state; do not reopen them without cause. Build open edge cases on that basis.
@@ -385,8 +417,8 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 - **Done when:** floors/battles per run, deeper entry, retreat edge cases, reward tables and the run-healing scope are decided in Overworld §2.2/§6.6/§7.8.
 
 ### [ ] T23 · Align Injury and Deadly Dungeons (D/V)
-**Status:** Open — blocked by T16, T20, T22.
-**Prerequisites:** T16, T20, T22.
+**Status:** Open — combat fall-prevention/HP/defeat interfaces needed before Battle acceptance; recovery/pricing/Deadly-dungeon tuning queued afterward.
+**Prerequisites:** Combat fall-prevention/HP/defeat-output interfaces with T04/T20 before the Battle gate, without deciding the Deadly-dungeon launch scope implicitly. Recovery/permanent-loss logistics and prices follow the gate with T16/T20/T22.
 **Sources:** Overworld [§5.2](gdd_overworld.md#52-defeat-and-injury), [§6.6](gdd_overworld.md#66-pills--medicines).
 - Review two nights of downtime, Revival price and Deadly loot bonus; confirm or defer optional Deadly dungeons for launch.
 - Recovery Spring already halves downtime to one night; define a minimum for the additional −1-night adjacency bonus.
@@ -397,29 +429,29 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 **Status:** Open — blocked by T12, T16, T20, T22.
 **Prerequisites:** T12, T16, T20, T22.
 **Sources:** Overworld [§5.1](gdd_overworld.md#51-obtaining-monsters), [§7.5](gdd_overworld.md#75-materials-seeds-and-grades).
-- Balance seal prices/grades and the second binding; check Seal Mastery against the player Stage cap.
+- Balance seal prices/grades and the **proposed** second binding (Double Bind, T20); keep deterministic post-win binding and player Stage cap. Seal Mastery is a proposal, not permission to exceed that player cap.
 - Define breeding/Hive/hatching times per rarity and incubation conditions; clarify same species versus “species of one parent”.
-- Make egg rarity, species visibility and timing of randomization explicit.
+- Preserve the current division: egg fixes species/rarity, hatching rolls shape; clarify visibility before purchase/hatching and when the egg's fixed data are generated. Do not reopen shape-at-hatch as if wholly unspecified. Define Hive offspring species/rarity/stage and its dependency on a housed/assigned Swarm; the current larva timer alone supplies no output contract.
 - *New:* eggs are not an item kind in the [item schema](gdd_overworld.md#76-item-schema) although they are found, bought and traded; decide whether eggs are items or monster-side records.
-- **Done when:** seal grades, second binding, breeding/Hive/hatching times, egg visibility/randomization and egg representation are decided in Overworld §5.1.
+- **Done when:** seal grades, proposed second binding, breeding/Hive output contracts and timers, egg visibility/generation timing and egg representation are decided in Overworld §5.1/§7.6, preserving the confirmed acquisition/roll boundaries.
 
 ### [ ] T25 · Internal World: Capacity, Buildings, Adjacency (D/V)
-**Status:** Open — blocked by T09, T16, T23, T24; Trial Pillar access conflict confirmed.
-**Prerequisites:** T09, T16, T23, T24.
+**Status:** Partly drafted — queued after the Battle gate; first-Trial-Pillar access conflict retained, not needed to construct legal combat test sheets.
+**Prerequisites:** Battle gate as scheduling prerequisite. First-breakthrough access/Evolution Pillar role use T05/T30 interfaces without waiting for all collection/economy tuning. Final sizing/adjacency needs T09/T16/T23/T24; none blocks Battle's body/swap legality contracts.
 **Sources:** Overworld [§4.2](gdd_overworld.md#42-building-system)–[§4.4](gdd_overworld.md#44-capacity-and-growth).
 - Confirm grid/capacity curve, footprints, unlocks and new structures.
 - Define housing capacity bonus, Mood/Loyalty and their concrete benefits, or remove an unnecessary system.
 - Define hatching at full capacity, rented monsters and bench size.
 - Trial Pillar unlocks only at Foundation but is needed to reach it; clarify access to the first breakthrough.
-- Adjacency bonuses: minimum times, multiple neighbours and stacking limits; reconcile Furnace −1 AP down to 0 with “execution costs AP”.
+- Adjacency bonuses: minimum times, multiple neighbours and stacking limits; recovery must not silently become zero nights. The old aspect-matched Furnace AP bonus has been removed (§4.3), so it is not an active −1-AP contradiction; retain the general free-planning/paid-execution check under T31.
 - Staff remain excluded from the interior for now. Reconsider only for concrete benefits; no implementation merely because it is possible.
 - **Done when:** grid/capacity, footprints, unlocks, Mood/Loyalty, hatching at full capacity, Trial Pillar access and adjacency limits are decided in Overworld §4.2–§4.4.
 
-## Phase 6 — Economy, Progression and Day Balance
+## After Battle — Economy, Progression and Day Balance
 
 ### [ ] T26 · Draft Staff Traits and Numbers (D/V)
 **Status:** Open — **user decision pending:** Ambitious poaching Standing comparison (whose Standing, against what, which direction); model B itself is chosen.
-**Prerequisites:** T15, T16.
+**Prerequisites:** Battle gate as scheduling prerequisite; no technical combat dependency for the Ambitious decision. T15/T16 for faction-specific wages/output/production tuning. Keep this independent question queued rather than parallel to the current Battle work.
 **Sources:** [Overworld §7.1.1](gdd_overworld.md#711-staff-model-b-chosen).
 - Model B is selected: visible Skill/Loyalty values plus one trait. Do not choose between models A/B/C again.
 - Define trait list, wages, output, Loyalty changes, dismissal, poaching and counteroffers.
@@ -450,7 +482,7 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 
 ### [ ] T29 · Review XP Curves and Cultivation Pacing (V)
 **Status:** Open — blocked by T05, T22, T25, T28; no XP or pacing tests run.
-**Prerequisites:** T05, T22, T25, T28.
+**Prerequisites:** Battle gate and T05's battle-facing state/step-supply model, T22/T25/T28 meta outputs. Do not require T05's final day-AP/logistics values before pacing; T31 uses these pacing results to finalize those costs.
 **Sources:** [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps); [Overworld §2.4](gdd_overworld.md#24-cultivation-loop).
 - Check the initial 18-step XP curve, pill XP, win XP, Training/Cultivate and idle XP; determine player values separately if necessary.
 - Check the target of 3–6 focused days per sub-tier against farm/purchase/staff income; do not treat old prototype numbers as confirmation.
@@ -458,12 +490,12 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 
 ### [ ] T30 · Complete Breakthrough Trials and Rituals (D/V)
 **Status:** Open — blocked by T20, T25, T27, T29; trial draft contains confirmed conflicts.
-**Prerequisites:** T20, T25, T27, T29.
+**Prerequisites:** Battle gate before meta trial/ritual design. First-access/logistics use T25's first-Pillar and T16 acquisition interfaces without waiting for all T29 pacing. Full trial tuning uses T20 combat results, T25/T27/T29 outputs; trial encounters must obey accepted Battle contracts.
 **Sources:** [Overworld §6.3.1](gdd_overworld.md#631-breakthrough-trials); [Monsters §5.2](gdd_monsters.md#52-rarity-ascension).
-- Check the first trial draft against prototype/game flow; confirm material quantities and pill effect.
+- Review the first trial draft against current game flow; prototype quantities are historical inputs, not validation. Confirm material quantities and pill effect, including which trial penalties exist beyond the listed guardian battle.
 - “Player starts at half HP”/“player on the winning team” conflicts with the non-combatant tamer role: which monster/team is meant?
-- Define player/monster trials, repetition, failure costs and trial access; synchronize rarity-ascension ingredients and acquisition routes.
-- **Done when:** trial requirements, player-versus-monster wording, repetition/failure costs, Trial Pillar access and rarity-ascension ingredients/site are decided in Overworld §6.3.1 and Monsters §5.2.
+- Define player/monster trials, repetition, failure costs and trial access; synchronize rarity-ascension ingredients/site/acquisition with T16. The proposal requires **next-tier materials before breakthrough**, while ordinary dungeons/monster access are Stage-gated: specify how those materials and guardian/new-stage trial encounters are reached without silently removing caps.
+- **Done when:** trial requirements, player-versus-monster wording, repetition/failure costs, first-Trial-Pillar and next-tier-material/encounter access, rarity-ascension ingredients/site and relevant test results are explicit in Overworld §6.3.1 and Monsters §5.2; prototype quantities do not substitute for tests.
 
 ### [ ] T31 · Finalize Day-AP and Action Costs (D/V)
 **Status:** Open — blocked by T22, T25, T28–T30; day-AP curve is a proposal only.
@@ -471,57 +503,63 @@ Reviewed Skills §5 price families and the three area-reference records (now in 
 **Sources:** Overworld [§2.3](gdd_overworld.md#23-day-loop), [§2.6](gdd_overworld.md#26-action-catalog).
 - Review proposed 3/4/4/5/5/6 AP per Stage and Arena price per tournament round.
 - Balance expeditions, cultivation, story and work against each other; account for staff reducing the workload.
-- Keep free decisions/queuing/rearranging consistent with paid execution.
-- **Done when:** the day-AP curve and every action cost in [Overworld §2.6](gdd_overworld.md#26-action-catalog) are balanced against each other with documented checks.
+- Keep free decisions/queuing/rearranging consistent with paid execution. Decide whether AP reaching 0 immediately ends the day (§2.3) or still permits free healing/harvesting/queueing/planning before night; do not assume one from UI convenience. Include dependency-aware night resolution (production inputs, hatching capacity, recovery and idle XP), not an undefined simultaneous write order.
+- **Done when:** day-end/free-action boundary and dependency-aware night resolution are explicit, and the day-AP curve/every action cost in [Overworld §2.6](gdd_overworld.md#26-action-catalog) are compared with documented current-design economy/pacing tests. No arithmetic-only balance closure.
 
-## Phase 7 — Late Game and Completion
+## Battle Late-Game Content and Cross-Project Completion
 
 ### [ ] T32 · Design Major Surges and Signatures (D)
-**Status:** Open — blocked by T09, T12, T13.
-**Prerequisites:** T09, T12, T13.
+**Status:** Open — part of Battle completion, not postponed until after Overworld economy; content/access/slot treatment unresolved.
+**Prerequisites:** Relevant T02/T05/T09 contracts and T12 roster/access decisions; use initial T13 core results for calibration, then test this content in the full-scope T13 pass. No T29–T31 or complete T13 prerequisite before drafting.
 **Sources:** Monsters [§3.1](gdd_monsters.md#31-kin-table), [§1](gdd_skills.md#1-the-kit) (access), [§2](gdd_skills.md#2-data-oriented-skill-construction-kit), [§3](gdd_skills.md#3-skill-execution-profiles) (Surge profiles), [§6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), [§5.3](gdd_monsters.md#53-monster-progression-the-18-steps); [Battle §5.1](gdd_battle.md#51-monster-skills-central-specification) (integration only).
-- Determine concrete shapes, area and range; review half-board/2 AP/once per battle.
-- Synchronize access for Ancient AND Legendary from Sovereign against tables sometimes saying only “Ancient”; distinguish Signatures of other Legendary Kins.
+- Determine concrete shapes, area, range and Signature slot treatment; retain existing Major 2-AP/once-per-battle working baseline until explicitly revised, and review the half-board draft. Major access is Ancient at Sovereign in Skills §1, not an automatic grant to every Legendary.
+- Resolve legacy Ancient-versus-Legendary access wording explicitly; do not treat the older task phrase “Ancient AND Legendary” as an approved Major grant. Distinguish an Ancient's Major at Sovereign from Legendary Signatures of other Kins, including their unresolved slot treatment.
 - **Done when:** Major Surge shapes/range/access and Signature access are decided and the Ancient/Legendary wording agrees in Monsters §3.1 / Skills §1 / Monsters §5.3 and Overworld §6.3.
 
 ### [ ] T35 · Update GDD Synchronization and Implementation Plan (K)
-**Status:** Open — ongoing; closes last.
-**Prerequisites:** the respective affected decisions; overall completion after T01–T34, T36 and T37.
-**Sources:** all three GDDs, especially technical notes and Development Phases.
+**Status:** Open — combat-source synchronization is required at the Battle gate; whole-project synchronization closes last.
+**Prerequisites:** Affected decisions and T37 editorial outputs. Battle deliverable does not wait for unfinished meta-only tasks; overall completion remains after T01–T34, T36 and T37.
+**Sources:** [Battle §2](gdd_battle.md#2-battle-flow)/[§7](gdd_battle.md#7-technical--prototype), [Monsters §1](gdd_monsters.md#1-overview)/[§3.1](gdd_monsters.md#31-kin-table)/[§5.3](gdd_monsters.md#53-monster-progression-the-18-steps), [Skills §2–§4](gdd_skills.md#2-data-oriented-skill-construction-kit)/[§10](gdd_skills.md#10-species-skill-assignments-prior-draft), [Overworld §6.3](gdd_overworld.md#63-stage-unlock-table)/[§8](gdd_overworld.md#8-technical-notes-overworld--development-phases).
+- **Battle deliverable:** synchronize accepted combat rules, developed sheets/content, source-specific Overworld interfaces and actual test coverage before the gate. **Final deliverable:** reconcile remaining Overworld systems/roadmap afterward; leave this mixed task open until both are complete.
 - Clearly distinguish decided rules, proposals, the existing prototype and later features.
-- Synchronize tables, schema fields, section references and version states. The technical validator currently requires Surge/Utility, although open kits require neither; reconcile species passives with slot-bound learnlists.
+- Synchronize tables, schema fields and section references without manual version promises. Battle §7.1 already labels mandatory Surge/utility as historical and explicitly excludes it from current kit rules; that documentation conflict is resolved, not evidence that current code was fixed. Overworld §8 still needs species-passive versus slot-bound learnlist reconciliation.
 - Update development phases based on clarified dependencies; do not mix implementation tasks with open design decisions.
 - Keep change history in Git, not in the GDDs or this task list. Maintain a current handoff and preserve only prototype comparisons needed to distinguish implementation from the current design.
 - *New:* reconcile the Overworld §6.3 “Monster unlock” column with [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps) (it lists a second artifact slot at Epic+ and a historical “Dual-aspect unlock removed” note for Immortal that Monsters §5.3 does not carry); keep historical removal notes out of active tables unless needed to delimit the current design.
 - *New (K, 2026-11-09 editorial pass):* [Overworld §6.9](gdd_overworld.md#69-hard-caps) still says “No gear, pill or evolution raises Surge damage…”, although physical evolution was removed (T36); decide whether the word should read slot development or be dropped. Not edited, because it could change the rule's scope.
-- *New:* keep the [Battle §7.1](gdd_battle.md#71-technical-notes-battle) legacy validator note consistent with the open kit rule; the “physical Size path” wording was removed with T36.
+- **Migration/decision-label corrections:** Battle §1.2 still calls zone × ground unresolved despite §4.6's explicit independence decision; §2.4 still calls Surge scheduling/order unresolved despite §2.2/§6.2; §4.7 still has a T04 order placeholder; §4.9 claims §4.10 retains shared shatter although §4.10 now uses per-type aftermath; §6.3 still calls mixed-ground landing and burning/crumble open despite §4.3/§4.9. Keep genuine remaining gaps in T04/T09, not these obsolete labels.
+- Skills §2 still mentions FIELD occupancy; §3 still marks decided 2×2 Mountain-air/entry and simultaneous-Surge ordering open; §4 still calls dead-caster/category order and `mend` cap/scaling unresolved and mentions planned Water/Swim. Synchronize to the owning confirmed sections without approving concrete content/prices. §5's “large-body hit multiplicity unresolved” and Focus death caveats need the same decision-status check; differing zone-source aggregation remains genuinely open under T09.
+- **Source-specific wording:** Skills §3 Flood says push “into newly laid ground” but immediately specifies push before residue; remove the contradictory implication, not the decided order. Monsters §3.1 Winged “immune” must preserve Battle §4.3's authored-air and §4.7's Mountain exception. Do not generalize Flood heavy immunity, Eruption reaction-instead-of-damage, Rift brittle bonus, Ancient collapse or no-retreat-collision to unrelated sources.
+- Fix owner navigation: Overworld subtitle/§5 still assign skills to Monsters, §6.3 points rarity slots to §7.2 and Sovereign skills to §7.4; Monsters §1.3 still says only Ancient has Major without linking the legacy-access qualification. Skills §10's embedded “6.2 Additional Species Candidates” is a migration duplicate, not an actual §6 subchapter (deduplication T37).
 - **Done when:** all other tasks are closed or consciously deferred, tables/schema fields/references are synchronized, the development phases are updated and prototype comparisons are limited to what distinguishes implementation from design.
 
 ### [ ] T37 · Editorial Deduplication Pass (K)
-**Status:** Mostly done — see the handoff for the applied batches; the bullets below list what is still a candidate.
-**Prerequisites:** none; coordinate with T35.
-**Sources:** all three GDDs.
-- *Done:* the Slowing Zone record (now in [gdd_skills.md](gdd_skills.md)) has one representation (field entries plus paper checks); upgrade candidates are a list; Strike AP/hit cells live only in [Skills §8.1](gdd_skills.md#81-strike-by-kin).
+**Status:** Open — earlier cleanup is present, but the Skills migration left exact duplicate paragraphs/catalogues and stale ownership/numbering; not editorially complete.
+**Prerequisites:** none for proven duplicates; prioritize combat-critical ownership/status/readability alongside Battle, with unrelated Overworld polishing after its gate. Coordinate with T35; contradictions require the owning D task, not an editorial choice.
+**Sources:** [Skills §2–§4](gdd_skills.md#2-data-oriented-skill-construction-kit), [§10](gdd_skills.md#10-species-skill-assignments-prior-draft), [§11](gdd_skills.md#11-concrete-skill-records); [Monsters §4.2](gdd_monsters.md#42-additional-species-candidates); [Battle §4](gdd_battle.md#4-battlefield)/[§6](gdd_battle.md#6-damage--displacement); [Overworld §6.3](gdd_overworld.md#63-stage-unlock-table).
+- **Verified existing cleanup:** Slowing Zone has one field-by-field baseline plus separate paper checks/candidates; Strike AP/hit-cell table is owned by Skills §8.1. Preserve those distinctions, not new parallel definitions.
+- **Proven duplicates:** Skills §10 repeats the identical “Coverage gaps in the reference roster” paragraph **three times** and embeds a second full species-candidate catalogue matching Monsters §4.2 (including the stray §6.2 heading). Keep roster candidates in Monsters and link from Skills; preserve skill-specific gaps exactly once.
 - Strike “max 2 damage” still appears in Battle §6.1 (law) and Skills §8.1/§3/§4/§7 (restatements at profile and reference level); kept as interface statements unless the user wants links only.
 - Skills §2 spatial contracts (layer occupancy, fixed bindings) still overlap Battle §4.3/§4.4/§6.5, and the Surge prop/height table in Skills §3 overlaps Battle §4.7/§4.10/§4.11 (recipient rules and interaction-field rows are already merged).
 - Slot development is summarized in Skills §6 and Overworld §2.6/§4.3/§6.3.2; stage gains appear in Monsters §5.3 and Overworld §6.3 (the “Monster unlock” column still partly differs from Monsters §5.3; reconcile under T35); pill XP in Monsters §5.3 and Overworld §7.5 is already linked.
 - Repeated per-statement “unresolved Tnn” disclaimers (mostly Skills §2–§4) could become one section status each, as CLAUDE.md prefers.
-- Table cells: none over ~450 characters remain; two list bullets (Skills §2 `Fixed bindings`, the Slowing Zone `effects` entry) are ~460 characters including link markup and are kept.
+- **Readability measured in this audit:** one table cell exceeds 450 characters (Skills §2 `usage`, 478 including markup); the earlier “none” claim is stale. Do not fragment precise contracts just to meet a length target. Compare actual character counts and preserve conditions/exceptions/status when shortening; no German prose outside the preserved AI prompts was identified by the full read.
 - **Done when:** each candidate is merged into one owning section with links elsewhere, or consciously kept; a before/after information check (conditions, exceptions, status) and the link check pass.
 
 ## Completed Tasks (IDs Retained for References)
 
-IDs stay valid for references in the GDDs and this file; completion was verified against the current text of all three GDDs.
+IDs stay valid for references in the GDDs and this file. Removal decisions were verified against the current four GDDs; residual editorial wording is tracked under T35/T37, not mistaken for undone gameplay decisions or completed balance tests.
 
 ### [x] T01 · Confirm the Aspect System (D/V)
+**Status:** Decided removal, incorporated; no balance validation implied.
 **Prerequisites:** none.
 **Sources:** [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps); Battle [§3.2](gdd_battle.md#32-monster-identity--skill-access), [§4.8](gdd_battle.md#48-no-attunement).
 - **Decided:** remove the triangle and fixed monster aspects; no fixed replacement elements. Monsters receive free descriptive themes; deliberately designed species learnlists determine their allowed abilities.
 - Remove Attunement. Concrete skills, ground types and Surge behaviour remain available in the construction kit, without fixed aspect binding or mandatory sets of three variants.
-- Incorporated into all three GDDs. New ground interactions are addressed under T07; concrete learnlists and roster under T10–T12. This does not validate the balance of the remaining mechanics.
+- Incorporated across the current four GDDs. New ground interactions are addressed under T07; concrete learnlists and roster under T10–T12. This does not validate the balance of the remaining mechanics.
 
 ### [x] T36 · Define Physical Evolution (D) — decided: removed
-**Status:** Decided by the user (2026-11-08): physical evolution does not exist. It was a relic of the former per-skill evolutions. EP as a spendable currency is removed; slot development is granted only at advancement steps ([Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps)) as an option to develop one skill slot. Applied in all three GDDs; the Evolution Pillar's remaining role and the Overworld “take back” action are open under T05/T25.
+**Status:** Decided by the user (2026-11-08): physical evolution does not exist. It was a relic of the former per-skill evolutions. EP as a spendable currency is removed; slot development is granted only at advancement steps ([Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps)) as an option to develop one skill slot. Removal is reflected across the four GDDs; the Evolution Pillar's remaining role and same-skill reversal/respec logistics are open under T05/T25. The old “take back physical evolutions” action is gone, not a still-existing action to price.
 **Prerequisites:** none.
 **Sources:** [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), [§5.1](gdd_monsters.md#51-monster-rarity), [§5.3](gdd_monsters.md#53-monster-progression-the-18-steps); Overworld [§2.6](gdd_overworld.md#26-action-catalog), [§6.3.2](gdd_overworld.md#632-permanent-skill-slot-development-confirmed).
 - Removed: “physical evolution”, the shared EP pool, “Paths offered per evolution”, “physical Size path”, the “Take back physical evolutions” action. Historical prototype mentions remain only as prototype notes in Overworld §8.
@@ -534,12 +572,14 @@ IDs stay valid for references in the GDDs and this file; completion was verified
 - Not affected: Overworld building adjacency tags ("water" for Qi Spring/Spirit Pond, Immortal-city layout) are a separate meta concept and still need an explicit decision if Water is dropped from the whole game (see Potential Extensions).
 
 ### [x] T33 · Legendary Aspect Change Removed (D)
-**Prerequisites:** T01, T11, T30.
+**Status:** Replaced by T01's confirmed removal; no replacement system approved.
+**Prerequisites:** T01 (decided); T11/T30 are no longer gates for a removed mechanic.
 **Sources:** [Monsters §5.1](gdd_monsters.md#51-monster-rarity).
 - Removed by T01: without fixed aspects, there is no aspect change. No replacement feature approved; other Legendary development remains part of existing progression tasks.
 
 ### [x] T34 · Dual-Aspect System Removed (D)
-**Prerequisites:** T01, T09, T13.
+**Status:** Replaced by T01's confirmed removal; residual active-table history is T35.
+**Prerequisites:** T01 (decided); T09/T13 are no longer gates for a removed mechanic.
 **Sources:** [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps); [Overworld §6.3](gdd_overworld.md#63-stage-unlock-table).
 - Removed by T01: no dual aspects or corresponding Immortal unlock. Multiple free themes require no separate unlock or special mechanic.
 
@@ -557,28 +597,35 @@ Parked ideas that are **not** part of the current design and not approved; they 
 
 ```mermaid
 flowchart TD
-    A[T01 Aspects - completed] --> B[T02 Data Model, Costs and AP Efficiency]
-    B --> C[T03 Stats and T04 Resolution]
-    C --> D[T05 to T11 Skills and Reference Roster]
-    Q[T37 Editorial Deduplication] --> N
-    D --> E[T12 Launch Roster, T13 Battle Tests, T14 Reshape]
-    A --> F[T16 Item and Recipe Catalogues]
-    D --> F
-    F --> G[T17 to T20 Equipment and Loadout]
-    E --> H[T21 to T25 Expeditions and Collection]
-    G --> H
-    I[T15 City Powers] --> J[T26 to T28 Staff Favor and Market]
-    F --> J
+    A[T02 confirmed model and policies] --> B[T04 resolution and T03 T06 T07 T09 contracts]
+    B --> C[T02 valuation and original-AP paths]
+    C --> D[T05 combat development and T10 T11 skills and kits]
+    D --> E[T12 roster]
+    D --> F[T13 core tests with T03 T06 T07 validation]
+    B --> G[T17 T18 T19 T20 combat equipment effects and loadout]
+    D --> G
+    B --> H[T21 board inputs and T22 T23 combat restrictions]
+    E --> I[T32 Major and Signature content]
+    F --> I
+    E --> J[T13 full-scope tests including T20 and T32]
+    I --> J
+    G --> J
     H --> J
-    J --> K[T29 XP and T30 Trials]
-    K --> L[T31 Day-AP]
-    E --> M[T32 Major Surges - T33/T34 completed]
-    L --> N[T35 GDD Synchronization]
-    M --> N
-    P --> N
+    J --> K[T35 T37 combat acceptance and synchronization]
+    K --> L[Battle completion gate]
+    L --> M[T14 T15 T16 and remaining meta acquisition and logistics]
+    L --> N[T22 T23 T24 T25 expeditions recovery collection housing]
+    M --> O[T26 T27 T28 staff favor and economy]
+    N --> O
+    M --> P[T30 first trial access and ritual logistics]
+    N --> P
+    O --> Q[T29 pacing and T30 final trial tuning]
+    P --> Q
+    Q --> R[T31 day-AP and cross-loop validation]
+    R --> S[T35 T37 final project synchronization]
 ```
 
-The detailed prerequisites per task are authoritative; the diagram summarizes only the main work streams.
+Arrows summarize scoped deliverables and the selected **Battle → Overworld** schedule, not blanket whole-task dependencies. T03/T06/T07/T20 V is executed within T13; its core pass informs T32, and its full-scope pass tests the resulting content. Battle-facing T05/T17–T23 outputs do not require final meta prices/recipes/XP/world systems. Combat T35/T37 corrections can start alongside the first contracts; their gate review is shown after tests. All unresolved meta parts remain open after the Battle gate; final project synchronization is separate.
 
 # AI Prompts
 
@@ -594,23 +641,30 @@ Sicherheit und Umfang:
 - Erhalte Nutzeränderungen. Bearbeite für diese Prüfung ausschließlich docs/temp_todo.md; keine Spielimplementierung und keine GDD-Änderungen. Keine Commits, Branchwechsel, Pulls, Pushes, Resets oder automatische Synchronisierung.
 - Chat Deutsch, Dokumentation Englisch. Ausnahme: wiederverwendbare Chat-Prompts samt Unterüberschriften unter AI Prompts bleiben Deutsch. Nutze kompakte thematische Stichpunkte und hilfreiche Übersichtstabellen; bewahre Bedingungen, Ausnahmen, Negationen, Einheiten und Entscheidungsstatus. Kein Changelog.
 
+Projektfokus und Reihenfolge — Battle als Kern des Spiels:
+- Battle zuerst abschließen; danach die Overworld auf den ausgearbeiteten und getesteten Kampf ausrichten. Prüfe trotzdem alle vier GDDs vollständig und erhalte offene Meta-Aufgaben; Battle-first begrenzt die Arbeitsreihenfolge, nicht den Analyseumfang.
+- Battle umfasst mehr als gdd_battle.md: auch Monster-Stats und zulässige Entwicklungsstände, Skills, Passives, Upgrade-Pfade, Slotentwicklung, Roster und Major-/Signature-Inhalte sowie direkte Kampfeinflüsse aus dem Overworld-GDD (Tamer-Skills, Artefakte, Medicines/Arrays, Loadout, Board-Eingaben und HP-/Niederlagen-Schnittstellen).
+- Trenne bei gemischten Aufgaben die Battle-Ergebnisse von der späteren Meta-Integration. Kampfauswirkungen, Entwicklungsumfang und legale Test-Sheets/Loadouts zuerst definieren und prüfen; Erwerb, XP-Tempo, Rezepte, Preise, Ritualorte, Gebäude, Wirtschaft und Tages-AP danach darauf abstimmen. Fehlende Meta-Details sind weder kostenlose/sofortige Standardannahmen noch pauschale Blocker für Battle. Bereits beschlossene Mechanikentfernungen nicht durch die neue Priorität rückgängig machen.
+- Erhalte die Battle-first-Reihenfolge in Recommended Work Order, Aufgaben-Voraussetzungen, Dependency Overview und Context Handoff. Unabhängige Battle-Arbeit darf parallel laufen; reine Overworld-Themen bleiben bis zum Battle-Abschluss zurückgestellt, sofern der Nutzer die Priorität nicht ausdrücklich ändert. Keine Zyklen erzeugen: notwendige Definitionen vor ihren Tests, nicht abgeschlossene Validierung als Voraussetzung ihrer eigenen Testeingaben.
+- Gleiche den Battle-Abschluss mit dem aktuellen Battle Completion Gate ab: vollständige Regeln/Inhalte/Schnittstellen im ausdrücklich vereinbarten Umfang und tatsächlich durchgeführte geeignete Tests mit dokumentierten Ergebnissen. Ein Regelentwurf, Budget-Fit, Rechenprüfer oder historischer Prototyp reicht nicht. Keine stillschweigende Verkleinerung des Rosters oder Auslassung von Items, Air/2×2 oder Late-Game-Inhalten; dafür wäre eine ausdrückliche Nutzerentscheidung nötig. Gemischte Aufgaben bleiben für ihre offenen Meta-Anteile offen.
+
 Lesen und analysieren:
-1. Lies die gesamte aktuelle temp_todo.md, besonders Context Handoff, danach alle drei GDDs vollständig: docs/gdd_battle.md, docs/gdd_monsters.md und docs/gdd_overworld.md. Große Dateien abschnittsweise lesen; eine Gliederungsübersicht allein ist keine vollständige Prüfung.
+1. Lies die gesamte aktuelle temp_todo.md, besonders Context Handoff, danach alle aktuellen GDDs vollständig: docs/gdd_battle.md, docs/gdd_monsters.md, docs/gdd_overworld.md und die zentrale Skill-Spezifikation docs/gdd_skills.md. Große Dateien abschnittsweise lesen; eine Gliederungsübersicht allein ist keine vollständige Prüfung.
 2. Gleiche jede vorhandene Aufgabe mit den zuständigen GDD-Abschnitten ab: noch offen, teilweise bearbeitet, nachweislich abgeschlossen, ersetzt, doppelt oder blockiert. Bestehende Aufgabenformulierungen und Arbeitswerte sind nicht automatisch Beschlüsse; GDD-Texte sind nicht automatisch validiert.
 3. Prüfe fehlende Regeln, Widersprüche, offene Alternativen, Zuständigkeiten, doppelte Definitionen, veraltete Verweise, Sprache/Lesbarkeit, quellenspezifische Ausnahmen und den Status als Entwurf/Beschluss/Historie. Prüfe gegebenenfalls Rechensummen; Rechenproben und Prototypergebnisse sind keine Gameplay-/Balancevalidierung.
 4. Entscheide keine offenen Gameplayvarianten, erfinde keine Standardannahmen und öffne bestätigte Prinzipien nicht ohne neuen Anlass. Der Endzustand Rubble oder Gefahrenboden nach einem Höhenbruch ist offen, sofern die aktuellen Dateien keine spätere ausdrückliche Freigabe dokumentieren. Unklarheiten benennen, nicht stillschweigend eine Variante bestätigen.
 
 Aufgabenliste aktualisieren:
-- Überarbeite oder erstelle temp_todo.md erst neu, nachdem du ihren Bestand mit allen drei GDDs abgeglichen hast. Erhalte alle weiterhin relevanten Entscheidungen, Einschränkungen, ausschließlich in der Übergabe enthaltenen Informationen und offenen Fragen. Nicht aus dem Gedächtnis ersetzen oder Punkte nur deshalb streichen, weil sie im GDD fehlen.
+- Überarbeite oder erstelle temp_todo.md erst neu, nachdem du ihren Bestand mit allen vier aktuellen GDDs abgeglichen hast. Erhalte alle weiterhin relevanten Entscheidungen, Einschränkungen, ausschließlich in der Übergabe enthaltenen Informationen und offenen Fragen. Nicht aus dem Gedächtnis ersetzen oder Punkte nur deshalb streichen, weil sie im GDD fehlen.
 - Erhalte Context Handoff und AI Prompts als Hauptabschnitte, einschließlich dieser wiederverwendbaren Prompts. Vorhandene Aufgaben-IDs und gültige Abhängigkeiten möglichst bewahren; bei Zusammenlegung/Ersatz Nachvollziehbarkeit erhalten und alle betroffenen Verweise/Diagrammkanten innerhalb dieser Datei aktualisieren. IDs nie für sachfremde Themen wiederverwenden.
 - Eindeutig ersetzte oder abgeschlossene Arbeit erst nach Prüfung ihrer restlichen Informationen und Abschlussbedingungen aus dem aktiven Backlog entfernen. Validierungsaufgaben brauchen tatsächlich durchgeführte geeignete Tests mit dokumentierten Ergebnissen; andernfalls offen lassen.
-- Jede bearbeitbare Aufgabe erhält Status, zuständige Quellenlinks, konkrete Lücke/Entscheidung, Voraussetzungen und Abschlussbedingungen. Zusammengehöriges bündeln, Prioritäten und eine sinnvolle nächste Reihenfolge festlegen; unabhängige Arbeit darf parallel bleiben. Neue Lücken ohne doppelte Aufgaben ergänzen.
+- Jede bearbeitbare Aufgabe erhält Status, zuständige Quellenlinks, konkrete Lücke/Entscheidung, Voraussetzungen und Abschlussbedingungen. Zusammengehöriges bündeln und eine Battle-first-Reihenfolge mit getrennten Battle-/Meta-Ergebnissen festlegen; unabhängige Battle-Arbeit darf parallel bleiben. Neue Lücken ohne doppelte Aufgaben ergänzen.
 - Regeln, Preise und vollständige Referenzrechnungen bleiben in den zuständigen GDDs: verlinken statt kopieren. Vorgeschlagene GDD-Korrekturen als Aufgaben erfassen, nicht als unbestätigte neue Regeln.
 - Veraltete Übergabe durch einen knappen aktuellen Stand ersetzen: Fokus, Beschlüsse gegenüber Entwürfen, Blocker, nächste konkrete Aktion/Fragen, betroffene Quellen, beobachteter Git-Stand und tatsächlich erfolgte Prüfungen. Zum Sessionende aktualisieren.
 
 Prüfung und Antwort:
 - Fokussierten Diff auf Informationsverlust und unbeabsichtigte Entscheidungsänderungen prüfen; relative Links, Aufgabenverweise, Abhängigkeiten und durchgeführte Rechnungen kontrollieren. git diff --check ausführen.
-- Auf Deutsch berichten: tatsächlich geprüfter Umfang, wichtigste Befunde, Aufgabenänderungen, offene Entscheidungen, erfolgte Prüfungen und empfohlene nächste Besprechung. Bei unvollständiger Analyse genau benennen, was fehlt; keine vollständige Prüfung behaupten.
+- Auf Deutsch berichten: tatsächlich geprüfter Umfang, wichtigste Befunde, Aufgabenänderungen, offene Entscheidungen, erfolgte Prüfungen und empfohlene nächste Battle-Besprechung. Benenne Battle-Blocker und später folgende Meta-Aufgaben getrennt. Bei unvollständiger Analyse genau benennen, was fehlt; keine vollständige Prüfung behaupten.
 ```
 
 ## Mit anderem Agent oder Rechner weiterarbeiten
@@ -638,11 +692,11 @@ Refactore die GDDs von Road of the Beasts redaktionell gemäß CLAUDE.md. Verlas
 
 Sicherheit und Umfang:
 - Lies CLAUDE.md. Prüfe zuerst Branch und Git-Status: nur auf docs/update_gdd arbeiten; andernfalls anhalten und nachfragen, nicht selbst wechseln.
-- Erhalte Nutzeränderungen. Schreibe nur in docs/ (docs/gdd_battle.md, docs/gdd_monsters.md, docs/gdd_overworld.md; docs/temp_todo.md nur für Verweise und Übergabe). Keine Spielimplementierung, keine Commits, Branchwechsel, Pulls, Pushes oder Resets ohne ausdrücklichen Auftrag.
+- Erhalte Nutzeränderungen. Schreibe nur in docs/ (docs/gdd_battle.md, docs/gdd_monsters.md, docs/gdd_overworld.md, docs/gdd_skills.md; docs/temp_todo.md nur für Verweise und Übergabe). Keine Spielimplementierung, keine Commits, Branchwechsel, Pulls, Pushes oder Resets ohne ausdrücklichen Auftrag.
 - Chat Deutsch; alle Dokumentation unter docs/ bleibt Englisch (Ausnahme: Chat-Prompts samt Unterüberschriften unter AI Prompts). Deutsche Bestandsabschnitte ins Englische übersetzen, ohne Regeln oder Entscheidungsstatus zu ändern.
 
 Analyse zuerst:
-1. Lies docs/temp_todo.md (Context Handoff, offene Aufgaben) und danach alle drei GDDs vollständig, abschnittsweise. Eine Gliederungsübersicht allein genügt nicht.
+1. Lies docs/temp_todo.md (Context Handoff, offene Aufgaben) und danach alle vier aktuellen GDDs (Battle, Monsters, Overworld, Skills) vollständig, abschnittsweise. Eine Gliederungsübersicht allein genügt nicht.
 2. Erstelle vor dem Bearbeiten eine Befundliste: (a) Spielmechaniken, Regeln, Formeln, Preislisten oder Datenstrukturen, die an mehreren Stellen definiert oder fast wortgleich wiederholt werden; (b) lange Fließtext-Absätze und überlange Tabellenzellen; (c) deutsche Reste; (d) Verweise, die nach Umbauten brechen würden. Lege die Liste dem Nutzer kurz vor, wenn du mehr als nur eindeutige Duplikate zusammenführen willst.
 
 Refactoring-Ziele (in dieser Priorität):
