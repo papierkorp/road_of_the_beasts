@@ -91,7 +91,7 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
     - Ground affects ground-layer occupants; prop reactions and Surge prop/occupant handling use their own rules, not a generic occupant hit ([gdd_battle §4.6–4.7](gdd_battle.md#46-zones-effects-rules--opposites) and §3 here).
 
 - **LOS ≠ placement legality:** zone/ground/prop/Surge casts and self boosts need no LOS; source-defined unit-targeted utility needs its explicit sight contract. Monster offensive push/pull uses spatial hit patterns, not direct unit selection. Reach, occupancy, layer and blocking checks still apply. Exact sight geometry/unspecified direct-target eligibility remain [temp_todo.md](temp_todo.md) T02/T04/T09.
-- **Layer-specific occupancy:** per-cell layer limits, props under zones/Surges and ground-on-prop rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground). Skill-side additions: prop creation needs empty cells; charging Surges cannot overlap (§3 here). FIELD occupants/air occupancy remain T04/T09: no universal cross-layer `empty` test.
+- **Layer-specific occupancy:** per-cell layer limits, props under zones/Surges and ground-on-prop rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground). Skill-side additions: prop creation needs empty cells; charging Surges cannot overlap (§3 here). Air occupancy follows Battle §4.3; no universal cross-layer `empty` test (open details: T09).
 - **Fixed bindings:** board footprints stay at cast cells; push direction/pull anchor are fixed at cast ([gdd_battle §4.4](gdd_battle.md#44-square-data-model)/[§6.5](gdd_battle.md#65-displacement); §2 here). Selecting a unit grants no homing area, following zone, moving pull anchor or automatic retarget after movement/death. Author unspecified unit-target resolution/validity (T02/T04); immediate body-relative Strike placement is no tracking precedent.
 
 **Area contract — explicit footprint, not cast range**
@@ -108,7 +108,7 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
 |----------------|------------------------|-----------------------|
 | `execution` | Immediate vs telegraphed delay, exact resolution event, charging/telegraph and autonomy rules where applicable | Immediate resolves the action now, not every effect now. Bind Surge execution to the [Surge profile](#surge) and its scheduling interface in [Battle §2.2](gdd_battle.md#22-initiative-rules); do not substitute a generic one-round delay. |
 | Effect trigger/application | Referenced event, whose turn/entry it is, recipients at that event and ordering dependencies | Existing resolution, `start_of_turn`, `on_enter`, `while_inside`, Surge-damage protection and `end_of_turn` events remain definition-bound ([gdd_battle §2.4](gdd_battle.md#24-effect-timing-reference)/[§4.6–4.7](gdd_battle.md#46-zones-effects-rules--opposites)). `while_inside` is continuous, not a repeating cast. |
-| `persistence` | Owner of the lifetime, clock/event, duration or consumption/removal condition, expiry result | Reference [Battle §4.5](gdd_battle.md#45-lifecycles) for board-state lifecycles and [Battle §4.10–§4.11](gdd_battle.md#410-damage-shatter--prop-types) for prop removal/reactions. Distinguish pending execution, any authored aftermath and self-bound states; effects of one zone share its clock. |
+| `persistence` | Owner of the lifetime, clock/event, duration or consumption/removal condition, expiry result | Reference [Battle §4.5](gdd_battle.md#45-lifecycles) for board-state lifecycles and [Battle §4.10–§4.11](gdd_battle.md#410-prop-catalogue-and-damage) for prop removal/reactions. Distinguish pending execution, any authored aftermath and self-bound states; effects of one zone share its clock. |
 
 - **Runtime bindings:** use turn/round sequence [Battle §2.1](gdd_battle.md#21-core-battle-loop), event meanings/order [Battle §2.4](gdd_battle.md#24-effect-timing-reference), ground entry [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed). Round duration does not count caster actions.
 - **Repetition:** persistence adds no undefined payload/repeat trigger; action repetition follows [Battle §2.3](gdd_battle.md#23-action-points). Missing trigger/lifetime/timing contracts remain [temp_todo.md](temp_todo.md) T02/T04/T07/T09/T19.
@@ -252,8 +252,7 @@ MAJOR SURGE
         Ancient vs Legendary Signature access remains T02/T32, not permission for either by inference
 ```
 
-- Prop interception, ordinary prop damage and destruction are resolved by [Battle §4.10](gdd_battle.md#410-damage-shatter--prop-types); explicit reactions use [Battle §4.11](gdd_battle.md#411-prop-reactions).
-- The profile table below selects those reactions; it does not redefine their runtime resolution.
+- Prop interception, ordinary prop damage and destruction are resolved by [Battle §4.10](gdd_battle.md#410-prop-catalogue-and-damage). *(User decision 2026-11-11:)* the three profiles carry **no prop-specific exceptions**; props take ordinary Surge handling (2 damage, intercepting the hit) and only the `heavy` tag of [Battle §4.11](gdd_battle.md#411-prop-reactions) applies.
 
 - **Concrete profiles:** existing Surges specify **Eruption**, **Flood** or **Rift**, independent of theme. Their authored residue remains mandatory for those profiles despite the general model's optional residue.
 - Timing alone neither requires these profiles nor authorizes new combinations; validate definitions under §7. These are mechanical profiles, not aspects/replacement elements; “Flood” is never a zone and need not resemble water.
@@ -261,11 +260,11 @@ MAJOR SURGE
 
 |     Type     | Damage |     Residue (permanent, level I)      |                                                                     Props                                                                     |                            Mountain                           |
 |--------------|--------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
-| **Eruption** |      3 | **Lava I** — burns at end of turn | Trees ignite **instead of taking prop damage** | hit normally, cannot change ground on a Mountain (**no residue** there; lava runs off), does not destroy it |
-| **Flood** |      2 | **Thornbed I** — hurts when entered | extinguishes burning Trees; heavy props block it and are **neither damaged nor moved** | **can't reach it** (square blanked) |
-| **Rift** |      3 | **Blight I** — hurts at start of turn | brittle props take **1 extra HP damage** (crumble reaction) | **destroys it** ([Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed)): the monster on it takes the Surge damage plus the environmental 1 collapse damage; its Blight I residue becomes the new ground |
+| **Eruption** |      3 | **Lava I** — burns at end of turn | ordinary prop handling | hit normally, cannot change ground on a Mountain (**no residue** there; lava runs off), does not destroy it |
+| **Flood** |      2 | **Thornbed I** — hurts when entered | ordinary prop handling | **can't reach it** (square blanked) |
+| **Rift** |      3 | **Blight I** — hurts at start of turn | ordinary prop handling | **destroys it** ([Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed)): the monster on it takes the Surge damage plus the environmental 1 collapse damage; its Blight I residue becomes the new ground |
 
-- **Push order:** damage-2/Thornbed also pushes struck monsters **1 square in the cast-fixed direction**, into newly laid ground. The order damage → push → residue follows the [payload resolution order](gdd_battle.md#62-surge-resolution-integration), so struck monsters are pushed before the residue is laid and do not enter it through this push; T07 only reviews the ground interactions.
+- **Push order:** damage-2/Thornbed also pushes struck monsters **1 square in the cast-fixed direction**, toward the squares that will receive residue afterwards. The order damage → push → residue follows the [payload resolution order](gdd_battle.md#62-surge-resolution-integration), so struck monsters are pushed before the residue is laid and do not enter it through this push; T07 only reviews the ground interactions.
 - **Collapse state:** the final ground after a Mountain is destroyed follows the Mountain-destruction rule in Battle §4.7 (the destroying skill's own ground, otherwise Rubble). Order of Surge damage, displacement and board operations (incl. collapse damage and residue): [payload resolution order](gdd_battle.md#62-surge-resolution-integration).
 
 A Mountain therefore offers profile-specific protection, not a universal Surge counter.
@@ -279,7 +278,7 @@ A Mountain therefore offers profile-specific protection, not a universal Surge c
 | **Pick the height** | Create Mountain where legal; protection, residue exclusion or collapse depends on the profile table above |
 | **Stand on Hallowed** | Use its Surge reduction and replacement contract in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) |
 | **Fly over it**                | Existing Surge damage recipients exclude air unless a definition authors air recipients ([Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground)); the air layer is out of reach (Winged, Soul+), except from attackers standing on a Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                       |
-| **Props / debris** | Use the interception/destruction rules in [Battle §4.10](gdd_battle.md#410-damage-shatter--prop-types), subject to the interim prop status |
+| **Props / debris** | Use the interception/destruction rules in [Battle §4.10](gdd_battle.md#410-prop-catalogue-and-damage), subject to the draft prop catalogue |
 | **Answer with your own Surge** | race it — but you can't claim squares already held by a charging Surge                                               |
 | **Control the tempo**          | slow / pull / push zones to steer where the target can stand; drain the caster's initiative to delay its next turn      |
 
@@ -342,7 +341,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 **`damage` — apply an existing damage source**
 
 - Required data: source/profile definition, profile-authorized value or value source, footprint/recipients, trigger and ordering reference.
-- Reduction, prop reactions, height and air eligibility come from that profile, never from a generic damage flag.
+- Reduction, height and air eligibility come from that profile, never from a generic damage flag.
 
 | Existing source/profile | Permitted value and recipients | Trigger, order and limits |
 |-------------------------|--------------------------------|---------------------------|
@@ -351,7 +350,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 | Hazard ground | Reference the concrete ground definition in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) for value, recipients and caps | Bind its existing event under [Battle §2.4](gdd_battle.md#24-effect-timing-reference). Placement is `board_changes`, not immediate damage. |
 | Collision / fall / debris | Reference [Battle §6.3](gdd_battle.md#63-collision-fall--debris) for event damage and recipient exceptions | Derived runtime consequences, not free castable payloads. Monster collision: 1 damage to each monster ([Battle §6.1](gdd_battle.md#61-the-damage-law)). |
 
-- **Damage permissions:** [Surge profiles](#surge) own prop exceptions, Battle §4.10–§4.11 generic reactions; indestructible props cannot be removed. Major/baseline twist exceptions need authored definitions/access/usage; no new damage values here.
+- **Damage permissions:** [Surge profiles](#surge) own damage recipients; they currently carry no prop exceptions, and the prop catalogue is in Battle §4.10. Major/baseline twist exceptions need authored definitions/access/usage; no new damage values here.
 - **No zone damage, immediate ranged burst, new damage zones or generic direct unit-targeted damage.** Retired collision bonuses remain unapproved (T04), not collision-law exceptions. Damage values are not slot-upgrade parameters (§6).
 
 **`displacement` — forced movement under an existing source**
@@ -366,8 +365,8 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 | Surge profile with cast-direction push | Recipients, distance and trigger from the [Surge profile](#surge) | Preserve that profile's complete damage, residue, height and prop contract; unresolved ordering is not an override. |
 | Authored pull twist | Struck monsters, pull 1 toward cast anchor after damage | Existing twist (§3); no arbitrary extra target or trigger. |
 
-- **Consequences:** blocking/collision/fall [Battle §6.3](gdd_battle.md#63-collision-fall--debris), entry [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed), prop destruction [Battle §4.10](gdd_battle.md#410-damage-shatter--prop-types). No implied chain push, extra step or air/prop eligibility. Diagonal displacement is limited to the explicitly coupled adjacent-hit contract; other sources retain cardinal rules.
-- **Unresolved, no defaults:** order among several board operations in one payload and dead-caster scheduling (payload order itself is decided in [Battle §6.2](gdd_battle.md#62-surge-resolution-integration)) ([temp_todo.md](temp_todo.md) T04).
+- **Consequences:** blocking/collision/fall [Battle §6.3](gdd_battle.md#63-collision-fall--debris), entry [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed), prop destruction [Battle §4.10](gdd_battle.md#410-prop-catalogue-and-damage). No implied chain push, extra step or air/prop eligibility. Diagonal displacement is limited to the explicitly coupled adjacent-hit contract; other sources retain cardinal rules.
+- **Order:** payload order, board-operation categories, same-category conflicts and dead-caster scheduling are decided in [Battle §6.2](gdd_battle.md#62-surge-resolution-integration) and [§2.2](gdd_battle.md#22-initiative-rules); no list-order or cast-order defaults.
 
 **`stat_change` — referenced effective modifiers, not arbitrary stat edits**
 
@@ -383,7 +382,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 | `drain_init` / `quicken` | Effective initiative −value / +value; examples include −1, −2 and +1 | Timing and order recalculation: [Battle §2.2](gdd_battle.md#22-initiative-rules). No immediate queue rewrite or arbitrary numeric interval. General effect-value caps/floors are not specified by [gdd_battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites) and remain open. |
 | `drain_range` / `extend` | Effective Reach −value / +value; examples include −1, −2 and +1 | Floor: [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites). No independent per-skill range stat. Upper modifier/value caps require clarification, not extrapolation from progression ceilings. |
 
-- **Timed Kin modifier:** Spirit Strike applies target initiative −1 next round (§8.1), not `while_inside`. Its distinct timed `stat_change` definition preserves trigger/expiry; stacking/refresh remain open. This is neither a free timing override on zone `drain_init` nor arbitrary timed Initiative/Reach/Movement permission.
+- **Timed Kin modifier:** Spirit Strike applies target initiative −1 next round (§8.1), not `while_inside`. Its distinct timed `stat_change` definition preserves trigger/expiry; stacking, refresh and expiry follow the [stat-modifier rule](gdd_battle.md#31-effective-stats) (same source refreshes only, other sources add; N-round effects end at the round end of the N-th following round). This is neither a free timing override on zone `drain_init` nor arbitrary timed Initiative/Reach/Movement permission.
 
 - **Other sources:** Hearth/Shrine provide `quicken 1`, Umbra `extend 1`, occupied Mountain +1 Reach. Keep ground/prop/height conditions, not zone expiry or free source substitution (gdd_battle §3.1/§4.7/§4.10).
 - **Distinct contracts:** `shield` uses existing Surge reduction ([counter menu](#surge)), `mend` caps at max HP, `expose` is reserved without a zone. Reduction/healing/reserved definitions grant no generic stat edits.
@@ -392,7 +391,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 
 **Persistent self buffs and passive rule modifiers — shared contracts**
 
-- **Timed self state:** ordinary `stat_change`/applicable typed effect, self recipients, explicit lifetime. Status is created runtime state, not a skill kind. Specify reapplication (stack/refresh/replace/ignore), cross-skill/source stacking identity, removal and caster/recipient death dependencies. the Focus record in [gdd_skills.md](gdd_skills.md) is structural draft, not generic timed-boost approval.
+- **Timed self state:** ordinary `stat_change`/applicable typed effect, self recipients, explicit lifetime. Status is created runtime state, not a skill kind. Reapplication follows [Battle §3.1](gdd_battle.md#31-effective-stats) (same source and owner: refresh duration only; different sources add without a cap); specify the source identity, removal and caster/recipient death dependencies. the Focus record in [gdd_skills.md](gdd_skills.md) is structural draft, not generic timed-boost approval.
 - **Passive rule/stat modifiers:** use continuous/conditional `stat_change` or typed **`rule_modifier`**. Each `rule_modifier` names the exact changed rule, scope (e.g. owner's shapes), operation/parameters, activation condition, lifetime, stacking and precedence. the Adaptive record in [gdd_skills.md](gdd_skills.md) (owner-scoped rotation) grants no arbitrary mutation.
 - **Event-driven passives:** same effect/board contracts, explicit event source, recipient binding, repeat/recursion limits and order; undefined policies block content.
 - **Extensions:** opaque `custom_effect`, per-skill callbacks and ownership permissions are incomplete definitions. Extend shared typed contracts/common costing; source-specific validation restricts content, not representable families.
@@ -406,9 +405,10 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 | Existing definition/source | Recipients, trigger and lifetime | Ordering and caps |
 |----------------------------|----------------------------------|-------------------|
 | Zone `shield` | Bind recipients/application to [Battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites) and lifetime to [Battle §4.5](gdd_battle.md#45-lifecycles) | Reduction and scaling/cap follow the [Surge profile counter menu](#surge). No independent charges or effect timer. |
+| **Nullify** *(draft, user 2026-11-11)* | Sets the protected monster's next Surge damage to 0 after the damage sum ([Battle §6.1](gdd_battle.md#61-the-damage-law)); sources: tamer Spirit Shield and, as a separate authored effect, monster skills | Consumed by the first Surge damage instance of at least 1 after the sum; one per monster, no stacking. Price far above value reduction (§5, open T02); monster access needs its own authored definition and validation |
 | Hallowed ground | Reference [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) for occupants, reduction and ground lifetime | Preserve the Surge profile's residue/height interaction; do not invent a separate hit-consumption rule. |
 
-- **Protection exclusions:** retired Lava immunity/prop reinforcement/Strike reduction proposals need separate validation (T02/T04/T10), not generic `shield` options; `expose` stays reserved. Once-per-battle tamer protection ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)) grants no repeatable monster immunity. Additional sources need authored definitions, not source substitution/default stacking (T02/T04/T20).
+- **Protection exclusions:** retired Lava immunity/prop reinforcement/Strike reduction proposals need separate validation (T02/T04/T10), not generic `shield` options; `expose` stays reserved. Once-per-battle tamer protection ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)) grants no repeatable monster immunity; monster Nullify is its own authored effect above. Additional sources need authored definitions, not source substitution/default stacking (T02/T04/T20).
 
 **`heal` — restore current HP only at an existing trigger**
 
@@ -454,28 +454,27 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
     - Declare coupled operations explicitly; height edits grant no generic damage or displacement payload.
     - Surge-specific height handling remains §3; no new height levels or timed expiry.
 - **Prop create / place**
-  - Required data / source: Existing prop definition (HP, solid/flying kind, tags and reactions), legal footprint and creation source
+  - Required data / source: Existing prop definition from the [catalogue](gdd_battle.md#410-prop-catalogue-and-damage) (HP, class, tags, `on_destroy`), legal footprint and creation source
   - Binding lifetime, ordering and limits: Placement uses §2; state and prop definitions use [Battle §4.9–§4.10](gdd_battle.md#49-props).
     - Reference existing lifetime/HP; unsupported occupancy/layer cases remain T04/T09.
 - **Prop move / relocate**
   - Required data / source: Authorized source, selected prop, origin/destination and applicable path/placement constraints
-  - Binding lifetime, ordering and limits: Reference placement in §2 and prop restrictions in [Battle §4.10–§4.11](gdd_battle.md#410-damage-shatter--prop-types).
+  - Binding lifetime, ordering and limits: Reference placement in §2 and prop restrictions in [Battle §4.10–§4.11](gdd_battle.md#410-prop-catalogue-and-damage).
     - Generic unit push/pull is not a prop-move definition.
-    - *Relocate contract (user-confirmed 2026-11-10; the source itself is not yet approved content):* an authorized source moves one selected eligible prop exactly one square orthogonally to a legal empty square (placement rules of Battle §4.9–§4.10; not onto monsters, props, edges or illegal ground); heavy props are not eligible; legality is checked at execution (Battle §6.2), an illegal move does nothing; a relocated prop keeps its HP, tags and lifetime and triggers no shatter or debris, only the entry/placement effects its type already defines. Longer distances or paths need a separate authorized contract.
+    - *Relocate contract (user-confirmed 2026-11-10; the source itself is not yet approved content):* an authorized source moves one selected eligible prop exactly one square orthogonally to a legal empty square (placement rules of Battle §4.9–§4.10; not onto monsters, props, edges or illegal ground); heavy props are not eligible; legality is checked at execution (Battle §6.2), an illegal move does nothing; a relocated prop keeps its HP, tags and lifetime and triggers no destruction aftermath, only the entry/placement effects its type already defines. Longer distances or paths need a separate authorized contract.
 - **Prop destroy / remove**
   - Required data / source: Existing destruction/reaction definition and eligible prop; damage-derived destruction references the damage source, not a free deletion flag
-  - Binding lifetime, ordering and limits: Reference the interim destruction/reaction rules in [Battle §4.9–§4.11](gdd_battle.md#49-props) and derived debris in [Battle §6.3](gdd_battle.md#63-collision-fall--debris).
-    - The prop redesign remains T04.
-    - Direct deletion, salvage or suppressed debris requires a separately approved source; removal does not imply universal shatter.
+  - Binding lifetime, ordering and limits: Reference the prop catalogue and aftermath in [Battle §4.10](gdd_battle.md#410-prop-catalogue-and-damage) and the destruction order in [Battle §6.2](gdd_battle.md#62-surge-resolution-integration).
+    - Direct deletion or suppressed aftermath requires a separately approved source; removal does not imply the type's aftermath unless that source says so.
 - **Cleanse**
   - Required data / source: Explicit source, exact affected layer/state, legal footprint/recipients and resulting state
   - Binding lifetime, ordering and limits: The existing Mountain-creation source clears non-Voidscar ground to Plain as above; no further monster Cleanse source exists (user decision 2026-11-10); a new one needs an explicit definition and validation and is parked under Potential Extensions.
     - Zone removal ends its effects, not ground/height/props or a charging Surge.
     - The combined zone-removal/Plain-reset exception is a tamer-source operation ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)), not a reusable monster permission.
-    - No generic cleanse of all layers, negative effects, Injury or Voidscar; unresolved combinations/order remain T02/T04/T07/T20.
+    - No generic cleanse of all layers, negative effects, Injury or Voidscar; unresolved combinations remain T02/T07/T20.
 
 - **Validation:** retain owning-profile Reach/anchor, fixed/on-board footprint, LOS and blocking ([gdd_battle §4.3–4.11](gdd_battle.md#43-the-square-stack-zones--ground); §2–§3 here). No-LOS ground/prop casts still obey their empty-cell requirements. Preview resulting ground/height/props, reactions and derived damage.
-- Simultaneous damage/collapse/debris/residue/relocation order remains T04/T07 where conflicting/underspecified, never list-order defaults. Planned loadout operations stay T18/T19. This catalogue approves no new props, conversion, board erasure or movement modes.
+- Simultaneous damage/collapse/aftermath/residue/relocation order: [Battle §6.2](gdd_battle.md#62-surge-resolution-integration) (decided); never list-order defaults. Planned loadout operations stay T18/T19. This catalogue approves no new props, conversion, board erasure or movement modes.
 
 ## 5. Construction Points and AP Efficiency
 
@@ -517,7 +516,7 @@ Maximums only: no spending targets, balance/component-price approval, step price
 
 ### Component Price Sheet
 
-**Calibration drafts, not validated balance. All prices are construction points, not combat damage.** Cells are potential footprint cells, not guaranteed hits; large-body hit multiplicity remains unresolved.
+**Calibration drafts, not validated balance. All prices are construction points, not combat damage.** Cells are potential footprint cells, not guaranteed hits; a 2×2 body is struck once per use (§3); 2×2 variant prices remain T02/T09.
 
 | Component | Price | Scope |
 |-----------|-------|-------|
@@ -565,7 +564,7 @@ Movement, passive and prop standards are maintained only in their owning section
 | Ancient | Mountain under the target is destroyed (Rubble unless a ground change is authored); the environmental 1 collapse damage is not Strike damage | +2 per potentially affected hit cell; provisional pending height/board resolution |
 
 - **Kin packages:** bound, not interchangeable. Scaled includes push-direction choice, distinct from footprint direction; charge neither twice. Winged retreats once/use, not per target, without extra battle AP. Existing collision/fall/entry rules apply. Swarm grants no extra monster damage; Ancient no extra collapse/debris damage or arbitrary ground removal.
-- **Unresolved:** Spirit stacking/refresh/expiry, Winged multi-target reference/ties/legal retreat, Scaled follows the payload resolution order; board/prop and 2×2/layers remain T02/T04/T09. No blanket damage-plus-Kin surcharge; review specific combinations.
+- **Unresolved:** Winged multi-target reference/ties/legal retreat, Scaled follows the payload resolution order; 2×2/layer pricing remains T02/T09. No blanket damage-plus-Kin surcharge; review specific combinations.
 - **Body-relative variant cost drafts** *(draft, not validated or approved content)*: 1×1 Jab-shaped references at the existing 2 battle AP (6 AP-efficiency points); the AP of movement-only variants is not otherwise decided and uses the Jab AP here. Anchors are existing rates only, with no new rates: forced one-cell displacement 2 per potential recipient cell (direction included, [Zone, Protection and Healing Costs](#zone-protection-and-healing-costs)); self retreat 3 once per use (Winged package rate, unconditional, never discounted by hit chance); footprint-direction cost 2 where the direction changes hit cells; ground/air coverage 2 only per damage effect.
 
 | Variant (Kin) | Calculation | Total |
@@ -643,7 +642,7 @@ If the resolved variant exactly matches an already priced preset, use that prese
 - **Self Initiative:** 4 points per +1/round, no artificial area/anchor/ground-air-attack fee.
   - Assumes draft refresh without magnitude stacking; normal AP-paid refresh adds no blanket surcharge.
   - Not a rate for arbitrary stats, targeted/team buffs or cumulative Initiative.
-  - Round-end duration/normal round queue recalculation apply; cross-source stacking, removal/death/exact termination remain open.
+  - Round-end duration/normal round queue recalculation apply; stacking and expiry follow Battle §3.1; removal/death/exact termination of the Focus record remain open.
   - Same draft rate can cost longer duration, not approve upgrades.
 - **Passive availability:** initial 12-point premium for continuously equipped, self-scoped boolean permission (owner rotation), replacing active efficiency; mechanics priced separately. Neither 0-AP active nor extra budget. Conditions grant no automatic discount; event-driven/repeating/proccing/team-wide/other patterns need frequency/recursion/combination review before pricing/approval.
 - **Rotation:** covers all owner's legal eligible-shape rotations while equipped, not each cast; identical boolean permissions do not stack. No mirroring, Strike geometry changes, cells, range or new profiles. Test equipped shapes, symmetry, action frequency, fixed-shape kits and placement options; equal value across kits is not guaranteed.
@@ -695,7 +694,7 @@ For the selected event/once-per-round combination, add the independently priced 
 
 - **Selection:** ranged zones pay +2 board anchor once, no second direction/anchor-binding charge. Body-relative Shove is not a ranged unit-selection source; calibrate its spatial components through the new variant contract rather than retaining a direct-target selection fee.
 - **Repetition/values:** normal AP-paid zone levelling/refresh included, extending Slow policy for calibration only. Resolve magnitude/cap/level formulas; no stronger values, heal scaling, extra triggers or ally-only filters. Test each effect's repetition independently.
-- **Healing/protection:** retain max HP, events/source permissions; no direct heal, revival, Injury cure, general immunity, tamer protection or item permission. Stacking/consumption/order (T04), `mend` scales `min(2, level)` and Mossbed has no loop limit (T07, decided); prices for the changed `mend` magnitude are still open. Prices set neither caps nor unbounded-healing permission.
+- **Healing/protection:** retain max HP, events/source permissions; no direct heal, revival, Injury cure, general immunity, tamer protection or item permission. Stacking and order: [Battle §3.1](gdd_battle.md#31-effective-stats)/[§6.2](gdd_battle.md#62-surge-resolution-integration) (decided); `mend` scales `min(2, level)` and Mossbed has no loop limit (T07, decided); prices for the changed `mend` magnitude are still open. Prices set neither caps nor unbounded-healing permission.
 
 ### Ground and Board Costs
 
@@ -709,18 +708,16 @@ For the selected event/once-per-round combination, add the independently priced 
 | Hallowed | 4 × C | Existing Surge reduction 1; no automatic hit consumption |
 | Mountain creation with coupled Plain reset | 5 × C | Mountain plus its existing non-Voidscar → Plain cleanse, one package |
 | Mountain-destruction operation (final ground: [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | 2 × C | Source-specific; the operation is priced because it grants the capability; the environmental 1 collapse damage is not priced as skill damage; the price is the earlier draft, not re-derived |
-| Create Wall / Tree | 4 per created prop | Existing HP/tags/solid/reaction package; provisional pending prop redesign |
-| Create Rock | 6 per created prop | Existing heavy-prop package; provisional, source/access still required |
-| Create Shrine | 8 per created prop | Existing prop/effect package; no duplicate permanent buff charge |
+| Create prop (any [catalogue](gdd_battle.md#410-prop-catalogue-and-damage) entry) | Not priced (T02) | The earlier Wall/Tree 4, Rock 6 and Shrine 8 packages belonged to the removed catalogue. Open: one price per prop class and the valuation of `on_destroy` operations, aura effects and Beam spawning; a missing price never means zero |
 | Relocate eligible prop (one square, orthogonal; contract in §4) | 6 per moved prop | Provisional component; contract confirmed, price not recalibrated |
-| Direct Rubble creation, Pillar creation, direct prop deletion | Not priced / not authorized by this table | Need explicit source/contract |
+| Direct Rubble creation, direct prop deletion | Not priced / not authorized by this table | Need explicit source/contract |
 | Voidscar alteration | Forbidden | No budget bypass |
 
-- **Props:** prices grant no catalogue/access; retain empty-cell, heavy/indestructible and interaction restrictions. Ordinary destruction has no generic surcharge; natural damage-derived debris is not a second authored operation and never affects Mountains. Ignition/extinguish/crumble, falling/splitting and mixed packages await prop redesign, not guessed defaults.
+- **Props:** prices grant no catalogue/access; retain empty-cell, `heavy` and interaction restrictions. Ordinary destruction has no generic surcharge; a prop's aftermath is part of its type, not a second authored operation, and never destroys Mountains.
 
 **User-selected working standard, unvalidated:** for an existing authorized extra on-hit prop-damage effect, use **1 construction point per additional prop HP damage per potential affected cell**, above the source's included ordinary prop damage. This is a narrower damage channel than monster damage and preserves the current extra-prop-damage component's valuation scale; it is not a monster-damage discount. Do not also charge that same extra damage through a Kin package or generic damage component. Exact prop eligibility, interception and mutually exclusive outcomes still bind the calculation. No automatic timing discount applies.
 
-Ignition, extinguishing, ongoing crumble, redirected falling/splitting and altered debris are not assigned a generic premium: the interim [Battle reaction definitions](gdd_battle.md#411-prop-reactions) do not yet establish the complete redesigned outcomes. For a reaction that replaces ordinary damage, evaluate complete legal outcomes under the conditional-outcome draft, not damage plus an invented reaction surcharge. Existing ground packages include their source-bound reactions; no new source inherits them. Missing special-reaction valuation keeps the full package incomplete.
+No source currently has a prop reaction or extra prop damage, so this standard has no user. A future reaction that replaces ordinary damage is evaluated as complete legal outcomes under the conditional-outcome draft, not damage plus an invented surcharge. Missing special-reaction valuation keeps the affected package incomplete.
 
 - **Cast fees/residue:** standalone ground/props add the applicable +2 anchor fee and AP-efficiency cost once. Residue means authored Surge **ground change, not prop creation**; [Surge profiles](#surge) own payloads/exceptions. Delayed hazard aftermath (rate in the table above) adds no second anchor/AP and gets no further 50% damage discount; immediate ground keeps its own rate. Source-specific height/prop exclusions remain binding.
 
@@ -745,16 +742,16 @@ Ignition, extinguishing, ongoing crumble, redirected falling/splitting and alter
 
 | Existing profile | Costed components on Low, prop-free cells | 2-cell subtotal | 3-cell subtotal | Remaining profile evaluation |
 |---|---|---|---|---|
-| Eruption | `15 + 3 × cells` damage + `4 × cells` Lava aftermath | 29 | 36 | Profile-specific ignition valuation is not yet defined (§3) |
-| Flood | `15 + 2 × cells` damage + `4 × cells` Thornbed aftermath + `1 × cells` one-square push | 29 | 36 | Qualifying push uses shared timing conditions; prop review and damage/ground/push ordering remain unresolved |
-| Rift | `15 + 3 × cells` damage + `4 × cells` Blight aftermath | 29 | 36 | Collapse and extra brittle-prop damage are excluded from these Low, prop-free subtotals (§3) |
+| Eruption | `15 + 3 × cells` damage + `4 × cells` Lava aftermath | 29 | 36 | No profile-specific prop exception (§3) |
+| Flood | `15 + 2 × cells` damage + `4 × cells` Thornbed aftermath + `1 × cells` one-square push | 29 | 36 | Qualifying push uses shared timing conditions; damage/push/residue order follows Battle §6.2 (decided) |
+| Rift | `15 + 3 × cells` damage + `4 × cells` Blight aftermath | 29 | 36 | Collapse is excluded from these Low, prop-free subtotals (§3) |
 
-**Scoped subtotals, not complete profile prices:** ordinary offensive prop damage/destruction has no generic surcharge. Extra on-hit prop damage now has a shared rate, but legal combined outcomes/order and other special reactions still prevent complete pricing.
+**Scoped subtotals, not complete profile prices:** ordinary offensive prop damage/destruction has no generic surcharge. Legal combined outcomes/order still prevent complete pricing.
 
 - **Collapse/hazard:** include the explicit destruction capability additively with residue under the [Mountain-destruction rule](gdd_battle.md#47-ground--neutral-hazard-and-blessed). The priced subset is `15 + (3 + 2 + 4) × cells`: **33/42** for two/three cells. Environmental collapse damage is not separately priced as skill damage; ground exclusivity does not waive the destruction capability.
-- Extra brittle-prop damage uses the board standard when eligible, without a second Kin/damage charge. It is not included in the prop-free subtotals. No-residue-on-Mountain/Mountain-exclusion rules grant no automatic credits.
+- No-residue-on-Mountain/Mountain-exclusion rules grant no automatic credits.
 - **Budget finding:** all three Low, prop-free two-cell subsets exceed 24; three cells reach 36 before additional capabilities/reactions. Height-capable Rift exceeds 24 in both shown cases and 36 for three cells. These are unresolved calibration conflicts, not automatic higher-level unlocks, content restrictions or approvals.
-- Preserve damage, 1-AP baselines, mechanics and shared ceilings; special prop reactions/event order remain T02/T04/T07 blockers.
+- Preserve damage, 1-AP baselines, mechanics and shared ceilings; special-reaction valuation remains a T02/T07 blocker.
 
 ### Mountain-Destruction Calibration Proposal
 
@@ -797,7 +794,7 @@ Ignition, extinguishing, ongoing crumble, redirected falling/splitting and alter
 - **Slow:** base 1/cap 2, Movement minimum 1, Step unaffected. Includes normal AP-paid recasts/levelling/duration refresh, not level-II starts, free recasts or enhanced repetition. No pricing of other stats; rounds do not guarantee personal turns. Test repetition.
 - **Marker:** existing temporary voluntary-movement blocking only, not enhanced blocking/duration; retain movement/displacement exceptions. Test chokepoints, props/height and prevented escape against the 50% damage rate: price does not guarantee avoidability.
 - **Combinations:** [no surcharge](#combination-policy-and-basic-surge-target) within/between skills/monsters. Validate full interactions; revise responsible components/rules on evidence. Guaranteed hits do not automatically qualify for avoidable-damage discounts.
-- **Props:** ordinary interaction is baseline for relevant offensive sources only, not movement/support damage or universal destruction. Evaluate special damage, resistance bypass and enhanced reactions; revisit after Battle §4.9–§4.11 redesign (T04), without blocking unrelated calibration.
+- **Props:** ordinary interaction is baseline for relevant offensive sources only, not movement/support damage or universal destruction. Evaluate special damage, resistance bypass and enhanced reactions against the redesigned catalogue (Battle §4.10), without blocking unrelated calibration.
 - **Permissions:** prices override no access/profile/damage/targeting/layer limits. Missing spatial/event/stacking contracts block affected content (T02/T04–T06/T09/T13).
 
 ### Round-Limited Availability Calibration
@@ -874,7 +871,7 @@ Ignition, extinguishing, ongoing crumble, redirected falling/splitting and alter
 | **Shape** | Other shape family or orientation, **same cell count** | I2 orientation, I3↔L3 or legal 4-cell families; Strike swaps same-size shapes from §8.1. Family must respect Kin and twist constraints; shapes remain fixed in battle. Legacy ‘always free’ grants no free development step or respec; costs remain T05. |
 | **Size** | **+1 cell** within the owning profile's cap; Strike selects a larger §8.1 shape | Ordinary tetris max 4; Swarm Surge cannot enlarge. A larger Strike uses its existing shape AP price as an optional higher-cost branch, never the only development path. The old automatic Surge +1 AP is unconfirmed; requirements, step costs and optional AP effects remain T02/T05. |
 | **Twist** *(Surge only)* | Replace/add an authored extra rule; not on a Species Surge | At most one; preserve §3 constraints and exclude damage/range increases, including legacy delayed-damage or extended-range candidates. Validate under the confirmed AP policy. |
-| **Small value** | Zones: `duration` +1 round total per skill. Movement: one flag flip total, turning off one restriction or lowering its distance penalty by 1 (§3) | Bounded candidate patches, not free upgrades. No damage increase or level-II start; the level-II-start passive remains a separate candidate (§9), not an approval through this table. |
+| **Small value** | Zones: `duration` +1 round total per skill. Movement: one flag flip total, turning off one restriction or lowering its distance penalty by 1 (§3) | Bounded candidate patches, not free upgrades. No damage increase or level-II start; the level-II-start passive remains a separate candidate (§9), not an approval through this table. A **residue level-II start** is a separate upgrade candidate *(user decision 2026-11-11)*: it needs its own price (T02) and board-fill tests (T13) before it becomes a patch, and until then residue starts at level I. |
 
 - **Shared process:** authorize patches to [§2](#2-data-oriented-skill-construction-kit), validate through [§7](#7-validation-and-concrete-skill-records), including species-specific/Signature (§1); no per-kind schema. Replacement is never a patch and follows this section's opening rules. Legacy named examples/evolution counts are retired pending T02/T05/T10.
 - **Identity:** different slot-development choices within one species yield different playstyles without new art. Shaped skills retain **one shape/fixed orientation**, except existing rotation permissions; Surges have **at most one, not mandatory, twist**. Non-area skills gain no footprint. Battle rules remain valid; preview the resolved variant normally.
@@ -1018,7 +1015,7 @@ Points in Movement only pay off with a movement skill; a Step-only monster stays
 - Pack Hunter (Strike costs 1 AP less if an ally is adjacent to the target)
 - First Blood (its first Strike each battle costs 1 AP less)
 - Vengeful (after taking Surge damage, its next Strike costs 1 AP less)
-- Scavenger (heals 1 when a prop within its Reach shatters)
+- Scavenger (heals 1 when a prop within its Reach is destroyed)
 - Frenzy (+1 shape cell at 1–2 HP)
 - Bulwark (team: allies orthogonally adjacent to it take 1 less Surge damage)
 
@@ -1039,7 +1036,7 @@ Points in Movement only pay off with a movement skill; a Step-only monster stays
 |---|---|---|---|---|---|
 | **Blaze Tiger** | Beast | Leap | *Magma Pounce* · Eruption · O4 · **Pounce** | Lava Field | Momentum |
 | **Ember Hawk** | Winged | Glide | *Cinder Dive* · Eruption · I3 · **Trail** | Shockwave | Skittish |
-| **Forge Golem** | Ancient | — | *Crucible* · Eruption · ring of 4 · **Ring** | Raise Wall, Raise Ground | Immovable |
+| **Forge Golem** | Ancient | — | *Crucible* · Eruption · ring of 4 · **Ring** | Raise Prop (type open, T10), Raise Ground | Immovable |
 | **Moss Turtle** | Scaled | Run | *Tidal Shell* · Flood · I3 · **Slow-burn** | Bark Veil | Deep Roots |
 | **Thorn Mites** | Swarm | Burrow | *Bramble Tide* · Flood · I2 · **Deep Residue** | Thornbed | Thornwalker |
 | **Grove Wisp** | Spirit | Phase | *Spring Burst* · Flood · L3 · **Lob** | Gale | Adaptive |
@@ -1099,8 +1096,8 @@ Draft structural references (Strike, Surge, Zone, Movement, self-buff, passive);
   - The superseded flat blueprint's behaviour/targeting/direction/duration/usage belong to these dimensions; Surge twists/species ownership are profile constraints/metadata on this same model.
 
 **Draft structural/calibration references, not approved catalogue or balance:** Slowing Zone, Beast Jab, Delayed Burst; Run, Focus, Adaptive below complete six cases.
-- Same top-level schema; groups explicit or bound to §2/§8.1. Unresolved access/upgrades/runtime remain draft. Jab covers only fully costed Beast, not other Kins' unresolved contracts (T02/T04/T06).
-- No runtime identifiers. Coordinates `[dx, dy]`, **1×1 bodies only**; large-body rules remain open.
+- Same top-level schema; groups explicit or bound to §2/§8.1. Unresolved access/upgrades/runtime remain draft. Jab covers only fully costed Beast, not other Kins' unresolved contracts (T02/T06).
+- No runtime identifiers. Coordinates `[dx, dy]`, **1×1 bodies only**; 2×2 records need the unapproved 2×2 variants (T09).
 
 Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference (draft record of existing Strike)**; **Delayed Burst reference (draft Minor Surge)**.
 
@@ -1139,7 +1136,7 @@ Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference
     - `damage`: fixed 3 against all ground-layer monsters in the footprint at resolution, including caster/allies/enemies
     - no air. Existing ordinary Surge prop handling: 2 to prop instead of occupant
     - shield/Hallowed reduction, minimum 0. Apply once at detonation
-    - no push, pull, ignition or brittle-prop extra reaction
+    - no push, pull or prop-specific reaction
     - no repeat payload
     - one-shot damage has no retained stack
     - pending marker lifetime ends at resolution
@@ -1149,8 +1146,8 @@ Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference
   - Delayed Burst: `type: until_resolution`; `owner: pending_surge`; expires at detonation; no post-resolution effect lifetime
 - **`board_changes`**
   - Slowing Zone: `[]`: no ground, height or prop operation
-  - Beast Jab: `[]`: no authored ground/height/prop operation; ordinary damage-derived prop reactions use Battle §4.10–§4.11
-  - Delayed Burst: `[]`: no authored ground placement, residue or height change; ordinary damage-derived prop destruction/shatter/debris remains §2, not an added residue component
+  - Beast Jab: `[]`: no authored ground/height/prop operation; ordinary damage-derived prop destruction uses Battle §4.10
+  - Delayed Burst: `[]`: no authored ground placement, residue or height change; ordinary damage-derived prop destruction and aftermath remain §2, not an added residue component
 - **`interactions`**
   - Slowing Zone: Placement not blocked by props/height; recipient layers are specified in `effects`; no ground-changing operation
   - Beast Jab: Monster damage recipients include ground and air; `blocked_by_objects: true` (solid-prop line rule); `blocked_by_height: false`; no additional Beast operation
@@ -1187,7 +1184,7 @@ Cases per field below: **Slowing Zone reference (draft)**; **Beast Jab reference
   - Same-AP candidate choice: At proposed 1 AP: choose fixed L3 (`offsets: [[0,-1],[0,0],[1,0]]`, junction anchor, count 3); other fields unchanged
   - Optional higher-AP candidate choice: At proposed 2 AP: choose fixed T4 with the offsets/anchor above, count 4; damage 3, delay, recipients and `board_changes: []` unchanged. This is not Major Surge access; Swarm cannot use either 3/4-cell reference
 
-- **Status:** calibration/same-AP development incomplete ([temp_todo.md](temp_todo.md) T02/T05); order/large bodies remain T04/T09. Residue is a board component, not combination surcharge (§5); residue-free references do not replace [concrete profiles](#surge).
+- **Status:** calibration/same-AP development incomplete ([temp_todo.md](temp_todo.md) T02/T05); large bodies remain T09. Residue is a board component, not combination surcharge (§5); residue-free references do not replace [concrete profiles](#surge).
 - **Resolution:** resolve all definitions/required parameters before validation (§2–§7). No skill override of fixed fields; rules determine effect/operation order, never field-list position. Unsupported/unspecified cases remain central TODO.
 - **Upgrades:** authorized named-field patches with prerequisites/exclusions/budget/AP consequences (§6), not another schema. Revalidate profile, Kin/species access, execution, placement, footprint, effect/trigger legality, persistence, interactions, usage and budget. Shared repetition policies: [§2](#usage-and-repetition); no generic multi-round cooldowns/mana/aspect/attunement. Upgrade limits: §6.
 
@@ -1231,7 +1228,7 @@ Cases per field below: **Run reference**; **Focus self-buff reference (DRAFT)**;
   - Adaptive (draft content): `none`; modifying another skill's orientation does not create an area
 - **`effects`**
   - Run: Typed self `movement`, Run preset, distance effective Movement (minimum 1); once at action resolution; owner's legal layer; no retained state/stack; process walk entry effects under existing rules
-  - Focus (draft): Typed `stat_change`: effective Initiative +1 to self in its legal layer; apply at resolution; bind to `focus_state`; proposed same-skill/same-owner group refreshes duration, never adds magnitude; cross-source stacking/removal/death policies pending
+  - Focus (draft): Typed `stat_change`: effective Initiative +1 to self in its legal layer; apply at resolution; bind to `focus_state`; same-skill/same-owner group refreshes duration, never adds magnitude, and other sources add (Battle §3.1); removal/death policies pending
   - Adaptive (draft content):
     - Typed `rule_modifier`: permit owner to rotate otherwise fixed tetris shapes when previewing/casting its own eligible skills
     - self scope in owner's legal layer
@@ -1260,7 +1257,7 @@ Cases per field below: **Run reference**; **Focus self-buff reference (DRAFT)**;
   - Adaptive (draft content): None approved; passive development/active-passive replacement remain T05; no automatic extra permission from slot level
 - **`evaluation`**
   - Run: [Movement cost reference](#movement-costs); passive availability `none`, combination 0; unlock/content/development validation pending
-  - Focus (draft): [Self-buff cost reference](#self-buff-and-passive-costs); passive availability `none`, combination 0; content/stacking/development validation pending
+  - Focus (draft): [Self-buff cost reference](#self-buff-and-passive-costs); passive availability `none`, combination 0; content/development validation pending
   - Adaptive (draft content): [Passive rotation cost reference](#self-buff-and-passive-costs); AP efficiency `none`, combination 0; content/interaction/development validation pending
 
 **Six-case paper checks:**
@@ -1268,7 +1265,7 @@ Cases per field below: **Run reference**; **Focus self-buff reference (DRAFT)**;
 - **Surge:** declaration ≠ delayed resolution; marker lifetime implies neither residue nor lasting damage.
 - **Zone:** one cast/shared lifetime; continuous slow is no extra action/repeated damage.
 - **Movement:** path/destination, not artificial area; entry retains ordinary board rules.
-- **Self buff:** movement off the original tile does not remove self state; no tile placement/ground payload/`unique` effect. Round-end duration does not guarantee two personal turns; cross-source stacking/termination gaps block approval.
+- **Self buff:** movement off the original tile does not remove self state; no tile placement/ground payload/`unique` effect. Round-end duration does not guarantee two personal turns; termination gaps block approval; stacking follows Battle §3.1.
 - **Passive:** equipped rotation is a scoped rule modifier, not AP-zero cast/separate schema. Identical boolean permissions grant no extra rotations/rule changes; author other passive interactions.
 
 - **Coverage limits:** structural walkthroughs, not engine tests/content approval. Event-driven passives fit declared activation events/conditions, event-bound recipients and typed effects; resolve repetition/recursion/order before approval (T02/T04/T11).

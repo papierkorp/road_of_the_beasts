@@ -475,12 +475,13 @@ BREAKTHROUGH  High → next stage's Lower
 
 ### 6.4 Tamer Skills
 
-Tamer skills are **learned over the game**, then **slotted before each battle**; runtime: [gdd_battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout). *Proposal* rows are new.
+Tamer skills are **learned over the game**, then **slotted before each battle**; runtime: [gdd_battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout) (activation window, Swap Places, Urgent Order, Second Wind, Life Thread, Beast Swap confirmed 2026-11-11, values draft). *Proposal* rows (Double Bind, Seal Mastery) wait for the catching rules (T24).
 
 - **Shared contracts, separate source:** definitions reference [Skills §4 effects](gdd_skills.md#4-effect-and-board-operation-contracts), [§2 data model](gdd_skills.md#2-data-oriented-skill-construction-kit) and [§7 validation](gdd_skills.md#7-validation-and-concrete-skill-records).
   - Explicit tamer permissions/unlocks/loadout/usage stay here and in [gdd_battle §5.2](gdd_battle.md#52-tamer-skills-and-battle-loadout).
   - The table summarizes effects, not executable definitions.
-- **No permission transfer:** monster-profile permissions, species/Kin access, slot development and monster-action AP prices do not transfer to tamers. Tamer Surge-damage prevention, own-monster repositioning, zone clearing/ground reset and proposed direct healing do not authorize monster equivalents.
+- **No permission transfer:** monster-profile permissions, species/Kin access, slot development and monster-action AP prices do not transfer to tamers. Own-monster repositioning, zone clearing/ground reset and proposed direct healing do not authorize monster equivalents. Surge-damage Nullify exists for monsters only as a separately authored, much higher-priced monster-skill effect ([Skills §4](gdd_skills.md#4-effect-and-board-operation-contracts)); tamer Spirit Shield/Life Thread rules: [Battle §6.1](gdd_battle.md#61-the-damage-law).
+- **Domain Glimpse** *(user decision 2026-11-11)*: removes zones and resets ground to Plain on the squares of its tetromino. The tamer picks any of the 7 tetrominoes in any rotation or reflection and places it anywhere on the board (no range or LOS; all four squares must lie on the board, no trimming). Voidscar stays, and props, Mountains (height), Surge markers and monsters are unaffected.
 - Source completion/validation: [T19/T20](temp_todo.md); unspecified details have no implicit defaults.
 
 |      Skill      | Stage |                                  Effect                                  |  Kind  |
@@ -488,11 +489,11 @@ Tamer skills are **learned over the game**, then **slotted before each battle**;
 | Spatial Pull    | Foundation | move an own monster to any empty square                            | position |
 | Qi Suppression  | Foundation | an enemy monster −2 initiative next round                          | tempo |
 | Spirit Shield   | Foundation | the next Surge damage on one own monster is 0                      | defense |
-| Swap Places *(proposal)* | Foundation | two own monsters trade squares                             | position |
+| Swap Places | Foundation | two own monsters trade squares                             | position |
 | Domain Glimpse  | Core | clear a tetromino of zones and reset its ground to Plain         | terrain |
-| Urgent Order *(proposal)* | Core | an own monster that has not acted this round acts next          | tempo |
-| Second Wind *(proposal)* | Core | an own monster regains 1 HP (never above max)                     | defense |
-| Life Thread *(proposal)* | Core | the next time an own monster would fall it stays at 1 HP          | defense (also protects in Deadly dungeons) |
+| Urgent Order | Core | an own monster that has not acted this round acts next          | tempo |
+| Second Wind | Core | an own monster regains 1 HP (never above max)                     | defense |
+| Life Thread | Core | the next time an own monster would fall it stays at 1 HP          | defense (also protects in Deadly dungeons) |
 | Double Bind *(proposal)* | Core | after the battle one extra defeated wild monster may be bound (§5.1) | catching, uses a slot |
 | Beast Swap      | Soul | exchange an active monster with one from the spatial space               | position |
 | Seal Mastery *(proposal)* | Soul | Binding Seals one tier lower than the target still bind it       | catching, uses a slot |
