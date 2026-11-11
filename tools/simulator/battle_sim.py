@@ -4,9 +4,13 @@
 Primary purpose (user, 2026-11-11): obtain an INITIAL BALANCING signal for the construction-point
 prices in docs/gdd_skills.md section 5 (do skills of equal cost perform comparably?). Props are
 considered good enough for now; do not extend them further before the skill coverage below.
-Current skill coverage: Jab Strike, Walk, one 2-cell Surge profile, props. Missing: other Kin Strikes,
-movement presets, zones/protection/healing, self buffs, ALL passives, tamer skills (one intervention
-per battle that can swing a fight), species and many different monsters.
+Current skill coverage: all 11 Strike shapes (ray-blocked by solid props, diagonal Cleave undefined/illegal) with
+Kin effects (Scaled push away from the attacker, Winged retreat opposite the shape centre, Spirit initiative -1
+next round, Swarm prop damage 4), movement presets (legacy/Step/Run/Leap/Glide/Burrow/Phase/Blink), one 2-cell
+Surge profile, props. Missing: Ancient's Mountain destruction (no Mountains), zones/protection/healing, self
+buffs, ALL passives, tamer skills (one intervention per battle that can swing a fight), species and many
+different monsters. Simplifications: Scaled push direction is always 'away'; Phase triggers only landing
+entry effects; Strike cells off the board are clipped; legacy --arch monsters keep the old 1-AP walk.
 
 Also: cheap bot-vs-bot indications for the CURRENT DRAFT rules (docs/gdd_battle.md,
 docs/gdd_skills.md). It is NOT the game, NOT balance validation and NOT price validation.
@@ -14,16 +18,19 @@ Context and plan: tools/simulator/README.md. Standard library only. Usage: pytho
 
 Modelled (reduced): square board, Plain/Rubble/Lava/Thornbed/Blight/Mossbed/Hallowed/Hearth/
 Umbra/Voidscar ground, ground-layer prop catalogue (Battle 4.10) with aftermath, initiative
-queue with ties, AP, Walk, Jab Strike, one-cell-pair Surge profiles (Eruption/Flood/Rift),
+queue with ties, AP, Walk/movement presets, Strikes, one-cell-pair Surge profiles (Eruption/Flood/Rift),
 payload order 6.2 (damage, defeat, removals incl. aftermath/Gong push, ground), late-round
 Voidscar pressure, battle end/Draw.
 NOT modelled: Mountains/height, air layer, 2x2 bodies, zones, extra turns (TPR), passives,
-tamer skills, skill-created props, Kin effects, upgrades, Nullify.
+tamer skills, skill-created props, Ancient Mountain effect, upgrades, Nullify.
 """
 import argparse
 import random
+import sys
+from pathlib import Path
 from collections import Counter, defaultdict
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 DIRS8 = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
 DIRS4 = DIRS8[:4]
 HAZ = {"lava": "end", "thorn": "enter", "blight": "start"}
@@ -58,6 +65,12 @@ class Mon:
         s.hp = s.maxhp = arch["hp"]
         s.init, s.move, s.reach, s.ap = arch["init"], arch["move"], arch["reach"], arch["ap"]
         s.alive = True
+        s.strikes = arch.get("strikes", [dict(shape="jab", kin="beast", dmg=2, ap=2, push="all")])
+        s.movement = arch.get("movement", "legacy")  # legacy | step | run | leap | glide | burrow | phase | blink
+        s.walk_ap = arch.get("walk_ap", 1)
+        s.surge_ap = arch.get("surge_ap", 1)
+        s.pen, s.pen_next = 0, 0  # Spirit Strike: initiative -1 next round
+        s.skind = arch.get("surge", "default")  # 'default' = global --surge, 'none' = cannot cast
 
 
 class Battle:
@@ -74,7 +87,7 @@ class Battle:
             spots = area[side][:]
             rng.shuffle(spots)
             for slot, a in enumerate(archs[side]):
-                s.mons.append(Mon(f"{'AB'[side]}{slot + 1}", side, slot, spots[slot], ARCH[a]))
+                s.mons.append(Mon(f"{'AB'[side]}{slot + 1}", side, slot, spots[slot], a if isinstance(a, dict) else ARCH[a]))
         s.surges = []  # dict(caster, cells, kind)
         s.round, s.max_rounds = 0, max_rounds
         s.voidscar_round = voidscar_round or (6 if size <= 5 else 8)
@@ -123,7 +136,7 @@ class Battle:
         return c
 
     def eff_init(s, m):
-        v = m.init + s.aura_near(m.pos, "init") + (1 if s.ground[m.pos][0] == "hearth" else 0)
+        v = m.init - m.pen + s.aura_near(m.pos, "init") + (1 if s.ground[m.pos][0] == "hearth" else 0)
         return max(0.1, v)
 
     def eff_move(s, m):
@@ -163,14 +176,15 @@ class Battle:
     # ---------- payload resolution (Battle 6.2) ----------
     def payload(s, hits, residue, kind):
         """hits: list of (cell, amount, is_surge). residue: (cell list, ground) or None."""
-        for cell, amt, is_surge in hits:
+        for hit in hits:
+            cell, amt, is_surge = hit[:3]
             m = s.mon_at(cell)
             if m:
                 cut = s.surge_cut(m) if is_surge else 0
                 s.damage(m, max(0, amt - cut), kind)
             pr = s.props.get(cell)
             if pr:
-                pr["hp"] -= 2
+                pr["hp"] -= hit[3] if len(hit) > 3 else 2
         s.defeat()
         s.resolve_removals(kind)
         ops = []
@@ -255,6 +269,40 @@ class Battle:
         elif g == "mossbed":
             s.heal(m, 1)
 
+    # ---------- Strikes (Skills 8.1) ----------
+    def strike(s, m, sk, d):
+        cells, _ = strike_cells(s, m, sk["shape"], d)
+        amt, kin = sk["dmg"], sk["kin"]
+        prop_amt = 0 if amt == 0 else (4 if kin == "swarm" else 2)
+        hits = [(c, amt, False, prop_amt) for c in cells]
+        targets = [x for x in (s.mon_at(c) for c in cells) if x and x is not m]
+        s.payload(hits, None, "strike")
+        if not m.alive or s.over:
+            return sk["ap"]
+        alive = [x for x in targets if x.alive]
+        if kin == "scaled":  # push away from the attacker (direction choice simplified to 'away')
+            alive.sort(key=lambda x: -max(abs(x.pos[0] - m.pos[0]), abs(x.pos[1] - m.pos[1])))
+            for x in alive:
+                dx, dy = x.pos[0] - m.pos[0], x.pos[1] - m.pos[1]
+                if sk.get("push") == "adjacent" and max(abs(dx), abs(dy)) != 1:
+                    continue
+                s.push(x, ((dx > 0) - (dx < 0), (dy > 0) - (dy < 0)))
+            s.defeat()
+        elif kin == "spirit":
+            for x in alive:
+                x.pen_next = 1
+        if kin == "winged" and m.alive:
+            r = retreat_vector(sk["shape"], d)
+            if r:
+                dest = (m.pos[0] + r[0], m.pos[1] + r[1])
+                claimed = {c for u in s.surges for c in u["cells"]}
+                if s.inb(dest) and dest not in s.props and not s.mon_at(dest) and dest not in claimed:
+                    m.pos = dest
+                    s.on_enter(m)
+                    s.defeat()
+        s.check_end()
+        return sk["ap"]
+
     # ---------- turn flow ----------
     def queue(s):
         ms = s.living()
@@ -279,6 +327,8 @@ class Battle:
         while not s.over and s.round < s.max_rounds:
             s.round += 1
             s.stats["rounds"] = s.round
+            for m in s.mons:
+                m.pen, m.pen_next = m.pen_next, 0
             q = s.queue()
             for m in q:
                 if s.over:
@@ -378,16 +428,104 @@ class Battle:
                 if not m.alive:
                     break
             s.check_end()
-            return 1
-        if kind == "jab":
-            c = (m.pos[0] + act[1][0], m.pos[1] + act[1][1])
-            if s.inb(c):
-                s.payload([(c, 2, False)], None, "strike")
-            return 2
+            return m.walk_ap
+        if kind == "strike":
+            return s.strike(m, m.strikes[act[1]], act[2])
         if kind == "surge":
-            s.surges.append(dict(caster=m, cells=act[1], kind=s.surge_kind))
-            return 1
+            s.surges.append(dict(caster=m, cells=act[1], kind=s.surge_kind if m.skind == "default" else m.skind))
+            return m.surge_ap
         return 99
+
+
+# ---------- Strike shapes (Skills 8.1; rays are ordered outward so a solid prop stops the rest of its ray) ----------
+SYMMETRIC = {"whirl", "cross", "storm", "long_whirl", "long_cross"}
+CARD = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+DIAG = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+
+
+def shape_rays(shape, d):
+    """List of rays (offset lists) for direction d, or None if shape/direction is not legal (diagonal Cleave undefined)."""
+    card = d is not None and (d[0] == 0 or d[1] == 0)
+    sc = lambda c, k: (c[0] * k, c[1] * k)
+    if shape == "jab":
+        return [[d]]
+    if shape == "thrust":
+        return [[d, sc(d, 2)]] if card else None
+    if shape == "diagonal_thrust":
+        return [[d, sc(d, 2)]] if not card else None
+    if shape == "pincer":
+        return [[d], [sc(d, -1)]]
+    if shape == "arc":
+        if card:
+            p = (abs(d[1]), abs(d[0]))
+            return [[d], [(d[0] + p[0], d[1] + p[1])], [(d[0] - p[0], d[1] - p[1])]]
+        return [[(d[0], 0)], [d], [(0, d[1])]]
+    if shape == "whirl":
+        return [[c] for c in CARD]
+    if shape == "cross":
+        return [[c] for c in DIAG]
+    if shape == "storm":
+        return [[c] for c in CARD + DIAG]
+    if shape == "cleave":
+        if not card:
+            return None
+        p = (abs(d[1]), abs(d[0]))
+        return [[(d[0] + k * p[0], d[1] + k * p[1]), (2 * d[0] + k * p[0], 2 * d[1] + k * p[1])] for k in (-1, 0, 1)]
+    if shape == "long_whirl":
+        return [[c, sc(c, 2)] for c in CARD]
+    if shape == "long_cross":
+        return [[c, sc(c, 2)] for c in DIAG]
+    raise ValueError("unknown strike shape " + shape)
+
+
+def strike_dirs(shape):
+    return [None] if shape in SYMMETRIC else [d for d in DIRS8 if shape_rays(shape, d)]
+
+
+def strike_cells(b, m, shape, d):
+    """(hit cells with prop blocking/clipped to the board, all unclipped offsets)."""
+    rays = shape_rays(shape, d)
+    cells, offs = [], []
+    for ray in rays:
+        blocked = False
+        for o in ray:
+            offs.append(o)
+            if blocked:
+                continue
+            c = (m.pos[0] + o[0], m.pos[1] + o[1])
+            if not b.inb(c):
+                continue
+            cells.append(c)
+            if c in b.props:
+                blocked = True
+    return cells, offs
+
+
+def retreat_vector(shape, d):
+    """Opposite of the hit-shape centre, only if the centre lies on one of the eight directions (Skills 3)."""
+    offs = [o for ray in shape_rays(shape, d) for o in ray]
+    mx, my = sum(o[0] for o in offs), sum(o[1] for o in offs)
+    if (mx, my) == (0, 0) or not (mx == 0 or my == 0 or abs(mx) == abs(my)):
+        return None
+    return (-((mx > 0) - (mx < 0)), -((my > 0) - (my < 0)))
+
+
+def best_strike(b, m, ap):
+    best = None
+    for i, sk in enumerate(m.strikes):
+        if ap < sk["ap"]:
+            continue
+        for d in strike_dirs(sk["shape"]):
+            cells, _ = strike_cells(b, m, sk["shape"], d)
+            foes = own = 0
+            for c in cells:
+                t = b.mon_at(c)
+                if t and t is not m:
+                    foes, own = (foes + 1, own) if t.side != m.side else (foes, own + 1)
+            score = foes * 2 - own * 3
+            if score > 0 and (best is None or score > best[0]):
+                best = (score, ("strike", i, d))
+    return best[1] if best else None
 
 
 # ---------- movement and bots ----------
@@ -396,6 +534,52 @@ def step_cost(b, p):
 
 
 def reachable(b, m):
+    if m.movement in ("legacy", "run"):
+        return reachable_walk(b, m)
+    claimed = {c for x in b.surges for c in x["cells"]}
+    ok = lambda q: b.inb(q) and q not in b.props and not b.mon_at(q) and q not in claimed \
+        and b.ground[q][0] not in HAZ and b.ground[q][0] != "voidscar"
+    mv, out = b.eff_move(m), {m.pos: []}
+    if m.movement == "step":
+        for q in b.adj4(m.pos):
+            if ok(q):
+                out[q] = [q]
+    elif m.movement == "leap":  # straight line, ignores props/monsters/surges on the way, only the landing counts
+        for d in DIRS8:
+            for k in range(1, mv + 1):
+                q = (m.pos[0] + d[0] * k, m.pos[1] + d[1] * k)
+                if ok(q):
+                    out[q] = [q]
+    elif m.movement == "blink":  # any free square within Movement - 2 (min 1)
+        r = max(1, mv - 2)
+        for x in range(m.pos[0] - r, m.pos[0] + r + 1):
+            for y in range(m.pos[1] - r, m.pos[1] + r + 1):
+                if ok((x, y)):
+                    out[(x, y)] = [(x, y)]
+    elif m.movement in ("glide", "burrow", "phase"):
+        # glide: free path, blocked by surges; burrow: free path, nothing blocks; phase: walk blocked by monsters/surges
+        r = max(1, mv - 1)
+        seen, frontier = {m.pos: 0}, [m.pos]
+        while frontier:
+            cur = frontier.pop(0)
+            for q in b.adj4(cur):
+                if not b.inb(q) or q in seen:
+                    continue
+                if m.movement != "burrow" and q in claimed:
+                    continue
+                if m.movement == "phase" and b.mon_at(q):
+                    continue
+                cost = seen[cur] + (step_cost(b, q) if m.movement == "phase" else 1)
+                if cost <= r:
+                    seen[q] = cost
+                    frontier.append(q)
+        for q in seen:
+            if q != m.pos and ok(q):
+                out[q] = [q] if m.movement != "phase" else [q]
+    return out
+
+
+def reachable_walk(b, m):
     """Dijkstra over move points, avoids solid props, monsters, pending surge squares and hazards."""
     claimed = {c for x in b.surges for c in x["cells"]}
     best, path, frontier = {m.pos: 0}, {m.pos: []}, [m.pos]
@@ -434,13 +618,10 @@ def bot_rush(b, m, ap):
     e = nearest(b, m)
     if not e:
         return None
-    if ap >= 2:
-        for d in DIRS8:
-            c = (m.pos[0] + d[0], m.pos[1] + d[1])
-            t = b.mon_at(c)
-            if t and t.side != m.side:
-                return ("jab", d)
-    if ap >= 1 and not any(x["caster"] is m for x in b.surges):
+    act = best_strike(b, m, ap)
+    if act:
+        return act
+    if ap >= m.surge_ap and m.skind != "none" and not any(x["caster"] is m for x in b.surges):
         best = None
         for dx in range(-3, 4):
             for dy in range(-3, 4):
@@ -457,7 +638,7 @@ def bot_rush(b, m, ap):
                     best = (score, cells)
         if best:
             return ("surge", best[1])
-    if ap >= 1 and not getattr(m, "_moved", False):
+    if ap >= m.walk_ap and not getattr(m, "_moved", False):
         paths = reachable(b, m)
         tgt = min(paths, key=lambda p: (max(abs(p[0] - e.pos[0]), abs(p[1] - e.pos[1])), len(paths[p])))
         if tgt != m.pos and paths[tgt]:
@@ -472,11 +653,10 @@ def bot_kite(b, m, ap):
     if not e:
         return None
     dist = max(abs(e.pos[0] - m.pos[0]), abs(e.pos[1] - m.pos[1]))
-    if dist <= 1 and ap >= 2:
-        for d in DIRS8:
-            t = b.mon_at((m.pos[0] + d[0], m.pos[1] + d[1]))
-            if t and t.side != m.side:
-                return ("jab", d)
+    if dist <= 3:
+        act = best_strike(b, m, ap)
+        if act:
+            return act
     act = bot_rush(b, m, ap)
     if act and act[0] == "walk" and dist <= 2:
         paths = reachable(b, m)
@@ -489,14 +669,14 @@ def bot_kite(b, m, ap):
 
 def bot_random(b, m, ap):
     opts = []
-    if ap >= 2:
-        opts += [("jab", d) for d in DIRS8]
-    if ap >= 1:
-        for _ in range(6):
+    opts += [("strike", i, d) for i, sk in enumerate(m.strikes) if ap >= sk["ap"] for d in strike_dirs(sk["shape"])]
+    if ap >= m.surge_ap:
+        for _ in range(6 if m.skind != "none" else 0):
             a = (m.pos[0] + b.rng.randint(-2, 2), m.pos[1] + b.rng.randint(-2, 2))
             cells = surge_cells(b, a) if b.inb(a) else None
             if cells and abs(a[0] - m.pos[0]) + abs(a[1] - m.pos[1]) <= b.eff_reach(m):
                 opts.append(("surge", cells))
+    if ap >= m.walk_ap:
         paths = reachable(b, m)
         if len(paths) > 1:
             tgt = b.rng.choice(sorted(paths))
@@ -509,10 +689,9 @@ def bot_random(b, m, ap):
 
 def candidates(b, m, ap):
     out = []
-    if ap >= 2:
-        out += [("jab", d) for d in DIRS8 if b.inb((m.pos[0] + d[0], m.pos[1] + d[1]))]
-    if ap >= 1:
-        if not any(x["caster"] is m for x in b.surges):
+    out += [("strike", i, d) for i, sk in enumerate(m.strikes) if ap >= sk["ap"] for d in strike_dirs(sk["shape"])]
+    if ap >= m.surge_ap:
+        if m.skind != "none" and not any(x["caster"] is m for x in b.surges):
             for dx in range(-3, 4):
                 for dy in range(-3, 4):
                     a = (m.pos[0] + dx, m.pos[1] + dy)
@@ -520,6 +699,7 @@ def candidates(b, m, ap):
                         cells = surge_cells(b, a)
                         if cells:
                             out.append(("surge", cells))
+    if ap >= m.walk_ap:
         paths = reachable(b, m)
         out += [("walk", p) for q, p in paths.items() if p and q != m.pos]
     return out
@@ -533,7 +713,7 @@ def evaluate(b, side):
         for c in x["cells"]:
             t = b.mon_at(c)
             if t:
-                val = SURGES[b.surge_kind][0] * 0.6
+                val = SURGES[x["kind"]][0] * 0.6
                 score += val if x["caster"].side != t.side and t.side != side else 0
                 score += val if t.side != side and x["caster"].side == side else 0
                 score -= val if t.side == side else 0
@@ -577,10 +757,23 @@ def make_props(size, names, rng):
     return out
 
 
+def monster_sheet(name):
+    import monsters  # builder: data/monsters + data/skills; refuses illegal sheets
+    r = monsters.build(name)
+    if not r["ok"]:
+        raise SystemExit(f"monster {name} is not legal: {r['errors']}")
+    for w in r["warnings"]:
+        if "NOT SIMULATED" in w:
+            print(f"[{name}] {w}")
+    return r["sheet"]
+
+
 def play(args, seed, names, surge=None, swap=False, trace=False):
     rng = random.Random(seed)
     bots = [BOTS[args.bot_a], BOTS[args.bot_b]]
-    if args.arch == "random":
+    if args.mon_a or args.mon_b:
+        archs = [[monster_sheet(n) for n in side.split(",")] for side in (args.mon_a or args.mon_b, args.mon_b or args.mon_a)]
+    elif args.arch == "random":
         archs = [[rng.choice(sorted(ARCH))], [rng.choice(sorted(ARCH))]]
     else:
         archs = [args.arch.split(","), args.arch.split(",")]
@@ -614,6 +807,8 @@ def main():
     ap.add_argument("--bot-a", choices=sorted(BOTS), default="rush")
     ap.add_argument("--bot-b", choices=sorted(BOTS), default="rush")
     ap.add_argument("--arch", default="random", help="'random' (one random archetype per side per game) or a comma list used by both sides, e.g. brawler,caster,balanced")
+    ap.add_argument("--mon-a", default="", help="comma list of data/monsters names for side A (legal sheets only); overrides --arch")
+    ap.add_argument("--mon-b", default="", help="same for side B (defaults to side A's list)")
     ap.add_argument("--props", default="", help="comma list of prop names, one mirrored pair each")
     ap.add_argument("--pairs", type=int, default=2, help="mirrored pairs per prop in --experiment props")
     ap.add_argument("--trace", action="store_true", help="print the board before each turn of one game (seed)")

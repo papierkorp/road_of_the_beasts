@@ -1,0 +1,15 @@
+{
+ "name": "Leap",
+ "usage": "active",
+ "ap": 2,
+ "sim": {
+  "action": "move",
+  "preset": "leap"
+ },
+ "components": [
+  {
+   "type": "move",
+   "preset": "leap"
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+{
+ "name": "test_golem_rift",
+ "kin": "beast",
+ "stage": "core",
+ "subtier": "high",
+ "note": "test sheet for price comparison, not a roster entry or reachability claim",
+ "stats": {
+  "hp": 8,
+  "init": 4.0,
+  "move": 1,
+  "reach": 3,
+  "tpr": 1,
+  "ap": 3
+ },
+ "slots": [
+  {
+   "skill": "Beast Jab",
+   "level": 1
+  },
+  {
+   "skill": "Rift 2 cells (no collapse)",
+   "level": 2
+  },
+  {
+   "skill": "Run",
+   "level": 1
+  }
+ ]
+}

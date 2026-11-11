@@ -1,0 +1,29 @@
+{
+ "name": "Flood 3 cells",
+ "usage": "active",
+ "ap": 1,
+ "components": [
+  {
+   "type": "damage",
+   "damage": 2,
+   "cells": 3,
+   "timing": "telegraphed_avoidable"
+  },
+  {
+   "type": "anchor"
+  },
+  {
+   "type": "marker"
+  },
+  {
+   "type": "displacement",
+   "cells": 3,
+   "timing": "telegraphed_avoidable"
+  },
+  {
+   "type": "ground",
+   "ground": "thornbed_1",
+   "cells": 3
+  }
+ ]
+}

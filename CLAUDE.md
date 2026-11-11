@@ -10,7 +10,7 @@
 - **Schreibbereich:** `docs/`, `tools/simulator/` (Python-Simulator, vom Nutzer 2026-11-11 freigegeben) und die Pflege dieser `CLAUDE.md`. Keine Änderungen an `godot/`, `tools/html_prototype/` oder anderen Pfaden.
 - **Git/Nutzerarbeit:** keine Commits, Branchwechsel, Pulls, Resets oder sonstigen eingreifenden Git-Aktionen ohne ausdrücklichen Auftrag. Nutzeränderungen erhalten; nichts automatisch synchronisieren.
 - **Validierung:** Prototypen bestätigen nicht das aktuelle Design; Dokumentationsprüfung und Rechenproben sind keine Gameplay-/Balancevalidierung.
-- **Werkzeuge:** `tools/simulator/` (reduzierter Python-Bot-Simulator, nur Standardbibliothek; Kontext, Umfang und Plan in `tools/simulator/README.md`) und `docs/temp_kalkscript.py` (Rechenprüfung) liefern nur Indizien, keine Balance-/Preisfreigabe und keine Spielimplementierung (Godot-Portierung erst nach dem Battle-Gate und nur mit eigenem Auftrag). Der Simulator bildet den aktuellen GDD-Entwurf reduziert ab; bei Regeländerungen mitpflegen (README/Docstring), Ergebnisse nur in `docs/temp_todo.md` (T13) festhalten.
+- **Werkzeuge:** `tools/simulator/` (reduzierter Python-Bot-Simulator samt Preisrechner `pricing.py`, nur Standardbibliothek; Kontext, Umfang und Plan in `tools/simulator/README.md`) liefern nur Indizien, keine Balance-/Preisfreigabe und keine Spielimplementierung (Godot-Portierung erst nach dem Battle-Gate und nur mit eigenem Auftrag). Der Simulator bildet den aktuellen GDD-Entwurf reduziert ab; bei Regeländerungen mitpflegen (README/Docstring), Ergebnisse nur in `docs/temp_todo.md` (T13) festhalten.
 
 ## Working style
 
@@ -57,7 +57,7 @@
 | [`docs/gdd_skills.md`](docs/gdd_skills.md) | Alles zu Monster-Skills: Kit, Datenmodell, Profile, Effektverträge, Preise/AP, Slotentwicklung, Validierung, Kin-Strike-/Bewegungstabellen, Passives, Spezies-Zuordnungen, konkrete Skill-Records | Monsteridentität/Stats/Roster in `gdd_monsters.md`; Kampfauflösung in Battle; Meta-Integration in Overworld |
 | [`docs/gdd_overworld.md`](docs/gdd_overworld.md) | Welt, Expeditionen, Monstererwerb/-unterbringung, Wirtschaft, Meta-Fortschritt, Tamer-Skills, Ausrüstung, Battle-Loadout | Nur Meta-Integration der Monster-Skills, nicht deren Konstruktion/Kampfauflösung |
 | [`docs/temp_todo.md`](docs/temp_todo.md) | Offene Entscheidungen, Abhängigkeiten, Validierungsaufträge, aktuelle Übergabe | Arbeitsorganisation, keine zusätzliche verbindliche Regelsammlung |
-| `tools/simulator/`, `docs/temp_kalkscript.py` | Prüfwerkzeuge (Bot-Simulator, Rechenchecker) | Indizien, keine Regel- oder Preisquelle |
+| `tools/simulator/` | Prüfwerkzeuge (Bot-Simulator, Preisrechner) | Indizien, keine Regel- oder Preisquelle |
 | `CLAUDE.md` | Dauerhafte Arbeitsregeln und Agent-Wegweiser | Keine Balancewerte, detaillierten Spielregeln oder Übergabekopie |
 
 ### Zentrale Monster-Skill-Spezifikation

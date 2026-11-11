@@ -1,0 +1,25 @@
+{
+ "name": "test_tiger_jab_only",
+ "kin": "beast",
+ "stage": "core",
+ "subtier": "high",
+ "note": "test sheet for price comparison, not a roster entry or reachability claim",
+ "stats": {
+  "hp": 5,
+  "init": 7.0,
+  "move": 4,
+  "reach": 2,
+  "tpr": 1,
+  "ap": 3
+ },
+ "slots": [
+  {
+   "skill": "Beast Jab",
+   "level": 1
+  },
+  {
+   "skill": "Run",
+   "level": 1
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{
+ "name": "Shield 2, 3 cells, 2 rounds",
+ "usage": "active",
+ "ap": 1,
+ "components": [
+  {
+   "type": "zone",
+   "effect": "shield",
+   "value": 2,
+   "cells": 3,
+   "rounds": 2
+  },
+  {
+   "type": "anchor"
+  }
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "name": "Run",
+ "usage": "active",
+ "ap": 2,
+ "components": [
+  {
+   "type": "move",
+   "preset": "run"
+  }
+ ],
+ "sim": {
+  "action": "move",
+  "preset": "run"
+ }
+}

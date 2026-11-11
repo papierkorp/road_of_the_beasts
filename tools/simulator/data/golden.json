@@ -1,0 +1,109 @@
+{
+ "_note": "Expected totals copied from docs/gdd_skills.md section 5 paper examples; update together with the rate table in pricing.py.",
+ "skills": {
+  "beast_jab.json": "14",
+  "winged_jab.json": "17",
+  "scaled_jab.json": "16",
+  "beast_thrust.json": "17",
+  "scaled_thrust.json": "21",
+  "beast_pincer.json": "15",
+  "beast_arc.json": "19",
+  "scaled_arc.json": "25",
+  "beast_whirl.json": "21",
+  "scaled_whirl.json": "29",
+  "beast_storm.json": "35",
+  "scaled_storm.json": "51",
+  "beast_cleave.json": "34",
+  "scaled_cleave.json": "46",
+  "beast_long_whirl.json": "42",
+  "scaled_long_whirl.json": "58",
+  "scaled_thrust_1_adjacent.json": "19",
+  "scaled_cleave_3_adjacent.json": "40",
+  "scaled_long_whirl_4_adjacent.json": "50",
+  "slow_zone_2_rounds.json": "23",
+  "slow_zone_3_rounds.json": "27.5",
+  "quicken_1_3_cells_2_rounds.json": "26",
+  "shield_2_3_cells_2_rounds.json": "26",
+  "mend_1_3_cells_2_rounds.json": "32",
+  "immediate_hazard_ground.json": "26",
+  "hallowed_cast.json": "20",
+  "mountain_creation_reset.json": "29",
+  "residue_free_surge.json": "24",
+  "eruption_2_cells.json": "29",
+  "eruption_3_cells.json": "36",
+  "flood_2_cells.json": "29",
+  "flood_3_cells.json": "36",
+  "rift_collapse_2_cells.json": "33",
+  "rift_collapse_3_cells.json": "42",
+  "run.json": "12",
+  "blink.json": "16",
+  "self_initiative_1_2_rounds.json": "20",
+  "adaptive_rotation.json": "18",
+  "scaled_push_only.json": "10",
+  "winged_retreat_only.json": "11",
+  "rift_2_cells_no_collapse.json": "29",
+  "leap.json": "14",
+  "glide.json": "14",
+  "burrow.json": "14",
+  "phase.json": "13"
+ },
+ "props": [
+  {
+   "component": {
+    "type": "prop",
+    "tier": "sturdy"
+   },
+   "expected": "6"
+  },
+  {
+   "component": {
+    "type": "prop",
+    "tier": "base",
+    "aftermath_damage_squares": 8
+   },
+   "expected": "12"
+  },
+  {
+   "component": {
+    "type": "prop",
+    "tier": "base",
+    "aftermath_ground": "mossbed"
+   },
+   "expected": "10"
+  },
+  {
+   "component": {
+    "type": "prop",
+    "tier": "sturdy",
+    "beam_squares": 4,
+    "aftermath_damage_squares": 0
+   },
+   "expected": "14"
+  },
+  {
+   "component": {
+    "type": "prop",
+    "tier": "base",
+    "aura": true
+   },
+   "expected": "8"
+  },
+  {
+   "component": {
+    "type": "prop",
+    "tier": "base",
+    "layer": "air",
+    "aftermath_damage_squares": 8
+   },
+   "expected": "14"
+  },
+  {
+   "component": {
+    "type": "prop",
+    "tier": "sturdy",
+    "layer": "both"
+   },
+   "expected": "8"
+  }
+ ]
+}

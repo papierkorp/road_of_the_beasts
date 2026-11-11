@@ -1,0 +1,15 @@
+{
+ "name": "Blink",
+ "usage": "active",
+ "ap": 2,
+ "components": [
+  {
+   "type": "move",
+   "preset": "blink"
+  }
+ ],
+ "sim": {
+  "action": "move",
+  "preset": "blink"
+ }
+}

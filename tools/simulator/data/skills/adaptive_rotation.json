@@ -1,0 +1,9 @@
+{
+ "name": "Adaptive (rotation)",
+ "usage": "passive_boolean",
+ "components": [
+  {
+   "type": "rotation"
+  }
+ ]
+}
