@@ -4,6 +4,12 @@ extends RefCounted
 ## fall and entry effects fire at the moment of the move. Pending Surges never block it.
 
 
+## Damage of a push or pull against the board edge and into a spiky prop (build rules since
+## 2026-11-12, temp_todo T38; the GDDs still say 0 and 1).
+const EDGE_DAMAGE := 1
+const SPIKY_DAMAGE := 2
+
+
 ## Cardinal pull direction toward `anchor`; ZERO on an exact diagonal or on the anchor itself
 ## (no unique cardinal direction → no movement). A 2x2 uses its covered square nearest the anchor.
 static func pull_dir(u: BattleUnit, anchor: Vector2i) -> Vector2i:
@@ -58,7 +64,10 @@ static func resolve(b: Battle, entries: Array) -> void:
 			return a["rank"] < c["rank"]
 		return b.roster.find(a["unit"]) < b.roster.find(c["unit"]))
 	for item: Dictionary in list:
-		shove(b, b.units[item["unit"]], item["dir"], item.get("cause", "push"))
+		# experiment: a push or pull may move several squares and stops at the first blocker
+		for _i in maxi(1, BattleExperiment.push_steps if item.get("multi", false) else 1):
+			if not shove(b, b.units[item["unit"]], item["dir"], item.get("cause", "push")):
+				break
 
 
 ## Moves `u` one square by force. Returns true if it moved.
@@ -77,7 +86,9 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 			fresh.append(c)
 	for c in fresh:
 		if not board.in_bounds(c):
-			b.emit(&"unmoved", {"who": u.id, "reason": "edge"})      # no move, no damage
+			b.emit(&"unmoved", {"who": u.id, "reason": "edge"})      # the void beyond the board: no move, 1 damage
+			BattleDamage.apply_round(b, [{"unit": u.id, "base": EDGE_DAMAGE, "type": BattleDamage.COLLISION, "source": "Board edge", "pushed": true}])
+			BattleDamage.defeat_step(b)
 			return false
 	# blockers on the unit's own layer: one collision, each blocker takes 1 (heavy props none)
 	var block_units := {}
@@ -90,7 +101,11 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 		if prop != null:
 			block_props[prop.uid] = prop
 	if not block_units.is_empty() or not block_props.is_empty():
-		var hits: Array = [{"unit": u.id, "base": 1, "type": BattleDamage.COLLISION, "source": "Collision", "pushed": true}]
+		var own := 1
+		for puid in block_props:
+			if block_props[puid].def.spiky:
+				own = SPIKY_DAMAGE
+		var hits: Array = [{"unit": u.id, "base": own, "type": BattleDamage.COLLISION, "source": "Collision", "pushed": true}]
 		for id in b.roster:
 			if block_units.has(id):
 				hits.append({"unit": id, "base": 1, "type": BattleDamage.COLLISION, "source": "Collision"})

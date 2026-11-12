@@ -597,12 +597,6 @@ func _order_text() -> String:
 			continue
 		var mark := "▶ " if i == battle.queue_idx and not battle.over else ("   " if i > battle.queue_idx else " ✓ ")
 		s += "%s%s %s  %.1f  %d/%d\n" % [mark, _side_tag(u), u.display_name(), e["init"], u.hp, u.max_hp]
-	var orphans := 0
-	for sg in battle.surges:
-		if sg.orphaned:
-			orphans += 1
-	if orphans > 0:
-		s += "⚠ %d Surge%s next round\n" % [orphans, "" if orphans == 1 else "s"]
 	return s.strip_edges()
 
 
@@ -664,8 +658,8 @@ func _actions() -> Array:
 	if u == null or u.side != PLAYER_SIDE:
 		return out
 	var mine := _my_turn()
-	out.append({"id": ACT_STEP, "text": "Step\n%d AP" % BattleMoves.STEP_AP,
-		"enabled": mine and battle.ap >= BattleMoves.STEP_AP and not BattleStats.is_rooted(u),
+	out.append({"id": ACT_STEP, "text": "Step\n%d AP" % BattleMoves.step_ap(),
+		"enabled": mine and battle.ap >= BattleMoves.step_ap() and not BattleStats.is_rooted(u),
 		"selected": mode == &"step", "card": {"title": "Step", "rows": BattleText.step_rows()}})
 	for i in u.sheet.skills.size():
 		var s := u.sheet.skills[i]

@@ -52,7 +52,7 @@ static func apply_round(b: Battle, hits: Array, heals: Array = []) -> Dictionary
 			b.emit(&"nullified", {"target": u.id, "source": h.get("source", "")})
 		dealt[u.id] = int(dealt.get(u.id, 0)) + amt
 		b.emit(&"damage", {"target": u.id, "amount": amt, "base": int(h["base"]), "kind": type,
-			"source": h.get("source", "")})
+			"source": h.get("source", ""), "by": h.get("by", &""), "trap": h.get("trap", false)})
 	for h: Dictionary in heals:
 		var u: BattleUnit = b.units.get(h["unit"])
 		if u == null or not u.is_alive():

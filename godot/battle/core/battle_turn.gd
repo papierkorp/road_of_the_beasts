@@ -1,10 +1,11 @@
 class_name BattleTurn
 extends RefCounted
 ## Turn and round flow (gdd_battle §2.1–§2.4, §4.2):
-##   entry start: due Surges → start-of-turn ground → AP
+##   entry start: start-of-turn ground → AP
+##   Surges: a trap fires when sprung, a timed Surge after its turns (between two turns)
 ##   entry end:   zone push/pull → end-of-turn ground (on the landing square) → mend
 ##   round end:   zones -1 round, timed unit effects expire, late-round Voidscar / arena
-##                collapse, initiative re-sorted, orphaned Surges detonate before the new queue.
+##                collapse, initiative re-sorted.
 
 
 static func begin(b: Battle) -> void:
@@ -32,27 +33,58 @@ static func _start_entry(b: Battle) -> void:
 		b.turn_owner = u.id
 		b.ap = 0
 		if u.is_alive():
-			# 1. due Surges of this caster, before anything else
-			var due: Array[PendingSurge] = []
-			for s in b.surges:
-				if s.owner == u.id and not s.orphaned:
-					due.append(s)
-			if not due.is_empty():
-				detonate(b, due)
-				if b.check_over():
-					return
-		if u.is_alive():
-			# 2. start-of-turn ground (Voidscar, Blight)
+			# 1. start-of-turn ground (Voidscar, Blight); its damage cannot move anyone into a trap
 			BattleDamage.ground_triggers(b, u, GroundTrigger.START_OF_TURN)
 			if b.check_over():
 				return
 		if u.is_alive():
-			# 3. AP
+			# 2. AP
 			b.ap = BattleStats.ap(u)
 			b.emit(&"turn_started", {"who": u.id, "ap": b.ap, "extra": entry["extra"]})
 			return
 		b.queue_idx += 1
 	b.turn_owner = &""
+
+
+## Trap Surges: every Surge with a ground monster on one of its squares, or (unless its skill
+## is sprung by monsters only) with a prop or Mountain that was not there at cast, detonates
+## now. Surges sprung at the same moment resolve together; a detonation can spring others.
+static func spring_traps(b: Battle) -> void:
+	var guard := 0
+	while not b.over and guard < 16:
+		guard += 1
+		var due: Array[PendingSurge] = []
+		for s in b.surges:
+			if s.turns_left >= 0:
+				continue                      # a timed Surge waits for its turns
+			for c in s.cells:
+				var cell := b.board.at(c)
+				if b.unit_at(c, Board.GROUND) != null or (s.skill.trap_trigger == "any" and (cell.prop != null or cell.is_mountain()) and not s.blocked_at_cast.has(c)):
+					due.append(s)
+					break
+		if due.is_empty():
+			return
+		detonate(b, due)
+		b.check_over()
+
+
+## Timed Surges count the turns that finish after their cast turn and detonate between two
+## turns; all that are due at the same moment resolve together.
+static func tick_timers(b: Battle) -> void:
+	var due: Array[PendingSurge] = []
+	for s in b.surges:
+		if s.turns_left < 0:
+			continue
+		if s.fresh:
+			s.fresh = false
+			continue
+		s.turns_left -= 1
+		if s.turns_left <= 0:
+			due.append(s)
+	if not due.is_empty():
+		detonate(b, due)
+		spring_traps(b)
+		b.check_over()
 
 
 ## Detonates Surges that are due at the same event, phase by phase together.
@@ -91,6 +123,22 @@ static func end_turn(b: Battle) -> void:
 		if d != Vector2i.ZERO:
 			BattleDisplace.shove(b, u, d, "zone")
 			BattlePayload.settle(b)
+			spring_traps(b)
+			if b.over:
+				return
+		# 1b. a repelling prop next to it pushes it 1 square away
+		if u.is_alive() and u.size == 1 and u.layer == Board.GROUND:
+			var away := Vector2i.ZERO
+			for dir in Board.CARDINAL:
+				var n := b.board.at(u.pos + dir)
+				if n != null and n.prop != null and n.prop.hp > 0 and n.prop.def.repel:
+					away -= dir
+			if (away.x == 0) != (away.y == 0):
+				BattleDisplace.shove(b, u, Vector2i(signi(away.x), signi(away.y)), "repel")
+				BattlePayload.settle(b)
+				spring_traps(b)
+				if b.over:
+					return
 		# 2. end-of-turn ground on the squares covered now, 3. mend
 		if u.is_alive():
 			var mend: Array = []
@@ -107,6 +155,9 @@ static func end_turn(b: Battle) -> void:
 					BattleDamage.apply_round(b, [], mend)
 		if b.check_over():
 			return
+	tick_timers(b)
+	if b.over:
+		return
 	b.queue_idx += 1
 	_start_entry(b)
 
@@ -141,15 +192,6 @@ static func _end_round(b: Battle) -> void:
 	b.queue_idx = 0
 	b.turn_owner = &""
 	b.emit(&"round_started", {"round": b.round_number, "queue": _queue_ids(b)})
-	# orphaned Surges detonate together at the round start, before the queue
-	var orphans: Array[PendingSurge] = []
-	for s in b.surges:
-		if s.orphaned:
-			orphans.append(s)
-	if not orphans.is_empty():
-		detonate(b, orphans)
-		if b.check_over():
-			return
 	_start_entry(b)
 
 
@@ -158,6 +200,9 @@ static func _end_round(b: Battle) -> void:
 ## is left, every living monster takes 1 damage per round.
 static func _late_pressure(b: Battle, ended_round: int) -> void:
 	if ended_round < b.voidscar_from:
+		return
+	if BattleExperiment.soft_pressure > 0:
+		_soft_pressure(b, ended_round)
 		return
 	var alive := b.living()
 	var best := -1
@@ -188,3 +233,73 @@ static func _late_pressure(b: Battle, ended_round: int) -> void:
 		hits.append({"unit": u.id, "base": 1, "type": BattleDamage.ARENA, "source": "Arena collapse"})
 	BattleDamage.apply_round(b, hits)
 	BattleDamage.defeat_step(b)
+
+
+## Test switch (temp_todo T38): pressure without damage. Every `soft_pressure` rounds the
+## outermost ring breaks away until 3×3 squares are left. Props on it vanish without aftermath,
+## monsters on it are set on the nearest free inner square (no damage, no entry effects; a
+## trap there springs). The new edge is a board edge: a push against it deals edge damage.
+static func _soft_pressure(b: Battle, ended_round: int) -> void:
+	if (ended_round - b.voidscar_from) % BattleExperiment.soft_pressure != 0:
+		return
+	var board := b.board
+	var m := board.margin
+	if board.size - 2 * (m + 1) < 3:
+		return
+	var stranded: Array[BattleUnit] = []
+	for cell in board.cells:
+		var p := cell.pos
+		if not board.in_bounds(p) or (p.x > m and p.y > m and p.x < board.size - 1 - m and p.y < board.size - 1 - m):
+			continue
+		if cell.prop != null:
+			board.remove_prop(cell.prop)
+		if cell.air_prop != null:
+			board.remove_prop(cell.air_prop)
+		cell.zone = null
+	for id in b.roster:
+		var u: BattleUnit = b.units[id]
+		if not u.is_alive():
+			continue
+		for c in u.cells():
+			if c.x <= m or c.y <= m or c.x >= board.size - 1 - m or c.y >= board.size - 1 - m:
+				stranded.append(u)
+				b.lift(u)
+				break
+	board.margin = m + 1
+	# markers lose the squares that broke away; one without squares is gone
+	var kept: Array[PendingSurge] = []
+	for s in b.surges:
+		for list: Array[Vector2i] in [s.cells, s.air_cells, s.ring, s.blocked_at_cast]:
+			for i in range(list.size() - 1, -1, -1):
+				if not board.in_bounds(list[i]):
+					list.remove_at(i)
+		if not s.cells.is_empty() or not s.air_cells.is_empty():
+			kept.append(s)
+	b.surges = kept
+	var centre := board.centre()
+	for u in stranded:
+		var best := Vector2i(-1, -1)
+		var best_key := 1 << 20
+		for pass_no in 2:                     # second pass: a prop makes room
+			for cell in board.cells:
+				var p := cell.pos
+				if not board.in_bounds(p) or board.unit_id_at(p, u.layer) != &"":
+					continue
+				if pass_no == 0 and board.prop_at(p, u.layer) != null:
+					continue
+				var key := Board.chebyshev(p, u.pos) * 100 + Board.chebyshev(p, centre)
+				if key < best_key:
+					best_key = key
+					best = p
+			if best.x >= 0:
+				break
+		if best.x < 0:
+			best = u.pos                      # no room at all (cannot happen on 3×3 with 6 monsters)
+		var prop := board.prop_at(best, u.layer)
+		if prop != null:
+			board.remove_prop(prop)
+		var from := u.pos
+		b.put(u, best)
+		b.emit(&"displaced", {"who": u.id, "from": from, "to": best, "cause": "Arena shrinks"})
+	b.emit(&"arena_shrunk", {"margin": board.margin})
+	spring_traps(b)

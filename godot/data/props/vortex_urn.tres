@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_pa"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_pd"]
+
+[sub_resource type="Resource" id="Resource_pull"]
+script = ExtResource("1_pa")
+op = "pull"
+
+[resource]
+script = ExtResource("3_pd")
+id = &"vortex_urn"
+display_name = "Vortex Urn"
+prop_class = "push"
+aftermath = Array[ExtResource("1_pa")]([SubResource("Resource_pull")])
+ground_left = &"plain"
+color = Color(0.35, 0.45, 0.7, 1)
+description = "Destroyed: monsters on the 8 neighbouring squares are pulled 1 square toward its square; the first to arrive takes it, the others collide. Leaves Plain."

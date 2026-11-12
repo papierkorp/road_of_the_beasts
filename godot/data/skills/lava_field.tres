@@ -1,19 +1,20 @@
-[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://shared/skill_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_0we8l"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_2vvip"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_v5qrm"]
+
+[sub_resource type="Resource" id="Resource_5p17m"]
+script = ExtResource("1_0we8l")
+ground = &"lava"
+on_mountain = true
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("3_v5qrm")
 id = &"lava_field"
 display_name = "Lava Field"
-archetype = &"Field"
-kind = 2
-aspect = 1
-ground_type = 3
-shapes = Array[StringName]([&"O4"])
-orientation = 0
-cast_range = 3
-surge_type = 0
-twist = 0
-directional = false
-description = "Permanent Lava: damage at end of turn; ignites Trees"
+kind = "ground"
+description = "Field: lays Lava I on its squares, also on Mountains. Needs prop-free squares."
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+board_ops = Array[ExtResource("1_0we8l")]([SubResource("Resource_5p17m")])

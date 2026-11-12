@@ -78,10 +78,15 @@ static func error(b: Battle, u: BattleUnit, s: BattleSkillDef, anchor: Vector2i,
 			return "the shape does not fit on the board"
 	if s.needs_direction() and not Board.CARDINAL.has(dir):
 		return "choose a push direction"
+	if s.kind == BattleSkillDef.TRAP and free_cells(b, list).is_empty():
+		return "every square of the shape already holds a Surge or trap"
 	for c in list:
 		var cell := b.board.at(c)
-		if s.kind == BattleSkillDef.SURGE and cell.surge >= 0:
-			return "[%d,%d] is already claimed by a charging Surge" % [c.x, c.y]
+		if s.kind == BattleSkillDef.TRAP and b.unit_at(c, Board.GROUND) != null:
+			return "a trap needs monster-free squares"
+		# a Surge replaces a trap on the squares it covers, but never lies on another Surge
+		if s.kind == BattleSkillDef.SURGE and cell.surge >= 0 and b.surge_by_id(cell.surge).turns_left >= 0:
+			return "[%d,%d] already holds a Surge" % [c.x, c.y]
 		if s.kind == BattleSkillDef.GROUND:
 			if (s.has_op(BoardOp.GROUND) or s.has_op(BoardOp.RAISE_MOUNTAIN)) and cell.prop != null:
 				return "[%d,%d] holds a %s: ground and height need prop-free squares" % [c.x, c.y, cell.prop.def.display_name]
@@ -94,6 +99,15 @@ static func error(b: Battle, u: BattleUnit, s: BattleSkillDef, anchor: Vector2i,
 				if not BattleBoardOps.can_place_prop(b, def, c):
 					return "[%d,%d] is not empty: props need empty squares" % [c.x, c.y]
 	return ""
+
+
+## The squares of a trap footprint that hold no marker yet: a trap is only laid there.
+static func free_cells(b: Battle, list: Array[Vector2i]) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for c in list:
+		if b.board.at(c).surge < 0:
+			out.append(c)
+	return out
 
 
 ## Squares on which a Surge cast now would also hit air-layer monsters through the Mountain

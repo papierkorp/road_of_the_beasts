@@ -95,16 +95,18 @@ func test_spirit_shield_and_life_thread_protect_one_monster() -> void:
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"spirit_shield", "unit": &"u0"})).is_not_empty()
 	assert_bool(_use(b, &"life_thread", {"unit": &"u0"})).is_true()
 	b.end_turn()
-	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})
-	H.until_turn_of(b, &"u1")
+	# the enemy's Surge is armed under the protected monster and sprung at once
+	var fire := func() -> void:
+		b._declare_surge(H.unit(b, 1), H.unit(b, 1).sheet.skills[0], {"slot": 0, "anchor": Vector2i(3, 3)})
+		BattleTurn.detonate(b, b.surges.duplicate())
+		b.check_over()
+	fire.call()
 	assert_int(H.unit(b, 0).hp).is_equal(3)      # the Surge damage became 0
 	assert_bool(H.unit(b, 0).nullify).is_false()
-	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})
-	H.until_turn_of(b, &"u1")
+	fire.call()
 	assert_int(H.unit(b, 0).hp).is_equal(1)      # lethal 3 damage: Life Thread leaves 1 HP
 	assert_bool(H.unit(b, 0).defeated).is_false()
-	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})
-	H.until_turn_of(b, &"u1")
+	fire.call()
 	assert_bool(H.unit(b, 0).defeated).is_true() # later lethal damage defeats normally
 
 
@@ -133,7 +135,7 @@ func test_domain_glimpse_clears_zones_and_ground_on_any_tetromino() -> void:
 	assert_int(H.unit(b, 1).hp).is_equal(5)
 
 
-func test_beast_swap_takes_square_and_queue_entry_and_orphans_the_surges() -> void:
+func test_beast_swap_takes_square_and_queue_entry_and_leaves_its_traps_set() -> void:
 	var b := _battle([
 		[0, Vector2i(0, 6), {"init": 9.0}],
 		[0, Vector2i(3, 5), {"init": 6.0, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
@@ -148,8 +150,8 @@ func test_beast_swap_takes_square_and_queue_entry_and_orphans_the_surges() -> vo
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"beast_swap", "unit": &"u1", "other": &"big"})).contains("same body size")
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"beast_swap", "unit": &"u0", "other": &"bench"})).contains("turn is running")
 	b.end_turn()
-	b.end_turn()                                 # u1's turn: it declares a Surge
-	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})
+	b.end_turn()                                 # u1's turn: it sets a trap next to the enemy
+	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 4)})
 	b.end_turn()                                 # round 2, u0's turn
 	assert_bool(_use(b, &"beast_swap", {"unit": &"u1", "other": &"bench"})).is_true()
 	assert_that(bench.pos).is_equal(Vector2i(3, 5))
@@ -157,13 +159,9 @@ func test_beast_swap_takes_square_and_queue_entry_and_orphans_the_surges() -> vo
 	assert_bool(H.unit(b, 1).on_field).is_false()
 	assert_bool(H.unit(b, 1).defeated).is_false()
 	assert_array(b.queue.map(func(e): return e["id"])).is_equal([&"u0", &"u2", &"bench"])  # the pending entry
-	assert_bool(b.surges[0].orphaned).is_true()
-	assert_int(H.unit(b, 2).hp).is_equal(8)
+	assert_bool(b.surges[0].orphaned).is_true()  # the trap of the swapped-out monster stays set
 	b.end_turn()
-	b.end_turn()
-	assert_str(b.turn_owner).is_equal("bench")
-	assert_int(H.unit(b, 2).hp).is_equal(8)      # not at the swapped-in monster's turn
-	b.end_turn()                                 # round 3 starts: the orphaned Surge detonates
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 4)})).is_true()   # the enemy walks into it
 	assert_int(H.unit(b, 2).hp).is_equal(5)
 	# the swapped-out monster does not count as fallen
 	var r := BattleSetup.make_result(b)

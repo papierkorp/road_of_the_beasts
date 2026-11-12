@@ -1,20 +1,16 @@
-[gd_resource type="Resource" script_class="SkillDef" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://shared/skill_def.gd" id="1"]
-[ext_resource type="Resource" path="res://data/zones/gale.tres" id="2"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_2kgom"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_tjjhq"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_illgm"]
+[ext_resource type="Resource" path="res://data/zones/gale.tres" id="4_0e726"]
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("3_illgm")
 id = &"gale"
 display_name = "Gale"
-archetype = &"Current"
-kind = 1
-aspect = 2
-zone = ExtResource("2")
-shapes = Array[StringName]([&"I3"])
-orientation = 0
-cast_range = 3
-surge_type = 0
-twist = 0
-directional = true
-description = "Push zone (direction WASD), extinguishes Trees"
+kind = "zone"
+description = "Push zone: occupants are pushed 1 in the cast direction at the end of their turn."
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+footprint = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1)])
+zone = ExtResource("4_0e726")

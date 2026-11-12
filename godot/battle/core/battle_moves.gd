@@ -10,7 +10,13 @@ extends RefCounted
 ## Air-layer monsters fly: only air-layer occupants and the board edge block, every square
 ## costs 1 and ground is ignored (gdd_battle §4.3).
 
-const STEP_AP := 2
+## Step and slotted movement cost 1 AP (build rule since 2026-11-12, T38; the GDD drafts said 2).
+const STEP_AP := 1
+
+
+## Step cost in play (a test switch may lower it).
+static func step_ap() -> int:
+	return BattleExperiment.step_ap if BattleExperiment.step_ap > 0 else STEP_AP
 const WALK_DIRS: Array[Vector2i] = Board.CARDINAL
 
 
@@ -59,8 +65,6 @@ static func _passable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 		var other := b.board.unit_id_at(c, u.layer)
 		if other != &"" and other != u.id and (prof["monsters"] or flying):
 			return false
-		if not flying and prof["surges"] and cell.surge >= 0:
-			return false
 	return true
 
 
@@ -75,8 +79,6 @@ static func _landable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 			return false
 		var other := b.board.unit_id_at(c, u.layer)
 		if other != &"" and other != u.id:
-			return false
-		if not flying and prof["surges"] and cell.surge >= 0:
 			return false
 		if not flying and prof["height"] and cell.is_mountain():
 			return false
@@ -182,7 +184,8 @@ static func _walk(b: Battle, u: BattleUnit, prof: Dictionary, dist: int, out: Di
 			best[key] = harm
 			var path: Array = cur[3].duplicate()
 			path.append(n)
-			frontier.append([n, cost, harm, path])
+			if b.board.at(n).surge < 0:
+				frontier.append([n, cost, harm, path])     # a walk ends on a trap square
 			if _landable(b, u, n, prof):
 				var old = out.get(n)
 				if old == null or harm < old["harm"] or (harm == old["harm"] and cost < old["cost"]):
@@ -191,13 +194,17 @@ static func _walk(b: Battle, u: BattleUnit, prof: Dictionary, dist: int, out: Di
 
 ## Performs the move to `to` (must be one of `options`). Entry effects fire on every entered
 ## square for walk and on the landing square otherwise. No fall damage for voluntary movement.
-static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, label: String) -> bool:
-	var opts := options(b, u, prof)
-	if not opts.has(to):
-		return false
+## `known_path` (from `options`, as the AI passes it) skips the second path search.
+static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, label: String, known_path: Array = []) -> bool:
+	var path := known_path
+	if path.is_empty():
+		var opts := options(b, u, prof)
+		if not opts.has(to):
+			return false
+		path = opts[to]["path"]
 	var from := u.pos
-	b.emit(&"moved", {"who": u.id, "from": from, "to": to, "path": opts[to]["path"].duplicate(), "skill": label})
-	for n: Vector2i in opts[to]["path"]:
+	b.emit(&"moved", {"who": u.id, "from": from, "to": to, "path": path.duplicate(), "skill": label})
+	for n: Vector2i in path:
 		var fresh := fresh_cells(u, u.pos, n)
 		b.relocate(u, n)
 		if u.layer == Board.GROUND:
@@ -205,6 +212,30 @@ static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, la
 		if not u.is_alive():
 			break
 	return true
+
+
+## Displacement caused by landing a movement skill (`impact_push`).
+static func impact(b: Battle, u: BattleUnit, s: BattleSkillDef, from: Vector2i, to: Vector2i) -> void:
+	if s.impact_push == "none" or not u.is_alive() or u.pos != to or u.size != 1:
+		return
+	var entries: Array = []
+	if s.impact_push == "ahead":
+		var v := to - from
+		if v == Vector2i.ZERO or (v.x != 0 and v.y != 0 and absi(v.x) != absi(v.y)):
+			return                            # only a straight or exactly diagonal run has a direction
+		var d := Vector2i(signi(v.x), signi(v.y))
+		var t := b.unit_at(to + d, u.layer)
+		if t != null:
+			entries.append({"unit": t.id, "dir": d, "cause": s.display_name, "multi": true})
+	else:
+		for d in Board.RING8:
+			var t := b.unit_at(to + d, u.layer)
+			if t != null:
+				entries.append({"unit": t.id, "dir": d, "key": 0, "cause": s.display_name, "multi": true})
+	if entries.is_empty():
+		return
+	BattleDisplace.resolve(b, entries)
+	BattlePayload.settle(b)
 
 
 ## Self retreat after a Strike (gdd_skills §3): one square, only the destination is checked,

@@ -57,7 +57,7 @@ TurnsPerRound
 AP            action points per turn
               (ranges and stage ceilings: §2.1, §2.3)
 
-SKILLS: Step (no slot, 2 AP) + 4 slots, active or passive, at least one active ([Skills §1](gdd_skills.md#1-the-kit))
+SKILLS: Step (no slot, 1 AP) + 4 slots, active or passive, at least one active ([Skills §1](gdd_skills.md#1-the-kit))
 ```
 
 The battle only ever sees this finished sheet.

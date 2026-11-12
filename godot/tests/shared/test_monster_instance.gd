@@ -20,8 +20,7 @@ func test_reference_individual_keeps_the_species_numbers() -> void:
 		assert_int(unit.move).is_equal(def.move)
 		assert_int(unit.tpr).is_equal(def.tpr)
 		assert_int(unit.reach).is_equal(def.reach)
-		assert_object(unit.surge).is_same(def.surge)
-		assert_object(unit.utility).is_same(def.utility)
+		assert_array(unit.skills).is_equal(def.skills)
 
 
 func test_battle_unit_is_a_copy_of_the_species() -> void:

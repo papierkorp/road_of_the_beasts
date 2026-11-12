@@ -80,10 +80,11 @@ func test_pushing_a_2x2_is_one_collision_and_each_blocker_takes_one() -> void:
 	])
 	var urn := b.add_prop(&"bamboo_stand", Vector2i(4, 3))
 	b.begin()
-	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 3), "dir": H.RIGHT})).is_true()
-	H.until_turn_of(b, &"u0")
+	# armed under the body and sprung at once (a trap needs free squares in play)
+	b._declare_surge(b.active(), b.active().sheet.skills[0], {"slot": 0, "anchor": Vector2i(2, 3), "dir": H.RIGHT})
+	BattleTurn.detonate(b, b.surges.duplicate())
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(2, 2))  # no move
-	assert_int(H.unit(b, 1).hp).is_equal(7)                 # 1 Surge + 1 collision, once
+	assert_int(H.unit(b, 1).hp).is_equal(6)                 # 1 Surge + one collision of 2 (the Bamboo Stand is spiky)
 	assert_int(H.unit(b, 2).hp).is_equal(4)
 	assert_int(urn.hp).is_equal(1)
 
@@ -139,9 +140,10 @@ func test_one_hit_per_monster_per_payload_and_separate_payloads_add() -> void:
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.RIGHT})   # Arc covers (2,2) (2,3) (2,4): two body squares
 	assert_int(H.unit(b, 1).hp).is_equal(8)                  # struck once
-	b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 2)})   # (3,2) (3,3)
-	b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(2, 2)})   # (2,2) (2,3)
-	H.until_turn_of(b, &"u0")
+	b._declare_surge(b.active(), b.active().sheet.skills[1], {"slot": 1, "anchor": Vector2i(3, 2), "dir": Vector2i.ZERO})
+	BattleTurn.detonate(b, b.surges.duplicate())               # (3,2) (3,3)
+	b._declare_surge(b.active(), b.active().sheet.skills[1], {"slot": 1, "anchor": Vector2i(2, 2), "dir": Vector2i.ZERO})
+	BattleTurn.detonate(b, b.surges.duplicate())               # (2,2) (2,3)
 	# two Surges, each once: (3 - 1 Hallowed under any covered square) twice
 	assert_int(H.unit(b, 1).hp).is_equal(4)
 
@@ -228,9 +230,9 @@ func test_surges_and_zone_effects_reach_the_air_only_when_authored() -> void:
 	assert_int(BattleStats.movement(b, H.unit(b, 1))).is_equal(3)
 	assert_int(BattleStats.movement(b, H.unit(b, 2))).is_equal(2)
 	b.begin()
-	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})
-	b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(4, 3)})
-	H.until_turn_of(b, &"u0")
+	b._declare_surge(b.active(), b.active().sheet.skills[0], {"slot": 0, "anchor": Vector2i(3, 3), "dir": Vector2i.ZERO})
+	b._declare_surge(b.active(), b.active().sheet.skills[1], {"slot": 1, "anchor": Vector2i(4, 3), "dir": Vector2i.ZERO})
+	BattleTurn.detonate(b, b.surges.duplicate())
 	assert_int(H.unit(b, 1).hp).is_equal(8)      # above a ground-only Surge
 	assert_int(H.unit(b, 3).hp).is_equal(5)      # the ground monster on the same square
 	assert_int(H.unit(b, 2).hp).is_equal(5)      # the Surge with authored air recipients

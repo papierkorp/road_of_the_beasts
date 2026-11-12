@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_e4qv1"]
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="2_tii04"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="3_lcrak"]
+
+[sub_resource type="Resource" id="Resource_vt44f"]
+script = ExtResource("3_lcrak")
+timing = "start_of_turn"
+
+[resource]
+script = ExtResource("2_tii04")
+id = &"blight"
+display_name = "Blight"
+group = "hazard"
+max_level = 2
+triggers = Array[ExtResource("3_lcrak")]([SubResource("Resource_vt44f")])
+color = Color(0.42, 0.26, 0.5, 1)
+description = "Damage = level at the start of your turn."
+internal_calc_cost = 4.0

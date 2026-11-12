@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_syxti"]
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="2_b8enf"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="3_mbbdk"]
+
+[sub_resource type="Resource" id="Resource_57tcu"]
+script = ExtResource("3_mbbdk")
+kind = "heal"
+amount = 1
+
+[resource]
+script = ExtResource("2_b8enf")
+id = &"mossbed"
+display_name = "Mossbed"
+group = "blessed"
+triggers = Array[ExtResource("3_mbbdk")]([SubResource("Resource_57tcu")])
+color = Color(0.5, 0.74, 0.5, 1)
+description = "Heals 1 when you enter the square, never above max HP. No re-entry limit."
+internal_calc_cost = 6.0

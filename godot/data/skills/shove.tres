@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_bo"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_sd"]
+
+[resource]
+script = ExtResource("3_sd")
+id = &"shove"
+display_name = "Shove"
+kind = "strike"
+description = "No damage: the monster on the chosen neighbouring square is pushed 1 square away."
+status = "test data (T38 experiment, no GDD rule)"
+internal_calc_cost = 10.0
+ap_cost = 2
+strike_damage = 0
+kin_effect = false
+radial_push = true

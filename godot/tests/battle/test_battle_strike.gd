@@ -117,23 +117,23 @@ func test_scaled_tail_sweep_pushes_in_the_chosen_direction_with_collision() -> v
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": H.RIGHT})).is_true()
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(4, 2))
 	assert_int(H.unit(b, 1).hp).is_equal(7)
-	# pushed into the heavy Stone Lion: 2 Strike + 1 collision, the heavy prop takes none
+	# pushed into the heavy, spiky Stone Lion: 2 Strike + 2 collision, the heavy prop takes none
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i(1, -1), "push_dir": H.RIGHT})).is_true()
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(4, 2))
-	assert_int(H.unit(b, 1).hp).is_equal(4)
+	assert_int(H.unit(b, 1).hp).is_equal(3)
 	assert_int(lion.hp).is_equal(3)
 	assert_int(urn.hp).is_equal(2)
 
 
-func test_collision_with_a_monster_damages_both_and_the_edge_damages_nobody() -> void:
+func test_collision_with_a_monster_damages_both_and_the_board_edge_the_pushed_one() -> void:
 	var scaled := {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(1, 3), scaled], [1, Vector2i(0, 3), {"hp": 9}], [1, Vector2i(0, 2), {"hp": 9}]])
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.LEFT, "push_dir": H.LEFT})
-	assert_int(H.unit(b, 1).hp).is_equal(7)      # off the board edge: no move, no damage
+	assert_int(H.unit(b, 1).hp).is_equal(6)      # against the board edge: no move, 2 Strike + 1
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(0, 3))
 	b.apply({"type": &"skill", "slot": 0, "dir": H.LEFT, "push_dir": H.UP})
-	assert_int(H.unit(b, 1).hp).is_equal(4)      # 2 + 1 collision
+	assert_int(H.unit(b, 1).hp).is_equal(3)      # 2 + 1 collision
 	assert_int(H.unit(b, 2).hp).is_equal(8)      # the monster it was pushed into: 1
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(0, 3))
 
@@ -172,8 +172,9 @@ func test_ancient_slam_destroys_the_mountain_under_the_target() -> void:
 	b.set_ground(Vector2i(3, 2), &"lava", 1)
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
-	assert_int(H.unit(b, 1).hp).is_equal(6)      # 2 Strike + 1 environmental collapse
-	assert_bool(b.board.at(Vector2i(3, 2)).is_mountain()).is_false()
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 1))   # every Strike pushes: off the Mountain
+	assert_int(H.unit(b, 1).hp).is_equal(6)      # 2 Strike + 1 fall; the collapse finds nobody
+	assert_bool(b.board.at(Vector2i(3, 2)).is_mountain()).is_false()   # the square where it was struck
 	assert_str(b.board.at(Vector2i(3, 2)).ground).is_equal("rubble")   # no authored ground → Rubble
 
 

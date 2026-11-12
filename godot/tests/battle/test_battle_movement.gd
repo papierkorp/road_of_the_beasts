@@ -60,13 +60,13 @@ func test_glide_burrow_phase_and_blink_drop_restrictions_for_distance() -> void:
 	var b := H.battle([_mover(3), [1, Vector2i(3, 2)], [1, Vector2i(6, 6)]])
 	b.add_prop(&"stone_lion", Vector2i(4, 3))
 	b.board.at(Vector2i(2, 3)).height = 1
-	b.board.at(Vector2i(3, 4)).surge = 77                   # a charging Surge square
-	# Glide: any path, Movement - 1 = 2; charging Surges block the path
+	b.board.at(Vector2i(3, 4)).surge = 77                   # a trap square: no movement is blocked by it
+	# Glide: any path, Movement - 1 = 2
 	var glide := _opts(b, 0, "glide")
 	assert_bool(glide.has(Vector2i(3, 1))).is_true()        # over the monster
 	assert_bool(glide.has(Vector2i(5, 3))).is_true()        # over the prop
-	assert_bool(glide.has(Vector2i(3, 4))).is_false()
-	assert_bool(glide.has(Vector2i(3, 5))).is_false()       # only reachable through the Surge square
+	assert_bool(glide.has(Vector2i(3, 4))).is_true()        # may land on the trap (and spring it)
+	assert_bool(glide.has(Vector2i(3, 5))).is_true()        # a free path passes over it
 	assert_bool(glide.has(Vector2i(2, 3))).is_true()        # may land on a Mountain
 	# Burrow: nothing blocks, but it cannot end (or start) on a Mountain
 	var burrow := _opts(b, 0, "burrow")
@@ -102,7 +102,7 @@ func test_walking_takes_the_route_with_the_least_entry_harm() -> void:
 	assert_int(opts[Vector2i(3, 2)]["harm"]).is_equal(2)
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 1)})).is_true()
 	assert_int(H.unit(b, 0).hp).is_equal(5)
-	assert_int(b.ap).is_equal(2)                            # slotted movement: 2 AP
+	assert_int(b.ap).is_equal(3)                            # slotted movement: 1 AP
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 2)})).is_true()
 	assert_int(H.unit(b, 0).hp).is_equal(3)                 # Thornbed II on entry
 
@@ -131,13 +131,13 @@ func test_rooted_passive_forbids_step_and_movement_skills() -> void:
 	assert_int(BattleStats.reach(b, H.unit(b, 0))).is_equal(3)
 
 
-func test_kit_movement_matches_the_kin_table() -> void:
-	# gdd_skills §8.2: Leap Beast, Glide Winged, Burrow Scaled/Swarm, Phase Spirit, Run all but Spirit
-	var expect := {&"blaze_tiger": &"leap", &"ember_hawk": &"glide", &"moss_turtle": &"run", &"thorn_mites": &"burrow",
-		&"grove_wisp": &"phase", &"gloom_wolf": &"run", &"dusk_moth": &"glide", &"hollow_serpent": &"burrow"}
+func test_kits_open_with_their_movement_skill() -> void:
+	# test kits (T38): Headbutt and Quake Leap are movement skills with displacement
+	var expect := {&"blaze_tiger": &"headbutt", &"ember_hawk": &"glide", &"moss_turtle": &"run", &"thorn_mites": &"burrow",
+		&"grove_wisp": &"quake_leap", &"gloom_wolf": &"run", &"dusk_moth": &"glide", &"hollow_serpent": &"burrow"}
 	for species: StringName in expect:
-		var kit := H.content().kit(species)
-		assert_str(kit.skills[0].id).is_equal(expect[species])
-	var golem := H.content().kit(&"forge_golem")
+		var def := H.content().monster(species)
+		assert_str(def.skills[0].id).is_equal(expect[species])
+	var golem := H.content().monster(&"forge_golem")
 	for s in golem.skills:
 		assert_str(s.kind).is_not_equal("move")             # Step only

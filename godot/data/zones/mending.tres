@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleZoneDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1_uf13v"]
+[ext_resource type="Script" path="res://battle/defs/battle_zone_def.gd" id="2_sd1kd"]
+
+[sub_resource type="Resource" id="Resource_jfofl"]
+script = ExtResource("1_uf13v")
+tag = "mend"
+cap = 2
+
+[resource]
+script = ExtResource("2_sd1kd")
+id = &"mending"
+display_name = "Mending Zone"
+internal_calc_cost = 3.0
+effects = Array[ExtResource("1_uf13v")]([SubResource("Resource_jfofl")])
+color = Color(0.6, 0.9, 0.7, 1)

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_pa"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_pd"]
+
+[resource]
+script = ExtResource("3_pd")
+id = &"storm_drum"
+display_name = "Storm Drum"
+prop_class = "aura"
+hp = 2
+repel = true
+ground_left = &"rubble"
+color = Color(0.55, 0.3, 0.3, 1)
+description = "While it stands: a monster that ends its turn orthogonally next to it is pushed 1 square away. Leaves Rubble."

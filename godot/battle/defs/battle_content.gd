@@ -1,23 +1,27 @@
 class_name BattleContent
 extends RefCounted
-## Registry of battle definitions. `shared()` loads every Resource file under
-## res://data/battle/ once: a new file in one of the folders is new content, no code change.
-##   grounds/<id>.tres → GroundDef        props/<id>.tres → PropDef
-##   zones/<id>.tres   → BattleZoneDef    skills/<id>.tres → BattleSkillDef
-##   tamer/<id>.tres   → TamerSkillDef    kits/<species_id>.tres → BattleKitDef (test data)
+## Registry of every definition under res://data, loaded once by folder: a new file is new
+## content, no code change.
+##   grounds/<id>.tres  → GroundDef        props/<id>.tres → PropDef
+##   zones/<id>.tres    → BattleZoneDef    skills/<id>.tres → BattleSkillDef
+##   tamer/<id>.tres    → TamerSkillDef    monsters/<id>.tres → MonsterDef (species + kit)
+## Skills and monsters carry a `content_status` (ContentStatus). Test-only and
+## simulation-only records are loaded like anything else, so tools and tests can use them, but
+## the game never fields them: a monster of the game may not hold such a skill (`validate`),
+## and `game_monster_ids` leaves such monsters out.
 ## A Battle holds one registry instance, so tests can add or replace definitions in a copy
 ## without touching the files.
 
 ## Bump when a definition changes meaning: replays are only valid for the same content.
-const VERSION := "2026-11-11.1"
-const ROOT := "res://data/battle"
+const VERSION := "2026-11-12.2"
+const ROOT := "res://data"
 
 var grounds := {}
 var props := {}
 var zones := {}
 var skills := {}
 var tamer := {}
-var kits := {}
+var monsters := {}
 var problems: Array[String] = []
 
 static var _shared: BattleContent = null
@@ -45,7 +49,7 @@ func copy() -> BattleContent:
 	c.zones = zones.duplicate()
 	c.skills = skills.duplicate()
 	c.tamer = tamer.duplicate()
-	c.kits = kits.duplicate()
+	c.monsters = monsters.duplicate()
 	return c
 
 
@@ -69,8 +73,17 @@ func tamer_skill(id: StringName) -> TamerSkillDef:
 	return tamer.get(id)
 
 
-func kit(species_id: StringName) -> BattleKitDef:
-	return kits.get(species_id)
+func monster(species_id: StringName) -> MonsterDef:
+	return monsters.get(species_id)
+
+
+## Ids of the monsters the game may offer (no test-only or simulation-only ones), alphabetical.
+func game_monster_ids() -> Array:
+	var out := []
+	for id in sorted_ids(monsters):
+		if ContentStatus.in_game(monsters[id]):
+			out.append(id)
+	return out
 
 
 func add_ground(def: GroundDef) -> void:
@@ -88,7 +101,7 @@ func load_all() -> void:
 	zones = _load_dir("zones", "BattleZoneDef", "id")
 	skills = _load_dir("skills", "BattleSkillDef", "id")
 	tamer = _load_dir("tamer", "TamerSkillDef", "id")
-	kits = _load_dir("kits", "BattleKitDef", "species_id")
+	monsters = _load_dir("monsters", "MonsterDef", "id")
 	validate()
 
 
@@ -150,22 +163,28 @@ func validate() -> void:
 				problems.append("zone '%s': effect '%s' authors no recipient layer" % [id, e.tag])
 	for id in skills:
 		_validate_skill(skills[id])
-	for id in kits:
-		var k: BattleKitDef = kits[id]
-		if k.skills.is_empty() or k.skills.size() > 4:
-			problems.append("kit '%s' needs 1-4 slots" % id)
+	for id in monsters:
+		var m: MonsterDef = monsters[id]
+		if m.skills.is_empty() or m.skills.size() > 4:
+			problems.append("monster '%s' needs 1-4 kit slots" % id)
 		var active := 0
-		for s in k.skills:
+		for s in m.skills:
 			if s == null:
-				problems.append("kit '%s' has an empty slot reference" % id)
-			elif s.is_active():
+				problems.append("monster '%s' has an empty kit slot" % id)
+				continue
+			if s.is_active():
 				active += 1
+			if ContentStatus.in_game(m) and not ContentStatus.in_game(s):
+				problems.append("monster '%s' holds the test-only or simulation-only skill '%s'" % [id, s.id])
 		if active == 0:
-			problems.append("kit '%s' needs at least one active skill" % id)
+			problems.append("monster '%s' needs at least one active skill" % id)
 
 
 func _validate_skill(s: BattleSkillDef) -> void:
 	var where := "skill '%s'" % s.id
+	if not [BattleSkillDef.STRIKE, BattleSkillDef.SURGE, BattleSkillDef.TRAP, BattleSkillDef.ZONE, BattleSkillDef.GROUND,
+			BattleSkillDef.MOVE, BattleSkillDef.BUFF, BattleSkillDef.PASSIVE].has(s.kind):
+		problems.append(where + " states no valid kind")
 	if s.display_name.is_empty():
 		problems.append(where + " has no display_name")
 	if s.is_active() and s.ap_cost < 1:
@@ -183,7 +202,7 @@ func _validate_skill(s: BattleSkillDef) -> void:
 				problems.append(where + " uses unknown Strike shape '%s'" % s.strike_shape)
 			if s.strike_damage < 0 or s.strike_damage > KinRules.STRIKE_DAMAGE:
 				problems.append(where + ": Strike damage is 0-2 (damage law)")
-		BattleSkillDef.SURGE:
+		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
 			if s.surge_damage < 0:
 				problems.append(where + " has negative Surge damage")
 		BattleSkillDef.ZONE:
@@ -207,13 +226,15 @@ func _validate_skill(s: BattleSkillDef) -> void:
 			problems.append(where + " ignores unknown ground '%s'" % g)
 
 
-## Stable fingerprint of every loaded definition: equal fingerprints mean equal content, so a
-## recorded battle can state which content it was played with.
+## Stable fingerprint of every loaded definition the game can field: equal fingerprints mean
+## equal content, so a recorded battle can state which content it was played with. Test-only
+## and simulation-only records and the status label itself are left out; a run on test builds names its builds instead.
 func fingerprint() -> String:
 	var parts: PackedStringArray = [VERSION]
-	for table: Dictionary in [grounds, props, zones, skills, tamer, kits]:
+	for table: Dictionary in [grounds, props, zones, skills, tamer, monsters]:
 		for id in sorted_ids(table):
-			parts.append(_describe(table[id]))
+			if ContentStatus.in_game(table[id]):
+				parts.append(_describe(table[id]))
 	return "\n".join(parts).sha256_text()
 
 
@@ -233,6 +254,8 @@ static func _describe(res: Resource) -> String:
 	for p in res.get_property_list():
 		if not (p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE) or not (p["usage"] & PROPERTY_USAGE_STORAGE):
 			continue
+		if p["name"] == "content_status" or p["name"] == "internal_calc_cost":
+			continue                          # labels and authoring numbers are not rules
 		var v = res.get(p["name"])
 		parts.append("%s=%s" % [p["name"], _describe_value(v)])
 	return "{%s}" % ";".join(parts)

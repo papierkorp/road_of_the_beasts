@@ -1,18 +1,19 @@
-[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://shared/skill_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_dco7v"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_r4734"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_ooj5f"]
+
+[sub_resource type="Resource" id="Resource_5ikao"]
+script = ExtResource("1_dco7v")
+ground = &"lava"
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("3_ooj5f")
 id = &"crucible"
 display_name = "Crucible"
-archetype = &"Surge"
-kind = 0
-aspect = 1
-shapes = Array[StringName]([])
-orientation = 0
-cast_range = 3
-surge_type = 1
-twist = 3
-directional = false
-description = "Eruption on your 4 neighbours: 3 dmg"
+kind = "trap"
+description = "Eruption on the four squares around the caster: 3 damage, leaves Lava I."
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+anchor_mode = "caster_ring"
+board_ops = Array[ExtResource("1_dco7v")]([SubResource("Resource_5ikao")])

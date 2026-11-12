@@ -131,8 +131,8 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 				extra.append("then retreat 1")
 			if not extra.is_empty():
 				rows.append(["", SEP.join(extra)])
-		BattleSkillDef.SURGE:
-			var parts: PackedStringArray = ["%d dmg" % s.surge_damage, "next turn", _area(s)]
+		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
+			var parts: PackedStringArray = ["%d dmg" % s.surge_damage, "trap" if s.kind == BattleSkillDef.TRAP else "in %d turns" % s.surge_turns, _area(s)]
 			if s.surge_displacement != "none":
 				parts.append(s.surge_displacement + " 1")
 			if s.surge_mountain == "blank":
@@ -237,7 +237,7 @@ static func cell_rows(b: Battle, p: Vector2i) -> Array:
 		var s := b.surge_by_id(cell.surge)
 		if s != null:
 			rows.append(["Surge", "%s%s%d dmg%s%s" % [s.skill.display_name, SEP, s.skill.surge_damage, SEP,
-				"next round" if s.orphaned else unit_name(b, s.owner)]])
+				"trap" if s.orphaned else unit_name(b, s.owner)]])
 	if cell.prop != null:
 		rows.append(_prop_row(b.content, cell.prop))
 	if cell.air_prop != null and cell.air_prop != cell.prop:
@@ -382,7 +382,7 @@ static func preview_lines(b: Battle, p: Dictionary) -> Array[String]:
 	var fired: Array = p["forecast"]
 	if not fired.is_empty():
 		var later := _briefs(after, fired)
-		out.append("next turn:" if not later.is_empty() else "next turn: no hit")
+		out.append("when it fires:" if not later.is_empty() else "when it fires: no hit")
 		for line in later:
 			out.append("  " + line)
 	return out

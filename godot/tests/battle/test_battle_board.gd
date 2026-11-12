@@ -208,7 +208,7 @@ func test_bronze_gong_pushes_its_neighbours_outward_with_ordinary_collisions() -
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(1, 1))    # diagonal neighbour: pushed diagonally away
 	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(3, 1))
 	assert_that(H.unit(b, 3).pos).is_equal(Vector2i(4, 3))    # into the Stone Lion: collision
-	assert_int(H.unit(b, 3).hp).is_equal(4)
+	assert_int(H.unit(b, 3).hp).is_equal(3)                   # a Stone Lion is spiky: 2 collision damage
 	assert_int(lion.hp).is_equal(3)                           # heavy: no collision damage
 	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 5))    # the striker below the Gong is pushed as well
 
@@ -237,7 +237,7 @@ func test_a_prop_at_zero_hp_blocks_until_the_removal_step() -> void:
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": H.RIGHT})
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 2))
-	assert_int(H.unit(b, 1).hp).is_equal(5)                 # 2 Strike + 1 collision + 1 aftermath
+	assert_int(H.unit(b, 1).hp).is_equal(4)                 # 2 Strike + 2 collision (spiky Bamboo) + 1 aftermath
 	assert_object(b.board.at(Vector2i(4, 2)).prop).is_null()
 	var order := H.event_types(b)
 	assert_bool(order.find(&"collision") < order.find(&"prop_destroyed")).is_true()
@@ -275,3 +275,32 @@ func test_event_passives_react_after_the_payload_once_per_event_in_queue_order()
 	assert_array(heals.map(func(e): return e["target"])).is_equal([&"u0", &"u1"])
 	var order := H.event_types(b)
 	assert_bool(order.find(&"prop_destroyed") < order.find(&"healed")).is_true()
+
+
+func test_a_vortex_urn_pulls_its_neighbours_in_and_a_storm_drum_pushes_them_away() -> void:
+	# Vortex Urn: destroyed, it pulls the eight neighbours toward its square; the first in the
+	# queue takes it, the other collides with it
+	var b := _strike_setup(&"vortex_urn", [[1, Vector2i(2, 3), {"hp": 9, "init": 6.0}], [1, Vector2i(4, 3), {"hp": 9, "init": 5.0}]])
+	b.begin()
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
+	assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()
+	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 3))                 # the striker stood next to it too and is first in the queue
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(2, 3))
+	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(4, 3))
+	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([8, 8])     # each collides with the one who got there
+	# Storm Drum: whoever ends its turn next to it is pushed 1 square away
+	var d := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(6, 0)]])
+	d.add_prop(&"storm_drum", Vector2i(3, 3))
+	d.begin()
+	d.end_turn()
+	assert_that(H.unit(d, 0).pos).is_equal(Vector2i(3, 5))
+
+
+func test_a_board_skill_places_a_prop_on_a_free_square() -> void:
+	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "skills": ["set_gong", "plant_bamboo"]}], [1, Vector2i(3, 3), {"hp": 9}]])
+	b.begin()
+	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})).is_not_empty()   # a monster stands there
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 4)})).is_true()
+	assert_str(b.board.at(Vector2i(3, 4)).prop.def.id).is_equal("bronze_gong")
+	assert_bool(b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(2, 3)})).is_true()
+	assert_bool(b.board.at(Vector2i(2, 3)).prop.def.spiky).is_true()

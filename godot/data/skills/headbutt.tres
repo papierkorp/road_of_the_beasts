@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_bo"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_sd"]
+
+[resource]
+script = ExtResource("3_sd")
+id = &"headbutt"
+display_name = "Headbutt"
+kind = "move"
+description = "Charge up to 2 squares in a straight line; the monster on the next square is pushed 1 square on."
+status = "test data (T38 experiment, no GDD rule)"
+ap_cost = 1
+move_path = "line"
+blocked_by_objects = false
+blocked_by_monsters = false
+blocked_by_surges = false
+ground_costs = false
+fixed_distance = 2
+impact_push = "ahead"

@@ -1,14 +1,16 @@
 class_name BattleSkillDef
 extends Resource
 ## One monster skill in the shared model of gdd_skills §2. Lives in
-## res://data/battle/skills/<id>.tres. `kind` selects the execution profile (gdd_skills §3);
+## res://data/skills/<id>.tres. `kind` selects the execution profile (gdd_skills §3);
 ## the groups below hold the data that profile reads. Nothing here is executable: resolution
 ## lives in battle/core, so a new skill that recombines existing fields needs no code.
 ##
-## All shipped records are test data / GDD drafts (T10–T12 are open); `status` says which.
+## All shipped records are test data / GDD drafts (T10–T12 are open): `content_status` is the
+## label the game filters on, `status` a free note on the origin.
 
 const STRIKE := "strike"
 const SURGE := "surge"
+const TRAP := "trap"
 const ZONE := "zone"
 const GROUND := "ground"      # immediate board operations (Field, Blessing, Raise Ground, Raise Prop)
 const MOVE := "move"
@@ -17,10 +19,18 @@ const PASSIVE := "passive"
 
 @export var id: StringName
 @export var display_name: String
-@export_enum("strike", "surge", "zone", "ground", "move", "buff", "passive") var kind: String = ZONE
+## No default: every record states its kind (a missing one is a content problem).
+@export_enum("strike", "surge", "trap", "zone", "ground", "move", "buff", "passive") var kind: String = ""
 @export_multiline var description: String = ""
-## Content status note, e.g. "test data (Skills §10 prior draft)" or "GDD reference (Skills §11)".
+## Where the record stands (ContentStatus): test-only and simulation-only records are never fielded by the game.
+@export_enum("approved", "draft", "test", "simulation", "archived") var content_status: String = ContentStatus.DRAFT
+## Free note on the origin, e.g. "test data (Skills §10 prior draft)" or "GDD reference (Skills §11)".
 @export var status: String = "test data"
+## Internal calculation cost in construction points (gdd_skills §5 working drafts): an
+## authoring note, not a rule, not a player value and not settled. For a Strike it is the
+## Beast (no Kin package) total of its shape; Surge kits have none yet (trap prices open, T02).
+## -1 = not calculated.
+@export var internal_calc_cost: float = -1.0
 
 @export_group("Usage")
 ## Battle-AP per use (at least 1; passives ignore it). Strikes take the cost of their shape.
@@ -59,6 +69,15 @@ var strike_shape: String = "jab"
 @export_enum("hit", "blank") var surge_mountain: String = "hit"
 ## Struck monsters are pushed in the cast direction or pulled toward the cast anchor.
 @export_enum("none", "push", "pull") var surge_displacement: String = "none"
+## Surge and trap are separate kinds that share this group (user decisions 2026-11-12, T38):
+##   kind surge  cast on any squares, also under monsters; detonates after `surge_turns`
+##               finished turns of any monster; replaces a trap on the squares it covers
+##   kind trap   set on monster-free squares without a marker; stays until something springs it
+## Surge only: turns of any monster that finish after the cast turn before it detonates.
+@export var surge_turns: int = 2
+## Trap only: what springs it: "any" = a monster, a new
+## prop or a new Mountain on its squares; "monsters" = only a monster.
+@export_enum("any", "monsters") var trap_trigger: String = "any"
 
 @export_group("Zone / timed effect")
 @export var zone: BattleZoneDef
@@ -83,6 +102,10 @@ var strike_shape: String = "jab"
 @export var distance_mod: int = 0
 ## > 0: a fixed distance that ignores Movement and `slow` (Step: 1).
 @export var fixed_distance: int = 0
+## Movement with displacement (temp_todo T38): after landing, "ahead" pushes the monster on
+## the next square in the travel direction 1 square on (a headbutt), "ring" pushes every
+## monster on the eight neighbouring squares 1 square outward (a shockwave).
+@export_enum("none", "ahead", "ring") var impact_push: String = "none"
 
 @export_group("Passive")
 ## Continuous stat effects while equipped (condition below).
@@ -117,13 +140,20 @@ func is_active() -> bool:
 	return kind != PASSIVE
 
 
+## Surge or trap: the two kinds that put a marker on the board and detonate.
+func is_marker() -> bool:
+	return kind == SURGE or kind == TRAP
+
+
 func is_placed() -> bool:
-	return kind == SURGE or kind == ZONE or kind == GROUND
+	return kind == SURGE or kind == TRAP or kind == ZONE or kind == GROUND
 
 
 func cost() -> int:
 	if kind == STRIKE:
 		return StrikeShapes.ap(StringName(strike_shape))
+	if kind == MOVE and BattleExperiment.move_ap > 0:
+		return BattleExperiment.move_ap          # test switch
 	return maxi(1, ap_cost)
 
 
@@ -131,7 +161,7 @@ func cost() -> int:
 func needs_direction() -> bool:
 	if kind == ZONE and zone != null:
 		return zone.has_tag(FieldEffect.PUSH)
-	return kind == SURGE and surge_displacement == "push"
+	return is_marker() and surge_displacement == "push"
 
 
 func needs_anchor() -> bool:
@@ -179,6 +209,8 @@ func kind_label() -> String:
 			return "Strike"
 		SURGE:
 			return "Surge"
+		TRAP:
+			return "Trap"
 		ZONE:
 			return "Zone"
 		GROUND:

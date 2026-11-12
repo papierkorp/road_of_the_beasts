@@ -213,11 +213,8 @@ static func is_rooted(u: BattleUnit) -> bool:
 	return false
 
 
-static func can_rotate(u: BattleUnit) -> bool:
-	for s in u.passives():
-		if s.rotate_shapes:
-			return true
-	return false
+static func can_rotate(_u: BattleUnit) -> bool:
+	return not BattleExperiment.no_rotation   # every monster may turn its shapes (build rule, T38)
 
 
 static func phases(u: BattleUnit) -> bool:

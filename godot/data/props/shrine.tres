@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_ajjoo"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_1ot63"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_g8ntj"]
+
+[sub_resource type="Resource" id="Resource_d37k1"]
+script = ExtResource("2_1ot63")
+tag = "quicken"
+
+[resource]
+script = ExtResource("3_g8ntj")
+id = &"shrine"
+display_name = "Shrine"
+prop_class = "aura"
+hp = 2
+aura = Array[ExtResource("2_1ot63")]([SubResource("Resource_d37k1")])
+ground_left = &"rubble"
+color = Color(0.9, 0.78, 0.4, 1)
+description = "Orthogonal neighbours get quicken 1 (everyone, enemies too). Leaves Rubble."
+internal_calc_cost = 8.0

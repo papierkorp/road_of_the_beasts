@@ -5,18 +5,20 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
-func test_ap_per_turn_is_the_ap_stat_and_step_costs_two() -> void:
-	var b := H.battle([[0, Vector2i(3, 3), {"ap": 3, "init": 9.0}], [1, Vector2i(6, 0)]])
+func test_ap_per_turn_is_the_ap_stat_and_step_costs_one() -> void:
+	var b := H.battle([[0, Vector2i(3, 3), {"ap": 2, "init": 9.0}], [1, Vector2i(6, 0)]])
 	b.begin()
-	assert_int(b.ap).is_equal(3)
+	assert_int(b.ap).is_equal(2)
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 2)})).is_true()
 	assert_int(b.ap).is_equal(1)
 	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 2))
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 1)})).is_true()
+	assert_int(b.ap).is_equal(0)
 	# an invalid attempt consumes neither AP nor usage and changes nothing
-	assert_str(b.check({"type": &"step", "to": Vector2i(3, 1)})).contains("2 AP")
-	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 1)})).is_false()
-	assert_int(b.ap).is_equal(1)
-	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 2))
+	assert_str(b.check({"type": &"step", "to": Vector2i(3, 0)})).contains("1 AP")
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 0)})).is_false()
+	assert_int(b.ap).is_equal(0)
+	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 1))
 
 
 func test_step_moves_exactly_one_orthogonal_square_and_ignores_slow_and_rubble() -> void:
@@ -28,7 +30,7 @@ func test_step_moves_exactly_one_orthogonal_square_and_ignores_slow_and_rubble()
 	assert_str(b.check({"type": &"step", "to": Vector2i(4, 2)})).is_not_empty()   # no diagonal step
 	assert_str(b.check({"type": &"step", "to": Vector2i(3, 1)})).is_not_empty()   # not two squares
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 2)})).is_true()        # Rubble costs Step nothing extra
-	assert_int(b.ap).is_equal(2)
+	assert_int(b.ap).is_equal(3)
 
 
 func test_every_skill_use_pays_its_authored_ap() -> void:
@@ -36,7 +38,9 @@ func test_every_skill_use_pays_its_authored_ap() -> void:
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 2)})).is_true()   # zone: 1 AP
 	assert_int(b.ap).is_equal(2)
-	assert_bool(b.apply({"type": &"skill", "slot": 1, "to": Vector2i(3, 5)})).is_true()        # Run: 2 AP
+	assert_bool(b.apply({"type": &"skill", "slot": 1, "to": Vector2i(3, 5)})).is_true()        # Run: 1 AP
+	assert_int(b.ap).is_equal(1)
+	assert_bool(b.apply({"type": &"skill", "slot": 1, "to": Vector2i(3, 3)})).is_true()
 	assert_int(b.ap).is_equal(0)
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 4)})).contains("AP")
 

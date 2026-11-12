@@ -1,18 +1,20 @@
-[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://shared/skill_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_q08kb"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_sl2h2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_7svma"]
+
+[sub_resource type="Resource" id="Resource_f2psq"]
+script = ExtResource("1_q08kb")
+ground = &"lava"
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("3_7svma")
 id = &"magma_pounce"
 display_name = "Magma Pounce"
-archetype = &"Surge"
-kind = 0
-aspect = 1
-shapes = Array[StringName]([&"O4"])
-orientation = 0
-cast_range = 3
-surge_type = 1
-twist = 1
-directional = false
-description = "Eruption next to you: 3 dmg, Lava residue"
+kind = "surge"
+description = "Eruption next to the caster: 3 damage, leaves Lava I."
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+anchor_mode = "adjacent"
+footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
+board_ops = Array[ExtResource("1_q08kb")]([SubResource("Resource_f2psq")])

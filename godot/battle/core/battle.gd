@@ -234,7 +234,7 @@ func end_unit_effects(u: BattleUnit) -> void:
 
 
 ## Zones, ground, props and Surges stay when their caster falls; its Surges become orphaned
-## and detonate at the start of the next round.
+## and stay set (a Surge is a trap and never lapses).
 func defeat(u: BattleUnit) -> void:
 	u.hp = 0
 	u.defeated = true
@@ -292,8 +292,8 @@ func check(a: Dictionary) -> String:
 		return "it is not this monster's turn"
 	match type:
 		&"step":
-			if ap < BattleMoves.STEP_AP:
-				return "Step needs %d AP, %d left" % [BattleMoves.STEP_AP, ap]
+			if ap < BattleMoves.step_ap():
+				return "Step needs %d AP, %d left" % [BattleMoves.step_ap(), ap]
 			if BattleStats.is_rooted(u):
 				return "%s cannot move" % u.display_name()
 			if not BattleMoves.options(self, u, BattleMoves.step_profile()).has(a.get("to")):
@@ -324,7 +324,7 @@ func _skill_error(u: BattleUnit, a: Dictionary) -> String:
 				return "%s cannot reach that square" % s.display_name
 		BattleSkillDef.STRIKE:
 			return strike_error(u, s, a.get("dir", Vector2i.ZERO), a.get("push_dir", Vector2i.ZERO), a.get("origin", u.pos))
-		BattleSkillDef.SURGE, BattleSkillDef.ZONE, BattleSkillDef.GROUND:
+		BattleSkillDef.SURGE, BattleSkillDef.TRAP, BattleSkillDef.ZONE, BattleSkillDef.GROUND:
 			return BattleCasting.error(self, u, s, a.get("anchor", u.pos), a.get("dir", Vector2i.ZERO), int(a.get("rot", 0)))
 	return ""
 
@@ -346,8 +346,10 @@ func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, push_dir: Vec
 
 
 ## Applies a legal action. Returns false (and changes nothing) if it is illegal.
-func apply(a: Dictionary) -> bool:
-	if check(a) != "":
+## `trusted`: the action comes straight from the legal candidates of this very state (AI dry
+## runs), so the legality check is not repeated; a move may carry its path as a["path"].
+func apply(a: Dictionary, trusted := false) -> bool:
+	if not trusted and check(a) != "":
 		return false
 	actions.append(a.duplicate(true))
 	var type: StringName = a["type"]
@@ -359,10 +361,11 @@ func apply(a: Dictionary) -> bool:
 	else:
 		var u := active()
 		if type == &"step":
-			ap -= BattleMoves.STEP_AP
-			BattleMoves.execute(self, u, BattleMoves.step_profile(), a["to"], "Step")
+			ap -= BattleMoves.step_ap()
+			BattleMoves.execute(self, u, BattleMoves.step_profile(), a["to"], "Step", a.get("path", []) if trusted else [])
 		else:
-			_use_skill(u, a)
+			_use_skill(u, a, trusted)
+		BattleTurn.spring_traps(self)
 		check_over()
 	# a monster that fell during its own turn has nothing left to do: the queue moves on
 	if not over and turn_owner != &"" and active() == null:
@@ -370,7 +373,7 @@ func apply(a: Dictionary) -> bool:
 	return true
 
 
-func _use_skill(u: BattleUnit, a: Dictionary) -> void:
+func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 	var slot: int = int(a["slot"])
 	var s := skill_in_slot(u, slot)
 	# a valid activation spends its AP and one use at activation, whatever happens later
@@ -379,11 +382,13 @@ func _use_skill(u: BattleUnit, a: Dictionary) -> void:
 	u.used_battle[slot] = true
 	match s.kind:
 		BattleSkillDef.MOVE:
-			BattleMoves.execute(self, u, BattleMoves.profile_of(s), a["to"], s.display_name)
+			var started := u.pos
+			BattleMoves.execute(self, u, BattleMoves.profile_of(s), a["to"], s.display_name, a.get("path", []) if trusted else [])
+			BattleMoves.impact(self, u, s, started, a["to"])
 		BattleSkillDef.STRIKE:
 			BattlePayload.resolve(self, [BattlePayload.strike(self, u, s, a.get("origin", u.pos),
 				a.get("dir", Vector2i.ZERO), a.get("push_dir", Vector2i.ZERO))])
-		BattleSkillDef.SURGE:
+		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
 			_declare_surge(u, s, a)
 		BattleSkillDef.ZONE:
 			var cells := BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
@@ -392,6 +397,17 @@ func _use_skill(u: BattleUnit, a: Dictionary) -> void:
 			for c in cells:
 				BattleBoardOps.land_zone(self, board.at(c), s.zone, _next_gid, u.id, s.duration,
 					a.get("dir", Vector2i.ZERO), a.get("anchor", u.pos))
+			if s.zone.has_tag(FieldEffect.PUSH) or s.zone.has_tag(FieldEffect.PULL):
+				# a current also moves whoever stands in it at the moment it is cast (T38)
+				var moved: Array = []
+				for c in cells:
+					var t := unit_at(c, Board.GROUND)
+					if t == null:
+						continue
+					var d: Vector2i = a.get("dir", Vector2i.ZERO) if s.zone.has_tag(FieldEffect.PUSH) else BattleDisplace.pull_dir(t, a.get("anchor", u.pos))
+					moved.append({"unit": t.id, "dir": d, "cause": s.display_name})
+				BattleDisplace.resolve(self, moved)
+				BattlePayload.settle(self)
 		BattleSkillDef.GROUND:
 			var cells := BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 			emit(&"cast", {"who": u.id, "skill": s.id, "cells": cells.duplicate()})
@@ -409,10 +425,33 @@ func _declare_surge(u: BattleUnit, s: BattleSkillDef, a: Dictionary) -> void:
 	ps.owner = u.id
 	ps.skill = s
 	ps.cells = BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
+	if s.kind == BattleSkillDef.TRAP:
+		ps.cells = BattleCasting.free_cells(self, ps.cells)   # laid only where no marker lies
+	else:
+		for c in ps.cells:                                    # a Surge replaces a trap square by square
+			var old := surge_by_id(board.at(c).surge)
+			if old != null:
+				old.cells.erase(c)
+				old.ring = []
+				for q in BattleExperiment.ring(old.cells, false):
+					if board.in_bounds(q):
+						old.ring.append(q)
+				if old.cells.is_empty():
+					surges.erase(old)
 	ps.dir = a.get("dir", Vector2i.ZERO)
 	ps.anchor = a.get("anchor", u.pos)
 	ps.air_cells = BattleCasting.mountain_air_cells(self, u, ps.cells)
 	ps.cast_round = round_number
+	ps.slot = int(a.get("slot", -1))
+	for c in ps.cells:
+		if board.at(c).prop != null or board.at(c).is_mountain():
+			ps.blocked_at_cast.append(c)
+	if s.kind == BattleSkillDef.SURGE:
+		ps.turns_left = maxi(1, s.surge_turns)
+		ps.fresh = true
+	for q in BattleExperiment.ring(ps.cells, false):
+		if board.in_bounds(q):
+			ps.ring.append(q)
 	surges.append(ps)
 	for c in ps.cells:
 		board.at(c).surge = ps.id
@@ -466,7 +505,7 @@ func preview(a: Dictionary) -> Dictionary:
 	var out := {"ok": true, "error": "", "events": sim.events.duplicate(true), "forecast": [], "after": sim}
 	if a.get("type") == &"skill" and not sim.surges.is_empty():
 		var s := skill_in_slot(active(), int(a["slot"]))
-		if s != null and s.kind == BattleSkillDef.SURGE:
+		if s != null and s.is_marker():
 			var ahead := sim.clone()
 			var mine: Array[PendingSurge] = [ahead.surges[ahead.surges.size() - 1]]
 			BattleTurn.detonate(ahead, mine)

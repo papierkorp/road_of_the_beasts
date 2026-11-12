@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="MonsterDef" format=3]
 
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
-[ext_resource type="Resource" path="res://data/skills/cinder_dive.tres" id="2"]
-[ext_resource type="Resource" path="res://data/skills/shockwave.tres" id="3"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
+[ext_resource type="Resource" path="res://data/skills/glide.tres" id="s0"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
+[ext_resource type="Resource" path="res://data/skills/cinder_dive.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/shockwave.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -14,8 +17,8 @@ hp = 2
 initiative = 9.0
 move = 3
 tpr = 2
-reach = 1
-surge = ExtResource("2")
-utility = ExtResource("3")
-passive = &"skittish"
+reach = 2
+ap = 2
+skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
 blurb = "Strafes a burning line from where it stands, pushes enemies with Shockwave, dodges away after a hit."
+notes = "Passive Skittish omitted: automatic target selection is unresolved (T11). Shockwave without the retired collision bonus."

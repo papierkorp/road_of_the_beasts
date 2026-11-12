@@ -23,10 +23,10 @@ func test_skill_cards_are_at_most_three_short_lines() -> void:
 
 func test_skill_cards_say_what_matters() -> void:
 	var c := H.content()
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"magma_pounce")))).is_equal(["3 dmg · next turn · 4 sq · adjacent", "leaves Lava I"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"tidal_shell")))).is_equal(["2 dmg · next turn · 3 sq · push 1 · not on Mountain", "leaves Thornbed I"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"gloom_rift")))).is_equal(["3 dmg · next turn · 3 sq", "breaks Mountain · leaves Blight I"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"crucible")))).is_equal(["3 dmg · next turn · 4 sq · around caster", "leaves Lava I"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"magma_pounce")))).is_equal(["3 dmg · in 2 turns · 4 sq · adjacent", "leaves Lava I"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"tidal_shell")))).is_equal(["2 dmg · in 2 turns · 3 sq · push 1 · not on Mountain", "leaves Thornbed I"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"gloom_rift")))).is_equal(["3 dmg · in 2 turns · 3 sq", "breaks Mountain · leaves Blight I"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"crucible")))).is_equal(["3 dmg · trap · 4 sq · around caster", "leaves Lava I"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"mire")))).is_equal(["slow 1, drain_init 2, drain_range 1 · 2 rd · 4 sq"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"lava_field")))).is_equal(["Lava I · 4 sq"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"raise_ground")))).is_equal(["Mountain · 2 sq"])
@@ -101,10 +101,12 @@ func test_the_cast_preview_is_a_few_merged_lines() -> void:
 	b.begin()
 	# ground skill: one merged line instead of one per square
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)}))).is_equal(["Lava I ×4"])
-	# Surge: nothing now, the forecast of its detonation in short
+	# Surge (a trap): nothing now, the forecast of its detonation in short
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 3)}))).is_equal([
-		"next turn:", "  Wolf −3", "  Wolf falls", "  Mountain breaks", "  Blight I ×3"])
-	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(0, 5)}))).is_equal(["next turn:", "  Blight I ×3"])
+		"when it fires:", "  Wolf −3", "  Wolf falls", "  Mountain breaks", "  Blight I ×3"])   # a timed Surge may be cast on a monster
+	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 2)}))).is_equal([
+		"when it fires:", "  Mountain breaks", "  Blight I ×3"])
+	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(0, 5)}))).is_equal(["when it fires:", "  Blight I ×3"])
 	# Strike with a push; a zone; an illegal aim
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 2, "dir": H.UP, "push_dir": H.LEFT}))).is_equal(["Wolf −2", "Wolf → [2,4]"])
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 3, "anchor": Vector2i(3, 4)}))).is_equal(["3 new"])

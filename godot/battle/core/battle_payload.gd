@@ -99,6 +99,10 @@ static func _collect_strike(b: Battle, p: Dictionary) -> void:
 			var other := b.unit_at(cell, layer)
 			if other != null and other.id != u.id:
 				_strike_struck(p, other)
+				if layer == Board.GROUND:
+					if not p.has("struck_at"):
+						p["struck_at"] = []
+					p["struck_at"].append(cell)   # where it stood when struck (it may be pushed away)
 				if not p["offsets"].has(other.id):
 					p["offsets"][other.id] = []
 				p["offsets"][other.id].append(h["o"])
@@ -153,9 +157,9 @@ static func _phase_damage(b: Battle, payloads: Array) -> void:
 						prop_hits.append([p["props"][uid], int(kin.get("prop_damage", KinRules.STRIKE_PROP_DAMAGE))])
 			"surge":
 				_collect_surge(b, p)
-				b.emit(&"surge_fired", {"who": p["owner"], "skill": skill.id, "cells": p["cells"].duplicate()})
+				b.emit(&"surge_fired", {"who": p["owner"], "skill": skill.id, "cells": p["cells"].duplicate(), "surge": p["seq"], "struck": p["units"].duplicate()})
 				for id: StringName in p["units"]:
-					hits.append({"unit": id, "base": skill.surge_damage, "type": BattleDamage.SURGE, "source": p["label"]})
+					hits.append({"unit": id, "base": skill.surge_damage, "type": BattleDamage.SURGE, "source": p["label"], "by": p["owner"], "trap": skill.kind == BattleSkillDef.TRAP})
 				for uid in p["props"]:
 					prop_hits.append([p["props"][uid], SURGE_PROP_DAMAGE])
 	BattleDamage.apply_round(b, hits)
@@ -176,6 +180,7 @@ static func _eight_dir(sum: Vector2i) -> Vector2i:
 
 static func _phase_displacement(b: Battle, payloads: Array) -> void:
 	var entries: Array = []
+	var swaps: Array = []
 	for p: Dictionary in payloads:
 		var skill: BattleSkillDef = p["skill"]
 		if p["kind"] == "strike":
@@ -189,8 +194,11 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 					b.apply_effect(t, "kin:%s:%s" % [KinRules.strike_name(owner.kin()), owner.id],
 						FieldEffect.DRAIN_INIT, int(kin["init_penalty"]), 1)
 				if kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
-					entries.append({"unit": id, "dir": p["push_dir"], "cause": p["label"]})
-				if skill.radial_push:
+					entries.append({"unit": id, "dir": p["push_dir"], "cause": p["label"], "multi": true})
+				if BattleExperiment.kin_push and skill.kin_effect and owner.kin() == MonsterDef.Kin.SPIRIT:
+					swaps.append([owner.id, id])
+				if skill.radial_push or (BattleExperiment.kin_push and skill.kin_effect and owner.kin() == MonsterDef.Kin.BEAST) \
+						or (skill.strike_damage > 0 and not kin.get("push", false)):   # every Strike pushes 1 away (T38)
 					# only hit cells next to the origin push, each along its own offset (gdd_skills §3)
 					var sum := Vector2i.ZERO
 					for o: Vector2i in p["offsets"].get(id, []):
@@ -198,18 +206,41 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 							sum += o
 					var d := _eight_dir(sum)
 					if d != Vector2i.ZERO:
-						entries.append({"unit": id, "dir": d, "cause": p["label"]})
+						entries.append({"unit": id, "dir": d, "cause": p["label"], "multi": true})
 		elif p["kind"] == "surge" and skill.surge_displacement != "none":
 			for id: StringName in p["units"]:
 				var t: BattleUnit = b.units[id]
 				if not t.is_alive():
 					continue
 				if skill.surge_displacement == "push":
-					entries.append({"unit": id, "dir": p["dir"], "cause": p["label"]})
+					entries.append({"unit": id, "dir": p["dir"], "cause": p["label"], "multi": true})
 				else:
 					entries.append({"unit": id, "dir": BattleDisplace.pull_dir(t, p["anchor"]),
 						"key": t.chebyshev_to(p["anchor"]), "cause": p["label"]})   # nearest the anchor first
 	BattleDisplace.resolve(b, entries)
+	# experiment (kin_push): a Spirit Strike trades squares with one struck 1x1 monster
+	var swapped := {}
+	for pair: Array in swaps:
+		var a: BattleUnit = b.units[pair[0]]
+		var t: BattleUnit = b.units[pair[1]]
+		if swapped.has(a.id) or not a.is_alive() or not t.is_alive() or a.size != 1 or t.size != 1 or a.layer != t.layer:
+			continue
+		if BattleStats.is_immovable(b, t) or a.chebyshev_to(t.pos) != 1:
+			continue
+		swapped[a.id] = true
+		var pa := a.pos
+		var pt := t.pos
+		b.lift(a)
+		b.lift(t)
+		b.put(a, pt)
+		b.put(t, pa)
+		b.emit(&"displaced", {"who": t.id, "from": pt, "to": pa, "cause": "swap"})
+		b.emit(&"displaced", {"who": a.id, "from": pa, "to": pt, "cause": "swap"})
+		for w: BattleUnit in [t, a]:
+			if w.is_alive() and w.layer == Board.GROUND:
+				var entered: Array[Vector2i] = [w.pos]
+				BattleDamage.ground_triggers(b, w, GroundTrigger.ON_ENTER, entered)
+		BattleDamage.defeat_step(b)
 
 
 # ---------- 4: board operations ----------
@@ -225,9 +256,8 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 		if p["kind"] == "strike" and skill.kin_effect:
 			var owner: BattleUnit = b.units[p["owner"]]
 			if KinRules.strike(owner.kin()).get("destroy_mountain", false):
-				# "the Mountain under the target": squares of struck monsters and struck props
-				for id: StringName in p["units"]:
-					targets.append_array(b.units[id].cells() if b.units[id].layer == Board.GROUND else [])
+				# "the Mountain under the target": the squares on which monsters were struck, and struck props
+				targets.append_array(p.get("struck_at", []))
 				for uid in p["props"]:
 					targets.append(p["props"][uid].pos)
 		for cell in targets:
@@ -312,6 +342,8 @@ static func _removal_round(b: Battle, mountains: Dictionary, removed: Array[Boar
 					hits.append({"unit": id, "base": a.amount, "type": BattleDamage.AFTERMATH, "source": prop.def.display_name})
 				elif a.op == "push":
 					pushes.append({"unit": id, "dir": _eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
+				elif a.op == "pull":
+					pushes.append({"unit": id, "dir": -_eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
 	var collapsed := {}
 	var cells := mountains.keys()
 	cells.sort()

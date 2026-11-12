@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_5ff4a"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_h1kxv"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_eak5o"]
+
+[sub_resource type="Resource" id="Resource_qwcbx"]
+script = ExtResource("2_h1kxv")
+tag = "extend"
+
+[resource]
+script = ExtResource("3_eak5o")
+id = &"totem"
+display_name = "Totem"
+prop_class = "aura"
+hp = 2
+aura = Array[ExtResource("2_h1kxv")]([SubResource("Resource_qwcbx")])
+ground_left = &"rubble"
+color = Color(0.5, 0.42, 0.7, 1)
+description = "Orthogonal neighbours get extend 1. Leaves Rubble."
+internal_calc_cost = 8.0

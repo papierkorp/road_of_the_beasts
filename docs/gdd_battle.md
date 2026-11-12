@@ -31,12 +31,21 @@ The encounter chooses a mode within the player's available team size; stage avai
 1. **Control squares, not just units** — attacks use spatial hit patterns and zones create shared positional opportunities/risks. Attack targeting, recipients and the boundary to unit-bound utility follow the [central square-control contract](gdd_skills.md#2-data-oriented-skill-construction-kit). The board is the weapon
 2. **Deterministic & readable** — before confirming, see exactly which squares a cast takes, levels up, cancels, replaces or loses, its ground/prop effects and every pushed monster's landing
 3. **Everything reacts, nothing deletes** — no delete button; small, data-driven rules. Zone overlaps use definitions and opposite effects ([§4.6](#46-zones-effects-rules--opposites)): opposite levels subtract, cancelling at equal levels. Concrete skill effects change ground and props; zones and ground are independent ([§4.6](#46-zones-effects-rules--opposites)). Prop aftermath is fixed per type ([§4.10](#410-prop-catalogue-and-damage)).
-4. **The Surge is the burst** — big damage (3+) only comes from a declared, charging, autonomous Surge; all smaller damage sources and the zone rule: [§6.1](#61-the-damage-law) themselves
-5. **Every threat has a real answer** — leave, apply zone-based Surge damage reduction, change the ground under it, pick the right height for that Surge type, block with props, answer with your own Surge
+4. **The Surge is the burst** — big damage (3+) only comes from a declared Surge, a visible trap on board squares that someone has to step or be pushed into ([central Surge profile](gdd_skills.md#surge)); all smaller damage sources and the zone rule: [§6.1](#61-the-damage-law)
+5. **Every threat has a real answer** — stay out and keep away from whoever could push you in, spring it safely with a prop or a Mountain, apply zone-based Surge damage reduction, change the ground under it, pick the right height for that Surge type, answer with your own Surge
 6. **Options, not luck** — fully deterministic and visible; variety comes from many meaningful turn choices (position, threat, reaction), never dice or hidden information
 7. **Low HP, high stakes** — one mistake can be fatal
 8. **Dynamic battlefields** — ground and props are resources; squares remember explicit board changes; Surges rewrite them only when their definition includes such effects
 9. **One skill source** — monster-skill authoring/access: [gdd_skills.md](gdd_skills.md), linked from [§5](#5-skill-integration). No fixed aspect or replacement element categories
+
+**Battle goals** *(user, 2026-11-12)* — what a battle has to deliver; the pillars above are the means, and rules, content and prices are judged against these goals ([temp_todo.md](temp_todo.md) T13 measures them):
+- **Influence and consequence:** the player's decisions shape the battle and have visible consequences.
+- **Deterministic:** no dice, no hidden information.
+- **Short:** a battle of about 15 rounds is already very long. No target length is set yet (T13).
+- **Tactical:** repeating one skill must not win a battle; position and combination decide.
+- **Every skill has its situation:** each skill is the right choice in some situations and none in all.
+- **Fair defeats:** a loss reads as the player's own mistake, not as something the game did to them.
+- **Simple to learn, hard to master:** few uniform rules, no hidden abilities; everything a monster can do is visible.
 
 ---
 
@@ -49,7 +58,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 3. **Each round:** one queue for all monsters of both sides, highest effective initiative first (§2.2)
 4. **Monster's turn:** dispatch due events/effects, spend its **AP** on legal actions ([§2.3](#23-action-points)), then resolve end effects in [§2.4](#24-effect-timing-reference) order.
 5. Round ends → resolve the round-end events in [§2.4](#24-effect-timing-reference)
-6. Battle ends when one side has no monsters left. *(User decision 2026-11-11:)* the check happens after a payload/phase has fully resolved, including its defeats; the battle then ends immediately and pending Surges and autonomous aftermath lapse. If both sides have no monsters left after the same resolution, the result is a **Draw**; its BattleResult handling is defined with T19/T23.
+6. Battle ends when one side has no monsters left. *(User decision 2026-11-11:)* the check happens after a payload/phase has fully resolved, including its defeats; the battle then ends immediately and Surges that are still set and autonomous aftermath lapse. If both sides have no monsters left after the same resolution, the result is a **Draw**; its BattleResult handling is defined with T19/T23.
 
 ### 2.2 Initiative Rules
 
@@ -58,12 +67,9 @@ The encounter chooses a mode within the player's available team size; stage avai
 - **Ties:** higher base initiative first; still tied → the sides alternate (the first tie of a battle goes to the side with the lower total initiative; if the totals are equal, to the player's side). *(User decision 2026-11-11:)* tied units of the same side act in their fixed loadout/start slot order (slot 1 first); an extra-turn entry follows its unit's main entry. EXP and other meta state never break ties.
 - An initiative-draining zone can flip the order, giving a monster two turns back to back across the round boundary — a real tempo weapon
 - Multi-turn monsters get one extra queue entry per extra turn, each at −3 initiative (min 0.1)
-- **Surge clock:** dispatch under [§2.4](#24-effect-timing-reference) and the [central Surge profile](gdd_skills.md#surge). Initiative changes/extra turns mean other monsters are not guaranteed a turn before detonation.
-  - **Extra turns** *(user decision 2026-11-10)*: a Surge detonates at the caster's next queue entry, including an extra-turn entry, before that turn's start effects.
-  - **Dead caster** *(user decision 2026-11-10)*: a Surge whose caster was defeated is not cancelled and detonates at the **start of the next round**, before the queue; several such Surges resolve together phase by phase ([§6.2](#62-surge-resolution-integration)).
-  - **Unit-bound effects and caster death** *(user decision 2026-11-10)*: effects bound to a unit (buffs, debuffs, marks, self-boosts) end immediately when that unit is defeated or removed. Zones, ground, props and Surges stay with their remaining duration when their caster dies; there is no owner expiry.
-  - Each Surge is bound to its own caster's queue entry, so Surges of different casters are never due at the same event; same-event ties arise only among Surges of one caster or among orphaned Surges.
-  - **Tie reference for orphaned Surges** *(user decision 2026-11-11)*: the new round's initiative is computed before orphaned Surges detonate and serves as the queue reference for displaced units. Ties between sources (board operations) follow the dead caster's position in the previous round's queue; several Surges of one caster follow their cast order.
+- **Surges and the queue** *(working draft, user directions 2026-11-12; replaces the earlier detonation at the caster's next queue entry, dead-caster detonation at the round start and the orphaned-Surge tie reference)*: a **trap** detonates when it is sprung, whoever's turn it is; a **Surge** counts finished turns of any monster and detonates between two turns ([central Surge profile](gdd_skills.md#surge)). The queue therefore shows who still acts before a Surge fires, and initiative decides who can set, spring or leave a Surge first.
+  - **Unit-bound effects and caster death** *(user decision 2026-11-10)*: effects bound to a unit (buffs, debuffs, marks, self-boosts) end immediately when that unit is defeated or removed. Zones, ground, props and Surges stay when their caster dies; there is no owner expiry, and a Surge of a defeated or swapped-out caster stays set like any other.
+  - **Simultaneous sources:** Surges sprung at the same moment resolve together ([§6.2](#62-surge-resolution-integration)); ties between sources follow their casters' positions in the current queue, a gone caster's position in the last queue it was in, and several Surges of one caster their cast order.
 
 ### 2.3 Action Points
 
@@ -72,7 +78,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 - Pay the resolved monster action's authored Battle-AP cost: **at least 1 Battle-AP, never 0**. This does not redefine tamer/loadout usage.
 - AP evaluation and construction prices: [Skills §5](gdd_skills.md#5-construction-points-and-ap-efficiency); skill execution, development and access: [§5.1](#51-monster-skills-central-specification). Tamer/loadout costs use their own Overworld sources ([§5.2](#52-tamer-skills-and-battle-loadout)), not monster-action prices.
 - **Repetition:** use the resolved skill's [central repetition policy](gdd_skills.md#usage-and-repetition) together with AP, board and profile limits.
-  - Concurrent Surge casts follow the [central Surge profile](gdd_skills.md#surge), not a monster-wide charging cap.
+  - Concurrent Surge casts follow the [central Surge profile](gdd_skills.md#surge), not a monster-wide cap: the same Surge may be set again for its AP.
   - A repeatable zone may be recast to level it up; a round-limited skill must satisfy its declared policy.
   - No generic multi-round cooldown system; existing skills gain no new cap implicitly.
 - **Positioning:** [movement and Strike profiles](gdd_skills.md#3-skill-execution-profiles) make repositioning compete with attacking for Battle-AP. Their authored prices, not a separate rule here, determine what fits in one turn; board control can place a target inside the Strike shape without a preceding move.
@@ -83,7 +89,8 @@ The encounter chooses a mode within the player's available team size; stage avai
 
 |    Trigger    |                          When                         |                                                         Effects / events                                                        |
 |---------------|-------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
-| on_timer      | start of the caster's next turn, before anything else | Surge detonation                                                                                                        |
+| on_sprung     | the moment a trigger of the trap is met, after the action or displacement that met it has resolved | trap detonation ([central Surge profile](gdd_skills.md#surge)) |
+| on_timer      | between two turns, once the authored number of finished turns has passed | Surge detonation ([central Surge profile](gdd_skills.md#surge)) |
 | start_of_turn | beginning of the occupant's turn                      | start-turn ground damage (§4.7)                                                                                                        |
 | on_enter      | a monster enters the square (move, push, pull)        | entry-triggered ground damage or healing (§4.7)                                                                                                       |
 | while_inside  | continuous modifier or source availability             | Movement, initiative and Reach modifiers; zone-based Surge damage reduction is available while inside and applies on Surge damage |
@@ -93,16 +100,16 @@ The encounter chooses a mode within the player's available team size; stage avai
 
 Order inside a turn:
 
-1. Due Surges: damage → explicitly authored residue, if present, under the [central profile](gdd_skills.md#surge).
-2. Start effects.
-3. AP.
-4. End effects: displacement → end-turn ground damage → `mend`.
+1. Start effects.
+2. AP: every action resolves completely; a Surge it springs detonates right after it (damage → explicitly authored residue, if present).
+3. End effects: displacement → end-turn ground damage → `mend`; a Surge sprung by the displacement detonates right after it.
+4. After the turn: Surges count it; those that are due detonate before the next turn starts.
 
 Entry effects apply when a monster enters a square, including by push / pull.
 
 **Event-driven reactions** *(user decision 2026-11-11)*: reactions of event-driven passives collect during a payload and resolve after its step 5 (self retreat), one at a time in the initiative-queue order of the reacting units, on the board as it then stands. Their consequences (entry or ground damage, healing) apply normally but trigger no further passive reactions; each passive reacts at most once per triggering event. Defeated units do not react. Order within a turn is unchanged.
 
-**Scheduling references:** exceptional Surge queue timing: [§2.2](#22-initiative-rules); combined-event ordering: [§6.2](#62-surge-resolution-integration); tamer/loadout activation windows: [§5.2](#52-tamer-skills-and-battle-loadout); remaining loadout details: T19/T20 in [temp_todo.md](temp_todo.md).
+**Scheduling references:** Surge triggers: [central Surge profile](gdd_skills.md#surge); combined-event ordering: [§6.2](#62-surge-resolution-integration); tamer/loadout activation windows: [§5.2](#52-tamer-skills-and-battle-loadout); remaining loadout details: T19/T20 in [temp_todo.md](temp_todo.md).
 
 ---
 
@@ -160,16 +167,16 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 ```
 [ AIR    ]  flying prop | flying monster | empty — immune to ground Surges (exception: attackers on a Mountain, §4.7)
 [ OBJECT ]  prop (§4.10; tag heavy = cannot be moved) | empty
-[ SURGE  ]  pending Surge marker | empty — shares shapes/placement with zones, never merges with them
+[ SURGE  ]  one marker: Surge or trap (a Surge replaces a trap square by square) | empty — shares shapes/placement with zones, never merges with them
 [ ZONE   ]  ONE timed zone (the skill's `duration`) | empty — control and support
 [ GROUND ]  type (neutral: Plain | Rubble | Voidscar — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra | Hallowed), always permanent
             + height (Low | Mountain)
 ```
 
-- all layers can be active at once · **1 object, 1 pending Surge, 1 zone, 1 ground type** per square
+- all layers can be active at once · **1 object, 1 set Surge, 1 zone, 1 ground type** per square
 - zones may be placed on prop squares — the zone affects the prop only through the reaction table ([§4.11](#411-prop-reactions)); **Solid** props prevent monster occupancy ([§4.9](#49-props))
 - The existing immediate hazard-ground placement profile and coupled height/reset operation (§4.7) require prop-free squares, subject to explicit [§4.11 prop reactions](#411-prop-reactions). These are source-specific [board-operation requirements](gdd_skills.md#4-effect-and-board-operation-contracts); blocking flags are profile-scoped, not a universal empty-square test ([Skills §2](gdd_skills.md#interaction-fields))
-- pending Surges may land on props and normally block voluntary movement; path blocking/landing legality use the resolved [movement profile](gdd_skills.md#movement). Displacement (push / pull) **can** move monsters into their squares
+- a trap needs monster-free ground squares when it is set (a Surge may be cast under monsters); either may lie on prop squares. No Surge marker blocks movement: entering a trap square by any means springs it, and a walk ends on the first trap square it enters ([central Surge profile](gdd_skills.md#surge); path rules: [movement profile](gdd_skills.md#movement))
 - **zones = what you do to a square for a while; ground = what the board remembers**
 - **2×2 bodies** *(user decision 2026-11-10; details below)*: a 2×2 monster occupies four squares of this stack.
   - **Distance/Reach:** measured from the nearest covered square, for attacker and target.
@@ -206,7 +213,7 @@ Illustrative **runtime board state only**, not a skill-authoring schema: entries
   },
   "object": { "name": "Stone Lion", "hp": 3, "tags": ["heavy"] },
   "air": null,
-  "surge": { "def":"surge_definition_id", "owner":"wolf", "due":"next_owner_turn_start", "dir":null, "gid":"g78" },
+  "surge": { "def":"surge_definition_id", "owner":"wolf", "trigger":"any", "dir":null, "gid":"g78" },
   "zone": {
     "def": "zone_definition_id", // reference to authored definition, not an embedded schema
     "gid": "g77",            // patch id: all cells of one cast
@@ -226,10 +233,10 @@ State stores zone level, not independent effect values; runtime values use effec
 |         Thing        |                                                   Clock                                                  |                                                Notes                                                |
 |----------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | **Zone** | the resolved skill's duration; ticking follows [§2.4](#24-effect-timing-reference) | on expiry the zone is removed; no repaint. Authoring and upgrades: [gdd_skills.md](gdd_skills.md) |
-| **Pending Surge** | scheduler integration: [§2.4](#24-effect-timing-reference) | charge, removal and authored aftermath follow the [central Surge profile](gdd_skills.md#surge) |
+| **Surge / trap marker** | trap: none, stays until it is sprung or a Surge replaces its squares; Surge: its authored number of finished turns | triggers, timer, removal and authored aftermath follow the [central Surge profile](gdd_skills.md#surge) |
 | **Ground**           | none — stays until changed | changed by authorized ground replacement/reset, authored Surge residue, destroyed props' aftermath ground or Voidscar spread; source restrictions and Voidscar immunity apply (§4.7); zones never change ground (§4.6) |
 
-- **Persistence:** zones have a duration, pending Surges a detonation timer; ground has no expiry clock. Neither Voidscar nor Lava fades: ground requires a change to disappear, subject to its exceptions.
+- **Persistence:** zones have a duration and Surges a turn count; traps and ground have no expiry clock. Neither Voidscar nor Lava fades: ground requires a change to disappear, subject to its exceptions.
 - Effects in one zone share its clock; separately authored status lifetimes remain permitted.
 
 ### 4.6 Zones: Effects, Rules & Opposites
@@ -247,8 +254,8 @@ State stores zone level, not independent effect values; runtime values use effec
 | `quicken` *(also Shrine, §4.10)*                      | while inside               | initiative +value                               | `drain_init`  |
 | `drain_range`                                         | while inside               | Reach −value (min 1)                            | `extend`      |
 | `extend`                                              | while inside               | Reach +value                                    | `drain_range` |
-| `push`                                                | end of your turn           | move 1 in the **direction set at cast**         | `pull`        |
-| `pull`                                                | end of your turn           | move 1 toward the **anchor square set at cast** | `push`        |
+| `push`                                                | when cast, and at the end of your turn | move 1 in the **direction set at cast**; the cast moves whoever stands in the zone at that moment *(working draft, user decision 2026-11-12, T38)* | `pull`        |
+| `pull`                                                | when cast, and at the end of your turn | move 1 toward the **anchor square set at cast**; the cast moves whoever stands in the zone at that moment | `push`        |
 | `shield`                                              | when you take Surge damage | damage on this square −value                    | `expose`      |
 | `expose` *(reserved)*                                 | when you take damage       | damage +1                                       | `shield`      |
 | `mend`                                                | end of your turn           | heals `min(2, zone level)`, never above max HP  | none          |
@@ -296,7 +303,7 @@ No merging: a square always shows exactly one zone with its real effects.
 
 - Ground on a Mountain changes only through skills whose definition allows it.
 - Climbing up costs 2 movement, subject to [movement-profile exceptions](gdd_skills.md#movement); pushed off a Mountain → 1 fall damage ([§6.3](#63-collision-fall--debris)).
-- Removed only by an explicit Mountain-destruction operation (below); can be raised under a charging Surge. Type-specific Surge interactions: [central Surge profiles](gdd_skills.md#surge).
+- Removed only by an explicit Mountain-destruction operation (below); raising one on a set Surge springs that Surge unless only monsters spring it. Type-specific Surge interactions: [central Surge profiles](gdd_skills.md#surge).
 
 **How ground is made:**
 
@@ -334,21 +341,23 @@ FLYING  → air layer (air content at Soul+); the Pagoda Bridge occupies both la
 - **Creatable by skill:** every prop type may be created by an authored prop source (empty cell required); creation prices are unvalidated drafts ([Skills §5](gdd_skills.md#prop-creation-price-drafts), T02). Board generation may pre-place any type.
 - **Prop damage rights:** damaging offensive sources (Strike, Surge) hit props like monsters; movement, support and zones damage props only through an explicitly authorized prop effect.
 - **No indestructible prop** *(user decision 2026-11-11)*: every prop can be destroyed; the former Pillar, Wall, Tree and Rock are replaced by the catalogue below.
+- **Spiky props** *(working draft, user direction 2026-11-12)*: a prop with the tag `spiky` deals 2 instead of 1 collision damage to a monster pushed or pulled into it ([§6.3](#63-collision-fall--debris)); the prop itself takes its usual collision damage. Which props are spiky is catalogue data ([§4.10](#410-prop-catalogue-and-damage)).
 - **Timing, conflicts and symmetry:** destruction and aftermath order: [§6.2](#62-surge-resolution-integration) step 4; placement symmetry: [§4.1](#41-battlefield-generation).
 
 ### 4.10 Prop Catalogue and Damage
 
-**Status: working draft** *(user chose the concept 2026-11-11; names, HP and aftermath values are calibration drafts until T13; creation prices T02)*. Classes: **inert** (nothing beyond ground), **burst** (damage on neighbouring squares), **residue** (leaves ground), **push** (displaces neighbours), **spawn** (creates child props), **aura** (works while standing).
+**Status: working draft** *(user chose the concept 2026-11-11; names, HP and aftermath values are calibration drafts until T13; creation prices T02)*. Classes: **inert** (nothing beyond ground), **burst** (damage on neighbouring squares), **residue** (leaves ground), **push** (displaces neighbours when destroyed), **spawn** (creates child props), **aura** (works while standing).
 
 | Prop | Class | HP | While standing | On destruction | Ground left |
 |------|-------|----|----------------|----------------|-------------|
-| Stone Lion | inert | 3 | `heavy`: cannot be moved | nothing | Rubble |
+| Stone Lion | inert | 3 | `heavy`: cannot be moved; `spiky` | nothing | Rubble |
 | Clay Urn | burst | 1 | — | 1 damage to monsters on the 8 neighbouring squares | Plain |
-| Bamboo Stand | burst | 2 | — | 1 damage to monsters on the 4 cardinal neighbours | Plain |
+| Bamboo Stand | burst | 2 | `spiky` | 1 damage to monsters on the 4 cardinal neighbours | Plain |
 | Paper Lantern | residue | 1 | — | nothing | Lava I |
 | Peach Tree | residue | 2 | — | nothing | Mossbed |
 | Ancestor Tablet | residue | 2 | — | nothing | Hallowed |
 | Bronze Gong | push | 2 | — | monsters on the 8 neighbouring squares are pushed 1 square away from the gong | Plain |
+| Vortex Urn *(T38 test prop, 2026-11-12)* | push | 1 | — | monsters on the 8 neighbouring squares are pulled 1 square toward the urn's square; the first to arrive takes the square, the others collide ([§6.3](#63-collision-fall--debris)) | Plain |
 | Pagoda Column | spawn | 3 | — | creates a Beam on each of the 4 cardinal neighbours that is free of props and monsters | Rubble |
 | Beam | inert | 1 | child prop, created only by the Column | nothing, spawns nothing | Plain |
 | Wind Chime *(air)* | inert | 1 | air layer only: blocks flight and air occupancy | nothing | — (ground unchanged) |
@@ -359,6 +368,7 @@ FLYING  → air layer (air content at Soul+); the Pagoda Bridge occupies both la
 | Totem | aura | 2 | orthogonal neighbours get `extend 1` | aura ends | Rubble |
 | Banner | aura | 2 | orthogonal neighbours get `haste 1` | aura ends | Rubble |
 | Wardstone | aura | 2 | orthogonal neighbours take 1 less Surge damage (summed under [§6.1](#61-the-damage-law)) | aura ends | Rubble |
+| Storm Drum *(T38 test prop, 2026-11-12)* | aura | 2 | a monster that ends its turn orthogonally next to it is pushed 1 square away from the drum (friend and foe; resolved with the turn-end zone displacement, [§2.4](#24-effect-timing-reference)) | effect ends | Rubble |
 
 **Air and both-layer props** *(user decisions 2026-11-11)*: air props never change ground; their aftermath damage reaches only air-layer monsters. The Pagoda Bridge is a draft concept: it needs an empty square in both layers, is hit by Strikes and by any Surge whose recipients include ground or air, takes a hit once per payload, and is the only prop with two layers. Its details, and all air-prop prices, are to be confirmed in T09/T02.
 
@@ -373,19 +383,20 @@ prop_def:
   layer: ground | air | both   # default ground
   hp: 1                   # every prop is destructible
   solid: true             # ground-layer props are always solid
-  tags: []                # heavy = cannot be moved
+  tags: []                # heavy = cannot be moved · spiky = 2 collision damage to a monster displaced into it
   creatable_by_skill: true
   aura: null              # class aura only: { area: orthogonal_adjacent, effect: { stat, modifier } }
+  repel: false            # Storm Drum: pushes orthogonal neighbours 1 away at their turn end
   on_destroy:             # fixed, previewed, direction-independent typed operations
     - damage: { pattern: ring8 | cardinal4, amount: 1, recipients: monsters }
-    - push:   { pattern: ring8, direction: outward, distance: 1 }
+    - push:   { pattern: ring8, direction: outward | inward, distance: 1 }   # inward = pull toward the prop square (Vortex Urn)
     - spawn:  { prop: beam, pattern: cardinal4, skip_if_occupied: true }
     - ground: { set: plain | rubble | lava_1 | mossbed | hallowed }
   reactions: []           # explicit-effect reactions (§4.11)
   price_ref: TBD          # Skills §5 creation price, not defined
 ```
 
-**Damage to props** *(draft)*: an ordinary Surge hit deals **2 damage** and intercepts the hit instead of hitting a monster there (ground-layer props are always Solid, so no monster shares the square); Strike damage and profile exceptions follow the [central execution profiles](gdd_skills.md#3-skill-execution-profiles); collision deals 1 to the prop (a `heavy` prop takes none, [§6.3](#63-collision-fall--debris)); fall, collapse and aftermath damage never affect props.
+**Damage to props** *(draft)*: an ordinary Surge hit deals **2 damage** and intercepts the hit instead of hitting a monster there (ground-layer props are always Solid, so no monster shares the square); Strike damage and profile exceptions follow the [central execution profiles](gdd_skills.md#3-skill-execution-profiles); collision deals 1 to the prop (a `heavy` prop takes none; a `spiky` prop deals 2 to the monster, [§6.3](#63-collision-fall--debris)); fall, collapse and aftermath damage never affect props.
 
 **Aftermath resolution** *(user decisions 2026-11-11)*:
 - Ground left behind is laid in category (e) of [§6.2](#62-surge-resolution-integration) step 4; the Gong push resolves directly after (a) (before Cleanse), using the §6.2 tie rules.
@@ -395,10 +406,11 @@ prop_def:
 
 ### 4.11 Prop Reactions
 
-**Status: reduced to the one remaining tag.** The catalogue above defines aftermath, so the former ignite, extinguish and crumble reactions (Tree/Wall) no longer have a prop to act on.
+**Status: two tags.** The catalogue above defines aftermath, so the former ignite, extinguish and crumble reactions (Tree/Wall) no longer have a prop to act on.
 
 - Tags react only to **explicit effects of the concrete skill**, never monster themes or blanket aspect categories. Reactions are data (`prop_def.reactions`) and shown in the cast preview.
 - **`heavy`** (Stone Lion): cannot be moved by displacement or relocation.
+- **`spiky`** (Stone Lion, Bamboo Stand; draft assignment): 2 collision damage to a monster displaced into it ([§4.9](#49-props)).
 - The Surge profiles carry no prop-specific exceptions *(user decision 2026-11-11)*; see [Skills §3](gdd_skills.md#surge).
 - Zones on prop squares wait; once the prop is gone, the zone works normally there.
 
@@ -439,7 +451,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 - **Urgent Order:** an own monster that has not acted this round is inserted directly after the current turn; its original entry of this round is removed (no double action). Extra-turn entries are not affected; the round-end re-sort is unchanged.
 - **Second Wind:** one own monster on the field regains 1 HP (never above max); it unlocks no monster healing.
 - **Life Thread:** set on one chosen own monster, effect and consumption as in [§6.1](#61-the-damage-law); it also protects in Deadly dungeons (death/injury details T23).
-- **Beast Swap:** the incoming monster takes the square and queue entry of the swapped-out monster (it acts this round only if that entry is still pending), arrives with its current HP and must have the same body size (1×1 for 1×1, 2×2 for 2×2). The swapped-out monster is not defeated and may be swapped back later; its pending Surges stay and detonate like orphaned Surges at the next round start ([§2.2](#22-initiative-rules)). Soul Tier gate unchanged.
+- **Beast Swap:** the incoming monster takes the square and queue entry of the swapped-out monster (it acts this round only if that entry is still pending), arrives with its current HP and must have the same body size (1×1 for 1×1, 2×2 for 2×2). The swapped-out monster is not defeated and may be swapped back later; its Surges stay set ([§2.2](#22-initiative-rules)). Soul Tier gate unchanged.
 - Remaining integration details (other skills, loadout, source-specific resolution): T18–T20.
 
 **Unresolved integration contract:** source-specific resolution of the remaining tamer skills and loadout details are tracked in [temp_todo.md](temp_todo.md), T18–T20; this section supplies no default timing or cost.
@@ -453,7 +465,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 > **The Surge is the burst.** It is the only skill that deals more than 2 damage to monsters; prop damage has source-specific exceptions in the [central damage contracts](gdd_skills.md#4-effect-and-board-operation-contracts).
 > - **Strike:** max 2 against monsters; body-relative execution and authored AP follow the [central Strike profile](gdd_skills.md#strike)
 > - **Hazard ground:** its level (max 2) at its trigger; Voidscar: 1. Ground effects: [§4.7](#47-ground--neutral-hazard-and-blessed); generic schedule: [§2.4](#24-effect-timing-reference)
-> - **Collision** (pushed into a prop or monster; contract: [§6.3](#63-collision-fall--debris)), **fall** (pushed off a Mountain), **Mountain collapse** (environmental, independent of the destroying skill, §4.7) and **prop aftermath damage** (Clay Urn, Bamboo Stand; air-layer Thunder Cloud; §4.10): 1 each
+> - **Collision** (pushed into a prop, a monster or the board edge; 2 instead of 1 for the pushed monster at a `spiky` prop; contract: [§6.3](#63-collision-fall--debris)), **fall** (pushed off a Mountain), **Mountain collapse** (environmental, independent of the destroying skill, §4.7) and **prop aftermath damage** (Clay Urn, Bamboo Stand; air-layer Thunder Cloud; §4.10): 1 each
 > - **Zones never deal damage.** Nothing else deals damage the instant it is cast
 
 **Damage modifiers** *(user decision 2026-11-10)*:
@@ -465,8 +477,8 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 
 ### 6.2 Surge Resolution Integration
 
-- Charge/detonation/autonomy and profile rules: [Skills §3](gdd_skills.md#3-skill-execution-profiles); no second lifecycle here.
-- The turn scheduler (§2.1–§2.4) dispatches due Surges; board state/reactions (§4) and generic damage/displacement (§6) resolve their declared effects.
+- Triggers, detonation and profile rules: [Skills §3](gdd_skills.md#3-skill-execution-profiles); no second lifecycle here.
+- A sprung Surge detonates right after the action or displacement that sprang it ([§2.4](#24-effect-timing-reference)); board state/reactions (§4) and generic damage/displacement (§6) resolve its declared effects. A detonation can spring further Surges (a push into the next one); each is resolved in turn.
 
 **Payload resolution order** *(user decision, applies to every Strike and Surge detonation payload)*:
 
@@ -483,17 +495,17 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 
 The order is fixed by this list, not by data-field position or per-skill authoring.
 
-**Legality at execution** *(user decision 2026-11-10)*: legality is checked per square and per operation on the board as it is at detonation, so a Surge can be countered by prop placement, height or ground changes made after the cast. A square or operation that is no longer legal (e.g. residue on a square now holding a prop, destroying a Mountain that is already gone) does nothing; everything else resolves normally. No retargeting, replacement square or refund of AP or usage.
+**Legality at execution** *(user decision 2026-11-10)*: legality is checked per square and per operation on the board as it is at detonation, so prop placement, height or ground changes made after the cast change what a Surge does (and a new prop or Mountain on its squares springs it, unless only monsters spring it). A square or operation that is no longer legal (e.g. residue on a square now holding a prop, destroying a Mountain that is already gone) does nothing; everything else resolves normally. No retargeting, replacement square or refund of AP or usage.
   - Whether a blocker also stops the rest of the footprint behind it depends on the Surge: **line-shaped footprints** are stopped by the first prop along the line from the anchor end (a Stone Lion on the middle square of a three-square line from one end also spares the squares beyond it), all other shapes lose only the blocked square *(user decision 2026-11-10)*. Which Surges are line-shaped is part of each Surge's authored shape and can differ from Surge to Surge ([Skills §3](gdd_skills.md#surge)); the prop's own interception and reactions follow the profile table.
 
-**Several Surges due at once** *(user decision 2026-11-10; applies to Surges of any casters, e.g. dead-caster Surges at the same round start)*: Surges due at the same event resolve **phase by phase together**: all damage simultaneously, then defeat, then displacement (still furthest-first), then board operations in the category order above, then self retreats. No order between Surges is needed. **Ties** *(user decision 2026-11-10: simultaneous, no precedence)*: damage from several sources on one target is applied simultaneously and adds; they create no source priority. Displacements keep the furthest-first rule; when two displaced units compete for one destination square or lie equally far along different directions, *(user decision 2026-11-10)* they resolve in their current initiative-queue order, and the later one collides under [§6.3](#63-collision-fall--debris). No other precedence between sources exists.
+**Several Surges due at once** *(user decision 2026-11-10; applies to Surges of any casters)*: Surges sprung at the same moment resolve **phase by phase together**: all damage simultaneously, then defeat, then displacement (still furthest-first), then board operations in the category order above, then self retreats. No order between Surges is needed. **Ties** *(user decision 2026-11-10: simultaneous, no precedence)*: damage from several sources on one target is applied simultaneously and adds; they create no source priority. Displacements keep the furthest-first rule; when two displaced units compete for one destination square or lie equally far along different directions, *(user decision 2026-11-10)* they resolve in their current initiative-queue order, and the later one collides under [§6.3](#63-collision-fall--debris). No other precedence between sources exists.
 
-Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). Confirmed autonomy is unchanged.
+Cleanse has no monster source beyond the Mountain-creation reset (Skills §4).
 
 ### 6.3 Collision, Fall & Debris
 
-- Pushed or pulled into a **prop**: no move, 1 damage to the monster and 1 to the prop (heavy props take none)
-- Into a **monster**: no move, **1 damage to each of the two monsters** · off the **board edge**: no move, no damage
+- Pushed or pulled into a **prop**: no move, 1 damage to the monster (2 at a `spiky` prop, [§4.9](#49-props)) and 1 to the prop (heavy props take none)
+- Into a **monster**: no move, **1 damage to each of the two monsters** · against the **board edge**: no move, **1 damage** to the pushed or pulled monster *(working draft, user direction 2026-11-12: the space beyond the board is void)*
 - **Collision contract** *(user decision)*: the monster-collision damage is derived runtime damage, not an authored component, and grants no bonus collision damage or retired collision perks. Passive modifiers such as Crashlander or Thick Hide change only the damage of the monster they name.
 - **Blocked multi-step displacement:** a unit moves step by step and stops on the last free square. The blocked step is the collision (once per displacement; remaining steps are lost). A pull whose path or anchor square is occupied follows the same rule; no alternative square
 - **Off a Mountain**: the move happens, 1 fall damage · onto Mountain from below: blocked like a prop, no damage
@@ -504,7 +516,7 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
 
 - No defense stat — damage reduction via zone-based Surge reduction, ground-based Surge reduction (§4.7) and authored passives
 - All damage exact and previewed
-- Surge autonomy follows the [central Surge profile](gdd_skills.md#surge); its caster's death does not cancel it, and dead-caster timing is in [§2.2](#22-initiative-rules)
+- A set Surge is independent of its caster ([central Surge profile](gdd_skills.md#surge)): the caster's death, displacement or swap neither removes nor springs it
 - Generic trigger scheduling and turn order have one reference: [§2.4](#24-effect-timing-reference); source-specific execution remains in the resolved definition
 
 ### 6.5 Displacement
@@ -516,7 +528,7 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
   - Blocked moves: [§6.3](#63-collision-fall--debris); entry/end-event integration: [§2.4](#24-effect-timing-reference).
 - Zone effects: [§4.6](#46-zones-effects-rules--opposites). Authored spatial on-hit push/pull and delayed footprint-bound displacement get recipients, bindings and triggers from the [central displacement contracts](gdd_skills.md#4-effect-and-board-operation-contracts), not a second profile catalogue here. Ties and combined-effect order: [§6.2](#62-surge-resolution-integration).
 
-**Why end of turn:** at turn start the target could simply walk away again; at turn end it lands in Lava, through Thornbed, in front of your Strike or in a Surge detonating before it can move again. Visible counterplay: don't end your turn on a current.
+**Why end of turn:** at turn start the target could simply walk away again; at turn end it lands in Lava, through Thornbed, in front of your Strike or onto a Surge, which detonates at once. Visible counterplay: don't end your turn on a current.
 
 ---
 
@@ -549,7 +561,7 @@ Cleanse has no monster source beyond the Mountain-creation reset (Skills §4). C
 
 **Builds:**
 
-- `godot/`: main menu → draft sandbox (1, 2 or 3 of the nine reference monsters with the test kits of [Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft), optional test loadout) → placement → **1v1 on 5×5**, **2v2 on 6×6** or **3v3 on 7×7** against an AI team drawn from the rest; the overworld starts battles through the same request. The headless core (`godot/battle/core/`) follows the confirmed rules of this document; all content is test data and nothing is validated.
+- `godot/`: main menu → draft sandbox (1, 2 or 3 of the nine reference monsters with their test kits (prior draft of [Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft), five of them changed to trap and displacement kits), optional test loadout) → placement → **1v1 on 5×5**, **2v2 on 6×6** or **3v3 on 7×7** against an AI team drawn from the rest; the overworld starts battles through the same request. The headless core (`godot/battle/core/`) follows this document, including the working drafts of 2026-11-12 (trap Surges, board-edge damage, spiky props); all content is test data and nothing is validated.
 - `tools/html_prototype/battle-prototype-v5-zones-ground.html` is the historical v5 reference and validates nothing of the current design.
 
 **Tools:**

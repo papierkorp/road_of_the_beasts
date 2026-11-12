@@ -415,7 +415,6 @@ func harvest(uid: int) -> String:
 # ---------- evolution and breakthrough (gdd_overworld §4.1, §4.7) ----------
 
 const EVOLUTION_PILLAR := &"evolution_pillar"
-const RESPEC_MATERIALS := 4
 const BREAKTHROUGH_MATERIALS := 5
 const MONSTER_BREAKTHROUGH_MATERIALS := 3
 
@@ -425,42 +424,6 @@ func has_pillar() -> bool:
 		if StringName(s["id"]) == EVOLUTION_PILLAR:
 			return true
 	return false
-
-
-## A skill evolution costs 1 AP (§7 "Train") and is done at the Evolution Pillar.
-func can_evolve() -> bool:
-	return has_pillar() and ap >= 1
-
-
-func evolve(monster_index: int, slot: int, skill: StringName, family: StringName, arg: String) -> bool:
-	if not can_evolve() or monster_index < 0 or monster_index >= monsters.size():
-		return false
-	if not monsters[monster_index].pick(slot, skill, family, arg):
-		return false
-	spend_ap(1)
-	return true
-
-
-func respec_requirements(monster_index: int) -> Array:
-	return [{"aspect": monsters[monster_index].species().aspect, "count": RESPEC_MATERIALS}]
-
-
-## Taking the evolutions back ("exchange, not just upgrade"): 1 AP and materials of its aspect.
-func can_respec(monster_index: int) -> bool:
-	return has_pillar() and ap >= 1 and monster_index >= 0 and monster_index < monsters.size() \
-		and not monsters[monster_index].evolutions.is_empty() \
-		and not materials_payment(respec_requirements(monster_index)).is_empty()
-
-
-func respec(monster_index: int) -> bool:
-	if not can_respec(monster_index):
-		return false
-	var paid := materials_payment(respec_requirements(monster_index))
-	for id in paid:
-		remove_item(id, int(paid[id]))
-	spend_ap(1)
-	monsters[monster_index].reset_evolutions()
-	return true
 
 
 ## The monster that makes the player's breakthrough possible: at the player's stage, High, bar full.

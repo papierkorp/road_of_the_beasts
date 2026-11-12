@@ -1,18 +1,24 @@
-[gd_resource type="Resource" script_class="SkillDef" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://shared/skill_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_qdoi2"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_bysul"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_qfomt"]
+
+[sub_resource type="Resource" id="Resource_cemww"]
+script = ExtResource("1_qdoi2")
+op = "destroy_mountain"
+
+[sub_resource type="Resource" id="Resource_3acav"]
+script = ExtResource("1_qdoi2")
+ground = &"blight"
+on_mountain = true
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("3_qfomt")
 id = &"eclipse"
 display_name = "Eclipse"
-archetype = &"Surge"
-kind = 0
-aspect = 3
-shapes = Array[StringName]([&"I4"])
-orientation = 0
-cast_range = 3
-surge_type = 3
-twist = 5
-directional = false
-description = "Wide Rift: 2 dmg on 4 squares, Blight residue"
+kind = "surge"
+description = "Rift on 4 squares: 3 damage, destroys Mountains, leaves Blight I."
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+footprint = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
+board_ops = Array[ExtResource("1_qdoi2")]([SubResource("Resource_cemww"), SubResource("Resource_3acav")])

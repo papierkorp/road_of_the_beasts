@@ -10,7 +10,7 @@ func test_the_shipped_content_loads_without_problems() -> void:
 	assert_array(c.problems).is_empty()
 	assert_array(c.grounds.keys()).contains_exactly_in_any_order([&"plain", &"rubble", &"voidscar", &"lava", &"thornbed",
 		&"blight", &"hearth", &"mossbed", &"umbra", &"hallowed"])
-	assert_int(c.props.size()).is_equal(17)      # the catalogue of gdd_battle §4.10
+	assert_int(c.props.size()).is_equal(19)      # the catalogue of gdd_battle §4.10 plus Vortex Urn and Storm Drum
 	assert_int(c.tamer.size()).is_equal(7)       # the confirmed tamer skills of gdd_battle §5.2
 	assert_int(c.fingerprint().length()).is_equal(64)
 	assert_str(c.fingerprint()).is_equal(BattleContent.reload_shared().fingerprint())
@@ -40,17 +40,18 @@ func test_the_catalogue_matches_the_gdd_table() -> void:
 	assert_int(c.ground(&"rubble").move_cost).is_equal(2)
 
 
-func test_every_test_kit_is_a_legal_four_slot_kit_with_the_reference_sheet() -> void:
+func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> void:
 	var c := H.content()
-	assert_int(c.kits.size()).is_equal(9)
+	assert_int(c.monsters.size()).is_equal(9)
+	assert_array(c.game_monster_ids()).has_size(9)
+	assert_array(GameData.monster_ids()).has_size(9)        # the roster the game offers
 	for id in GameData.monster_ids():
-		var kit := c.kit(id)
-		assert_object(kit).is_not_null()
-		assert_int(kit.skills.size()).is_equal(4)
-		var sheet := UnitSheets.from_instance(MonsterInstance.of_species(GameData.monster(id)))
+		var def := c.monster(id)
+		assert_object(def).is_same(GameData.monster(id))      # one definition, two registries
+		assert_int(def.skills.size()).is_equal(4)
+		var sheet := UnitSheets.from_instance(MonsterInstance.of_species(def))
 		assert_array(sheet.problems()).is_empty()
 		assert_bool(sheet.active_skills().size() >= 1).is_true()
-		assert_str(kit.skills[kit.surge_slot].kind).is_equal("surge")
 		# gdd_monsters §4.1: every Core High reference individual spends 16 points above base
 		var tpr_cost: int = [0, 3, 8, 15][sheet.tpr]
 		var ap_cost: int = {2: 6, 3: 9, 4: 14, 5: 21}[sheet.ap]
@@ -58,13 +59,13 @@ func test_every_test_kit_is_a_legal_four_slot_kit_with_the_reference_sheet() -> 
 		assert_int(points).is_equal(31)
 	# Swarm Surges are limited to 2 cells (gdd_monsters §3.1)
 	assert_int(c.skill(&"bramble_tide").footprint.size()).is_equal(2)
-	# basic Surges keep the 1-AP target; slotted movement costs 2 AP
+	# basic Surges and traps keep the 1-AP target; slotted movement costs 1 AP
 	for id: StringName in c.skills:
 		var s := c.skill(id)
-		if s.kind == "surge":
+		if s.kind == "surge" or s.kind == "trap":
 			assert_int(s.cost()).is_equal(1)
 		if s.kind == "move":
-			assert_int(s.cost()).is_equal(2)
+			assert_int(s.cost()).is_equal(1)
 
 
 func test_a_new_ground_type_is_only_a_new_definition() -> void:
@@ -118,8 +119,9 @@ func test_a_new_prop_and_a_new_skill_are_only_new_definitions() -> void:
 		[1, Vector2i(5, 3), {"hp": 9, "move": 3}],
 	], 7, c)
 	b.begin()
-	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(4, 3)})        # (4,3) (5,3), anchor (4,3)
-	H.until_turn_of(b, &"u0")
+	# armed under the monster and sprung at once: (4,3) (5,3), anchor (4,3)
+	b._declare_surge(b.active(), trap, {"slot": 0, "anchor": Vector2i(4, 3)})
+	BattleTurn.detonate(b, b.surges.duplicate())
 	var target := H.unit(b, 1)
 	assert_int(target.hp).is_equal(7)
 	assert_that(target.pos).is_equal(Vector2i(4, 3))                        # pulled 1 toward the anchor

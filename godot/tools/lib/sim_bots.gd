@@ -4,6 +4,8 @@ extends RefCounted
 ## Use it through `const Bots := preload("res://tools/lib/sim_bots.gd")`.
 ##
 ##   greedy  AiBrain itself: one-step lookahead on a copy of the battle
+##   plan    AiBrain's evaluation, but the best few first actions are judged together with
+##           the best second action of the same turn (set a trap, then push into it)
 ##   rush    hit whoever is in a Strike shape, else cast, else walk toward the nearest enemy
 ##   kite    like rush, but backs away from an enemy that is 2 squares or closer
 ##   random  a random legal action, stops with 15 % chance
@@ -11,7 +13,9 @@ extends RefCounted
 ## All four are crude: none plans ahead, refreshes timed effects on purpose, targets props or
 ## uses tamer skills. Their results are flow indications, never balance evidence.
 
-const NAMES: Array[String] = ["greedy", "rush", "kite", "random"]
+const NAMES: Array[String] = ["greedy", "plan", "rush", "kite", "random"]
+## plan: how many first actions are looked at one action further.
+const PLAN_BEAM := 6
 const MAX_ACTIONS_PER_TURN := 8
 const KITE_DISTANCE := 2
 const KITE_STRIKE_DISTANCE := 3
@@ -42,6 +46,8 @@ static func _decide(bot: String, b: Battle, rng: RandomNumberGenerator, moved: b
 	if b.active() == null:
 		return {"type": &"end_turn"}
 	match bot:
+		"plan":
+			return _plan(b, rng)
 		"rush":
 			return _rush(b, rng, moved)
 		"kite":
@@ -60,7 +66,7 @@ static func _is_move(b: Battle, a: Dictionary) -> bool:
 
 
 static func _cost(b: Battle, a: Dictionary) -> int:
-	return BattleMoves.STEP_AP if a["type"] == &"step" else b.skill_in_slot(b.active(), int(a["slot"])).cost()
+	return BattleMoves.step_ap() if a["type"] == &"step" else b.skill_in_slot(b.active(), int(a["slot"])).cost()
 
 
 ## Squares an attack covers: the Strike shape or the Surge footprint.
@@ -215,3 +221,51 @@ static func _random(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 	keys.sort()
 	var list: Array[Dictionary] = groups[keys[rng.randi_range(0, keys.size() - 1)]]
 	return _pick(list, rng)
+
+
+## Two actions of one turn judged together: the PLAN_BEAM best first actions by AiBrain's
+## evaluation are each followed by their best second action; the first action of the best
+## pair is played. Still no look at the opponent's reply.
+static func _plan(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
+	var u := b.active()
+	var side := u.side
+	var base := AiBrain.evaluate(b, side)
+	var firsts: Array = []                    # [gain, action, battle after it]
+	for a in AiBrain.candidates(b):
+		var sim := b.clone()
+		if sim.apply(a, true):
+			firsts.append([AiBrain.evaluate(sim, side) - base, a, sim])
+	if firsts.is_empty():
+		return {"type": &"end_turn"}
+	firsts.sort_custom(func(x: Array, y: Array) -> bool: return x[0] > y[0])
+	# setting a trap gains little by itself, so the best trap casts always
+	# get their second action looked at
+	var looked: Array = firsts.slice(0, PLAN_BEAM)
+	var traps := 0
+	for i in range(PLAN_BEAM, firsts.size()):
+		if true:
+			var fa: Dictionary = firsts[i][1]
+			if traps < PLAN_BEAM and fa["type"] == &"skill" and b.skill_in_slot(u, int(fa["slot"])).kind == BattleSkillDef.TRAP:
+				looked.append(firsts[i])
+				traps += 1
+	firsts = looked
+	var best: Array[Dictionary] = []
+	var best_total := AiBrain.MIN_GAIN
+	for i in firsts.size():
+		var total: float = firsts[i][0]
+		var after: Battle = firsts[i][2]
+		if not after.over and after.turn_owner == b.turn_owner and after.queue_idx == b.queue_idx and after.round_number == b.round_number:
+			var follow := 0.0
+			for a2 in AiBrain.candidates(after):
+				var sim2 := after.clone()
+				if sim2.apply(a2, true):
+					follow = maxf(follow, AiBrain.evaluate(sim2, side) - base - total)
+			total += follow
+		if total > best_total + 0.001:
+			best_total = total
+			best = [firsts[i][1]]
+		elif absf(total - best_total) <= 0.001 and not best.is_empty():
+			best.append(firsts[i][1])
+	if best.is_empty():
+		return {"type": &"end_turn"}
+	return best[rng.randi_range(0, best.size() - 1)]

@@ -1,30 +1,27 @@
 extends SceneTree
-## Equal-cost, side-swapped comparison of two test builds (tools/data/builds): an
-## indication for a price question, never balance validation or price approval.
+## Side-swapped comparison of two monsters of data/monsters (also simulation-only ones): an
+## indication of how two sheets or kits do against each other, never balance validation.
 ##
-##   godot --headless --path godot -s res://tools/compare.gd -- [--builds a,b] [--seeds 1,2,3]
-##         [--pairs-per-seed 10] [--sizes 5,7] [--bot greedy|rush|kite|random] [--board flat|layout]
+##   godot --headless --path godot -s res://tools/compare.gd -- [--monsters a,b] [--seeds 1,2,3]
+##         [--pairs-per-seed 10] [--sizes 5,7] [--bot greedy|plan|rush|kite|random] [--board flat|layout]
 ##
-## Both builds must have equal exact stat spend, equal summed skill prices and the same
-## slot-level distribution; illegal or partly simulated builds are refused. Each build fields
-## one monster. Every seed is played twice with swapped sides on the same mirrored start
-## squares, with the same bot and no tamer skills. A Draw (or timeout) scores 0.5. SD and range
-## describe the seed-block mean scores of build A, not confidence intervals.
+## Nothing is priced or checked against a budget: skill prices are not settled, and finding
+## out what plays well comes first (temp_todo T02/T13). The table shows the stat points of
+## both sheets (gdd_monsters §2.2 prices) as information only. Each side fields one monster.
+## Every seed is played twice with swapped sides on the same mirrored start squares, with the
+## same bot and no tamer skills. A Draw (or timeout) scores 0.5. SD and range describe the
+## seed-block mean scores of monster A, not confidence intervals.
 ##
-## Reading: different stat allocations at equal spend probe the whole build, not the marginal
-## value of a shared skill; high Draw rates or bot stalling make a 50/50 score meaningless.
+## Reading: high Draw rates or bot stalling make a 50/50 score meaningless.
 ## Record the command, seeds, game count and limits under T13 in docs/temp_todo.md.
 
 const Cli := preload("res://tools/lib/cli.gd")
-const Pricing := preload("res://tools/lib/skill_pricing.gd")
-const Builds := preload("res://tools/lib/sim_builds.gd")
 const Runner := preload("res://tools/lib/sim_runner.gd")
 const Bots := preload("res://tools/lib/sim_bots.gd")
 
-const OPTIONS: Array[String] = ["builds", "seeds", "pairs-per-seed", "sizes", "bot", "board", "help"]
-const DEFAULT_PAIRS := [["test_golem_eruption", "test_golem_rift"], ["test_tiger_eruption", "test_golem_eruption"],
-	["test_tiger_shield", "test_golem_shield"]]
-const HELP := "compare.gd -- [--builds a,b] [--seeds 1,2,3] [--pairs-per-seed 10] [--sizes 5,7] [--bot greedy] [--board flat|layout]"
+const OPTIONS: Array[String] = ["monsters", "seeds", "pairs-per-seed", "sizes", "bot", "board", "help"]
+const DEFAULT_PAIRS := [["forge_golem", "moss_turtle"], ["blaze_tiger", "forge_golem"], ["gloom_wolf", "hollow_serpent"]]
+const HELP := "compare.gd -- [--monsters a,b] [--seeds 1,2,3] [--pairs-per-seed 10] [--sizes 5,7] [--bot greedy] [--board flat|layout]"
 
 
 func _initialize() -> void:
@@ -60,35 +57,23 @@ func _run() -> int:
 	if board != "flat" and board != "layout":
 		return _fail("--board must be flat or layout (a seeded board would differ between the two games of a seed)")
 	var pairs: Array = DEFAULT_PAIRS
-	if opt.has("builds"):
-		var chosen := Cli.names(opt["builds"])
+	if opt.has("monsters"):
+		var chosen := Cli.names(opt["monsters"])
 		if chosen.size() != 2 or chosen[0] == chosen[1]:
-			return _fail("--builds requires exactly two distinct names: a,b")
+			return _fail("--monsters requires exactly two distinct ids: a,b")
 		pairs = [chosen]
-	var builds := {}
+	var builds := {}                          # id -> {sheet, points}
 	for pair: Array in pairs:
 		for name: String in pair:
 			if builds.has(name):
 				continue
-			if not Builds.list_builds().has(name):
-				return _fail("unknown build: %s" % name)
-			var result := Builds.build(name)
-			if not Builds.fully_simulated(result):
-				var why: Array[String] = result["errors"].duplicate()
-				for w: String in result["warnings"]:
-					if w.to_upper().contains("NOT SIMULATED"):
-						why.append(w)
-				return _fail("%s: %s" % [name, "; ".join(why)])
-			for w: String in result["warnings"]:
-				print("NOTE %s: %s" % [name, w])
-			builds[name] = result
-	for pair: Array in pairs:
-		var a: Dictionary = builds[pair[0]]
-		var c: Dictionary = builds[pair[1]]
-		if not Pricing.same(a["stat_spent"], c["stat_spent"]) or not Pricing.same(a["skill_points"], c["skill_points"]) or a["levels"] != c["levels"]:
-			return _fail("%s vs %s: unequal stat/skill spend or slot levels: %s/%s %s != %s/%s %s" % [pair[0], pair[1],
-				Pricing.fmt(a["stat_spent"]), Pricing.fmt(a["skill_points"]), a["levels"],
-				Pricing.fmt(c["stat_spent"]), Pricing.fmt(c["skill_points"]), c["levels"]])
+			var def := GameData.monster(StringName(name))
+			if def == null:
+				return _fail("unknown monster: %s (data/monsters)" % name)
+			var sheet := UnitSheets.from_instance(MonsterInstance.of_species(def))
+			if not sheet.problems().is_empty():
+				return _fail("%s: %s" % [name, "; ".join(sheet.problems())])
+			builds[name] = {"sheet": sheet, "points": _stat_points(sheet)}
 	# distinct game seeds per seed block
 	var schedule: Array = []
 	var used := {}
@@ -102,7 +87,7 @@ func _run() -> int:
 				used[seed_value] = true
 				seeds.append(seed_value)
 		schedule.append(seeds)
-	var rows: Array = [["Build A", "Build B", "Size", "Stat/skill spend", "Games", "Wins A/B/draws", "Score A", "Seed SD",
+	var rows: Array = [["Monster A", "Monster B", "Size", "Stat points A/B", "Games", "Wins A/B/draws", "Score A", "Seed SD",
 		"Seed range", "Rounds mean", "Timeouts"]]
 	for pair: Array in pairs:
 		for size in sizes:
@@ -110,7 +95,7 @@ func _run() -> int:
 			if row.is_empty():
 				return 2
 			rows.append(row)
-	print("Bot-vs-bot indications only; no balance validation or price approval. Content %s." % BattleContent.VERSION)
+	print("Bot-vs-bot indications only; no balance validation, nothing priced. Content %s." % BattleContent.VERSION)
 	print("Bot %s; blocks %s; %d paired seeds/block; board %s, mirrored starts, no tamer skills." % [bot, blocks, per_seed, board])
 	print("Draw = 0.5; sample SD/range describe A's seed-block means (one block: SD n/a).")
 	print(Cli.table(rows))
@@ -163,11 +148,17 @@ func _row(pair: Array, builds: Dictionary, size: int, schedule: Array, bot: Stri
 					wins_b += 1
 		block_means.append(block_score / (2.0 * seeds.size()))
 	var games := wins_a + wins_b + draws
-	var a: Dictionary = builds[pair[0]]
-	return [pair[0], pair[1], str(size), "%s/%s" % [Pricing.fmt(a["stat_spent"]), Pricing.fmt(a["skill_points"])], str(games),
+	return [pair[0], pair[1], str(size), "%d/%d" % [builds[pair[0]]["points"], builds[pair[1]]["points"]], str(games),
 		"%d/%d/%d" % [wins_a, wins_b, draws], "%.3f" % ((wins_a + 0.5 * draws) / games),
 		"%.3f" % _sample_sd(block_means) if block_means.size() > 1 else "n/a",
 		"%.3f..%.3f" % [block_means.min(), block_means.max()], "%.2f" % (float(rounds) / games), str(timeouts)]
+
+
+## Stat points of a sheet at the gdd_monsters §2.2 prices (information only).
+func _stat_points(s: UnitSheet) -> int:
+	var tpr_cost: int = [0, 3, 8, 15][clampi(s.tpr, 1, 3)]
+	var ap_cost: int = {2: 6, 3: 9, 4: 14, 5: 21}.get(s.ap, 6)
+	return s.hp + int(s.initiative) + s.movement + (s.reach - 1) * 3 + tpr_cost + ap_cost
 
 
 func _sample_sd(values: Array[float]) -> float:

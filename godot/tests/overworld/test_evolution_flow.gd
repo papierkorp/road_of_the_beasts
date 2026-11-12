@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## The overworld side of evolution: the Evolution Pillar, AP and respec costs, and breakthroughs.
+## Breakthroughs and the Evolution Pillar as a structure (the legacy skill evolution is removed).
 
 
 func _rng(seed_value := 8) -> RandomNumberGenerator:
@@ -73,7 +73,6 @@ func test_a_monster_follows_the_player_one_stage_at_a_time() -> void:
 	assert_int(m.sub_tier).is_equal(Stage.SubTier.LOWER)
 	assert_int(m.xp).is_equal(0)
 	assert_int(m.max_hp()).is_greater_equal(hp_before)
-	assert_int(m.evo_slots()).is_equal(1)
 	assert_bool(g.can_monster_break_through(0)).is_false()        # never above the player's stage
 
 
@@ -93,46 +92,6 @@ func test_the_cheat_moves_everyone_up() -> void:
 
 
 # ---------- evolving ----------
-
-func test_evolving_needs_the_pillar_and_costs_one_ap() -> void:
-	var g := _game()
-	Cheats.stage_up(g)
-	var m := g.monsters[0]
-	var path: Dictionary = m.slot_offers(0)[0]
-	var arg := String(m.path_variants(path["skill"], path["family"])[0]["arg"])
-	assert_bool(g.evolve(0, 0, path["skill"], path["family"], arg)).is_false()        # no pillar yet
-	_with_pillar(g)
-	var ap := g.ap
-	assert_bool(g.evolve(0, 0, path["skill"], path["family"], arg)).is_true()
-	assert_int(g.ap).is_equal(ap - 1)
-	assert_int(m.evolutions.size()).is_equal(1)
-
-
-func test_a_failed_evolution_costs_nothing() -> void:
-	var g := _game()
-	Cheats.stage_up(g)
-	_with_pillar(g)
-	var ap := g.ap
-	assert_bool(g.evolve(0, 0, &"surge", &"twist", "NOT_A_TWIST")).is_false()
-	assert_int(g.ap).is_equal(ap)
-
-
-func test_respec_costs_ap_and_materials_of_the_monsters_aspect() -> void:
-	var g := _game()
-	Cheats.stage_up(g)
-	_with_pillar(g)
-	var m := g.monsters[0]
-	var path: Dictionary = m.slot_offers(0)[0]
-	g.evolve(0, 0, path["skill"], path["family"], String(m.path_variants(path["skill"], path["family"])[0]["arg"]))
-	assert_bool(g.can_respec(0)).is_false()                       # no materials
-	_give(g, m.species().aspect, GameState.RESPEC_MATERIALS)
-	assert_bool(g.can_respec(0)).is_true()
-	var ap := g.ap
-	assert_bool(g.respec(0)).is_true()
-	assert_int(g.ap).is_equal(ap - 1)
-	assert_int(m.evolutions.size()).is_equal(0)
-	assert_bool(g.can_respec(0)).is_false()                       # nothing left to take back
-
 
 func test_the_pillar_is_a_buildable_structure() -> void:
 	var d := StructureCatalog.def(GameState.EVOLUTION_PILLAR)

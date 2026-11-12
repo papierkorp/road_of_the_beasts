@@ -9,6 +9,8 @@ const MAX_ACTIONS_PER_TURN := 8
 ## A skill placement is only simulated if its footprint comes this close to some monster.
 const PLACEMENT_RADIUS := 1
 const MIN_GAIN := 0.05
+## Score points per point of damage a ready push would deal (real damage counts 10 per HP).
+const PUSH_FOCUS := 4.0
 
 
 ## Every legal action of the active unit except ending the turn.
@@ -17,17 +19,19 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 	var u := b.active()
 	if u == null:
 		return out
-	if b.ap >= BattleMoves.STEP_AP:
-		for to: Vector2i in BattleMoves.options(b, u, BattleMoves.step_profile()):
-			out.append({"type": &"step", "to": to})
+	if b.ap >= BattleMoves.step_ap():
+		var steps := BattleMoves.options(b, u, BattleMoves.step_profile())
+		for to: Vector2i in steps:
+			out.append({"type": &"step", "to": to, "path": steps[to]["path"]})
 	for slot in u.sheet.skills.size():
 		var s := u.sheet.skills[slot]
 		if not s.is_active() or b.ap < s.cost() or b.usage_error(u, slot) != "":
 			continue
 		match s.kind:
 			BattleSkillDef.MOVE:
-				for to: Vector2i in BattleMoves.options(b, u, BattleMoves.profile_of(s)):
-					out.append({"type": &"skill", "slot": slot, "to": to})
+				var moves := BattleMoves.options(b, u, BattleMoves.profile_of(s))
+				for to: Vector2i in moves:
+					out.append({"type": &"skill", "slot": slot, "to": to, "path": moves[to]["path"]})
 			BattleSkillDef.STRIKE:
 				var pushes: Array[Vector2i] = [Vector2i.ZERO]
 				if s.kin_effect and KinRules.strike(u.kin()).get("push", false):
@@ -38,14 +42,24 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 							var a := {"type": &"skill", "slot": slot, "dir": d, "push_dir": pd, "origin": origin}
 							if b.check(a) == "" and _strike_touches(b, u, s, origin, d):
 								out.append(a)
-			BattleSkillDef.SURGE, BattleSkillDef.ZONE, BattleSkillDef.GROUND:
+			BattleSkillDef.SURGE, BattleSkillDef.TRAP, BattleSkillDef.ZONE, BattleSkillDef.GROUND:
 				var dirs: Array[Vector2i] = [Vector2i.ZERO]
 				if s.needs_direction():
 					dirs = Board.CARDINAL
 				var rots := [0, 1, 2, 3] if BattleStats.can_rotate(u) and s.anchor_mode != "caster_ring" and s.anchor_mode != "trail" else [0]
+				var seen_shapes := {}
 				for rot: int in rots:
+					var shape_key := s.offsets(rot)
+					shape_key.sort()
+					if seen_shapes.has(shape_key):
+						continue                  # this turn of the shape covers the same squares
+					seen_shapes[shape_key] = true
+					# a zone only matters on a monster; a trap or ground next to one
+					var radius := 0 if s.kind == BattleSkillDef.ZONE or s.kind == BattleSkillDef.SURGE else PLACEMENT_RADIUS
+					# a Surge is only worth casting on an enemy, a trap next to one
+					var whom := 1 - u.side if s.is_marker() else -1
 					for anchor in BattleCasting.anchors(b, u, s, dirs[0], rot):
-						if not _near_someone(b, BattleCasting.cells(u, s, anchor, rot)):
+						if not _near_someone(b, BattleCasting.cells(u, s, anchor, rot), radius, whom):
 							continue
 						for d in dirs:
 							out.append({"type": &"skill", "slot": slot, "anchor": anchor, "dir": d, "rot": rot})
@@ -63,10 +77,10 @@ static func _strike_touches(b: Battle, u: BattleUnit, s: BattleSkillDef, origin:
 	return false
 
 
-static func _near_someone(b: Battle, cells: Array[Vector2i]) -> bool:
-	for u in b.living():
+static func _near_someone(b: Battle, cells: Array[Vector2i], radius := PLACEMENT_RADIUS, side := -1) -> bool:
+	for u in b.living(side):
 		for c in cells:
-			if u.chebyshev_to(c) <= PLACEMENT_RADIUS:
+			if u.chebyshev_to(c) <= radius:
 				return true
 	return false
 
@@ -84,36 +98,145 @@ static func evaluate(b: Battle, side: int) -> float:
 		score += 14.0 + 10.0 * u.hp
 	for u in theirs:
 		score -= 14.0 + 10.0 * u.hp
-	# pending Surges: whoever stands in one is in danger
+	# timed Surges threaten whoever stands in them; traps whoever stands next to them
 	for s in b.surges:
-		for c in s.cells:
+		if s.turns_left >= 0:
+			for c in s.cells:
+				var t := b.unit_at(c, Board.GROUND)
+				if t != null:
+					var weight := float(mini(s.skill.surge_damage, t.hp)) * _timed_weight(b, s, t)
+					score += weight if t.side != side else -weight * 1.3
+			continue
+		for c in s.ring:
 			var t := b.unit_at(c, Board.GROUND)
-			if t == null:
-				continue
-			var weight := float(mini(s.skill.surge_damage, t.hp)) * 2.5
-			score += weight if t.side != side else -weight * 1.3
+			if t != null:
+				var weight := float(mini(s.skill.surge_damage, t.hp)) * 0.5
+				score += weight if t.side != side else -weight * 0.6
 	for u in b.living():
 		var sgn := 1.0 if u.side == side else -1.0
-		# standing on harm at the next start or end of turn
-		var harm := BattleDamage.ground_harm(b, u, GroundTrigger.END_OF_TURN, u.cells()) \
-			+ BattleDamage.ground_harm(b, u, GroundTrigger.START_OF_TURN, u.cells())
-		score -= sgn * 3.0 * harm
-		for c in BattleStats.contributions(b, u):
-			match String(c["tag"]):
-				"slow", "drain_init", "drain_range":
-					score -= sgn * 1.5 * float(c["value"])
-				"haste", "quicken", "extend", "shield":
-					score += sgn * 1.0 * float(c["value"])
-				"mend":
-					if u.hp < u.max_hp:
-						score += sgn * 2.0
+		score -= sgn * _standing_cost(b, u)
+	# displacement: an enemy next to something that hurts when it is pushed there is a target,
+	# an own unit in that spot a liability
+	for u in theirs:
+		score += _exposure(b, u, mine)
+	for u in mine:
+		score -= 0.5 * _exposure(b, u, theirs)
 	# close the distance: every own unit wants an enemy within reach of its kit
+	var closing := 1.5 if BattleExperiment.ai_aggressive else 0.6
 	for u in mine:
 		var nearest := 99
 		for e in theirs:
 			nearest = mini(nearest, e.chebyshev_to(u.pos))
-		score -= 0.6 * nearest
+		score -= closing * nearest
 	return score
+
+
+## Score points for how exposed `u` is to being pushed into harm by one of `pushers`: for each
+## cardinal direction the damage a 1-square push would deal (board edge, prop, spiky prop,
+## monster, fall, trap or Surge, hazard ground), weighted by how ready a pusher is: one standing
+## on the opposite neighbour square (a Strike pushes straight away from the striker), one within
+## two squares of it; with none near it counts nothing.
+static func _exposure(b: Battle, u: BattleUnit, pushers: Array) -> float:
+	if u.size != 1 or u.layer != Board.GROUND or BattleStats.is_immovable(b, u):
+		return 0.0
+	var total := 0.0
+	var here := b.board.at(u.pos)
+	for d in Board.CARDINAL:
+		var harm := _push_harm(b, u, here, u.pos + d)
+		if harm <= 0.0:
+			continue
+		var from := u.pos - d
+		var ready := 0.0
+		for p: BattleUnit in pushers:
+			var dist := absi(p.pos.x - from.x) + absi(p.pos.y - from.y)
+			if dist == 0:
+				ready = 1.0
+				break
+			if dist <= 2:
+				ready = 0.3
+		total += PUSH_FOCUS * minf(harm, float(u.hp)) * ready
+	return total
+
+
+## Damage a 1-square push of `u` onto `to` would deal (0 if it would only move or be stopped).
+static func _push_harm(b: Battle, u: BattleUnit, here: BoardCell, to: Vector2i) -> float:
+	var cell := b.board.at(to) if b.board.in_bounds(to) else null
+	if cell == null:
+		return float(BattleDisplace.EDGE_DAMAGE)
+	if cell.prop != null and cell.prop.hp > 0:
+		return float(BattleDisplace.SPIKY_DAMAGE) if cell.prop.def.spiky else 1.0
+	if b.unit_at(to, Board.GROUND) != null:
+		return 1.0
+	if cell.height > here.height:
+		return 0.0
+	var harm := 1.0 if cell.height < here.height else 0.0
+	if cell.surge >= 0:
+		var s := b.surge_by_id(cell.surge)
+		if s != null:
+			harm += float(s.skill.surge_damage) * (1.0 if s.turns_left < 0 else 0.6)
+	var g := b.content.ground(cell.ground)
+	if g != null and not BattleStats.ignores_ground(u, cell.ground):
+		for t in g.triggers:
+			if t.kind == "damage":
+				harm += float(t.value_at(cell.level))
+	return harm
+
+
+## Weight per point of pending timed Surge damage: higher if the target has no turn left
+## before the detonation within this round's queue (it cannot walk out by itself).
+static func _timed_weight(b: Battle, s: PendingSurge, t: BattleUnit) -> float:
+	var last := b.queue_idx + s.turns_left + (1 if s.fresh else 0)
+	if last >= b.queue.size():
+		return 2.5                            # crosses the round end: the next order is unknown
+	for i in range(b.queue_idx + (0 if b.turn_owner == t.id else 1), last + 1):
+		if b.queue[i]["id"] == t.id:
+			return 2.5
+	return 8.0
+
+
+## What standing where it stands costs `u` (harm at its next turn start / end, hindering and
+## helping effects), in score points. 1x1 ground units take a direct look at their square;
+## other bodies use the general (slower) stat functions.
+static func _standing_cost(b: Battle, u: BattleUnit) -> float:
+	var cost := 0.0
+	if u.size != 1 or u.layer != Board.GROUND:
+		var harm := BattleDamage.ground_harm(b, u, GroundTrigger.END_OF_TURN, u.cells()) \
+			+ BattleDamage.ground_harm(b, u, GroundTrigger.START_OF_TURN, u.cells())
+		cost += 3.0 * harm
+		for c in BattleStats.contributions(b, u):
+			cost += _tag_cost(String(c["tag"]), float(c["value"]), u)
+		return cost
+	var cell := b.board.at(u.pos)
+	var g := b.content.ground(cell.ground)
+	if g != null and not BattleStats.ignores_ground(u, cell.ground):
+		for t in g.triggers:
+			if t.timing != GroundTrigger.ON_ENTER:
+				cost += (3.0 if t.kind == "damage" else -3.0) * t.value_at(cell.level)
+		for e in g.effects:
+			cost += _tag_cost(e.tag, float(e.value_at(cell.level)), u)
+	if cell.zone != null and cell.prop == null:
+		for e in cell.zone.def.effects:
+			if e.affects_ground:
+				cost += _tag_cost(e.tag, float(e.value_at(cell.zone.level)), u)
+	for d in Board.CARDINAL:
+		var n := b.board.at(u.pos + d)
+		if n != null and n.prop != null and n.prop.hp > 0:
+			for e in n.prop.def.aura:
+				cost += _tag_cost(e.tag, float(e.value_at(1)), u)
+	for fx in u.effects:
+		cost += _tag_cost(String(fx["tag"]), float(fx["value"]), u)
+	return cost
+
+
+static func _tag_cost(tag: String, value: float, u: BattleUnit) -> float:
+	match tag:
+		"slow", "drain_init", "drain_range":
+			return 1.5 * value
+		"haste", "quicken", "extend", "shield":
+			return (-0.3 if BattleExperiment.ai_aggressive else -1.0) * value
+		"mend":
+			return -2.0 if u.hp < u.max_hp else 0.0
+	return 0.0
 
 
 ## The best action for the active unit ({type: &"end_turn"} if nothing helps).
@@ -126,7 +249,7 @@ static func decide(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 	var best_gain := MIN_GAIN
 	for a in candidates(b):
 		var sim := b.clone()
-		if not sim.apply(a):
+		if not sim.apply(a, true):
 			continue
 		var gain := evaluate(sim, u.side) - base
 		if gain > best_gain + 0.001:

@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="MonsterDef" format=3]
 
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
-[ext_resource type="Resource" path="res://data/skills/tidal_shell.tres" id="2"]
-[ext_resource type="Resource" path="res://data/skills/bark_veil.tres" id="3"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
+[ext_resource type="Resource" path="res://data/skills/run.tres" id="s0"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
+[ext_resource type="Resource" path="res://data/skills/tidal_shell.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/bark_veil.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -12,10 +15,10 @@ kin = 2
 aspect = 2
 hp = 8
 initiative = 3.0
-move = 1
+move = 2
 tpr = 1
-reach = 2
-surge = ExtResource("2")
-utility = ExtResource("3")
-passive = &"deep_roots"
+reach = 3
+ap = 3
+skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
 blurb = "A slow, heavy Flood that hits one turn later but harder, behind Bark Veils."
+notes = "Slow-burn twist and Deep Roots omitted: undecided / placeholder (T11)."

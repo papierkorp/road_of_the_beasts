@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="MonsterDef" format=3]
 
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
-[ext_resource type="Resource" path="res://data/skills/spring_burst.tres" id="2"]
-[ext_resource type="Resource" path="res://data/skills/gale.tres" id="3"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
+[ext_resource type="Resource" path="res://data/skills/quake_leap.tres" id="s0"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
+[ext_resource type="Resource" path="res://data/skills/spring_burst.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/gale.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -10,12 +13,12 @@ id = &"grove_wisp"
 display_name = "Grove Wisp"
 kin = 4
 aspect = 2
-hp = 3
+hp = 4
 initiative = 8.0
-move = 3
+move = 4
 tpr = 1
-reach = 1
-surge = ExtResource("2")
-utility = ExtResource("3")
-passive = &"adaptive"
+reach = 2
+ap = 3
+skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
 blurb = "Throws weak Floods from far away, phases through props, and is the only one that can turn its shapes in battle."
+notes = "Trap and displacement test kit (T38). Quake Leap replaces Phase."

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_25ren"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_0vtru"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_08h5m"]
+
+[resource]
+script = ExtResource("3_08h5m")
+id = &"strike_cleave"
+display_name = "Cleave"
+kind = "strike"
+description = "2 damage to every monster and prop in the shape (allies too), plus the Kin effect."
+status = "GDD Strike shape (Skills §8.1)"
+ap_cost = 5
+strike_shape = "cleave"
+internal_calc_cost = 34.0

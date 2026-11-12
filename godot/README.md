@@ -2,13 +2,14 @@
 
 ```
 shared/      data schemas and the cultivation model, used by every part
-             MonsterDef / SkillDef / ZoneDef / ZoneEffect / Shapes / Aspect (LEGACY species model of the overworld),
-             Stage, StatShape, MonsterInstance (the individual monster), Evolution, ItemCatalog,
+             MonsterDef (species, reference stats and kit in one file), Shapes, Aspect (look and materials only),
+             Stage, StatShape, MonsterInstance (the individual monster), ItemCatalog,
              BattleRequest / BattleResult (the contract between battle and overworld), GameData (registry), UiTheme
 battle/      the deterministic grid battle (docs/gdd_battle.md, gdd_skills.md, gdd_monsters.md)
   defs/      DEFINITIONS — pure data Resources and tables, no rules
              FieldEffect, GroundDef + GroundTrigger, PropDef + PropAftermath, BattleZoneDef, BattleSkillDef + BoardOp,
-             TamerSkillDef, BattleKitDef, UnitSheet, StrikeShapes, KinRules, BattleContent (registry of data/battle)
+             TamerSkillDef, UnitSheet, StrikeShapes, KinRules, ContentStatus,
+             BattleContent (registry of data/)
   core/      STATE and RULES — headless, no nodes, no randomness
              state:  Battle, Board, BoardCell, BoardProp, BoardZone, PendingSurge, BattleUnit
              rules:  BattleStats (effective stats, modifiers), BattleQueue (initiative), BattleMoves (movement
@@ -23,14 +24,14 @@ battle/      the deterministic grid battle (docs/gdd_battle.md, gdd_skills.md, g
   battle.tscn, draft.tscn
 overworld/   days, AP, night phase, economy, internal world (gdd_overworld.md)
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession)
-data/        content as Resource files (a new file = new content)
-  battle/    grounds/ props/ zones/ skills/ tamer/ kits/  — what the battle resolves
-  monsters/ skills/ zones/   legacy species data of the overworld model
-tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game, tests/tools
-tools/       headless tools (tools/README.md): sim.gd (AI-vs-AI runs), compare.gd (equal-cost build
-             comparison), price.gd (construction-point calculator), smoke_ui.gd (plays the real UI);
-             defs/ and lib/ their Resource classes and shared scripts, data/ price records and
-             test builds as Resource files
+data/        ALL content as Resource files, one folder per kind (a new file = new content)
+             monsters/ skills/ zones/ grounds/ props/ tamer/  — the game's content and, with the status
+                                                               "simulation", test monsters of the tools; every
+                                                               resource carries its internal_calc_cost
+tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game
+tools/       headless tools (tools/README.md): sim.gd (AI-vs-AI runs), compare.gd (comparison of two
+             monsters), smoke_ui.gd (plays the real UI);
+             lib/ their shared scripts (their data lies under data/, their Resource classes in battle/defs/)
 ```
 
 ## Dependency rule
@@ -44,7 +45,7 @@ that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends
 
 | Layer | Where | Rule |
 |-------|-------|------|
-| Definitions | `battle/defs`, `data/battle/*.tres` | Data only. A definition never contains resolution code. |
+| Definitions | `battle/defs`, `data/*.tres` | Data only. A definition never contains resolution code. |
 | State | `Battle` + `Board*`, `BattleUnit`, `PendingSurge` | Plain data; `Battle.clone()` copies it, `snapshot()` / `state_hash()` describe it. |
 | Rules | `battle/core/battle_*.gd` | Static functions on a `Battle`. No nodes, time, frames or UI state. |
 | Presentation | `battle/view`, `battle/ui` | Calls `Battle.check` / `preview` / `apply`, reads state and `events`. Decides nothing. |
@@ -66,28 +67,45 @@ that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends
 
 ## Adding content
 
-Everything under `data/battle/` is loaded by folder; the file name is the id. `tests/battle/test_battle_content.gd`
+Everything under `data/` is loaded by folder; the file name is the id. `tests/battle/test_battle_content.gd`
 validates the whole set and shows a new ground, prop and skill built from existing parts without code changes.
 
 | To add | Do this | New code needed when |
 |--------|---------|----------------------|
-| **Ground type** | new `GroundDef` in `data/battle/grounds/`: movement cost, max level, `GroundTrigger`s (start of turn / on enter / end of turn, damage or heal), while-standing `FieldEffect`s, colour | it needs a behaviour element that does not exist yet (a new trigger timing, a new effect tag): extend `GroundTrigger` / `FieldEffect` and the one function that reads them (`BattleDamage.ground_effects`, `BattleStats.contributions`) |
-| **Prop** | new `PropDef` in `data/battle/props/`: layer, HP, `heavy`, aura effects, `PropAftermath` list (damage / push / spawn + pattern), ground left | a new aftermath operation: add it to `PropAftermath` and `BattlePayload._removal_round` |
-| **Zone** | new `BattleZoneDef` in `data/battle/zones/` (effects with base / cap and recipient layers) + a zone skill | a new effect tag (see ground) |
-| **Skill** | new `BattleSkillDef` in `data/battle/skills/`: `kind` picks the profile (strike, surge, zone, ground, move, buff, passive); fill that profile's group; `board_ops` for ground / height / prop changes | a new execution profile or a new `BoardOp`: add the data fields and one branch in `Battle._use_skill` / the matching `BattlePayload` phase |
+| **Ground type** | new `GroundDef` in `data/grounds/`: movement cost, max level, `GroundTrigger`s (start of turn / on enter / end of turn, damage or heal), while-standing `FieldEffect`s, colour | it needs a behaviour element that does not exist yet (a new trigger timing, a new effect tag): extend `GroundTrigger` / `FieldEffect` and the one function that reads them (`BattleDamage.ground_effects`, `BattleStats.contributions`) |
+| **Prop** | new `PropDef` in `data/props/`: layer, HP, `heavy`, aura effects, `PropAftermath` list (damage / push / spawn + pattern), ground left | a new aftermath operation: add it to `PropAftermath` and `BattlePayload._removal_round` |
+| **Zone** | new `BattleZoneDef` in `data/zones/` (effects with base / cap and recipient layers) + a zone skill | a new effect tag (see ground) |
+| **Skill** | new `BattleSkillDef` in `data/skills/`: `kind` picks the profile (strike, surge, zone, ground, move, buff, passive); fill that profile's group; `board_ops` for ground / height / prop changes | a new execution profile or a new `BoardOp`: add the data fields and one branch in `Battle._use_skill` / the matching `BattlePayload` phase |
 | **Strike shape** | one entry in `StrikeShapes` (offsets, directions, AP) | — |
 | **Passive** | a `BattleSkillDef` of kind `passive` using the Passive group (stat effects, ignored effects / grounds, damage reductions, immovable, …) | a new kind of rule modifier: add the field and read it in `BattleStats` |
-| **Monster kit** | new `BattleKitDef` in `data/battle/kits/<species_id>.tres` (4 slots + reference sheet); the species itself is a `MonsterDef` in `data/monsters/` | — |
-| **Tamer skill** | new `TamerSkillDef` in `data/battle/tamer/` | always: tamer skills are unique mechanics, each has its resolver in `BattleTamer` |
+| **Monster** | new `MonsterDef` in `data/monsters/<id>.tres`: Kin, reference stats and the kit of up to 4 skills in one file | — |
+| **Tamer skill** | new `TamerSkillDef` in `data/tamer/` | always: tamer skills are unique mechanics, each has its resolver in `BattleTamer` |
 
 Unique mechanics stay local: the Kin twists live in the `KinRules` table, tamer skills in `BattleTamer`, late-round
 pressure in `BattleTurn`. No other module asks for a concrete monster, skill, prop or ground id.
 
-## Content status
+## Content status and build rules
 
-All shipped battle content is **test data or a GDD draft**, never approved content (docs/temp_todo.md T10–T13):
-the nine kits rebuild the prior-draft assignments of gdd_skills §10 from decided mechanics only, the prop catalogue
-is the working draft of gdd_battle §4.10, and seed 0 boards are fixed test layouts. Each record names its status.
+- **Everything is test data or a GDD draft**, never approved content (docs/temp_todo.md T10–T13). Skills and monsters
+  carry `content_status` (`approved` / `draft` / `test` / `simulation` / `archived`); the game never fields test-only,
+  simulation-only or archived records (filter in `BattleContent`). Details: [tools/README.md](tools/README.md).
+- **Build rules that are GDD working drafts since 2026-11-12** (user directions, docs/temp_todo.md T38, not validated):
+  **Surge** and **trap** are two skill kinds: a Surge is cast on any squares and detonates after its turns (2) of any
+  monster; a trap needs monster-free squares, stays until a monster, a new prop or a new Mountain appears on it, never
+  lapses and may be set repeatedly; a Surge replaces a trap square by square; a monster pushed against
+  the **board edge** takes 1 damage; a monster pushed into a **spiky prop** (`PropDef.spiky`: Bamboo Stand, Stone Lion)
+  takes 2; movement skills may displace on landing (`BattleSkillDef.impact_push`).
+  Since the user decisions of 2026-11-12 also: Step 1 AP, slotted movement skills 1 AP, shield / mend zone skills 2 AP,
+  push and pull zones also move the monsters in them at cast, every Strike pushes each struck monster 1 square away,
+  and everyone may rotate a placed shape.
+- **Test content without a GDD skill record** (T38): board skills Set Gong and Plant Bamboo (place a Bronze Gong / a
+  spiky Bamboo Stand on a free square in Reach); props Vortex Urn (destroyed: pulls the eight neighbours 1 square in)
+  and Storm Drum (pushes a monster that ends its turn orthogonally next to it 1 square away).
+- **Test switches, build only** (`battle/core/battle_experiment.gd`, set in the draft screen or by `sim.gd --variant`): pushes
+  over 2 squares / sliding, the Spirit swap, no rotation, AP of Step / Jab / movement, and the aggressive bot, and `soft_pressure` (late-round pressure without damage: the outer ring breaks away
+  every N rounds down to 3×3; not shown by the battle view yet).
+- **Removed:** the legacy skill model of the overworld (`SkillDef`, `ZoneDef`, skill evolution at the Evolution
+  Pillar). Slot development (gdd_skills §6) is not built.
 
 ## Running the checks
 
@@ -96,8 +114,7 @@ godot --headless --path godot --import
 godot --headless --path godot -s -d res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c -a res://tests < /dev/null
 godot --headless --path godot -s res://tools/smoke_ui.gd -- 3v3 7      # draft → placement → battle through the real UI
 godot --headless --path godot -s res://tools/sim.gd -- 20 3v3 1 "$(git rev-parse --short HEAD)"   # AI vs AI; prints a run block for docs/simulation_log.md
-godot --headless --path godot -s res://tools/compare.gd -- --bot rush                             # equal-cost, side-swapped test builds
-godot --headless --path godot -s res://tools/price.gd -- --example "Scaled Arc" --slot-level 2    # construction points of a price record
+godot --headless --path godot -s res://tools/compare.gd -- --bot rush                             # two monsters, side-swapped
 ```
 
-Options, test builds, bots and the limits of these runs: [tools/README.md](tools/README.md). None of them is a balance test.
+Options, test monsters, bots and the limits of these runs: [tools/README.md](tools/README.md). None of them is a balance test.

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_mvt2v"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_c10q4"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_a2rf3"]
+
+[sub_resource type="Resource" id="Resource_rod65"]
+script = ExtResource("1_mvt2v")
+op = "push"
+
+[resource]
+script = ExtResource("3_a2rf3")
+id = &"bronze_gong"
+display_name = "Bronze Gong"
+prop_class = "push"
+hp = 2
+aftermath = Array[ExtResource("1_mvt2v")]([SubResource("Resource_rod65")])
+ground_left = &"plain"
+color = Color(0.76, 0.6, 0.26, 1)
+description = "Destroyed: monsters on the 8 neighbouring squares are pushed 1 square away. Leaves Plain."
+internal_calc_cost = 12.0

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_e4gco"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_05aox"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_duwa2"]
+
+[resource]
+script = ExtResource("3_duwa2")
+id = &"glide"
+display_name = "Glide"
+kind = "move"
+description = "Any path up to Movement -1; charging Surges block the path. No lasting flight."
+status = "GDD movement preset (Skills §3/§8.2)"
+ap_cost = 1
+move_path = "free"
+blocked_by_objects = false
+blocked_by_monsters = false
+ground_costs = false
+distance_mod = -1
+internal_calc_cost = 14.0

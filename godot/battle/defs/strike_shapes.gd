@@ -38,6 +38,8 @@ static func shape_name(shape: StringName) -> String:
 
 
 static func ap(shape: StringName) -> int:
+	if shape == &"jab" and BattleExperiment.jab_ap > 0:
+		return BattleExperiment.jab_ap          # test switch
 	return SHAPES[shape]["ap"]
 
 

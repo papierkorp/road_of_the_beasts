@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_75nil"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_xrv6r"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_61hwc"]
+
+[sub_resource type="Resource" id="Resource_j5qgw"]
+script = ExtResource("2_xrv6r")
+tag = "shield"
+
+[resource]
+script = ExtResource("3_61hwc")
+id = &"wardstone"
+display_name = "Wardstone"
+prop_class = "aura"
+hp = 2
+aura = Array[ExtResource("2_xrv6r")]([SubResource("Resource_j5qgw")])
+ground_left = &"rubble"
+color = Color(0.5, 0.8, 0.86, 1)
+description = "Orthogonal neighbours take 1 less Surge damage. Leaves Rubble."
+internal_calc_cost = 8.0

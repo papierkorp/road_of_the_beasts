@@ -1,20 +1,17 @@
-[gd_resource type="Resource" script_class="SkillDef" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://shared/skill_def.gd" id="1"]
-[ext_resource type="Resource" path="res://data/zones/veil_d.tres" id="2"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_xuoao"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_4b5hy"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_knn5v"]
+[ext_resource type="Resource" path="res://data/zones/shade_veil.tres" id="4_10xrt"]
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("3_knn5v")
 id = &"shade_veil"
 display_name = "Shade Veil"
-archetype = &"Veil"
-kind = 1
-aspect = 3
-zone = ExtResource("2")
-shapes = Array[StringName]([&"I3"])
-orientation = 0
-cast_range = 3
-surge_type = 0
-twist = 0
-directional = false
-description = "Shield 2 vs Surges, Strikes -1"
+kind = "zone"
+ap_cost = 2
+description = "Shield zone: Surge damage on its squares -2 (up to -3 with level)."
+status = "test data (Skills §10 prior draft, decided mechanics only)"
+footprint = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1)])
+zone = ExtResource("4_10xrt")

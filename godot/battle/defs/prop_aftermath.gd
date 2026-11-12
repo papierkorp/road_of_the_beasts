@@ -7,7 +7,8 @@ const RING8: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1),
 	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]
 const CARDINAL4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
-@export_enum("damage", "push", "spawn") var op: String = "damage"
+## push = 1 square away from the prop, pull = 1 square toward its (then empty) square.
+@export_enum("damage", "push", "pull", "spawn") var op: String = "damage"
 @export_enum("ring8", "cardinal4") var pattern: String = "ring8"
 ## damage: amount per monster · push: distance (always 1 in the catalogue).
 @export var amount: int = 1

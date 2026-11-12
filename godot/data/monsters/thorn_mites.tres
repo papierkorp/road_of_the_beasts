@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="MonsterDef" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="MonsterDef" format=3]
 
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
-[ext_resource type="Resource" path="res://data/skills/bramble_tide.tres" id="2"]
-[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="3"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
+[ext_resource type="Resource" path="res://data/skills/burrow.tres" id="s0"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
+[ext_resource type="Resource" path="res://data/skills/bramble_tide.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -14,8 +17,8 @@ hp = 3
 initiative = 6.0
 move = 2
 tpr = 2
-reach = 1
-surge = ExtResource("2")
-utility = ExtResource("3")
-passive = &"thornwalker"
+reach = 3
+ap = 2
+skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
 blurb = "Weak little Floods that leave thorns for 3 rounds, on top of a permanent Thornbed they walk through."
+notes = "Deep Residue (level-II residue) and Thornwalker omitted: undecided / no free slot (T07/T11)."

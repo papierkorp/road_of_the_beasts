@@ -16,6 +16,12 @@ var _start1: Button
 var _tamer: Array[StringName] = []
 var _tamer_buttons := {}            # id -> Button
 var _random_board: CheckBox
+## Open test switches (temp_todo T38): label -> CheckBox. They apply to every battle.
+var _experiments := {}
+const EXPERIMENTS := [
+	["Beast pushes, Spirit swaps", "Beast Strikes push the target 1 square away; a Spirit Strike trades squares with it."],
+	["Push 2 squares", "Strike and Surge pushes and pulls move up to 2 squares."],
+]
 
 
 func _ready() -> void:
@@ -94,6 +100,23 @@ func _ready() -> void:
 	_random_board.tooltip_text = "Off: the fixed test layout of the mode. On: a seeded, point-symmetric layout."
 	loadout.add_child(_random_board)
 
+	var lab := HBoxContainer.new()
+	lab.add_theme_constant_override("separation", 8)
+	col.add_child(lab)
+	var lab_label := Label.new()
+	lab_label.text = "Test switches:"
+	lab_label.add_theme_color_override("font_color", UiTheme.DIM)
+	lab.add_child(lab_label)
+	for item: Array in EXPERIMENTS:
+		var cb := CheckBox.new()
+		cb.text = item[0]
+		cb.tooltip_text = item[1]
+		cb.add_theme_font_size_override("font_size", 13)
+		cb.button_pressed = (item[0] == "Push 2 squares" and BattleExperiment.push_steps > 1) or (item[0] != "Push 2 squares" and BattleExperiment.kin_push)
+		cb.toggled.connect(func(_on: bool): _apply_experiments())
+		lab.add_child(cb)
+		_experiments[item[0]] = cb
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
 	col.add_child(row)
@@ -129,6 +152,16 @@ func _card_text(d: MonsterDef) -> String:
 	return "%s\n%s\n%s" % [d.display_name.to_upper(), BattleText.rows_to_text(rows), d.blurb]
 
 
+## Sets the experiment switches from the check boxes and refreshes the cards (kits can change).
+func _apply_experiments() -> void:
+	var on := func(label: String) -> bool: return (_experiments[label] as CheckBox).button_pressed
+	BattleExperiment.reset()
+	BattleExperiment.kin_push = on.call("Beast pushes, Spirit swaps")
+	BattleExperiment.push_steps = 2 if on.call("Push 2 squares") else 1
+	for id in _cards:
+		(_cards[id] as Button).text = _card_text(BattleSetup.load_def(id))
+
+
 func _toggle(id: StringName, on: bool) -> void:
 	if on and not _picked.has(id):
 		if _picked.size() >= 3:
@@ -159,6 +192,7 @@ func _update() -> void:
 
 
 func _start(m: StringName) -> void:
+	_apply_experiments()
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
 	var enemy := BattleSetup.random_enemy(_picked, BattleSetup.team_size(m), rng)

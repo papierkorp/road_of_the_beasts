@@ -1,6 +1,6 @@
 class_name GroundDef
 extends Resource
-## A ground type (gdd_battle §4.7). Lives in res://data/battle/grounds/<id>.tres.
+## A ground type (gdd_battle §4.7). Lives in res://data/grounds/<id>.tres.
 ##
 ## Everything a ground does is composed from reusable elements: a movement cost, damage/heal
 ## triggers (GroundTrigger) and while-standing effects from the shared vocabulary (FieldEffect).
@@ -11,6 +11,10 @@ const RUBBLE := &"rubble"
 
 @export var id: StringName
 @export var display_name: String
+## Internal calculation cost in construction points (gdd_skills §5 working drafts): an
+## authoring note, not a rule, not a player value and not settled. Per created cell (permanent-state package).
+## -1 = not calculated.
+@export var internal_calc_cost: float = -1.0
 @export_enum("neutral", "hazard", "blessed") var group: String = "neutral"
 ## Movement points to enter (movement profiles with ground costs only; gdd_skills §3).
 @export var move_cost: int = 1

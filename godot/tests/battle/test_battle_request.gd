@@ -33,7 +33,7 @@ func test_reference_individuals_use_the_gdd_reference_sheet() -> void:
 	var sheet := UnitSheets.from_instance(MonsterInstance.of_species(GameData.monster(&"forge_golem")))
 	assert_array([sheet.hp, sheet.movement, sheet.tpr, sheet.reach, sheet.ap]).is_equal([8, 1, 1, 3, 3])
 	assert_float(sheet.initiative).is_equal(4.0)
-	assert_array(sheet.skills.map(func(s): return s.id)).is_equal([&"strike_jab", &"crucible", &"raise_ground", &"immovable"])
+	assert_array(sheet.skills.map(func(s): return s.id)).is_equal([&"strike_jab", &"set_gong", &"crucible", &"immovable"])
 	assert_bool(sheet.airborne).is_false()
 
 
@@ -56,29 +56,6 @@ func test_winged_individuals_fly_from_soul_tier() -> void:
 	assert_bool(UnitSheets.from_instance(_rolled(&"ember_hawk", Stage.Type.CORE_FORMATION)).airborne).is_false()
 	assert_bool(UnitSheets.from_instance(_rolled(&"ember_hawk", Stage.Type.SOUL)).airborne).is_true()
 	assert_bool(UnitSheets.from_instance(_rolled(&"blaze_tiger", Stage.Type.SOUL)).airborne).is_false()
-
-
-func test_only_gdd_legal_evolution_picks_reach_the_battle() -> void:
-	var inst := MonsterInstance.of_species(GameData.monster(&"gloom_wolf"))
-	inst.evolutions = [
-		{"slot": 0, "skill": "surge", "family": "shape", "arg": "L3:0"},      # Shape: same cell count
-		{"slot": 1, "skill": "surge", "family": "twist", "arg": "LOB"},       # range +2 / damage -1: not legal
-		{"slot": 2, "skill": "utility", "family": "value", "arg": "duration"},  # zone duration +1: legal
-		{"slot": 3, "skill": "surge", "family": "value", "arg": "range"},     # cast range: never
-	]
-	var sheet := UnitSheets.from_instance(inst)
-	var kit := H.content().kit(&"gloom_wolf")
-	var rift: BattleSkillDef = sheet.skills[kit.surge_slot]
-	assert_array(rift.footprint).is_equal(UnitSheets.legacy_footprint(&"L3", 0))
-	assert_int(rift.surge_damage).is_equal(3)    # no evolution changes damage
-	assert_int(sheet.skills[kit.utility_slot].duration).is_equal(3)
-	assert_int(H.content().skill(&"mire").duration).is_equal(2)             # the shared record is untouched
-	assert_int(H.content().skill(&"gloom_rift").footprint.size()).is_equal(3)
-	assert_int(sheet.notes.size()).is_equal(2)   # the twist and the range pick are reported, not applied
-	# a utility swap maps onto the battle record with the same id
-	var swapped := MonsterInstance.of_species(GameData.monster(&"gloom_wolf"))
-	swapped.evolutions = [{"slot": 0, "skill": "utility", "family": "swap", "arg": "bog"}]
-	assert_str(UnitSheets.from_instance(swapped).skills[kit.utility_slot].id).is_equal("bog")
 
 
 func test_prep_pill_is_a_pre_battle_initiative_modifier_and_ambush_is_ignored() -> void:

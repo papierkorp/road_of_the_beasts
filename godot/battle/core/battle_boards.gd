@@ -31,7 +31,8 @@ const MODES := {
 }
 ## Ground-layer catalogue entries a seeded board may pre-place (no child props).
 const SEEDED_PROPS: Array[StringName] = [&"stone_lion", &"clay_urn", &"bamboo_stand", &"paper_lantern",
-	&"peach_tree", &"ancestor_tablet", &"bronze_gong", &"pagoda_column", &"shrine", &"totem", &"banner", &"wardstone"]
+	&"peach_tree", &"ancestor_tablet", &"bronze_gong", &"pagoda_column", &"shrine", &"totem", &"banner", &"wardstone",
+	&"vortex_urn", &"storm_drum"]
 
 
 static func has_mode(mode: StringName) -> bool:

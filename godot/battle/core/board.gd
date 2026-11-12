@@ -10,6 +10,9 @@ const RING8: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, 0)
 	Vector2i(0, 1), Vector2i(-1, 1), Vector2i(-1, 0), Vector2i(-1, -1)]
 
 var size: int
+## Rings broken away from the outside (test switch BattleExperiment.soft_pressure): squares in
+## them count as off the board.
+var margin: int = 0
 var cells: Array[BoardCell] = []
 ## layer -> {Vector2i: unit id}; a 2x2 body is entered on all four squares.
 var occupants: Array[Dictionary] = [{}, {}]
@@ -23,7 +26,7 @@ func _init(board_size: int = 7) -> void:
 
 
 func in_bounds(p: Vector2i) -> bool:
-	return p.x >= 0 and p.y >= 0 and p.x < size and p.y < size
+	return p.x >= margin and p.y >= margin and p.x < size - margin and p.y < size - margin
 
 
 func at(p: Vector2i) -> BoardCell:
@@ -98,6 +101,7 @@ static func chebyshev(a: Vector2i, b: Vector2i) -> int:
 
 func clone() -> Board:
 	var b := Board.new(0)
+	b.margin = margin
 	b.size = size
 	var props_seen := {}
 	for c in cells:

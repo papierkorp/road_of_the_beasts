@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_2j6r0"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_bd6ee"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_5eivi"]
+
+[resource]
+script = ExtResource("3_5eivi")
+id = &"strike_thrust"
+display_name = "Thrust"
+kind = "strike"
+description = "2 damage to every monster and prop in the shape (allies too), plus the Kin effect."
+status = "GDD Strike shape (Skills §8.1)"
+ap_cost = 3
+strike_shape = "thrust"
+internal_calc_cost = 17.0

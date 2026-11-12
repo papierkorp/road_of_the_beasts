@@ -9,6 +9,7 @@
 - Confirmed rules override legacy conflicts; open decisions remain in temp_todo.md.
 - **Open rules:** a missing or unresolved rule grants no default, permission or implicit behaviour; content that depends on it stays blocked, and the T-references in this chapter name the owning task.
 - **Status:** the records in §11 are **draft structural/calibration references, not approved content, balance or unlocks**; §8–§10 hold working and prior-draft content. Open decisions and tasks live only in [temp_todo.md](temp_todo.md) (T02, T05, T10, T11).
+- **Surge direction (working draft, user direction 2026-11-12, played in the Godot build, not validated):** a Surge is a **trap** ([§3 Surge](#surge)); the earlier timed Surge (detonation at the caster's next turn) is replaced. §3 and the runtime sections of [gdd_battle.md](gdd_battle.md) follow the trap. **Not yet redrafted:** the §5 rates that assume a telegraphed, avoidable timed Surge (the 50 % timing rate, the marker-blocking fee, the basic Surge cross-check, the Surge rows of the calibration examples and the prop-aftermath analogy) and the Delayed Burst record of §11. Until T02/T10/T38 redraft them they are working numbers of the timed Surge, not prices or records of trap Surges.
 - **Section references:** `§n` without a file name means this file; other files are named explicitly (Monsters, Battle, Overworld).
 
 
@@ -20,8 +21,8 @@ Monster = Step (always, no slot)
           at least one active      — Epic+ get a 5th, passive-only slot ([Monsters §5.1](gdd_monsters.md#51-monster-rarity))
 ```
 
-- **Slots:** all 4 open on day one; movement skills occupy a normal slot, unlike universal **Step** (1 square, 2 AP, slot-free). No skill kind is mandatory; repeats, including identical skills in separate legal slots, are allowed. Each copy occupies its own slot and has independent activation usage under [§2](#usage-and-repetition); access and passive-only slot restrictions still apply.
-- **Limits:** species learnable list and Kin lock-outs ([Monsters §3.1](gdd_monsters.md#31-kin-table)/§8.2); each skill's [usage policy](#usage-and-repetition) and [Surge placement rules](#surge) remain binding. There is no monster-wide cap on simultaneously charging Surges.
+- **Slots:** all 4 open on day one; movement skills occupy a normal slot, unlike universal **Step** (1 square, 1 AP, slot-free; the weakest movement, for monsters without a movement skill). No skill kind is mandatory; repeats, including identical skills in separate legal slots, are allowed. Each copy occupies its own slot and has independent activation usage under [§2](#usage-and-repetition); access and passive-only slot restrictions still apply.
+- **Limits:** species learnable list and Kin lock-outs ([Monsters §3.1](gdd_monsters.md#31-kin-table)/§8.2); each skill's [usage policy](#usage-and-repetition) and [Surge placement rules](#surge) remain binding. There is no monster-wide cap on simultaneously set Surges.
 - **Default-kit tip:** pair a Surge with a *different effect family* of utility (protection, slowing or displacement), preserving an answer. Skills define zones/ground/effects; descriptive themes grant no bonuses or penalties. The prototype Tiger's 7 skills are a test bench, not a kit.
 
 ### Species-Specific and Signature Access
@@ -59,7 +60,7 @@ Every resolved definition contains all groups below: `none`/`[]` where genuinely
 | `upgrades` | Authored patches to these same fields, slot-level requirements, prerequisites/exclusions and explicit AP consequences. Empty while a draft's development path is unresolved. | Re-evaluate the resolved patched definition, not a second upgrade-component model or duplicate enlargement charge. |
 | `evaluation` | Internal pre-release authoring/test report: derived component costs, AP-efficiency or passive-availability cost, total points and required slot-level ceiling. Legacy `combination_cost` fields are fixed at 0, not an additional price channel. Neither a runtime requirement nor a player currency. | Derived result under [§5](#5-construction-points-and-ap-efficiency), not independently editable mechanics, prices or permissions. |
 
-- **Profiles are reusable bundles, not a closed menu:** Strike supplies body-relative hits, Surge telegraphing/charging, Zone persistent board area, movement presets traversal. Fully defined self buffs/passives may use `rule_profile: none`, without bypassing damage delivery, access or hard limits.
+- **Profiles are reusable bundles, not a closed menu:** Strike supplies body-relative hits, Surge trap placement and triggers, Zone persistent board area, movement presets traversal. Fully defined self buffs/passives may use `rule_profile: none`, without bypassing damage delivery, access or hard limits.
 - Evaluate resolved mechanics once; `kind`/`rule_profile` are not separately purchased advantages.
 
 
@@ -91,14 +92,14 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
     - Ground affects ground-layer occupants; prop reactions and Surge prop/occupant handling use their own rules, not a generic occupant hit ([gdd_battle §4.6–4.7](gdd_battle.md#46-zones-effects-rules--opposites) and §3 here).
 
 - **LOS ≠ placement legality:** zone/ground/prop/Surge casts and self boosts need no LOS; source-defined unit-targeted utility needs its explicit sight contract. Monster offensive push/pull uses spatial hit patterns, not direct unit selection. Reach, occupancy, layer and blocking checks still apply. Exact sight geometry/unspecified direct-target eligibility remain [temp_todo.md](temp_todo.md) T02/T04/T09.
-- **Layer-specific occupancy:** per-cell layer limits, props under zones/Surges and ground-on-prop rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground). Skill-side additions: prop creation needs empty cells; charging Surges cannot overlap (§3 here). Air occupancy follows Battle §4.3; no universal cross-layer `empty` test (open details: T09).
+- **Layer-specific occupancy:** per-cell layer limits, props under zones/Surges and ground-on-prop rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground). Skill-side additions: prop creation needs empty cells; set Surges cannot overlap (§3 here). Air occupancy follows Battle §4.3; no universal cross-layer `empty` test (open details: T09).
 - **Fixed bindings:** board footprints stay at cast cells; push direction/pull anchor are fixed at cast ([gdd_battle §4.4](gdd_battle.md#44-square-data-model)/[§6.5](gdd_battle.md#65-displacement); §2 here). Selecting a unit grants no homing area, following zone, moving pull anchor or automatic retarget after movement/death. Author unspecified unit-target resolution/validity (T02/T04); immediate body-relative Strike placement is no tracking precedent.
 
 **Area contract — explicit footprint, not cast range**
 
 - **Required area data:** shape/profile, distinct integer offsets from a declared anchor/body origin, matching `cell_count`, authored orientation/selection policy, boundary and blocking/placement references. Reusable footprints may own offsets; family names/unexplained orientation numbers cannot reconstruct cells. Non-area skills use `area: none`, without cell count/artificial footprint.
 - **Anchor/caps:** [Footprints and Placement](#footprints-and-placement) lists tetris families/counts/orientations. Author the centre-most anchor's exact offset mapping; no runtime tie-break. Caps: [§5](#5-construction-points-and-ap-efficiency). Strike body footprints (§8.1) and Major Surge access/profile are not generic size overrides.
-- **Orientation:** normal tetris skills have one family and one fixed absolute board orientation for both teams, not facing, team mirroring or default rotation. Only the owner-scoped [passive permission](#non-area-and-passive-coverage-references) allows in-battle rotation; Strike separately selects eight directions (§2–§3). Push direction is not rotation; missing mappings remain T02.
+- **Orientation** *(working draft, user decision 2026-11-12, T38)*: every monster may **rotate** a placed shape in quarter turns when it casts it (rotation only: no mirroring, no change of family or cell count); the authored orientation is the default. Footprints bound to the caster (the ring around it, trails) follow their own rule and are not rotated. Strike separately selects eight directions (§2–§3). Push direction is not rotation; missing mappings remain T02. The former owner-scoped rotation passive (Adaptive) has no function left and is to be redefined or removed (T11).
 - **Boundaries:** all cells must be on-board (§2); no automatic trimming, shifting or rotation to fit. Keep profile-specific Strike solid-prop blocking, ground/prop occupancy and Mountain blanking separate ([gdd_battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); §2–§3 here), not universal obstacle clipping/resizing. Forced-movement collision uses [gdd_battle §6.3](gdd_battle.md#63-collision-fall--debris), not area placement.
 - **Hits/2×2:** a monster covered by several hit cells is struck once per use ([§3](#body-relative-damage-and-movement-variants)); cells are not otherwise distinct hits. 2×2 geometry is decided in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground) and the *2×2 bodies* entry below; no 2×2 board case is left open; the remaining open part is concrete air-capable definitions and prices (T09/T02). Infer neither per-cell/per-unit hits, partial placement nor collision defaults; preview/validation must expose unsupported cases.
 
@@ -130,7 +131,7 @@ These are separate responsibilities, resolved against [gdd_battle §4.3–4.11](
 
 ### Evaluation Contract — One Definition, One Calculation
 
-Evaluation is an **internal, pre-release calculation/check of an authored definition**, not an in-battle calculation, player-facing resource or required runtime field. It can be produced by an authoring script/test before a skill is admitted to the game. The [price calculator](../godot/tools/lib/skill_pricing.gd) covers only the explicitly supported reference subsets, not the full model or content admission. The calculation is part of this data model, not a parallel skill blueprint. The field table above binds authored mechanics to costing; [§4](#4-effect-and-board-operation-contracts) owns effect/operation contracts and [§5](#5-construction-points-and-ap-efficiency) owns their rates, units and package inclusions. Neither costing nor reference records redefine those contracts.
+Evaluation is an **internal, pre-release calculation/check of an authored definition**, not an in-battle calculation, player-facing resource or required runtime field. It can be produced by an authoring script/test before a skill is admitted to the game. The Godot build stores the current working number as `internal_calc_cost` on each skill, zone, ground and prop resource (an authoring note; the earlier price calculator was removed on 2026-11-12 because prices are not settled). The calculation is part of this data model, not a parallel skill blueprint. The field table above binds authored mechanics to costing; [§4](#4-effect-and-board-operation-contracts) owns effect/operation contracts and [§5](#5-construction-points-and-ap-efficiency) owns their rates, units and package inclusions. Neither costing nor reference records redefine those contracts.
 
 1. Resolve the skill's authored fields and referenced profiles/contracts, including any selected upgrade patches, before release. Runtime trigger/usage definitions describe the capability being evaluated; actual casts, hits, destroyed props or observed trigger counts never determine its construction price.
 2. Derive each charge's quantity from those resolved fields and apply the owning §5 rate once. Attribute it to the source field/effect/operation and referenced rate; do not copy mechanics or introduce separately authored cost-only cell counts, durations, layers or timing flags.
@@ -153,7 +154,7 @@ Existing tetris families/authoring orientations below follow the spatial/area co
 | S4 / Z4 |     4 |                           4 |
 | L4 / J4 |     4 |                           8 |
 
-- **Orientation counts** are authoring options, not battle choices; fixed orientation/passive rotation follow the area contract above. Outside-battle changes: [§6](#6-slot-levels-development-replacement-and-upgrades). Rotation shortcuts: `R` / right-click.
+- **Orientation counts** are authoring options for the default orientation; in battle every shape may be rotated (area contract above). Outside-battle changes: [§6](#6-slot-levels-development-replacement-and-upgrades). Rotation shortcuts: `R` / right-click.
 - **Preview:** colour squares **new / levels up / replaces / weakens / cancels / blocked**; list ground/prop reactions, displacement landings and Surge damage after reductions. Referenced Battle rules determine outcomes, not preview labels.
 
 ### Interaction Fields
@@ -187,7 +188,8 @@ Central monster-skill execution definitions; [Battle chapter 5](gdd_battle.md#5-
 |   Kind   |      Writes to      |                                         In battle                                          |
 |----------|---------------------|--------------------------------------------------------------------------------------------|
 | `strike` | squares around the body | small direct damage in a shape around the monster ([Strike profile](#strike))                               |
-| `surge`  | Surge layer; ground only via explicit `board_changes` | telegraphed delayed execution ([Surge profile](#surge)), including the existing burst profiles; optional, separately budgeted residue; multiple casts may charge concurrently under their skill-instance policies |
+| `surge`  | Surge layer; ground only via explicit `board_changes` | a visible marker that detonates after its turns ([Surge profile](#surge)), including the existing burst profiles; optional, separately budgeted residue |
+| `trap`   | Surge layer; ground only via explicit `board_changes` | a visible marker on free squares that detonates when sprung ([Surge profile](#surge)); same profiles and residue rules; may be set repeatedly |
 | `zone`   | zone layer          | timed control or support on squares ([gdd_battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites)), lasts for the skill's `duration`               |
 | `ground` | ground layer        | hazard ground or Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                                           |
 | `prop`   | object layer        | places or moves props ([gdd_battle §4.9](gdd_battle.md#49-props))                                                               |
@@ -215,42 +217,64 @@ Profiles are reusable, not a closed menu. Direct buffs/passives use the common m
 - **Retreat direction for shapes** *(user decision)*: the retreat goes **opposite to the centre of the hit shape**, one cell from the attacker's origin. The direction is the geometric centre (mean of the shape's hit-cell offsets) relative to the origin and exists only if that centre lies on one of the eight directions (on an axis or exactly diagonal); the retreat is then the opposite unit vector. Shapes whose centre is the origin (Pincer, Whirl, Cross, Storm, Long Whirl/Cross) or lies off all eight directions have **no self retreat**. Jab, Thrust, Diagonal Thrust, Arc and cardinal Cleave qualify. A retreat variant needs a hit shape (a movement-only retreat uses a damage-free hit shape, no empty pattern), and the direction is the Strike direction selection already priced. The user confirmed this reading on 2026-11-10.
 - **One hit per monster** *(user decision)*: a monster covered by several hit cells (mainly 2×2 bodies) is struck **once per use**: damage, Kin effect and push/retreat trigger once, regardless of covered cells. Construction prices stay per potential cell (hit multiplicity is not priced). 2×2 specifics: see *2×2 bodies* below.
 - **2×2 bodies** *(user decision 2026-11-10; body rules in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground))*: for a 2×2 **target**, the push offset `d` is the mean of the offsets of its covered hit cells adjacent to the attacker's origin; it applies only if that mean lies on one of the eight directions, otherwise the body takes damage and Kin effect but is not pushed. A 2×2 **attacker** with a retreat variant retreats with its whole body one square along the opposite unit vector; legal only if all four destination squares are legal, else it stays in place (failed-retreat rule above). A 2×2 attacker chooses one of its four covered squares as the shape origin together with the direction, shown in the preview; its own body squares are not hit. A 2×2 target of a pull moves one cardinal step of the whole body, with the direction taken from the covered square nearest the anchor (ties as for 1×1, T04). A 2×2 is affected by any zone, Surge footprint or hit shape that overlaps at least one covered square, once per event or use. Mountain, entry and landing rules for 2×2 are decided in [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground) and [§6.3](gdd_battle.md#63-collision-fall--debris).
-- **Access** *(user decision)*: the variants are **Kin-bound**: target-movement (push) variants, damage-plus-push or movement-only, only for Scaled; self-retreat variants only for Winged. The existing Kin Strikes (Scaled push 1 with its push-direction choice, Winged retreat 1) stay unchanged and are separate skills. No variant is open to other Kin, and no Kin package is transferred. Shape AP and stage limits follow [§8.1](#81-strike-by-kin); concrete species lists remain content work (T11).
+- **Access** *(user decisions; push access changed 2026-11-12)*: target-movement (push) variants, damage-plus-push or movement-only (Shove), are **no longer bound to Scaled**: any species may carry one through its learn list. Which Kins and species actually get them is content work (T06/T11), not open to everyone by default. Self-retreat variants stay Winged-only. The existing Kin Strikes (Scaled push 1 with its push-direction choice, Winged retreat 1) stay unchanged and are separate skills; no Kin package is transferred. Shape AP and stage limits follow [§8.1](#81-strike-by-kin).
 - **Authored alternatives:** target movement or self movement is fixed by the skill, not selected after a hit. Preserve source-specific side/caster/layer permissions and legal landing rules. Blocked/occupied destinations grant no automatic alternative square. Collision, fall and entry consequences remain environmental/runtime consequences, not an extra authored damage component.
-- **Spatial boundary:** non-adjacent off-axis hits have no inferred normalization/tie-break; 2×2 geometry follows the *2×2 bodies* entry above, but the 2×2 variants stay unapproved until the price calculator and cost notes cover them (T09/T02). This coupled eight-direction rule does not change existing cardinal zone/Surge push/pull or silently replace Scaled's selected direction; Winged's Dive uses the same centre-based retreat. Prices, AP, access and unresolved ordering within the attack payload/multi-target resolution remain T02/T04/T06; neither a damage value nor a damage-for-distance exchange is approved by this section.
+- **Spatial boundary:** non-adjacent off-axis hits have no inferred normalization/tie-break; 2×2 geometry follows the *2×2 bodies* entry above, but the 2×2 variants stay unapproved until cost notes cover them (T09/T02). This coupled eight-direction rule does not change existing cardinal zone/Surge push/pull or silently replace Scaled's selected direction; Winged's Dive uses the same centre-based retreat. Prices, AP, access and unresolved ordering within the attack payload/multi-target resolution remain T02/T04/T06; neither a damage value nor a damage-for-distance exchange is approved by this section.
 
 ### Surge
 
-- **Surge:** telegraphed delayed execution, pending marker/timer, zone shapes/placement but its own slot/lifecycle.
-- **Concurrent casts:** a monster may have multiple pending Surges from different equipped skills or repeated casts of the same skill instance when its [usage policy](#usage-and-repetition) permits. Each cast pays its own authored Battle-AP and creates its own pending marker/timer under the existing scheduling contract. No monster-wide charging cap applies. Placement still forbids overlap with any pending Surge; several Surges due at the same event resolve phase by phase together, with no cast-order rule ([Battle §6.2](gdd_battle.md#62-surge-resolution-integration)).
-- **Aftermath:** optional, explicit, separately budgeted `board_changes`, never implied by Surge alone. Damage precedes authored ground aftermath. No new prices here; legality/evaluation/validation: §4/§5/§7.
+**Status: working draft** *(user directions 2026-11-12: Surge (timed) and trap as two skill kinds; played in the Godot build; only bot runs so far, [simulation_log.md](simulation_log.md) S002–S008; open points: T38 in [temp_todo.md](temp_todo.md))*.
+
+- **Surge and trap are two separate skill kinds** *(user decisions 2026-11-12)*: a **Surge** is the attack that forces a reaction: cast on any squares, also under monsters, it detonates after an authored number of turns. A **trap** is board control: set on free squares, it does nothing until it is sprung and then detonates at once. Both are declared, visible markers that use zone shapes/placement with their own slot and lifecycle, both use the profiles below, and both are the only source of big damage ([Battle §6.1](gdd_battle.md#61-the-damage-law)). A kit may hold both.
+- **One marker per square, the Surge wins** *(user decision 2026-11-12)*: a square holds at most one marker. A **Surge replaces a trap** on exactly the squares it covers; the trap stays on its other squares (and is gone once it has none left). A **trap is laid only on the squares of its shape that hold no marker**; on squares with a Surge or another trap nothing happens, and it cannot be cast if no square is free. A Surge cannot be cast on squares of another Surge.
+- **Several at once:** a monster may have several Surges pending, from different skills or from repeated casts of the same skill; each cast pays its authored Battle-AP and follows the skill's [usage policy](#usage-and-repetition). There is no cap per monster or per skill. A Surge cannot be set on squares that already hold a set Surge.
+- **Aftermath:** optional, explicit, separately budgeted `board_changes`, never implied by Surge alone. Damage precedes authored ground aftermath. Legality/evaluation/validation: §4/§5/§7.
 
 ```
-MINOR SURGE
-  shape/placement: resolved authored footprint and constraints (§2/§3), checked under [central skill rules](#2-data-oriented-skill-construction-kit)
+SURGE and TRAP — common to both kinds (Minor)
+  shape/placement: resolved authored footprint and constraints (§2/§3)
   range: effective Reach to anchor unless an explicitly approved baseline profile says otherwise
-  charging: visible, blocks movement through its squares
-  fires: at the START of the caster's next turn (simple alternating 1v1: after the opponent's turn)
-         if the caster died, it fires at the start of the next round ([Battle §2.2](gdd_battle.md#22-initiative-rules))
-  autonomous: not cancelled by displacing / killing the caster
+  marker: visible to both sides with its footprint, effect and type; blocks no movement;
+          stays when its caster is defeated, displaced or swapped out; one marker per square
   per-square result:
     monster  → authored value, reduced by zone shield and Hallowed (minimum 0 damage)
                (hits every monster on its squares — allies and the caster included)
     prop     → ordinary interception instead of its occupant (Battle §4.10); profile exceptions below
-               select reactions resolved under Battle §4.10–§4.11
     Mountain → depends on the Surge profile (table below)
   afterwards: only if explicitly authored, apply the separately budgeted RESIDUE
               board_changes effect (permanent ground, gdd_battle §4.7), subject to its profile's
               height rules below; otherwise no residue; no repaint
-  usage: spend authored AP (§5) per cast; repeat availability follows the equipped instance's usage policy (§2)
-  claims squares: can't be placed on squares already holding any charging Surge (the first one claims them)
+  usage: spend authored AP (§5) per cast; repeat availability follows the skill's usage policy (§2)
+
+SURGE
+  cast on: any squares, also under monsters; replaces a trap on the squares it covers
+  detonates: after its authored number of finished turns of any monster (draft: 2), counted
+             from the turn after the cast; it fires between two turns; Surges due together
+             resolve together (gdd_battle §6.2)
+  answer: leave its squares before it fires (whoever has no turn left before then cannot)
+
+TRAP
+  set on: squares without a ground-layer monster and without a marker (squares of its shape that
+          hold a Surge or trap are skipped); a prop or Mountain already there is allowed
+          and does not spring it
+  no timer, never lapses
+  triggers (authored per trap, shown on the skill):
+    any (default)  a ground-layer monster on one of its squares (walk, landing, push, pull, swap),
+                   or a prop or a Mountain that appears on one of its squares
+    monsters       only a monster springs it
+  detonates: right after the action or displacement that sprang it has resolved; a walk ends on
+             the first trap square it enters; a detonation can spring others
 
 MAJOR SURGE
   shape/range: requires an explicitly authored large-area profile, not a generic size/range override
   usage: once per battle; authored AP and access: §5/§1
   open: legacy up-to-half-board/long-range wording needs a concrete definition (T02);
-        Ancient vs Legendary Signature access remains T02/T32, not permission for either by inference
+        Ancient vs Legendary Signature access remains T02/T32, not permission for either by inference;
+        whether a Major Surge is a trap as well is undecided (T38/T32)
 ```
+
+- **Readings of the build that need confirmation (T38):** air-layer monsters neither block nor spring a ground Surge (the Mountain rule of [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) still lets it hit adjacent flyers, fixed at cast); a prop or Mountain that stood on a square at cast never springs it later; a Surge may be set next to anyone, including directly behind a monster that is then pushed in during the same turn.
+- **Not adopted:** zones as triggers (push and pull zones spring a trap indirectly by moving a monster in); detonation by the caster; a lapse of traps; a Surge that is also sprung by entry.
 
 - Prop interception, ordinary prop damage and destruction are resolved by [Battle §4.10](gdd_battle.md#410-prop-catalogue-and-damage). *(User decision 2026-11-11:)* the three profiles carry **no prop-specific exceptions**; props take ordinary Surge handling (2 damage, intercepting the hit) and only the `heavy` tag of [Battle §4.11](gdd_battle.md#411-prop-reactions) applies.
 
@@ -271,16 +295,16 @@ A Mountain therefore offers profile-specific protection, not a universal Surge c
 
 **Runtime counter menu** (authoring validation of live counters: §2/§4/§5/§7):
 
-|            Counter             |                                                         How                                                          |
-|--------------------------------|----------------------------------------------------------------------------------------------------------------------|
-| **Leave**                      | move out of its squares before it fires — but mind any explicitly authored residue                                             |
+| Counter | How |
+|---|---|
+| **Stay out / leave** | trap: do not end a move on its squares, and keep away from the squares next to it while someone can push, pull or swap you in. Timed Surge: walk out before it fires |
+| **Spring it safely** | put a prop or a Mountain on one of its squares, or push another monster in; not possible against a Surge that only monsters spring |
+| **Resist displacement** | passives and props that stop a push or pull (drafts: Immovable, Counterweight, a `heavy` blocker behind you) |
 | **Zone shield** | `shield` over its squares: reduction 2 (up to 3 with level) cuts damage 1:1 per square; recast to level up |
-| **Pick the height** | Create Mountain where legal; protection, residue exclusion or collapse depends on the profile table above |
+| **Pick the height** | protection, residue exclusion or collapse depends on the profile table above; creating the Mountain on its squares springs it |
 | **Stand on Hallowed** | Use its Surge reduction and replacement contract in [Battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed) |
-| **Fly over it**                | Existing Surge damage recipients exclude air unless a definition authors air recipients ([Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground)); the air layer is out of reach (Winged, Soul+), except from attackers standing on a Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                       |
-| **Props / debris** | Use the interception/destruction rules in [Battle §4.10](gdd_battle.md#410-prop-catalogue-and-damage), subject to the draft prop catalogue |
-| **Answer with your own Surge** | race it — but you can't claim squares already held by a charging Surge                                               |
-| **Control the tempo**          | slow / pull / push zones to steer where the target can stand; drain the caster's initiative to delay its next turn      |
+| **Fly over it** | Existing Surge damage recipients exclude air unless a definition authors air recipients ([Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground)); the air layer is out of reach (Winged, Soul+), except from attackers standing on a Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) |
+| **Answer with your own Surge** | set one where the enemy has to pass — but not on squares another Surge already holds |
 
 ### Movement
 
@@ -293,7 +317,7 @@ Movement skills use **flag profiles**, not special-case lists. Modes are authori
 | `path`                 | `walk` square by square · `line` straight line, only the landing square counts · `free` any path, only the landing square counts · `teleport` any free square in range |
 | `blocked_by_objects`   | solid props block the path                                                      |
 | `blocked_by_monsters`  | monsters block the path                                                         |
-| `blocked_by_surges`    | charging Surges block the path                                                  |
+| `blocked_by_surges`    | retired with trap Surges *(working draft 2026-11-12)*: no Surge square blocks a path; the column below is kept until the presets are repriced (T02) |
 | `blocked_by_height`    | can't start or end the move on Mountain                                         |
 | `ground_costs`         | Rubble and climbing cost 2 movement, Thornbed fires on every square entered (walk only) |
 | `distance_mod`         | distance = Movement + this (min 1)                                              |
@@ -308,11 +332,21 @@ Movement skills use **flag profiles**, not special-case lists. Modes are authori
 | **Phase**          | walk | no      | yes      | yes    | no     | yes          | −1           |
 | **Blink**          | teleport | no  | no       | no     | no     | no           | −2           |
 
+- **Surges and movement** *(working draft 2026-11-12)*: every movement may enter or land on a Surge square and springs it; a `walk` ends on the first Surge square it enters. The “Surges” column of the table is therefore without effect, and presets that paid for dropping it (Leap, Burrow, Blink) need a price review (T02).
 - **Price rule:** every restriction a preset drops is paid for in distance or in direction (Leap: straight line only). New modes follow it
 - Apply only the resolved, authorized movement variant; upgrade allowances and AP consequences belong to [§6](#6-slot-levels-development-replacement-and-upgrades), not a second battle upgrade rule
 - Min 1 square for every movement skill. Step ignores slow and extra ground costs, but still requires a legal unblocked destination
 - Ignoring path blockers permits no occupied landing. Walk processes entered cells; line/free/teleport only landing, with destination effects still applying.
 - Glide grants no persistent flight; flight rules: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); layer change/landing remain T09.
+
+**Movement with landing displacement** *(working draft, user direction 2026-11-12; test skills in the Godot build, no price, no record yet: T10/T02)*: a movement skill may carry one displacement that happens on landing. It is forced displacement under §4 and [Battle §6.3](gdd_battle.md#63-collision-fall--debris), deals no damage of its own and needs a 1×1 mover.
+
+| Variant | Effect on landing | Test skill |
+|---|---|---|
+| Push ahead | the monster on the next square in the travel direction (straight or exactly diagonal run) is pushed 1 square on | Headbutt: line, up to 2 squares |
+| Push ring | every monster on the eight neighbouring squares is pushed 1 square outward | Quake Leap: line, Movement − 1 |
+
+A damage-free, movement-only Strike that pushes (Shove, [body-relative variants](#body-relative-damage-and-movement-variants)) is the third displacement tool of the test kits; push variants are not bound to Scaled any more (access rule there).
 
 ### Surge Constraints and Species Access
 
@@ -430,7 +464,7 @@ Preserve the existing structural restrictions when authoring or upgrading a cons
 - This is not forced `displacement`, unit relocation or prop movement.
 - Resolve one movement action under [§3](#3-skill-execution-profiles); it creates no persistent movement permission.
 
-- **Step:** resolves as the universal one-square action under the [Movement profile](#movement) (slot-free, 2 AP, exactly 1 square); not freely upgradable.
+- **Step:** resolves as the universal one-square action under the [Movement profile](#movement) (slot-free, 1 AP, exactly 1 square); not freely upgradable.
 - **Slotted movement:** authorized [preset](#movement) (path, blocking, ground-cost and landing rules there), AP baseline (§5), **Movement, not Reach**.
 - **Access:** §8.2 owns presets/foreign modes, body/stage restrictions. `path: teleport` grants no access without an authorized profile; free paths grant neither persistent flight nor air access. Winged air requires Soul; flight movement and air occupancy: [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground), a Soul+ Winged stays on the air layer with no landing effect. Water/Swim is removed.
 - **Custom modes/upgrades:** satisfy distance/direction pricing and access; fields are no player bypasses. §6's named one-flag-flip/distance-penalty patches grant no unrestricted path-mode, flight, teleport, extra action or range upgrade. Validate complete profile, entry order and destination preview; large-body/movement gaps remain T04/T09.
@@ -469,7 +503,7 @@ Tamer-source unit relocation and unit-swap effects retain their separate definit
 - **Cleanse**
   - Required data / source: Explicit source, exact affected layer/state, legal footprint/recipients and resulting state
   - Binding lifetime, ordering and limits: The existing Mountain-creation source clears non-Voidscar ground to Plain as above; no further monster Cleanse source exists (user decision 2026-11-10); a new one needs an explicit definition and validation and is parked under Potential Extensions.
-    - Zone removal ends its effects, not ground/height/props or a charging Surge.
+    - Zone removal ends its effects, not ground/height/props or a set Surge.
     - The combined zone-removal/Plain-reset exception is a tamer-source operation ([gdd_overworld §6.4](gdd_overworld.md#64-tamer-skills)), not a reusable monster permission.
     - No generic cleanse of all layers, negative effects, Injury or Voidscar; unresolved combinations remain T02/T07/T20.
 
@@ -495,6 +529,8 @@ allowed ceiling = shared base budget + slot-level allowance
 skill point cost <= allowed ceiling
 ```
 
+- **Defence costs a little more than attack** *(user principle 2026-11-12, numbers open)*: answering a threat (protection, healing) should cost slightly more Battle-AP than making it, so that waiting is never the cheaper plan. Which AP values express this is being tried in simulation (T38); prices follow later.
+- **Displacement is everywhere, not a slot** *(user principle 2026-11-12)*: no kit reserves a slot for displacement; instead many skills of every kind carry it (Strikes, zones, props, movement, Surges and traps).
 - **AP efficiency:** fewer battle AP/use buys a powerful advantage, costing more construction points; higher AP leaves more effect room, never costs extra merely for spending AP. Author the finished skill/AP, then evaluate total points: AP cost is part of valuation, not an AP-class budget ladder or separate budget source.
 - **Confirmed costing structure:** combine one-time use/availability costs with effect-extent costs. Charge AP efficiency, free-anchor choice and the complete Surge marker once at their applicable scope, not per footprint cell. Price area effects per potentially affected cell; non-area effects use their authored package (e.g. movement). Duration, magnitude and other explicit effect dimensions remain part of the component formula. No generic activation surcharge per added effect or blanket area surcharge on top of its cell price.
 - **Shared component prices:** charge actual mechanics once, never redundant tags/flags or the same enlargement twice; no combination surcharge ([policy](#combination-policy-and-basic-surge-target)). Evaluate telegraphing/blocking/restrictions in context, without arbitrary negative credits or uncalibrated exceptions.
@@ -516,7 +552,7 @@ Maximums only: no spending targets, balance/component-price approval, step price
 
 ### Component Price Sheet
 
-**Calibration drafts, not validated balance. All prices are construction points, not combat damage.** Cells are potential footprint cells, not guaranteed hits; a 2×2 body is struck once per use (§3); 2×2 variant prices remain T02/T09.
+**Calibration drafts, not validated balance. All prices are construction points, not combat damage.** Cells are potential footprint cells, not guaranteed hits; a 2×2 body is struck once per use (§3); 2×2 variant prices remain T02/T09. **Surge rows predate the trap direction** (see [Scope and Status](#scope-and-status)): the telegraphed-timing rate and the marker-blocking fee describe the timed Surge and have no trap equivalent yet (T02/T38).
 
 | Component | Price | Scope |
 |-----------|-------|-------|
@@ -569,15 +605,15 @@ Movement, passive and prop standards are maintained only in their owning section
 
 | Variant (Kin) | Calculation | Total |
 |---|---|---:|
-| Damage + push (Scaled) | damage 4 + direction 2 + ground/air 2 + push 2 + AP efficiency 6 | 16 |
-| Push only, no damage (Scaled) | direction 2 + push 2 + AP efficiency 6 (no damage, so no ground/air coverage) | 10 |
+| Damage + push (any Kin; priced with the Scaled package rate) | damage 4 + direction 2 + ground/air 2 + push 2 + AP efficiency 6 | 16 |
+| Push only, no damage (Shove; any Kin) | direction 2 + push 2 + AP efficiency 6 (no damage, so no ground/air coverage) | 10 |
 | Damage + retreat (Winged) | damage 4 + direction 2 + ground/air 2 + retreat 3 + AP efficiency 6 | 17 |
 | Retreat only, no damage, with hit cell (Winged) | direction 2 + retreat 3 + AP efficiency 6 | 11 |
 
 - **Reading:** damage + push/retreat totals equal the existing Scaled/Winged Jab totals above because the rates are the same anchors; the new geometry adds no points. Movement-only variants are cheaper only because the absent damage is not paid for. All fit slot level 1 (24) numerically. This is arithmetic, not balance, and grants no unlock.
 - **Multi-cell push drafts** *(draft)*: push is priced 2 per **adjacent** hit cell only, since only those cells can move a recipient; all other components follow the formula below (Beast values from the table). Damage + push totals: Jab 16, Pincer 19, Arc 25, Whirl 29, Cross 29, Storm 51 (equal to the Scaled column, as all hit cells are adjacent) and Thrust 19 (Scaled 21), Cleave 40 (46), Long Whirl/Long Cross 50 (58), because distant cells are not moved. Movement-only variants omit damage 4 per cell and the ground/air 2. Budget fit follows the existing Beast/Scaled budget findings and is not a recommendation.
 - **Multi-cell retreat drafts** *(draft)*: retreat is 3 once per use, so damage + retreat equals the Winged column above for qualifying shapes: Jab 17, Thrust 20, Diagonal Thrust 20, Arc 22, cardinal Cleave 37. Pincer, Whirl, Cross, Storm and Long Whirl/Cross have no retreat variant (their existing Winged Strikes are unchanged). Retreat-only is priced only for the 1-cell Jab shape (11 above); damage-free multi-cell shapes are not priced.
-- **Open:** 2×2/layers need T09; Cleave is cardinal-only (decided); hit multiplicity for retreat is decided as once per use. The [price calculator](../godot/tools/lib/skill_pricing.gd) prices them only through the Scaled/Winged package rows.
+- **Open:** 2×2/layers need T09; Cleave is cardinal-only (decided); hit multiplicity for retreat is decided as once per use. They are priced only through the Scaled/Winged package rows.
 
 - **Construction-point formula, 1×1 references:** `4 × hit cells + 2 × cells outside the adjacent eight-cell ring + effective footprint-direction cost + 2 ground/air coverage + AP-efficiency cost + Kin component`. Direction costs 2 only if cells change; ordinary prop interaction has no generic surcharge. Table values are **not damage** and decide no 2×2 hit multiplicity.
 
@@ -613,7 +649,7 @@ Movement, passive and prop standards are maintained only in their owning section
 | Burrow | 8 | 6 | 14 | — |
 | Phase | 7 | 6 | 13 | — |
 | Blink | 10 | 6 | 16 | — |
-| Step (universal, no slot) | Not budgeted | Not applicable | Not applicable | Existing 2 AP, exactly 1 cell; no skill upgrades |
+| Step (universal, no slot) | Not budgeted | Not applicable | Not applicable | 1 AP, exactly 1 cell; no skill upgrades |
 
 - **Package scope:** whole §3 presets, not additive flag prices/restriction exchange rates. Retain §8.2 Kin/stage access and the legal landing/occupancy/entry rules of the [§3 presets](#movement); self movement pays no ranged-anchor/ground-air-attack fee.
 - **Status:** all existing slotted modes fit 24 numerically, without new access, completed upgrades, progression unlock or balance approval. Unmodified baseline walk uses the table total, combination 0, passive availability inapplicable.
@@ -874,9 +910,9 @@ No source currently has a prop reaction or extra prop damage, so this standard h
 
 | Authored action/profile | Existing battle AP cost / limit |
 |-------------------------|---------------------------------|
-| Step (no slot) | 2 AP |
-| Slotted movement | 2 AP |
-| Zone / ordinary ground / prop / direct | 1 AP |
+| Step (no slot) | 1 AP *(working draft, user decision 2026-11-12, T38)* |
+| Slotted movement | 1 AP *(working draft, user decision 2026-11-12, T38)*; the 6-point AP-efficiency figures of the movement table below still assume 2 AP |
+| Zone / ordinary ground / prop / direct | 1 AP; **protecting and healing zones (`shield`, `mend`) 2 AP** *(working draft, user decision 2026-11-12, T38)*: defence costs a little more than attack |
 | Minor Surge | 1 AP baseline per cast; repetition follows the equipped instance's usage policy |
 | Strike | 2–5 AP by the selected authored shape (§8.1) |
 | Blessing ground | 2 AP; not the ordinary-ground default |
@@ -889,7 +925,7 @@ No source currently has a prop reaction or extra prop damage, so this standard h
 
 - A zone's existing duration default is 2 rounds, but every resolved definition must state/reference its lifetime; the Slowing Zone record in [gdd_skills.md](gdd_skills.md) remains an unvalidated combination.
 - Temporary species-specific effects must state N rounds or an explicit consumption/end-of-battle condition; the former flat `rounds` field is not a separate schema.
-- A Surge needs at least three live counters to pass design validation (leaving, protection, height, air, props or tempo as applicable); a nominal counter that its actual profile prevents does not count.
+- A Surge needs at least three live counters to pass design validation (staying out, safe springing by a prop or Mountain, resistance to displacement, protection, height or air as applicable); a nominal counter that its actual profile prevents does not count. A Surge that only monsters spring loses the safe-springing counter and still needs three. *(Reworded for trap Surges 2026-11-12; to be checked in play, T38.)*
 - **Size:** 1–4 cells for ordinary skills with a tetris shape, 2 for Swarm Surges ([Monsters §3.1](gdd_monsters.md#31-kin-table)). Strikes have their own list (§8.1); Major Surge requires its explicitly authored large-area profile and access, not a generic cap override.
 
 ## 6. Slot Levels, Development, Replacement and Upgrades
@@ -1014,18 +1050,18 @@ Jab    Thrust    Diag Thrust    Arc      Arc (diagonal)    Cleave
 - **Every shape hits allies too.** The bigger the shape, the more of them stand in it. A 2×2 monster starts the shape at a chosen covered square ([2×2 bodies](#body-relative-damage-and-movement-variants))
 - The shape is part of the species and changes through slot-development upgrades (Shape and Size, §6)
 
-**Kin twists:** every Strike deals **2 damage per struck monster**, plus its bound Kin effect. Under confirmed policy, Kin advantages consume the shared construction budget (§5); Beast has none to price.
+**Kin twists:** every Strike deals **2 damage per struck monster** and **pushes it 1 square away from the striker** *(working draft, user decision 2026-11-12, T38)* (along its own offset, as in the [body-relative variants](#body-relative-damage-and-movement-variants); monsters on non-adjacent hit cells are damaged but not moved), plus its bound Kin effect. Under confirmed policy, Kin advantages consume the shared construction budget (§5); Beast has none to price.
 - §5 prices all Kins/existing shapes as unvalidated calibration drafts; full combination evaluation is pending. Existing effects and battle-AP prices remain unchanged.
 - Table values are gameplay effects, **not construction points**.
 
 |   Kin   |   Strike   |                                          Effect                                          |
 |---------|------------|------------------------------------------------------------------------------------------|
-| Beast   | Bite       | no effect *(user decision 2026-11-11: Beast stays the unpriced baseline)*                |
+| Beast   | Bite       | no further effect *(user decision 2026-11-11: Beast stays the unpriced baseline)*        |
 | Winged  | Dive       | then retreat 1 square for free, opposite the centre of the hit shape, once per use (rule and failed-retreat handling: [§3](#body-relative-damage-and-movement-variants); no retreat for shapes without a unique centre direction) |
-| Scaled  | Tail Sweep | push the target 1 square (direction chosen with WASD)                                    |
+| Scaled  | Tail Sweep | pushes the target 1 square in a **chosen** cardinal direction instead of straight away    |
 | Swarm   | Gnaw       | props take double (4)                                                                    |
 | Spirit  | Siphon     | target −1 initiative next round                                                          |
-| Ancient | Slam       | destroys the Mountain under the target (Mountain-destruction rule: [gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed); no ground change authored → Rubble) |
+| Ancient | Slam       | destroys the Mountain under the square where the target was struck (Mountain-destruction rule: [gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed); no ground change authored → Rubble); the push comes first, so the target usually falls off before the collapse |
 
 ### 8.2 Movement by Kin
 
@@ -1094,6 +1130,7 @@ Points in Movement only pay off with a movement skill; a Step-only monster stays
 ## 10. Species Skill Assignments (Prior Draft)
 
 **Non-authoritative prior-draft ideas:** no skill/access/cost specification, blueprint catalogue or approved damage/range exceptions. Names, old twists, passives, descriptions and overfilled loadouts grant no exceptions to §1–§9; retain for later validation, not implementation/redesign here. Rebuild under §2–§7; species access: §3 / §1. Monster identity, stats and shapes: [Monsters §4.1](gdd_monsters.md#41-first-roster-draft--9-monsters).
+- **Kits of the Godot build differ** *(2026-11-12)*: five species carry trap and displacement test kits (Tiger: Headbutt; Golem: Set Gong, a board skill that places a Bronze Gong on a free square in Reach; Wolf: Plant Bamboo, the same with a spiky Bamboo Stand; Serpent: a second, monster-only trap; Wisp: Quake Leap). They live in the monster files of the build and are listed in [simulation_log.md](simulation_log.md) (kit set `736eb4e604a6`, S009); they are test data, not a replacement of this prior draft.
 - **Legacy loadouts:** movement (§8.2) + Kin Strike (§8.1) + Surge + utility = 4 slots, plus table passive. Under the [current kit rule](#1-the-kit), passives need their own slot: these are not finalized legal kits. Forge Golem uses only Step and takes a second utility.
 
 | Monster | Kin | Movement | Surge (type · shape · twist) | Utility | Passive |
@@ -1147,6 +1184,8 @@ Coverage gaps in the reference roster: Raise Ground (except Forge Golem), Sancti
 Draft structural references (Strike, Surge, Zone, Movement, self-buff, passive); not approved content. Layout and field groups: [§2](#2-data-oriented-skill-construction-kit).
 
 ### Slowing Zone, Beast Jab and Delayed Burst (area and Strike references)
+
+**Surge record status:** the Delayed Burst reference below is written for the timed Surge (execution at the caster's next turn, movement blocked by its squares, “leaving” as a counter). Under the trap direction of [§3](#surge) its `execution`, `persistence`, `interactions` and paper checks are outdated and are to be re-authored (T10/T38); the other field groups still show the layout.
 
 **Documentation template, not implementation:** one §2 model including species skills/upgraded variants. Field names show responsibilities, not required serialization; referenced effects supply mechanics/caps, not a parallel zone schema.
 
@@ -1308,7 +1347,7 @@ Cases per field below: **Run reference**; **Focus self-buff reference (DRAFT)**;
   - Focus (draft): `[]`
   - Adaptive (draft content): `[]`
 - **`interactions`**
-  - Run: Walk; blocked by solid props, monsters and charging Surges; height allowed; ground costs apply; distance modifier 0; legal destination required; air/2×2 remain T09
+  - Run: Walk; blocked by solid props and monsters (a walk ends on the first Surge square it enters); height allowed; ground costs apply; distance modifier 0; legal destination required; air/2×2 remain T09
   - Focus (draft): No placement/path blocking; no air attack or ground interaction is introduced by a self-bound modifier
   - Adaptive (draft content): Affects only owner's authorized shape orientation choice; no targeting, footprint, layer or terrain exceptions
 - **`usage`**

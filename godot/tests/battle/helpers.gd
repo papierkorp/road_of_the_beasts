@@ -73,11 +73,12 @@ static func strike(shape := "jab", kin_effect := true) -> BattleSkillDef:
 
 
 ## A residue-free test Surge (damage 3) with the given offsets.
-static func surge(offsets: Array, damage := 3) -> BattleSkillDef:
+## A marker skill: kind trap (`mode` "trap", the default of the tests) or kind surge ("timed").
+static func surge(offsets: Array, damage := 3, mode := "trap") -> BattleSkillDef:
 	var s := BattleSkillDef.new()
 	s.id = &"t_surge"
 	s.display_name = "Test Surge"
-	s.kind = BattleSkillDef.SURGE
+	s.kind = BattleSkillDef.TRAP if mode == "trap" else BattleSkillDef.SURGE
 	s.surge_damage = damage
 	var fp: Array[Vector2i] = []
 	fp.assign(offsets)

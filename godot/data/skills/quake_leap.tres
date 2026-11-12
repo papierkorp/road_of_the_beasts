@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_bo"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_sd"]
+
+[resource]
+script = ExtResource("3_sd")
+id = &"quake_leap"
+display_name = "Quake Leap"
+kind = "move"
+description = "Leap in a straight line (Movement - 1); on landing every monster on the eight neighbouring squares is pushed 1 square outward."
+status = "test data (T38 experiment, no GDD rule)"
+ap_cost = 1
+move_path = "line"
+blocked_by_objects = false
+blocked_by_monsters = false
+blocked_by_surges = false
+ground_costs = false
+distance_mod = -1
+impact_push = "ring"
