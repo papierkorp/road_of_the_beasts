@@ -42,7 +42,7 @@ func test_the_catalogue_matches_the_gdd_table() -> void:
 
 func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> void:
 	var c := H.content()
-	assert_int(c.monsters.size()).is_equal(9)
+	assert_int(c.monsters.size()).is_equal(19)              # nine of the game and ten simulation-only kits (kit_*, S017)
 	assert_array(c.game_monster_ids()).has_size(9)
 	assert_array(GameData.monster_ids()).has_size(9)        # the roster the game offers
 	for id in GameData.monster_ids():
@@ -60,13 +60,16 @@ func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> 
 		assert_float(points).is_equal(16.0)
 	# Swarm Surges are limited to 2 cells (gdd_monsters §3.1)
 	assert_int(c.skill(&"bramble_tide").footprint.size()).is_equal(2)
-	# basic Surges and traps keep the 1-AP target; slotted movement costs 1 AP
+	# basic Surges and traps keep the 1-AP target; Run costs 1 AP, every other movement skill 2
+	# (build test since 2026-11-13: full Movement for all of them, the dropped restrictions are paid in AP)
 	for id: StringName in c.skills:
 		var s := c.skill(id)
 		if s.kind == "surge" or s.kind == "trap":
 			assert_int(s.cost()).is_equal(1)
 		if s.kind == "move":
-			assert_int(s.cost()).is_equal(1)
+			assert_int(s.cost()).is_equal(1 if id == &"run" else 2)
+			assert_int(s.distance_mod).is_equal(0)
+			assert_int(s.fixed_distance).is_equal(0)
 
 
 func test_a_new_ground_type_is_only_a_new_definition() -> void:

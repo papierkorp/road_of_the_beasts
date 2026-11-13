@@ -39,6 +39,47 @@ Monster = Step (always, no slot)
 - **One model:** active actions, passives, self buffs, targeted utility, movement, Strikes, Surges, zones and species-exclusive/Signature skills share fields. No `unique` effect, opaque script hook or separate passive/buff schema bypasses construction/costing. Players select finished definitions/authored upgrades, not arbitrary components.
 - **Representation ≠ approval:** self buffs/conditional passives need no structural exception, but their numbers, stacking, triggers, access and combinations still need approval. Existing profiles preserve rules; new content stays draft until its rules/cost are agreed. Genuinely new mechanics extend the shared vocabulary with explicit parameters, resolution, limits and costing, not skill-specific escape hatches.
 
+### The Skill Sentence (reshape, decided 2026-11-13)
+
+**Status:** decided by the user as the form of every skill ([Battle §1.2](gdd_battle.md#12-battle-design-pillars), “Reshape decisions”). **The rest of §2–§11 still describes the earlier model with skill classes, height and the air layer and is rewritten from this table** ([temp_todo.md](temp_todo.md) T40); the build does not implement it yet. Numbers in the examples are placeholders.
+
+Every skill is one line: **cost · where · when · what · what stays.** Strike, Surge, trap, zone skill, board skill and movement skill are typical combinations of these parts, not rule classes of their own.
+
+| Part | Choices |
+|---|---|
+| **Cost** | AP · use (any number, once per round, once per battle) |
+| **Where: anchor** | own square · neighbouring square · square within Reach · line from the caster · ring around the caster · path of the own movement |
+| **Where: shape** | 1 square · line 2–4 · block 2×2 · angle · cross · ring; freely rotated |
+| **When** | now · after time (every monster on it has had a turn) · on entering (trap) |
+| **What** | damage x · healing x · push or pull n (away from the caster, in the cast direction, away from the centre, toward the anchor) · own movement (distance = Movement stat) · *experiment:* ±AP, ±turns per round |
+| **What stays** | nothing · ground (type, duration) · zone (type, duration) · prop |
+
+Three lists that skills only use:
+
+- **Ground types** (act at a moment): effect (damage, healing, movement cost, **damage when a monster moves on the square**) × timing (on entering, end of the occupant's turn, end of the round).
+- **Zone types** (act while a monster stands inside): ±initiative, ±Reach, ±Movement, push or pull at the end of its turn.
+- **Movement kinds:** direction (cardinal, diagonal, line, free) and what the movement ignores (props, monsters, ground, zones).
+
+Rules that hold for every sentence:
+
+- Damage with “now” exists only on a neighbouring square; damage at range is “after time” or “on entering” (fair damage at range, Battle §1.2).
+- Every effect hits everyone on its squares, friend and foe.
+- Being pushed or pulled counts as movement.
+- **Guideline, not a duty:** a kit skill has one main effect and one board effect; Step and Jab stay plain.
+- Effects on AP or turns per round are rare and expensive and carry the content status `experiment`.
+
+| Example | Cost | Where | When | What | What stays |
+|---|---|---|---|---|---|
+| Jab | 2 AP | neighbouring square, 1 square | now | 2 damage, push 1 | nothing |
+| Run | 1 AP | path of the movement | now | movement, cardinal, ignores nothing | nothing |
+| A Surge with Lava | 1 AP | Reach, block 2×2 | after time | 3 damage | Lava, 2 rounds |
+| A thorn trap | 1 AP | Reach, line 2 | on entering | 2 damage, push 1 | Thornbed, 2 rounds |
+| Gale | 1 AP | Reach, line 3 | now | push 1 in the cast direction | push zone, 2 rounds |
+| A snare *(new)* | 2 AP | Reach, 1 square, also under a monster | now | — | ground “damage when moving”, 2 rounds |
+| A fire trail *(new)* | 2 AP | path of the movement | now | movement, line | Lava on the path, 2 rounds |
+
+**Skill generator** *(planned, T40)*: a tool that draws legal sentences from this table as simulation-only skills, so that bot runs measure what each part is worth; the skills of the game (about 15 to start with) are then chosen by hand.
+
 ### Common Field Structure
 
 Every resolved definition contains all groups below: `none`/`[]` where genuinely inapplicable; `pending` for unresolved drafts, blocking approval and never a runtime default. Names are documentation notation, not required engine serialization.

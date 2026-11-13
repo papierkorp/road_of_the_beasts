@@ -59,6 +59,8 @@ static func _passable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 	var through_props: bool = not prof["objects"] or (not flying and BattleStats.phases(u))
 	for c in u.cells_at(origin):
 		var cell := b.board.at(c)
+		if _walled(b, cell):
+			return false
 		if not through_props or flying:
 			if b.board.prop_at(c, u.layer) != null:
 				return false
@@ -68,6 +70,14 @@ static func _passable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 	return true
 
 
+## Test switch surge_wall: a square of a charging timed Surge lets no movement in.
+static func _walled(b: Battle, cell: BoardCell) -> bool:
+	if not BattleExperiment.surge_wall or cell == null or cell.surge < 0:
+		return false
+	var s := b.surge_by_id(cell.surge)
+	return s != null and s.turns_left >= 0
+
+
 ## May the body stop on `origin`? Ignoring path blockers never permits an occupied landing.
 static func _landable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictionary) -> bool:
 	if not _in_bounds(b, u, origin):
@@ -75,6 +85,8 @@ static func _landable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 	var flying := u.layer == Board.AIR
 	for c in u.cells_at(origin):
 		var cell := b.board.at(c)
+		if _walled(b, cell):
+			return false
 		if b.board.prop_at(c, u.layer) != null:
 			return false
 		var other := b.board.unit_id_at(c, u.layer)

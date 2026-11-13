@@ -18,6 +18,8 @@ const FLANK := "flank"            # test rule: two enemies next to a monster at 
 ## damage = base + increases - reductions, summed in one step, floored at 0. Each source only
 ## modifies the damage types it names. `pushed`: the unit is the one being pushed or pulled.
 static func amount(b: Battle, u: BattleUnit, base: int, type: String, pushed := false) -> int:
+	if b.round_number < BattleExperiment.damage_from_round:
+		return 0                              # test switch: the first rounds are for positioning only
 	# `expose` is reserved (no approved source); the vocabulary entry is honoured if authored.
 	var increase := BattleStats.total(b, u, FieldEffect.EXPOSE)
 	var reduce := 0

@@ -208,3 +208,73 @@ func test_with_the_fair_switch_a_due_surge_waits_for_the_turn_of_the_monster_on_
 	b.end_turn()                                    # the target ends its turn on the square: now it fires
 	assert_int(b.surges.size()).is_equal(0)
 	assert_int(H.unit(b, 2).hp).is_less(H.unit(b, 2).max_hp)
+
+
+# --- switches of simulation S017 (2026-11-13) ---
+
+func test_with_reverse_order_the_first_monster_that_postponed_acts_last() -> void:
+	BattleExperiment.delay_turn = true
+	BattleExperiment.delay_reverse = true
+	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0}], [1, Vector2i(3, 0), {"init": 7.0}], [0, Vector2i(5, 6), {"init": 4.0}]])
+	b.begin()
+	assert_bool(b.apply({"type": &"delay"})).is_true()             # the fastest waits
+	assert_bool(b.apply({"type": &"delay"})).is_true()             # the second waits too
+	assert_that(b.turn_owner).is_equal(H.unit(b, 2).id)
+	assert_str(b.check({"type": &"delay"})).is_not_empty()         # only monsters that postponed follow
+	b.end_turn()
+	assert_that(b.turn_owner).is_equal(H.unit(b, 1).id)            # the later one to postpone comes first
+	b.end_turn()
+	assert_that(b.turn_owner).is_equal(H.unit(b, 0).id)            # the fastest has the last word
+
+
+func test_first_round_postponing_is_for_two_turn_monsters_and_the_fastest() -> void:
+	BattleExperiment.delay_turn = true
+	BattleExperiment.delay_first_round = true
+	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0}], [1, Vector2i(3, 0), {"init": 7.0}],
+		[0, Vector2i(5, 6), {"init": 5.0, "tpr": 2}], [1, Vector2i(5, 0), {"init": 3.0}]])
+	b.begin()
+	assert_str(b.check({"type": &"delay"})).is_empty()             # first of the queue
+	b.end_turn()
+	assert_str(b.check({"type": &"delay"})).is_not_empty()         # one turn, not the fastest
+	b.end_turn()
+	assert_str(b.check({"type": &"delay"})).is_empty()             # two turns per round
+	b.end_turn()
+	b.end_turn()
+	assert_int(b.round_number).is_equal(2)
+	assert_str(b.check({"type": &"delay"})).is_not_empty()         # round 1 only
+
+
+func test_with_a_calm_round_nothing_deals_damage_before_round_two() -> void:
+	BattleExperiment.damage_from_round = 2
+	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0, "skills": ["strike_jab"]}], [1, Vector2i(3, 2), {"init": 5.0}]])
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 3)})).is_true()
+	assert_int(H.unit(b, 1).hp).is_equal(H.unit(b, 1).max_hp)
+	_end_round(b)
+	assert_int(b.round_number).is_equal(2)
+	var foe := H.unit(b, 1)
+	var dir := foe.pos - H.unit(b, 0).pos
+	if absi(dir.x) + absi(dir.y) == 1:
+		assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": dir, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 3)})).is_true()
+		assert_int(foe.hp).is_less(foe.max_hp)
+
+
+func test_a_charging_surge_can_block_its_squares_and_leave_ground() -> void:
+	var timed := H.surge([Vector2i.ZERO], 3, "timed")
+	timed.surge_turns = 2
+	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "reach": 4, "skills": [timed]}], [1, Vector2i(2, 2), {"init": 5.0}]])
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 3)})).is_true()
+	b.end_turn()
+	var steps := BattleMoves.options(b, H.unit(b, 1), BattleMoves.step_profile())
+	assert_bool(steps.has(Vector2i(2, 3))).is_true()               # the rule: it may walk in
+	BattleExperiment.surge_wall = true
+	steps = BattleMoves.options(b, H.unit(b, 1), BattleMoves.step_profile())
+	assert_bool(steps.has(Vector2i(2, 3))).is_false()
+	assert_bool(steps.has(Vector2i(1, 2))).is_true()
+	BattleExperiment.surge_ground = &"thornbed"
+	for i in 3:                                                     # it detonates after its turns
+		if not b.surges.is_empty():
+			b.end_turn()
+	assert_int(b.surges.size()).is_equal(0)
+	assert_that(b.board.at(Vector2i(2, 3)).ground).is_equal(&"thornbed")

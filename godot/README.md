@@ -112,6 +112,15 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   the AI walks up to the enemy instead of ending a turn with AP left (`ai_hunt`, not a rule). The three values stay
   switches of `battle_experiment.gd` so that `sim.gd` can compare (0 / off = the earlier behaviour). The battle view
   does not show how long ground still lasts.
+- **Movement skills, build test since 2026-11-13** (user choice in the discussion of that day; not a GDD rule, gdd_skills §8.2
+  still prices dropped restrictions in distance; simulation S016 Part D): every movement skill covers the full Movement
+  stat. Run costs 1 AP; Glide, Burrow, Blink, Leap, Phase, Quake Leap and Headbutt cost 2 AP and have no distance
+  deduction or fixed distance any more. `sim.gd --variant freeap=N` / `freemod=N` set their AP and a deduction for a run.
+- **Switches of simulation S017** (2026-11-13; off by default, `battle/core/battle_experiment.gd`): `delay_reverse` and
+  `delay_first_round` (two forms of postponing a turn), `damage_from_round` (no damage before that round), `surge_wall`
+  (a charging timed Surge lets no movement onto its squares), `surge_ground` (ground a timed Surge leaves). Content status
+  `experiment` (user decision): in the game and labelled in the overview, for mechanics to try. The reshape decisions of
+  gdd_battle §1.2 (no height, Wellspring by last touch, fair damage at range, skills as one sentence) are **not built**.
 - **Wellspring rules, build rules since 2026-11-13** (user decision, working draft in gdd_battle §4.2 / §2.2, temp_todo T39;
   simulations S013–S015): three Wellspring squares on the centre row of the 7×7 board (`wells` = 3, ground
   `data/grounds/wellspring.tres`; no prop or Mountain there; boards with an even side or under 7×7 get none). At the end of a

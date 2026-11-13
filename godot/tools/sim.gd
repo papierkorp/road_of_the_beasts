@@ -12,7 +12,7 @@ extends SceneTree
 ##   --team-a / --team-b  fixed teams: monster ids of data/monsters, also simulation-only ones
 ##                        (comma lists; --team-b defaults to --team-a), on an empty board with
 ##                        seeded, mirrored start squares
-##   --bot-a / --bot-b    greedy (AiBrain, default; hunt = same) | wait | chase | plan | rush | kite | random
+##   --bot-a / --bot-b    greedy (AiBrain, default; hunt = same) | wait | chase | plan | tactic | rush | kite | random
 ##                        (tools/lib/sim_bots.gd)
 ##   --board              kit runs: seeded (default) | layout    build runs: flat (default) | layout | seeded
 ##   --props a,b          build runs: one mirrored pair per prop id
@@ -53,6 +53,9 @@ const MAX_TURNS := 600
 var _shield_ap := 0
 var _fielded := {}                      # ids of the skills some fielded monster carried
 var _defence_ap := 0
+var _mix_kits := false
+var _mix_skills := false
+var _mix_stats := false
 const DAMAGE_KINDS := ["strike", "surge", "ground", "collision", "fall", "collapse", "aftermath", "arena"]
 const OPTIONS: Array[String] = ["bot-a", "bot-b", "team-a", "team-b", "board", "props", "experiment", "pairs", "trace", "help",
 	"variant", "shield-once", "pressure", "compact", "compact-head", "paired", "no-kind-a", "no-kind-b"]
@@ -169,6 +172,9 @@ func _run() -> int:
 ## Sets the experiment switches from a comma list ("" = the confirmed rules).
 func _apply_variant(text: String) -> String:
 	BattleExperiment.reset()
+	_mix_kits = false
+	_mix_skills = false
+	_mix_stats = false
 	for part in Cli.names(text):
 		var kv := part.split("=")
 		var key := kv[0]
@@ -193,6 +199,14 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.no_rotation = true
 			"move":
 				BattleExperiment.move_ap = maxi(1, val.to_int())
+			"freeap", "freemod":                     # movement skills other than Run: their AP / squares taken off Movement
+				for sid in BattleContent.shared().skills:
+					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
+					if sd.kind == BattleSkillDef.MOVE and sd.id != &"run":
+						if key == "freeap":
+							sd.ap_cost = maxi(1, val.to_int())
+						else:
+							sd.distance_mod = -absi(val.to_int())
 			"defap":
 				_defence_ap = maxi(1, val.to_int())
 			"shieldap":
@@ -213,8 +227,22 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.tpr_from_round = 1
 			"flank":
 				BattleExperiment.flank = true
-			"delay":
+			"delay":                                  # delay | delay=reverse | delay=first (round 1: two-turn monsters and the fastest)
 				BattleExperiment.delay_turn = true
+				BattleExperiment.delay_reverse = val == "reverse"
+				BattleExperiment.delay_first_round = val == "first"
+			"mixkits":                                # every monster plays a random kit of the game's monsters
+				_mix_kits = true
+			"mixskills":                              # every monster plays four random skills (one of them deals damage)
+				_mix_skills = true
+			"mixstats":                               # every monster plays random stats: HP 3-8, initiative 1-9, Movement 1-5, Reach 2-4, TPR 1-2, AP 2-3
+				_mix_stats = true
+			"calm":                                   # calm=N: no damage in the first N rounds
+				BattleExperiment.damage_from_round = maxi(1, val.to_int()) + 1
+			"surgewall":
+				BattleExperiment.surge_wall = true
+			"surgeground":
+				BattleExperiment.surge_ground = StringName(val if val != "" else "thornbed")
 			"castersurge":
 				BattleExperiment.surge_at_caster = true
 			"fairsurge":
@@ -288,7 +316,7 @@ func _apply_variant(text: String) -> String:
 					if sd.kind == BattleSkillDef.SURGE:
 						sd.surge_turns = maxi(1, val.to_int())
 			_:
-				return "unknown variant '%s' (push, kinpush, step, jab, move, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, groundfade, trapfade, startback, trapcap)" % key
+				return "unknown variant '%s' (push, kinpush, step, jab, move, freeap, freemod, mixkits, mixskills, mixstats, calm, surgewall, surgeground, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, groundfade, trapfade, startback, trapcap)" % key
 	if _defence_ap > 0:
 		for sid in BattleContent.shared().skills:
 			var sd: BattleSkillDef = BattleContent.shared().skills[sid]
@@ -317,6 +345,8 @@ func _series(setup: Dictionary, label: String) -> int:
 	var timeouts := 0
 	var rounds_total := 0
 	var by_monster := {}                  # species -> [played, won]
+	var by_kit := {}                      # mixkits: kit donor -> [played, won]; "body+kit" -> the same
+	var kit_of := {}                      # mix variants: unit id -> tags of what it drew in this battle
 	var damage := {}                      # kind -> total
 	var counts := {&"surge_declared": 0, &"strike": 0, &"cast": 0, &"prop_destroyed": 0, &"defeated": 0}
 	var props_placed := {}                # prop id -> count at battle start
@@ -351,6 +381,52 @@ func _series(setup: Dictionary, label: String) -> int:
 			var r := BattleRequest.from_ids(mode, p, e)
 			r.board_seed = rng.randi_range(1, 1 << 30) if setup["board"] == "seeded" else 0
 			b = BattleSetup.build(r)
+		kit_of.clear()
+		if _mix_kits or _mix_skills:
+			var donors := content.game_monster_ids()
+			for mid in BattleContent.sorted_ids(content.monsters):       # plus the simulation-only kits
+				if String(mid).begins_with("kit_"):
+					donors.append(mid)
+			var pool: Array[BattleSkillDef] = []                         # every skill some kit holds
+			for mid: StringName in donors:
+				for sd: BattleSkillDef in content.monster(mid).skills:
+					if not pool.has(sd):
+						pool.append(sd)
+			for id in b.roster:
+				var mu: BattleUnit = b.units[id]
+				if _mix_kits:
+					var donor: StringName = donors[rng.randi_range(0, donors.size() - 1)]
+					mu.sheet.skills = content.monster(donor).skills.duplicate()
+					kit_of[id] = ["kit:%s" % donor, "pair:%s+%s" % [mu.sheet.species_id, donor]]
+					continue
+				var drawn: Array[BattleSkillDef] = []
+				while drawn.size() < 4:
+					var sd: BattleSkillDef = pool[rng.randi_range(0, pool.size() - 1)]
+					var harms: bool = (sd.kind == BattleSkillDef.STRIKE and sd.strike_damage > 0) or sd.is_marker()
+					if drawn.has(sd) or (drawn.is_empty() and not harms):
+						continue                      # the first slot deals damage
+					drawn.append(sd)
+				mu.sheet.skills = drawn
+				var tags: Array = []
+				for sd in drawn:
+					tags.append("skill:%s" % sd.id)
+				kit_of[id] = tags
+		if _mix_stats:
+			for id in b.roster:
+				var mu: BattleUnit = b.units[id]
+				var sh := mu.sheet
+				sh.hp = rng.randi_range(3, 8)
+				sh.initiative = float(rng.randi_range(1, 9))
+				sh.movement = rng.randi_range(1, 5)
+				sh.reach = rng.randi_range(2, 4)
+				sh.tpr = rng.randi_range(1, 2)
+				sh.ap = rng.randi_range(2, 3)
+				mu.max_hp = sh.hp
+				mu.hp = sh.hp
+				var tags: Array = kit_of.get(id, [])
+				tags.append_array(["stat:hp=%d" % sh.hp, "stat:init=%d" % int(sh.initiative), "stat:move=%d" % sh.movement,
+					"stat:reach=%d" % sh.reach, "stat:tpr=%d" % sh.tpr, "stat:ap=%d" % sh.ap])
+				kit_of[id] = tags
 		board_size = b.board.size
 		b.voidscar_from += int(setup["pressure"])
 		pressure_from = b.voidscar_from
@@ -482,6 +558,13 @@ func _series(setup: Dictionary, label: String) -> int:
 			by_monster[k][0] += 1
 			if b.over and b.winner_side == u.side:
 				by_monster[k][1] += 1
+			if kit_of.has(id):
+				for kk: String in kit_of[id]:
+					if not by_kit.has(kk):
+						by_kit[kk] = [0, 0]
+					by_kit[kk][0] += 1
+					if b.over and b.winner_side == u.side:
+						by_kit[kk][1] += 1
 
 	var total_damage := 0
 	for k in damage:
@@ -578,6 +661,14 @@ func _series(setup: Dictionary, label: String) -> int:
 		return ra > rc if ra != rc else a < c)
 	for k: String in names:
 		print("| %s | %d | %d %% |" % [k, by_monster[k][0], roundi(100.0 * by_monster[k][1] / by_monster[k][0])])
+	if not by_kit.is_empty():
+		print("")
+		print("| Random draw (mixkits / mixskills / mixstats) | Played | Win rate |")
+		print("|---|---|---|")
+		var kk_names := by_kit.keys()
+		kk_names.sort()
+		for kk: String in kk_names:
+			print("| %s | %d | %d %% |" % [kk, by_kit[kk][0], roundi(100.0 * by_kit[kk][1] / by_kit[kk][0])])
 	print("")
 	print("Skill uses per battle: %s" % _pairs(skills_used, n, false))
 	print("Reached late-round pressure: HP leader won %d, lost %d, HP level %d, no winner %d" % lead)

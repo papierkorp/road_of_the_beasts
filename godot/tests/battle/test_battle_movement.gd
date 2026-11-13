@@ -56,12 +56,12 @@ func test_leap_is_a_straight_line_that_only_counts_the_landing_square() -> void:
 	assert_bool(opts.has(Vector2i(6, 0))).is_true()         # exactly Movement 3 along the diagonal
 
 
-func test_glide_burrow_phase_and_blink_drop_restrictions_for_distance() -> void:
-	var b := H.battle([_mover(3), [1, Vector2i(3, 2)], [1, Vector2i(6, 6)]])
+func test_glide_burrow_phase_and_blink_drop_restrictions() -> void:
+	var b := H.battle([_mover(2), [1, Vector2i(3, 2)], [1, Vector2i(6, 6)]])
 	b.add_prop(&"stone_lion", Vector2i(4, 3))
 	b.board.at(Vector2i(2, 3)).height = 1
 	b.board.at(Vector2i(3, 4)).surge = 77                   # a trap square: no movement is blocked by it
-	# Glide: any path, Movement - 1 = 2
+	# Glide: any path, Movement = 2 (build test since 2026-11-13: full Movement, 2 AP)
 	var glide := _opts(b, 0, "glide")
 	assert_bool(glide.has(Vector2i(3, 1))).is_true()        # over the monster
 	assert_bool(glide.has(Vector2i(5, 3))).is_true()        # over the prop
@@ -80,8 +80,9 @@ func test_glide_burrow_phase_and_blink_drop_restrictions_for_distance() -> void:
 	assert_bool(phase.has(Vector2i(5, 3))).is_true()
 	assert_bool(phase.has(Vector2i(4, 3))).is_false()
 	assert_bool(phase.has(Vector2i(3, 1))).is_false()
-	# Blink: any free square within Movement - 2 = 1 (board distance, so diagonals count);
+	# Blink: any free square within Movement (board distance, so diagonals count); slowed to 1 here;
 	# it is not blocked by charging Surges and may land in one
+	H.unit(b, 0).sheet.movement = 1
 	var blink := _opts(b, 0, "blink")
 	assert_array(blink.keys()).contains_exactly_in_any_order([Vector2i(2, 2), Vector2i(4, 2), Vector2i(2, 3), Vector2i(2, 4),
 		Vector2i(3, 4), Vector2i(4, 4)])

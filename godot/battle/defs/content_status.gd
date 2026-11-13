@@ -3,6 +3,9 @@ extends RefCounted
 ## How far a content Resource is: one shared scale for everything under res://data.
 ##   approved    released game content (none exists yet; T10–T12 are open)
 ##   draft       GDD draft or test content the game currently plays with
+##   experiment  a mechanic the user wants to try in the game (user decision 2026-11-13: for example
+##               rare, expensive skills that change AP or turns per round); the game fields it,
+##               the overview shows the label; no GDD rule follows from it
 ##   test        exists only for automated tests; the game never fields it
 ##   simulation  exists only for simulation runs (test monsters and their skills); the game
 ##               never fields it
@@ -12,12 +15,13 @@ extends RefCounted
 
 const APPROVED := "approved"
 const DRAFT := "draft"
+const EXPERIMENT := "experiment"
 const TEST := "test"
 const SIMULATION := "simulation"
 const ARCHIVED := "archived"
 
 
-## True if the game itself may use the Resource (approved or draft). THE filter: GameData and
+## True if the game itself may use the Resource (approved, draft or experiment). THE filter: GameData and
 ## BattleContent call it, nothing else decides what the game sees. Definitions without the
 ## field (grounds, props, zones, tamer skills) are game content.
 static func in_game(res: Resource) -> bool:

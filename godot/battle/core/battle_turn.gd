@@ -62,7 +62,14 @@ static func _start_entry(b: Battle) -> void:
 ## happened, so no end-of-turn effect and no timer runs. Start-of-turn ground triggers again later.
 static func delay(b: Battle) -> void:
 	var entry: Dictionary = b.queue.pop_at(b.queue_idx)
-	b.queue.append(entry)
+	entry["waited"] = true
+	var at := b.queue.size()
+	if BattleExperiment.delay_reverse or BattleExperiment.delay_first_round:
+		for i in range(b.queue_idx, b.queue.size()):
+			if b.queue[i].get("waited", false):
+				at = i                            # before the monsters that postponed earlier
+				break
+	b.queue.insert(at, entry)
 	b.delayed[entry["id"]] = b.round_number
 	b.ap = 0
 	b.emit(&"turn_delayed", {"who": entry["id"]})

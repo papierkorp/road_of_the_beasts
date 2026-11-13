@@ -59,6 +59,20 @@ static var tpr_from_round := 2
 ## A monster may postpone its turn once per round, before it has done anything: its queue entry
 ## moves to the end of the round's queue (action `delay`; draft T39).
 static var delay_turn := false
+## With delay_turn: monsters that postponed act in reverse order of the queue (the one that stood
+## first acts last), so the fastest monster has the last word of a round.
+static var delay_reverse := false
+## With delay_turn (user idea 2026-11-13): postponing is allowed in round 1 only, and only to monsters
+## with TurnsPerRound 2+ (their extra turn does not count yet) and to the first monster of the queue.
+static var delay_first_round := false
+## No damage of any kind before this round (1 = off; 2 = round 1 is for positioning only).
+static var damage_from_round := 1
+## A charging timed Surge blocks its squares for every movement including Step: nothing may enter
+## or land on them (monsters standing there may leave; pushes are not blocked).
+static var surge_wall := false
+## A timed Surge without ground of its own leaves this ground type on its squares when it detonates
+## ("" = nothing); it fades like other ground laid in battle (`ground_rounds`).
+static var surge_ground := &""
 ## A timed Surge detonates at the start of its caster's next turn instead of counting turns of any
 ## monster (the rule before 2026-11-12); a Surge whose caster is gone detonates at the next round start.
 static var surge_at_caster := false
@@ -93,6 +107,11 @@ static func reset() -> void:
 	tpr_from_round = 2
 	pressure_mode = "idle"
 	delay_turn = false
+	delay_reverse = false
+	delay_first_round = false
+	damage_from_round = 1
+	surge_wall = false
+	surge_ground = &""
 	surge_at_caster = false
 	surge_fair = false
 

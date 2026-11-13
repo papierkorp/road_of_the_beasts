@@ -23,7 +23,7 @@ const PASSIVE := "passive"
 @export_enum("strike", "surge", "trap", "zone", "ground", "move", "buff", "passive") var kind: String = ""
 @export_multiline var description: String = ""
 ## Where the record stands (ContentStatus): test-only and simulation-only records are never fielded by the game.
-@export_enum("approved", "draft", "test", "simulation", "archived") var content_status: String = ContentStatus.DRAFT
+@export_enum("approved", "draft", "experiment", "test", "simulation", "archived") var content_status: String = ContentStatus.DRAFT
 ## Free note on the origin, e.g. "test data (Skills §10 prior draft)" or "GDD reference (Skills §11)".
 @export var status: String = "test data"
 ## Internal calculation cost in construction points (gdd_skills §5 working drafts): an

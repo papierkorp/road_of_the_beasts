@@ -31,7 +31,7 @@ func test_skill_cards_say_what_matters() -> void:
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"lava_field")))).is_equal(["Lava I · 4 sq"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"raise_ground")))).is_equal(["Mountain · 2 sq"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"leap")))).is_equal(["straight line · Move"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"burrow")))).is_equal(["any path · Move -1 · not on Mountain"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"burrow")))).is_equal(["any path · Move · not on Mountain"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"focus_reference")))).is_equal(["self: quicken 1 · 2 rd"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"immovable")))).is_equal(["Ignores push and pull."])
 	# the Kin twist is one extra line, and only if the Kin has one

@@ -13,6 +13,11 @@ extends RefCounted
 ##           ahead waits for late-round pressure, the other one has to come)
 ##   plan    AiBrain's evaluation, but the best few first actions are judged together with
 ##           the best second action of the same turn (set a trap, then push into it)
+##   tactic  plans the whole turn: every order of actions the AP allow (a beam over AiBrain's evaluation,
+##           kept in a bold and a threat-aware ranking), then the best few end positions and
+##           "postpone the turn" are played on with greedy bots for both sides until this monster's
+##           next turn; the line with the best position at that point is played. It can strike and
+##           step back, stay out of reach, leave or avoid a Surge and postpone for a double turn.
 ##   rush    hit whoever is in a Strike shape, else cast, else walk toward the nearest enemy
 ##   kite    like rush, but backs away from an enemy that is 2 squares or closer
 ##   random  a random legal action, stops with 15 % chance
@@ -20,9 +25,16 @@ extends RefCounted
 ## All four are crude: none plans ahead, refreshes timed effects on purpose, targets props or
 ## uses tamer skills. Their results are flow indications, never balance evidence.
 
-const NAMES: Array[String] = ["greedy", "hunt", "careful", "wait", "chase", "plan", "rush", "kite", "random"]
+const NAMES: Array[String] = ["greedy", "hunt", "careful", "wait", "chase", "plan", "tactic", "rush", "kite", "random"]
 ## plan: how many first actions are looked at one action further.
 const PLAN_BEAM := 6
+## tactic: lines kept per action by plain evaluation / by the threat-aware one, the same for the end
+## positions that are played on, and the longest line.
+const TACTIC_BEAM := 4
+const TACTIC_BEAM_SAFE := 3
+const TACTIC_ROLL := 3
+const TACTIC_ROLL_SAFE := 2
+const TACTIC_DEPTH := 4
 const MAX_ACTIONS_PER_TURN := 8
 const KITE_DISTANCE := 2
 const KITE_STRIKE_DISTANCE := 3
@@ -33,6 +45,9 @@ static func play_turn(bot: String, b: Battle, rng: RandomNumberGenerator) -> voi
 	BattleExperiment.ai_hunt = bot != "wait"                        # only `wait` ends a turn instead of walking up
 	BattleExperiment.ai_hunt_behind = bot == "chase"
 	BattleExperiment.ai_careful = bot == "careful"
+	if bot == "tactic":
+		_tactic_turn(b, rng)
+		return
 	if bot == "greedy" or bot == "hunt" or bot == "careful" or bot == "wait" or bot == "chase":
 		AiBrain.play_turn(b, b.turn_owner, rng)
 		return
@@ -279,3 +294,122 @@ static func _plan(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 	if best.is_empty():
 		return {"type": &"end_turn"}
 	return best[rng.randi_range(0, best.size() - 1)]
+
+
+## --- tactic -------------------------------------------------------------------------------
+
+static func _same_turn(b: Battle, owner: StringName, entry: int, round_no: int) -> bool:
+	return not b.over and b.turn_owner == owner and b.queue_idx == entry and b.round_number == round_no
+
+
+static func _static_score(b: Battle, side: int, careful: bool) -> float:
+	BattleExperiment.ai_careful = careful
+	var v := AiBrain.evaluate(b, side)
+	BattleExperiment.ai_careful = false
+	return v
+
+
+## The `n` best lines by `key`, skipping those already in `taken` (compared by their state key).
+static func _top(lines: Array, key: String, n: int, taken: Dictionary) -> Array:
+	var sorted := lines.duplicate()
+	sorted.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return x[key] > y[key])
+	var out: Array = []
+	for l: Dictionary in sorted:
+		if out.size() >= n:
+			break
+		if taken.has(l["id"]):
+			continue
+		taken[l["id"]] = true
+		out.append(l)
+	return out
+
+
+## Plays `sim` on with greedy bots for both sides until `who` is up again (or one round of turns
+## has passed) and returns the position for `side`. `own_turns` own turns in between are played
+## greedy too (the postponed turn).
+static func _rollout(sim: Battle, who: StringName, side: int, own_turns: int, rng: RandomNumberGenerator) -> float:
+	var delay := BattleExperiment.delay_turn
+	BattleExperiment.delay_turn = false               # the bots in the look-ahead do not postpone
+	var guard := sim.queue.size() + 1
+	while not sim.over and guard > 0:
+		guard -= 1
+		if sim.turn_owner == who:
+			if own_turns <= 0:
+				break
+			own_turns -= 1
+		AiBrain.play_turn(sim, sim.turn_owner, rng)
+	BattleExperiment.delay_turn = delay
+	return AiBrain.evaluate(sim, side)
+
+
+static func _tactic_turn(b: Battle, rng: RandomNumberGenerator) -> void:
+	var me := b.active()
+	if me == null:
+		b.end_turn()
+		return
+	var side := me.side
+	var owner := b.turn_owner
+	var entry := b.queue_idx
+	var round_no := b.round_number
+	# 1. lines: every order of actions, a beam per action count
+	var root := {"id": "root", "actions": [], "state": b, "bold": _static_score(b, side, false), "safe": _static_score(b, side, true)}
+	var ends: Array = [root]
+	var frontier: Array = [root]
+	for depth in TACTIC_DEPTH:
+		var next: Array = []
+		var seen := {}
+		for line: Dictionary in frontier:
+			var s: Battle = line["state"]
+			if not _same_turn(s, owner, entry, round_no):
+				continue
+			for a in AiBrain.candidates(s):
+				var sim := s.clone()
+				if not sim.apply(a, true):
+					continue
+				var bold := _static_score(sim, side, false)
+				var safe := _static_score(sim, side, true)
+				var mine: BattleUnit = sim.units[me.id]
+				var id := "%s|%d|%.2f|%.2f" % [mine.pos, sim.ap, bold, safe]
+				if seen.has(id):
+					continue                      # another order of the same actions
+				seen[id] = true
+				var acts: Array = (line["actions"] as Array).duplicate()
+				acts.append(a)
+				next.append({"id": id, "actions": acts, "state": sim, "bold": bold, "safe": safe})
+		if next.is_empty():
+			break
+		var taken := {}
+		frontier = _top(next, "bold", TACTIC_BEAM, taken)
+		frontier.append_array(_top(next, "safe", TACTIC_BEAM_SAFE, taken))
+		ends.append_array(frontier)
+	# 2. the best end positions are played on until this monster's next turn
+	var taken := {"root": true}
+	var finals: Array = [root]
+	finals.append_array(_top(ends, "bold", TACTIC_ROLL, taken))
+	finals.append_array(_top(ends, "safe", TACTIC_ROLL_SAFE, taken))
+	var look := RandomNumberGenerator.new()
+	var look_seed := rng.randi()
+	var best: Dictionary = {}
+	var best_value := -INF
+	for line: Dictionary in finals:
+		var sim: Battle = (line["state"] as Battle).clone()
+		if _same_turn(sim, owner, entry, round_no):
+			sim.end_turn()
+		look.seed = look_seed
+		var value := _rollout(sim, me.id, side, 0, look) + 0.02 * float(line["bold"])
+		if value > best_value + 0.001:
+			best_value = value
+			best = line
+	if b.check({"type": &"delay"}) == "" and AiBrain._enemy_acts_later(b, side):
+		var sim := b.clone()
+		sim.apply({"type": &"delay"}, true)
+		look.seed = look_seed
+		if _rollout(sim, me.id, side, 1, look) + 0.02 * float(root["bold"]) > best_value + 0.5:
+			b.apply({"type": &"delay"})
+			return
+	# 3. play the line
+	for a: Dictionary in best["actions"]:
+		if not _same_turn(b, owner, entry, round_no) or not b.apply(a):
+			break
+	if _same_turn(b, owner, entry, round_no):
+		b.end_turn()

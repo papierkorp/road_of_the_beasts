@@ -299,6 +299,13 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 				if (c.is_mountain() or p["destroyed"].has(cell)) and not op.on_mountain:
 					continue
 				BattleBoardOps.lay_ground(b, c, op.ground, p["label"])
+		# test switch surge_ground: a timed Surge without ground of its own leaves one
+		var sk: BattleSkillDef = p["skill"]
+		if BattleExperiment.surge_ground != &"" and p["kind"] == "surge" and sk.kind == BattleSkillDef.SURGE and sk.ops_of(BoardOp.GROUND).is_empty():
+			for cell: Vector2i in p["cells"]:
+				var c := b.board.at(cell)
+				if c.prop == null and not c.is_mountain() and not p["destroyed"].has(cell) and not BattleExperiment.well_squares(b.board.size).has(cell):
+					BattleBoardOps.lay_ground(b, c, BattleExperiment.surge_ground, p["label"])
 
 
 static func _has_dead_props(b: Battle) -> bool:

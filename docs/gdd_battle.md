@@ -47,6 +47,17 @@ The encounter chooses a mode within the player's available team size; stage avai
 - **Fair defeats:** a loss reads as the player's own mistake, not as something the game did to them.
 - **Simple to learn, hard to master:** few uniform rules, no hidden abilities; everything a monster can do is visible.
 
+**Reshape decisions** *(user, 2026-11-13; decided as direction, **not yet worked into the sections below or into the build**; where a section contradicts them, these hold; work list: [temp_todo.md](temp_todo.md) T40)*:
+- **Fair damage at range:** damage from a distance never hits a monster that has had no turn of its own since the cast. Immediate damage exists only as a Strike on a neighbouring square. Fair timings for damage on a square: on entering it, at the end of the occupant's own turn, at the end of the round; no damage at the start of a turn or round.
+- **No height and no air layer:** Mountains, climbing costs, every height rule and the air layer with flying are removed; props take over cover and blocking.
+- **Wellspring by last touch:** every map has at least one Wellspring (the name may change); it belongs to the side whose monster touched it last and deals its end-of-round damage for that side, whether or not a monster still stands on it.
+- **Being pushed or pulled is movement:** every effect that reacts to movement on a square also reacts to displacement.
+- **Skills are one sentence, not classes:** where (anchor, shape, range) · when (now, after time, on entering) · what (effects from one shared list) · what stays (square effect or prop). Strike, Surge, trap, zone and prop skill are typical combinations. Guideline, not a duty: a kit skill has one main effect and one board effect; Step and Jab stay plain. Record format and vocabulary: [gdd_skills.md](gdd_skills.md) (to be rewritten, T40).
+- **New effect kind:** damage when a monster moves on the square, none while it stands still; may be cast directly on a monster.
+- **AP and turn effects:** effects that change AP or turns per round may exist as rare, expensive skills; they carry the content status `experiment` until tried.
+- **Two layers with one role each:** a square keeps ground and zone. **Ground acts at a moment:** damage, healing or movement cost on entering, at the end of the occupant's turn or at the end of the round. **A zone acts while a monster stands in it:** stat changes, and push or pull at the end of its turn. A pending Surge or trap and the occupant (monster or prop) complete the square.
+- **Board:** 7×7 stays for 3v3; other shapes are a parked idea ([temp_todo.md](temp_todo.md), Potential Extensions).
+
 ---
 
 ## 2. Battle Flow

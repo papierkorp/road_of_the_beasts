@@ -82,11 +82,235 @@ Kinds: strike_jab = strike · magma_pounce, cinder_dive, eclipse, gloom_rift, co
 
 **Kit set `164984ea835f`** (content `2026-11-12.3`): as `736eb4e604a6` with two slots changed after the user decision of 2026-11-12 (no shield zone in a kit): moss_turtle carries `mire` (zone) instead of `bark_veil`, dusk_moth `blink` (move) instead of `shade_veil`. First used in S012.
 
+**Kit set `6e152c78b752`** (content `2026-11-13.1`): stats and kits of `f4086ae48783`; the movement skills other than Run cover the full Movement stat and cost 2 AP (Glide, Burrow, Blink, Leap, Phase, Quake Leap, Headbutt; S016 Part D).
+
 **Kit set `f4086ae48783`** (content `2026-11-13.1`; HP/Init/Move/TPR/Reach/AP: slots): the kits of `164984ea835f` with the stats of the draft prices of 2026-11-13 (S015 set C).
 
 - blaze_tiger 7/7/5/1/2/3 · dusk_moth 5/7/3/1/4/3 · ember_hawk 5/9/5/2/2/3 · forge_golem 8/5/1/1/3/3 · gloom_wolf 6/9/3/1/3/3 · grove_wisp 5/9/5/1/3/3 · hollow_serpent 7/5/3/1/3/3 · moss_turtle 8/3/2/1/3/3 · thorn_mites 6/3/3/2/3/3
 
 # Entries
+
+## S017 · 2026-11-13 · postponing in two forms, a calm first round, Surge wall; kits and stats drawn at random
+
+**State:** `1b84358` dirty (uncommitted) · content `2026-11-13.1` · kit set `6e152c78b752` (movement skills on full Movement, all but Run 2 AP). Godot 4.7.2. 3v3, random teams on seeded boards, `--paired`, bots `tactic` on both sides, 20 battles per seed: seeds 1–8 (160 battles) or 1–16 (320). Rows are sums over the blocks of a row, as in S016. Stat set “wide”: S016.
+
+**Questions (user):** does postponing a turn reward initiative (general form with the waiting monsters in reverse order; user idea: round 1 only, for monsters with two turns and the first of the queue); does a first round without damage or a charging Surge that blocks movement help; **are the fragile monsters weak because their kit does not fit** (every test so far used one fixed kit per monster)?
+
+**New switches** (`sim.gd --variant`; all off by default): `delay=reverse`, `delay=first`, `calm=N` (no damage in the first N rounds), `surgewall` (no movement may enter the squares of a charging timed Surge), `surgeground` (a timed Surge without ground of its own leaves Thornbed; **without effect here: all five timed Surges of the kits already leave ground**, the rows equal those without it and are not listed), `mixkits` (every monster plays a random kit: the nine of the game, in Part C also ten simulation-only kits `kit_*`), `mixskills` (four random skills out of the 31 that some kit holds, the first one dealing damage), `mixstats` (HP 3–8, initiative 1–9, Movement 1–5, Reach 2–4, TPR 1–2, AP 2–3, each drawn alone, no budget).
+
+### Part A · switches on the stat set “wide”
+
+| Variant | Battles | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) | Hawk / Wisp / Moth | Tiger / Wolf / Serpent | Golem / Turtle / Mites |
+|---|---|---|---|---|---|---|---|---|
+| wide | 160 | 79 / 78 / 3 | 3.8 | 17 / 2 % | 1.1 | 28 / 36 / 53 % | 57 / 49 / 63 % | 53 / 62 / 43 % |
+| wide · `delay=reverse` | 160 | 81 / 77 / 2 | 4.0 | 20 / 5 % | 1.1 | 32 / 46 / 51 % | 48 / 47 / 65 % | 52 / 69 / 39 % |
+| wide · `delay=first` | 160 | 81 / 78 / 1 | 3.9 | 19 / 2 % | 1.1 | 28 / 35 / 51 % | 53 / 52 / 64 % | 57 / 67 / 43 % |
+| wide · `calm=1` | 160 | 66 / 94 / 0 | 4.3 | 11 / 7 % | 2.0 | 44 / 55 / 30 % | 47 / 60 / 60 % | 53 / 72 / 32 % |
+| wide · `fairsurge` (S016 Part D row) | 160 | 66 / 89 / 5 | 4.7 | 9 / 9 % | 1.7 | 46 / 48 / 22 % | 45 / 52 / 60 % | 62 / 58 / 44 % |
+| wide · `fairsurge,delay=reverse` | 160 | 70 / 88 / 2 | 4.2 | 7 / 5 % | 1.6 | 41 / 53 / 32 % | 40 / 54 / 55 % | 67 / 55 / 48 % |
+| wide · `fairsurge,delay=first` | 160 | 72 / 86 / 2 | 4.5 | 11 / 8 % | 1.6 | 45 / 45 / 23 % | 46 / 57 / 54 % | 63 / 62 / 51 % |
+| wide · `fairsurge,calm=1` | 160 | 85 / 73 / 2 | 5.0 | 6 / 10 % | 2.1 | 40 / 50 / 35 % | 48 / 42 / 61 % | 67 / 59 / 46 % |
+| wide · `fairsurge,surgewall` | 160 | 83 / 74 / 3 | 4.9 | 5 / 9 % | 1.6 | 38 / 46 / 36 % | 48 / 44 / 59 % | 61 / 54 / 58 % |
+| wide · `fairsurge,surgedmg=-1` | 160 | 73 / 84 / 3 | 4.3 | 8 / 5 % | 1.6 | 35 / 49 / 35 % | 39 / 53 / 53 % | 64 / 62 / 54 % |
+| wide, Hawk and Mites AP 3 · `fairsurge` | 160 | 76 / 82 / 2 | 4.2 | 19 / 6 % | 1.6 | 37 / 60 / 38 % | 32 / 50 / 55 % | 58 / 55 / 62 % |
+
+### Part B · every monster with a random kit of the nine (`mixkits`): body and kit apart
+
+| Variant | Battles | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) | Body: Hawk / Wisp / Moth | Tiger / Wolf / Serpent | Golem / Turtle / Mites |
+|---|---|---|---|---|---|---|---|---|
+| wide · `fairsurge,mixkits` (nine kits) | 320 | 158 / 157 / 5 | 4.1 | 15 / 4 % | 1.6 | 36 / 40 / 39 % | 45 / 42 / 57 % | 73 / 59 / 57 % |
+| kit set stats · `fairsurge,mixkits` (nine kits) | 160 | 77 / 81 / 2 | 4.3 | 6 / 4 % | 1.9 | 53 / 35 / 44 % | 44 / 39 / 57 % | 55 / 54 / 64 % |
+
+| Kit of | wide: win rate (plays) | kit set stats: win rate (plays) |
+|---|---|---|
+| grove_wisp | 61% (212) | 64% (92) |
+| ember_hawk | 55% (228) | 56% (113) |
+| forge_golem | 55% (226) | 55% (109) |
+| moss_turtle | 48% (221) | 50% (116) |
+| gloom_wolf | 47% (193) | 41% (104) |
+| blaze_tiger | 46% (198) | 54% (95) |
+| hollow_serpent | 46% (211) | 43% (111) |
+| dusk_moth | 43% (220) | 43% (104) |
+| thorn_mites | 42% (211) | 41% (116) |
+
+Body class against kit, stat set “wide” (plays in brackets; 40–110 per cell, so ±10–15 points):
+
+| Kit of | fragile bodies (Hawk, Wisp, Moth, Wolf) | middle (Tiger, Mites) | sturdy (Golem, Turtle, Serpent) |
+|---|---|---|---|
+| blaze_tiger | 33 % (84) | 54 % (46) | 57 % (68) |
+| dusk_moth | 34 % (109) | 43 % (51) | 58 % (60) |
+| ember_hawk | 41 % (88) | 52 % (58) | 72 % (82) |
+| forge_golem | 46 % (104) | 65 % (43) | 60 % (79) |
+| gloom_wolf | 35 % (97) | 48 % (40) | 68 % (56) |
+| grove_wisp | 49 % (94) | 62 % (47) | 75 % (71) |
+| hollow_serpent | 41 % (100) | 50 % (48) | 52 % (63) |
+| moss_turtle | 40 % (102) | 39 % (56) | 68 % (63) |
+| thorn_mites | 32 % (100) | 48 % (50) | 52 % (61) |
+
+### Part C · stats and skills or kits drawn at random (320 battles per row; win rate of the monsters holding the value, plays in brackets)
+
+`mixskills,mixstats,fairsurge`: 320 battles, sides 152 / 168 / 0 draws, 4.6 rounds, under 3 / over 7 8 / 8 %, first defeat round 1.9. `mixskills,mixstats`: 320 battles, sides 155 / 163 / 2 draws, 3.6 rounds, under 3 / over 7 26 / 4 %, first defeat round 1.5. `mixkits,mixstats,fairsurge`: 320 battles, sides 151 / 165 / 4 draws, 4.2 rounds, under 3 / over 7 9 / 4 %, first defeat round 1.9.
+
+| Stat value | `mixskills,mixstats,fairsurge` | `mixskills,mixstats` | `mixkits,mixstats,fairsurge` (19 kits) |
+|---|---|---|---|
+| hp=3 | 36% (312) | 37% (312) | 43% (335) |
+| hp=4 | 49% (321) | 49% (321) | 46% (325) |
+| hp=5 | 50% (319) | 47% (319) | 47% (321) |
+| hp=6 | 51% (304) | 53% (304) | 51% (317) |
+| hp=7 | 55% (336) | 57% (336) | 53% (299) |
+| hp=8 | 59% (328) | 55% (328) | 56% (323) |
+| init=1 | 48% (216) | 44% (216) | 49% (234) |
+| init=2 | 55% (210) | 50% (210) | 51% (221) |
+| init=3 | 54% (205) | 47% (205) | 49% (196) |
+| init=4 | 50% (223) | 52% (223) | 42% (200) |
+| init=5 | 53% (216) | 53% (216) | 50% (185) |
+| init=6 | 48% (226) | 48% (226) | 50% (223) |
+| init=7 | 48% (207) | 54% (207) | 53% (214) |
+| init=8 | 46% (205) | 48% (205) | 54% (204) |
+| init=9 | 49% (212) | 51% (212) | 46% (243) |
+| move=1 | 46% (404) | 51% (404) | 47% (403) |
+| move=2 | 51% (380) | 49% (380) | 49% (381) |
+| move=3 | 53% (376) | 51% (376) | 50% (403) |
+| move=4 | 50% (373) | 51% (373) | 50% (384) |
+| move=5 | 51% (387) | 47% (387) | 51% (349) |
+| reach=2 | 47% (666) | 48% (666) | 51% (631) |
+| reach=3 | 49% (631) | 49% (631) | 47% (659) |
+| reach=4 | 54% (623) | 53% (623) | 50% (630) |
+| tpr=1 | 46% (948) | 45% (948) | 46% (975) |
+| tpr=2 | 54% (972) | 55% (972) | 53% (945) |
+| ap=2 | 48% (985) | 47% (985) | 44% (972) |
+| ap=3 | 52% (935) | 52% (935) | 55% (948) |
+
+| Skill | with `fairsurge` | without |
+|---|---|---|
+| shockwave | 66% (187) | 59% (187) |
+| gale | 64% (188) | 57% (188) |
+| void_pull | 59% (183) | 59% (183) |
+| bog | 56% (174) | 56% (174) |
+| run | 55% (209) | 54% (209) |
+| immovable | 53% (203) | 47% (203) |
+| quake_leap | 53% (198) | 47% (198) |
+| cinder_dive | 52% (353) | 51% (353) |
+| plant_bamboo | 52% (188) | 51% (188) |
+| shove | 52% (178) | 53% (178) |
+| ambush_rift | 51% (357) | 49% (357) |
+| glide | 51% (197) | 55% (197) |
+| coiling_rift | 50% (336) | 51% (336) |
+| mire | 50% (200) | 46% (200) |
+| gloom_rift | 49% (377) | 51% (377) |
+| strike_thrust | 49% (332) | 48% (332) |
+| tidal_shell | 49% (326) | 50% (326) |
+| bramble_tide | 48% (328) | 47% (328) |
+| eclipse | 48% (340) | 51% (340) |
+| headbutt | 48% (205) | 43% (205) |
+| lava_field | 48% (185) | 43% (185) |
+| set_gong | 48% (180) | 41% (180) |
+| strike_jab | 48% (308) | 51% (308) |
+| blink | 47% (213) | 45% (213) |
+| leap | 47% (174) | 51% (174) |
+| spring_burst | 47% (322) | 51% (322) |
+| crucible | 46% (328) | 47% (328) |
+| magma_pounce | 46% (353) | 48% (353) |
+| raise_ground | 46% (198) | 43% (198) |
+| thornbed | 45% (174) | 49% (174) |
+| burrow | 43% (186) | 47% (186) |
+
+| Kit | Win rate (plays) |
+|---|---|
+| grove_wisp | 71% (95) |
+| ember_hawk | 66% (91) |
+| kit_pusher | 58% (89) |
+| kit_lancer | 57% (112) |
+| kit_controller | 56% (91) |
+| kit_harrier | 54% (93) |
+| kit_denier | 53% (89) |
+| moss_turtle | 49% (101) |
+| thorn_mites | 49% (114) |
+| kit_builder | 48% (108) |
+| hollow_serpent | 46% (95) |
+| kit_skirmisher | 46% (119) |
+| kit_sniper | 45% (111) |
+| forge_golem | 44% (111) |
+| gloom_wolf | 44% (87) |
+| kit_trapper | 43% (101) |
+| blaze_tiger | 40% (103) |
+| dusk_moth | 39% (105) |
+| kit_battery | 37% (105) |
+
+**Observations** (indications; bots only; about ±7 points for a monster in a 160-battle row, ±6 for a stat value or skill in Part C):
+
+- *Postponing does not lift the fast monsters in either form:* Hawk and Wisp stay where they were, battle length hardly moves; the user's round-1 rule and the general reverse-order rule give the same picture.
+- *A first round without damage moves the first defeat to round 2.0–2.1;* with `fairsurge` 6 % of battles end under 3 rounds and 10 % last longer than 7.
+- *A charging Surge that blocks movement, with `fairsurge`, gives the fewest short battles (5 %).*
+- *With kits mixed the bodies sort by HP:* Golem 73 %, Turtle 59 %, Serpent and Mites 57 %; Tiger 45 %, Wolf 42 %, Wisp 40 %, Moth 39 %, Hawk 36 %. The fragile bodies reach 49 % at best with any of the nine kits. The Hawk's kit is the second best; its body is what loses.
+- *Kits differ by about 20 points averaged over bodies* (Wisp's kit 61–71 %, Mites' and Moth's about 40 %); four Surges (`kit_battery`) and the Moth's kit are last with `fairsurge`.
+- *Stat values, each drawn alone:* **initiative shows no trend at all** over its nine values in any row, **Movement almost none** (only Movement 1 trails in two rows); HP 3 is a cliff (36–43 %), HP 4–6 flat (46–53 %), HP 7–8 at 53–59 %; a second turn is worth 7–10 points, AP 3 against AP 2 4–11, Reach 4 against 2 nothing to 7.
+- *Skills:* the displacing zones lead (Shockwave, Gale, Void Pull, Bog 56–66 %), Run 54–55 %, every Surge and trap 46–52 %, Jab 48–51 %, the movement skills for 2 AP 43–55 %.
+- *Limits:* `tactic` assumes a `greedy` opponent; no budget in Part C, so a value is measured across every other stat; combinations (a fragile body with one fitting skill) need far more battles.
+
+**Follow-up:** T40 (reshape of square and skills: initiative and Movement have no job on the board; no single hit may take a monster from full HP to zero), T03 (stat prices: HP 3 against 4, AP, second turn), T39 (postponing; calm first round), T38 (Surge wall), T13. No rule was changed by this entry.
+
+About 3 400 battles in 216 runs.
+
+## S016 · 2026-11-13 · a bot that plans the whole turn (`tactic`); wide stats, postponing, `fairsurge`; movement skills on full Movement for 2 AP
+
+**State:** `1b84358` dirty (uncommitted) · content `2026-11-13.1` · kit set `f4086ae48783` for Parts A–C, `6e152c78b752` for Part D (movement skills changed). Godot 4.7.2. 3v3, random teams on seeded boards, `--paired`, seeds 1–8 with 20 battles each (160 battles per row; Part A 80 per seating). The tool printed full blocks; the rows below are sums over the eight blocks of a row (wins, mean rounds, shares weighted by battles; a monster's win rate weighted by its battles).
+
+**Questions (user):** did the fragile, fast monsters lose because of the AI; do stats that differ more (HP from 3, AP 2 and 3) hold up; what does postponing a turn do with a bot that can use it; what do movement skills on full Movement cost.
+
+**Bot `tactic`** (`tools/lib/sim_bots.gd`): searches every order of actions the AP allow (beam over `AiBrain.evaluate`, 4 lines by plain score and 3 by the threat-aware score per action count), plays the best 3 + 2 end positions, “do nothing” and (with `delay`) the postponed turn on with `greedy` for both sides until its monster is up again, and takes the line with the best position there. About 23 s per 3v3 battle on one core.
+
+**Stat set “wide”** (`stat=` for the run only; HP / Init / Move / Reach / TPR / AP): Forge Golem 8 / 1 / 1 / 3 / 1 / 3 · Moss Turtle 7 / 3 / 2 / 3 / 1 / 3 · Hollow Serpent 6 / 5 / 2 / 3 / 1 / 3 · Thorn Mites 6 / 3 / 3 / 3 / 2 / 2 · Blaze Tiger 5 / 7 / 5 / 2 / 1 / 3 · Gloom Wolf 4 / 9 / 3 / 3 / 1 / 3 · Grove Wisp 3 / 9 / 5 / 3 / 1 / 3 · Ember Hawk 3 / 9 / 5 / 3 / 2 / 2 · Dusk Moth 3 / 7 / 3 / 4 / 1 / 3. Trial prices behind it (not a rule): HP 1.5 per point above 2, initiative 0.5, Movement 1, Reach 3, second turn 4, AP 3 4; every sheet 15.5–16.5.
+
+### Part A · `tactic` against `greedy` (build rules, kit set stats)
+
+| Seating | Battles | `tactic` wins | Mean rounds | Under 3 rounds |
+|---|---|---|---|---|
+| `tactic` side 0 | 80 | 72 | 3.4 | 39 % |
+| `tactic` side 1 | 80 | 77 | 2.7 | 44 % |
+
+### Part B · kit set stats (HP 5–8, every monster AP 3)
+
+| Bots · variant | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) | Hawk / Wisp / Moth | Tiger / Wolf / Serpent | Golem / Turtle / Mites |
+|---|---|---|---|---|---|---|---|
+| `greedy` | 80 / 77 / 3 | 3.6 | 18 / 2 % | 1.3 | 44 / 51 / 49 % | 57 / 56 / 61 % | 41 / 47 / 39 % |
+| `tactic` | 66 / 93 / 1 | 3.7 | 20 / 2 % | 1.3 | 54 / 57 / 55 % | 63 / 52 / 53 % | 36 / 40 / 36 % |
+| `tactic` · `delay` | 68 / 92 / 0 | 3.3 | 29 / 2 % | 1.2 | 56 / 60 / 56 % | 54 / 51 / 56 % | 40 / 40 / 36 % |
+| `tactic` · `delay,fairsurge` | 74 / 86 / 0 | 4.1 | 9 / 2 % | 1.6 | 59 / 63 / 43 % | 55 / 54 / 44 % | 43 / 46 / 44 % |
+
+### Part C · stat set “wide” (HP 3–8, two monsters with AP 2)
+
+| Bots · variant | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) | Hawk / Wisp / Moth | Tiger / Wolf / Serpent | Golem / Turtle / Mites |
+|---|---|---|---|---|---|---|---|
+| `greedy` | 83 / 77 / 0 | 4.1 | 22 / 9 % | 1.1 | 27 / 53 / 52 % | 51 / 44 / 67 % | 52 / 58 / 50 % |
+| `tactic` | 87 / 72 / 1 | 3.6 | 25 / 1 % | 1.1 | 35 / 46 / 53 % | 54 / 55 / 64 % | 47 / 54 / 42 % |
+| `tactic` · `delay` | 81 / 77 / 2 | 3.6 | 26 / 2 % | 1.1 | 34 / 58 / 46 % | 61 / 60 / 59 % | 41 / 52 / 35 % |
+| `tactic` · `fairsurge` | 79 / 81 / 0 | 4.3 | 12 / 7 % | 1.4 | 40 / 54 / 38 % | 60 / 41 / 64 % | 57 / 54 / 46 % |
+| `tactic` · `delay,fairsurge` | 86 / 73 / 1 | 4.0 | 13 / 2 % | 1.4 | 45 / 58 / 35 % | 49 / 51 / 52 % | 63 / 54 / 42 % |
+
+### Part D · movement skills other than Run on full Movement for 2 AP (build test; kit set `6e152c78b752`), bots `tactic`
+
+| Stats · variant | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) | Hawk / Wisp / Moth | Tiger / Wolf / Serpent | Golem / Turtle / Mites |
+|---|---|---|---|---|---|---|---|
+| kit set | 63 / 97 / 0 | 3.7 | 18 / 1 % | 1.5 | 53 / 57 / 55 % | 48 / 65 / 49 % | 38 / 48 / 37 % |
+| kit set · `fairsurge` | 74 / 84 / 2 | 4.6 | 6 / 2 % | 1.9 | 63 / 61 / 37 % | 41 / 50 / 35 % | 50 / 59 / 48 % |
+| wide · `fairsurge` | 66 / 89 / 5 | 4.7 | 9 / 9 % | 1.7 | 46 / 48 / 22 % | 45 / 52 / 60 % | 62 / 58 / 44 % |
+| wide · `fairsurge,freeap=1,freemod=1` (1 AP, Movement − 1) | 86 / 73 / 1 | 4.3 | 10 / 7 % | 1.4 | 39 / 56 / 40 % | 50 / 52 / 55 % | 63 / 49 / 44 % |
+
+**Observations** (indications; bots only; a monster plays in about 50 battles of a row, so a difference under about 7 points between two win rates is noise):
+
+- *Play quality outweighs everything measured so far:* `tactic` wins 149 of 160 battles against `greedy`. It models its opponent as `greedy`, which is exactly what it meets there; the rows of `tactic` against itself are the fairer reading.
+- *With the kit set stats better play lifts the fast monsters and lowers the sturdy ones:* Hawk 44 → 54 %, Wisp 51 → 57 %, Golem 41 → 36 %, Turtle 47 → 40 %. The stat prices of S014/S015 were derived from `greedy` and so rated HP too high against initiative.
+- *A 3-HP monster with AP 3 holds (Wisp 46–58 % in the wide rows); the two AP-2 monsters are weak in every wide row* (Hawk 27–46 %, Mites 35–46 %, the Mites with 6 HP).
+- *`fairsurge` halves the share of battles under 3 rounds* (20–29 % → 9–13 %; with the new movement rule 6–9 %) and moves the first defeat from round 1.1–1.3 to 1.4–1.9. It lowers the Dusk Moth (two Surge-dependent slots) to 22–43 %.
+- *Postponing in its present form does little:* no gain for the fast monsters beyond noise, and with the kit set stats more battles under 3 rounds (29 %). If everyone postpones, the slowest monster still acts last.
+- *First defeats stay in round 1–2 in every row.*
+- *Movement for 2 AP:* Glide, Burrow, Headbutt and Quake Leap are used more often than before in spite of the price (seed 1: Burrow 1.5 → 2.75, Glide 1.55 → 2.4 per battle); win rates move within noise except the Wolf (+13) and Tiger (−15) in the first row.
+- *Unexplained:* with the kit set stats and `tactic` on both sides, side 1 wins about 58 % in all five rows (66/93, 68/92, 74/86, 63/97, 74/84); with `greedy` and with the wide set there is no such lean.
+
+**Follow-up:** T03 (prices from `greedy` runs overrate HP; AP 2 against AP 3; HP floor), T39 (postponing with waiting monsters in reverse initiative order; round-1 defeats; side lean), T38 (`fairsurge` plus a board effect for Surges; the Moth's kit), T13 (bot quality: `tactic` as reference; a game opponent on its level). No rule or stat was changed by this entry; the movement skill change of Part D is a build test (godot/README.md).
+
+About 2 100 battles in 136 runs.
 
 ## S015 · 2026-11-13 · Wellspring rules as build rules; new stat prices and frames; the Surge timer tested again
 

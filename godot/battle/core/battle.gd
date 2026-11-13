@@ -302,8 +302,13 @@ func check(a: Dictionary) -> String:
 			return "%s has already acted this turn" % u.display_name()
 		if int(delayed.get(u.id, 0)) == round_number:
 			return "%s has already postponed a turn this round" % u.display_name()
-		if queue_idx >= queue.size() - 1:
+		if queue_idx >= queue.size() - 1 or queue[queue_idx + 1].get("waited", false):
 			return "nobody acts after %s this round" % u.display_name()
+		if BattleExperiment.delay_first_round:
+			if round_number != 1:
+				return "turns can only be postponed in round 1"
+			if u.sheet.tpr < 2 and (queue_idx != 0 or queue[0].get("waited", false)):
+				return "only the first monster of the queue and monsters with two turns may postpone"
 		return ""
 	match type:
 		&"step":

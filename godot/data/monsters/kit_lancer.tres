@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="MonsterDef" format=3]
+
+[ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
+[ext_resource type="Resource" path="res://data/skills/leap.tres" id="s0"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
+[ext_resource type="Resource" path="res://data/skills/strike_thrust.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/gale.tres" id="s3"]
+
+[resource]
+script = ExtResource("1")
+id = &"kit_lancer"
+display_name = "Kit: Lancer"
+content_status = "simulation"
+reference_shape = 3
+hp = 6
+initiative = 5.0
+move = 3
+tpr = 1
+reach = 3
+ap = 3
+skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
+blurb = "Leaps in a line and strikes two squares deep; Gale pushes a line back."
+notes = "Simulation only (S017): a kit for `sim.gd --variant mixkits`; the stats are placeholders and no price was checked."

@@ -14,7 +14,7 @@ const STRIKE_NAMES := {
 @export var id: StringName
 @export var display_name: String
 ## ContentStatus: a test-only or simulation-only monster is never offered by the game.
-@export_enum("approved", "draft", "test", "simulation", "archived") var content_status: String = ContentStatus.DRAFT
+@export_enum("approved", "draft", "experiment", "test", "simulation", "archived") var content_status: String = ContentStatus.DRAFT
 @export var kin: Kin = Kin.BEAST
 ## Look and overworld material family only; no battle rule reads it (aspects are removed, T01).
 @export var aspect: Aspect.Type = Aspect.Type.FORCE
