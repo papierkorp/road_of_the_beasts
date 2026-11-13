@@ -4,6 +4,10 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _ids(b: Battle) -> Array:
 	var out := []
 	for e in b.queue:
@@ -23,6 +27,7 @@ func test_one_queue_for_both_sides_by_effective_initiative() -> void:
 
 
 func test_extra_turn_entries_sit_three_lower_and_never_below_the_floor() -> void:
+	BattleExperiment.tpr_from_round = 1       # the queue of round 2 and later (in round 1 every monster has one turn)
 	var b := H.battle([
 		[0, Vector2i(0, 6), {"init": 6.0}],
 		[1, Vector2i(6, 0), {"init": 9.0, "tpr": 2}],

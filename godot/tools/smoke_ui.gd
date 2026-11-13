@@ -2,7 +2,8 @@ extends SceneTree
 ## Headless UI smoke test: draft → placement → battle, then plays the player's side through
 ## the real controller input path (hover, highlights, previews, inspector, click), using the
 ## AI only to choose what to aim at.
-## godot --headless -s res://tools/smoke_ui.gd -- [mode] [seed]
+## godot --headless -s res://tools/smoke_ui.gd -- [mode] [seed] [check box]
+## A third argument ticks the draft check box with that label (e.g. Wellsprings).
 
 var _frames := 0
 var _stage := 0
@@ -10,12 +11,14 @@ var _rng := RandomNumberGenerator.new()
 var _mode := &"3v3"
 var _player_actions := 0
 var _refused := 0
+var _box := ""
 
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	_mode = StringName(args[0]) if args.size() > 0 else &"3v3"
 	_rng.seed = int(args[1]) if args.size() > 1 else 7
+	_box = args[2] if args.size() > 2 else ""
 	change_scene_to_file("res://battle/draft.tscn")
 
 
@@ -35,6 +38,9 @@ func _process(_delta: float) -> bool:
 		for tid: StringName in [&"second_wind", &"spirit_shield", &"domain_glimpse"]:
 			scene._toggle_tamer(tid, true)
 		print("[smoke] draft pick: ", pick)
+		if _box != "":
+			(scene._experiments[_box] as CheckBox).button_pressed = true
+			print("[smoke] ticked: ", _box, " (wells ", BattleExperiment.wells, ")")
 		scene._start(_mode)
 		_stage = 1
 		return false

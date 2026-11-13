@@ -3,7 +3,14 @@ extends RefCounted
 ## actions from `AiBrain.candidates` (all legal) and apply them through `Battle.apply`.
 ## Use it through `const Bots := preload("res://tools/lib/sim_bots.gd")`.
 ##
-##   greedy  AiBrain itself: one-step lookahead on a copy of the battle
+##   greedy  AiBrain itself, as the game plays it: one-step lookahead on a copy of the battle;
+##           with AP left and nothing better to do it walks toward the nearest enemy
+##           (`hunt` is the same bot under its name in simulation S011)
+##   wait    AiBrain as it was up to S011: ends the turn instead of walking up
+##   careful greedy with the switch `ai_careful`: it counts the Strike damage enemies can bring to
+##           each of its monsters before their next turn and avoids squares where that is lethal
+##   chase   like greedy, but walks up only while its side is not ahead in total HP (the side that is
+##           ahead waits for late-round pressure, the other one has to come)
 ##   plan    AiBrain's evaluation, but the best few first actions are judged together with
 ##           the best second action of the same turn (set a trap, then push into it)
 ##   rush    hit whoever is in a Strike shape, else cast, else walk toward the nearest enemy
@@ -13,7 +20,7 @@ extends RefCounted
 ## All four are crude: none plans ahead, refreshes timed effects on purpose, targets props or
 ## uses tamer skills. Their results are flow indications, never balance evidence.
 
-const NAMES: Array[String] = ["greedy", "plan", "rush", "kite", "random"]
+const NAMES: Array[String] = ["greedy", "hunt", "careful", "wait", "chase", "plan", "rush", "kite", "random"]
 ## plan: how many first actions are looked at one action further.
 const PLAN_BEAM := 6
 const MAX_ACTIONS_PER_TURN := 8
@@ -23,7 +30,10 @@ const RANDOM_STOP := 0.15
 
 
 static func play_turn(bot: String, b: Battle, rng: RandomNumberGenerator) -> void:
-	if bot == "greedy":
+	BattleExperiment.ai_hunt = bot != "wait"                        # only `wait` ends a turn instead of walking up
+	BattleExperiment.ai_hunt_behind = bot == "chase"
+	BattleExperiment.ai_careful = bot == "careful"
+	if bot == "greedy" or bot == "hunt" or bot == "careful" or bot == "wait" or bot == "chase":
 		AiBrain.play_turn(b, b.turn_owner, rng)
 		return
 	var owner := b.turn_owner

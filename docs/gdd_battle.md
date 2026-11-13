@@ -41,7 +41,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 **Battle goals** *(user, 2026-11-12)* — what a battle has to deliver; the pillars above are the means, and rules, content and prices are judged against these goals ([temp_todo.md](temp_todo.md) T13 measures them):
 - **Influence and consequence:** the player's decisions shape the battle and have visible consequences.
 - **Deterministic:** no dice, no hidden information.
-- **Short:** a battle of about 15 rounds is already very long. No target length is set yet (T13).
+- **Short:** a battle of about 15 rounds is already very long. **Target for 3v3 *(working draft, user direction 2026-11-12)*:** 3–7 rounds, ended by fighting and not by late-round pressure (§4.2); more than 10 rounds counts as a failure, fewer than 3 as too short (measured in T13).
 - **Tactical:** repeating one skill must not win a battle; position and combination decide.
 - **Every skill has its situation:** each skill is the right choice in some situations and none in all.
 - **Fair defeats:** a loss reads as the player's own mistake, not as something the game did to them.
@@ -67,6 +67,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 - **Ties:** higher base initiative first; still tied → the sides alternate (the first tie of a battle goes to the side with the lower total initiative; if the totals are equal, to the player's side). *(User decision 2026-11-11:)* tied units of the same side act in their fixed loadout/start slot order (slot 1 first); an extra-turn entry follows its unit's main entry. EXP and other meta state never break ties.
 - An initiative-draining zone can flip the order, giving a monster two turns back to back across the round boundary — a real tempo weapon
 - Multi-turn monsters get one extra queue entry per extra turn, each at −3 initiative (min 0.1)
+- **Extra turns count from round 2** *(working draft, user decision 2026-11-13; S013)*: in round 1 every monster has exactly one queue entry, whatever its TurnsPerRound
 - **Surges and the queue** *(working draft, user directions 2026-11-12; replaces the earlier detonation at the caster's next queue entry, dead-caster detonation at the round start and the orphaned-Surge tie reference)*: a **trap** detonates when it is sprung, whoever's turn it is; a **Surge** counts finished turns of any monster and detonates between two turns ([central Surge profile](gdd_skills.md#surge)). The queue therefore shows who still acts before a Surge fires, and initiative decides who can set, spring or leave a Surge first.
   - **Unit-bound effects and caster death** *(user decision 2026-11-10)*: effects bound to a unit (buffs, debuffs, marks, self-boosts) end immediately when that unit is defeated or removed. Zones, ground, props and Surges stay when their caster dies; there is no owner expiry, and a Surge of a defeated or swapped-out caster stays set like any other.
   - **Simultaneous sources:** Surges sprung at the same moment resolve together ([§6.2](#62-surge-resolution-integration)); ties between sources follow their casters' positions in the current queue, a gone caster's position in the last queue it was in, and several Surges of one caster their cast order.
@@ -95,7 +96,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 | on_enter      | a monster enters the square (move, push, pull)        | entry-triggered ground damage or healing (§4.7)                                                                                                       |
 | while_inside  | continuous modifier or source availability             | Movement, initiative and Reach modifiers; zone-based Surge damage reduction is available while inside and applies on Surge damage |
 | end_of_turn   | end of the occupant's turn                            | 1. push / pull → 2. end-turn ground damage (on the landing square) → 3. `mend`                                                            |
-| round end     | after the last turn of the round                      | zones −1 round (expired zones are removed), burning props burn down, late-round Voidscar spreads, initiative re-sorted |
+| round end     | after the last turn of the round                      | zones −1 round (expired zones are removed), burning props burn down, Wellspring and surround damage (§4.2), ground laid in battle fades (§4.5), late-round Voidscar spreads if nobody holds a Wellspring, initiative re-sorted |
 | immediate / event-derived | on authored execution or the triggering event | Strike on use; collision / fall on impact; aftermath on prop destruction |
 
 Order inside a turn:
@@ -157,10 +158,15 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 
 **Unvalidated opening target:** on 7×7, intended 5–6-row start separation should reward acting first with position, not a free hit: no Strike or Surge reaching the enemy line in round 1. The start-area table does not guarantee this; validation remains T13 in [temp_todo.md](temp_todo.md).
 
-### 4.2 Late-Round Pressure (Anti-Stalling)
+### 4.2 Wellsprings, Surrounding and Late-Round Pressure
 
-- From a set round, the square farthest from all living monsters becomes **Voidscar** each round (permanent, undestroyable). *Reading (user decision 2026-11-10):* each square's distance is measured to its nearest living monster and the largest value wins. **Ties** *(user decision 2026-11-10)*: all equally far squares become Voidscar together, with no tie-break. Start scales with board size (tunable: 1v1 round 6, 3v3 round 8).
-- **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round — so every battle ends.
+**Status: working draft** *(user decisions 2026-11-13 after a design discussion; standard of the Godot build; only bot runs, [simulation_log.md](simulation_log.md) S013–S015; not played; open points: T39 in [temp_todo.md](temp_todo.md))*. The win condition is unchanged: all enemy monsters defeated. Holding squares is the way there, and whoever waits loses HP.
+
+- **Wellsprings:** three squares on the centre row of the 3v3 board (7×7: x = 1, 3, 5) are **Wellspring**, a ground type that nothing changes ([§4.7](#47-ground--neutral-hazard-and-blessed)). No prop and no Mountain may stand on one; zones, Surges and traps may lie on it. Count and squares for other modes are open (boards with an even side have no centre row; the build places none there).
+- **Wellspring damage:** at the end of a round every Wellspring a monster **stands on** (ground or air layer) deals **1 damage to the nearest enemy** (board distance from the square). Ties: the enemy with more HP, then with more initiative, then **the holder chooses**. (The build takes roster order for the last tie; a choice needs an input step.)
+- **Surrounding:** at the end of a round a monster with **two or more enemies on its eight neighbour squares** takes 1 damage.
+- **One step:** Wellspring and surround damage of a round resolve together as one simultaneous damage step ([§6.1](#61-the-damage-law)), before ground laid in battle fades and before late-round pressure.
+- **Late-round pressure is only a brake:** it runs only at the end of a round **in which nobody holds a Wellspring**, and then as before: from a set round (tunable: 1v1 round 6, 3v3 round 8) the square farthest from all living monsters becomes **Voidscar** (permanent, undestroyable). *Reading (user decision 2026-11-10):* each square's distance is measured to its nearest living monster and the largest value wins; all equally far squares convert together, with no tie-break. **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round. In modes without Wellsprings it runs every round as before.
 
 ### 4.3 The Square Stack: Zones & Ground
 
@@ -169,7 +175,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 [ OBJECT ]  prop (§4.10; tag heavy = cannot be moved) | empty
 [ SURGE  ]  one marker: Surge or trap (a Surge replaces a trap square by square) | empty — shares shapes/placement with zones, never merges with them
 [ ZONE   ]  ONE timed zone (the skill's `duration`) | empty — control and support
-[ GROUND ]  type (neutral: Plain | Rubble | Voidscar — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra | Hallowed), always permanent
+[ GROUND ]  type (neutral: Plain | Rubble | Voidscar — hazard: Lava | Thornbed | Blight, lvl I–II — blessed: Hearth | Mossbed | Umbra | Hallowed), laid in battle: 2 rounds (§4.5)
             + height (Low | Mountain)
 ```
 
@@ -233,10 +239,10 @@ State stores zone level, not independent effect values; runtime values use effec
 |         Thing        |                                                   Clock                                                  |                                                Notes                                                |
 |----------------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------|
 | **Zone** | the resolved skill's duration; ticking follows [§2.4](#24-effect-timing-reference) | on expiry the zone is removed; no repaint. Authoring and upgrades: [gdd_skills.md](gdd_skills.md) |
-| **Surge / trap marker** | trap: none, stays until it is sprung or a Surge replaces its squares; Surge: its authored number of finished turns | triggers, timer, removal and authored aftermath follow the [central Surge profile](gdd_skills.md#surge) |
-| **Ground**           | none — stays until changed | changed by authorized ground replacement/reset, authored Surge residue, destroyed props' aftermath ground or Voidscar spread; source restrictions and Voidscar immunity apply (§4.7); zones never change ground (§4.6) |
+| **Surge / trap marker** | trap: none, stays until it is sprung, a Surge replaces its squares or its caster sets the same trap skill again (one trap per trap skill and monster); Surge: its authored number of finished turns | triggers, timer, removal and authored aftermath follow the [central Surge profile](gdd_skills.md#surge) |
+| **Ground**           | laid during the battle: **2 rounds** (the round it is laid in and the next one), then Plain again; ground of the starting board, Rubble of a destroyed Mountain and Voidscar: none | the clock restarts whenever the ground is laid or levelled again. Also changed by authorized ground replacement/reset, authored Surge residue, destroyed props' aftermath ground or Voidscar spread; source restrictions and Voidscar immunity apply (§4.7); zones never change ground (§4.6) |
 
-- **Persistence:** zones have a duration and Surges a turn count; traps and ground have no expiry clock. Neither Voidscar nor Lava fades: ground requires a change to disappear, subject to its exceptions.
+- **Persistence** *(working draft, user decision 2026-11-12 after [simulation_log.md](simulation_log.md) S011; played in the Godot build, only bot runs, not validated)*: what a skill lays on the board is temporary. Zones have a duration, Surges a turn count, and ground laid during the battle (by a skill, Surge residue or prop aftermath) turns back into Plain at the end of the round after the one it was laid in. Traps have no clock, but a monster holds at most one trap per trap skill: setting it again removes the earlier one without effect. Ground of the starting board, Rubble of a destroyed Mountain and Voidscar do not fade. *Replaces “traps and ground have no expiry clock”; reason: permanent hazard ground and markers filled the board and made waiting pay.*
 - Effects in one zone share its clock; separately authored status lifetimes remain permitted.
 
 ### 4.6 Zones: Effects, Rules & Opposites
@@ -290,6 +296,7 @@ No merging: a square always shows exactly one zone with its real effects.
 | Neutral | **Plain** | move cost 1 |
 | Neutral | **Rubble** | move cost 2; left by several destroyed props (catalogue, §4.10) and destroyed Mountains (when the destroying skill authors no ground change) |
 | Neutral | **Voidscar** | 1 damage at the **start** of your turn; permanent, spreads late-game (§4.2), nothing changes it |
+| Neutral | **Wellspring** | no effect on whoever stands on it; held at the end of a round it damages the nearest enemy (§4.2); permanent, nothing changes it, no prop or Mountain on it |
 | Hazard | **Lava** I–II | damage = level at the **end** of your turn — *punishes staying* |
 | Hazard | **Thornbed** I–II | damage = level when you **enter** the square (move, push or pull) — *punishes moving* |
 | Hazard | **Blight** I–II | damage = level at the **start** of your turn — *punishes being there when your turn begins* |
@@ -309,8 +316,8 @@ No merging: a square always shows exactly one zone with its real effects.
 
 - **Field effects** lay their specified level I hazard ground, also on Mountain
 - **Surge residue** applies the explicitly authored ground operation under the [central Surge profile](gdd_skills.md#surge) and [board-operation contract](gdd_skills.md#4-effect-and-board-operation-contracts); generic Surge execution alone lays no ground
-- **Blessing skills** lay blessed ground. It has no levels and is permanent; casting still spends the central authored AP price (§2.3)
-- All ground is **permanent**: it stays until something changes it (§4.5)
+- **Blessing skills** lay blessed ground. It has no levels and lasts like any ground laid in battle (§4.5); casting still spends the central authored AP price (§2.3)
+- Ground of the starting board stays until something changes it; ground laid during the battle lasts 2 rounds (§4.5)
 - **Same type** on the square → hazards +1 level (max II), blessed ground stays as it is
 - **Different type** → the new ground **replaces** the old one under the applicable ground/source rules; this is not automatic conversion by a skill name or theme
 - **Coupled height/reset (Raise Ground):** every skill that creates height creates a Mountain; Raise Ground raises it and resets ground to Plain, including Lava but excluding Voidscar. This source-specific [board-operation contract](gdd_skills.md#4-effect-and-board-operation-contracts) grants no ground reset from height changes alone
@@ -466,6 +473,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 > - **Strike:** max 2 against monsters; body-relative execution and authored AP follow the [central Strike profile](gdd_skills.md#strike)
 > - **Hazard ground:** its level (max 2) at its trigger; Voidscar: 1. Ground effects: [§4.7](#47-ground--neutral-hazard-and-blessed); generic schedule: [§2.4](#24-effect-timing-reference)
 > - **Collision** (pushed into a prop, a monster or the board edge; 2 instead of 1 for the pushed monster at a `spiky` prop; contract: [§6.3](#63-collision-fall--debris)), **fall** (pushed off a Mountain), **Mountain collapse** (environmental, independent of the destroying skill, §4.7) and **prop aftermath damage** (Clay Urn, Bamboo Stand; air-layer Thunder Cloud; §4.10): 1 each
+> - **Wellspring and surrounding** *(working draft 2026-11-13)*: 1 each at the end of a round ([§4.2](#42-wellsprings-surrounding-and-late-round-pressure)); no source reduces them
 > - **Zones never deal damage.** Nothing else deals damage the instant it is cast
 
 **Damage modifiers** *(user decision 2026-11-10)*:

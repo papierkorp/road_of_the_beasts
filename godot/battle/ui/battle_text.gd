@@ -266,6 +266,8 @@ static func event_line(b: Battle, e: Dictionary) -> String:
 		&"tamer_skill":
 			var t := b.content.tamer_skill(e["skill"])
 			return "%s: %s" % ["Tamer" if int(e["side"]) == 0 else "Enemy tamer", t.display_name if t != null else String(e["skill"])]
+		&"surge_lapsed":
+			return "A trap lapses"
 		&"zones_faded":
 			return "%d zone sq fade" % e["count"]
 		&"battle_over":

@@ -189,7 +189,7 @@ Central monster-skill execution definitions; [Battle chapter 5](gdd_battle.md#5-
 |----------|---------------------|--------------------------------------------------------------------------------------------|
 | `strike` | squares around the body | small direct damage in a shape around the monster ([Strike profile](#strike))                               |
 | `surge`  | Surge layer; ground only via explicit `board_changes` | a visible marker that detonates after its turns ([Surge profile](#surge)), including the existing burst profiles; optional, separately budgeted residue |
-| `trap`   | Surge layer; ground only via explicit `board_changes` | a visible marker on free squares that detonates when sprung ([Surge profile](#surge)); same profiles and residue rules; may be set repeatedly |
+| `trap`   | Surge layer; ground only via explicit `board_changes` | a visible marker on free squares that detonates when sprung ([Surge profile](#surge)); same profiles and residue rules; setting it again moves it (one trap per trap skill and monster) |
 | `zone`   | zone layer          | timed control or support on squares ([gdd_battle §4.6](gdd_battle.md#46-zones-effects-rules--opposites)), lasts for the skill's `duration`               |
 | `ground` | ground layer        | hazard ground or Mountain ([gdd_battle §4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed))                                                           |
 | `prop`   | object layer        | places or moves props ([gdd_battle §4.9](gdd_battle.md#49-props))                                                               |
@@ -242,7 +242,7 @@ SURGE and TRAP — common to both kinds (Minor)
     prop     → ordinary interception instead of its occupant (Battle §4.10); profile exceptions below
     Mountain → depends on the Surge profile (table below)
   afterwards: only if explicitly authored, apply the separately budgeted RESIDUE
-              board_changes effect (permanent ground, gdd_battle §4.7), subject to its profile's
+              board_changes effect (ground laid in battle, gdd_battle §4.5/§4.7), subject to its profile's
               height rules below; otherwise no residue; no repaint
   usage: spend authored AP (§5) per cast; repeat availability follows the skill's usage policy (§2)
 
@@ -257,7 +257,8 @@ TRAP
   set on: squares without a ground-layer monster and without a marker (squares of its shape that
           hold a Surge or trap are skipped); a prop or Mountain already there is allowed
           and does not spring it
-  no timer, never lapses
+  no timer, never lapses; one per trap skill and monster: setting the skill again removes its
+          earlier trap without effect (working draft 2026-11-12, Battle §4.5)
   triggers (authored per trap, shown on the skill):
     any (default)  a ground-layer monster on one of its squares (walk, landing, push, pull, swap),
                    or a prop or a Mountain that appears on one of its squares
@@ -282,7 +283,7 @@ MAJOR SURGE
 - Timing alone neither requires these profiles nor authorizes new combinations; validate definitions under §7. These are mechanical profiles, not aspects/replacement elements; “Flood” is never a zone and need not resemble water.
 - Existing damage/residue/prop/height effects:
 
-|     Type     | Damage |     Residue (permanent, level I)      |                                                                     Props                                                                     |                            Mountain                           |
+|     Type     | Damage |     Residue (2 rounds, level I)        |                                                                     Props                                                                     |                            Mountain                           |
 |--------------|--------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------|
 | **Eruption** |      3 | **Lava I** — burns at end of turn | ordinary prop handling | hit normally, cannot change ground on a Mountain (**no residue** there; lava runs off), does not destroy it |
 | **Flood** |      2 | **Thornbed I** — hurts when entered | ordinary prop handling | **can't reach it** (square blanked) |
@@ -1130,7 +1131,7 @@ Points in Movement only pay off with a movement skill; a Step-only monster stays
 ## 10. Species Skill Assignments (Prior Draft)
 
 **Non-authoritative prior-draft ideas:** no skill/access/cost specification, blueprint catalogue or approved damage/range exceptions. Names, old twists, passives, descriptions and overfilled loadouts grant no exceptions to §1–§9; retain for later validation, not implementation/redesign here. Rebuild under §2–§7; species access: §3 / §1. Monster identity, stats and shapes: [Monsters §4.1](gdd_monsters.md#41-first-roster-draft--9-monsters).
-- **Kits of the Godot build differ** *(2026-11-12)*: five species carry trap and displacement test kits (Tiger: Headbutt; Golem: Set Gong, a board skill that places a Bronze Gong on a free square in Reach; Wolf: Plant Bamboo, the same with a spiky Bamboo Stand; Serpent: a second, monster-only trap; Wisp: Quake Leap). They live in the monster files of the build and are listed in [simulation_log.md](simulation_log.md) (kit set `736eb4e604a6`, S009); they are test data, not a replacement of this prior draft.
+- **Kits of the Godot build differ** *(2026-11-12)*: five species carry trap and displacement test kits (Tiger: Headbutt; Golem: Set Gong, a board skill that places a Bronze Gong on a free square in Reach; Wolf: Plant Bamboo, the same with a spiky Bamboo Stand; Serpent: a second, monster-only trap; Wisp: Quake Leap); since the user decision after S011 no kit holds a shield zone (Turtle: Mire instead of Bark Veil; Moth: Blink instead of Shade Veil). They live in the monster files of the build and are listed in [simulation_log.md](simulation_log.md) (kit set `736eb4e604a6`, S009); they are test data, not a replacement of this prior draft.
 - **Legacy loadouts:** movement (§8.2) + Kin Strike (§8.1) + Surge + utility = 4 slots, plus table passive. Under the [current kit rule](#1-the-kit), passives need their own slot: these are not finalized legal kits. Forge Golem uses only Step and takes a second utility.
 
 | Monster | Kin | Movement | Surge (type · shape · twist) | Utility | Passive |

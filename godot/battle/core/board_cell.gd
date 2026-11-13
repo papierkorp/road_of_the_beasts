@@ -7,6 +7,8 @@ var pos := Vector2i.ZERO
 var ground: StringName = GroundDef.PLAIN
 ## Hazard level (1-2); other ground stays at 1.
 var level: int = 1
+## Test switch BattleExperiment.ground_rounds: last round this ground lasts (0 = no end).
+var ground_until: int = 0
 ## 0 = low, 1 = Mountain (the only height state; combines with any ground type).
 var height: int = 0
 ## Ground-layer object (a both-layer prop is referenced here and in `air_prop`).
@@ -29,6 +31,7 @@ func clone(props_seen: Dictionary) -> BoardCell:
 	var c := BoardCell.new(pos)
 	c.ground = ground
 	c.level = level
+	c.ground_until = ground_until
 	c.height = height
 	c.surge = surge
 	if zone != null:

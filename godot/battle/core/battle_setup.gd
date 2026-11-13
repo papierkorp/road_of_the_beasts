@@ -60,6 +60,8 @@ static func build(request: BattleRequest) -> Battle:
 			var pos := starts[i]
 			if side == 0 and i < request.player_starts.size() and _legal_start(b, request, request.player_starts, i):
 				pos = request.player_starts[i]
+			if BattleExperiment.start_back:
+				pos.y = b.board.size - 1          # test switch: back row only
 			if side == 1:
 				pos = b.board.mirrored(pos) - Vector2i(sheet.size - 1, sheet.size - 1)
 			var u := BattleUnit.new(StringName("%s%d_%s" % [prefix, i, team[i].species_id]), sheet, side, i, pos)

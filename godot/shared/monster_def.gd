@@ -20,6 +20,10 @@ const STRIKE_NAMES := {
 @export var aspect: Aspect.Type = Aspect.Type.FORCE
 
 @export_group("Reference individual (gdd_monsters §4.1)")
+## The stat shape (frame, gdd_monsters §2.2) the reference stats below were built with: an
+## authoring label from the §4.1 table, 0 = not stated. The values follow StatShape.Id; no
+## rule reads it (a shape belongs to the individual, not to the species).
+@export_enum("None", "Glass cannon", "Anvil", "Skirmisher", "Berserker", "Balanced", "Fragile") var reference_shape: int = 0
 @export var hp: int = 5
 @export var initiative: float = 5.0
 @export var move: int = 2

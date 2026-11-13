@@ -26,6 +26,8 @@ var slot: int = -1
 ## turn is still running.
 var turns_left: int = -1
 var fresh: bool = false
+## Test switch surge_fair: ids of the monsters that finished a turn since the cast.
+var acted := {}
 ## Squares that already held a prop or a Mountain at cast (they do not spring it).
 var blocked_at_cast: Array[Vector2i] = []
 ## Squares orthogonally next to its squares, kept for the AI.
@@ -46,6 +48,7 @@ func clone() -> PendingSurge:
 	s.slot = slot
 	s.turns_left = turns_left
 	s.fresh = fresh
+	s.acted = acted.duplicate()
 	s.blocked_at_cast = blocked_at_cast.duplicate()
 	s.ring = ring.duplicate()
 	return s

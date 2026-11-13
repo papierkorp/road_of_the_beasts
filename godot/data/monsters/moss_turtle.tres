@@ -5,7 +5,7 @@
 [ext_resource type="Resource" path="res://data/skills/run.tres" id="s0"]
 [ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
 [ext_resource type="Resource" path="res://data/skills/tidal_shell.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/bark_veil.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/mire.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -13,6 +13,7 @@ id = &"moss_turtle"
 display_name = "Moss Turtle"
 kin = 2
 aspect = 2
+reference_shape = 2
 hp = 8
 initiative = 3.0
 move = 2
@@ -20,5 +21,5 @@ tpr = 1
 reach = 3
 ap = 3
 skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
-blurb = "A slow, heavy Flood that hits one turn later but harder, behind Bark Veils."
+blurb = "A slow, heavy Flood that hits one turn later but harder; its Mire slows whoever comes close."
 notes = "Slow-burn twist and Deep Roots omitted: undecided / placeholder (T11)."

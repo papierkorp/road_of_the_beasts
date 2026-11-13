@@ -37,6 +37,9 @@ var prev_queue: Array[Dictionary] = []   # the finished round's queue (orphaned 
 var queue_idx := 0
 var turn_owner: StringName = &""
 var ap := 0
+## Test switch delay_turn: the running entry has acted already · unit id -> round it postponed a turn in.
+var entry_acted := false
+var delayed := {}
 var round_number := 1
 var over := false
 var winner_side := -1                    # 0 player, 1 enemy, -1 none / Draw
@@ -179,6 +182,8 @@ func usage_error(u: BattleUnit, slot: int) -> String:
 	var s := skill_in_slot(u, slot)
 	if s == null:
 		return "no such skill slot"
+	if BattleExperiment.no_shield_zones and s.kind == BattleSkillDef.ZONE and s.zone != null and s.zone.has_tag(FieldEffect.SHIELD):
+		return "%s is switched off (test switch: no shield zones)" % s.display_name
 	match s.repetition:
 		"once_per_round":
 			if int(u.used_round.get(slot, 0)) == round_number:
@@ -290,6 +295,16 @@ func check(a: Dictionary) -> String:
 		return "no monster is acting"
 	if a.has("unit") and a["unit"] != u.id:
 		return "it is not this monster's turn"
+	if type == &"delay":
+		if not BattleExperiment.delay_turn:
+			return "turns cannot be postponed"
+		if entry_acted:
+			return "%s has already acted this turn" % u.display_name()
+		if int(delayed.get(u.id, 0)) == round_number:
+			return "%s has already postponed a turn this round" % u.display_name()
+		if queue_idx >= queue.size() - 1:
+			return "nobody acts after %s this round" % u.display_name()
+		return ""
 	match type:
 		&"step":
 			if ap < BattleMoves.step_ap():
@@ -356,9 +371,13 @@ func apply(a: Dictionary, trusted := false) -> bool:
 	if type == &"end_turn":
 		BattleTurn.end_turn(self)
 		return true
+	if type == &"delay":
+		BattleTurn.delay(self)
+		return true
 	if type == &"tamer":
 		BattleTamer.apply(self, a)
 	else:
+		entry_acted = true
 		var u := active()
 		if type == &"step":
 			ap -= BattleMoves.step_ap()
@@ -426,6 +445,15 @@ func _declare_surge(u: BattleUnit, s: BattleSkillDef, a: Dictionary) -> void:
 	ps.skill = s
 	ps.cells = BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 	if s.kind == BattleSkillDef.TRAP:
+		if BattleExperiment.trap_cap > 0:                     # test switch: the oldest trap of this skill gives way
+			var own: Array[PendingSurge] = []
+			for old_trap in surges:
+				if old_trap.owner == u.id and old_trap.turns_left < 0 and old_trap.slot == int(a.get("slot", -1)):
+					own.append(old_trap)
+			while own.size() >= BattleExperiment.trap_cap:
+				var gone: PendingSurge = own.pop_front()
+				remove_surge(gone)
+				emit(&"surge_lapsed", {"surge": gone.id})
 		ps.cells = BattleCasting.free_cells(self, ps.cells)   # laid only where no marker lies
 	else:
 		for c in ps.cells:                                    # a Surge replaces a trap square by square
@@ -476,6 +504,8 @@ func clone() -> Battle:
 	b.queue_idx = queue_idx
 	b.turn_owner = turn_owner
 	b.ap = ap
+	b.entry_acted = entry_acted
+	b.delayed = delayed.duplicate()
 	b.round_number = round_number
 	b.over = over
 	b.winner_side = winner_side
@@ -527,7 +557,7 @@ func snapshot() -> Dictionary:
 			z = [String(c.zone.def.id), c.zone.gid, String(c.zone.owner), c.zone.level, c.zone.duration, c.zone.dir, c.zone.anchor]
 		var p := [] if c.prop == null else [String(c.prop.def.id), c.prop.hp, c.prop.uid]
 		var air := [] if c.air_prop == null else [String(c.air_prop.def.id), c.air_prop.hp, c.air_prop.uid]
-		cs.append([String(c.ground), c.level, c.height, p, air, z, c.surge])
+		cs.append([String(c.ground), c.level, c.height, p, air, z, c.surge, c.ground_until])
 	var ss := []
 	for s in surges:
 		ss.append([s.id, String(s.owner), String(s.skill.id), s.cells.duplicate(), s.dir, s.anchor, s.air_cells.duplicate(), s.orphaned])

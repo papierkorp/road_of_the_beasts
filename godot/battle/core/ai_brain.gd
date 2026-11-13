@@ -11,6 +11,20 @@ const PLACEMENT_RADIUS := 1
 const MIN_GAIN := 0.05
 ## Score points per point of damage a ready push would deal (real damage counts 10 per HP).
 const PUSH_FOCUS := 4.0
+## ai_hunt: score points an approaching move may cost.
+const HUNT_TOLERANCE := 4.0
+## Wellspring draft: score points for a held Wellspring and for a monster with two enemies around it
+## (1 damage at the end of the round, if nothing changes until then; real damage counts 10).
+const WELL_VALUE := 9.0
+const FLANK_VALUE := 7.0
+## delay_turn: a first action that gains less than this is not worth acting before the enemy.
+const DELAY_GAIN := 3.0
+## ai_careful: share of a monster's value that counts as lost while enemies can strike it down before
+## its next turn, score points per point of non-lethal Strike damage in reach, and the weight of the
+## same threat against enemy monsters.
+const DANGER_LETHAL := 0.6
+const DANGER_HIT := 3.5
+const DANGER_ENEMY := 0.25
 
 
 ## Every legal action of the active unit except ending the turn.
@@ -27,6 +41,8 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 		var s := u.sheet.skills[slot]
 		if not s.is_active() or b.ap < s.cost() or b.usage_error(u, slot) != "":
 			continue
+		if s.kind == BattleExperiment.ai_no_kind[u.side]:
+			continue                              # test switch: this side plays without the kind
 		match s.kind:
 			BattleSkillDef.MOVE:
 				var moves := BattleMoves.options(b, u, BattleMoves.profile_of(s))
@@ -128,6 +144,25 @@ static func evaluate(b: Battle, side: int) -> float:
 		for e in theirs:
 			nearest = mini(nearest, e.chebyshev_to(u.pos))
 		score -= closing * nearest
+	if BattleExperiment.ai_careful:
+		for u in b.living():
+			var threat := _strike_threat(b, u)
+			if threat <= 0:
+				continue
+			var cost := DANGER_LETHAL * (14.0 + 10.0 * u.hp) if threat >= u.hp else DANGER_HIT * threat
+			score += -cost if u.side == side else cost * DANGER_ENEMY
+	for p in BattleExperiment.well_squares(b.board.size):
+		var holder := b.any_unit_at(p)
+		if holder != null:
+			score += WELL_VALUE if holder.side == side else -WELL_VALUE
+	if BattleExperiment.flank:
+		for u in b.living():
+			var around := 0
+			for e in b.living(1 - u.side):
+				if e.chebyshev_to(u.pos) == 1:
+					around += 1
+			if around >= 2:
+				score += -FLANK_VALUE if u.side == side else FLANK_VALUE
 	return score
 
 
@@ -185,6 +220,13 @@ static func _push_harm(b: Battle, u: BattleUnit, here: BoardCell, to: Vector2i) 
 ## Weight per point of pending timed Surge damage: higher if the target has no turn left
 ## before the detonation within this round's queue (it cannot walk out by itself).
 static func _timed_weight(b: Battle, s: PendingSurge, t: BattleUnit) -> float:
+	if BattleExperiment.surge_at_caster:       # it fires at its caster's next entry: can the target move before?
+		for i in range(b.queue_idx + 1, b.queue.size()):
+			if b.queue[i]["id"] == t.id:
+				return 2.5
+			if b.queue[i]["id"] == s.owner:
+				return 8.0
+		return 2.5
 	var last := b.queue_idx + s.turns_left + (1 if s.fresh else 0)
 	if last >= b.queue.size():
 		return 2.5                            # crosses the round end: the next order is unknown
@@ -257,9 +299,96 @@ static func decide(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 			best = [a]
 		elif absf(gain - best_gain) <= 0.001 and not best.is_empty():
 			best.append(a)
+	if BattleExperiment.delay_turn and (best.is_empty() or best_gain < DELAY_GAIN) and b.check({"type": &"delay"}) == "" and _enemy_acts_later(b, u.side):
+		return {"type": &"delay"}
+	if best.is_empty() and BattleExperiment.ai_hunt:
+		best = _approach(b, u, base)
 	if best.is_empty():
 		return {"type": &"end_turn"}
 	return best[rng.randi_range(0, best.size() - 1)]
+
+
+## Test switch `ai_hunt`: the movement actions that bring the active unit closest to an enemy
+## (walking distance), as long as the position does not get worse by more than HUNT_TOLERANCE
+## score points (about one point of hazard-ground damage; never a sprung trap). Empty if the
+## unit already stands next to an enemy or cannot get closer.
+static func _approach(b: Battle, u: BattleUnit, base: float) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var best_dist := _walk_to_enemy(b, u.side, u.pos)
+	if best_dist <= 1:
+		return out
+	if BattleExperiment.ai_hunt_behind:
+		var hp := [0, 0]
+		for lu in b.living():
+			hp[lu.side] += lu.hp
+		if hp[u.side] > hp[1 - u.side]:
+			return out                        # ahead: let the other side come
+	var best_gain := -HUNT_TOLERANCE
+	for a in candidates(b):
+		if not a.has("to"):
+			continue
+		var sim := b.clone()
+		if not sim.apply(a, true) or sim.over:
+			continue
+		var me: BattleUnit = sim.units[u.id]
+		if not me.is_alive():
+			continue
+		var gain := evaluate(sim, u.side) - base
+		if gain < -HUNT_TOLERANCE:
+			continue
+		var dist := _walk_to_enemy(sim, u.side, me.pos)
+		if dist < best_dist or (dist == best_dist and not out.is_empty() and gain > best_gain + 0.001):
+			best_dist = dist
+			best_gain = gain
+			out = [a]
+		elif dist == best_dist and not out.is_empty() and absf(gain - best_gain) <= 0.001:
+			out.append(a)
+	return out
+
+
+## Strike damage the enemies of `u` can bring to it with the turns of one round: each enemy with a
+## Strike walks up (a movement skill covers its Movement per AP, Steps 1 square) and strikes with
+## the AP that are left. A rough count: no Surges, no pushes, no blocked paths, no turn borders.
+static func _strike_threat(b: Battle, u: BattleUnit) -> int:
+	var total := 0
+	for e in b.living(1 - u.side):
+		var strike: BattleSkillDef = null
+		var stride := 1
+		for s in e.sheet.skills:
+			if s.kind == BattleSkillDef.STRIKE and s.strike_damage > 0 and (strike == null or s.cost() < strike.cost()):
+				strike = s
+			elif s.kind == BattleSkillDef.MOVE and not BattleStats.is_rooted(e):
+				stride = maxi(stride, maxi(1, BattleStats.movement(b, e) + s.distance_mod) if s.fixed_distance <= 0 else s.fixed_distance)
+		if strike == null:
+			continue
+		var turns := e.sheet.tpr if b.round_number >= BattleExperiment.tpr_from_round else 1
+		var ap := BattleStats.ap(e) * turns
+		var steps := maxi(0, e.manhattan_to(u.pos) - 1)
+		if steps > 0 and BattleStats.is_rooted(e):
+			continue
+		ap -= int(ceil(float(steps) / stride))
+		var hits := mini(ap / strike.cost(), turns * (BattleStats.ap(e) / strike.cost()))
+		if hits > 0:
+			total += hits * strike.strike_damage
+	return total
+
+
+static func _enemy_acts_later(b: Battle, side: int) -> bool:
+	for i in range(b.queue_idx + 1, b.queue.size()):
+		var e: BattleUnit = b.units[b.queue[i]["id"]]
+		if e.side != side and e.is_alive():
+			return true
+	return false
+
+
+static func _walk_to_enemy(b: Battle, side: int, from: Vector2i) -> int:
+	var best := 99
+	for e in b.living(1 - side):
+		best = mini(best, e.manhattan_to(from))
+	for p in BattleExperiment.well_squares(b.board.size):      # a free Wellspring is a goal too
+		if b.any_unit_at(p) == null:
+			best = mini(best, absi(p.x - from.x) + absi(p.y - from.y) + 1)
+	return best
 
 
 static func execute(b: Battle, _who: StringName, action: Dictionary) -> bool:

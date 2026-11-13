@@ -21,7 +21,8 @@ static func build(b: Battle) -> Array[Dictionary]:
 			continue
 		var eff := BattleStats.initiative(b, u)
 		totals[u.side] += eff
-		for k in u.sheet.tpr:
+		var turns := 1 if b.round_number < BattleExperiment.tpr_from_round else u.sheet.tpr      # test switch
+		for k in turns:
 			entries.append({"id": id, "init": maxf(BattleStats.MIN_INITIATIVE, snappedf(eff - EXTRA_TURN_PENALTY * k, 0.1)),
 				"base": u.sheet.initiative, "side": u.side, "slot": u.slot, "extra": k})
 	entries.sort_custom(func(a: Dictionary, c: Dictionary) -> bool:

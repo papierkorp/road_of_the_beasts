@@ -65,6 +65,7 @@ static func make_battle(mode: StringName, teams: Array, board: String, rng: Rand
 			var data := BattleBoards.mode_data(mode)
 			b.board = Board.new(int(data["size"]))
 			b.voidscar_from = int(data["voidscar_from"])
+			BattleBoards.place_wells(b)
 		"layout":
 			BattleBoards.build(b, mode, 0)
 		"seeded":

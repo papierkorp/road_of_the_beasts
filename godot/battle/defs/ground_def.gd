@@ -8,6 +8,8 @@ extends Resource
 
 const PLAIN := &"plain"
 const RUBBLE := &"rubble"
+## Wellspring (gdd_battle §4.2): held at the end of a round it damages the nearest enemy.
+const WELL := &"wellspring"
 
 @export var id: StringName
 @export var display_name: String
@@ -27,6 +29,11 @@ const RUBBLE := &"rubble"
 @export var effects: Array[FieldEffect] = []
 @export var color: Color = Color(0.42, 0.44, 0.4)
 @export_multiline var description: String = ""
+
+
+## A square that takes no prop and no Mountain.
+static func is_reserved(ground: StringName) -> bool:
+	return ground == WELL
 
 
 func triggers_at(timing: String) -> Array[GroundTrigger]:

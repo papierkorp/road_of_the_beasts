@@ -113,6 +113,7 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 				var g := b.content.ground(cell.ground)
 				if cell.ground != GroundDef.PLAIN and (g == null or not g.immutable):
 					cell.ground = GroundDef.PLAIN
+					cell.ground_until = 0
 					cell.level = 1
 					b.emit(&"ground_changed", {"pos": p, "ground": cell.ground, "level": 1, "result": &"reset", "source": def.display_name})
 	BattlePayload.settle(b)

@@ -80,7 +80,903 @@ godot --headless --path godot -s res://tools/sim.gd -- <battles> <mode> <seed> "
 
 Kinds: strike_jab = strike · magma_pounce, cinder_dive, eclipse, gloom_rift, coiling_rift, tidal_shell = surge · crucible, ambush_rift, spring_burst, bramble_tide = trap · shade_veil, shockwave, gale, bark_veil = zone · lava_field, thornbed, set_gong, plant_bamboo = board · immovable = passive · the rest = move.
 
+**Kit set `164984ea835f`** (content `2026-11-12.3`): as `736eb4e604a6` with two slots changed after the user decision of 2026-11-12 (no shield zone in a kit): moss_turtle carries `mire` (zone) instead of `bark_veil`, dusk_moth `blink` (move) instead of `shade_veil`. First used in S012.
+
+**Kit set `f4086ae48783`** (content `2026-11-13.1`; HP/Init/Move/TPR/Reach/AP: slots): the kits of `164984ea835f` with the stats of the draft prices of 2026-11-13 (S015 set C).
+
+- blaze_tiger 7/7/5/1/2/3 · dusk_moth 5/7/3/1/4/3 · ember_hawk 5/9/5/2/2/3 · forge_golem 8/5/1/1/3/3 · gloom_wolf 6/9/3/1/3/3 · grove_wisp 5/9/5/1/3/3 · hollow_serpent 7/5/3/1/3/3 · moss_turtle 8/3/2/1/3/3 · thorn_mites 6/3/3/2/3/3
+
 # Entries
+
+## S015 · 2026-11-13 · Wellspring rules as build rules; new stat prices and frames; the Surge timer tested again
+
+**State:** `c35396a` dirty (uncommitted) · content `2026-11-13.1` · kit set `f4086ae48783` for Parts B (last row) and C; Part A and the other rows of Part B ran on kit set `164984ea835f` with stats set by `stat=`. **Build rules since S014** (user decision 2026-11-13): three Wellsprings on the centre row of the 7×7 board, Wellspring and surround damage at the end of a round, TPR counts from round 2, late-round pressure only in rounds in which nobody holds a Wellspring. The one-time bonus squares of S013 Parts G/H are removed from the build. 3v3, `--paired`, bot `greedy`.
+
+**Questions (user):** adopt the Wellspring draft, set the stat prices anew and adapt the frames; then test the Surge again.
+
+### Part A · the default after the change
+
+The first row of the new default (seed 1, 40 battles, old stats) equals the row of `wells=3,flank,tpr2,latepressure=idle` in S013 column by column.
+
+### Part B · four stat sets for the nine monsters (HP / Init / Move / TPR / Reach / AP), each spending 16 points by its prices
+
+| Set · prices | Golem | Turtle | Serpent | Wolf | Tiger | Wisp | Hawk | Moth | Mites |
+|---|---|---|---|---|---|---|---|---|---|
+| old · HP 1 from base 1, Init 1, second turn 5 | 8/4/1/1/3/3 | 8/3/2/1/3/3 | 7/4/2/1/3/3 | 5/6/2/1/3/3 | 5/7/4/1/2/3 | 4/8/4/1/2/3 | 2/9/3/2/2/2 | 2/9/3/2/2/2 | 3/6/2/2/3/2 |
+| A · HP 3 from base 3, Init 0.5, second turn 5 | 6/3/1/1/3/3 | 7/1/2/1/2/3 | 6/1.5/2/1/3/3 | 5/7/2/1/3/3 | 5/9/4/1/2/3 | 4/7/5/1/3/3 | 4/9/5/2/2/2 | 4/7/2/1/4/3 | 4/7/3/2/3/2 |
+| B · HP 2 from base 3, Init 0.5, second turn 5 | 7/5/1/1/3/3 | 8/5/2/1/2/3 | 7/3/2/1/3/3 | 6/7/2/1/3/3 | 6/9/4/1/2/3 | 5/5/5/1/3/3 | 5/9/4/2/2/2 | 5/5/2/1/4/3 | 5/5/3/2/3/2 |
+| D · as B, second turn 3 | 7/5/1/1/3/3 | 8/5/2/1/2/3 | 7/3/2/1/3/3 | 6/7/2/1/3/3 | 6/9/4/1/2/3 | 5/5/5/1/3/3 | 6/9/4/2/2/2 | 5/5/2/1/4/3 | 6/5/3/2/3/2 |
+| **C · HP 2 from base 4, Init 0.5, second turn 3** (adopted) | 8/5/1/1/3/3 | 8/3/2/1/3/3 | 7/5/3/1/3/3 | 6/9/3/1/3/3 | 7/7/5/1/2/3 | 5/9/5/1/3/3 | 5/9/5/2/2/3 | 5/7/3/1/4/3 | 6/3/3/2/3/3 |
+
+Movement 1, Reach 3, AP 3 for 3 in every set. In A–D the Dusk Moth is the new Caster shape (Reach 4, one turn).
+
+Win rates in random teams (seeds 1–6, 60 battles each; a monster plays in about 240 of the 360):
+
+| Set | Hawk | Moth | Mites | Wisp | Tiger | Wolf | Golem | Turtle | Serpent | Lowest–highest | Mean rounds | Under 3 / over 10 · longest |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| old | 30 % | 31 % | 34 % | 54 % | 61 % | 51 % | 62 % | 62 % | 69 % | 30–69 % | 3.7 | 23 / 1 % · 18 |
+| A | 46 % | 53 % | 35 % | 65 % | 50 % | 62 % | 41 % | 45 % | 47 % | 35–65 % | 3.2 | 31 / 0 % · 10 |
+| B | 51 % | 46 % | 32 % | 71 % | 44 % | 51 % | 48 % | 58 % | 42 % | 32–71 % | 3.5 | 21 / 0 % · 12 |
+| D | 55 % | 50 % | 39 % | 66 % | 44 % | 50 % | 43 % | 57 % | 38 % | 38–66 % | 3.6 | 20 / 0 % · 11 |
+| **C** | 53 % | 45 % | 41 % | 57 % | 56 % | 50 % | 41 % | 46 % | 57 % | 41–57 % | 3.5 | 25 / 0 % · 10 |
+
+Team types (T = Golem, Turtle, Serpent; M = Tiger, Wolf, Wisp; F = Moth, Hawk, Mites; reading as in S012 Part B; seed 1, 40 battles per cell):
+
+| Set | T beats F | T beats M | M beats F | T mirror | M mirror | F mirror | random |
+|---|---|---|---|---|---|---|---|
+| old | 77 / 80 | 45 / 80 | 78 / 80 | 7.0 · 0 % · 8 % | 2.6 · 53 % · 0 % | 2.3 · 75 % · 0 % | 3.8 · 25 % · 2 % |
+| A | 32 / 80 | 31 / 80 | 58 / 80 | 6.3 · 0 % · 5 % | 2.4 · 63 % · 0 % | 2.2 · 70 % · 0 % | 3.1 · 36 % · 0 % |
+| B | 29 / 80 | 23 / 80 | 64 / 80 | 7.2 · 0 % · 13 % | 3.0 · 15 % · 0 % | 2.6 · 55 % · 0 % | 3.8 · 24 % · 2 % |
+| D | 23 / 80 | 23 / 80 | 58 / 80 | 7.2 · 0 % · 13 % | 3.0 · 15 % · 0 % | 2.6 · 48 % · 0 % | 3.5 · 24 % · 2 % |
+| **C** | 54 / 80 | 22 / 80 | 56 / 80 | 5.5 · 5 % · 5 % | 2.8 · 43 % · 0 % | 2.5 · 63 % · 0 % | 3.5 · 29 % · 0 % |
+
+### Part C · the Surge timer on the new standard (stats C; four seeds, 160 battles per row)
+
+`castersurge`: a timed Surge fires at its caster's next turn. `fairsurge`: a Surge that is due waits until every monster standing on its squares has finished a turn since the cast. `turns=N`: finished turns of any monster until it fires (build: 2). `alltraps`: every marker skill is a trap. `delay`: a monster may postpone its turn once per round.
+
+| Variant | Mean rounds | Under 3 / over 7 / over 10 · longest | Side 0 / 1 / draw | First defeat in round | Surge share of damage | Surge and trap damage per cast on enemies |
+|---|---|---|---|---|---|---|
+| build rules (2 turns of any monster) | 3.5 | 23 / 2 / 0 % · 8 | 80 / 77 / 3 | 1.4 | 34 % | 1.20 |
+| `turns=1` | 3.0 | 36 / 0 / 0 % · 7 | 60 / 98 / 2 | 1.2 | 46 % | 1.81 |
+| `turns=3` | 3.9 | 13 / 2 / 0 % · 10 | 79 / 81 / 0 | 1.4 | 24 % | 0.88 |
+| `castersurge` | 4.0 | 13 / 3 / 0 % · 10 | 69 / 88 / 3 | 1.7 | 16 % | 0.53 |
+| `fairsurge` | 4.0 | 8 / 4 / 1 % · 11 | 75 / 83 / 2 | 1.7 | 13 % | 0.43 |
+| `alltraps` | 4.1 | 12 / 6 / 1 % · 13 | 85 / 74 / 1 | 1.6 | 0 % (traps 16 %) | 0.57 |
+| `delay` | 3.6 | 17 / 1 / 0 % · 8 | 80 / 79 / 1 | 1.3 | 32 % | 1.10 |
+| `castersurge,delay` | 3.9 | 11 / 1 / 0 % · 9 | 68 / 88 / 4 | 1.7 | 15 % | 0.54 |
+| `fairsurge,delay` | 4.0 | 9 / 2 / 0 % · 9 | 76 / 81 / 3 | 1.8 | 13 % | 0.44 |
+| build rules, bots `careful` | 4.8 | 5 / 10 / 2 % · 14 | 63 / 97 / 0 | 1.7 | — | — |
+| `fairsurge`, bots `careful` | 6.2 | 1 / 26 / 8 % · 18 | 65 / 95 / 0 | 2.2 | — | — |
+
+Team types (seed 1, 40 battles per cell):
+
+| Variant | T beats F | T beats M | M beats F | T mirror | M mirror | F mirror | random |
+|---|---|---|---|---|---|---|---|
+| build rules | 54 / 80 | 22 / 80 | 56 / 80 | 5.5 · 5 % · 5 % | 2.8 · 43 % · 0 % | 2.5 · 63 % · 0 % | 3.5 · 29 % · 0 % |
+| `castersurge` | 33 / 80 | 31 / 80 | 44 / 80 | 7.1 · 0 % · 10 % | 3.5 · 3 % · 0 % | 2.6 · 48 % · 0 % | 3.8 · 14 % · 0 % |
+| `fairsurge` | 42 / 80 | 43 / 80 | 40 / 80 | 7.3 · 0 % · 10 % | 3.5 · 8 % · 0 % | 2.8 · 48 % · 0 % | 4.0 · 8 % · 2 % |
+
+**Observations** (indications; bots only; a difference under about 6 points between two win rates or 8 of 80 wins is noise):
+
+- *Stats:* every set with dearer HP pulls the nine win rates together; set C has the narrowest spread (41–57 % against 30–69 %) and no monster outside 40–60 %. Its weak spot is the pairing sturdy against middle (22 of 80). All sets leave the battles short (20–31 % under 3 rounds); none has a battle over 12 rounds.
+- *The Surge timer decides the short end:* with a Surge that can always be left (`fairsurge`) 8 % of battles end before round 3, with `castersurge` or three turns 13 %, with the build rule 23 %, with one turn 36 %. The same order holds for the strength of the Surge: 0.43, 0.53, 0.88, 1.20 and 1.81 damage per cast.
+- *`fairsurge` also levels the team types* (42, 43 and 40 of 80) but makes the sturdy mirror longer (7.3 rounds, 10 % over 10) and, with careful bots on both sides, the battles long (6.2 rounds, 8 % over 10).
+- *Three turns instead of two* is the smallest change: a number, no new rule; it halves the short end and keeps a quarter of the damage with Surges.
+- *Postponing a turn* adds little by itself (23 to 17 %) and nothing on top of the two Surge rules.
+- *Side balance* drifts with `castersurge` (69 : 88) and with careful bots (63 : 97); not followed up.
+
+**Follow-up:** T39 (adopted rules in play; which Surge timer), T38 (Surge strength against avoidability), T03 (prices and frames in play, frames of the other stages, AP 3 bought by everyone, sturdy against middle), T13 (share under 3 rounds).
+
+About 7 080 battles in 162 runs.
+
+## S014 · 2026-11-13 · what a stat point is worth; a threat-aware AI
+
+**State:** `c35396a` dirty (uncommitted) · content `2026-11-12.3` · kit set `164984ea835f`. Build rules as in S012; “draft” = `wells=3,flank,tpr2,latepressure=idle` (T39). 3v3, random teams on seeded boards, `--paired`, seeds 1–6 with 60 battles each (360 battles per row; the changed monster plays in 234–255 of them).
+
+**Questions (user):** what are initiative, TPR, Movement, Reach, AP and HP worth, each changed alone on one monster; could 1 HP cost 2 or 3 points; do the fragile monsters lose because the AI plays them badly.
+
+### Part A · one stat changed on one monster (`stat=monster.field:value`): win rate of that monster
+
+Points = price of the change under [Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups) (HP, initiative, Movement 1 per point; Reach 3; AP 2→3 3, 3→4 5; second turn 5). Reference stats HP / Init / Move / TPR / Reach / AP: Ember Hawk 2 / 9 / 3 / 2 / 2 / 2, Gloom Wolf 5 / 6 / 2 / 1 / 3 / 3, Forge Golem 8 / 4 / 1 / 1 / 3 / 3.
+
+| Monster · change (points) | Build rules: win rate · difference | Draft: win rate · difference |
+|---|---|---|
+| Ember Hawk, unchanged | 37.6 % | 29.7 % |
+| HP 2 → 5 (+3) | 50.3 % · +12.7 | 46.8 % · +17.1 |
+| HP 2 → 7 (+5) | 66.3 % · +28.7 | 55.6 % · +25.9 |
+| Initiative 9 → 6 (−3) | 42.1 % · +4.5 | 40.9 % · +11.2 |
+| Movement 3 → 6 (+3) | 43.4 % · +5.8 | 33.0 % · +3.3 |
+| Reach 2 → 3 (+3) | 48.4 % · +10.8 | 30.7 % · +1.0 |
+| AP 2 → 3 (+3) | 48.4 % · +10.8 | 32.9 % · +3.2 |
+| TPR 2 → 1 (−5) | 27.5 % · −10.1 | 30.0 % · +0.3 |
+| Gloom Wolf, unchanged | 51.3 % | 50.9 % |
+| HP 5 → 8 (+3) | 66.8 % · +15.5 | 64.9 % · +14.0 |
+| HP 5 → 10 (+5) | 73.7 % · +22.4 | 72.7 % · +21.8 |
+| Initiative 6 → 9 (+3) | 53.9 % · +2.6 | 55.1 % · +4.2 |
+| Movement 2 → 5 (+3) | 54.7 % · +3.4 | 53.4 % · +2.5 |
+| Reach 3 → 4 (+3) | 55.4 % · +4.1 | 59.6 % · +8.7 |
+| AP 3 → 4 (+5) | 62.3 % · +11.0 | 62.4 % · +11.5 |
+| TPR 1 → 2 (+5) | 77.5 % · +26.2 | 63.2 % · +12.3 |
+| Forge Golem, unchanged | 56.1 % | 61.7 % |
+| HP 8 → 5 (−3) | 46.0 % · −10.1 | 46.5 % · −15.2 |
+| Initiative 4 → 7 (+3) | 58.1 % · +2.0 | 62.7 % · +1.0 |
+| Initiative 4 → 9 (+5) | 62.0 % · +5.9 | 60.7 % · −1.0 |
+| Movement 1 → 4 (+3) | 56.1 % · 0.0 | 61.7 % · 0.0 |
+| Reach 3 → 4 (+3) | 58.3 % · +2.2 | 58.8 % · −2.9 |
+| AP 3 → 4 (+5) | 67.5 % · +11.4 | 64.2 % · +2.5 |
+| TPR 1 → 2 (+5) | 84.2 % · +28.1 | 66.7 % · +5.0 |
+
+The Golem's kit has no movement skill, so its Movement stat changes nothing (Step always moves 1 square).
+
+### Part B · the AI with a threat count (`--bot-a careful --bot-b careful`; switch `ai_careful`)
+
+The bot adds to `AiBrain`'s evaluation the Strike damage that enemies can bring to each of its monsters within one round (walk up, then strike with the AP left; no Surges, pushes, blocked paths or turn borders). A square where that is lethal costs 60 % of the monster's value, other threat 3.5 score points per point of damage.
+
+| Rules · bots | Mean rounds | Under 3 / over 10 · longest | First defeat in round | Win rate Ember Hawk / Dusk Moth / Thorn Mites | Wisp / Tiger / Wolf | Golem / Turtle / Serpent |
+|---|---|---|---|---|---|---|
+| build rules · `greedy` | 5.1 | 14 / 7 % · 17 | 1.1 | 38 / 42 / 38 % | 53 / 41 / 51 % | 56 / 60 / 72 % |
+| build rules · `careful` | 7.7 | 3 / 22 % · 22 | 1.4 | 38 / 48 / 37 % | 54 / 48 / 50 % | 43 / 59 / 74 % |
+| draft · `greedy` | 3.8 | 22 / 2 % · 18 | 1.1 | 30 / 31 / 34 % | 54 / 61 / 51 % | 62 / 62 / 69 % |
+| draft · `careful` | 4.8 | 13 / 6 % · 17 | 1.2 | 29 / 33 / 34 % | 62 / 56 / 58 % | 52 / 65 / 64 % |
+
+Rounds and length shares from seeds 1–4 with 40 battles (160), win rates from seeds 1–6 with 60 (360). `careful` against `greedy`, both seatings, 720 battles each: the careful side wins 322 of 717 decided battles under the build rules (45 %) and 307 of 715 with the draft (43 %).
+
+**Observations** (indications; bots only; a difference under about 6 points between two win rates is noise):
+
+- *HP is worth four to six win-rate points per price point on all three monsters and under both rule sets;* initiative and Movement about one, Reach and AP between nothing and three and a half.
+- *A second turn is worth as much as the body that takes it:* +26 and +28 points on Wolf and Golem under the build rules, 10 points on the 2-HP Hawk; with the draft (TPR from round 2, Wellsprings) +12 and +5, and nothing on the Hawk.
+- *High initiative does not help the Hawk:* with 6 instead of 9 it wins more (4 and 11 points).
+- *Careful play is not what the fragile monsters lack:* their win rates stay the same with the threat count, and the careful side loses to the uncareful one (43–45 %). Careful bots on both sides make battles longer (7.7 rounds and 22 % over 10 under the build rules; 4.8 rounds and 13 % under 3 with the draft).
+- *Limits:* one monster per shape, one kit each; the threat count is rough and the bot still has no hit-and-run.
+
+**Follow-up:** T03 (stat prices: HP against the rest; the price of a second turn depends on the body), T39 (with careful bots the draft gives 4.8 rounds and 13 % under 3), T13 (AI quality, I42).
+
+About 18 300 battles in 308 runs (first careful runs with a script error discarded and repeated).
+
+## S013 · 2026-11-13 · Wellspring draft: held centre squares that damage, surrounding, TPR from round 2, late-round pressure in three forms
+
+**State:** `c35396a` dirty (uncommitted) · content `2026-11-12.3` · kit set `164984ea835f`. Build rules as in S012; the draft runs behind test switches that are off by default (the build-rules row is unchanged by the code). 3v3 on 7×7, `--paired`, bot `greedy` (the game AI, walks up) unless named.
+
+**Draft (user, 2026-11-13; T39):** `wells=3`: three Wellspring squares on the centre row (x = 1, 3, 5); at the end of a round every Wellspring a monster stands on deals 1 damage to the nearest enemy (ties: more HP, more initiative, then roster order as a stand-in for the holder's choice). `flank`: a monster with two or more enemies on its eight neighbour squares takes 1 damage at the end of the round. `tpr2`: in round 1 every monster has one turn. `latepressure=none`: no late-round pressure; `idle`: pressure only at the end of a round in which nobody holds a Wellspring; without the key: pressure as in the rules (from round 8). The AI values a held Wellspring (9 score points, damage counts 10) and a surrounded monster (7), and walks toward a free Wellspring like toward an enemy.
+
+**Questions (user):** does the draft end battles by fighting within 3–7 rounds, and what should happen to late-round pressure.
+
+### Part A · random teams on seeded boards, four seeds (160 battles per row)
+
+| Variant | Mean rounds | Under 3 / over 7 / over 10 · longest | Side 0 / 1 / draw / timeout | First defeat in round · defeated before own first turn | Wellsprings: last defeat / damage | Surrounded: last defeat / damage | Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|---|---|---|
+| build rules | 5.1 | 14 / 18 / 7 % · 17 | 76 / 83 / 1 / 0 | 1.1 · 0.14 | — | — | — |
+| build rules, `latepressure=none` | 6.9 | 14 / 18 / 7 % · 298 | 75 / 83 / 1 / 1 | 1.1 · 0.14 | — | — | — |
+| `wells=3,flank,tpr2,latepressure=none` | 3.8 | 22 / 6 / 2 % · 18 | 84 / 76 / 0 / 0 | 1.1 · 0.06 | 27 % / 14 % | 0 % / 0 % | 0.66 / 0.49 |
+| the same, `latepressure=idle` | 3.8 | 22 / 6 / 2 % · 18 | 84 / 76 / 0 / 0 | 1.1 · 0.06 | 27 % / 14 % | 0 % / 0 % | 0.66 / 0.49 |
+| the same, pressure as in the rules | 3.7 | 22 / 6 / 2 % · 16 | 84 / 76 / 0 / 0 | 1.1 · 0.06 | 27 % / 14 % | 0 % / 0 % | 0.66 / 0.49 |
+| `wells=3,latepressure=none` | 5.9 | 21 / 6 / 3 % · 298 | 76 / 81 / 2 / 1 | 1.1 · 0.14 | 35 % / 14 % | — | 0.48 / 0.40 |
+| `wells=3,latepressure=idle` | 4.0 | 21 / 6 / 3 % · 16 | 77 / 80 / 3 / 0 | 1.1 · 0.14 | 34 % / 14 % | — | 0.57 / 0.47 |
+| `flank,latepressure=none` | 6.8 | 13 / 14 / 6 % · 298 | 77 / 82 / 0 / 1 | 1.1 · 0.14 | — | 1 % / 1 % | — |
+| `tpr2,latepressure=none` | 7.9 | 13 / 15 / 8 % · 298 | 73 / 85 / 0 / 2 | 1.2 · 0.04 | — | — | — |
+| `wells=3,flank,latepressure=none` | 5.6 | 24 / 5 / 2 % · 298 | 78 / 79 / 2 / 1 | 1.1 · 0.14 | 34 % / 14 % | 1 % / 0 % | 0.47 / 0.41 |
+| `wells=3,tpr2,latepressure=none` | 3.8 | 20 / 5 / 1 % · 12 | 79 / 79 / 2 / 0 | 1.1 · 0.06 | 28 % / 14 % | — | 0.65 / 0.49 |
+| `wells=1,flank,tpr2,latepressure=none` | 4.5 | 18 / 10 / 5 % · 17 | 77 / 83 / 0 / 0 | 1.2 · 0.04 | 8 % / 6 % | 0 % / 1 % | 0.21 / 0.20 |
+| `wells=2,…` (x = 1, 5) | 5.7 | 25 / 7 / 2 % · 299 | 81 / 75 / 3 / 1 | 1.1 · 0.08 | 34 % / 14 % | 0 % / 0 % | 0.47 / 0.40 |
+| `wells=5,…` | 3.5 | 30 / 3 / 0 % · 9 | 86 / 74 / 0 / 0 | 1.2 · 0.04 | 32 % / 18 % | 1 % / 1 % | 0.81 / 0.69 |
+
+A mean that contains a timeout (longest 298 or 299) is pulled up by that single battle of 300 rounds.
+
+### Part B · other bots and attacking against waiting (`wells=3,flank,tpr2`, 160 battles per row)
+
+| Bots (side 0 / side 1) · pressure | Mean rounds | Under 3 / over 7 / over 10 · longest | Side 0 / 1 / draw / timeout | Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|
+| `chase` / `chase` · none | 4.1 | 19 / 7 / 2 % · 24 | 85 / 75 / 0 / 0 | 0.62 / 0.46 |
+| `wait` / `wait` · none | 15.4 | 18 / 13 / 7 % · 298 | 77 / 75 / 0 / 8 | 0.27 / 0.18 |
+| `wait` / `wait` · idle | 4.8 | 18 / 13 / 7 % · 17 | 82 / 76 / 2 / 0 | 0.53 / 0.41 |
+| `greedy` / `wait` · none | 5.8 | 20 / 8 / 2 % · 294 | 90 / 69 / 0 / 1 | 0.58 / 0.33 |
+| `wait` / `greedy` · none | 5.4 | 20 / 10 / 5 % · 198 | 77 / 81 / 1 / 1 | 0.43 / 0.48 |
+| build rules: `greedy` / `wait` | 5.9 | 12 / 24 / 13 % · 20 | 67 / 91 / 2 / 0 | — |
+| build rules: `wait` / `greedy` | 6.0 | 11 / 24 / 12 % · 19 | 77 / 83 / 0 / 0 | — |
+
+The walking side wins 171 of 317 decided battles with the draft (54 %) and 150 of 318 under the build rules (47 %).
+
+### Part C · the short end (`wells=3,flank,tpr2`, 160 battles per row)
+
+| Variant | Mean rounds | Under 3 / over 7 / over 10 · longest | Side 0 / 1 / draw | First defeat in round · defeated before own first turn |
+|---|---|---|---|---|
+| `latepressure=none,startback` | 4.0 | 18 / 5 / 2 % · 18 | 79 / 79 / 2 | 1.2 · 0.02 |
+| `latepressure=none,hpmin=3` | 3.9 | 18 / 4 / 2 % · 18 | 78 / 81 / 1 | 1.2 · 0.05 |
+| `latepressure=none,startback,hpmin=3` | 4.0 | 15 / 4 / 2 % · 18 | 70 / 86 / 4 | 1.2 · 0.02 |
+| `latepressure=idle,hpmin=4` | 4.0 | 20 / 5 / 2 % · 12 | 74 / 86 / 0 | 1.3 · 0.01 |
+| `latepressure=idle,hp=1` (every monster +1 HP) | 4.1 | 16 / 7 / 2 % · 13 | 73 / 84 / 3 | 1.2 · 0.01 |
+| `latepressure=idle,hp=2` | 4.4 | 9 / 8 / 2 % · 23 | 76 / 84 / 0 | 1.5 · 0.01 |
+| `latepressure=idle,hp=1,startback` | 4.1 | 13 / 2 / 0 % · 10 | 77 / 83 / 0 | 1.3 · 0.00 |
+
+### Part D · team types (teams and reading as in S012 Part B; one seed, 40 battles per cell)
+
+| Variant | T beats F | T beats M | M beats F | T mirror | M mirror | F mirror | random |
+|---|---|---|---|---|---|---|---|
+| build rules (S012) | 75 / 80 | 63 / 80 | 73 / 80 | 9.0 · 0 % · 25 % | 3.3 · 25 % · 0 % | 2.0 · 75 % · 0 % | 5.2 · 9 % · 6 % |
+| `wells=3,flank,tpr2,latepressure=none` | 77 / 80 | 45 / 80 | 78 / 80 | 7.0 · 0 % · 8 % | 2.6 · 53 % · 0 % | 2.3 · 75 % · 0 % | 3.8 · 25 % · 2 % |
+| …`latepressure=idle,startback,hpmin=3` | 70 / 80 | 45 / 80 | 79 / 80 | 7.0 · 0 % · 8 % | 2.6 · 53 % · 0 % | 2.4 · 65 % · 0 % | 4.0 · 16 % · 2 % |
+| …`latepressure=idle,hp=1` | 78 / 80 | 42 / 80 | 80 / 80 | 7.2 · 0 % · 8 % | 3.0 · 28 % · 0 % | 2.4 · 68 % · 0 % | 4.0 · 20 % · 2 % |
+| …`latepressure=idle,hp=2` | 73 / 80 | 41 / 80 | 78 / 80 | 8.2 · 0 % · 20 % | 3.3 · 18 % · 0 % | 2.6 · 53 % · 0 % | 4.4 · 12 % · 2 % |
+| …`latepressure=idle,hpmin=4` | 63 / 80 | 45 / 80 | 77 / 80 | 7.0 · 0 % · 8 % | 2.6 · 53 % · 0 % | 2.4 · 70 % · 0 % | 3.9 · 18 % · 2 % |
+
+### Part E · who falls in round 1 and why (`wells=3,flank,tpr2,latepressure=idle`, seeds 1–4, 160 battles, `SIM_DEBUG`)
+
+| Figure | Value |
+|---|---|
+| Battles with a defeat in round 1 | 143 of 160 |
+| Defeats in round 1 / in all rounds | 227 / 664 |
+| Round-1 victims by max HP | 2 HP: 158 (Ember Hawk 79, Dusk Moth 79) · 3 HP: 19 · 4 HP: 35 · 5 HP: 15 · 7–8 HP: 0 |
+| Victim had already taken its turn of the round | 218 of 227 |
+| Killed by a single damage instance | 125 of 227 |
+| Killing hit | Surge 100 (Eclipse 29, Magma Pounce 27, Gloom Rift 20, Cinder Dive 17, Coiling Rift 7) · collision 51 (monster or prop 38, board edge 13) · Jab 48 · Wellspring 9 · surrounded 9 · prop aftermath 8 · trap 2 |
+| Side of the victim | side 0: 111 · side 1: 116 |
+
+- *Reading:* the monsters with the highest initiative act first, walk toward the Wellsprings and the enemy, and have no turn left in the round; every slower monster then acts with them in reach. With 2 HP a Jab (2) or a Surge (3) is one hit. A Surge counts two finished turns of any monster, so on a monster that has already acted it cannot be left: with one turn per monster in round 1 (`tpr2`) the fast monsters have lost their second turn as a way out. The Wellsprings and the surround rule cause 18 of the 227 defeats.
+
+### Part F · postponing a turn and Surges that fire at their caster's next turn (`wells=3,flank,tpr2,latepressure=idle` plus the named switches; 160 battles per row)
+
+`delay`: before it has acted, a monster may move its queue entry to the end of the round's queue, once per round. The AI does so when its best first action gains less than 3 score points and an enemy still acts later. `castersurge`: a timed Surge detonates at the start of its caster's next turn (the rule before 2026-11-12) instead of after two finished turns of any monster; traps are unchanged.
+
+| Variant | Mean rounds | Under 3 / over 7 / over 10 · longest | Side 0 / 1 | First defeat in round · defeated before own first turn | Surge share of damage · damage per cast on enemies |
+|---|---|---|---|---|---|
+| draft without both | 3.8 | 22 / 6 / 2 % · 18 | 84 / 76 | 1.1 · 0.06 | 38 % · 0.98 |
+| + `delay` | 3.9 | 22 / 7 / 1 % · 14 | 78 / 82 | 1.1 · 0.02 | — |
+| + `castersurge` | 3.9 | 14 / 2 / 0 % · 9 | 87 / 73 | 1.3 · 0.02 | — |
+| + `delay,castersurge` | 4.0 | 11 / 6 / 1 % · 13 | 84 / 76 | 1.3 · 0.01 | 19 % · 0.49 |
+| + both, TPR from round 1 | 4.1 | 21 / 5 / 3 % · 18 | 82 / 78 | 1.1 · 0.07 | — |
+| build rules + both (no Wellsprings) | 5.5 | 14 / 22 / 8 % · 19 | 74 / 86 | 1.2 · 0.04 | — |
+
+| Round 1 with `delay,castersurge` (seeds 1–4, `SIM_DEBUG`) | Value (without both: Part E) |
+|---|---|
+| Battles with a defeat in round 1 | 115 of 160 (143) |
+| Defeats in round 1 | 135 (227) |
+| Victims with 2 HP | 108 (158) |
+| Killing hit | collision 61 · Jab 57 · surrounded 7 · Wellspring 4 · trap 3 · aftermath 3 · Surge 0 (Surge 100) |
+
+Team types with `delay,castersurge` (reading as in Part D): T beats F 77 / 80, T beats M 35 / 80, M beats F 80 / 80; T mirror 8.7 rounds · 0 % under 3 · 25 % over 10; M mirror 2.9 · 40 % · 0 %; F mirror 2.5 · 60 % · 0 %; random 4.0 · 13 % · 0 %. Walking against waiting bots: the walking side wins 169 of 319 (53 %).
+
+- *Reading:* the Surge rule is what moves the short end (22 % to 14 % under 3 rounds, no Surge kill in round 1 any more); postponing alone changes nothing measurable with this bot rule and adds a little on top (11 %). The price: Surges deal half as much (0.49 instead of 0.98 damage per cast, 19 % instead of 38 % of all damage), and the sturdy mirror, which lives on Surges, is long again (8.7 rounds, 25 % over 10). Round 1 still costs a 2-HP monster in most battles, now by a Jab or a push.
+
+### Part G · one-time bonus squares: shield, one more turn, both (`boon=`; 160 battles per row)
+
+Four squares on the centre row between and beside the Wellsprings (x = 0, 2, 4, 6). The first monster standing on one takes it and the square turns Plain. `shield`: the monster ignores its next damage instance of at least 1. `turn`: one more turn at the end of the current round. `both`: shield on x = 2 and 4, turn on x = 0 and 6. No prop or Mountain on them. The AI counts 7 score points per square taken (a held Wellspring: 9) and walks toward an untaken square. Base I = `wells=3,flank,tpr2,latepressure=idle`; base II = base I + `delay,castersurge`.
+
+| Base · bonus | Mean rounds | Under 3 / over 7 / over 10 · longest | Side 0 / 1 | Defeats in round 1 (of them 2-HP monsters) · battles with one | Bonus squares taken per battle, side 0 / 1 | Win rate Ember Hawk / Dusk Moth / Thorn Mites |
+|---|---|---|---|---|---|---|
+| I · none | 3.8 | 22 / 6 / 2 % · 18 | 84 / 76 | 227 (158) · 143 | — | 29 / 29 / 35 % |
+| I · shield | 3.9 | 20 / 5 / 1 % · 14 | 81 / 79 | 203 (143) · 142 | 1.30 / 1.08 | 35 / 30 / 31 % |
+| I · turn | 3.4 | 39 / 4 / 0 % · 8 | 85 / 73 | 269 (166) · 150 | 1.23 / 1.13 | 30 / 26 / 29 % |
+| I · both | 3.5 | 30 / 3 / 1 % · 11 | 86 / 74 | 234 (153) · 146 | 1.29 / 1.10 | 33 / 23 / 36 % |
+| II · none | 4.0 | 11 / 6 / 1 % · 13 | 84 / 76 | 135 (108) · 115 | — | 42 / 29 / 22 % |
+| II · shield | 4.2 | 7 / 8 / 1 % · 11 | 77 / 81 | 115 (90) · 102 | 1.47 / 1.31 | 41 / 30 / 36 % |
+| II · turn | 3.5 | 27 / 4 / 1 % · 12 | 86 / 74 | 219 (122) · 137 | 1.41 / 1.31 | 38 / 29 / 31 % |
+| II · both | 3.9 | 17 / 4 / 2 % · 13 | 87 / 72 | 147 (97) · 116 | 1.46 / 1.44 | 43 / 33 / 32 % |
+
+Who took the 356 squares of “I · both”: Gloom Wolf 71, Blaze Tiger 66, Forge Golem 53, Grove Wisp 48, Moss Turtle 48, Dusk Moth 33, Hollow Serpent 33, Ember Hawk 18, Thorn Mites 13; 147 of them in round 1, 167 in round 2.
+
+- *Reading:* the shield helps a little at the short end (22 to 20 %, on base II 11 to 7 % under 3 rounds; 20–24 fewer defeats in round 1 over 160 battles). The extra turn makes the opening harsher (39 and 27 % under 3 rounds, more defeats in round 1): one more turn in round 1 is one more attack. Both together lie in between. The fragile monsters do not win more with any of them (differences within the noise of about ±8 points), and they are not the ones who take the squares: the monsters that act first take a Wellspring (the AI values it higher and it lies on the same row), the next ones the bonus squares. Whether a player would send a fast monster for the shield first is not something these bots show.
+
+### Part H · shield squares nearer to the start rows (`boon=<layout>`; the extra-turn square was removed after Part G; 160 battles per row)
+
+Layouts on 7×7, given for side 0 and mirrored for side 1 (start squares (1,5), (3,6), (5,5); Wellsprings (1,3), (3,3), (5,3)): `centre` = Part G “shield” (four on the centre row) · `near` (2,4) (4,4) · `path` (1,4) (5,4), in front of the outer Wellsprings · `each` (1,4) (3,4) (5,4) · `one` (3,4). Base I and II as in Part G.
+
+| Base · layout | Mean rounds | Under 3 / over 7 / over 10 · longest | Side 0 / 1 / draw |
+|---|---|---|---|
+| I · none | 3.8 | 22 / 6 / 2 % · 18 | 84 / 76 / 0 |
+| I · centre | 3.9 | 20 / 5 / 1 % · 14 | 81 / 79 / 0 |
+| I · near | 4.0 | 20 / 7 / 3 % · 13 | 82 / 73 / 5 |
+| I · path | 3.8 | 22 / 3 / 1 % · 13 | 82 / 77 / 1 |
+| I · each | 3.8 | 25 / 5 / 1 % · 11 | 65 / 95 / 0 |
+| I · one | 3.6 | 24 / 3 / 2 % · 12 | 89 / 71 / 0 |
+| II · none | 4.0 | 11 / 6 / 1 % · 13 | 84 / 76 / 0 |
+| II · centre | 4.2 | 7 / 8 / 1 % · 11 | 77 / 81 / 2 |
+| II · near | 4.2 | 11 / 4 / 1 % · 11 | 81 / 78 / 1 |
+| II · path | 4.2 | 13 / 4 / 3 % · 16 | 74 / 85 / 1 |
+| II · each | 4.1 | 12 / 4 / 0 % · 10 | 76 / 81 / 3 |
+| II · one | 4.0 | 11 / 2 / 1 % · 15 | 86 / 74 / 0 |
+
+| Base II · layout | Defeats in round 1 (2-HP monsters) · battles with one | Squares taken · by Hawk, Moth, Mites · in round 1 | Win rate Ember Hawk / Dusk Moth / Thorn Mites |
+|---|---|---|---|
+| none | 135 (108) · 115 | — | 42 / 29 / 22 % |
+| centre | 115 (90) · 102 | 443 · 103 · 111 | 41 / 30 / 36 % |
+| near | 126 (103) · 106 | 482 · 130 · 255 | 52 / 35 / 23 % |
+| path | 122 (106) · 102 | 506 · 116 · 352 | 41 / 32 / 29 % |
+| each | 119 (97) · 97 | 754 · 209 · 473 | 34 / 28 / 29 % |
+| one | 116 (89) · 95 | 278 · 102 · 216 | 44 / 34 / 23 % |
+
+- *Reading:* nearer squares are taken earlier (255–473 in round 1 instead of 111) but change neither the short end (11–13 % under 3 rounds on base II, as without squares) nor the defeats of 2-HP monsters in round 1 (89–106 against 108) nor the win rates of the fragile monsters (within noise). The three fragile species take about their share of the squares (a quarter to a third), not more. The 7 % of the centre layout is the lowest value, but 160 battles separate it from 11 % only weakly. A shield takes one hit; a 2-HP monster in reach of two enemies falls to the second.
+
+**Observations** (indications; bots only; 160 battles per row in Parts A–C, 40 per cell in Part D):
+
+- *The Wellsprings mostly end battles without late-round pressure:* 3.8 rounds, 2 % over 10 rounds, longest 18, no timeout in 160 battles with the full draft (single timeouts in the rows without `tpr2` or with two Wellsprings); with pressure as in the rules or in the idle form the figures are the same, because pressure is not reached. Under the build rules without pressure one battle in 160 does not end.
+- *A brake is still needed when nobody takes a Wellspring:* waiting bots hold 0.45 Wellsprings per round end together and 8 of 160 battles do not end; with pressure only in rounds without a held Wellspring none does (4.8 rounds).
+- *Walking up beats waiting:* 54 % against 47 % under the build rules.
+- *The battles get short rather than long:* 22 % under 3 rounds (build rules 14 %); the first defeat still falls in round 1. One turn per monster in round 1 lowers the defeats before a monster's first turn from 0.14 to 0.06 per battle; it does not move the first defeat. One more HP for everyone with back-row starts gives 13 % under 3 rounds, none over 10 and 4.1 rounds; two more HP 9 % and 4.4 rounds.
+- *Surrounding does not show in bot play:* 0–1 % of the damage with or without the AI term; the bots do not set it up. The runs say nothing about this rule.
+- *Wellspring count:* one gives 4.5 rounds and 6 % of the damage, three 3.8 and 14 %, five 3.5 and 18 % with 30 % of battles under 3 rounds. With two (x = 1, 5) one battle in 160 does not end without pressure, as with three Wellsprings and TPR from round 1.
+- *Team types:* the sturdy trio no longer beats the middle one (45 of 80, build rules 63) and its mirror is shorter (7.0 rounds, 8 % over 10). The fragile trio still loses nearly every battle against both, at any HP level tried; the middle mirror gets very short (2.6 rounds, 53 % under 3).
+
+**Follow-up:** T39 (the draft: user play, the last tie-break, the pressure form, the short end), T03/T12 (fragile shapes at fixed damage), T13 (share under 3 rounds as the main open metric).
+
+About 6 960 battles in 174 runs.
+
+## S012 · 2026-11-12 · new build rules (ground clock, one trap per skill, no shield zones in kits, AI walks up); why sturdy teams win and last long
+
+**State:** `c35396a` dirty (uncommitted) · content `2026-11-12.3` · kit set `164984ea835f`. **Build rules since S011** (user decision 2026-11-12): ground laid during a battle lasts 2 rounds, a monster holds one trap per trap skill, Moss Turtle carries Mire instead of Bark Veil and Dusk Moth Blink instead of Shade Veil, and `AiBrain` walks toward the nearest enemy instead of ending a turn with AP left. The bot `greedy` is this AI now (`hunt` is the same bot); `wait` is the AI as it was. 3v3 on 7×7, late-round pressure from round 8, `--paired`.
+
+**Questions (user):** why do three slow, sturdy monsters need so long against each other and beat three fragile ones almost always, and what would change it.
+
+**Teams.** T = Forge Golem, Moss Turtle, Hollow Serpent (HP 8 / 8 / 7, Movement 1 / 2 / 2, TPR 1, AP 3). M = Blaze Tiger, Gloom Wolf, Grove Wisp (HP 5 / 5 / 4, Movement 4 / 2 / 4, TPR 1, AP 3). F = Dusk Moth, Ember Hawk, Thorn Mites (HP 2 / 2 / 3, Movement 3 / 3 / 2, TPR 2, AP 2). Fixed teams play on an empty board with mirrored start squares; each pairing is played in both seatings (2 × 40 battles), mirrors once (40). “random” = random teams on seeded boards, two seeds (80 battles). Per row about 440 battles; one seed unless the row says “seed 2”. Round figures: mean · share under 3 · share over 10.
+
+### Part A · the new build rules, random teams, four seeds (160 battles per row)
+
+| Bots (both sides) | Mean rounds | Ended before pressure | Last defeat by collapse | Under 3 / over 7 / over 10 · longest | Side 0 : side 1 |
+|---|---|---|---|---|---|
+| `greedy` (walks up, the game AI) | 5.1 | 87 % | 1 % | 14 / 18 / 7 % · 17 | 76 : 83 |
+| `chase` | 5.8 | 81 % | 3 % | 14 / 24 / 12 % · 20 | 80 : 80 |
+| `wait` (AI up to S011) | 7.5 | 72 % | 20 % | 8 / 37 / 23 % · 24 | 74 : 82 |
+
+For comparison, candidate R of S011 (trap clock instead of the trap limit, veil slots dead instead of replaced) over eight seeds: 4.6 / 5.2 / 6.9 rounds.
+
+### Part B · team types against each other and single changes (`--variant`, this run only)
+
+| Variant | T beats F | T beats M | M beats F | T mirror | M mirror | F mirror | random |
+|---|---|---|---|---|---|---|---|
+| build rules | 75 / 80 | 63 / 80 | 73 / 80 | 9.0 · 0 % · 25 % | 3.3 · 25 % · 0 % | 2.0 · 75 % · 0 % | 5.2 · 9 % · 6 % |
+| build rules, seed 2 | 75 / 80 | 68 / 80 | 75 / 80 | 8.6 · 0 % · 20 % | 2.9 · 45 % · 0 % | 1.7 · 90 % · 0 % | 5.3 · 16 % · 8 % |
+| `hpmin=3,hpmax=6` | 53 / 80 | 47 / 80 | 68 / 80 | 7.2 · 0 % · 8 % | 3.3 · 25 % · 0 % | 2.0 · 83 % · 0 % | 4.8 · 12 % · 6 % |
+| `hpmin=4,hpmax=6` | 36 / 80 | 47 / 80 | 56 / 80 | 7.2 · 0 % · 8 % | 3.3 · 25 % · 0 % | 2.3 · 70 % · 0 % | 4.8 · 10 % · 6 % |
+| `hpmin=4,hpmax=6`, seed 2 | 48 / 80 | 49 / 80 | 68 / 80 | 8.6 · 0 % · 33 % | 2.9 · 45 % · 0 % | 2.2 · 78 % · 0 % | 4.0 · 20 % · 0 % |
+| `hpmin=3,hpmax=5` | 39 / 80 | 30 / 80 | 68 / 80 | 8.1 · 0 % · 20 % | 3.3 · 25 % · 0 % | 2.0 · 83 % · 0 % | 4.2 · 22 % · 2 % |
+| `apmin=3` (F with 3 AP per turn) | 55 / 80 | 63 / 80 | 68 / 80 | 9.0 · 0 % · 25 % | 3.3 · 25 % · 0 % | 1.4 · 100 % · 0 % | 4.7 · 16 % · 6 % |
+| `strikedmg=3` | 72 / 80 | 69 / 80 | 72 / 80 | 9.9 · 0 % · 30 % | 3.1 · 23 % · 0 % | 1.9 · 83 % · 0 % | 4.5 · 13 % · 2 % |
+| `turns=1` (Surges fire after 1 turn) | 69 / 80 | 68 / 80 | 73 / 80 | 6.4 · 0 % · 3 % | 2.9 · 33 % · 0 % | 1.9 · 88 % · 0 % | 3.9 · 25 % · 2 % |
+| `alltimed` (every trap a Surge) | 68 / 80 | 62 / 80 | 69 / 80 | 6.9 · 0 % · 0 % | 3.1 · 30 % · 0 % | 2.0 · 68 % · 0 % | 4.8 · 14 % · 5 % |
+| `step=2` | 75 / 80 | 40 / 80 | 75 / 80 | 9.2 · 0 % · 30 % | 3.4 · 23 % · 0 % | 2.0 · 80 % · 0 % | 5.6 · 6 % · 4 % |
+| T +1 Movement (`stat=`: Golem 2, Turtle 3, Serpent 3) | 75 / 80 | 67 / 80 | 73 / 80 | 5.9 · 0 % · 5 % | 3.3 · 25 % · 0 % | 2.0 · 75 % · 0 % | 4.3 · 14 % · 2 % |
+| T +1 Movement, seed 2 | 74 / 80 | 70 / 80 | 75 / 80 | 6.3 · 0 % · 8 % | 2.9 · 45 % · 0 % | 1.7 · 90 % · 0 % | 4.3 · 23 % · 3 % |
+
+### Part C · HP band and Movement together
+
+| Variant | T beats F | T beats M | M beats F | T mirror | M mirror | F mirror | random |
+|---|---|---|---|---|---|---|---|
+| `hpmin=4,hpmax=6` + T +1 Movement | 44 / 80 | 50 / 80 | 56 / 80 | 5.3 · 0 % · 0 % | 3.3 · 25 % · 0 % | 2.3 · 70 % · 0 % | 4.0 · 16 % · 2 % |
+| the same, seed 2 | 48 / 80 | 44 / 80 | 68 / 80 | 5.6 · 0 % · 0 % | 2.9 · 45 % · 0 % | 2.2 · 78 % · 0 % | 3.6 · 24 % · 0 % |
+| `hpmin=4,hpmax=6` + only Golem Movement 2 | 36 / 80 | 47 / 80 | 56 / 80 | 7.2 · 0 % · 8 % | 3.3 · 25 % · 0 % | 2.3 · 70 % · 0 % | 4.0 · 25 % · 3 % |
+| `hpmin=3,hpmax=6` + T +1 Movement | 54 / 80 | 50 / 80 | 68 / 80 | 5.3 · 0 % · 0 % | 3.3 · 25 % · 0 % | 2.0 · 83 % · 0 % | 3.8 · 26 % · 0 % |
+| the same, seed 2 | 55 / 80 | 44 / 80 | 68 / 80 | 5.6 · 0 % · 0 % | 2.9 · 45 % · 0 % | 1.9 · 88 % · 0 % | 3.8 · 32 % · 4 % |
+| `hpmin=4,hpmax=7` + T +1 Movement | 61 / 80 | 62 / 80 | 56 / 80 | 5.9 · 0 % · 3 % | 3.3 · 25 % · 0 % | 2.3 · 70 % · 0 % | 3.9 · 16 % · 2 % |
+| `hpmin=4,hpmax=6` + T +1 Movement + `startback` | 44 / 80 | 50 / 80 | 56 / 80 | 5.3 · 0 % · 0 % | 3.3 · 25 % · 0 % | 2.3 · 70 % · 0 % | 4.1 · 26 % · 0 % |
+| `hpmin=4,hpmax=6` + T +1 Movement + `tprmax=1,apmin=3` | 50 / 80 | 50 / 80 | 66 / 80 | 5.3 · 0 % · 0 % | 3.3 · 25 % · 0 % | 2.6 · 53 % · 0 % | 4.3 · 23 % · 4 % |
+| `hpmin=4,hpmax=6` + T +1 Movement + `tprmax=1` | 77 / 80 | 50 / 80 | 79 / 80 | 5.3 · 0 % · 0 % | 3.3 · 25 % · 0 % | 3.8 · 20 % · 0 % | 4.4 · 8 % · 4 % |
+
+### Part D · inside the T mirror (full blocks, seed 1, 40 battles)
+
+| Variant | Mean rounds | Damage per battle | Step / Jab uses per battle | Surges and traps declared · damage per marker |
+|---|---|---|---|---|
+| build rules | 9.0 | 40.4 | 22.9 / 4.9 | 968 · 0.98 |
+| `hpmin=4,hpmax=6` + T +1 Movement | 5.3 | 32.4 | 11.7 / 5.0 | 519 · 1.28 |
+
+**Observations** (indications; bots only; 40 battles per cell, so differences under about 8 of 80 wins or 1 round are noise):
+
+- *The new build rules behave like candidate R:* 5.1 rounds with the game AI, 87 % ended before pressure, 7 % over 10 rounds. The waiting AI is still slower (7.5 rounds, 23 % over 10).
+- *The order T > M > F follows the HP sum (23 / 14 / 7):* with every monster between 4 and 6 HP the three team types are close to level (T beats F 36–48 of 80, T beats M 47–49, M beats F 56–68). More AP for F, more Strike damage, faster Surges or a dearer Step do not change the order.
+- *The length of the T mirror follows Movement, not HP:* one more Movement for the three brings it from 9.0 to 5.9 rounds (seed 2: 8.6 to 6.3); the HP band alone 7.2 and 8.6. Under the build rules the three take 23 Steps per battle and land 5 Jabs, and a marker deals 0.98 of its 2–3 damage.
+- *Both together:* T mirror 5.3–5.6 rounds, none over 10 in 80 battles; random teams 3.6–4.0 rounds, with 16–24 % under 3 rounds (build rules 9–16 %).
+- *The F mirror is the opposite problem and no HP value changes it:* 1.7–2.3 rounds, 70–90 % under 3 rounds, one monster per battle defeated before its first turn. With TPR 1 for everyone it lasts 3.8 rounds (20 % under 3), but then F loses to T and M again (77 and 79 of 80).
+- *Noise:* the HP band rows of the T mirror differ between seeds (7.2 and 8.6 rounds); `hpmin=3,hpmax=5` gives a longer T mirror than `hpmin=3,hpmax=6` on one seed.
+
+**Follow-up:** T03 (HP against TPR and initiative in the stat prices: a second turn costs as much as 5 HP and is worth far less here), T12 (reference individuals: HP band, Movement of the slow shapes), T13 (team-type matrix as a standing check; the F mirror and the share under 3 rounds), T38 (the build rules of this entry in play).
+
+About 10 960 battles in 276 runs.
+
+## S011 · 2026-11-12 · why waiting pays: board fill; ground and traps with a clock, no shield zones; value of each skill kind
+
+**State:** `c35396a` dirty (uncommitted: new test switches, bots and `sim.gd` options; the rules of the build are unchanged with all switches off: the build-rules row of S010 is reproduced bit for bit) · content `2026-11-12.2` · kit set `736eb4e604a6` (`swap` variants change the kits for the run only). 3v3 on seeded draft boards unless a row names another mode. About 57 680 battles in 1 460 runs; the tables hold the ones the observations rest on.
+
+**Questions (user, 2026-11-12):** which combination of changes makes 3v3 battles end by fighting within 3–7 rounds (over 10 rounds counts as a failure), deterministic and with few uniform rules; are all skill kinds viable or does one decide alone. S010 showed that the bot that walks up loses to the bot that waits, so the first question here is what makes waiting pay.
+
+**How to read the tables.** Rows are means over the named runs, computed from the compact rows of the tool (40 battles per run, 20 with the planning bot); only parts D and F paste tool rows unchanged. Every run is reproducible: `sim.gd -- 40 3v3 <seed> "c35396a dirty" --paired --compact --variant <variant> --bot-a <bot> --bot-b <bot> [--pressure 200] [--no-kind-a|b <kind>]`. *Wins of `hunt` against the waiting `AiBrain`:* `hunt` on side 0 and on side 1, seeds 1 and 2 (160 battles) in parts A and B, seeds 1–4 (320 battles) in part C; a share under 50 % means that walking up loses to waiting. One share of 160 battles has a standard error of about 4 points, one of 320 about 3.
+
+| Switch (`--variant`, new in this entry unless noted) | What it does |
+|---|---|
+| `groundfade=N` | ground laid during the battle (skill, Surge residue, prop aftermath) turns back into Plain at the end of the N-th round, counting the round it was laid or levelled in (N = 2: like a zone of duration 2). Ground of the starting board, Rubble of a destroyed Mountain and Voidscar stay |
+| `trapfade=N` | a trap nobody sprang lapses at the end of the N-th round, counting the round it was set in |
+| `trapcap=N` | a monster holds at most N traps per trap skill; one more removes its oldest trap of that skill |
+| `noshield` (S007) | shield zone skills cannot be used; the slot stays in the kit. Now a switch of the battle (`no_shield_zones`) instead of an AP hack; rows are identical |
+| `shield=N` | shield zones reduce Surge damage by N at every level (build: 2, up to 3) |
+| `swap=old>new` | every kit holding skill `old` holds `new` instead for this run. “mire / blink” = `swap=bark_veil>mire,swap=shade_veil>blink` (Moss Turtle, Dusk Moth); “bog / void_pull” and the others likewise |
+| `hp=±N`, `hpmin=N`, `hpmax=N`, `tprmax=N`, `apmin=N`, `surgedmg=±N`, `strikedmg=N` | reference HP of all monsters shifted or clamped; turns per round capped, AP raised to a minimum; damage of all Surges and traps shifted; Strike damage set |
+| `zoneonce`, `castonce` | every zone skill, or every zone, Surge, trap and board skill, once per round |
+| `startback` | every monster starts on the back row (3v3: 6 instead of 4 squares between the lines) |
+| `softpressure`, `jab`, `step`, `move`, `turns`, `alltimed`, `alltraps`, `push`, `norotate`, `defap`, `shield-once` | as in S007–S010 |
+| bot `hunt` (S010) | `AiBrain` that walks toward the nearest enemy instead of ending a turn with AP left |
+| bot `chase` | `hunt`, but only while its side is not ahead in total HP: the side that would win by waiting for late-round pressure waits, the other has to come |
+| `--no-kind-a` / `--no-kind-b <kind>` | the bot of that side never uses skills of the kind (strike, surge, trap, zone, ground = board skills, move); the Step stays |
+
+### Part A · single switches on the build rules
+
+| Variant | Wins of `hunt` against the waiting `AiBrain` (160 battles) | `hunt` on both sides: mean rounds | Ended before pressure | Collapse endings | Rounds under 3 / over 7 / over 10 (%) · longest |
+|---|---|---|---|---|---|
+| build rules | 44 % | 8.4 | 59 % | 8 % | 14 / 42 / 34 · 22 |
+| `noshield` | 42 % | 5.6 | 83 % | 2 % | 15 / 19 / 13 · 19 |
+| `jab=1` | 41 % | 6.4 | 78 % | 9 % | 22 / 28 / 22 · 21 |
+| `softpressure=2` | 48 % | 6.6 | 60 % | 0 % | 14 / 42 / 19 · 16 |
+| `shield-once` | 47 % | 7.8 | 66 % | 5 % | 12 / 38 / 28 · 22 |
+| `defap=3` | 46 % | 7.0 | 69 % | 9 % | 14 / 34 / 28 · 20 |
+| `alltimed` | 46 % | 6.7 | 73 % | 5 % | 14 / 30 / 22 · 20 |
+| `alltraps` | 42 % | 10.8 | 45 % | 30 % | 8 / 64 / 46 · 21 |
+| `turns=1` | 44 % | 6.7 | 70 % | 8 % | 20 / 33 / 26 · 21 |
+| `turns=3` | 41 % | 8.5 | 60 % | 8 % | 8 / 43 / 35 · 21 |
+| `step=2` | 46 % | 8.1 | 62 % | 9 % | 12 / 42 / 29 · 19 |
+| `move=2` | 36 % | 8.4 | 64 % | 10 % | 4 / 40 / 32 · 20 |
+| `push=2` | 42 % | 7.3 | 70 % | 8 % | 10 / 32 / 28 · 18 |
+| `norotate` | 36 % | 8.9 | 56 % | 14 % | 12 / 44 / 39 · 21 |
+| `strikedmg=1` | 44 % | 8.4 | 62 % | 16 % | 10 / 43 / 38 · 22 |
+| `strikedmg=3` | 44 % | 7.8 | 66 % | 8 % | 9 / 34 / 29 · 20 |
+| `surgedmg=-1` | 40 % | 7.3 | 70 % | 8 % | 10 / 34 / 25 · 20 |
+| `surgedmg=1` | 44 % | 7.8 | 66 % | 14 % | 12 / 38 / 32 · 23 |
+| `hp=-1` | 46 % | 6.8 | 73 % | 6 % | 10 / 34 / 22 · 19 |
+| `hp=1` | 42 % | 8.1 | 63 % | 9 % | 10 / 43 / 33 · 22 |
+| `hpmin=4,hpmax=6` | 38 % | 7.2 | 70 % | 3 % | 12 / 33 / 25 · 20 |
+| `startback` | 41 % | 8.3 | 65 % | 10 % | 10 / 38 / 32 · 24 |
+| `groundfade=2` | 50 % | 6.3 | 79 % | 2 % | 14 / 25 / 14 · 20 |
+| `groundfade=3` | 49 % | 6.8 | 74 % | 3 % | 14 / 30 / 19 · 20 |
+| `trapfade=2` | 39 % | 7.2 | 69 % | 4 % | 14 / 36 / 25 · 18 |
+| `trapfade=3` | 41 % | 7.5 | 64 % | 6 % | 14 / 38 / 28 · 19 |
+| `groundfade=2,trapfade=2` | 48 % | 5.5 | 88 % | 2 % | 14 / 20 / 6 · 16 |
+| `groundfade=3,trapfade=3` | 52 % | 6.6 | 74 % | 2 % | 14 / 32 / 18 · 19 |
+| `groundfade=2,noshield` | 50 % | 4.5 | 92 % | 0 % | 15 / 12 / 2 · 13 |
+| `groundfade=2,trapfade=2,noshield` | 51 % | 4.5 | 92 % | 0 % | 15 / 12 / 2 · 13 |
+
+### Part B · replacement skills and further switches on the candidates
+
+G = `groundfade=2`; C = `groundfade=2,trapfade=2` with mire / blink; R = `groundfade=2,trapfade=2,noshield`. “a / b” replaces Bark Veil by a and Shade Veil by b.
+
+| Variant | Wins of `hunt` against the waiting `AiBrain` (160 battles) | `hunt` on both sides: mean rounds | Ended before pressure | Collapse endings | Rounds under 3 / over 7 / over 10 (%) · longest |
+|---|---|---|---|---|---|
+| G + mire / blink | 49 % | 5.4 | 84 % | 2 % | 10 / 19 / 8 · 17 |
+| G + bog / void_pull | 46 % | 4.2 | 95 % | 0 % | 23 / 9 / 4 · 19 |
+| G + strike_arc / void_pull | 50 % | 5.0 | 90 % | 2 % | 18 / 12 / 6 · 17 |
+| G + raise_ground / void_pull | 48 % | 5.1 | 89 % | 0 % | 16 / 14 / 8 · 22 |
+| G + void_pull / mire | 43 % | 4.2 | 96 % | 0 % | 18 / 9 / 3 · 17 |
+| G + strike_arc / strike_thrust | 49 % | 4.7 | 89 % | 2 % | 16 / 14 / 4 · 17 |
+| mire / blink without G | 44 % | 6.8 | 72 % | 2 % | 10 / 32 / 23 · 19 |
+| `groundfade=1` + mire / blink | 45 % | 5.6 | 86 % | 0 % | 9 / 19 / 9 · 18 |
+| `groundfade=3` + mire / blink | 42 % | 6.2 | 78 % | 2 % | 10 / 29 / 14 · 19 |
+| G + mire / blink + `trapfade=2` (= C) | 49 % | 5.3 | 82 % | 0 % | 10 / 20 / 6 · 13 |
+| C + `hpmin=3` | 51 % | 5.3 | 88 % | 0 % | 13 / 15 / 6 · 20 |
+| C + `hpmin=4` | 49 % | 5.4 | 86 % | 2 % | 12 / 20 / 10 · 15 |
+| C + `hpmin=3,hpmax=6` | 46 % | 4.6 | 93 % | 0 % | 12 / 9 / 3 · 11 |
+| C + `startback` | 48 % | 5.7 | 85 % | 2 % | 15 / 22 / 8 · 17 |
+| C + `hpmin=3,startback` | 48 % | 5.7 | 84 % | 2 % | 9 / 25 / 8 · 16 |
+| C + `hpmin=4,startback` | 45 % | 6.0 | 86 % | 2 % | 6 / 26 / 9 · 17 |
+| C + `turns=3` | 50 % | 5.7 | 86 % | 0 % | 6 / 22 / 8 · 14 |
+| C + `hpmin=3,turns=3` | 45 % | 5.3 | 88 % | 2 % | 10 / 16 / 8 · 19 |
+| C + `surgedmg=-1` | 46 % | 5.6 | 86 % | 0 % | 8 / 19 / 6 · 14 |
+| R = `groundfade=2,trapfade=2,noshield` | 51 % | 4.5 | 92 % | 0 % | 15 / 12 / 2 · 13 |
+| R + `jab=1` | 47 % | 4.3 | 94 % | 0 % | 24 / 12 / 2 · 11 |
+| R + `softpressure=2` | 48 % | 4.5 | 92 % | 0 % | 15 / 12 / 0 · 10 |
+| R + `turns=1` | 46 % | 3.8 | 96 % | 0 % | 29 / 6 / 4 · 13 |
+| R + `hp=-1` | 54 % | 4.7 | 90 % | 0 % | 20 / 16 / 4 · 13 |
+
+### Part C · finalists over four seeds and six bot pairings
+
+Seeds 1–4 with 40 battles each (160 per row); planning bot: seeds 1 and 2 with 20 battles (40); pressure out of reach: seeds 1 and 2 with 40 battles (80). `AiBrain + aggro` is the variant with `,aggro` added.
+
+| Variant | Bots (both sides) | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Rounds under 3 / over 7 / over 10 (%) · longest | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | Uses per slot and battle: strike / surge / trap / zone / board / move | Defeated before own first turn (per battle) | Wins of `hunt` against the waiting `AiBrain` |
+|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | hunt | 160 | 75 / 83 / 2 / 0 | 7.7 | 66 % | 15 / 35 / 28 · 22 | 26 / 21 / 1 / 21 / 12 / 10 / 8 | 0.55 / 1.87 / 1.54 / 2.45 / 1.27 / 3.12 | 0.12 | 127 of 320 (40 %) |
+|  | chase | 160 | 77 / 82 / 1 / 0 | 8.4 | 60 % | 14 / 43 / 37 · 21 | 22 / 15 / 0 / 24 / 14 / 9 / 17 | 0.49 / 1.68 / 1.37 / 2.57 / 1.14 / 2.52 | 0.12 |  |
+|  | AiBrain | 160 | 79 / 73 / 8 / 0 | 10.9 | 40 % | 10 / 62 / 61 · 21 | 12 / 9 / 2 / 9 / 9 / 0 / 59 | 0.42 / 1.36 / 1.10 / 3.54 / 1.03 / 1.50 | 0.12 |  |
+|  | AiBrain + aggro | 160 | 80 / 78 / 2 / 0 | 8.6 | 56 % | 18 / 44 / 44 · 21 | 18 / 16 / 2 / 12 / 10 / 0 / 42 | 0.51 / 1.42 / 0.92 / 1.95 / 0.94 / 1.69 | 0.15 |  |
+|  | plan | 40 | 19 / 21 / 0 / 0 | 8.1 | 58 % | 20 / 45 / 42 · 20 | 20 / 20 / 8 / 12 / 2 / 12 / 22 | 0.53 / 1.66 / 1.64 / 2.35 / 1.65 / 1.58 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 36 / 37 / 0 / 7 | 41.0 | 82 % | 14 / 42 / 34 · 220 | 24 / 22 / 3 / 32 / 15 / 2 / 2 | 0.55 / 1.96 / 2.08 / 10.09 / 1.81 / 4.24 | 0.09 |  |
+|  | chase, pressure +200 | 80 | 30 / 32 / 0 / 18 | 71.7 | 64 % | 12 / 50 / 43 · 221 | 10 / 14 / 0 / 36 / 21 / 10 / 8 | 0.48 / 2.07 / 1.68 / 15.47 / 1.43 / 6.30 | 0.09 |  |
+| mire / blink for the two veils | hunt | 160 | 86 / 74 / 0 / 0 | 6.7 | 72 % | 13 / 33 / 22 · 21 | 27 / 23 / 3 / 25 / 10 / 8 / 3 | 0.53 / 1.81 / 1.44 / 2.27 / 1.25 / 2.59 | 0.14 | 144 of 320 (45 %) |
+|  | chase | 160 | 80 / 79 / 1 / 0 | 7.6 | 66 % | 12 / 37 / 32 · 20 | 24 / 17 / 2 / 24 / 8 / 9 / 13 | 0.49 / 1.62 / 1.32 / 1.98 / 1.10 / 2.20 | 0.14 |  |
+|  | AiBrain | 160 | 74 / 80 / 6 / 0 | 10.7 | 41 % | 6 / 61 / 59 · 21 | 12 / 10 / 1 / 9 / 10 / 1 / 57 | 0.42 / 1.40 / 1.11 / 1.73 / 0.97 / 1.46 | 0.14 |  |
+|  | AiBrain + aggro | 160 | 80 / 72 / 8 / 0 | 9.1 | 52 % | 18 / 48 / 48 · 21 | 18 / 10 / 0 / 12 / 14 / 0 / 46 | 0.52 / 1.36 / 0.84 / 1.37 / 0.90 / 1.54 | 0.15 |  |
+|  | plan | 40 | 23 / 17 / 0 / 0 | 6.6 | 72 % | 22 / 28 / 25 · 20 | 20 / 12 / 8 / 15 / 22 / 8 / 10 | 0.58 / 1.67 / 1.21 / 2.33 / 1.30 / 1.66 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 45 / 31 / 0 / 4 | 38.4 | 84 % | 10 / 32 / 23 · 218 | 29 / 17 / 4 / 24 / 16 / 6 / 2 | 0.54 / 1.83 / 2.98 / 2.15 / 3.07 / 4.71 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 33 / 32 / 0 / 15 | 69.8 | 66 % | 12 / 43 / 40 · 218 | 20 / 17 / 4 / 26 / 11 / 4 / 11 | 0.45 / 1.87 / 1.50 / 2.75 / 1.34 / 5.00 | 0.10 |  |
+| `trapfade=2,noshield` | hunt | 160 | 83 / 77 / 0 / 0 | 5.4 | 84 % | 19 / 18 / 12 · 20 | 32 / 22 / 4 / 24 / 16 / 2 / 1 | 0.57 / 1.78 / 1.63 / 0.70 / 1.23 / 2.67 | 0.15 | 136 of 320 (42 %) |
+|  | chase | 160 | 77 / 83 / 0 / 0 | 6.6 | 75 % | 19 / 30 / 24 · 21 | 33 / 17 / 2 / 24 / 14 / 4 / 8 | 0.55 / 1.68 / 1.56 / 0.69 / 1.11 / 2.46 | 0.15 |  |
+|  | AiBrain | 160 | 80 / 75 / 5 / 0 | 9.4 | 51 % | 13 / 50 / 48 · 21 | 18 / 15 / 2 / 14 / 7 / 0 / 46 | 0.44 / 1.52 / 1.38 / 0.71 / 1.06 / 1.72 | 0.15 |  |
+|  | AiBrain + aggro | 160 | 78 / 79 / 3 / 0 | 8.5 | 57 % | 18 / 44 / 43 · 21 | 18 / 16 / 1 / 12 / 12 / 0 / 42 | 0.52 / 1.42 / 0.97 / 0.56 / 0.87 / 1.74 | 0.15 |  |
+|  | plan | 40 | 23 / 17 / 0 / 0 | 5.8 | 78 % | 22 / 25 / 22 · 18 | 20 / 15 / 15 / 15 / 12 / 5 / 18 | 0.61 / 1.62 / 2.31 / 0.82 / 1.81 / 1.75 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 43 / 35 / 0 / 2 | 11.6 | 96 % | 15 / 18 / 13 · 216 | 30 / 16 / 4 / 24 / 24 / 2 / 0 | 0.57 / 2.22 / 2.13 / 0.66 / 1.19 / 2.73 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 37 / 32 / 0 / 11 | 39.7 | 82 % | 18 / 30 / 26 · 221 | 30 / 18 / 2 / 28 / 17 / 3 / 2 | 0.52 / 1.71 / 4.03 / 0.66 / 1.75 / 6.93 | 0.11 |  |
+| `groundfade=2` | hunt | 160 | 77 / 83 / 0 / 0 | 6.0 | 82 % | 15 / 23 / 13 · 21 | 38 / 24 / 3 / 13 / 16 / 2 / 2 | 0.65 / 1.97 / 1.62 / 1.92 / 1.26 / 2.68 | 0.12 | 149 of 320 (47 %) |
+|  | chase | 160 | 80 / 80 / 0 / 0 | 7.1 | 71 % | 14 / 34 / 20 · 22 | 32 / 21 / 2 / 14 / 16 / 4 / 10 | 0.59 / 1.98 / 1.62 / 2.16 / 1.19 / 2.52 | 0.12 |  |
+|  | AiBrain | 160 | 87 / 66 / 7 / 0 | 9.3 | 54 % | 10 / 50 / 43 · 21 | 28 / 10 / 1 / 10 / 10 / 0 / 39 | 0.51 / 1.57 / 1.33 / 2.90 / 1.15 / 1.76 | 0.12 |  |
+|  | AiBrain + aggro | 160 | 83 / 77 / 0 / 0 | 6.3 | 76 % | 18 / 28 / 20 · 20 | 40 / 16 / 5 / 8 / 11 / 0 / 19 | 0.61 / 1.67 / 1.08 / 1.28 / 0.93 / 1.93 | 0.15 |  |
+|  | plan | 40 | 24 / 16 / 0 / 0 | 5.8 | 80 % | 20 / 28 / 18 · 16 | 30 / 25 / 5 / 20 / 10 / 2 / 5 | 0.61 / 1.83 / 1.82 / 1.61 / 1.58 / 1.74 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 38 / 42 / 0 / 0 | 7.8 | 100 % | 14 / 25 / 14 · 112 | 38 / 22 / 5 / 16 / 15 / 0 / 0 | 0.68 / 2.08 / 1.56 / 2.33 / 1.17 / 3.49 | 0.09 |  |
+|  | chase, pressure +200 | 80 | 38 / 39 / 0 / 3 | 19.5 | 94 % | 12 / 38 / 22 · 220 | 32 / 24 / 2 / 18 / 18 / 2 / 2 | 0.61 / 2.21 / 1.77 / 3.97 / 1.20 / 6.46 | 0.09 |  |
+| `groundfade=2,shield=1` | hunt | 160 | 78 / 81 / 1 / 0 | 5.4 | 86 % | 16 / 22 / 7 · 20 | 40 / 28 / 4 / 11 / 14 / 2 / 0 | 0.65 / 1.89 / 1.73 / 1.41 / 1.34 / 2.62 | 0.15 | 149 of 320 (47 %) |
+|  | chase | 160 | 78 / 81 / 1 / 0 | 6.4 | 77 % | 16 / 28 / 16 · 20 | 35 / 20 / 5 / 10 / 18 / 3 / 6 | 0.60 / 1.80 / 1.56 / 1.52 / 1.35 / 2.41 | 0.15 |  |
+|  | AiBrain | 160 | 85 / 70 / 5 / 0 | 8.7 | 58 % | 11 / 45 / 40 · 21 | 24 / 16 / 1 / 8 / 12 / 0 / 37 | 0.51 / 1.55 / 1.23 / 1.95 / 1.07 / 1.84 | 0.15 |  |
+|  | AiBrain + aggro | 160 | 80 / 79 / 1 / 0 | 6.3 | 76 % | 18 / 28 / 19 · 20 | 40 / 17 / 2 / 8 / 14 / 1 / 18 | 0.62 / 1.69 / 1.03 / 1.03 / 0.90 / 1.96 | 0.15 |  |
+|  | plan | 40 | 26 / 14 / 0 / 0 | 5.1 | 88 % | 20 / 20 / 12 · 16 | 35 / 18 / 10 / 15 / 18 / 2 / 2 | 0.61 / 1.68 / 1.62 / 1.13 / 1.68 / 1.84 | 0.28 |  |
+|  | hunt, pressure +200 | 80 | 37 / 41 / 1 / 1 | 7.9 | 99 % | 14 / 20 / 8 · 198 | 36 / 32 / 4 / 10 / 17 / 0 / 0 | 0.66 / 1.96 / 3.22 / 1.35 / 3.07 / 3.11 | 0.10 |  |
+|  | chase, pressure +200 | 80 | 37 / 39 / 1 / 3 | 15.9 | 95 % | 18 / 32 / 15 · 216 | 32 / 21 / 8 / 12 / 20 / 2 / 0 | 0.60 / 1.96 / 1.46 / 1.87 / 1.34 / 5.68 | 0.10 |  |
+| `groundfade=2,trapfade=2` | hunt | 160 | 78 / 82 / 0 / 0 | 5.4 | 89 % | 15 / 18 / 8 · 18 | 38 / 28 / 4 / 11 / 16 / 2 / 1 | 0.66 / 1.96 / 1.73 / 1.75 / 1.14 / 2.46 | 0.12 | 148 of 320 (46 %) |
+|  | chase | 160 | 81 / 78 / 1 / 0 | 6.2 | 77 % | 14 / 29 / 12 · 19 | 35 / 22 / 2 / 14 / 18 / 2 / 5 | 0.61 / 1.93 / 1.92 / 1.94 / 1.19 / 2.29 | 0.12 |  |
+|  | AiBrain | 160 | 88 / 68 / 4 / 0 | 8.7 | 56 % | 10 / 47 / 38 · 21 | 31 / 14 / 2 / 10 / 11 / 2 / 29 | 0.54 / 1.73 / 1.89 / 2.74 / 1.31 / 1.89 | 0.12 |  |
+|  | AiBrain + aggro | 160 | 80 / 80 / 0 / 0 | 6.2 | 80 % | 18 / 27 / 18 · 21 | 48 / 16 / 4 / 6 / 13 / 0 / 12 | 0.68 / 1.82 / 1.25 / 1.10 / 0.93 / 2.06 | 0.15 |  |
+|  | plan | 40 | 26 / 14 / 0 / 0 | 5.2 | 82 % | 20 / 22 / 10 · 12 | 38 / 25 / 8 / 18 / 5 / 2 / 2 | 0.67 / 1.86 / 1.72 / 1.44 / 1.54 / 1.73 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 38 / 42 / 0 / 0 | 5.7 | 100 % | 14 / 20 / 6 · 31 | 34 / 28 / 4 / 12 / 16 / 0 / 0 | 0.69 / 1.98 / 1.46 / 1.76 / 1.06 / 2.51 | 0.09 |  |
+|  | chase, pressure +200 | 80 | 40 / 37 / 1 / 2 | 10.7 | 98 % | 12 / 35 / 12 · 199 | 34 / 26 / 0 / 17 / 20 / 0 / 0 | 0.62 / 2.40 / 2.94 / 3.08 / 1.18 / 3.12 | 0.09 |  |
+| `groundfade=2,noshield` | hunt | 160 | 77 / 83 / 0 / 0 | 4.8 | 90 % | 19 / 14 / 5 · 19 | 36 / 24 / 4 / 16 / 17 / 1 / 2 | 0.63 / 1.78 / 1.47 / 0.70 / 1.18 / 2.60 | 0.15 | 159 of 320 (50 %) |
+|  | chase | 160 | 74 / 86 / 0 / 0 | 5.5 | 86 % | 19 / 23 / 11 · 19 | 36 / 24 / 5 / 10 / 18 / 3 / 4 | 0.61 / 1.79 / 1.38 / 0.70 / 1.11 / 2.36 | 0.15 |  |
+|  | AiBrain | 160 | 79 / 76 / 5 / 0 | 7.9 | 64 % | 13 / 38 / 35 · 20 | 29 / 18 / 2 / 10 / 10 / 1 / 32 | 0.51 / 1.63 / 1.20 / 0.74 / 1.13 / 1.91 | 0.15 |  |
+|  | AiBrain + aggro | 160 | 85 / 75 / 0 / 0 | 6.2 | 77 % | 18 / 26 / 18 · 20 | 36 / 22 / 2 / 8 / 14 / 0 / 17 | 0.63 / 1.68 / 0.98 / 0.57 / 0.89 / 1.99 | 0.15 |  |
+|  | plan | 40 | 25 / 15 / 0 / 0 | 5.3 | 85 % | 22 / 20 / 15 · 16 | 28 / 20 / 10 / 10 / 20 / 5 / 8 | 0.62 / 1.65 / 1.90 / 0.81 / 1.78 / 1.87 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 38 / 41 / 0 / 1 | 6.8 | 99 % | 15 / 12 / 2 · 198 | 36 / 20 / 4 / 16 / 22 / 0 / 0 | 0.61 / 1.75 / 3.00 / 0.66 / 2.95 / 2.83 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 35 / 44 / 0 / 1 | 18.0 | 94 % | 18 / 25 / 10 · 219 | 42 / 19 / 4 / 6 / 22 / 2 / 4 | 0.62 / 1.93 / 1.28 / 0.66 / 1.10 / 4.82 | 0.11 |  |
+| `groundfade=2,noshield,trapcap=1` | hunt | 160 | 72 / 86 / 2 / 0 | 4.5 | 95 % | 20 / 10 / 4 · 17 | 38 / 23 / 4 / 13 / 20 / 1 / 1 | 0.65 / 1.77 / 1.02 / 0.69 / 1.11 / 2.42 | 0.15 | 160 of 320 (50 %) |
+|  | chase | 160 | 76 / 84 / 0 / 0 | 5.4 | 86 % | 21 / 24 / 8 · 18 | 39 / 23 / 4 / 10 / 20 / 1 / 3 | 0.65 / 1.86 / 1.13 / 0.71 / 1.12 / 2.24 | 0.15 |  |
+|  | AiBrain | 160 | 78 / 77 / 5 / 0 | 7.2 | 70 % | 14 / 34 / 26 · 20 | 26 / 24 / 4 / 10 / 14 / 1 / 24 | 0.55 / 1.72 / 0.96 / 0.76 / 1.09 / 2.00 | 0.15 |  |
+|  | AiBrain + aggro | 160 | 82 / 78 / 0 / 0 | 5.6 | 84 % | 18 / 19 / 14 · 21 | 43 / 20 / 1 / 10 / 12 / 0 / 12 | 0.67 / 1.65 / 0.78 / 0.55 / 0.89 / 1.97 | 0.15 |  |
+|  | plan | 40 | 24 / 16 / 0 / 0 | 4.0 | 95 % | 22 / 8 / 2 · 12 | 30 / 15 / 10 / 8 / 35 / 0 / 0 | 0.68 / 1.63 / 1.19 / 0.81 / 1.10 / 1.85 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 34 / 45 / 1 / 0 | 4.7 | 100 % | 13 / 10 / 6 · 15 | 36 / 19 / 3 / 13 / 26 / 0 / 0 | 0.66 / 1.81 / 0.94 / 0.63 / 1.14 / 2.44 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 38 / 40 / 0 / 2 | 9.6 | 98 % | 18 / 26 / 9 · 199 | 41 / 24 / 4 / 8 / 22 / 0 / 0 | 0.66 / 1.95 / 1.40 / 0.67 / 1.47 / 3.29 | 0.11 |  |
+| **R** = `groundfade=2,trapfade=2,noshield` | hunt | 160 | 79 / 81 / 0 / 0 | 4.5 | 94 % | 19 / 11 / 3 · 13 | 38 / 25 / 5 / 13 / 16 / 0 / 0 | 0.65 / 1.77 / 1.47 / 0.70 / 1.10 / 2.44 | 0.15 | 155 of 320 (48 %) |
+|  | chase | 160 | 78 / 82 / 0 / 0 | 5.2 | 87 % | 19 / 20 / 8 · 17 | 41 / 23 / 2 / 13 / 17 / 2 / 2 | 0.63 / 1.82 / 1.62 / 0.70 / 1.14 / 2.23 | 0.15 |  |
+|  | AiBrain | 160 | 79 / 79 / 2 / 0 | 6.8 | 73 % | 13 / 29 / 22 · 20 | 34 / 24 / 2 / 11 / 11 / 1 / 17 | 0.56 / 1.79 / 1.57 / 0.74 / 1.18 / 2.06 | 0.15 |  |
+|  | AiBrain + aggro | 160 | 86 / 73 / 1 / 0 | 5.8 | 81 % | 18 / 22 / 16 · 20 | 44 / 20 / 2 / 8 / 14 / 1 / 11 | 0.68 / 1.73 / 1.11 / 0.57 / 0.91 / 2.03 | 0.15 |  |
+|  | plan | 40 | 22 / 18 / 0 / 0 | 4.4 | 90 % | 22 / 10 / 10 · 14 | 25 / 18 / 20 / 10 / 22 / 2 / 2 | 0.64 / 1.62 / 1.75 / 0.81 / 1.45 / 1.78 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 39 / 41 / 0 / 0 | 4.5 | 100 % | 15 / 12 / 2 · 13 | 39 / 22 / 6 / 14 / 18 / 0 / 0 | 0.64 / 1.81 / 1.33 / 0.65 / 1.12 / 2.44 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 38 / 41 / 0 / 1 | 7.6 | 99 % | 18 / 23 / 10 · 199 | 44 / 20 / 2 / 12 / 22 / 0 / 0 | 0.65 / 2.21 / 2.56 / 0.67 / 1.14 / 2.99 | 0.11 |  |
+| `groundfade=2,trapfade=2` + mire / blink | hunt | 160 | 81 / 79 / 0 / 0 | 5.3 | 83 % | 13 / 21 / 8 · 19 | 44 / 24 / 5 / 10 / 14 / 1 / 1 | 0.65 / 1.86 / 1.77 / 2.22 / 1.20 / 2.27 | 0.14 | 157 of 320 (49 %) |
+|  | chase | 160 | 82 / 78 / 0 / 0 | 5.9 | 80 % | 12 / 24 / 11 · 19 | 45 / 17 / 2 / 14 / 17 / 2 / 2 | 0.63 / 1.88 / 1.77 / 2.21 / 1.17 / 2.17 | 0.14 |  |
+|  | AiBrain | 160 | 73 / 84 / 3 / 0 | 7.7 | 68 % | 6 / 36 / 26 · 21 | 34 / 20 / 3 / 12 / 10 / 1 / 20 | 0.56 / 1.86 / 1.67 / 2.07 / 1.09 / 1.87 | 0.14 |  |
+|  | AiBrain + aggro | 160 | 86 / 73 / 1 / 0 | 6.4 | 74 % | 18 / 32 / 21 · 21 | 40 / 20 / 2 / 13 / 12 / 1 / 12 | 0.66 / 1.69 / 1.18 / 1.85 / 0.89 / 1.82 | 0.15 |  |
+|  | plan | 40 | 21 / 19 / 0 / 0 | 5.2 | 85 % | 22 / 25 / 12 · 14 | 38 / 20 / 8 / 12 / 15 / 2 / 2 | 0.71 / 1.74 / 1.59 / 2.25 / 1.47 / 1.77 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 41 / 39 / 0 / 0 | 5.3 | 100 % | 10 / 20 / 6 · 13 | 50 / 18 / 3 / 8 / 18 / 0 / 0 | 0.66 / 1.88 / 1.54 / 2.12 / 1.21 / 2.22 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 42 / 37 / 0 / 1 | 9.0 | 99 % | 12 / 29 / 13 · 199 | 46 / 18 / 2 / 14 / 18 / 0 / 0 | 0.65 / 2.40 / 2.83 / 2.35 / 1.18 / 2.97 | 0.10 |  |
+| `groundfade=2,trapcap=1` + mire / blink | hunt | 160 | 76 / 83 / 1 / 0 | 5.1 | 87 % | 14 / 18 / 7 · 17 | 42 / 24 / 5 / 10 / 18 / 1 / 1 | 0.65 / 1.77 / 1.07 / 1.99 / 1.14 / 2.12 | 0.14 | 150 of 320 (47 %) |
+|  | chase | 160 | 80 / 80 / 0 / 0 | 5.8 | 81 % | 14 / 24 / 12 · 20 | 41 / 22 / 4 / 13 / 15 / 3 / 3 | 0.62 / 1.84 / 1.09 / 2.15 / 1.11 / 2.03 | 0.14 |  |
+|  | AiBrain | 160 | 74 / 82 / 4 / 0 | 7.5 | 72 % | 8 / 37 / 23 · 24 | 33 / 22 / 2 / 9 / 15 / 1 / 20 | 0.58 / 1.76 / 0.99 / 2.07 / 1.06 / 1.81 | 0.14 |  |
+|  | AiBrain + aggro | 160 | 86 / 73 / 1 / 0 | 6.5 | 77 % | 18 / 32 / 19 · 21 | 42 / 18 / 1 / 11 / 13 / 1 / 14 | 0.66 / 1.72 / 0.86 / 1.87 / 0.95 / 1.81 | 0.15 |  |
+|  | plan | 40 | 22 / 17 / 1 / 0 | 4.8 | 85 % | 22 / 20 / 8 · 18 | 40 / 10 / 10 / 12 / 22 / 0 / 2 | 0.65 / 1.72 / 1.22 / 2.32 / 1.17 / 1.69 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 37 / 43 / 0 / 0 | 5.2 | 100 % | 9 / 19 / 6 · 15 | 46 / 19 / 4 / 10 / 20 / 0 / 0 | 0.66 / 1.80 / 0.96 / 1.96 / 1.16 / 2.18 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 38 / 39 / 0 / 3 | 15.1 | 95 % | 10 / 28 / 12 · 218 | 42 / 20 / 4 / 16 / 16 / 0 / 0 | 0.61 / 1.99 / 1.46 / 2.18 / 1.42 / 4.25 | 0.10 |  |
+| `groundfade=2` + bog / void_pull | hunt | 160 | 80 / 79 / 1 / 0 | 4.2 | 94 % | 25 / 8 / 3 · 19 | 29 / 23 / 9 / 14 / 23 / 1 / 0 | 0.53 / 1.53 / 1.22 / 1.83 / 1.08 / 2.03 | 0.16 | 156 of 320 (49 %) |
+|  | chase | 160 | 76 / 84 / 0 / 0 | 5.2 | 85 % | 24 / 20 / 13 · 19 | 34 / 14 / 8 / 17 / 20 / 4 / 4 | 0.52 / 1.56 / 1.37 / 1.93 / 1.13 / 1.93 | 0.15 |  |
+|  | AiBrain | 160 | 78 / 75 / 7 / 0 | 7.8 | 66 % | 16 / 38 / 32 · 20 | 24 / 12 / 5 / 10 / 15 / 1 / 30 | 0.47 / 1.47 / 1.18 / 1.83 / 1.03 / 1.65 | 0.14 |  |
+|  | AiBrain + aggro | 160 | 79 / 81 / 0 / 0 | 5.6 | 82 % | 25 / 24 / 16 · 19 | 31 / 15 / 4 / 15 / 18 / 2 / 13 | 0.57 / 1.42 / 1.07 / 1.57 / 0.92 / 1.69 | 0.17 |  |
+|  | plan | 40 | 25 / 15 / 0 / 0 | 5.6 | 82 % | 15 / 20 / 12 · 16 | 38 / 15 / 15 / 2 / 20 / 2 / 8 | 0.59 / 1.52 / 1.67 / 1.93 / 1.73 / 1.58 | 0.28 |  |
+|  | hunt, pressure +200 | 80 | 42 / 37 / 1 / 0 | 4.5 | 100 % | 23 / 9 / 4 · 23 | 30 / 16 / 14 / 10 / 28 / 0 / 0 | 0.53 / 1.52 / 1.25 / 1.85 / 1.16 / 2.05 | 0.12 |  |
+|  | chase, pressure +200 | 80 | 38 / 39 / 0 / 3 | 19.5 | 92 % | 22 / 26 / 18 · 216 | 34 / 17 / 8 / 16 / 20 / 2 / 2 | 0.53 / 1.61 / 3.21 / 1.87 / 2.97 / 5.06 | 0.11 |  |
+
+### Part D · build rules against R over eight seeds
+
+R = `groundfade=2,trapfade=2,noshield`. Seeds 1–8 (planning bot: seeds 1–4, 20 battles each). The rows after R compare it with the same set without a trap clock, with a trap limit instead, and with back-row starts and an HP floor of 3 added.
+
+| Variant | Bots (both sides) | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Collapse endings | Rounds under 3 / over 7 / over 10 (%) · longest |
+|---|---|---|---|---|---|---|---|
+| build rules | hunt | 320 | 154 / 164 / 2 / 0 | 7.6 | 68 % | 6 % | 15 / 35 / 28 · 22 |
+| build rules | chase | 320 | 145 / 174 / 1 / 0 | 8.3 | 61 % | 15 % | 12 / 43 / 36 · 21 |
+| build rules | AiBrain | 320 | 136 / 162 / 22 / 0 | 11.2 | 38 % | 60 % | 10 / 64 / 62 · 22 |
+| build rules | plan | 80 | 39 / 41 / 0 / 0 | 7.7 | 62 % | 26 % | 15 / 39 / 36 · 23 |
+| R | hunt | 320 | 161 / 159 / 0 / 0 | 4.6 | 94 % | 0 % | 18 / 11 / 3 · 14 |
+| R | chase | 320 | 154 / 166 / 0 / 0 | 5.2 | 86 % | 1 % | 16 / 20 / 8 · 17 |
+| R | AiBrain | 320 | 144 / 172 / 4 / 0 | 6.9 | 73 % | 16 % | 11 / 31 / 22 · 20 |
+| R | plan | 80 | 38 / 42 / 0 / 0 | 4.5 | 89 % | 4 % | 24 / 12 / 9 · 16 |
+| R without the trap clock (`groundfade=2,noshield`) | hunt | 320 | 158 / 162 / 0 / 0 | 4.9 | 90 % | 1 % | 18 / 14 / 6 · 19 |
+| R without the trap clock (`groundfade=2,noshield`) | chase | 320 | 147 / 173 / 0 / 0 | 5.6 | 84 % | 3 % | 16 / 24 / 12 · 19 |
+| R without the trap clock (`groundfade=2,noshield`) | AiBrain | 320 | 141 / 169 / 10 / 0 | 7.9 | 65 % | 29 % | 11 / 38 / 33 · 21 |
+| R without the trap clock (`groundfade=2,noshield`) | plan | 80 | 40 / 40 / 0 / 0 | 4.9 | 86 % | 5 % | 24 / 21 / 10 · 17 |
+| R with a trap limit instead (`groundfade=2,noshield,trapcap=1`) | hunt | 320 | 154 / 164 / 2 / 0 | 4.5 | 93 % | 1 % | 18 / 11 / 4 · 17 |
+| R with a trap limit instead (`groundfade=2,noshield,trapcap=1`) | chase | 320 | 154 / 166 / 0 / 0 | 5.3 | 86 % | 2 % | 18 / 21 / 8 · 18 |
+| R with a trap limit instead (`groundfade=2,noshield,trapcap=1`) | AiBrain | 320 | 144 / 167 / 9 / 0 | 7.2 | 71 % | 22 % | 12 / 34 / 26 · 20 |
+| R with a trap limit instead (`groundfade=2,noshield,trapcap=1`) | plan | 80 | 42 / 38 / 0 / 0 | 4.0 | 96 % | 0 % | 25 / 9 / 1 · 12 |
+| R + `startback,hpmin=3` | hunt | 320 | 151 / 168 / 1 / 0 | 4.9 | 89 % | 1 % | 12 / 15 / 4 · 15 |
+| R + `startback,hpmin=3` | chase | 320 | 154 / 165 / 1 / 0 | 5.4 | 86 % | 1 % | 11 / 21 / 6 · 21 |
+| R + `startback,hpmin=3` | AiBrain | 320 | 144 / 168 / 8 / 0 | 7.0 | 73 % | 17 % | 6 / 32 / 22 · 25 |
+| R + `startback,hpmin=3` | plan | 80 | 41 / 38 / 1 / 0 | 4.7 | 94 % | 2 % | 11 / 10 / 2 · 14 |
+
+Tool rows of seeds 1–4 (`hunt`, then `AiBrain`, then the planning bot), build rules first:
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| bots hunt | 3v3 · 1 · 40 | 20 / 20 / 0 / 0 | 8.3 | 58 % | 20 / 15 / 0 / 30 / 15 / 8 / 8 | 24 / 29 / 3 / 17 / 17 / 2 / 3 | 25 / 32 / 2 / 14 / 20 / 3 / 3 | 11.82 | 3.38 / 5.17 / 3.27 | 0.67 / 0.07 | 26.10 | 3.5 / 8.1 / 3.8 / 7.1 / 2.8 / 16.6 / 12.6 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.58 / 2.02 / 1.42 / 2.54 / 1.09 / 3.12 | Step 23 % | none | 15 / 1 / 1 / 0 | 15 / 43 / 35 · 20 | 1.1 | 0.03 |
+| bots hunt | 3v3 · 2 · 40 | 18 / 21 / 1 / 0 | 8.5 | 60 % | 20 / 25 / 3 / 15 / 13 / 15 / 8 | 25 / 25 / 6 / 14 / 21 / 3 / 3 | 24 / 32 / 3 / 13 / 20 / 3 / 2 | 11.50 | 3.42 / 4.67 / 3.40 | 0.71 / 0.08 | 25.57 | 3.2 / 7.5 / 4.0 / 7.7 / 3.0 / 16.4 / 12.9 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.54 / 1.89 / 1.47 / 2.71 / 1.21 / 3.04 | Step 24 % | none | 12 / 2 / 1 / 1 | 13 / 40 / 33 · 22 | 1.1 | 0.15 |
+| bots hunt | 3v3 · 3 · 40 | 14 / 25 / 1 / 0 | 7.0 | 70 % | 30 / 15 / 0 / 23 / 13 / 10 / 5 | 26 / 21 / 3 / 15 / 28 / 3 / 2 | 24 / 30 / 3 / 14 / 23 / 3 / 2 | 10.97 | 3.02 / 4.42 / 3.52 | 0.69 / 0.05 | 25.00 | 3.1 / 6.9 / 4.0 / 6.2 / 3.4 / 17.6 / 11.8 | 6.0 / 4.2 / 2.4 / 2.9 / 2.5 / 5.5 / 0.5 | 0.52 / 1.64 / 1.72 / 2.14 / 1.33 / 3.21 | Step 22 % | none | 8 / 1 / 1 / 1 | 20 / 30 / 23 · 20 | 1.0 | 0.12 |
+| bots hunt | 3v3 · 4 · 40 | 23 / 17 / 0 / 0 | 7.1 | 78 % | 33 / 28 / 0 / 15 / 8 / 8 / 10 | 26 / 31 / 1 / 15 / 18 / 3 / 5 | 24 / 34 / 1 / 14 / 18 / 4 / 3 | 11.85 | 3.45 / 4.62 / 3.77 | 0.69 / 0.04 | 25.10 | 3.4 / 7.5 / 4.3 / 6.0 / 4.1 / 16.4 / 14.2 | 6.0 / 3.9 / 2.8 / 2.5 / 2.8 / 5.2 / 0.8 | 0.56 / 1.94 / 1.54 / 2.39 / 1.46 / 3.12 | Step 25 % | none | 7 / 1 / 1 / 0 | 13 / 28 / 23 · 21 | 1.1 | 0.20 |
+| build rules | 3v3 · 1 · 40 | 22 / 15 / 3 / 0 | 11.9 | 30 % | 13 / 3 / 3 / 3 / 10 / 0 / 68 | 19 / 26 / 3 / 5 / 17 / 1 / 26 | 18 / 28 / 2 / 5 / 21 / 0 / 25 | 8.95 | 3.25 / 3.62 / 2.08 | 0.78 / 0.09 | 26.57 | 2.5 / 5.7 / 3.2 / 11.6 / 3.2 / 7.9 / 4.0 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.41 / 1.43 / 1.23 / 4.14 / 1.25 / 1.49 | bark_veil 15 % | none | 19 / 5 / 3 / 1 | 13 / 73 / 70 · 21 | 1.1 | 0.03 |
+| build rules | 3v3 · 2 · 40 | 21 / 17 / 2 / 0 | 12.6 | 25 % | 5 / 5 / 0 / 5 / 8 / 0 / 75 | 17 / 18 / 4 / 10 / 21 / 0 / 28 | 18 / 25 / 2 / 7 / 19 / 0 / 28 | 7.62 | 2.65 / 2.75 / 2.23 | 0.85 / 0.09 | 26.52 | 2.5 / 5.2 / 2.5 / 9.9 / 2.1 / 9.2 / 4.0 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.41 / 1.31 / 0.89 / 3.50 / 0.86 / 1.70 | bark_veil 15 % | none | 21 / 6 / 1 / 2 | 5 / 75 / 75 · 21 | 1.1 | 0.15 |
+| build rules | 3v3 · 3 · 40 | 16 / 23 / 1 / 0 | 8.5 | 60 % | 20 / 13 / 3 / 13 / 13 / 0 / 38 | 18 / 21 / 3 / 13 / 26 / 0 / 17 | 19 / 30 / 2 / 9 / 24 / 0 / 14 | 8.38 | 2.90 / 3.08 / 2.40 | 0.86 / 0.07 | 24.60 | 2.4 / 5.5 / 2.9 / 9.5 / 2.6 / 7.7 / 3.9 | 6.0 / 4.2 / 2.4 / 2.9 / 2.5 / 5.5 / 0.5 | 0.40 / 1.29 / 1.24 / 3.30 / 1.04 / 1.40 | bark_veil 12 % | none | 14 / 1 / 1 / 0 | 13 / 43 / 40 · 18 | 1.0 | 0.12 |
+| build rules | 3v3 · 4 · 40 | 20 / 18 / 2 / 0 | 10.5 | 43 % | 10 / 15 / 0 / 15 / 5 / 0 / 55 | 20 / 17 / 2 / 14 / 19 / 0 / 25 | 19 / 28 / 2 / 10 / 17 / 0 / 23 | 8.38 | 2.90 / 3.20 / 2.27 | 0.86 / 0.06 | 26.27 | 2.8 / 5.5 / 2.9 / 8.1 / 2.7 / 7.3 / 4.6 | 6.0 / 3.9 / 2.8 / 2.5 / 2.8 / 5.2 / 0.8 | 0.47 / 1.40 / 1.04 / 3.23 / 0.96 / 1.40 | Step 14 % | none | 18 / 0 / 3 / 2 | 10 / 58 / 58 · 20 | 1.1 | 0.20 |
+| bots plan | 3v3 · 1 · 20 | 11 / 9 / 0 / 0 | 9.9 | 40 % | 25 / 15 / 5 / 5 / 0 / 10 / 40 | 19 / 21 / 5 / 8 / 25 / 2 / 17 | 20 / 29 / 5 / 7 / 22 / 2 / 11 | 11.40 | 3.75 / 5.25 / 2.40 | 0.75 / 0.04 | 25.95 | 3.1 / 6.5 / 5.0 / 8.8 / 5.1 / 8.1 / 6.3 | 6.0 / 3.8 / 2.8 / 2.8 / 2.7 / 5.2 / 0.8 | 0.53 / 1.70 / 1.80 / 3.18 / 1.89 / 1.53 | Step 15 % | none | 11 / 1 / 0 / 0 | 15 / 60 / 60 · 20 | 1.1 | 0.15 |
+| bots plan | 3v3 · 2 · 20 | 8 / 12 / 0 / 0 | 6.2 | 75 % | 15 / 25 / 10 / 20 / 5 / 15 / 5 | 20 / 21 / 10 / 11 / 25 / 3 / 2 | 24 / 32 / 7 / 9 / 22 / 1 / 2 | 10.40 | 3.60 / 4.20 / 2.60 | 0.89 / 0.04 | 25.30 | 3.2 / 6.2 / 4.2 / 4.0 / 3.8 / 8.8 / 5.6 | 6.0 / 3.8 / 2.9 / 2.6 / 2.6 / 5.3 / 0.7 | 0.53 / 1.62 / 1.47 / 1.53 / 1.42 / 1.64 | Step 16 % | none | 2 / 2 / 1 / 0 | 25 / 30 / 25 · 18 | 1.1 | 0.35 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 1 · 40 | 19 / 21 / 0 / 0 | 5.0 | 90 % | 43 / 25 / 3 / 13 / 15 / 0 / 0 | 28 / 37 / 2 / 10 / 19 / 0 / 0 | 28 / 39 / 1 / 8 / 21 / 0 / 0 | 12.55 | 3.45 / 5.28 / 3.83 | 0.74 / 0.09 | 26.07 | 3.9 / 8.2 / 4.3 / 1.9 / 3.3 / 14.1 / 8.9 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.65 / 2.06 / 1.63 / 0.70 / 1.29 / 2.66 | Step 20 % | bark_veil, crucible, shade_veil | 3 / 1 / 0 / 0 | 15 / 20 / 5 · 13 | 1.0 | 0.07 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 2 · 40 | 20 / 20 / 0 / 0 | 4.0 | 95 % | 35 / 18 / 8 / 15 / 20 / 0 / 0 | 30 / 28 / 5 / 9 / 26 / 0 / 0 | 30 / 35 / 4 / 7 / 23 / 0 / 0 | 9.00 | 3.10 / 2.73 / 3.17 | 0.93 / 0.09 | 23.75 | 3.7 / 6.2 / 2.8 / 1.7 / 2.4 / 12.0 / 6.8 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.62 / 1.56 / 1.03 / 0.60 / 0.95 / 2.22 | Step 19 % | bark_veil, shade_veil | 2 / 0 / 0 / 0 | 15 / 5 / 0 · 10 | 1.1 | 0.15 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 3 · 40 | 14 / 26 / 0 / 0 | 4.1 | 98 % | 38 / 30 / 5 / 10 / 13 / 0 / 0 | 28 / 27 / 3 / 13 / 25 / 0 / 0 | 28 / 35 / 3 / 8 / 23 / 0 / 0 | 10.12 | 3.23 / 3.48 / 3.42 | 0.86 / 0.08 | 24.88 | 3.7 / 6.6 / 3.5 / 2.4 / 2.5 / 12.2 / 7.0 | 6.0 / 4.2 / 2.4 / 2.9 / 2.5 / 5.5 / 0.5 | 0.62 / 1.56 / 1.50 / 0.82 / 0.96 / 2.22 | Step 18 % | bark_veil, shade_veil | 0 / 0 / 1 / 0 | 25 / 5 / 3 · 11 | 1.0 | 0.17 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 4 · 40 | 26 / 14 / 0 / 0 | 4.8 | 95 % | 35 / 28 / 5 / 15 / 18 / 0 / 0 | 33 / 29 / 4 / 11 / 22 / 0 / 0 | 31 / 36 / 2 / 10 / 19 / 0 / 0 | 12.20 | 3.15 / 4.45 / 4.60 | 0.71 / 0.06 | 24.68 | 4.1 / 7.4 / 4.8 / 1.7 / 3.4 / 13.8 / 9.1 | 6.0 / 3.9 / 2.8 / 2.5 / 2.8 / 5.2 / 0.8 | 0.69 / 1.89 / 1.72 / 0.67 / 1.21 / 2.64 | Step 20 % | bark_veil, shade_veil | 1 / 0 / 1 / 0 | 20 / 15 / 3 · 11 | 1.1 | 0.23 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 1 · 40 | 19 / 21 / 0 / 0 | 7.2 | 68 % | 30 / 23 / 0 / 10 / 15 / 0 / 20 | 24 / 37 / 2 / 10 / 18 / 1 / 5 | 22 / 42 / 1 / 6 / 21 / 0 / 5 | 11.80 | 3.65 / 4.40 / 3.75 | 0.87 / 0.08 | 26.23 | 3.1 / 7.7 / 4.1 / 2.1 / 3.0 / 11.1 / 6.0 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.52 / 1.92 / 1.56 / 0.74 / 1.18 / 2.09 | Step 16 % | bark_veil, crucible, shade_veil | 9 / 2 / 2 / 0 | 13 / 33 / 25 · 20 | 1.1 | 0.05 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 2 · 40 | 21 / 18 / 1 / 0 | 7.3 | 73 % | 33 / 20 / 5 / 10 / 10 / 5 / 15 | 30 / 27 / 5 / 10 / 21 / 1 / 5 | 28 / 34 / 2 / 7 / 21 / 0 / 6 | 10.55 | 3.15 / 4.20 / 3.20 | 0.79 / 0.06 | 24.82 | 3.6 / 7.1 / 3.5 / 1.6 / 3.1 / 12.8 / 5.7 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.61 / 1.79 / 1.26 / 0.58 / 1.24 / 2.38 | Step 15 % | bark_veil, shade_veil | 8 / 2 / 1 / 0 | 8 / 33 / 23 · 19 | 1.1 | 0.15 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 3 · 40 | 16 / 24 / 0 / 0 | 6.3 | 73 % | 45 / 25 / 0 / 10 / 8 / 0 / 13 | 28 / 30 / 2 / 13 / 21 / 0 / 4 | 26 / 37 / 2 / 9 / 22 / 0 / 2 | 11.62 | 3.35 / 4.28 / 4.00 | 0.78 / 0.07 | 25.52 | 3.5 / 7.5 / 4.1 / 2.6 / 2.9 / 10.8 / 5.4 | 6.0 / 4.2 / 2.4 / 2.9 / 2.5 / 5.5 / 0.5 | 0.58 / 1.78 / 1.74 / 0.91 / 1.14 / 1.97 | Step 15 % | bark_veil, shade_veil | 8 / 3 / 0 / 0 | 13 / 28 / 18 · 17 | 1.0 | 0.17 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 4 · 40 | 23 / 16 / 1 / 0 | 6.4 | 78 % | 28 / 28 / 3 / 13 / 10 / 0 / 20 | 27 / 26 / 2 / 10 / 23 / 0 / 8 | 24 / 36 / 1 / 8 / 20 / 1 / 8 | 11.30 | 3.00 / 4.12 / 4.17 | 0.76 / 0.05 | 24.35 | 3.1 / 6.5 / 4.8 / 1.9 / 3.3 / 9.4 / 6.2 | 6.0 / 3.9 / 2.8 / 2.5 / 2.8 / 5.2 / 0.8 | 0.52 / 1.66 / 1.72 / 0.75 / 1.18 / 1.79 | Step 18 % | bark_veil, shade_veil | 4 / 2 / 2 / 1 | 18 / 23 / 20 · 19 | 1.1 | 0.23 |
+| groundfade=2,trapfade=2,noshield + bots plan | 3v3 · 1 · 20 | 11 / 9 / 0 / 0 | 4.1 | 95 % | 25 / 15 / 20 / 10 / 30 / 0 / 0 | 26 / 25 / 11 / 10 / 27 / 0 / 0 | 27 / 32 / 8 / 9 / 23 / 0 / 0 | 10.90 | 3.30 / 3.85 / 3.75 | 0.86 / 0.03 | 24.25 | 4.0 / 6.8 / 4.2 / 2.5 / 2.8 / 9.7 / 6.5 | 6.0 / 3.8 / 2.8 / 2.8 / 2.7 / 5.2 / 0.8 | 0.66 / 1.78 / 1.51 / 0.93 / 1.04 / 1.84 | Step 18 % | bark_veil, shade_veil | 1 / 0 / 0 / 0 | 20 / 5 / 5 · 11 | 1.1 | 0.15 |
+| groundfade=2,trapfade=2,noshield + bots plan | 3v3 · 2 · 20 | 11 / 9 / 0 / 0 | 4.8 | 85 % | 25 / 20 / 20 / 10 / 15 / 5 / 5 | 22 / 20 / 16 / 10 / 27 / 1 / 1 | 26 / 28 / 11 / 8 / 24 / 0 / 0 | 11.35 | 3.20 / 5.00 / 3.15 | 0.76 / 0.05 | 23.75 | 3.8 / 5.5 / 5.8 / 1.9 / 4.9 / 9.2 / 5.5 | 6.0 / 3.8 / 2.9 / 2.6 / 2.6 / 5.3 / 0.7 | 0.62 / 1.46 / 2.00 / 0.70 / 1.85 / 1.72 | Step 15 % | bark_veil, shade_veil | 3 / 0 / 0 / 0 | 25 / 15 / 15 · 14 | 1.1 | 0.35 |
+
+### Part E · what a skill kind is worth to the side that keeps it
+
+Both sides play the same bot; one side never uses the kind. Share of the 160 battles (seeds 1 and 2, both seatings) won by the side that keeps it; 50 % = the kind can be replaced by the other actions without loss.
+
+| Variant · bot | strike | surge | trap | zone | board | move |
+|---|---|---|---|---|---|---|
+| build rules · `hunt` | 70 % | 69 % | 54 % | 51 % | 47 % | 54 % |
+| R · `hunt` | 81 % | 70 % | 54 % | 50 % | 50 % | 56 % |
+| C (`groundfade=2,trapfade=2` + mire / blink) · `hunt` | 77 % | 71 % | 52 % | 50 % | 49 % | 58 % |
+| C · `plan` | — | — | 52 % | 58 % | 52 % | — |
+
+### Part F · cross-check in 2v2 and 1v1 (one run each; not tuned, user focus is 3v3)
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 2v2 · 1 · 60 | 25 / 32 / 3 / 0 | 6.9 | 65 % | 20 / 15 / 3 / 10 / 18 / 0 / 33 | 28 / 19 / 4 / 8 / 21 / 0 / 19 | 29 / 17 / 1 / 7 / 25 / 0 / 20 | 4.40 | 1.02 / 1.90 / 1.48 | 0.52 / 0.11 | 15.40 | 2.3 / 2.8 / 1.6 / 4.4 / 1.2 / 5.4 / 3.2 | 4.0 / 2.7 / 1.6 / 1.8 / 1.9 / 3.6 / 0.4 | 0.58 / 1.06 / 0.95 / 2.38 / 0.63 / 1.51 | Step 15 % | crucible | 16 / 0 / 5 / 0 | 28 / 35 / 33 · 18 | 1.4 | 0.20 |
+| groundfade=2,trapfade=2,noshield | 2v2 · 1 · 60 | 23 / 34 / 3 / 0 | 5.1 | 75 % | 42 / 22 / 2 / 3 / 22 / 0 / 8 | 39 / 21 / 2 / 5 / 26 / 0 / 5 | 42 / 19 / 1 / 5 / 29 / 0 / 3 | 5.70 | 1.03 / 2.52 / 2.15 | 0.45 / 0.09 | 15.07 | 3.3 / 3.7 / 2.0 / 1.7 / 1.5 / 6.7 / 4.3 | 4.0 / 2.7 / 1.6 / 1.8 / 1.9 / 3.6 / 0.4 | 0.83 / 1.38 / 1.23 / 0.95 / 0.81 / 1.86 | Step 18 % | bark_veil, crucible, shade_veil | 9 / 2 / 4 / 0 | 30 / 25 / 13 · 13 | 1.2 | 0.20 |
+| bots hunt | 2v2 · 1 · 60 | 22 / 38 / 0 / 0 | 4.1 | 90 % | 33 / 20 / 2 / 17 / 22 / 2 / 3 | 37 / 20 / 4 / 11 / 25 / 1 / 1 | 39 / 19 / 1 / 11 / 27 / 0 / 1 | 5.68 | 1.22 / 2.40 / 2.07 | 0.45 / 0.09 | 15.37 | 3.1 / 3.8 / 1.9 / 3.3 / 1.6 / 7.6 / 5.5 | 4.0 / 2.7 / 1.6 / 1.8 / 1.9 / 3.6 / 0.4 | 0.78 / 1.43 / 1.14 / 1.80 / 0.86 / 2.12 | Step 21 % | none | 5 / 1 / 0 / 0 | 30 / 10 / 5 · 15 | 1.3 | 0.20 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 2v2 · 1 · 60 | 24 / 35 / 1 / 0 | 3.8 | 93 % | 30 / 22 / 3 / 10 / 35 / 0 / 0 | 35 / 21 / 5 / 7 / 31 / 0 / 0 | 41 / 21 / 2 / 7 / 29 / 0 / 0 | 5.92 | 1.23 / 2.28 / 2.40 | 0.49 / 0.11 | 15.48 | 3.3 / 3.8 / 2.1 / 1.9 / 1.4 / 8.0 / 5.2 | 4.0 / 2.7 / 1.6 / 1.8 / 1.9 / 3.6 / 0.4 | 0.82 / 1.43 / 1.28 / 1.02 / 0.78 / 2.24 | Step 20 % | bark_veil, shade_veil | 3 / 0 / 1 / 0 | 28 / 7 / 0 · 9 | 1.2 | 0.20 |
+| build rules | 1v1 · 1 · 100 | 45 / 54 / 1 / 0 | 4.2 | 77 % | 38 / 3 / 2 / 2 / 33 / 0 / 22 | 38 / 3 / 2 / 2 / 33 / 0 / 23 | 50 / 2 / 1 / 3 / 24 / 0 / 20 | 1.31 | 0.10 / 0.67 / 0.54 | 0.15 / 0.00 | 6.41 | 1.6 / 0.9 / 0.4 / 2.1 / 0.4 / 2.3 / 0.6 | 2.0 / 1.3 / 0.8 / 0.9 / 0.9 / 1.8 / 0.2 | 0.80 / 0.65 / 0.52 / 2.31 / 0.45 / 1.29 | strike_jab 19 % | cinder_dive | 21 / 0 / 2 / 0 | 61 / 22 / 17 · 17 | 4.2 | 0.05 |
+| groundfade=2,trapfade=2,noshield | 1v1 · 1 · 100 | 41 / 59 / 0 / 0 | 3.0 | 89 % | 50 / 4 / 3 / 1 / 32 / 0 / 10 | 50 / 4 / 3 / 1 / 32 / 0 / 10 | 60 / 3 / 1 / 2 / 24 / 1 / 9 | 1.48 | 0.10 / 0.63 / 0.75 | 0.17 / 0.01 | 6.03 | 1.8 / 1.0 / 0.5 / 0.3 / 0.5 / 2.6 / 0.7 | 2.0 / 1.3 / 0.8 / 0.9 / 0.9 / 1.8 / 0.2 | 0.90 / 0.72 / 0.61 / 0.38 / 0.58 / 1.43 | strike_jab 24 % | bark_veil, cinder_dive, crucible, shade_veil | 11 / 0 / 0 / 0 | 73 / 11 / 7 · 16 | 3.0 | 0.05 |
+| bots hunt | 1v1 · 1 · 100 | 42 / 58 / 0 / 0 | 2.6 | 97 % | 52 / 7 / 1 / 3 / 35 / 0 / 1 | 52 / 7 / 1 / 3 / 35 / 0 / 1 | 64 / 5 / 1 / 3 / 25 / 0 / 1 | 1.92 | 0.18 / 0.72 / 1.02 | 0.18 / 0.02 | 6.37 | 2.1 / 1.2 / 0.7 / 1.0 / 0.4 / 3.3 / 1.9 | 2.0 / 1.3 / 0.8 / 0.9 / 0.9 / 1.8 / 0.2 | 1.03 / 0.92 / 0.82 / 1.10 / 0.40 / 1.80 | strike_jab 20 % | none | 3 / 0 / 0 / 0 | 68 / 3 / 2 · 13 | 2.6 | 0.05 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 1v1 · 1 · 100 | 41 / 59 / 0 / 0 | 2.2 | 98 % | 59 / 4 / 2 / 1 / 32 / 1 / 0 | 59 / 4 / 2 / 1 / 32 / 1 / 0 | 70 / 4 / 1 / 1 / 24 / 0 / 0 | 1.95 | 0.12 / 0.61 / 1.22 | 0.15 / 0.00 | 6.06 | 2.1 / 1.2 / 0.8 / 0.4 / 0.4 / 2.9 / 1.5 | 2.0 / 1.3 / 0.8 / 0.9 / 0.9 / 1.8 / 0.2 | 1.06 / 0.87 / 0.94 / 0.44 / 0.40 / 1.59 | strike_jab 23 % | bark_veil, shade_veil | 2 / 0 / 0 / 0 | 76 / 2 / 1 · 11 | 2.2 | 0.05 |
+
+### Part G · the opening: battles under 3 rounds, first blood, fixed layout
+
+Single switches on R (seeds 1 and 2, columns as in part A):
+
+| Variant | Wins of `hunt` against the waiting `AiBrain` (160 battles) | `hunt` on both sides: mean rounds | Ended before pressure | Collapse endings | Rounds under 3 / over 7 / over 10 (%) · longest |
+|---|---|---|---|---|---|
+| R | 51 % | 4.5 | 92 % | 0 % | 15 / 12 / 2 · 13 |
+| R + `turns=3` | 49 % | 5.2 | 85 % | 0 % | 15 / 18 / 8 · 13 |
+| R + `move=2` | 46 % | 6.2 | 80 % | 0 % | 5 / 28 / 12 · 18 |
+| R + `move=2,step=2` | 45 % | 6.9 | 70 % | 0 % | 9 / 35 / 14 · 23 |
+| R + `startback,move=2` | 51 % | 5.9 | 86 % | 0 % | 6 / 18 / 10 · 17 |
+| R + `startback,hpmin=3` | 52 % | 5.2 | 90 % | 2 % | 5 / 13 / 6 · 14 |
+| R + `hpmin=3,move=2` | 42 % | 5.8 | 88 % | 0 % | 2 / 18 / 9 · 14 |
+| R + `startback,hpmin=3,move=2` | 49 % | 6.0 | 86 % | 0 % | 4 / 19 / 9 · 19 |
+
+Over four seeds (columns as in part C):
+
+| Variant | Bots (both sides) | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Rounds under 3 / over 7 / over 10 (%) · longest | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | Uses per slot and battle: strike / surge / trap / zone / board / move | Defeated before own first turn (per battle) | Wins of `hunt` against the waiting `AiBrain` |
+|---|---|---|---|---|---|---|---|---|---|---|
+| R + `hpmin=3` | hunt | 160 | 80 / 79 / 1 / 0 | 4.8 | 89 % | 18 / 15 / 4 · 16 | 34 / 30 / 4 / 13 / 18 / 2 / 1 | 0.64 / 1.87 / 1.72 / 0.75 / 1.22 / 2.49 | 0.17 | 161 of 320 (50 %) |
+|  | chase | 160 | 80 / 80 / 0 / 0 | 5.4 | 87 % | 15 / 16 / 9 · 20 | 42 / 24 / 1 / 12 / 16 / 2 / 1 | 0.65 / 1.85 / 1.78 / 0.78 / 1.40 / 2.28 | 0.17 |  |
+|  | AiBrain | 160 | 70 / 86 / 4 / 0 | 6.8 | 72 % | 11 / 31 / 21 · 20 | 32 / 22 / 1 / 12 / 16 / 1 / 17 | 0.56 / 1.84 / 1.57 / 0.81 / 1.24 / 2.08 | 0.16 |  |
+|  | AiBrain + aggro | 160 | 87 / 72 / 1 / 0 | 5.7 | 81 % | 16 / 22 / 15 · 20 | 45 / 20 / 2 / 10 / 11 / 1 / 10 | 0.69 / 1.78 / 1.13 / 0.55 / 1.06 / 2.01 | 0.16 |  |
+|  | plan | 40 | 19 / 21 / 0 / 0 | 4.5 | 92 % | 18 / 8 / 8 · 13 | 28 / 20 / 10 / 12 / 22 / 0 / 5 | 0.66 / 1.57 / 1.85 / 0.95 / 1.45 / 1.82 | 0.25 |  |
+|  | hunt, pressure +200 | 80 | 39 / 40 / 0 / 1 | 7.2 | 99 % | 14 / 16 / 3 · 197 | 36 / 20 / 6 / 16 / 22 / 0 / 0 | 0.64 / 1.91 / 3.20 / 0.70 / 3.00 / 2.47 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 39 / 39 / 0 / 2 | 10.4 | 98 % | 12 / 16 / 12 · 197 | 50 / 22 / 0 / 10 / 12 / 0 / 0 | 0.66 / 1.97 / 6.57 / 0.70 / 5.93 / 2.42 | 0.11 |  |
+| R + `startback` | hunt | 160 | 74 / 86 / 0 / 0 | 5.3 | 89 % | 15 / 17 / 7 · 17 | 41 / 22 / 2 / 20 / 15 / 0 / 1 | 0.62 / 1.88 / 1.80 / 0.85 / 1.06 / 2.76 | 0.12 | 155 of 320 (48 %) |
+|  | chase | 160 | 77 / 83 / 0 / 0 | 5.6 | 83 % | 14 / 24 / 10 · 21 | 46 / 21 / 3 / 12 / 18 / 0 / 1 | 0.63 / 1.88 / 1.67 / 0.90 / 1.04 / 2.56 | 0.12 |  |
+|  | AiBrain | 160 | 74 / 85 / 1 / 0 | 7.2 | 68 % | 14 / 38 / 24 · 25 | 40 / 20 / 3 / 8 / 11 / 0 / 17 | 0.59 / 1.78 / 1.60 / 0.89 / 0.95 / 2.26 | 0.12 |  |
+|  | AiBrain + aggro | 160 | 81 / 77 / 2 / 0 | 5.8 | 81 % | 12 / 23 / 13 · 19 | 46 / 20 / 2 / 11 / 12 / 0 / 10 | 0.68 / 1.65 / 1.21 / 0.80 / 0.90 / 2.19 | 0.14 |  |
+|  | plan | 40 | 23 / 17 / 0 / 0 | 4.8 | 92 % | 8 / 8 / 2 · 20 | 30 / 30 / 8 / 10 / 20 / 0 / 2 | 0.66 / 1.62 / 1.37 / 0.79 / 1.38 / 2.15 | 0.28 |  |
+|  | hunt, pressure +200 | 80 | 39 / 39 / 0 / 2 | 9.4 | 98 % | 15 / 18 / 8 · 198 | 40 / 20 / 2 / 20 / 18 / 0 / 0 | 0.62 / 2.37 / 4.70 / 0.79 / 2.44 / 3.45 | 0.11 |  |
+|  | chase, pressure +200 | 80 | 40 / 40 / 0 / 0 | 5.5 | 100 % | 12 / 24 / 8 · 17 | 44 / 16 / 4 / 12 / 26 / 0 / 0 | 0.65 / 1.91 / 1.48 / 0.85 / 1.08 / 2.52 | 0.11 |  |
+| R + `startback,hpmin=3` | hunt | 160 | 78 / 81 / 1 / 0 | 5.1 | 89 % | 10 / 16 / 6 · 15 | 39 / 24 / 1 / 14 / 20 / 0 / 2 | 0.67 / 1.94 / 1.56 / 0.96 / 1.08 / 2.77 | 0.13 | 157 of 320 (49 %) |
+|  | chase | 160 | 86 / 74 / 0 / 0 | 5.7 | 84 % | 10 / 24 / 8 · 21 | 44 / 23 / 3 / 12 / 16 / 2 / 2 | 0.67 / 1.97 / 1.88 / 0.97 / 1.16 / 2.69 | 0.13 |  |
+|  | AiBrain | 160 | 73 / 85 / 2 / 0 | 7.1 | 72 % | 6 / 33 / 23 · 25 | 36 / 18 / 2 / 13 / 14 / 2 / 16 | 0.65 / 1.84 / 1.56 / 0.94 / 1.08 / 2.26 | 0.13 |  |
+|  | AiBrain + aggro | 160 | 81 / 78 / 1 / 0 | 6.3 | 76 % | 12 / 27 / 16 · 20 | 42 / 20 / 2 / 13 / 11 / 1 / 12 | 0.69 / 1.77 / 1.36 / 0.89 / 0.92 / 2.25 | 0.14 |  |
+|  | plan | 40 | 22 / 17 / 1 / 0 | 4.8 | 95 % | 8 / 8 / 2 · 14 | 42 / 25 / 2 / 12 / 15 / 0 / 2 | 0.68 / 1.64 / 1.31 / 0.87 / 1.25 / 2.19 | 0.28 |  |
+|  | hunt, pressure +200 | 80 | 37 / 42 / 0 / 1 | 7.5 | 99 % | 5 / 13 / 6 · 198 | 42 / 19 / 0 / 15 / 24 / 0 / 0 | 0.70 / 1.97 / 2.78 / 0.90 / 2.02 / 2.83 | 0.12 |  |
+|  | chase, pressure +200 | 80 | 40 / 39 / 0 / 1 | 8.3 | 99 % | 5 / 26 / 9 · 198 | 42 / 24 / 3 / 12 / 20 / 0 / 0 | 0.66 / 2.12 / 3.74 / 0.93 / 2.86 / 3.06 | 0.12 |  |
+| R + `hpmin=3,move=2` | hunt | 160 | 80 / 80 / 0 / 0 | 5.7 | 89 % | 5 / 16 / 8 · 18 | 34 / 27 / 3 / 18 / 14 / 0 / 1 | 0.50 / 2.32 / 1.63 / 1.09 / 1.12 / 1.86 | 0.08 | 141 of 320 (44 %) |
+|  | chase | 160 | 79 / 80 / 1 / 0 | 6.1 | 83 % | 6 / 24 / 14 · 19 | 27 / 36 / 3 / 18 / 11 / 4 / 0 | 0.43 / 2.20 / 1.88 / 1.09 / 1.22 / 1.72 | 0.08 |  |
+|  | AiBrain | 160 | 73 / 81 / 6 / 0 | 8.0 | 68 % | 4 / 39 / 27 · 22 | 31 / 20 / 1 / 19 / 8 / 2 / 18 | 0.43 / 2.24 / 1.87 / 1.09 / 1.21 / 1.72 | 0.08 |  |
+|  | AiBrain + aggro | 160 | 90 / 70 / 0 / 0 | 6.7 | 74 % | 8 / 31 / 20 · 20 | 36 / 23 / 2 / 14 / 14 / 0 / 12 | 0.56 / 2.06 / 1.47 / 0.89 / 1.23 / 1.59 | 0.07 |  |
+|  | plan | 40 | 19 / 21 / 0 / 0 | 5.0 | 90 % | 12 / 15 / 5 · 14 | 30 / 20 / 2 / 22 / 25 / 0 / 0 | 0.53 / 2.17 / 2.01 / 1.42 / 1.58 / 0.92 | 0.08 |  |
+|  | hunt, pressure +200 | 80 | 45 / 35 / 0 / 0 | 5.8 | 100 % | 2 / 18 / 9 · 14 | 33 / 32 / 4 / 14 / 14 / 0 / 0 | 0.52 / 2.38 / 1.55 / 1.06 / 1.16 / 1.90 | 0.07 |  |
+|  | chase, pressure +200 | 80 | 47 / 33 / 0 / 0 | 6.2 | 100 % | 2 / 24 / 16 · 19 | 30 / 39 / 3 / 15 / 12 / 0 / 0 | 0.48 / 2.26 / 1.75 / 1.08 / 1.21 / 1.70 | 0.07 |  |
+
+
+Further single causes tried on R (seeds 1 and 2, columns as in part A): two turns per round and repeated casting.
+
+| Variant | Wins of `hunt` against the waiting `AiBrain` (160 battles) | `hunt` on both sides: mean rounds | Ended before pressure | Collapse endings | Rounds under 3 / over 7 / over 10 (%) · longest |
+|---|---|---|---|---|---|
+| R + `tprmax=1` (every monster one turn per round) | 46 % | 4.8 | 90 % | 0 % | 14 / 16 / 2 · 11 |
+| R + `tprmax=1,apmin=3` | 48 % | 5.3 | 88 % | 2 % | 14 / 16 / 9 · 17 |
+| R + `tprmax=1,apmin=3,hpmin=3,startback` | 54 % | 5.0 | 96 % | 0 % | 8 / 12 / 4 · 18 |
+| R + `zoneonce` (zone skills once per round) | 55 % | 4.6 | 92 % | 0 % | 16 / 16 / 4 · 12 |
+| R + `castonce` (zone, Surge, trap and board skills once per round) | 45 % | 4.8 | 92 % | 0 % | 14 / 13 / 0 · 10 |
+| R + `zoneonce,startback,hpmin=3` | 50 % | 5.6 | 88 % | 0 % | 2 / 20 / 6 · 16 |
+| R + `castonce,startback,hpmin=3` | 51 % | 5.2 | 85 % | 0 % | 9 / 20 / 6 · 16 |
+| `groundfade=2,trapfade=2,castonce` (shields kept) | 50 % | 5.9 | 79 % | 0 % | 13 / 26 / 12 · 16 |
+
+How a defeat in round 1 comes about (events of traced battles under R): a fast monster goes in with Step and its movement skill, the other side answers with what costs 1 AP and needs no waiting: a push zone cast twice in one turn (each cast moves the monsters in it and deals 1 collision damage to both colliding monsters), the ring push of Quake Leap, a Jab; 2 HP are gone after two such hits.
+
+First blood (full-block runs with `SIM_DEBUG`, seeds 1–4, 160 battles each): the side that defeats the first monster wins 99 of 158 decided battles under the build rules and 109 of 160 under R with `hunt` (63 % / 68 %), 104 of 159 and 102 of 160 with `chase` (65 % / 64 %); 95–96 % of all battles have a defeat in round 1.
+
+Fixed test layout instead of seeded boards (`--board layout`), build rules then R, `AiBrain` then `hunt`:
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 21 / 18 / 1 / 0 | 12.6 | 25 % | 10 / 8 / 0 / 0 / 3 / 0 / 75 | 17 / 17 / 3 / 6 / 21 / 0 / 29 | 17 / 22 / 2 / 6 / 21 / 0 / 28 | 8.35 | 2.45 / 3.65 / 2.25 | 0.69 / 0.08 | 26.75 | 2.5 / 4.7 / 3.6 / 11.0 / 3.0 / 7.8 / 4.5 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.41 / 1.18 / 1.37 / 3.94 / 1.16 / 1.48 | bark_veil 14 % | none | 27 / 1 / 2 / 0 | 10 / 78 / 75 · 20 | 1.2 | 0.05 |
+| build rules | 3v3 · 2 · 40 | 25 / 13 / 2 / 0 | 12.3 | 30 % | 0 / 8 / 0 / 8 / 13 / 3 / 68 | 13 / 21 / 2 / 9 / 18 / 1 / 30 | 13 / 27 / 1 / 5 / 20 / 0 / 30 | 7.35 | 2.60 / 2.67 / 2.08 | 0.92 / 0.07 | 25.57 | 1.8 / 4.5 / 2.9 / 11.1 / 2.1 / 7.0 / 3.6 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.29 / 1.14 / 1.04 / 3.91 / 0.85 / 1.30 | bark_veil 16 % | none | 17 / 6 / 5 / 0 | 13 / 70 / 70 · 22 | 1.1 | 0.25 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 1 · 40 | 20 / 19 / 1 / 0 | 8.9 | 60 % | 25 / 13 / 0 / 5 / 15 / 0 / 35 | 27 / 20 / 4 / 7 / 22 / 0 / 11 | 23 / 30 / 2 / 5 / 21 / 0 / 12 | 12.40 | 2.88 / 5.85 / 3.67 | 0.62 / 0.06 | 25.73 | 3.1 / 7.0 / 5.4 / 1.8 / 3.8 / 10.3 / 6.3 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.51 / 1.76 / 2.03 / 0.64 / 1.47 / 1.94 | Step 17 % | bark_veil, shade_veil | 12 / 3 / 1 / 0 | 13 / 45 / 35 · 20 | 1.1 | 0.07 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 2 · 40 | 20 / 18 / 2 / 0 | 7.7 | 68 % | 28 / 8 / 5 / 20 / 15 / 0 / 23 | 21 / 23 / 3 / 12 / 24 / 0 / 8 | 21 / 34 / 2 / 6 / 24 / 0 / 7 | 11.72 | 3.12 / 4.67 / 3.92 | 0.74 / 0.04 | 25.75 | 3.0 / 7.2 / 4.5 / 1.6 / 2.9 / 11.4 / 5.7 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.50 / 1.84 / 1.63 / 0.58 / 1.15 / 2.12 | Step 16 % | bark_veil, shade_veil | 8 / 2 / 2 / 1 | 10 / 35 / 28 · 18 | 1.1 | 0.25 |
+| bots hunt | 3v3 · 1 · 40 | 20 / 20 / 0 / 0 | 7.4 | 70 % | 23 / 15 / 0 / 20 / 18 / 13 / 3 | 26 / 23 / 3 / 15 / 20 / 3 / 2 | 22 / 31 / 1 / 13 / 22 / 2 / 1 | 11.78 | 3.30 / 5.10 / 3.38 | 0.65 / 0.05 | 25.48 | 3.0 / 7.1 / 4.7 / 6.1 / 3.3 / 14.6 / 13.9 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.50 / 1.77 / 1.76 / 2.17 / 1.29 / 2.75 | Step 26 % | none | 10 / 2 / 0 / 0 | 15 / 38 / 28 · 19 | 1.1 | 0.05 |
+| bots hunt | 3v3 · 2 · 40 | 17 / 23 / 0 / 0 | 9.3 | 58 % | 18 / 8 / 3 / 28 / 15 / 23 / 8 | 23 / 22 / 2 / 16 / 21 / 5 / 2 | 20 / 29 / 2 / 14 / 23 / 3 / 4 | 10.55 | 2.95 / 4.08 / 3.52 | 0.67 / 0.06 | 24.98 | 2.6 / 7.3 / 3.2 / 7.6 / 1.9 / 18.4 / 14.6 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.44 / 1.85 / 1.18 / 2.70 / 0.79 / 3.41 | Step 26 % | none | 12 / 3 / 2 / 0 | 18 / 48 / 40 · 22 | 1.1 | 0.23 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 1 · 40 | 23 / 17 / 0 / 0 | 5.0 | 88 % | 40 / 13 / 0 / 10 / 30 / 0 / 0 | 31 / 26 / 3 / 10 / 24 / 0 / 0 | 27 / 34 / 2 / 7 / 23 / 0 / 0 | 12.28 | 3.00 / 5.15 / 4.12 | 0.67 / 0.06 | 25.32 | 3.6 / 7.9 / 4.4 / 1.5 / 2.9 / 14.2 / 9.5 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.60 / 1.97 / 1.66 / 0.54 / 1.13 / 2.67 | Step 22 % | bark_veil, shade_veil | 3 / 2 / 0 / 0 | 13 / 18 / 5 · 12 | 1.1 | 0.07 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 2 · 40 | 20 / 20 / 0 / 0 | 4.6 | 93 % | 28 / 28 / 5 / 15 / 23 / 0 / 0 | 23 / 32 / 4 / 10 / 25 / 0 / 0 | 23 / 38 / 2 / 8 / 24 / 0 / 0 | 10.55 | 3.20 / 3.52 / 3.83 | 0.85 / 0.06 | 24.30 | 3.0 / 7.2 / 3.3 / 1.5 / 1.9 / 13.7 / 8.1 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.49 / 1.83 / 1.21 / 0.54 / 0.79 / 2.53 | Step 21 % | bark_veil, shade_veil | 2 / 1 / 0 / 0 | 18 / 10 / 3 · 13 | 1.1 | 0.23 |
+
+### Part H · fixed teams: three slow, sturdy monsters on both sides, and against three fragile ones
+
+Forge Golem, Moss Turtle and Hollow Serpent (23 HP, Movement 1–2) on both sides, seeded boards, `hunt` on both sides, seeds 1 and 2 (80 battles per row; `--team-a forge_golem,moss_turtle,hollow_serpent --board seeded`):
+
+| Variant | Mean rounds | Ended before pressure | Collapse endings | Rounds under 3 / over 7 / over 10 (%) · longest |
+|---|---|---|---|---|
+| build rules | 16.1 | 4 % | 20 % | 0 / 96 / 88 · 25 |
+| R | 8.8 | 59 % | 0 % | 0 / 54 / 26 · 20 |
+| R + `hpmax=6` | 7.9 | 64 % | 0 % | 0 / 52 / 12 · 20 |
+| R + `hpmax=5` | 7.8 | 68 % | 0 % | 2 / 48 / 15 · 20 |
+| R + `hp=-1` | 7.8 | 72 % | 2 % | 0 / 46 / 15 · 18 |
+| R + `hp=-2` | 7.2 | 74 % | 0 % | 0 / 40 / 10 · 16 |
+| R + `jab=1` | 7.3 | 75 % | 0 % | 0 / 39 / 12 · 19 |
+| R + `turns=1` | 7.2 | 74 % | 2 % | 0 / 39 / 8 · 19 |
+| R + `strikedmg=3` | 8.2 | 65 % | 0 % | 0 / 52 / 20 · 21 |
+| R + `surgedmg=1` | 8.7 | 59 % | 0 % | 0 / 55 / 24 · 21 |
+| R + `push=2` | 8.2 | 62 % | 0 % | 0 / 54 / 20 · 17 |
+| R + `softpressure=2` | 8.0 | 59 % | 0 % | 0 / 54 / 16 · 12 |
+| `groundfade=2,trapfade=2` + strike_arc for Bark Veil | 8.6 | 62 % | 2 % | 0 / 53 / 30 · 21 |
+| `groundfade=2,trapfade=2` + mire for Bark Veil | 10.1 | 34 % | 2 % | 0 / 83 / 42 · 20 |
+
+The same team with `AiBrain` on both sides, and against Dusk Moth, Ember Hawk and Thorn Mites (`--team-b`, `hunt`), build rules then R:
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 5 / 5 / 30 / 0 | 20.4 | 0 % | 0 / 0 / 0 / 0 / 0 / 3 / 98 | 3 / 4 / 0 / 8 / 0 / 1 / 84 | 3 / 11 / 0 / 7 / 1 / 1 / 75 | 8.07 | 2.85 / 2.20 / 3.02 | 0.63 / 0.01 | 45.45 | 0.8 / 5.0 / 3.1 / 31.0 / 0.1 / 4.7 / 10.5 | 6.0 / 4.0 / 4.0 / 2.0 / 2.0 / 4.0 / 2.0 | 0.13 / 1.24 / 0.78 / 15.49 / 0.07 / 1.16 | bark_veil 56 % | none | 6 / 3 / 17 / 14 | 0 / 100 / 100 · 25 | 10.3 | 0.00 |
+| build rules | 3v3 · 2 · 40 | 6 / 2 / 32 / 0 | 19.8 | 0 % | 0 / 0 / 0 / 0 / 0 / 0 / 100 | 3 / 7 / 1 / 7 / 0 / 0 / 81 | 5 / 13 / 1 / 7 / 1 / 0 / 73 | 8.20 | 3.35 / 2.00 / 2.85 | 0.77 / 0.02 | 46.17 | 1.2 / 5.2 / 3.0 / 30.1 / 0.5 / 4.0 / 8.4 | 6.0 / 4.0 / 4.0 / 2.0 / 2.0 / 4.0 / 2.0 | 0.20 / 1.31 / 0.74 / 15.03 / 0.25 / 0.99 | bark_veil 57 % | none | 6 / 2 / 18 / 14 | 0 / 100 / 100 · 23 | 8.3 | 0.00 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 1 · 40 | 20 / 10 / 10 / 0 | 15.1 | 8 % | 23 / 15 / 3 / 0 / 10 / 3 / 48 | 22 / 26 / 3 / 18 / 6 / 1 / 23 | 21 / 41 / 2 / 10 / 6 / 1 / 17 | 23.35 | 7.03 / 8.38 / 7.95 | 0.75 / 0.05 | 43.15 | 4.8 / 15.5 / 7.8 / 0.0 / 1.2 / 12.6 / 18.3 | 6.0 / 4.0 / 4.0 / 2.0 / 2.0 / 4.0 / 2.0 | 0.79 / 3.88 / 1.96 / 0.00 / 0.61 / 3.14 | Step 30 % | bark_veil | 21 / 6 / 6 / 4 | 0 / 95 / 80 · 22 | 4.1 | 0.00 |
+| groundfade=2,trapfade=2,noshield | 3v3 · 2 · 40 | 23 / 12 / 5 / 0 | 13.9 | 23 % | 15 / 10 / 5 / 8 / 13 / 0 / 50 | 15 / 28 / 5 / 18 / 7 / 0 / 25 | 20 / 41 / 3 / 10 / 5 / 0 / 19 | 22.10 | 6.75 / 7.90 / 7.45 | 0.80 / 0.04 | 42.88 | 4.8 / 14.7 / 7.4 / 0.0 / 1.1 / 11.3 / 16.5 | 6.0 / 4.0 / 4.0 / 2.0 / 2.0 / 4.0 / 2.0 | 0.81 / 3.67 / 1.85 / 0.00 / 0.56 / 2.83 | Step 30 % | bark_veil | 22 / 2 / 6 / 0 | 0 / 85 / 68 · 22 | 4.6 | 0.00 |
+| bots hunt | 3v3 · 1 · 40 | 38 / 2 / 0 / 0 | 6.8 | 75 % | 5 / 48 / 0 / 15 / 20 / 5 / 8 | 16 / 33 / 2 / 22 / 14 / 1 / 5 | 10 / 39 / 2 / 22 / 18 / 1 / 4 | 16.90 | 4.05 / 6.92 / 5.92 | 0.47 / 0.01 | 19.35 | 1.2 / 6.2 / 10.7 / 10.5 / 5.3 / 15.6 / 17.3 | 6.0 / 4.0 / 3.0 / 3.0 / 2.0 / 5.0 / 1.0 | 0.20 / 1.55 / 3.57 / 3.50 / 2.65 / 3.11 | Step 26 % | none | 10 / 0 / 0 / 0 | 5 / 33 / 18 · 18 | 1.3 | 0.05 |
+| bots hunt | 3v3 · 2 · 40 | 40 / 0 / 0 / 0 | 8.2 | 60 % | 13 / 33 / 0 / 23 / 13 / 13 / 8 | 20 / 32 / 2 / 26 / 11 / 3 / 3 | 12 / 43 / 2 / 21 / 15 / 2 / 2 | 17.55 | 4.15 / 7.78 / 5.62 | 0.52 / 0.01 | 20.52 | 1.6 / 6.5 / 11.0 / 9.9 / 6.3 / 18.3 / 20.2 | 6.0 / 4.0 / 3.0 / 3.0 / 2.0 / 5.0 / 1.0 | 0.26 / 1.63 / 3.67 / 3.30 / 3.15 / 3.65 | Step 27 % | none | 16 / 0 / 0 / 0 | 5 / 45 / 30 · 23 | 1.2 | 0.05 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 1 · 40 | 38 / 2 / 0 / 0 | 5.1 | 88 % | 28 / 45 / 0 / 10 / 15 / 0 / 0 | 33 / 33 / 6 / 8 / 16 / 0 / 0 | 19 / 47 / 4 / 12 / 16 / 0 / 0 | 16.18 | 3.48 / 6.15 / 6.55 | 0.66 / 0.04 | 22.25 | 2.2 / 6.2 / 10.0 / 2.5 / 4.5 / 14.1 / 14.3 | 6.0 / 4.0 / 3.0 / 3.0 / 2.0 / 5.0 / 1.0 | 0.36 / 1.55 / 3.33 / 0.82 / 2.27 / 2.82 | Step 27 % | bark_veil, shade_veil | 5 / 0 / 0 / 0 | 8 / 15 / 5 · 20 | 1.0 | 0.07 |
+| groundfade=2,trapfade=2,noshield + bots hunt | 3v3 · 2 · 40 | 37 / 3 / 0 / 0 | 5.0 | 90 % | 33 / 28 / 3 / 15 / 20 / 3 / 0 | 35 / 28 / 4 / 13 / 18 / 1 / 0 | 19 / 45 / 2 / 12 / 20 / 1 / 0 | 15.90 | 3.02 / 6.35 / 6.53 | 0.64 / 0.02 | 22.12 | 2.5 / 5.7 / 10.2 / 2.6 / 4.8 / 13.0 / 11.8 | 6.0 / 4.0 / 3.0 / 3.0 / 2.0 / 5.0 / 1.0 | 0.42 / 1.43 / 3.40 / 0.88 / 2.42 / 2.60 | Step 23 % | bark_veil, shade_veil | 4 / 0 / 0 / 0 | 20 / 13 / 10 · 16 | 1.0 | 0.23 |
+
+**Observations** (indications; bots only; R = `groundfade=2,trapfade=2,noshield`):
+
+- *What makes waiting pay is the board filling up.* In the long battles of the build rules the middle of the board is covered with hazard ground and markers after four or five rounds and nobody finds a square to advance to (traces of single battles). With ground that lasts 2 rounds the `hunt` bot wins 47–50 % against the waiting `AiBrain` instead of 40–44 %, and battles between two `hunt` bots fall from 7.7 to 6.0 rounds. No other single switch of part A does this: Jab for 1 AP, faster or all-timed Surges, more Strike or Surge damage, lower HP, dearer or once-per-round shields, a longer start distance and 2-square pushes all leave `hunt` at 36–48 % and the share of battles over 10 rounds at 19–46 % (`noshield` alone: 13 %).
+- *Three changes carry the result; two are needed, the third helps* (parts C and D, removing one at a time from R, `hunt` unless named): without the ground clock 5.4 instead of 4.5 rounds, walking up loses again (42 %) and 11 of 80 control battles without pressure reach the turn limit (`chase`); without `noshield` 5.4 rounds and 38 % instead of 22 % of battles between waiting bots over 10 rounds; without the trap clock 4.9 instead of 4.6 rounds over eight seeds, and with waiting bots 7.9 instead of 6.9 rounds with 29 % instead of 16 % collapse endings. A trap limit of one per skill (`trapcap=1`) does about the same as the trap clock (4.5 rounds; 7.2 rounds and 22 % with waiting bots).
+- *R against the build rules over eight seeds (part D):* mean length 4.6 instead of 7.6 rounds (`hunt`), 5.2 instead of 8.3 (`chase`), 4.5 instead of 7.7 (`plan`), 6.9 instead of 11.2 (waiting `AiBrain`); ended before pressure 94 % / 86 % / 89 % / 73 % instead of 68 % / 61 % / 62 % / 38 %; over 10 rounds 3 % / 8 % / 9 % / 22 % instead of 28 % / 36 % / 36 % / 62 %; collapse endings 0 % / 1 % / 4 % / 16 % instead of 6 % / 15 % / 26 % / 60 %. With pressure out of reach (`--pressure 200`, seeds 1–6, 240 battles per cell) all `hunt` battles end by fighting within 14 rounds (mean 4.6; build rules: 24 reach the turn limit) and 238 of 240 `chase` battles (mean 6.6; build rules: 53 at the turn limit). The sides stay level (161 : 159 with `hunt`).
+- *The waiting bot stays the slow case.* Two `AiBrain` sides still need 6.9 rounds with 22 % over 10 under R, because neither walks up; with R walking up is close to level (303 of 640 battles over eight seeds, 47 %, against 256 of 640, 40 %, under the build rules), so this is mostly a matter of the opponent AI.
+- *The short end is the open flank.* The first monster falls in round 1 in almost every battle under every variant (mean 1.0–1.1; 80 traced battles of one variant with back-row starts had 112 defeats in round 1, nearly all of them the 2–5 HP monsters with high initiative that go in first: Ember Hawk 37, Dusk Moth 26, Grove Wisp 23, Thorn Mites 13, Blaze Tiger 11), and 10–24 % of battles are over before round 3. Alone, a higher HP floor, a longer start distance and slower or weaker Surges change this by a few points at most. Back-row starts together with an HP floor of 3 (Dusk Moth and Ember Hawk 3 instead of 2) lower the share under 3 rounds over eight seeds (part D: 18 % → 12 % with `hunt`, 16 % → 11 % with `chase`, 24 % → 11 % with the planning bot) for 0.2–0.3 rounds more; one turn per round for every monster and once-per-round casting do not (part G); movement skills back at 2 AP bring it to 5 % but walking up loses again (44 %) and more battles pass 10 rounds. Monsters defeated before their own first turn under R: 0.11–0.15 per battle. The first defeat does not decide the battle: the side that scores it wins 63–68 %, under the build rules as under R. Whether people overextend like these bots is a question for play.
+- *The user's other candidates on top of R (part B):* Jab for 1 AP, Surges after 1 turn and 1 HP less shorten nothing that matters (4.3 / 3.8 / 4.7 rounds against 4.5) and raise the share of battles under 3 rounds from 15 % to 20–29 %. Pressure without damage changes nothing measurable once battles end before it starts.
+- *Replacement skills for the two veil slots (part B):* Mire and Blink keep the length distribution closest to the target (5.3–5.4 rounds, 10 % under 3, 6–8 % over 10); pull zones (Bog, Void Pull) make traps deal 9–12 % of the last blows instead of 4–5 % (`hunt`) but end 23–25 % of battles before round 3. A second Strike shape at 3 AP is hardly used (Thrust: never).
+- *Skill kinds, how battles end (part C, R):* last blows by Strike 38 %, Surge 25 %, collision 16 %, hazard ground 13 %, trap 5 % (`hunt`); with the planning bot 25 / 18 / 22 / 10 and trap 20 %. Uses per slot and battle: Surge 1.8, trap 1.5, board 1.1, zone 0.7 (two of the fielded zone slots are the switched-off veils; 2.2 with Mire / Blink), Strike 0.65, movement 2.4. No kind stands at zero and no source ends more than 44 % of the battles; under the build rules the collapse ended 60 % with the waiting bot.
+- *Skill kinds, what they are worth (part E):* a side without its Strikes wins 19–30 % and one without its Surges 29–31 %; without movement skills 42–46 %; without traps, zones or board skills 42–53 %, which is inside the noise around 50 % (zone with the planning bot: 42 %). In bot hands Strike and Surge decide, and the three board-shaping kinds can be replaced by the other actions. The Jab is the least used slot and the most needed one.
+- *Team make-up sets the upper end (part H).* Three slow, sturdy monsters on both sides need 15.9–16.4 rounds under the build rules (with the waiting bot 30–32 of 40 battles are Draws by collapse) and 8.8 rounds under R, where 26 % still pass 10 rounds. No further switch brings this mirror under 7 rounds: 2 HP less, Jab for 1 AP and Surges after 1 turn reach 7.2–7.3, an HP ceiling of 5–6 gives 7.8–7.9, and Mire in the freed slot lengthens it to 10.1. Against three fragile, fast monsters the sturdy team wins 75–78 of 80 battles under both rule sets.
+- *2v2 and 1v1 (part F, cross-check only):* 2v2 gets shorter (5.1 instead of 6.9 rounds with `AiBrain`, 3.8 instead of 4.1 with `hunt`); 1v1 was already short and gets shorter (3.0 instead of 4.2 and 2.2 instead of 2.6 rounds; 61–76 % of 1v1 battles end before round 3, and side 1 wins 54–59 %). The 1v1 figures are a gross break that exists under the build rules as well.
+- *Limits:* all bots are crude; `hunt` and `chase` were written for this entry and their “walking up” is one way of attacking. Bots do not push into traps or props on purpose (the planning bot a little), so the low value of traps, zones and board skills is not a verdict on those kinds. Nothing here says whether the battles are fun, fair or readable.
+
+**Follow-up:** T38 (ground and trap clock or trap limit, kit protection: user decisions; rule text for Battle §4.5 if adopted), T13 (length distribution, attacker's share and kind value as standing metrics; the early defeats; human play of the candidate in the draft sandbox), T11 (replacement skills for the veil slots; the Strike slot), I42 / opponent AI (an `AiBrain` that walks up), T02 (prices stay ignored by user decision).
+
+## S010 · 2026-11-12 · rerun of the interrupted series in 3v3, length distribution, attacking against waiting bots
+
+**State:** `c35396a` dirty (uncommitted tool and switch changes; the rules of the build are unchanged) · content `2026-11-12.2` · kit set `736eb4e604a6`. 3v3 only (user focus 2026-11-12); the 2v2 and 1v1 rows of the interrupted list were not run. 1 720 battles in 45 runs.
+
+**Questions (user):** do battles end by fighting instead of by late-round pressure, and within 3–7 rounds (more than 10 rounds counts as a failure); what do the three open candidates do (no shield zones, pressure without damage, Jab for 1 AP); is the standstill a rule problem or a bot problem.
+
+**New columns of `sim.gd`** (last three): share of battles under 3, over 7 and over 10 rounds and the longest battle · mean round of the first defeat · monsters defeated before their own first turn, per battle.
+
+| Variant / bot | What it is |
+|---|---|
+| `noshield`, `jab=1`, `softpressure=N` | as in the handoff: shield zone skills unusable · Jab 1 AP · every N rounds the outer ring breaks away instead of damage |
+| `aggro` | bot change: `AiBrain` values closing in more and its own support effects less |
+| `pressure +200` | late-round pressure out of reach |
+| bot `hunt` (new) | `AiBrain` with the switch `ai_hunt`: with AP left and no better action it walks toward the nearest enemy (walking distance) as long as the position gets no worse than about one point of hazard damage; never into a trap |
+| bot `rush` | strikes whoever is in a shape, else casts, else walks toward the nearest enemy, without judging the position |
+
+Command per row: `sim.gd -- <battles> 3v3 <seed> "c35396a dirty" --paired --compact [--variant …] [--pressure 200] [--bot-a … --bot-b …]`. Rows are pasted unchanged from the tool; the bots of a table are named above it.
+
+### Part A · the interrupted series (`AiBrain` on both sides)
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 22 / 15 / 3 / 0 | 11.9 | 30 % | 13 / 3 / 3 / 3 / 10 / 0 / 68 | 19 / 26 / 3 / 5 / 17 / 1 / 26 | 18 / 28 / 2 / 5 / 21 / 0 / 25 | 8.95 | 3.25 / 3.62 / 2.08 | 0.78 / 0.09 | 26.57 | 2.5 / 5.7 / 3.2 / 11.6 / 3.2 / 7.9 / 4.0 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.41 / 1.43 / 1.23 / 4.14 / 1.25 / 1.49 | bark_veil 15 % | none | 19 / 5 / 3 / 1 | 13 / 73 / 70 · 21 | 1.1 | 0.03 |
+| noshield | 3v3 · 1 · 40 | 20 / 18 / 2 / 0 | 10.6 | 38 % | 15 / 15 / 0 / 5 / 10 / 0 / 53 | 20 / 30 / 2 / 9 / 15 / 2 / 20 | 18 / 35 / 1 / 6 / 20 / 1 / 17 | 9.07 | 3.23 / 3.70 / 2.15 | 0.99 / 0.09 | 27.15 | 2.7 / 6.2 / 2.9 / 2.0 / 2.7 / 9.1 / 4.8 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.45 / 1.54 / 1.09 / 0.72 / 1.05 / 1.72 | Step 16 % | bark_veil, crucible, shade_veil | 19 / 3 / 2 / 1 | 13 / 63 / 60 · 19 | 1.1 | 0.05 |
+| jab=1 | 3v3 · 1 · 40 | 23 / 15 / 2 / 0 | 12.3 | 28 % | 8 / 5 / 0 / 0 / 15 / 0 / 73 | 29 / 17 / 1 / 4 / 18 / 0 / 28 | 25 / 21 / 1 / 4 / 20 / 0 / 27 | 7.85 | 2.30 / 3.58 / 1.98 | 0.64 / 0.08 | 26.12 | 3.6 / 4.7 / 3.1 / 11.3 / 2.8 / 7.8 / 4.0 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.60 / 1.18 / 1.18 / 4.03 / 1.09 / 1.48 | bark_veil 13 % | none | 25 / 2 / 0 / 2 | 13 / 73 / 73 · 22 | 1.1 | 0.12 |
+| softpressure=1 | 3v3 · 1 · 40 | 20 / 20 / 0 / 0 | 8.6 | 30 % | 20 / 15 / 10 / 25 / 25 / 0 / 0 | 22 / 29 / 5 / 16 / 23 / 0 / 0 | 22 / 33 / 5 / 13 / 25 / 0 / 0 | 10.57 | 3.88 / 4.03 / 2.67 | 0.80 / 0.12 | 25.98 | 3.0 / 6.8 / 3.7 / 8.8 / 3.5 / 8.4 / 4.3 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.50 / 1.71 / 1.41 / 3.15 / 1.39 / 1.59 | Step 11 % | none | 21 / 3 / 3 / 0 | 13 / 73 / 35 · 15 | 1.1 | 0.03 |
+| softpressure=2 | 3v3 · 1 · 40 | 19 / 21 / 0 / 0 | 8.9 | 30 % | 25 / 20 / 13 / 20 / 20 / 0 / 0 | 23 / 31 / 6 / 15 / 21 / 0 / 0 | 21 / 33 / 6 / 14 / 23 / 0 / 0 | 10.80 | 4.05 / 4.25 / 2.50 | 0.82 / 0.12 | 25.90 | 2.9 / 7.0 / 3.9 / 9.1 / 3.6 / 8.6 / 4.6 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.47 / 1.74 / 1.45 / 3.23 / 1.40 / 1.62 | Step 12 % | none | 19 / 5 / 3 / 0 | 13 / 73 / 48 · 15 | 1.1 | 0.03 |
+| noshield,jab=1 | 3v3 · 1 · 40 | 21 / 17 / 2 / 0 | 10.2 | 45 % | 15 / 13 / 0 / 10 / 8 / 0 / 55 | 30 / 21 / 1 / 9 / 11 / 0 / 25 | 27 / 25 / 0 / 6 / 18 / 0 / 23 | 7.62 | 2.17 / 3.65 / 1.80 | 0.82 / 0.05 | 26.10 | 3.9 / 4.9 / 2.7 / 1.9 / 2.6 / 8.9 / 4.1 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.65 / 1.23 / 1.02 / 0.68 / 1.01 / 1.68 | Step 14 % | bark_veil, shade_veil | 19 / 1 / 0 / 2 | 20 / 55 / 55 · 22 | 1.0 | 0.17 |
+| noshield,jab=1,softpressure=2 | 3v3 · 1 · 40 | 19 / 21 / 0 / 0 | 7.5 | 45 % | 28 / 38 / 3 / 18 / 15 / 0 / 0 | 34 / 31 / 2 / 16 / 14 / 0 / 0 | 31 / 31 / 4 / 11 / 20 / 0 / 0 | 9.00 | 3.10 / 3.95 / 1.95 | 0.97 / 0.06 | 26.02 | 4.5 / 6.0 / 3.0 / 1.9 / 2.8 / 9.2 / 4.7 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.75 / 1.49 / 1.15 / 0.70 / 1.10 / 1.74 | Step 15 % | bark_veil, shade_veil | 16 / 6 / 0 / 0 | 20 / 55 / 38 · 14 | 1.0 | 0.17 |
+| noshield,jab=1,softpressure=1 | 3v3 · 1 · 40 | 21 / 19 / 0 / 0 | 7.2 | 45 % | 25 / 30 / 3 / 18 / 25 / 0 / 0 | 34 / 28 / 3 / 16 / 17 / 0 / 0 | 31 / 31 / 4 / 11 / 20 / 0 / 0 | 8.93 | 2.98 / 3.80 / 2.15 | 0.95 / 0.07 | 25.65 | 4.5 / 5.9 / 3.0 / 1.9 / 2.8 / 9.2 / 4.7 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.74 / 1.48 / 1.14 / 0.70 / 1.09 / 1.73 | Step 15 % | bark_veil, shade_veil | 16 / 6 / 0 / 0 | 20 / 55 / 23 · 14 | 1.0 | 0.17 |
+| aggro | 3v3 · 1 · 40 | 24 / 16 / 0 / 0 | 9.5 | 50 % | 23 / 8 / 3 / 13 / 10 / 0 / 45 | 29 / 23 / 3 / 10 / 18 / 0 / 14 | 24 / 31 / 1 / 8 / 20 / 0 / 14 | 7.97 | 2.80 / 3.25 / 1.93 | 0.94 / 0.11 | 25.85 | 3.2 / 6.0 / 2.0 / 5.4 / 1.9 / 9.6 / 4.5 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.54 / 1.49 / 0.75 / 1.92 / 0.76 / 1.80 | Step 14 % | spring_burst | 18 / 1 / 1 / 0 | 13 / 50 / 50 · 19 | 1.0 | 0.07 |
+| aggro,noshield,jab=1,softpressure=2 | 3v3 · 1 · 40 | 20 / 19 / 1 / 0 | 7.0 | 50 % | 33 / 20 / 5 / 28 / 15 / 0 / 0 | 41 / 26 / 2 / 11 / 17 / 0 / 0 | 35 / 33 / 2 / 10 / 19 / 0 / 0 | 8.53 | 3.02 / 3.52 / 1.98 | 1.00 / 0.09 | 26.23 | 4.9 / 6.2 / 2.3 / 1.3 / 2.4 / 9.3 / 5.2 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.82 / 1.56 / 0.86 / 0.46 / 0.95 / 1.75 | Step 16 % | bark_veil, crucible, shade_veil, spring_burst | 11 / 6 / 2 / 1 | 25 / 50 / 30 · 16 | 1.0 | 0.15 |
+| build rules | 3v3 · 2 · 40 | 21 / 17 / 2 / 0 | 12.6 | 25 % | 5 / 5 / 0 / 5 / 8 / 0 / 75 | 17 / 18 / 4 / 10 / 21 / 0 / 28 | 18 / 25 / 2 / 7 / 19 / 0 / 28 | 7.62 | 2.65 / 2.75 / 2.23 | 0.85 / 0.09 | 26.52 | 2.5 / 5.2 / 2.5 / 9.9 / 2.1 / 9.2 / 4.0 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.41 / 1.31 / 0.89 / 3.50 / 0.86 / 1.70 | bark_veil 15 % | none | 21 / 6 / 1 / 2 | 5 / 75 / 75 · 21 | 1.1 | 0.15 |
+| noshield | 3v3 · 2 · 40 | 21 / 17 / 2 / 0 | 11.9 | 33 % | 10 / 3 / 3 / 5 / 10 / 0 / 68 | 18 / 20 / 4 / 9 / 19 / 0 / 27 | 16 / 28 / 2 / 6 / 18 / 0 / 28 | 7.28 | 2.70 / 2.60 / 1.98 | 0.98 / 0.09 | 25.80 | 2.2 / 5.0 / 2.2 / 1.5 / 2.1 / 9.8 / 3.9 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.37 / 1.27 / 0.82 / 0.54 / 0.85 / 1.82 | Step 15 % | bark_veil, shade_veil | 19 / 6 / 1 / 1 | 8 / 68 / 68 · 21 | 1.1 | 0.15 |
+| jab=1 | 3v3 · 2 · 40 | 19 / 16 / 5 / 0 | 10.5 | 43 % | 15 / 13 / 3 / 0 / 13 / 0 / 58 | 20 / 17 / 4 / 6 / 24 / 0 / 28 | 24 / 24 / 2 / 5 / 18 / 0 / 25 | 7.62 | 2.45 / 2.92 / 2.25 | 0.80 / 0.06 | 25.27 | 3.2 / 4.6 / 3.0 / 8.8 / 2.2 / 8.4 / 3.7 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.53 / 1.16 / 1.10 / 3.10 / 0.90 / 1.56 | bark_veil 13 % | none | 15 / 3 / 1 / 4 | 18 / 58 / 58 · 22 | 1.1 | 0.17 |
+| softpressure=1 | 3v3 · 2 · 40 | 15 / 24 / 1 / 0 | 8.8 | 25 % | 20 / 25 / 5 / 15 / 28 / 0 / 0 | 20 / 27 / 8 / 15 / 27 / 0 / 0 | 24 / 31 / 6 / 13 / 23 / 0 / 0 | 9.45 | 3.50 / 3.25 / 2.70 | 0.90 / 0.12 | 25.65 | 3.2 / 6.2 / 3.2 / 7.2 / 2.5 / 9.7 / 5.0 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.54 / 1.58 / 1.17 / 2.56 / 1.00 / 1.79 | Step 13 % | none | 22 / 4 / 1 / 1 | 5 / 75 / 30 · 13 | 1.1 | 0.15 |
+| softpressure=2 | 3v3 · 2 · 40 | 15 / 24 / 1 / 0 | 9.2 | 25 % | 15 / 20 / 13 / 23 / 23 / 0 / 0 | 19 / 24 / 8 / 20 / 26 / 0 / 0 | 23 / 30 / 7 / 15 / 23 / 0 / 0 | 9.62 | 3.50 / 3.52 / 2.60 | 0.87 / 0.11 | 25.48 | 3.2 / 6.5 / 3.1 / 7.6 / 2.5 / 9.7 / 5.0 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.53 / 1.64 / 1.15 / 2.69 / 1.03 / 1.80 | Step 13 % | none | 22 / 4 / 1 / 1 | 5 / 75 / 53 · 14 | 1.1 | 0.15 |
+| noshield,jab=1 | 3v3 · 2 · 40 | 20 / 16 / 4 / 0 | 10.8 | 40 % | 10 / 3 / 3 / 13 / 13 / 0 / 60 | 19 / 16 / 3 / 12 / 21 / 0 / 27 | 24 / 25 / 2 / 6 / 18 / 0 / 24 | 7.40 | 2.30 / 2.98 / 2.12 | 0.84 / 0.09 | 26.00 | 3.2 / 4.6 / 2.8 / 1.4 / 2.1 / 9.2 / 3.8 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.53 / 1.17 / 1.01 / 0.49 / 0.84 / 1.70 | Step 14 % | bark_veil, shade_veil | 14 / 4 / 2 / 4 | 15 / 63 / 60 · 21 | 1.0 | 0.25 |
+| noshield,jab=1,softpressure=2 | 3v3 · 2 · 40 | 20 / 20 / 0 / 0 | 7.8 | 43 % | 33 / 15 / 13 / 20 / 20 / 0 / 0 | 26 / 21 / 7 / 16 / 27 / 0 / 0 | 31 / 30 / 5 / 12 / 21 / 0 / 0 | 8.95 | 2.92 / 3.52 / 2.50 | 0.83 / 0.13 | 24.85 | 4.0 / 5.7 / 3.2 / 1.4 / 2.2 / 10.0 / 4.5 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.66 / 1.44 / 1.18 / 0.50 / 0.89 / 1.86 | Step 15 % | bark_veil, shade_veil | 15 / 5 / 3 / 0 | 15 / 63 / 40 · 12 | 1.0 | 0.25 |
+| noshield,jab=1,softpressure=1 | 3v3 · 2 · 40 | 17 / 23 / 0 / 0 | 7.4 | 43 % | 30 / 15 / 13 / 20 / 23 / 0 / 0 | 27 / 20 / 8 / 16 / 28 / 0 / 0 | 32 / 29 / 5 / 11 / 22 / 0 / 0 | 8.65 | 2.90 / 3.25 / 2.50 | 0.85 / 0.14 | 25.07 | 4.0 / 5.5 / 3.2 / 1.4 / 2.0 / 9.8 / 4.4 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.67 / 1.39 / 1.15 / 0.50 / 0.83 / 1.81 | Step 14 % | bark_veil, shade_veil | 18 / 2 / 3 / 0 | 15 / 63 / 23 · 13 | 1.0 | 0.25 |
+| aggro | 3v3 · 2 · 40 | 14 / 24 / 2 / 0 | 9.0 | 55 % | 20 / 20 / 0 / 8 / 5 / 0 / 45 | 23 / 30 / 2 / 6 / 21 / 0 / 16 | 22 / 31 / 2 / 7 / 20 / 0 / 17 | 8.40 | 3.00 / 3.33 / 2.08 | 0.89 / 0.09 | 25.35 | 2.9 / 5.4 / 3.0 / 6.0 / 2.6 / 9.6 / 3.9 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.49 / 1.37 / 1.08 / 2.13 / 1.06 / 1.77 | bark_veil 12 % | none | 12 / 3 / 2 / 1 | 18 / 45 / 45 · 21 | 1.1 | 0.12 |
+| aggro,noshield,jab=1,softpressure=2 | 3v3 · 2 · 40 | 17 / 22 / 1 / 0 | 7.3 | 45 % | 35 / 13 / 10 / 18 / 20 / 0 / 0 | 37 / 21 / 5 / 11 / 24 / 0 / 0 | 37 / 26 / 5 / 11 / 20 / 0 / 0 | 8.25 | 2.58 / 3.17 / 2.50 | 0.79 / 0.15 | 25.18 | 4.8 / 5.8 / 2.5 / 1.1 / 1.6 / 10.2 / 4.7 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.80 / 1.47 / 0.89 / 0.37 / 0.66 / 1.89 | strike_jab 16 % | bark_veil, shade_veil | 13 / 4 / 2 / 1 | 15 / 58 / 23 · 13 | 1.0 | 0.28 |
+
+Planning bot (`--bot-a plan --bot-b plan`, 20 battles):
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 20 | 11 / 9 / 0 / 0 | 9.9 | 40 % | 25 / 15 / 5 / 5 / 0 / 10 / 40 | 19 / 21 / 5 / 8 / 25 / 2 / 17 | 20 / 29 / 5 / 7 / 22 / 2 / 11 | 11.40 | 3.75 / 5.25 / 2.40 | 0.75 / 0.04 | 25.95 | 3.1 / 6.5 / 5.0 / 8.8 / 5.1 / 8.1 / 6.3 | 6.0 / 3.8 / 2.8 / 2.8 / 2.7 / 5.2 / 0.8 | 0.53 / 1.70 / 1.80 / 3.18 / 1.89 / 1.53 | Step 15 % | none | 11 / 1 / 0 / 0 | 15 / 60 / 60 · 20 | 1.1 | 0.15 |
+| noshield,jab=1,softpressure=2 | 3v3 · 1 · 20 | 12 / 8 / 0 / 0 | 6.0 | 65 % | 30 / 10 / 25 / 15 / 15 / 0 / 0 | 27 / 23 / 11 / 10 / 24 / 0 / 0 | 35 / 27 / 7 / 8 / 23 / 0 / 0 | 10.60 | 2.95 / 4.50 / 3.15 | 0.71 / 0.11 | 25.70 | 5.5 / 6.0 / 4.5 / 2.1 / 4.5 / 9.3 / 5.5 | 6.0 / 3.8 / 2.8 / 2.8 / 2.7 / 5.2 / 0.8 | 0.93 / 1.59 / 1.65 / 0.76 / 1.69 / 1.77 | strike_jab 15 % | bark_veil, shade_veil | 7 / 0 / 0 / 0 | 20 / 40 / 15 · 12 | 1.1 | 0.10 |
+
+Pressure out of reach (`AiBrain`, 20 battles):
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| pressure +200 | 3v3 · 1 · 20 | 7 / 4 / 0 / 9 | 114.5 | 35 % | 9 / 18 / 9 / 0 / 27 / 0 / 36 | 18 / 37 / 3 / 5 / 25 / 0 / 5 | 22 / 34 / 2 / 7 / 26 / 0 / 6 | 14.05 | 7.65 / 4.40 / 2.00 | 0.49 / 0.05 | 20.95 | 2.4 / 10.6 / 3.5 / 84.5 / 4.2 / 9.7 / 4.5 | 6.0 / 3.8 / 2.8 / 2.8 / 2.7 / 5.2 / 0.8 | 0.40 / 2.78 / 1.27 / 30.73 / 1.54 / 1.85 | bark_veil 38 % | crucible | 4 / 0 / 0 / 0 | 10 / 75 / 70 · 219 | 1.1 | 0.00 |
+| aggro + pressure +200 | 3v3 · 1 · 20 | 8 / 8 / 0 / 4 | 106.1 | 50 % | 25 / 19 / 0 / 6 / 13 / 0 / 38 | 30 / 30 / 4 / 10 / 19 / 0 / 7 | 24 / 37 / 2 / 10 / 19 / 0 / 8 | 8.30 | 2.90 / 3.20 / 2.20 | 0.95 / 0.11 | 23.10 | 3.0 / 5.9 / 2.4 / 53.5 / 2.2 / 9.2 / 5.0 | 6.0 / 3.8 / 2.8 / 2.8 / 2.7 / 5.2 / 0.8 | 0.49 / 1.55 / 0.87 / 19.45 / 0.81 / 1.75 | bark_veil 64 % | crucible, spring_burst | 6 / 0 / 0 / 0 | 10 / 50 / 50 · 219 | 1.0 | 0.15 |
+
+### Part B · attacking against waiting bots (build rules unless the row names a variant)
+
+`hunt` on both sides:
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 20 / 20 / 0 / 0 | 8.3 | 58 % | 20 / 15 / 0 / 30 / 15 / 8 / 8 | 24 / 29 / 3 / 17 / 17 / 2 / 3 | 25 / 32 / 2 / 14 / 20 / 3 / 3 | 11.82 | 3.38 / 5.17 / 3.27 | 0.67 / 0.07 | 26.10 | 3.5 / 8.1 / 3.8 / 7.1 / 2.8 / 16.6 / 12.6 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.58 / 2.02 / 1.42 / 2.54 / 1.09 / 3.12 | Step 23 % | none | 15 / 1 / 1 / 0 | 15 / 43 / 35 · 20 | 1.1 | 0.03 |
+| build rules | 3v3 · 2 · 40 | 18 / 21 / 1 / 0 | 8.5 | 60 % | 20 / 25 / 3 / 15 / 13 / 15 / 8 | 25 / 25 / 6 / 14 / 21 / 3 / 3 | 24 / 32 / 3 / 13 / 20 / 3 / 2 | 11.50 | 3.42 / 4.67 / 3.40 | 0.71 / 0.08 | 25.57 | 3.2 / 7.5 / 4.0 / 7.7 / 3.0 / 16.4 / 12.9 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.54 / 1.89 / 1.47 / 2.71 / 1.21 / 3.04 | Step 24 % | none | 12 / 2 / 1 / 1 | 13 / 40 / 33 · 22 | 1.1 | 0.15 |
+| aggro | 3v3 · 1 · 40 | 22 / 18 / 0 / 0 | 5.1 | 85 % | 30 / 25 / 3 / 33 / 10 / 0 / 0 | 30 / 29 / 3 / 19 / 18 / 0 / 0 | 27 / 35 / 2 / 15 / 20 / 0 / 0 | 9.97 | 3.25 / 4.10 / 2.62 | 0.85 / 0.10 | 26.12 | 3.7 / 7.4 / 2.6 / 2.9 / 2.2 / 12.8 / 8.5 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.62 / 1.85 / 0.97 / 1.02 / 0.86 / 2.42 | Step 21 % | none | 3 / 3 / 0 / 0 | 15 / 15 / 10 · 18 | 1.0 | 0.07 |
+| aggro | 3v3 · 2 · 40 | 16 / 24 / 0 / 0 | 6.0 | 73 % | 38 / 23 / 0 / 25 / 8 / 3 / 3 | 30 / 27 / 4 / 15 / 21 / 1 / 1 | 29 / 30 / 3 / 13 / 22 / 1 / 0 | 9.90 | 2.98 / 3.95 / 2.98 | 0.74 / 0.09 | 24.95 | 3.8 / 6.3 / 3.6 / 3.0 / 2.6 / 14.8 / 9.8 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.64 / 1.59 / 1.31 / 1.08 / 1.05 / 2.74 | Step 22 % | none | 7 / 3 / 1 / 0 | 18 / 30 / 13 · 18 | 1.1 | 0.12 |
+| aggro | 3v3 · 3 · 40 | 16 / 22 / 2 / 0 | 5.1 | 85 % | 28 / 8 / 3 / 35 / 18 / 5 / 3 | 28 / 21 / 3 / 17 / 27 / 1 / 1 | 27 / 34 / 2 / 12 / 22 / 0 / 0 | 8.88 | 2.95 / 3.52 / 2.40 | 0.89 / 0.11 | 24.70 | 3.4 / 6.7 / 2.2 / 3.1 / 2.2 / 12.9 / 8.1 | 6.0 / 4.2 / 2.4 / 2.9 / 2.5 / 5.5 / 0.5 | 0.56 / 1.57 / 0.95 / 1.08 / 0.86 / 2.36 | Step 21 % | crucible | 6 / 0 / 0 / 0 | 25 / 23 / 13 · 16 | 1.0 | 0.20 |
+| pressure +200 | 3v3 · 1 · 40 | 18 / 19 / 0 / 3 | 37.1 | 85 % | 22 / 19 / 3 / 38 / 16 / 0 / 0 | 25 / 31 / 3 / 19 / 17 / 0 / 0 | 25 / 33 / 2 / 16 / 20 / 1 / 0 | 15.10 | 3.45 / 8.40 / 3.25 | 0.52 / 0.06 | 25.10 | 3.4 / 8.0 / 7.2 / 24.2 / 6.2 / 21.0 / 16.9 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.57 / 1.99 / 2.70 / 8.65 / 2.41 / 3.97 | bark_veil 24 % | none | 1 / 1 / 1 / 0 | 15 / 43 / 35 · 215 | 1.1 | 0.03 |
+| aggro + pressure +200 | 3v3 · 1 · 40 | 22 / 18 / 0 / 0 | 5.2 | 100 % | 25 / 28 / 3 / 35 / 10 / 0 / 0 | 29 / 30 / 3 / 19 / 18 / 0 / 0 | 26 / 35 / 2 / 15 / 20 / 0 / 0 | 9.93 | 3.27 / 4.08 / 2.58 | 0.86 / 0.10 | 26.07 | 3.6 / 7.3 / 2.6 / 3.0 / 2.2 / 12.8 / 8.4 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.61 / 1.84 / 0.97 / 1.05 / 0.86 / 2.42 | Step 21 % | none | 0 / 0 / 0 / 0 | 15 / 15 / 10 · 20 | 1.0 | 0.07 |
+| aggro + pressure +200 | 3v3 · 2 · 40 | 16 / 23 / 0 / 1 | 20.4 | 93 % | 38 / 23 / 0 / 26 / 8 / 3 / 0 | 30 / 27 / 5 / 15 / 21 / 1 / 0 | 29 / 30 / 3 / 13 / 22 / 0 / 0 | 9.82 | 2.95 / 3.95 / 2.92 | 0.75 / 0.09 | 24.90 | 3.8 / 6.2 / 3.6 / 6.4 / 2.6 / 30.9 / 25.2 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.64 / 1.58 / 1.30 / 2.26 / 1.04 / 5.72 | Step 32 % | none | 1 / 0 / 1 / 0 | 18 / 30 / 13 · 214 | 1.1 | 0.12 |
+
+`rush` on both sides:
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 24 / 16 / 0 / 0 | 4.0 | 98 % | 25 / 35 / 0 / 28 / 10 / 0 / 0 | 18 / 29 / 0 / 27 / 21 / 0 / 0 | 18 / 35 / 0 / 23 / 20 / 0 / 1 | 5.08 | 3.40 / 1.00 / 0.68 | 1.50 / 0.25 | 25.40 | 2.3 / 5.1 / 0.0 / 10.9 / 4.9 / 5.6 / 3.9 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.39 / 1.27 / 0.00 / 3.90 / 1.93 / 1.06 | Step 12 % | ambush_rift, bramble_tide, crucible, spring_burst | 1 / 0 / 0 / 0 | 5 / 3 / 3 · 15 | 1.4 | 0.00 |
+| build rules | 3v3 · 2 · 40 | 23 / 17 / 0 / 0 | 3.4 | 100 % | 18 / 28 / 0 / 40 / 15 / 0 / 0 | 14 / 29 / 0 / 31 / 22 / 0 / 0 | 16 / 38 / 0 / 23 / 20 / 0 / 0 | 4.72 | 3.15 / 0.90 / 0.68 | 1.60 / 0.33 | 24.25 | 2.0 / 4.7 / 0.0 / 10.0 / 5.0 / 4.8 / 3.4 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.33 / 1.20 / 0.00 / 3.53 / 2.04 / 0.88 | Step 11 % | ambush_rift, bramble_tide, crucible, spring_burst | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 6 | 1.4 | 0.00 |
+| pressure +200 | 3v3 · 1 · 40 | 24 / 16 / 0 / 0 | 4.0 | 100 % | 25 / 35 / 0 / 28 / 10 / 0 / 0 | 18 / 29 / 0 / 27 / 21 / 0 / 0 | 19 / 35 / 0 / 23 / 21 / 0 / 0 | 5.10 | 3.40 / 1.00 / 0.70 | 1.50 / 0.25 | 25.45 | 2.4 / 5.1 / 0.0 / 10.9 / 4.9 / 5.6 / 3.9 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.40 / 1.27 / 0.00 / 3.90 / 1.93 / 1.06 | Step 12 % | ambush_rift, bramble_tide, crucible, spring_burst | 0 / 0 / 0 / 0 | 5 / 3 / 3 · 16 | 1.4 | 0.00 |
+
+`hunt` (side 0) against `AiBrain` (side 1):
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 19 / 20 / 1 / 0 | 8.9 | 50 % | 23 / 13 / 3 / 13 / 13 / 8 / 28 | 24 / 28 / 4 / 10 / 19 / 3 / 7 | 24 / 32 / 3 / 10 / 21 / 3 / 5 | 10.00 | 3.42 / 4.15 / 2.42 | 0.81 / 0.08 | 25.50 | 3.2 / 6.8 / 3.2 / 8.8 / 2.8 / 12.1 / 8.7 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.54 / 1.69 / 1.23 / 3.13 / 1.11 / 2.27 | Step 19 % | none | 13 / 3 / 3 / 1 | 13 / 50 / 45 · 18 | 1.1 | 0.03 |
+| build rules | 3v3 · 2 · 40 | 16 / 24 / 0 / 0 | 9.7 | 53 % | 25 / 13 / 0 / 23 / 8 / 13 / 18 | 24 / 23 / 6 / 14 / 19 / 3 / 8 | 23 / 29 / 3 / 12 / 20 / 4 / 8 | 9.40 | 2.90 / 3.90 / 2.60 | 0.76 / 0.10 | 24.95 | 3.0 / 6.5 / 2.9 / 7.5 / 2.5 / 13.5 / 10.2 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.51 / 1.64 / 1.06 / 2.67 / 0.99 / 2.50 | Step 22 % | none | 14 / 5 / 0 / 0 | 8 / 53 / 48 · 19 | 1.1 | 0.17 |
+| aggro | 3v3 · 1 · 40 | 20 / 19 / 1 / 0 | 5.7 | 83 % | 28 / 15 / 5 / 33 / 13 / 3 / 3 | 30 / 25 / 3 / 18 / 20 / 1 / 1 | 27 / 34 / 2 / 12 / 21 / 1 / 1 | 9.60 | 3.15 / 4.05 / 2.40 | 0.87 / 0.08 | 25.45 | 3.6 / 7.2 / 2.4 / 3.2 / 2.1 / 11.7 / 7.5 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.60 / 1.81 / 0.89 / 1.14 / 0.83 / 2.21 | Step 20 % | none | 5 / 0 / 1 / 1 | 13 / 20 / 13 · 15 | 1.0 | 0.07 |
+
+`AiBrain` (side 0) against `hunt` (side 1):
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 22 / 18 / 0 / 0 | 10.1 | 48 % | 23 / 10 / 0 / 23 / 18 / 10 / 15 | 22 / 28 / 4 / 11 / 18 / 3 / 7 | 22 / 32 / 2 / 12 / 19 / 3 / 7 | 11.57 | 4.08 / 4.47 / 3.02 | 0.70 / 0.09 | 26.35 | 3.1 / 7.7 / 3.9 / 9.3 / 3.3 / 15.5 / 11.9 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.52 / 1.91 / 1.48 / 3.33 / 1.30 / 2.92 | Step 22 % | none | 16 / 0 / 5 / 0 | 15 / 55 / 48 · 20 | 1.1 | 0.03 |
+| build rules | 3v3 · 2 · 40 | 23 / 17 / 0 / 0 | 8.4 | 55 % | 15 / 20 / 0 / 35 / 5 / 10 / 13 | 24 / 23 / 3 / 21 / 20 / 3 / 5 | 22 / 32 / 2 / 14 / 21 / 3 / 4 | 9.95 | 3.05 / 3.80 / 3.10 | 0.75 / 0.08 | 24.20 | 2.8 / 6.8 / 3.1 / 7.3 / 2.2 / 13.9 / 10.2 | 6.0 / 4.0 / 2.8 / 2.8 / 2.5 / 5.4 / 0.6 | 0.46 / 1.73 / 1.13 / 2.58 / 0.91 / 2.57 | Step 22 % | none | 15 / 1 / 1 / 0 | 13 / 50 / 38 · 21 | 1.1 | 0.15 |
+| aggro | 3v3 · 1 · 40 | 26 / 13 / 1 / 0 | 6.9 | 75 % | 33 / 15 / 3 / 25 / 10 / 0 / 15 | 31 / 27 / 4 / 16 / 16 / 0 / 4 | 28 / 32 / 2 / 12 / 20 / 1 / 3 | 9.82 | 3.05 / 4.03 / 2.75 | 0.79 / 0.12 | 26.25 | 3.8 / 7.2 / 2.6 / 3.6 / 2.2 / 13.0 / 9.1 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.64 / 1.80 / 0.99 / 1.29 / 0.85 / 2.46 | Step 22 % | spring_burst | 8 / 1 / 0 / 1 | 15 / 28 / 20 · 21 | 1.0 | 0.07 |
+
+`rush` (side 0) against `AiBrain` (side 1), then the seats swapped:
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 1 · 40 | 6 / 34 / 0 / 0 | 4.6 | 95 % | 20 / 18 / 3 / 40 / 10 / 3 / 3 | 18 / 27 / 2 / 28 / 19 / 1 / 2 | 17 / 36 / 2 / 22 / 18 / 1 / 2 | 10.32 | 3.73 / 4.47 / 2.12 | 0.77 / 0.07 | 22.85 | 2.1 / 5.9 / 4.5 / 7.8 / 5.7 / 6.4 / 4.6 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.35 / 1.47 / 1.68 / 2.79 / 2.23 / 1.21 | Step 12 % | crucible | 1 / 0 / 1 / 0 | 13 / 8 / 5 · 16 | 1.2 | 0.03 |
+| build rules | 3v3 · 1 · 40 | 35 / 5 / 0 / 0 | 4.3 | 95 % | 20 / 33 / 5 / 28 / 13 / 0 / 3 | 15 / 33 / 3 / 24 / 21 / 0 / 1 | 15 / 39 / 2 / 19 / 22 / 0 / 1 | 7.05 | 3.58 / 2.38 / 1.10 | 1.18 / 0.17 | 23.23 | 1.9 / 5.5 / 1.5 / 7.4 / 3.7 / 6.2 / 4.5 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.32 / 1.39 / 0.57 / 2.65 / 1.45 / 1.17 | Step 15 % | crucible | 1 / 0 / 1 / 0 | 18 / 10 / 3 · 14 | 1.1 | 0.05 |
+
+`hunt` (side 0) against `rush` (side 1), then the seats swapped (both with `aggro`):
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| aggro | 3v3 · 1 · 40 | 36 / 4 / 0 / 0 | 3.2 | 100 % | 18 / 43 / 5 / 25 / 10 / 0 / 0 | 18 / 34 / 3 / 22 / 18 / 0 / 0 | 21 / 38 / 3 / 16 / 20 / 0 / 0 | 6.58 | 3.38 / 1.90 / 1.30 | 1.25 / 0.23 | 23.82 | 2.8 / 5.2 / 1.4 / 5.6 / 3.9 / 7.1 / 4.8 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.46 / 1.29 / 0.54 / 2.00 / 1.52 / 1.34 | Step 16 % | none | 0 / 0 / 0 / 0 | 25 / 0 / 0 · 5 | 1.1 | 0.12 |
+| aggro | 3v3 · 1 · 40 | 6 / 34 / 0 / 0 | 4.2 | 95 % | 30 / 28 / 3 / 30 / 8 / 0 / 0 | 24 / 26 / 3 / 24 / 20 / 0 / 0 | 21 / 34 / 2 / 19 / 21 / 0 / 0 | 8.60 | 3.60 / 3.20 / 1.80 | 0.91 / 0.14 | 24.55 | 2.9 / 5.8 / 2.8 / 6.1 / 4.3 / 8.1 / 5.3 | 6.0 / 4.0 / 2.6 / 2.8 / 2.5 / 5.3 / 0.7 | 0.47 / 1.44 / 1.07 / 2.17 / 1.70 / 1.52 | Step 15 % | crucible | 0 / 1 / 1 / 0 | 18 / 8 / 5 · 12 | 1.1 | 0.12 |
+
+**Observations** (indications; bots only; 40 battles per row, about ±8 points):
+
+- *The partial result of the interrupted series is reproduced:* build rules end by collapse in 68 % / 75 % of battles after 11.9 / 12.6 rounds; `noshield` 53 % / 68 %; `jab=1` 73 % / 58 %; pressure without damage 8.6–9.2 rounds; the full combination 7.2–7.8 rounds (7.0–7.3 aggressive, 6.0 planning bot). With pressure out of reach 9 of 20 battles reach the turn limit (4 of 20 aggressive).
+- *The length has two peaks.* In every variant the first monster falls in round 1 (mean 1.0–1.1; the victims are the 2–4 HP monsters with high initiative that fly in first), 5–20 % of battles are over before round 3, and 55–75 % last longer than 10 rounds: after the early losses the remaining monsters (7–8 HP, Movement 1–2) stand between hazard ground and markers and wait. The mean of 11–12 rounds describes neither group.
+- *A bot that walks up to the enemy shortens the battles without any rule change:* `hunt` on both sides 8.3 / 8.5 rounds with 8 % collapse endings; with `aggro` 5.1–6.0 rounds, 73–85 % ended before pressure, 0–3 % collapse endings, and with pressure out of reach 79 of 80 battles still end (one timeout). `rush` on both sides: 3.4–4.0 rounds.
+- *But walking up loses.* Against the waiting `AiBrain` the `hunt` bot wins 70 of 160 battles (44 %; 33 of 78 with `aggro`), and `rush` wins 11 of 80 (14 %). `hunt` in turn beats `rush` 70 to 10. Under the build rules the side that waits and reacts is ahead, so the standstill is not only a weakness of the bot.
+- *Skill kinds (per fielded slot and battle, `AiBrain`):* zone 3.5–4.1, Surge 1.3–1.4, movement 1.5–1.7, trap 0.9–1.2, board 0.9–1.3, Strike 0.41; with `hunt` + `aggro` zone 1.0–1.1, Surge 1.6–1.9, movement 2.4–2.7, Strike 0.56–0.64. `rush` never sets a trap.
+- *Limits:* `hunt` and `rush` are as crude as `AiBrain`; the 44 % say that this way of attacking loses to this way of waiting, not that every attack does.
+
+**Follow-up:** T13 (length distribution and the attacker's share as metrics; a better opponent AI), T38 (what makes waiting pay: measured in S011), T02 (prices stay ignored by user decision).
 
 ## S009 · 2026-11-12 · five rule changes as build rules, rotation, Strike damage, prop skills, skill-kind usage
 

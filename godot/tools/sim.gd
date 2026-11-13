@@ -12,7 +12,8 @@ extends SceneTree
 ##   --team-a / --team-b  fixed teams: monster ids of data/monsters, also simulation-only ones
 ##                        (comma lists; --team-b defaults to --team-a), on an empty board with
 ##                        seeded, mirrored start squares
-##   --bot-a / --bot-b    greedy (AiBrain, default) | rush | kite | random (tools/lib/sim_bots.gd)
+##   --bot-a / --bot-b    greedy (AiBrain, default; hunt = same) | wait | chase | plan | rush | kite | random
+##                        (tools/lib/sim_bots.gd)
 ##   --board              kit runs: seeded (default) | layout    build runs: flat (default) | layout | seeded
 ##   --props a,b          build runs: one mirrored pair per prop id
 ##   --experiment props   build runs: one block without props, then one per catalogue prop
@@ -28,6 +29,14 @@ extends SceneTree
 ##                        zones) · zonepush (push / pull zones also move at cast) · alltraps /
 ##                        alltimed (every marker skill of one kind) · turns=N (timer of Surges)
 ##                        · aggro (the AI closes in more and values support less)
+##                        · groundfade=N (ground laid in battle ends with the N-th round; rule 2, 0 = never) ·
+##                        trapfade=N (an unsprung trap ends with the N-th round) · trapcap=N (traps
+##                        per trap skill and monster; rule 1, 0 = no limit) ·
+##                        shield=N (Surge reduction of shield zones) · startback (back-row starts)
+##                        · for this run only: swap=old>new (kits), hp=±N, hpmin=N, hpmax=N,
+##                        stat=monster.field:value, tprmax=N, apmin=N, surgedmg=±N, strikedmg=N, zoneonce / castonce (zone
+##                        skills / all placed skills once per round)
+##   --no-kind-a / -b K   the bot of side 0 / 1 never uses skills of kind K (what is the kind worth)
 ##   --shield-once        test change: every shield zone skill is once per global round
 ##   --pressure N         late-round pressure starts N rounds later (negative: earlier)
 ##   --paired             battle i always starts from seed-derived state i, so runs with different
@@ -46,7 +55,7 @@ var _fielded := {}                      # ids of the skills some fielded monster
 var _defence_ap := 0
 const DAMAGE_KINDS := ["strike", "surge", "ground", "collision", "fall", "collapse", "aftermath", "arena"]
 const OPTIONS: Array[String] = ["bot-a", "bot-b", "team-a", "team-b", "board", "props", "experiment", "pairs", "trace", "help",
-	"variant", "shield-once", "pressure", "compact", "compact-head", "paired"]
+	"variant", "shield-once", "pressure", "compact", "compact-head", "paired", "no-kind-a", "no-kind-b"]
 const HELP := "sim.gd -- [battles] [mode 1v1|2v2|3v3|5v5] [seed] [state] [kits] [--team-a monsters] [--team-b monsters]\n" \
 	+ "          [--bot-a B] [--bot-b B] [--board flat|layout|seeded] [--props ids] [--experiment props|bots] [--pairs N] [--trace]"
 
@@ -82,7 +91,11 @@ func _run() -> int:
 	setup["compact"] = opt.has("compact") or opt.has("compact-head")
 	setup["compact_head"] = opt.has("compact-head")
 	setup["paired"] = opt.has("paired")
+	setup["debug"] = OS.has_environment("SIM_DEBUG")
 	var why := _apply_variant(setup["variant"])
+	BattleExperiment.ai_no_kind[0] = String(opt.get("no-kind-a", ""))
+	BattleExperiment.ai_no_kind[1] = String(opt.get("no-kind-b", ""))
+	setup["no_kind"] = BattleExperiment.ai_no_kind.duplicate()
 	if why != "":
 		return _fail(why)
 	if setup["shield_once"]:
@@ -175,7 +188,7 @@ func _apply_variant(text: String) -> String:
 				for sid in BattleContent.shared().skills:
 					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
 					if sd.kind == BattleSkillDef.STRIKE and sd.strike_damage > 0:
-						sd.strike_damage = clampi(val.to_int(), 0, 2)
+						sd.strike_damage = clampi(val.to_int(), 0, 4)
 			"norotate":
 				BattleExperiment.no_rotation = true
 			"move":
@@ -184,10 +197,86 @@ func _apply_variant(text: String) -> String:
 				_defence_ap = maxi(1, val.to_int())
 			"shieldap":
 				_shield_ap = maxi(1, val.to_int())
+			"groundfade":
+				BattleExperiment.ground_rounds = maxi(0, val.to_int())
+			"trapfade":
+				BattleExperiment.trap_rounds = maxi(1, val.to_int())
+			"startback":
+				BattleExperiment.start_back = true
+			"trapcap":
+				BattleExperiment.trap_cap = maxi(0, val.to_int())
+			"wells":
+				BattleExperiment.wells = maxi(0, val.to_int())
+			"noflank":
+				BattleExperiment.flank = false
+			"tpr1":
+				BattleExperiment.tpr_from_round = 1
+			"flank":
+				BattleExperiment.flank = true
+			"delay":
+				BattleExperiment.delay_turn = true
+			"castersurge":
+				BattleExperiment.surge_at_caster = true
+			"fairsurge":
+				BattleExperiment.surge_fair = true
+			"tpr2":
+				BattleExperiment.tpr_from_round = 2
+			"latepressure":
+				if val != "none" and val != "idle" and val != "always":
+					return "latepressure needs none, idle or always (got '%s')" % val
+				BattleExperiment.pressure_mode = val
 			"softpressure":
 				BattleExperiment.soft_pressure = maxi(1, val.to_int())
 			"noshield":
-				_shield_ap = 99
+				BattleExperiment.no_shield_zones = true
+			"hp":
+				for mid in BattleContent.shared().monsters:
+					var md: MonsterDef = BattleContent.shared().monsters[mid]
+					md.hp = clampi(md.hp + val.to_int(), 1, 10)
+			"surgedmg":
+				for sid in BattleContent.shared().skills:
+					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
+					if sd.is_marker():
+						sd.surge_damage = maxi(1, sd.surge_damage + val.to_int())
+			"swap":
+				var pair := val.split(">")
+				var skills: Dictionary = BattleContent.shared().skills
+				if pair.size() != 2 or not skills.has(StringName(pair[0])) or not skills.has(StringName(pair[1])):
+					return "swap needs old>new with two skill ids of data/skills (got '%s')" % val
+				for mid in BattleContent.shared().monsters:
+					var md: MonsterDef = BattleContent.shared().monsters[mid]
+					for i in md.skills.size():
+						if md.skills[i].id == StringName(pair[0]):
+							md.skills[i] = skills[StringName(pair[1])]
+			"stat":                                   # stat=monster.field:value, this run only
+				var sv := val.split(":")
+				var mf := sv[0].split(".")
+				var smd: MonsterDef = BattleContent.shared().monsters.get(StringName(mf[0])) if mf.size() == 2 and sv.size() == 2 else null
+				if smd == null or not (mf[1] in smd):
+					return "stat needs monster.field:value (got '%s')" % val
+				smd.set(mf[1], sv[1].to_float() if mf[1] == "initiative" else sv[1].to_int())
+			"hpmin", "hpmax":
+				for mid in BattleContent.shared().monsters:
+					var md: MonsterDef = BattleContent.shared().monsters[mid]
+					md.hp = maxi(md.hp, val.to_int()) if key == "hpmin" else mini(md.hp, maxi(1, val.to_int()))
+			"shield":
+				for zid in BattleContent.shared().zones:
+					for fe: FieldEffect in (BattleContent.shared().zones[zid] as BattleZoneDef).effects:
+						if fe.tag == FieldEffect.SHIELD:
+							fe.base = maxi(1, val.to_int())
+							fe.cap = fe.base
+			"tprmax", "apmin":
+				for mid in BattleContent.shared().monsters:
+					var md: MonsterDef = BattleContent.shared().monsters[mid]
+					if key == "tprmax":
+						md.tpr = mini(md.tpr, maxi(1, val.to_int()))
+					else:
+						md.ap = maxi(md.ap, val.to_int())
+			"zoneonce", "castonce":
+				for sid in BattleContent.shared().skills:
+					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
+					if sd.kind == BattleSkillDef.ZONE or (key == "castonce" and sd.is_placed()):
+						sd.repetition = "once_per_round"
 			"alltraps", "alltimed":
 				for sid in BattleContent.shared().skills:
 					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
@@ -199,7 +288,7 @@ func _apply_variant(text: String) -> String:
 					if sd.kind == BattleSkillDef.SURGE:
 						sd.surge_turns = maxi(1, val.to_int())
 			_:
-				return "unknown variant '%s' (push, kinpush, step, jab, move, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns)" % key
+				return "unknown variant '%s' (push, kinpush, step, jab, move, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, groundfade, trapfade, startback, trapcap)" % key
 	if _defence_ap > 0:
 		for sid in BattleContent.shared().skills:
 			var sd: BattleSkillDef = BattleContent.shared().skills[sid]
@@ -240,8 +329,12 @@ func _series(setup: Dictionary, label: String) -> int:
 	var trap_damage := 0                   # trap part of the Surge damage
 	var defeats_by := {}                   # last damage kind of every defeated monster
 	var ended_by := {}                     # the same for the last defeat of each battle
+	var well_held := [0, 0, 0, 0, 0]     # Wellsprings held at round ends by side 0, side 1; round ends counted; bonus squares taken by side 0, side 1
 	# battles that reached late-round pressure: [HP leader won, HP leader lost, HP level, Draw or timeout after a lead]
 	var lead := [0, 0, 0, 0]
+	var length := [0, 0, 0, 0]             # battles under 3 rounds, over 7, over 10; the longest battle
+	var unacted := 0                       # monsters defeated before their own first turn
+	var first_defeat := [0, 0]             # rounds of the first defeat summed, battles with a defeat
 	for i in n:
 		if setup["paired"]:
 			rng.seed = seed_value * 1000003 + i
@@ -283,6 +376,10 @@ func _series(setup: Dictionary, label: String) -> int:
 		else:
 			wins[b.winner_side] += 1
 		rounds_total += b.round_number
+		length[0] += 1 if b.round_number < 3 else 0
+		length[1] += 1 if b.round_number > 7 else 0
+		length[2] += 1 if b.round_number > 10 else 0
+		length[3] = maxi(length[3], b.round_number)
 		if not hp_at_pressure.is_empty():
 			if hp_at_pressure[0] == hp_at_pressure[1]:
 				lead[2] += 1
@@ -296,7 +393,11 @@ func _series(setup: Dictionary, label: String) -> int:
 		var pending := {}                 # surge id -> threatened squares
 		var last_surge_victim := {}       # unit id -> true if its last damage was Surge damage
 		var last_kind := {}               # unit id -> kind of its last damage ("void" = Voidscar)
+		var hit_log := {}                 # unit id -> its damage instances as text (SIM_DEBUG)
 		var final_kind := ""
+		var acted := {}                   # unit id -> it has started a turn of its own
+		var event_round := 1
+		var had_defeat := false
 		extra["left"] += b.surges.size()
 		for ev in b.events:
 			match ev["type"]:
@@ -314,13 +415,34 @@ func _series(setup: Dictionary, label: String) -> int:
 						if pending[sid].has(ev["from"]) and not pending[sid].has(ev["to"]):
 							extra["dodges"] += 1
 							break
+				&"round_started":
+					event_round = int(ev["round"])
+				&"wells_held":
+					well_held[0] += int(ev["held"][0])
+					well_held[1] += int(ev["held"][1])
+					well_held[2] += 1
+				&"turn_started":
+					acted[ev["who"]] = true
 				&"defeated":
+					if not acted.has(ev["who"]):
+						unacted += 1
+					if setup.get("debug", false):
+						print("DBG round %d: %s defeated by %s (acted %s)" % [event_round, ev["who"], last_kind.get(ev["who"], "other"), acted.has(ev["who"])])
+						print("DBGHIT round %d | %s | hp %d | %s" % [event_round, b.units[ev["who"]].sheet.species_id, b.units[ev["who"]].max_hp, " + ".join(hit_log.get(ev["who"], PackedStringArray()))])
+					if not had_defeat:
+						had_defeat = true
+						first_defeat[0] += event_round
+						first_defeat[1] += 1
 					if last_surge_victim.get(ev["who"], false):
 						extra["surge_kills"] += 1
 					final_kind = String(last_kind.get(ev["who"], "other"))
 					defeats_by[final_kind] = int(defeats_by.get(final_kind, 0)) + 1
 			if ev["type"] == &"damage":
 				if int(ev["amount"]) > 0:
+					if setup.get("debug", false):
+						if not hit_log.has(ev["target"]):
+							hit_log[ev["target"]] = PackedStringArray()
+						hit_log[ev["target"]].append("r%d %s %s %d" % [event_round, ev["kind"], ev.get("source", ""), int(ev["amount"])])
 					var kind := String(ev["kind"])
 					if kind == "surge" and ev.get("trap", false):
 						kind = "trap"
@@ -345,6 +467,8 @@ func _series(setup: Dictionary, label: String) -> int:
 			if ev["type"] in [&"surge_declared", &"cast", &"strike", &"moved"] and ev.has("skill"):
 				var key := String(ev["skill"])
 				skills_used[key] = int(skills_used.get(key, 0)) + 1
+		if setup.get("debug", false):
+			print("DBG end: winner %s after %d rounds" % [str(b.winner_side) if b.over and not b.draw else "none", b.round_number])
 		if b.over and final_kind != "":
 			ended_by[final_kind] = int(ended_by.get(final_kind, 0)) + 1
 		for id in b.roster:
@@ -378,14 +502,15 @@ func _series(setup: Dictionary, label: String) -> int:
 		var dmg_table := {"strike": int(damage.get("strike", 0)), "surge": surge_total - trap_damage, "trap": trap_damage, "ground": hazard,
 			"collision": int(damage.get("collision", 0)) + int(damage.get("fall", 0)), "void": void_damage, "arena": int(damage.get("arena", 0))}
 		if setup["compact_head"]:
-			print("| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner |")
-			print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
-		print("| %s | %s · %d · %d | %d / %d / %d / %d | %.1f | %d %% | %s | %s | %s | %s | %s / %s / %s | %s / %s | %s | %s | %s | %s | %s | %s | %d / %d / %d / %d |" % ([
+			print("| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |")
+			print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+		print("| %s | %s · %d · %d | %d / %d / %d / %d | %.1f | %d %% | %s | %s | %s | %s | %s / %s / %s | %s / %s | %s | %s | %s | %s | %s | %s | %d / %d / %d / %d | %d / %d / %d · %d | %s | %s | %s |" % ([
 			_variant_text(setup), mode, seed_value, n, wins[0], wins[1], draws, timeouts, float(rounds_total) / n,
 			roundi(100.0 * extra["early"] / n), by.call(ended_by, n - timeouts), by.call(defeats_by, counts[&"defeated"]),
 			by.call(dmg_table, total_damage), per.call(declared, n), per.call(extra["fired_hit"], n),
 			per.call(extra["fired"] - extra["fired_hit"], n), per.call(declared - extra["fired"], n),
-			per.call(extra["enemy_dmg"], declared), per.call(extra["own_dmg"], declared), per.call(total_damage, n)] + _usage_columns(content, skills_used, slots_by_kind, n) + lead))
+			per.call(extra["enemy_dmg"], declared), per.call(extra["own_dmg"], declared), per.call(total_damage, n)] + _usage_columns(content, skills_used, slots_by_kind, n) + lead + [roundi(100.0 * length[0] / n), roundi(100.0 * length[1] / n), roundi(100.0 * length[2] / n), length[3],
+			("%.1f" % (float(first_defeat[0]) / first_defeat[1])) if first_defeat[1] > 0 else "—", per.call(unacted, n), _well_column(ended_by, n - timeouts, defeats_by, counts[&"defeated"], damage, total_damage, well_held, n)]))
 		return 0
 
 	if setup["kits"]:
@@ -456,6 +581,9 @@ func _series(setup: Dictionary, label: String) -> int:
 	print("")
 	print("Skill uses per battle: %s" % _pairs(skills_used, n, false))
 	print("Reached late-round pressure: HP leader won %d, lost %d, HP level %d, no winner %d" % lead)
+	print("Rounds: under 3 in %d %%, over 7 in %d %%, over 10 in %d %% of the battles, longest %d; first defeat in round %s (mean); monsters defeated before their own first turn: %s per battle" % [
+		roundi(100.0 * length[0] / n), roundi(100.0 * length[1] / n), roundi(100.0 * length[2] / n), length[3],
+		("%.1f" % (float(first_defeat[0]) / first_defeat[1])) if first_defeat[1] > 0 else "—", per.call(unacted, n)])
 	if label != "":
 		print("")
 	return 0
@@ -509,6 +637,12 @@ func _variant_text(setup: Dictionary) -> String:
 		parts.append("shield-once")
 	if int(setup["pressure"]) != 0:
 		parts.append("pressure %+d" % int(setup["pressure"]))
+	for side in 2:
+		if setup["no_kind"][side] != "":
+			parts.append("side %d without %s" % [side, setup["no_kind"][side]])
+	var bots: Array[String] = setup["bots"]
+	if bots != (["greedy", "greedy"] as Array[String]):
+		parts.append("bots %s" % (bots[0] if bots[0] == bots[1] else "%s / %s" % bots))
 	return "build rules" if parts.is_empty() else " + ".join(parts)
 
 
@@ -553,3 +687,16 @@ func _pairs(table: Dictionary, n: int, per_battle_label: bool) -> String:
 	if parts.is_empty():
 		return "none"
 	return ", ".join(parts) + (" (per battle)" if per_battle_label else "")
+
+
+## Compact column of the Wellspring draft: share of last defeats, of all defeats and of the damage
+## by Wellsprings / by being surrounded, and the Wellsprings held per round end by each side.
+func _well_column(ended_by: Dictionary, ended: int, defeats_by: Dictionary, defeats: int, damage: Dictionary, total: int, held: Array, battles: int) -> String:
+	if BattleExperiment.wells <= 0 and not BattleExperiment.flank:
+		return "—"
+	var pct := func(table: Dictionary, k: String, of: int) -> String: return str(roundi(100.0 * int(table.get(k, 0)) / of)) if of > 0 else "—"
+	var per_round := "—"
+	if int(held[2]) > 0:
+		per_round = "%.2f / %.2f" % [float(held[0]) / held[2], float(held[1]) / held[2]]
+	return "%s / %s · %s / %s · %s / %s · %s" % [pct.call(ended_by, "well", ended), pct.call(ended_by, "flank", ended),
+		pct.call(defeats_by, "well", defeats), pct.call(defeats_by, "flank", defeats), pct.call(damage, "well", total), pct.call(damage, "flank", total), per_round]

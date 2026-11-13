@@ -112,7 +112,7 @@ func _ready() -> void:
 		cb.text = item[0]
 		cb.tooltip_text = item[1]
 		cb.add_theme_font_size_override("font_size", 13)
-		cb.button_pressed = (item[0] == "Push 2 squares" and BattleExperiment.push_steps > 1) or (item[0] != "Push 2 squares" and BattleExperiment.kin_push)
+		cb.button_pressed = _experiment_on(item[0])
 		cb.toggled.connect(func(_on: bool): _apply_experiments())
 		lab.add_child(cb)
 		_experiments[item[0]] = cb
@@ -150,6 +150,14 @@ func _card_text(d: MonsterDef) -> String:
 	var sheet := UnitSheets.from_instance(MonsterInstance.of_species(d))
 	var rows := BattleText.sheet_rows(BattleContent.shared(), sheet)
 	return "%s\n%s\n%s" % [d.display_name.to_upper(), BattleText.rows_to_text(rows), d.blurb]
+
+
+## Whether the switch behind a check box is on at the moment.
+func _experiment_on(label: String) -> bool:
+	match label:
+		"Push 2 squares":
+			return BattleExperiment.push_steps > 1
+	return BattleExperiment.kin_push
 
 
 ## Sets the experiment switches from the check boxes and refreshes the cards (kits can change).

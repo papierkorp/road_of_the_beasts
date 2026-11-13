@@ -5,7 +5,7 @@
 [ext_resource type="Resource" path="res://data/skills/glide.tres" id="s0"]
 [ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
 [ext_resource type="Resource" path="res://data/skills/eclipse.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/shade_veil.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/blink.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -13,12 +13,13 @@ id = &"dusk_moth"
 display_name = "Dusk Moth"
 kin = 1
 aspect = 3
-hp = 2
-initiative = 9.0
+reference_shape = 1
+hp = 5
+initiative = 7.0
 move = 3
-tpr = 2
-reach = 2
-ap = 2
+tpr = 1
+reach = 4
+ap = 3
 skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
-blurb = "A wide, weaker Rift that grows on Cursed squares, under a Shade Veil."
+blurb = "A wide, weaker Rift that grows on Cursed squares; Blinks out of reach."
 notes = "Native Ground omitted: placeholder without mechanics (T11). Shade Veil without the retired Strike reduction."

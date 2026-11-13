@@ -5,6 +5,10 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func test_ap_per_turn_is_the_ap_stat_and_step_costs_one() -> void:
 	var b := H.battle([[0, Vector2i(3, 3), {"ap": 2, "init": 9.0}], [1, Vector2i(6, 0)]])
 	b.begin()
@@ -46,6 +50,7 @@ func test_every_skill_use_pays_its_authored_ap() -> void:
 
 
 func test_once_per_round_counts_per_equipped_instance_and_resets_with_the_global_round() -> void:
+	BattleExperiment.tpr_from_round = 1       # extra turns as from round 2 on (in round 1 every monster has one turn)
 	var limited := H.zone_skill([FieldEffect.make("slow", 1, 2)])
 	limited.repetition = "once_per_round"
 	var b := H.battle([[0, Vector2i(3, 3), {"ap": 5, "init": 9.0, "tpr": 2, "skills": [limited, limited]}], [1, Vector2i(6, 0), {"init": 1.0}]])

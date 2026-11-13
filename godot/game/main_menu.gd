@@ -1,8 +1,9 @@
 extends Control
-## Start menu: start the battle, settings, quit.
+## Start menu: start the game or the battle prototype, overview (debug tables of skills and monsters), settings, quit.
 
 const DRAFT_SCENE := "res://battle/draft.tscn"
 const OVERWORLD_SCENE := "res://overworld/district.tscn"
+const OVERVIEW_SCENE := "res://game/overview.tscn"
 
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
@@ -44,6 +45,7 @@ func _ready() -> void:
 	var cont := _add_button("Continue", _continue_game)
 	cont.disabled = not SaveGame.exists()
 	_add_button("Battle Prototype", func(): get_tree().change_scene_to_file(DRAFT_SCENE))
+	_add_button("Overview", func(): get_tree().change_scene_to_file(OVERVIEW_SCENE))
 	_add_button("Settings", _show_settings)
 	_add_button("Quit", func(): get_tree().quit())
 

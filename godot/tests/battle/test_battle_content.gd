@@ -8,7 +8,7 @@ const H := preload("res://tests/battle/helpers.gd")
 func test_the_shipped_content_loads_without_problems() -> void:
 	var c := BattleContent.reload_shared()
 	assert_array(c.problems).is_empty()
-	assert_array(c.grounds.keys()).contains_exactly_in_any_order([&"plain", &"rubble", &"voidscar", &"lava", &"thornbed",
+	assert_array(c.grounds.keys()).contains_exactly_in_any_order([&"plain", &"rubble", &"voidscar", &"wellspring", &"lava", &"thornbed",
 		&"blight", &"hearth", &"mossbed", &"umbra", &"hallowed"])
 	assert_int(c.props.size()).is_equal(19)      # the catalogue of gdd_battle §4.10 plus Vortex Urn and Storm Drum
 	assert_int(c.tamer.size()).is_equal(7)       # the confirmed tamer skills of gdd_battle §5.2
@@ -53,10 +53,11 @@ func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> 
 		assert_array(sheet.problems()).is_empty()
 		assert_bool(sheet.active_skills().size() >= 1).is_true()
 		# gdd_monsters §4.1: every Core High reference individual spends 16 points above base
-		var tpr_cost: int = [0, 3, 8, 15][sheet.tpr]
-		var ap_cost: int = {2: 6, 3: 9, 4: 14, 5: 21}[sheet.ap]
-		var points: int = sheet.hp + int(sheet.initiative) + sheet.movement + (sheet.reach - 1) * 3 + tpr_cost + ap_cost
-		assert_int(points).is_equal(31)
+		# (draft prices of 2026-11-13: HP 2 per point above 4, initiative 0.5 per point above 1, Movement 1
+		# per point above 1, Reach 3 per point above 2, second turn 3, AP 3 3)
+		var points: float = (sheet.hp - 4) * 2.0 + (sheet.initiative - 1.0) * 0.5 + (sheet.movement - 1) + (sheet.reach - 2) * 3.0 \
+			+ (3.0 if sheet.tpr == 2 else 0.0) + (3.0 if sheet.ap == 3 else 0.0)
+		assert_float(points).is_equal(16.0)
 	# Swarm Surges are limited to 2 cells (gdd_monsters §3.1)
 	assert_int(c.skill(&"bramble_tide").footprint.size()).is_equal(2)
 	# basic Surges and traps keep the 1-AP target; slotted movement costs 1 AP

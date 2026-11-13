@@ -11,6 +11,8 @@ const FALL := "fall"
 const COLLAPSE := "collapse"      # Mountain collapse (environmental)
 const AFTERMATH := "aftermath"    # prop aftermath
 const ARENA := "arena"            # late-round collapse of the whole arena
+const WELL := "well"              # test rule: a held Wellspring at the end of a round
+const FLANK := "flank"            # test rule: two enemies next to a monster at the end of a round
 
 
 ## damage = base + increases - reductions, summed in one step, floored at 0. Each source only

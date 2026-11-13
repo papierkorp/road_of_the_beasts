@@ -67,6 +67,7 @@ static func build(b: Battle, mode: StringName, seed_value := 0) -> Array[Vector2
 	b.voidscar_from = d["voidscar_from"]
 	for p: Vector2i in d["mountains"]:
 		b.board.at(p).height = 1
+	place_wells(b)
 	var starts: Array[Vector2i] = []
 	starts.assign(d["starts"])
 	var props: Dictionary = d["props"] if seed_value == 0 else _seeded_props(b, mode, d, starts, seed_value)
@@ -79,6 +80,15 @@ static func build(b: Battle, mode: StringName, seed_value := 0) -> Array[Vector2
 		b.add_prop(props[p], p)
 		b.add_prop(props[p], twin)
 	return starts
+
+
+## Test rule (BattleExperiment.wells): turns the centre-row squares into Wellsprings (no Mountain there).
+static func place_wells(b: Battle) -> void:
+	for p in BattleExperiment.well_squares(b.board.size):
+		var cell := b.board.at(p)
+		cell.ground = GroundDef.WELL
+		cell.level = 1
+		cell.height = 0
 
 
 static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int) -> Dictionary:

@@ -113,18 +113,22 @@ func test_a_trap_never_fires_by_itself_and_outlives_its_caster() -> void:
 	assert_int(H.unit(b, 1).hp).is_equal(5)
 
 
-func test_the_same_trap_can_be_set_several_times_and_only_on_free_squares() -> void:
+func test_a_second_trap_skill_is_laid_only_on_free_squares_and_the_same_one_moves() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO, Vector2i(1, 0)])]}],
+		[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO, Vector2i(1, 0)]), H.surge([Vector2i.ZERO, Vector2i(1, 0)])]}],
 		[1, Vector2i(6, 0), {"hp": 8}],
 	])
 	b.begin()
 	assert_bool(_cast(b, 0, Vector2i(3, 3))).is_true()   # (3,3) (4,3)
-	assert_bool(_cast(b, 0, Vector2i(4, 3))).is_true()   # the same skill again: only (5,3) is free
+	assert_bool(_cast(b, 1, Vector2i(4, 3))).is_true()   # another trap skill: only (5,3) is free
 	assert_int(b.surges.size()).is_equal(2)
 	assert_array(b.surges[1].cells).is_equal([Vector2i(5, 3)])
 	assert_int(b.board.at(Vector2i(4, 3)).surge).is_equal(1)   # the first trap keeps its square
 	assert_int(b.ap).is_equal(1)
+	assert_bool(_cast(b, 0, Vector2i(2, 4))).is_true()   # the first skill again: its trap moves (one per skill)
+	assert_int(b.surges.size()).is_equal(2)
+	assert_int(b.board.at(Vector2i(3, 3)).surge).is_equal(-1)
+	assert_int(b.board.at(Vector2i(2, 4)).surge).is_greater(0)
 
 
 func test_a_pushed_monster_springs_the_trap_and_a_walk_ends_on_it() -> void:

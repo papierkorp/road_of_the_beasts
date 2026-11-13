@@ -67,6 +67,10 @@ static func lay_ground(b: Battle, cell: BoardCell, ground: StringName, source :=
 			cell.ground = ground
 			cell.level = 1
 	if out != &"kept" and out != &"immutable":
+		var laid := b.content.ground(cell.ground)
+		var fades := BattleExperiment.ground_rounds > 0 and cell.ground != GroundDef.PLAIN and (laid == null or not laid.immutable)
+		cell.ground_until = b.round_number + BattleExperiment.ground_rounds - 1 if fades else 0
+	if out != &"kept" and out != &"immutable":
 		b.emit(&"ground_changed", {"pos": cell.pos, "ground": cell.ground, "level": cell.level,
 			"result": out, "source": source})
 	return out
@@ -77,13 +81,14 @@ static func lay_ground(b: Battle, cell: BoardCell, ground: StringName, source :=
 ## Mountain creation with its coupled reset to Plain (Voidscar stays). Needs a prop-free
 ## square; a second creation on a Mountain does nothing.
 static func raise_mountain(b: Battle, cell: BoardCell) -> bool:
-	if cell.is_mountain() or cell.prop != null:
+	if cell.is_mountain() or cell.prop != null or GroundDef.is_reserved(cell.ground):
 		return false
 	cell.height = 1
 	var cur := b.content.ground(cell.ground)
 	if cur == null or not cur.immutable:
 		cell.ground = GroundDef.PLAIN
 		cell.level = 1
+		cell.ground_until = 0
 	b.emit(&"mountain_raised", {"pos": cell.pos})
 	return true
 
@@ -98,6 +103,7 @@ static func destroy_mountain(b: Battle, cell: BoardCell, keep_ground: bool) -> b
 	if not keep_ground and (cur == null or not cur.immutable):
 		cell.ground = GroundDef.RUBBLE
 		cell.level = 1
+		cell.ground_until = 0
 	b.emit(&"mountain_destroyed", {"pos": cell.pos})
 	return true
 
@@ -106,7 +112,7 @@ static func destroy_mountain(b: Battle, cell: BoardCell, keep_ground: bool) -> b
 
 ## True if a prop of this type may be placed here: its layers are free of props and monsters.
 static func can_place_prop(b: Battle, def: PropDef, p: Vector2i) -> bool:
-	if def == null or not b.board.in_bounds(p):
+	if def == null or not b.board.in_bounds(p) or GroundDef.is_reserved(b.board.at(p).ground):
 		return false
 	for layer in [Board.GROUND, Board.AIR]:
 		if not def.occupies(layer):

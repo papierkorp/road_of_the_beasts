@@ -4,6 +4,10 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _battle(specs: Array, skills: Array) -> Battle:
 	var b := H.battle(specs)
 	for id: StringName in skills:
@@ -61,6 +65,7 @@ func test_swap_places_needs_two_small_ground_monsters() -> void:
 
 
 func test_urgent_order_moves_a_waiting_monster_directly_after_the_current_turn() -> void:
+	BattleExperiment.tpr_from_round = 1       # extra turns as from round 2 on
 	var b := _battle([
 		[0, Vector2i(0, 6), {"init": 9.0}], [1, Vector2i(6, 0), {"init": 7.0}], [1, Vector2i(5, 0), {"init": 6.0}],
 		[0, Vector2i(1, 6), {"init": 2.0, "tpr": 2}],

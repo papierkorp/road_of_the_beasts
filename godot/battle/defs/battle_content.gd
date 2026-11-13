@@ -13,7 +13,7 @@ extends RefCounted
 ## without touching the files.
 
 ## Bump when a definition changes meaning: replays are only valid for the same content.
-const VERSION := "2026-11-12.2"
+const VERSION := "2026-11-13.1"
 const ROOT := "res://data"
 
 var grounds := {}
@@ -254,7 +254,7 @@ static func _describe(res: Resource) -> String:
 	for p in res.get_property_list():
 		if not (p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE) or not (p["usage"] & PROPERTY_USAGE_STORAGE):
 			continue
-		if p["name"] == "content_status" or p["name"] == "internal_calc_cost":
+		if p["name"] == "content_status" or p["name"] == "internal_calc_cost" or p["name"] == "reference_shape":
 			continue                          # labels and authoring numbers are not rules
 		var v = res.get(p["name"])
 		parts.append("%s=%s" % [p["name"], _describe_value(v)])

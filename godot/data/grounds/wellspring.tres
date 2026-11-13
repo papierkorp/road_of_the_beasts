@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"wellspring"
+display_name = "Wellspring"
+immutable = true
+color = Color(0.2, 0.62, 0.72, 1)
+description = "At the end of a round a monster standing here deals 1 damage to the nearest enemy. Nothing changes this ground; no prop or Mountain may stand on it."

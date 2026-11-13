@@ -25,7 +25,7 @@ SPECIES  (data file, shared by all individuals — §4.1)
   Each concrete Surge skill defines its own behaviour, shape and twist.
 
 INDIVIDUAL  (one per monster the player owns or meets in the wild)
-  stat shape      glass cannon | anvil | skirmisher | berserker | balanced | fragile
+  stat shape      bulwark | skirmisher | swift | caster
   stats           rolled inside the shape's frame, then spent by the player (§2.2)
   rarity          Normal | Rare | Epic | Legendary
   stage + sub-tier + XP
@@ -35,9 +35,9 @@ INDIVIDUAL  (one per monster the player owns or meets in the wild)
   current HP      persists between battles of an expedition
 ```
 
-- **Stat shape is individual, not species-wide.** Two Blaze Tigers can be a fast skirmisher and a hard-hitting berserker: same Surge, different playstyle, collection depth without new art.
-- Wild/newly caught monsters roll shapes weighted by **Kin lean** (§3.1: Winged → glass cannon, Ancient → anvil, …); rare off-lean rolls are prized finds. §4.1 shows reference individuals: typical Core Formation rolls.
-- **Every stat is paid for** (§2.2). Shape allocates a fixed budget: speed costs HP; slow shapes recover HP and Reach. No shape is strictly better.
+- **Stat shape is individual, not species-wide.** Two Blaze Tigers can be a fast skirmisher and a two-turn swift one: same Surge, different playstyle, collection depth without new art.
+- Wild/newly caught monsters roll shapes weighted by **Kin lean** (§3.1: Winged → swift or caster, Ancient → bulwark, …); rare off-lean rolls are prized finds. §4.1 shows reference individuals: typical Core Formation rolls.
+- **Every stat is paid for** (§2.2). Shape allocates a fixed budget: speed, extra turns and Reach cost HP. No shape is meant to be strictly better; whether that holds is measured, not assumed (§2.2).
 
 ### 1.2 Monster Sheet
 
@@ -65,7 +65,7 @@ The battle only ever sees this finished sheet.
 ### 1.3 Monster Identity — The 6 Axes
 
 ```
-1. STAT SHAPE   glass cannon / anvil / skirmisher / berserker / balanced / fragile   (per individual monster, rolled with the Kin's lean — §1.1)
+1. STAT SHAPE   bulwark / skirmisher / swift / caster   (per individual monster, rolled with the Kin's lean — §1.1)
 2. THEMES       free descriptive motifs; no fixed aspects, replacement element types or attunement
 3. KIN          creature type → Strike, layer, stat lean, which skill profiles it may take, Surge size access
 4. KIT          4 slots (active or passive, ≥ 1 active); each concrete Surge defines its behaviour, shape + size and at most ONE twist ([Skills §3](gdd_skills.md#3-skill-execution-profiles))
@@ -96,7 +96,7 @@ The six stat shapes are frames of min–max values per stat, not fixed stats (§
 
 |         Stat        |   Range  |                                                       Function                                                        |
 |---------------------|----------|-----------------------------------------------------------------------------------------------------------------------|
-| HP                  | 1–10     | No defense stat — dead is dead                                                                                        |
+| HP                  | 4–10     | No defense stat — dead is dead                                                                                        |
 | Initiative          | 0.1–10.0 | Position in the turn queue ([gdd_battle §2.2](gdd_battle.md#22-initiative-rules))                                                                          |
 | Movement            | int      | Squares per movement skill ([§3](gdd_skills.md#3-skill-execution-profiles)); Step is always 1                                                        |
 | Reach               | 2–4      | Cast range of all skills ([§2](gdd_skills.md#2-data-oriented-skill-construction-kit)); Strikes don't use it                                                      |
@@ -110,6 +110,8 @@ Zones and standing on a Mountain change these values during a fight: effective s
 
 ### 2.2 Frame, Budget, Level-Ups
 
+**Section status** *(user direction 2026-11-13)*: every number in this section (stat prices, budgets, frames) is a **working value, not fixed**. Statements elsewhere that treat them as settled are wrong. They are worked out in play and simulation together with the battle rules and the skills ([temp_todo.md](temp_todo.md) T03). The prices and frames below were reset on 2026-11-13 after the first measurements ([simulation_log.md](simulation_log.md) S012–S015).
+
 A monster **starts** with stats rolled by its stat shape; **after that the player decides** where each level-up goes. Three rules keep this fair:
 
 ```
@@ -118,78 +120,53 @@ BUDGET  every monster of a stage and sub-tier has the same total of stat points
 PRICE   stats cost points: a strong stat is paid for with the others
 ```
 
-**Stat prices:** **points = value × price** (Reach: (value − 1) × price). Base values are free (15 base points); the budget below is additional. **TPR/AP prices rise per step:** second and third action sources cost more than the first.
+**Stat prices** *(working draft of 2026-11-13, replaces the first draft; derived from bot runs, [simulation_log.md](simulation_log.md) S014/S015; not played)*: base values are free; every monster of a stage and sub-tier spends the same budget on top.
 
-|   Stat   | Base |                  Price                  | Base cost |
-|----------|------|-----------------------------------------|-----------|
-| HP       |    1 | 1 per point                             |         1 |
-| Init     |  1.0 | 1 per point (see below)                 |         1 |
-| Movement |    1 | 1 per point                             |         1 |
-| Reach    |    2 | 3 per point above 1                     |         3 |
-| TPR      |    1 | 1st **3** · 2nd **5** · 3rd **7**       |         3 |
-| AP       |    2 | base 2 = 6 · AP 3 **+3** · AP 4 **+5** · AP 5 **+7** |  6 |
-| **Base total** |  |                                       |    **15** |
+|   Stat   | Base (free) | Price above base |
+|----------|-------------|------------------|
+| HP       | 4           | 2 per point |
+| Init     | 1.0         | 0.5 per point (1 point = 2.0 initiative at the roll) |
+| Movement | 1           | 1 per point |
+| Reach    | 2           | 3 per point |
+| TPR      | 1           | second turn **3** (a third: open) |
+| AP       | 2           | AP 3 **3** · AP 4 **+5** · AP 5 **+7** |
 
-- **Absolute costs:** TPR 1/2/3 = 3/8/15; AP 2/3/4/5 = 6/9/14/21.
-- **One AP ceiling for every monster** *(user decision 2026-11-11)*: the stage ceiling of §2.3 applies to all monsters alike; no TPR value lowers it and no AP value restricts TPR. Extra turns are limited by their price instead; the TPR price formula (the additive 3/8/15 above does not scale with the number of actions per round) is an open draft until simulator evidence (T03/T13). AP additionally unlocks larger Strike shapes ([Skills §8.1](gdd_skills.md#81-strike-by-kin)).
+- **What changed and why:** HP cost 1 per point from a base of 1 and a second turn 5. In the runs a point of HP was worth four to six times a point of initiative or Movement, a 2-HP monster fell to a single Strike, and with extra turns counting from round 2 ([Battle §2.2](gdd_battle.md#22-initiative-rules)) a second turn was worth less than its price. Hence: no monster below 4 HP, HP at twice its old price, initiative at half, the second turn at 3.
+- **Known weak spots of this draft:** at Core every reference individual buys AP 3 (3 points for a third of all its actions), so AP does not tell monsters apart there; the value of a second turn depends on the body that takes it; the price of a third turn and the prices above AP 3 are carried over untested.
+- **One AP ceiling for every monster** *(user decision 2026-11-11)*: the stage ceiling of §2.3 applies to all monsters alike; no TPR value lowers it and no AP value restricts TPR. AP additionally unlocks larger Strike shapes ([Skills §8.1](gdd_skills.md#81-strike-by-kin)).
 
-**Budget per stage and sub-tier** (points above the 15 base points; absolute total in brackets):
+**Budget per stage and sub-tier** (points above the free base values):
 
-|        Stage        |  Lower  |  Middle |   High  |
-|---------------------|---------|---------|---------|
-| Qi Gathering        | 4 (19)  | 5 (20)  | 6 (21)  |
-| Foundation          | 10 (25) | 11 (26) | 12 (27) |
-| Core Formation      | 14 (29) | 15 (30) | 16 (31) |
-| Soul Tier and above | 18 (33) | 19 (34) | 20 (35) |
+|        Stage        | Lower | Middle | High |
+|---------------------|-------|--------|------|
+| Qi Gathering        | 4     | 5      | 6    |
+| Foundation          | 10    | 11     | 12   |
+| Core Formation      | 14    | 15     | 16   |
+| Soul Tier and above | 18    | 19     | 20   |
 
-So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Foundation**, because TPR 2 opens there). Immortal and Sovereign add no points; reason and replacement: [§5.3](#53-monster-progression-the-18-steps).
+So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Foundation**, because TPR 2 opens there). Immortal and Sovereign add no points; reason and replacement: [§5.3](#53-monster-progression-the-18-steps). The budgets are the earlier ones; only Core Formation High (16) has been simulated with the new prices.
 
-**The six frames at Core Formation** (min–max). Total points are absolute totals with all stats at minimum/maximum; every shape contains the required Core budget (29 / 30 / 31).
+**The four frames at Core Formation** (min–max of the roll). The earlier six frames are replaced: Glass cannon, Berserker and Fragile became **Swift**, Balanced joined **Skirmisher**, Anvil is **Bulwark**, and **Caster** is new.
 
-|    Shape     |  HP |  Init | Move | Reach | TPR |  AP | Total points | Feel |
-|--------------|-----|-------|------|-------|-----|-----|--------------|------|
-| Glass cannon | 1–3 | 7–9   | 1–3  | 2     | 2   | 2   | 26–32        | commits fast, dies if its Surge is cut away |
-| Anvil        | 6–8 | 1–4   | 1–2  | 2–3   | 1   | 2–3 | 20–32        | slow, hard to dislodge, threatens a radius it can't leave |
-| Skirmisher   | 3–5 | 5–8   | 3–5  | 2     | 1   | 2–3 | 23–33        | never in its own Surge when it fires |
-| Berserker    | 4–6 | 5–7   | 1–3  | 2     | 2   | 2   | 27–33        | escalates one Surge with Empower; TPR 3 opens at Soul |
-| Balanced     | 4–6 | 4–6   | 2–3  | 2–3   | 1   | 2–3 | 22–33        | no weakness, no spike — the kit decides |
-| Fragile      | 2–4 | 5–7   | 1–3  | 2–3   | 2   | 2   | 25–34        | weak body, many turns; lives on its Surge |
+|   Shape    |  HP |  Init | Move | Reach | TPR |  AP | Feel |
+|------------|-----|-------|------|-------|-----|-----|------|
+| Bulwark    | 7–8 | 1–5   | 1–3  | 2–3   | 1   | 2–3 | slow, hard to dislodge; holds a Wellspring |
+| Skirmisher | 5–7 | 5–9   | 3–5  | 2–3   | 1   | 2–3 | gets where it wants first; takes free squares and pushes holders off |
+| Swift      | 4–6 | 3–9   | 3–5  | 2–3   | 2   | 2–3 | two turns from round 2 on, paid with body or speed |
+| Caster     | 4–5 | 5–7   | 2–3  | 4     | 1   | 2–3 | weak body, long Reach; works from behind the others |
 
-**Worked frame totals:**
+- Worked example (Bulwark, 16 points): HP 8 (8) + Init 5.0 (2) + Reach 3 (3) + AP 3 (3) = 16. Swift: HP 5 (2) + Init 9.0 (4) + Move 5 (4) + second turn (3) + AP 3 (3) = 16. Caster: HP 5 (2) + Init 7.0 (3) + Move 3 (2) + Reach 4 (6) + AP 3 (3) = 16.
+- **Frames for the other stages are not derived yet** (the earlier scaled tables are removed with the old prices; T03). The Qi Gathering HP ceiling of §2.3 equals the new HP base and has to be reset with them.
 
-- Worked out with the prices (Glass cannon): HP 1–3 = 1–3 · Init 7–9 = 7–9 (8–12) · Move 1–3 = 1–3 (9–15) · Reach 2 = 3 (12–18) · TPR 2 = 8 (20–26) · AP 2 = 6 → **26–32**.
-- Anvil: HP 6–8 · Init 1–4 (7–12) · Move 1–2 (8–14) · Reach 2–3 = 3–6 (11–20) · TPR 1 = 3 (14–23) · AP 2–3 = 6–9 → **20–32**.
+- **Init at roll:** 1 point = **2.0 Init**; a free decimal (.0–.9) is rolled on top, below the frame maximum.
+- **Init at level-up:** 1 point = **+0.2 Init**; fine-tune the queue without replacing shape identity. Budget counts points received, equally for every monster regardless of purchases.
 
-**Balance check:** a fair frame contains the budget with a nearby maximum, allowing the individual to spend it with some choice.
-- At Core's maximum budget (31), headroom is 1 for Glass cannon (max 32) and Anvil, 2 for Skirmisher/Berserker/Balanced, 3 for Fragile.
-- Glass cannon and Anvil therefore vary little between rolls; the wide Anvil (20–32) and Balanced (22–33) ranges matter only as roll minima.
-
-**All stages (absolute point range of the scaled frame vs. budget):**
-
-|    Shape     | Qi (19–21) | Foundation (25–27) | Core (29–31) | Soul+ (33–35) |
-|--------------|------------|--------------------|--------------|---------------|
-| Glass cannon | 18–21      | 24–28              | 26–32        | 30–37         |
-| Anvil        | 17–19      | 19–26              | 20–32        | 25–37         |
-| Skirmisher   | 19–22      | 20–26              | 23–33        | 28–38         |
-| Berserker    | 18–21      | 25–29              | 27–33        | 32–39         |
-| Balanced     | 17–20      | 20–27              | 22–33        | 26–39         |
-| Fragile      | 17–20      | 24–30              | 25–34        | 30–39         |
-
-- **Unspent points:** Qi Anvil (max 19 vs. budgets 19 / 20 / 21) leaves 1 at Middle, 2 at High; Qi Balanced/Fragile (max 20) leave 1 at High; Foundation High Anvil/Skirmisher (max 26 vs. 27) leave 1. The player spends roll leftovers freely: no lost points or frame changes.
-- The table excludes Berserker's TPR 3 at Soul.
-
-- **Init at roll:** 1 point = **1.0 Init**; speed costs other stats. A free decimal (.0–.9) is rolled on top, below the frame maximum.
-- **Init at level-up:** 1 point = **+0.1 Init**; fine-tune the queue without replacing shape identity. Budget counts points received, equally for every monster regardless of purchases.
-
-Example, a Glass cannon at Core High (16 points above base): HP 2 (1) + Init 9 (8) + Move 3 (2) + TPR 2 (5) = 16.
-
-- **Stage scaling:** *(user decision 2026-11-11)* scale the Core frame limits with the ratio *(stage ceiling − 1) ÷ (Core ceiling − 1)* (§2.3) for Reach, applied as `1 + (Core limit − 1) × ratio`, and with *stage ceiling ÷ Core ceiling* for HP/Init/Movement; round half up, minimum 1. Cut TPR/AP limits to the ceiling; only Berserker's TPR frame grows, to 3 at Soul.
-- **Frame applies only at roll:** new/wild individuals draw within it until their stage/sub-tier budget is spent. Two Anvils start differently, never stronger overall.
+- **Stage scaling:** *(user decision 2026-11-11)* scale the Core frame limits with the ratio *(stage ceiling − 1) ÷ (Core ceiling − 1)* (§2.3) for Reach, applied as `1 + (Core limit − 1) × ratio`, and with *stage ceiling ÷ Core ceiling* for HP/Init/Movement; round half up, minimum 1. Cut TPR/AP limits to the ceiling. (Written for the earlier frames; to be redone with the frames of the other stages, T03.)
+- **Frame applies only at roll:** new/wild individuals draw within it until their stage/sub-tier budget is spent. Two Bulwarks start differently, never stronger overall.
   - Each later level-up adds points for free player allocation (free action), limited only by stage ceilings (§2.3).
   - Save ceiling-blocked points for the next breakthrough.
 - **Reshape:** pool all points and reroll within the new frame at the same budget; leftovers remain unspent. Level-up spending alone never changes the shape label. Item, ritual location and day-AP: [Overworld §2.6](gdd_overworld.md#26-action-catalog).
 - **Ceiling rule:** monsters cannot exceed the player's stage: the spatial space sustains only what the tamer's qi can feed. *(user decision 2026-11-11)* the cap is the player's **stage**, not the exact sub-tier; §5.3 lists the progression steps within that stage and sets no separate sub-tier cap.
-- **Working values:** prices, budgets and frames are first drafts.
 
 ### 2.3 Stat Ceilings per Stage
 
@@ -201,12 +178,12 @@ Each stage defines hard caps, no shape and no point can go above them:
 | Max Initiative                                   |          5.0 |        7.0 |            9.0 |  10.0 |
 | Max TurnsPerRound                                |            1 |          2 |              2 |     3 |
 | Max Movement                                     |            3 |          4 |              5 |     5 |
-| Max Reach (see §2.1)                  |            2 |          3 |              3 |     4 |
+| Max Reach (see §2.1)                  |            2 |          3 |              4 |     4 |
 | Max AP                                           |            2 |          2 |              3 |     3 |
 
 Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 
-- **Lifetime scale:** HP 1–10, Init 0.1–10.0, TPR 1–3, AP 2–5 span the entire game; inflation would destroy its deterministic low-HP feel.
+- **Lifetime scale:** HP 4–10, Init 0.1–10.0, TPR 1–3, AP 2–5 span the entire game; inflation would destroy its deterministic low-HP feel.
 - **Damage never scales by stage** ([gdd_battle §6.1](gdd_battle.md#61-the-damage-law)): Surge base, Strike (max 2) and ground damage stay equal from Qi Gathering to Sovereign.
 
 ---
@@ -222,10 +199,10 @@ Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 
 |     Kin     |      Body fantasy      |               Layer/Movement              |      Stat lean      |                        Surge access                        |      Locked out of      |
 |-------------|------------------------|-------------------------------------------|---------------------|------------------------------------------------------------|-------------------------|
-| **Beast**   | tiger, ape, wolf       | ground, high move                         | balanced/skirmisher | Minor                                                      | Major Surge, Sanctify   |
-| **Winged**  | bird, moth, wyvern     | **air** (Soul+), move 3+                  | glass cannon        | Minor; **ignores ground effects and ground-recipient Surges while airborne** (exceptions: authored air recipients, [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); attackers on a Mountain, [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | Raise Prop, Major Surge |
-| **Scaled**  | serpent, turtle, drake | ground, low move                          | anvil               | Minor                                                      | —                       |
-| **Swarm**   | insects, rats          | ground, move 2                            | fragile, TPR 2+     | Minor, 2-cell shapes                                       | Major Surge, Relocate   |
+| **Beast**   | tiger, ape, wolf       | ground, high move                         | skirmisher          | Minor                                                      | Major Surge, Sanctify   |
+| **Winged**  | bird, moth, wyvern     | **air** (Soul+), move 3+                  | swift, caster       | Minor; **ignores ground effects and ground-recipient Surges while airborne** (exceptions: authored air recipients, [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); attackers on a Mountain, [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | Raise Prop, Major Surge |
+| **Scaled**  | serpent, turtle, drake | ground, low move                          | bulwark             | Minor                                                      | —                       |
+| **Swarm**   | insects, rats          | ground, move 2                            | swift (TPR 2)       | Minor, 2-cell shapes                                       | Major Surge, Relocate   |
 | **Spirit**  | ghost, wisp            | ground, **Phase / Blink** ([Skills §8.2](gdd_skills.md#82-movement-by-kin))        | low HP, high init   | Minor                                                      | Raise Prop              |
 | **Ancient** | golem, treant          | ground, move 1                            | max HP, TPR 1       | Minor + **only Kin with Major Surge**                      | Air                     |
 
@@ -238,19 +215,19 @@ Strike shapes and Kin effects ([Skills §8.1](gdd_skills.md#81-strike-by-kin)), 
 ### 4.1 First Roster Draft — 9 monsters
 
 **Non-authoritative prior-draft ideas.** Names, descriptions and shapes are unvalidated; skill assignments are in [Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft).
-- **Reference individuals:** shape belongs to individuals (§1.1); these are typical species rolls at **Core Formation High**, each spending exactly 16 points within frame (caps HP 8, Init 9, TPR 2, Move 5, Reach 3, AP 3; §2.2–2.3).
+- **Reference individuals:** shape belongs to individuals (§1.1); these are typical species rolls at **Core Formation High**, each spending exactly 16 points within frame by the draft prices of 2026-11-13 (caps HP 8, Init 9, TPR 2, Move 5, Reach 4, AP 3; §2.2–2.3). These are the stats of the Godot build (kit set `f4086ae48783`); they were chosen among four simulated sets for the narrowest spread of win rates ([simulation_log.md](simulation_log.md) S015).
 
 | Monster | Kin | Descriptive themes | Shape · HP / Init / Move / TPR / Reach / AP |
 |---|---|---|---|
-| **Blaze Tiger** | Beast | flame, hunting | skirmisher · 5 / 7.0 / 4 / 1 / 2 / 3 |
-| **Ember Hawk** | Winged | embers, flight | glass cannon · 2 / 9.0 / 3 / 2 / 2 / 2 |
-| **Forge Golem** | Ancient | forge, stone | anvil · 8 / 4.0 / 1 / 1 / 3 / 3 |
-| **Moss Turtle** | Scaled | moss, shell | anvil · 8 / 3.0 / 2 / 1 / 3 / 3 |
-| **Thorn Mites** | Swarm | thorns, infestation | fragile · 3 / 6.0 / 2 / 2 / 3 / 2 |
-| **Grove Wisp** | Spirit | grove, wandering light | skirmisher · 4 / 8.0 / 4 / 1 / 2 / 3 |
-| **Gloom Wolf** | Beast | gloom, pack hunting | balanced · 5 / 6.0 / 2 / 1 / 3 / 3 |
-| **Dusk Moth** | Winged | dusk, eclipse | glass cannon · 2 / 9.0 / 3 / 2 / 2 / 2 |
-| **Hollow Serpent** | Scaled | hollow, coils | anvil · 7 / 4.0 / 2 / 1 / 3 / 3 |
+| **Blaze Tiger** | Beast | flame, hunting | skirmisher · 7 / 7.0 / 5 / 1 / 2 / 3 |
+| **Ember Hawk** | Winged | embers, flight | swift · 5 / 9.0 / 5 / 2 / 2 / 3 |
+| **Forge Golem** | Ancient | forge, stone | bulwark · 8 / 5.0 / 1 / 1 / 3 / 3 |
+| **Moss Turtle** | Scaled | moss, shell | bulwark · 8 / 3.0 / 2 / 1 / 3 / 3 |
+| **Thorn Mites** | Swarm | thorns, infestation | swift · 6 / 3.0 / 3 / 2 / 3 / 3 |
+| **Grove Wisp** | Spirit | grove, wandering light | skirmisher · 5 / 9.0 / 5 / 1 / 3 / 3 |
+| **Gloom Wolf** | Beast | gloom, pack hunting | skirmisher · 6 / 9.0 / 3 / 1 / 3 / 3 |
+| **Dusk Moth** | Winged | dusk, eclipse | caster · 5 / 7.0 / 3 / 1 / 4 / 3 |
+| **Hollow Serpent** | Scaled | hollow, coils | bulwark · 7 / 5.0 / 3 / 1 / 3 / 3 |
 
 
 ### 4.2 Additional Species Candidates
