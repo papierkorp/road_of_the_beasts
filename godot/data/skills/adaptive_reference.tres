@@ -8,6 +8,7 @@
 script = ExtResource("3_kp8ju")
 id = &"adaptive_reference"
 display_name = "Adaptive"
+content_status = "archived"
 kind = "passive"
 description = "May rotate its own fixed footprints in battle."
 status = "GDD reference record (Skills §11), draft"

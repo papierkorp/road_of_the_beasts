@@ -12,6 +12,7 @@ tag = "extend"
 script = ExtResource("2_37g8o")
 id = &"umbra"
 display_name = "Umbra"
+content_status = "archived"
 group = "blessed"
 effects = Array[ExtResource("1_wd2gm")]([SubResource("Resource_k3tk8")])
 color = Color(0.34, 0.36, 0.56, 1)

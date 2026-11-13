@@ -105,7 +105,7 @@ func test_mend_heals_min_two_and_level_and_never_above_max_hp() -> void:
 	assert_int(H.unit(b, 1).hp).is_equal(6)     # 5 + 2, capped at max HP 6
 
 
-func test_start_of_turn_blight_and_voidscar_and_on_enter_thornbed_and_mossbed() -> void:
+func test_ground_acts_on_entering_at_turn_end_and_at_round_end() -> void:
 	var b := H.battle([
 		[0, Vector2i(1, 1), {"init": 9.0}],
 		[0, Vector2i(3, 1), {"init": 8.0}],
@@ -117,14 +117,19 @@ func test_start_of_turn_blight_and_voidscar_and_on_enter_thornbed_and_mossbed() 
 	b.set_ground(Vector2i(5, 2), &"thornbed", 1)
 	b.set_ground(Vector2i(5, 3), &"mossbed")
 	b.begin()
-	assert_int(H.unit(b, 0).hp).is_equal(3)     # Blight II at the start of its turn
+	assert_int(H.unit(b, 0).hp).is_equal(5)     # no ground damages at the start of a turn
 	b.end_turn()
-	assert_int(H.unit(b, 1).hp).is_equal(4)     # Voidscar: 1
+	assert_int(H.unit(b, 1).hp).is_equal(5)
 	b.end_turn()
+	assert_int(H.unit(b, 1).hp).is_equal(4)     # Voidscar: 1 at the end of its turn
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(5, 2)})).is_true()
 	assert_int(H.unit(b, 2).hp).is_equal(1)     # Thornbed I on entry
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(5, 3)})).is_true()
 	assert_int(H.unit(b, 2).hp).is_equal(2)     # Mossbed heals 1 on entry
+	b.end_turn()
+	b.end_turn()
+	assert_int(b.round_number).is_equal(2)
+	assert_int(H.unit(b, 0).hp).is_equal(3)     # Blight II at the end of the round
 
 
 func test_placing_ground_under_an_occupant_is_not_entry() -> void:

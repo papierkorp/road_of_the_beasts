@@ -22,20 +22,20 @@ A monster the player owns is **two layers**: a fixed *species* and a unique *ind
 SPECIES  (data file, shared by all individuals — §4.1)
   Kin · descriptive themes (free-form, no mechanical type) · default kit
   (4 slots, active or passive) · learnable skills · blurb · art
-  Each concrete Surge skill defines its own behaviour, shape and twist.
+  Skills are cards ([Skills §2](gdd_skills.md#2-the-skill-card)); the species only lists which it may learn.
 
 INDIVIDUAL  (one per monster the player owns or meets in the wild)
   stat shape      bulwark | skirmisher | swift | caster
   stats           rolled inside the shape's frame, then spent by the player (§2.2)
   rarity          Normal | Rare | Epic | Legendary
   stage + sub-tier + XP
-  slot development  permanent development per skill slot, gained at advancement steps ([Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades), §5.3)
+  slot development  permanent development per skill slot, gained at advancement steps ([Skills §6](gdd_skills.md#6-slot-levels-development-and-replacement), §5.3)
   slot loadout    equipped skill and its selected upgrades per slot; development survives skill replacement
   artifact(s)     socketed passives (gdd_overworld §6.7)
   current HP      persists between battles of an expedition
 ```
 
-- **Stat shape is individual, not species-wide.** Two Blaze Tigers can be a fast skirmisher and a two-turn swift one: same Surge, different playstyle, collection depth without new art.
+- **Stat shape is individual, not species-wide.** Two Blaze Tigers can be a fast skirmisher and a two-turn swift one: same kit, different playstyle, collection depth without new art.
 - Wild/newly caught monsters roll shapes weighted by **Kin lean** (§3.1: Winged → swift or caster, Ancient → bulwark, …); rare off-lean rolls are prized finds. §4.1 shows reference individuals: typical Core Formation rolls.
 - **Every stat is paid for** (§2.2). Shape allocates a fixed budget: speed, extra turns and Reach cost HP. No shape is meant to be strictly better; whether that holds is measured, not assumed (§2.2).
 
@@ -67,8 +67,8 @@ The battle only ever sees this finished sheet.
 ```
 1. STAT SHAPE   bulwark / skirmisher / swift / caster   (per individual monster, rolled with the Kin's lean — §1.1)
 2. THEMES       free descriptive motifs; no fixed aspects, replacement element types or attunement
-3. KIN          creature type → Strike, layer, stat lean, which skill profiles it may take, Surge size access
-4. KIT          4 slots (active or passive, ≥ 1 active); each concrete Surge defines its behaviour, shape + size and at most ONE twist ([Skills §3](gdd_skills.md#3-skill-execution-profiles))
+3. KIN          creature type → Strike effect, stat lean, which skills it may learn
+4. KIT          4 slots (active or passive, ≥ 1 active), chosen by the player from the species' learnable list ([Skills §1](gdd_skills.md#1-the-kit))
 5. PASSIVE      the rule-bender — biggest personality driver
 6. SIZE         1x1 vs 2x2
 ```
@@ -77,16 +77,16 @@ The battle only ever sees this finished sheet.
 
 |           Layer           |                                  Decides                                  |                                  Example                                   |
 |---------------------------|---------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| **Kin** (body)            | Strike, movement layer, stat lean, allowed skill profiles, Surge size         | Beast bites and is fast; only Ancient has a Major Surge (at Sovereign; Legendary ambiguity open, [Skills §1](gdd_skills.md#1-the-kit)) |
+| **Kin** (body)            | Strike effect, stat lean, skill access                                    | Beast bites and is fast; a Winged Strike retreats; a Scaled one picks its push direction ([Skills §8](gdd_skills.md#8-strikes-and-movement)) |
 | **Themes** (description)  | free-form flavour and visual identity, no mechanical eligibility rules   | fire, moss, shadows, storms — motifs may mix freely                        |
-| **Species** (the monster) | its default kit of 4 slots and its Species Surge ([Skills §3](gdd_skills.md#3-skill-execution-profiles))                  | Blaze Tiger: *Magma Pounce* — O4 Eruption that must land next to the tiger |
+| **Species** (the monster) | its default kit of 4 slots and its learnable list ([Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters))        | Blaze Tiger: Headbutt, Jab, Fire Trail, Lava Field — charges in and burns the ground it runs over |
 
 - **No fixed roles:** Kin is not class (Beast ≠ "damage dealer"); kits determine team function, so two Beasts can play completely differently.
-- Build teams from *combinations*: one monster pulls, another Strikes; one floods enemies into another's Eruption.
+- Build teams from *combinations*: one monster pulls, another Strikes; one lays Binding Vines under a target and another pushes it off them.
 
-**Design test:** one sentence per monster built from its kit. If two monsters read the same, change a Surge shape or twist, a skill or its descriptive theme.
+**Design test:** one sentence per monster built from its kit. If two monsters read the same, change a skill, a stat or its descriptive theme.
 
-The six stat shapes are frames of min–max values per stat, not fixed stats (§2.2).
+The stat shapes are frames of min–max values per stat, not fixed stats (§2.2).
 
 ---
 
@@ -96,21 +96,23 @@ The six stat shapes are frames of min–max values per stat, not fixed stats (§
 
 |         Stat        |   Range  |                                                       Function                                                        |
 |---------------------|----------|-----------------------------------------------------------------------------------------------------------------------|
-| HP                  | 4–10     | No defense stat — dead is dead                                                                                        |
+| HP                  | 3–10     | No defense stat — dead is dead. Lowest HP 3 against a highest single hit of 2 ([Battle §6.1](gdd_battle.md#61-the-damage-law)) *(working value 2026-11-13; the HP floor of 4 is dropped)* |
 | Initiative          | 0.1–10.0 | Position in the turn queue ([gdd_battle §2.2](gdd_battle.md#22-initiative-rules))                                                                          |
-| Movement            | int      | Squares per movement skill ([§3](gdd_skills.md#3-skill-execution-profiles)); Step is always 1                                                        |
-| Reach               | 2–4      | Cast range of all skills ([§2](gdd_skills.md#2-data-oriented-skill-construction-kit)); Strikes don't use it                                                      |
+| Movement            | int      | Squares per movement skill ([Skills §3](gdd_skills.md#3-what-a-skill-does-itself)); Step is always 1                                                        |
+| Reach               | 2–4      | How far away a skill may create ground, a zone or a prop ([Skills §2](gdd_skills.md#place-shape-and-rotation)); Strikes don't use it                                                      |
 | TurnsPerRound (TPR) | 1–3      | Extra turns: queue entries and initiative penalty in [gdd_battle §2.2](gdd_battle.md#22-initiative-rules)                |
 | AP                  | 2–5      | Action points per turn ([gdd_battle §2.3](gdd_battle.md#23-action-points))                                                                              |
 | Kin / Rarity / Size | —        | §3 and §5.1                                                                                                           |
 
-Zones and standing on a Mountain change these values during a fight: effective stats, [gdd_battle §3.1](gdd_battle.md#31-effective-stats).
+Zones, aura props and self buffs change these values during a fight: effective stats, [gdd_battle §3.1](gdd_battle.md#31-effective-stats).
+
+**What the stats are worth is open** *(2026-11-13)*: in bot runs on the reshaped build HP is worth about 4 win-rate points per point, AP 3 against 2 about 11 and a second turn 7–12, while **initiative, Movement and Reach show no measurable value** ([simulation_log.md](simulation_log.md) S017–S019). The goal that every stat matters is not met yet; it needs rules that give initiative and Movement a job (T40), not prices.
 
 **Every stat is paid for:** monsters at the same stage/sub-tier share a budget, allocated by shape (§2.2). Acting first, possibly several times consecutively, costs HP or Reach; poor turn order buys HP, Reach or AP.
 
 ### 2.2 Frame, Budget, Level-Ups
 
-**Section status** *(user direction 2026-11-13)*: every number in this section (stat prices, budgets, frames) is a **working value, not fixed**. Statements elsewhere that treat them as settled are wrong. They are worked out in play and simulation together with the battle rules and the skills ([temp_todo.md](temp_todo.md) T03). The prices and frames below were reset on 2026-11-13 after the first measurements ([simulation_log.md](simulation_log.md) S012–S015).
+**Section status** *(user direction 2026-11-13)*: **the prices, frames and budgets below are the draft of the morning of 2026-11-13, made before the reshape; the build no longer follows them** (its monsters carry spread test stats, §4.1; lowest HP is 3, not 4). They are kept as the last worked-out draft until new values are found. every number in this section (stat prices, budgets, frames) is a **working value, not fixed**. Statements elsewhere that treat them as settled are wrong. They are worked out in play and simulation together with the battle rules and the skills ([temp_todo.md](temp_todo.md) T03). The prices and frames below were reset on 2026-11-13 after the first measurements ([simulation_log.md](simulation_log.md) S012–S015).
 
 A monster **starts** with stats rolled by its stat shape; **after that the player decides** where each level-up goes. Three rules keep this fair:
 
@@ -133,7 +135,7 @@ PRICE   stats cost points: a strong stat is paid for with the others
 
 - **What changed and why:** HP cost 1 per point from a base of 1 and a second turn 5. In the runs a point of HP was worth four to six times a point of initiative or Movement, a 2-HP monster fell to a single Strike, and with extra turns counting from round 2 ([Battle §2.2](gdd_battle.md#22-initiative-rules)) a second turn was worth less than its price. Hence: no monster below 4 HP, HP at twice its old price, initiative at half, the second turn at 3.
 - **Known weak spots of this draft:** at Core every reference individual buys AP 3 (3 points for a third of all its actions), so AP does not tell monsters apart there; the value of a second turn depends on the body that takes it; the price of a third turn and the prices above AP 3 are carried over untested.
-- **One AP ceiling for every monster** *(user decision 2026-11-11)*: the stage ceiling of §2.3 applies to all monsters alike; no TPR value lowers it and no AP value restricts TPR. AP additionally unlocks larger Strike shapes ([Skills §8.1](gdd_skills.md#81-strike-by-kin)).
+- **One AP ceiling for every monster** *(user decision 2026-11-11)*: the stage ceiling of §2.3 applies to all monsters alike; no TPR value lowers it and no AP value restricts TPR. AP additionally unlocks larger Strike shapes ([Skills §8.1](gdd_skills.md#81-strike-shapes)).
 
 **Budget per stage and sub-tier** (points above the free base values):
 
@@ -150,7 +152,7 @@ So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Found
 
 |   Shape    |  HP |  Init | Move | Reach | TPR |  AP | Feel |
 |------------|-----|-------|------|-------|-----|-----|------|
-| Bulwark    | 7–8 | 1–5   | 1–3  | 2–3   | 1   | 2–3 | slow, hard to dislodge; holds a Wellspring |
+| Bulwark    | 7–8 | 1–5   | 1–3  | 2–3   | 1   | 2–3 | slow, hard to dislodge; holds ground near a Dragon Vein |
 | Skirmisher | 5–7 | 5–9   | 3–5  | 2–3   | 1   | 2–3 | gets where it wants first; takes free squares and pushes holders off |
 | Swift      | 4–6 | 3–9   | 3–5  | 2–3   | 2   | 2–3 | two turns from round 2 on, paid with body or speed |
 | Caster     | 4–5 | 5–7   | 2–3  | 4     | 1   | 2–3 | weak body, long Reach; works from behind the others |
@@ -184,7 +186,7 @@ Each stage defines hard caps, no shape and no point can go above them:
 Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 
 - **Lifetime scale:** HP 4–10, Init 0.1–10.0, TPR 1–3, AP 2–5 span the entire game; inflation would destroy its deterministic low-HP feel.
-- **Damage never scales by stage** ([gdd_battle §6.1](gdd_battle.md#61-the-damage-law)): Surge base, Strike (max 2) and ground damage stay equal from Qi Gathering to Sovereign.
+- **Damage never scales by stage** ([gdd_battle §6.1](gdd_battle.md#61-the-damage-law)): Strike (max 2), ground and collision damage stay equal from Qi Gathering to Sovereign.
 
 ---
 
@@ -194,19 +196,20 @@ Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 
 > **Kin = what kind of creature it is. Themes describe it freely, without assigning a mechanical type.**
 
-- Kin sets **Strike, Surge size, stat lean, movement layer and utility access**, never damage multipliers. No Force/Nature/Dark weakness triangle, replacement element system or attunement.
-- The **species learnable list** determines concrete skill access within Kin/progression restrictions.
+- Kin sets the **Strike effect, the stat lean and skill access**, never damage multipliers. No weakness triangle, element system or attunement. Every monster stands on the ground *(user decision 2026-11-13: no air layer; Winged monsters are ground monsters)*.
+- The **species learnable list** determines concrete skill access within Kin and progression restrictions; neither exists as content yet (T11), and the kits of the build ignore Kin access.
 
-|     Kin     |      Body fantasy      |               Layer/Movement              |      Stat lean      |                        Surge access                        |      Locked out of      |
-|-------------|------------------------|-------------------------------------------|---------------------|------------------------------------------------------------|-------------------------|
-| **Beast**   | tiger, ape, wolf       | ground, high move                         | skirmisher          | Minor                                                      | Major Surge, Sanctify   |
-| **Winged**  | bird, moth, wyvern     | **air** (Soul+), move 3+                  | swift, caster       | Minor; **ignores ground effects and ground-recipient Surges while airborne** (exceptions: authored air recipients, [Battle §4.3](gdd_battle.md#43-the-square-stack-zones--ground); attackers on a Mountain, [§4.7](gdd_battle.md#47-ground--neutral-hazard-and-blessed)) | Raise Prop, Major Surge |
-| **Scaled**  | serpent, turtle, drake | ground, low move                          | bulwark             | Minor                                                      | —                       |
-| **Swarm**   | insects, rats          | ground, move 2                            | swift (TPR 2)       | Minor, 2-cell shapes                                       | Major Surge, Relocate   |
-| **Spirit**  | ghost, wisp            | ground, **Phase / Blink** ([Skills §8.2](gdd_skills.md#82-movement-by-kin))        | low HP, high init   | Minor                                                      | Raise Prop              |
-| **Ancient** | golem, treant          | ground, move 1                            | max HP, TPR 1       | Minor + **only Kin with Major Surge**                      | Air                     |
+| Kin | Body fantasy | Stat lean | Strike effect ([Skills §8.1](gdd_skills.md#81-strike-shapes)) |
+|---|---|---|---|
+| **Beast** | tiger, ape, wolf | skirmisher, high Movement | none (baseline) |
+| **Winged** | bird, moth, wyvern | swift, caster | retreats 1 square after the Strike |
+| **Scaled** | serpent, turtle, drake | bulwark, low Movement | pushes in a chosen direction |
+| **Swarm** | insects, rats | swift (two turns) | props take double |
+| **Spirit** | ghost, wisp | low HP, high initiative | target −1 initiative next round |
+| **Ancient** | golem, treant | max HP, one turn | open *(it destroyed Mountains; T06)* |
 
-Strike shapes and Kin effects ([Skills §8.1](gdd_skills.md#81-strike-by-kin)), movement modes by Kin ([Skills §8.2](gdd_skills.md#82-movement-by-kin)) and everything else about skills live in [gdd_skills.md](gdd_skills.md).
+- **Open with the reshape (T06/T11):** what sets the Kins apart beyond the Strike effect. The earlier table gave them Surge sizes, movement layers, the air layer for Winged and lock-outs from single skills; all of that is gone with Surges, height and the air layer.
+- Strike shapes, movement kinds and everything else about skills: [gdd_skills.md](gdd_skills.md).
 
 ---
 
@@ -214,20 +217,22 @@ Strike shapes and Kin effects ([Skills §8.1](gdd_skills.md#81-strike-by-kin)), 
 
 ### 4.1 First Roster Draft — 9 monsters
 
-**Non-authoritative prior-draft ideas.** Names, descriptions and shapes are unvalidated; skill assignments are in [Skills §10](gdd_skills.md#10-species-skill-assignments-prior-draft).
+**Working draft.** Names, descriptions and shapes are unvalidated; the kits of the build are in [Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters).
 - **Reference individuals:** shape belongs to individuals (§1.1); these are typical species rolls at **Core Formation High**, each spending exactly 16 points within frame by the draft prices of 2026-11-13 (caps HP 8, Init 9, TPR 2, Move 5, Reach 4, AP 3; §2.2–2.3). These are the stats of the Godot build (kit set `f4086ae48783`); they were chosen among four simulated sets for the narrowest spread of win rates ([simulation_log.md](simulation_log.md) S015).
 
-| Monster | Kin | Descriptive themes | Shape · HP / Init / Move / TPR / Reach / AP |
-|---|---|---|---|
-| **Blaze Tiger** | Beast | flame, hunting | skirmisher · 7 / 7.0 / 5 / 1 / 2 / 3 |
-| **Ember Hawk** | Winged | embers, flight | swift · 5 / 9.0 / 5 / 2 / 2 / 3 |
-| **Forge Golem** | Ancient | forge, stone | bulwark · 8 / 5.0 / 1 / 1 / 3 / 3 |
-| **Moss Turtle** | Scaled | moss, shell | bulwark · 8 / 3.0 / 2 / 1 / 3 / 3 |
-| **Thorn Mites** | Swarm | thorns, infestation | swift · 6 / 3.0 / 3 / 2 / 3 / 3 |
-| **Grove Wisp** | Spirit | grove, wandering light | skirmisher · 5 / 9.0 / 5 / 1 / 3 / 3 |
-| **Gloom Wolf** | Beast | gloom, pack hunting | skirmisher · 6 / 9.0 / 3 / 1 / 3 / 3 |
-| **Dusk Moth** | Winged | dusk, eclipse | caster · 5 / 7.0 / 3 / 1 / 4 / 3 |
-| **Hollow Serpent** | Scaled | hollow, coils | bulwark · 7 / 5.0 / 3 / 1 / 3 / 3 |
+**Reshape note (2026-11-13, [temp_todo.md](temp_todo.md) T40):** the Godot build fields the nine monsters with **spread test stats** (below, right column) and new kits ([Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters)); they follow no price and no frame, because stat prices are open again after [simulation_log.md](simulation_log.md) S016–S019 (initiative and Movement showed no value under the earlier rules). The HP floor of 4 is dropped: lowest HP 3 against a highest single hit of 2. Winged monsters are ground monsters. The left column is the price draft of 2026-11-13 and is kept until new prices exist.
+
+| Monster | Kin | Descriptive themes | Shape · HP / Init / Move / TPR / Reach / AP | Build since 2026-11-13 (test stats) |
+|---|---|---|---|---|
+| **Blaze Tiger** | Beast | flame, hunting | skirmisher · 7 / 7.0 / 5 / 1 / 2 / 3 | 5 / 7.0 / 5 / 1 / 2 / 3 |
+| **Ember Hawk** | Winged | embers, flight | swift · 5 / 9.0 / 5 / 2 / 2 / 3 | 3 / 9.0 / 5 / 2 / 3 / 2 |
+| **Forge Golem** | Ancient | forge, stone | bulwark · 8 / 5.0 / 1 / 1 / 3 / 3 | 8 / 1.0 / 1 / 1 / 3 / 3 |
+| **Moss Turtle** | Scaled | moss, shell | bulwark · 8 / 3.0 / 2 / 1 / 3 / 3 | 7 / 3.0 / 2 / 1 / 3 / 3 |
+| **Thorn Mites** | Swarm | thorns, infestation | swift · 6 / 3.0 / 3 / 2 / 3 / 3 | 6 / 3.0 / 3 / 2 / 3 / 2 |
+| **Grove Wisp** | Spirit | grove, wandering light | skirmisher · 5 / 9.0 / 5 / 1 / 3 / 3 | 3 / 9.0 / 5 / 1 / 3 / 3 |
+| **Gloom Wolf** | Beast | gloom, pack hunting | skirmisher · 6 / 9.0 / 3 / 1 / 3 / 3 | 4 / 9.0 / 3 / 1 / 3 / 3 |
+| **Dusk Moth** | Winged | dusk, eclipse | caster · 5 / 7.0 / 3 / 1 / 4 / 3 | 3 / 7.0 / 3 / 1 / 4 / 3 |
+| **Hollow Serpent** | Scaled | hollow, coils | bulwark · 7 / 5.0 / 3 / 1 / 3 / 3 | 6 / 5.0 / 2 / 1 / 3 / 3 |
 
 
 ### 4.2 Additional Species Candidates
@@ -264,10 +269,10 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 
 - "Max stage reachable" is the core axis — the wuxia "noble bloodline" trope, long-term potential over instant power
 - **No stat bonuses from rarity.** Soul+ caps already sit on the absolute scale ([§2.3](#23-stat-ceilings-per-stage)), so rarity buys slots, development steps and ceiling — never numbers
-- **High mechanics are Rare+ territory by design:** Air layer and 2x2 need Soul, TPR 3 needs Soul, the Ancient's Major Surge needs Sovereign.
-  - A Normal monster (max Core) has no Soul-tier air/2×2 or TPR-3 access; TPR 2 is already possible from Foundation (§5.3)
+- **High mechanics are Rare+ territory by design:** 2×2 bodies and TPR 3 need Soul.
+  - A Normal monster (max Core) has no 2×2 or TPR-3 access; TPR 2 is already possible from Foundation (§5.3)
 - Rarity does **not** decide the stat shape: any rarity can roll any shape (weighted by Kin lean, §1.1)
-- Slot development, superseded per-skill prices and replacement rules: [Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades). This table supplies only rarity/progression working data, not slot-development prices.
+- Slot development and replacement rules: [Skills §6](gdd_skills.md#6-slot-levels-development-and-replacement). This table supplies only rarity/progression working data, not slot-development prices.
 
 ### 5.2 Rarity Ascension
 
@@ -292,19 +297,19 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 | 7 | Core Formation Lower | 14               | **+2 points** · **slot-development step** · +1 learnable skill · AP 3 · 5v5 special · 2nd tamer slot    | 400                     |
 | 8 | Core Formation Middle | 15              | +1 stat point                                                                                    | 800                     |
 | 9 | Core Formation High | 16                | +1 stat point                                                                                    | 1300 (+ trial)          |
-| 10| Soul Tier Lower   | 18                  | **+2 points** · **slot-development step** · +1 learnable skill · air layer, 2x2, TPR 3 · foreign movement mode ([Skills §8.2](gdd_skills.md#82-movement-by-kin)) · Beast Swap     | 1000                    |
+| 10| Soul Tier Lower   | 18                  | **+2 points** · **slot-development step** · +1 learnable skill · 2x2, TPR 3 · Beast Swap     | 1000                    |
 | 11| Soul Tier Middle  | 19                  | +1 stat point                                                                                    | 2000                    |
 | 12| Soul Tier High    | 20                  | +1 stat point                                                                                    | 3200 (+ trial)          |
 | 13| Immortal Lower    | 20                  | no points · **slot-development step** · +1 learnable skill · AP 4 · 3rd tamer slot | 2500 |
 | 14| Immortal Middle   | 20                  | +1 slot-development step                                                                                | 5000                    |
 | 15| Immortal High     | 20                  | +1 slot-development step                                                                                | 8000 (+ trial)          |
-| 16| Sovereign Lower   | 20                  | **slot-development step** · AP 5 · Signature skill (Legendary) · Major Surge (Ancient)   | 6000                    |
+| 16| Sovereign Lower   | 20                  | **slot-development step** · AP 5 · Signature skill (Legendary)   | 6000                    |
 | 17| Sovereign Middle  | 20                  | +1 slot-development step                                                                                | 12000                   |
 | 18| Sovereign High    | 20                  | +1 slot-development step · the end of the table                                                         | —                       |
 
-- **Slot-development step** = the monster may develop one skill slot ([Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades)): 1 step for Normal / Rare, 2 for Epic / Legendary (§5.1).
+- **Slot-development step** = the monster may develop one skill slot ([Skills §6](gdd_skills.md#6-slot-levels-development-and-replacement)): 1 step for Normal / Rare, 2 for Epic / Legendary (§5.1).
   - Normal reaches Core (steps 4 and 7: only 2 development steps in total, to be reviewed under T05), Rare reaches Soul (3 steps), Epic Immortal, Legendary Sovereign.
-- **Learnable skills:** the species list grows with the stages (4 defaults + 1 per breakthrough from Foundation to Immortal = 8). Kit access and replacement/development rules: [Skills §1](gdd_skills.md#1-the-kit)/[Skills §6](gdd_skills.md#6-slot-levels-development-replacement-and-upgrades)
+- **Learnable skills:** the species list grows with the stages (4 defaults + 1 per breakthrough from Foundation to Immortal = 8). Kit access and replacement/development rules: [Skills §1](gdd_skills.md#1-the-kit)/[Skills §6](gdd_skills.md#6-slot-levels-development-and-replacement)
 - **Why not points at Immortal / Sovereign:** the stat ceilings and the damage law are reached; more points would only be number inflation (pillar 1). Those sub-tiers give choices (slot-development steps) instead of numbers.
 
 **XP proposal** (prototype bars: Lower 60, Middle 120, High 200):

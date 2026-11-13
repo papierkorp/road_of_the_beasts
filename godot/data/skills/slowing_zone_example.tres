@@ -9,6 +9,7 @@
 script = ExtResource("3_0hpqd")
 id = &"slowing_zone_example"
 display_name = "Slowing Zone"
+content_status = "archived"
 kind = "zone"
 description = "Slow 1 (2 at level II) on a horizontal I3 for 2 rounds."
 status = "GDD reference record (Skills §11), draft"

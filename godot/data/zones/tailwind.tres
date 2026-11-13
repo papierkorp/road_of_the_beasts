@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleZoneDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/battle_zone_def.gd" id="2"]
+
+[sub_resource type="Resource" id="e1"]
+script = ExtResource("1")
+tag = "haste"
+base = 2
+cap = 2
+
+[resource]
+script = ExtResource("2")
+id = &"tailwind"
+display_name = "Tailwind"
+effects = Array[ExtResource("1")]([SubResource("e1")])
+color = Color(0.75, 0.9, 0.6, 1)

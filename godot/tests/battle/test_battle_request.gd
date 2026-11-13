@@ -18,7 +18,7 @@ func test_build_fields_teams_at_mirrored_starts_with_their_current_hp() -> void:
 	assert_int(b.living(0).size()).is_equal(3)
 	assert_int(b.living(1).size()).is_equal(3)
 	var tiger: BattleUnit = b.units[&"p0_blaze_tiger"]
-	assert_array([tiger.hp, tiger.max_hp]).is_equal([2, 7])
+	assert_array([tiger.hp, tiger.max_hp]).is_equal([2, GameData.monster(&"blaze_tiger").hp])
 	for i in 3:
 		assert_that(b.living(1)[i].pos).is_equal(b.board.mirrored(b.living(0)[i].pos))
 	assert_int(b.voidscar_from).is_equal(8)
@@ -30,10 +30,12 @@ func test_build_fields_teams_at_mirrored_starts_with_their_current_hp() -> void:
 
 
 func test_reference_individuals_use_the_gdd_reference_sheet() -> void:
-	var sheet := UnitSheets.from_instance(MonsterInstance.of_species(GameData.monster(&"forge_golem")))
-	assert_array([sheet.hp, sheet.movement, sheet.tpr, sheet.reach, sheet.ap]).is_equal([8, 1, 1, 3, 3])
-	assert_float(sheet.initiative).is_equal(5.0)
-	assert_array(sheet.skills.map(func(s): return s.id)).is_equal([&"strike_jab", &"set_gong", &"crucible", &"immovable"])
+	# the values come from the monster file, which the monster builder may change: compare with the file
+	var golem := GameData.monster(&"forge_golem")
+	var sheet := UnitSheets.from_instance(MonsterInstance.of_species(golem))
+	assert_array([sheet.hp, sheet.movement, sheet.tpr, sheet.reach, sheet.ap]).is_equal([golem.hp, golem.move, golem.tpr, golem.reach, golem.ap])
+	assert_float(sheet.initiative).is_equal(golem.initiative)
+	assert_array(sheet.skills.map(func(s): return s.id)).is_equal(golem.skills.map(func(s): return s.id))
 	assert_bool(sheet.airborne).is_false()
 
 
@@ -52,9 +54,9 @@ func test_rolled_individuals_keep_their_stats_with_base_ap_and_minimum_reach() -
 	assert_bool(sheet.notes.size() >= 1).is_true()
 
 
-func test_winged_individuals_fly_from_soul_tier() -> void:
+func test_winged_individuals_stay_on_the_ground() -> void:
 	assert_bool(UnitSheets.from_instance(_rolled(&"ember_hawk", Stage.Type.CORE_FORMATION)).airborne).is_false()
-	assert_bool(UnitSheets.from_instance(_rolled(&"ember_hawk", Stage.Type.SOUL)).airborne).is_true()
+	assert_bool(UnitSheets.from_instance(_rolled(&"ember_hawk", Stage.Type.SOUL)).airborne).is_false()   # no air layer since the reshape of 2026-11-13
 	assert_bool(UnitSheets.from_instance(_rolled(&"blaze_tiger", Stage.Type.SOUL)).airborne).is_false()
 
 

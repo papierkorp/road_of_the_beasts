@@ -3,9 +3,9 @@
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
 [ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
 [ext_resource type="Resource" path="res://data/skills/run.tres" id="s0"]
-[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
-[ext_resource type="Resource" path="res://data/skills/tidal_shell.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/mire.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/bog.tres" id="s1"]
+[ext_resource type="Resource" path="res://data/skills/void_pull.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/shove.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -14,12 +14,12 @@ display_name = "Moss Turtle"
 kin = 2
 aspect = 2
 reference_shape = 2
-hp = 8
+hp = 7
 initiative = 3.0
 move = 2
 tpr = 1
 reach = 3
 ap = 3
 skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
-blurb = "A slow, heavy Flood that hits one turn later but harder; its Mire slows whoever comes close."
-notes = "Slow-burn twist and Deep Roots omitted: undecided / placeholder (T11)."
+blurb = "Slow wall that moves others: drags enemies into the Bog, pulls them together and shoves them off a Dragon Vein."
+notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

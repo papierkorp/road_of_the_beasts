@@ -131,6 +131,10 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 			if h_to >= h_from:
 				all_lower = false
 		falls = all_lower
+	if u.layer == Board.GROUND:
+		BattleDamage.ground_triggers(b, u, GroundTrigger.ON_LEAVE)      # being moved is movement
+		if not u.is_alive():
+			return true
 	b.relocate(u, to)
 	b.emit(&"displaced", {"who": u.id, "from": from, "to": to, "cause": cause})
 	if falls:

@@ -8,6 +8,7 @@
 script = ExtResource("3_remx1")
 id = &"pagoda_bridge"
 display_name = "Pagoda Bridge"
+content_status = "archived"
 layer = "both"
 hp = 3
 ground_left = &"rubble"

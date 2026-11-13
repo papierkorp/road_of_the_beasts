@@ -9,6 +9,7 @@
 script = ExtResource("3_0g6md")
 id = &"shockwave"
 display_name = "Shockwave"
+content_status = "archived"
 kind = "zone"
 description = "Push zone: occupants are pushed 1 in the cast direction at the end of their turn."
 status = "test data (Skills §10 prior draft, decided mechanics only)"

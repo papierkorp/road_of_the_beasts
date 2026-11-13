@@ -171,7 +171,7 @@ func test_a_new_prop_or_mountain_springs_a_trap_unless_only_monsters_do() -> voi
 		else:
 			assert_int(b.surges.size()).is_equal(0)      # sprung: the way to disarm a trap
 			assert_int(lion.hp).is_equal(1)              # the new prop intercepts
-			assert_str(b.board.at(Vector2i(3, 3)).ground).is_equal("plain")   # no residue under a prop
+			assert_str(b.board.at(Vector2i(3, 3)).ground).is_equal("lava")    # ground is laid under a prop too
 			assert_str(b.board.at(Vector2i(4, 3)).ground).is_equal("lava")    # everything else resolves
 
 
@@ -226,18 +226,6 @@ func test_displacement_resolves_the_unit_furthest_along_first() -> void:
 	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([4, 4])
 
 
-func test_rift_destroys_the_mountain_with_collapse_damage_and_its_own_ground() -> void:
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "reach": 3, "skills": ["gloom_rift"]}], [1, Vector2i(3, 3), {"hp": 8}]])
-	b.board.at(Vector2i(3, 3)).height = 1
-	b.begin()
-	_fire(b, 0, Vector2i(3, 3))                  # vertical I3: (3,2) (3,3) (3,4)
-	assert_int(H.unit(b, 1).hp).is_equal(4)      # 3 Surge + 1 environmental collapse
-	assert_bool(b.board.at(Vector2i(3, 3)).is_mountain()).is_false()
-	assert_str(b.board.at(Vector2i(3, 3)).ground).is_equal("blight")   # the Rift's own ground, not Rubble
-	assert_int(b.board.at(Vector2i(3, 3)).level).is_equal(1)
-	assert_str(b.board.at(Vector2i(3, 2)).ground).is_equal("blight")
-
-
 func test_value_reductions_add_and_a_zero_damage_hit_still_displaces() -> void:
 	var wave := H.surge([Vector2i.ZERO, Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)])
 	wave.surge_displacement = "push"
@@ -278,7 +266,7 @@ func test_lethal_prop_aftermath_and_the_survive_effect() -> void:
 		b.begin()
 		_fire(b, 0, Vector2i(1, 1))
 		assert_object(b.board.at(Vector2i(1, 1)).prop).is_null()
-		assert_str(b.board.at(Vector2i(1, 1)).ground).is_equal("plain")   # the Urn leaves Plain, in (e)
+		assert_str(b.board.at(Vector2i(1, 1)).ground).is_equal("lava")    # the Urn leaves the ground as it is
 		assert_bool(H.unit(b, 2).defeated).is_true()
 		if thread:
 			assert_bool(H.unit(b, 1).defeated).is_false()
@@ -303,7 +291,7 @@ func test_props_intercept_and_a_line_footprint_stops_at_the_first_prop() -> void
 	assert_int(lion.hp).is_equal(1)              # ordinary Surge hit on a prop: 2
 	assert_int(H.unit(b, 1).hp).is_equal(8)      # beyond the first prop of the line: spared
 	assert_str(b.board.at(Vector2i(3, 5)).ground).is_equal("lava")
-	assert_str(b.board.at(Vector2i(3, 4)).ground).is_equal("plain")    # no residue under a standing prop
+	assert_str(b.board.at(Vector2i(3, 4)).ground).is_equal("lava")     # ground is laid under a standing prop too
 	assert_str(b.board.at(Vector2i(3, 3)).ground).is_equal("plain")    # spared squares get nothing
 	assert_int(lion2.hp).is_equal(1)             # other shapes only lose the blocked square
 

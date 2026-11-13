@@ -2,10 +2,10 @@
 
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
 [ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
-[ext_resource type="Resource" path="res://data/skills/burrow.tres" id="s0"]
+[ext_resource type="Resource" path="res://data/skills/run.tres" id="s0"]
 [ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
 [ext_resource type="Resource" path="res://data/skills/coiling_rift.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/ambush_rift.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -14,12 +14,12 @@ display_name = "Hollow Serpent"
 kin = 2
 aspect = 3
 reference_shape = 2
-hp = 7
+hp = 6
 initiative = 5.0
-move = 3
+move = 2
 tpr = 1
 reach = 3
 ap = 3
 skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
-blurb = "Pulls you in with Void Pull, then its Rift drags everything it hits toward the centre."
-notes = "Trap and displacement test kit (T38). Two Surges; Ambush Rift (monster-only trap) replaces Void Pull."
+blurb = "Lays Blight that pulls enemies together and slowing thorns around them."
+notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

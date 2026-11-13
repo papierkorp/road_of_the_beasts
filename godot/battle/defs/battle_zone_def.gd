@@ -7,6 +7,8 @@ const MAX_LEVEL := 3
 
 @export var id: StringName
 @export var display_name: String
+## How far the record is (ContentStatus): the game, the overview filter and the skill builder use only what is in the game.
+@export_enum("approved", "draft", "experiment", "test", "simulation", "archived") var content_status: String = ContentStatus.DRAFT
 ## Internal calculation cost in construction points (gdd_skills §5 working drafts): an
 ## authoring note, not a rule, not a player value and not settled. Per cell and round at level I.
 ## -1 = not calculated.

@@ -13,7 +13,7 @@ const DIR_NAMES := {
 	Vector2i(0, -1): "north", Vector2i(1, -1): "north-east", Vector2i(1, 0): "east", Vector2i(1, 1): "south-east",
 	Vector2i(0, 1): "south", Vector2i(-1, 1): "south-west", Vector2i(-1, 0): "west", Vector2i(-1, -1): "north-west",
 }
-const TIMING := {"start_of_turn": "at turn start", "on_enter": "on enter", "end_of_turn": "at turn end"}
+const TIMING := {"start_of_turn": "at turn start", "on_enter": "on entering", "end_of_turn": "at turn end", "end_of_round": "at round end", "on_leave": "on leaving"}
 const PATHS := {"walk": "walk", "line": "straight line", "free": "any path", "teleport": "teleport"}
 
 
@@ -106,7 +106,7 @@ static func ops_tokens(c: BattleContent, ops: Array, residue := false) -> Packed
 
 static func _area(s: BattleSkillDef) -> String:
 	var n := 4 if s.anchor_mode == "caster_ring" else s.footprint.size()
-	var where := {"adjacent": "adjacent", "trail": "line from caster", "caster_ring": "around caster"}
+	var where := {"reach": "within Reach", "adjacent": "adjacent", "trail": "line from caster", "caster_ring": "around caster"}
 	return "%d sq" % n + (SEP + where[s.anchor_mode] if where.has(s.anchor_mode) else "")
 
 
@@ -114,7 +114,102 @@ static func _usage(s: BattleSkillDef) -> String:
 	return {"once_per_round": SEP + "1/round", "once_per_battle": SEP + "1/battle"}.get(s.repetition, "")
 
 
-## The card of a skill: at most three short lines [["", text], ...]. Name and AP are on the button.
+## An effect in plain words: "Movement −1", "initiative +2", "push 1".
+static func effect_words(e: FieldEffect, level := 1) -> String:
+	var v := e.value_at(level)
+	match e.tag:
+		FieldEffect.SLOW:
+			return "Movement −%d" % v
+		FieldEffect.HASTE:
+			return "Movement +%d" % v
+		FieldEffect.DRAIN_INIT:
+			return "initiative −%d" % v
+		FieldEffect.QUICKEN:
+			return "initiative +%d" % v
+		FieldEffect.DRAIN_RANGE:
+			return "Reach −%d" % v
+		FieldEffect.EXTEND:
+			return "Reach +%d" % v
+		FieldEffect.VIGOR:
+			return "AP +%d" % v
+		FieldEffect.SAP:
+			return "AP −%d" % v
+		FieldEffect.TEMPO:
+			return "+%d turn next round" % v
+	return e.text(level)
+
+
+## What a zone does: "while inside: Movement −1, initiative −2 · pulls 1 at cast and turn end".
+static func zone_brief(z: BattleZoneDef, level := 1) -> String:
+	var inside: PackedStringArray = []
+	var moves: PackedStringArray = []
+	for e: FieldEffect in z.effects:
+		if e.tag == FieldEffect.PUSH:
+			moves.append("pushes 1 at cast and turn end")
+		elif e.tag == FieldEffect.PULL:
+			moves.append("pulls 1 at cast and turn end")
+		else:
+			inside.append(effect_words(e, level))
+	var parts: PackedStringArray = []
+	if not inside.is_empty():
+		parts.append("while inside: " + ", ".join(inside))
+	parts.append_array(moves)
+	return SEP.join(parts)
+
+
+## What a ground does, with its levels: "1 dmg on enter (II: 2)".
+static func ground_words(g: GroundDef) -> String:
+	var text := ground_brief(g, 1)
+	if g.max_level > 1 and not g.triggers.is_empty():
+		text += " (II: %d)" % g.triggers[0].value_at(2)
+	return text if text != "" else "no effect"
+
+
+## What a prop is, for a card: "2 HP · spiky · burst 1".
+static func prop_words(c: BattleContent, d: PropDef) -> String:
+	var parts: PackedStringArray = ["%d HP" % d.hp]
+	if d.spiky:
+		parts.append("spiky")
+	var brief := prop_brief(c, d)
+	if brief != "":
+		parts.append(brief)
+	return SEP.join(parts)
+
+
+## The lines for what a skill creates: per ground, zone or prop one line "creates …" and below it one
+## line with what that thing does (its definition, not the skill, holds that).
+static func created_rows(c: BattleContent, s: BattleSkillDef) -> Array:
+	var rows: Array = []
+	var rounds := BattleExperiment.ground_rounds
+	for op: BoardOp in s.board_ops:
+		match op.op:
+			BoardOp.GROUND:
+				var g := c.ground(op.ground)
+				if g == null:
+					continue
+				rows.append(["", "creates ground: %s%s" % [g.display_name, (SEP + "%d rd" % rounds) if rounds > 0 else ""]])
+				rows.append(["", "  %s: %s" % [g.display_name, ground_words(g)]])
+			BoardOp.CREATE_ZONE:
+				var z := c.zone(op.zone)
+				if z == null:
+					continue
+				rows.append(["", "creates zone: %s%s%d rd" % [z.display_name, SEP, op.zone_rounds]])
+				rows.append(["", "  %s: %s" % [z.display_name, zone_brief(z)]])
+			BoardOp.CREATE_PROP:
+				var d := c.prop(op.prop)
+				if d == null:
+					continue
+				rows.append(["", "creates prop: %s" % d.display_name])
+				rows.append(["", "  %s: %s" % [d.display_name, prop_words(c, d)]])
+			BoardOp.RAISE_MOUNTAIN:
+				rows.append(["", "creates a Mountain (removed mechanic)"])
+			BoardOp.DESTROY_MOUNTAIN:
+				rows.append(["", "breaks Mountain (removed mechanic)"])
+	return rows
+
+
+## The card of a skill: what the skill does itself in one line, then what it creates and what each
+## created ground, zone or prop does [["", text], ...]. Name and AP are on the button.
 static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 	var rows: Array = []
 	match s.kind:
@@ -131,30 +226,43 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 				extra.append("then retreat 1")
 			if not extra.is_empty():
 				rows.append(["", SEP.join(extra)])
-		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
+			rows.append_array(created_rows(c, s))
+		BattleSkillDef.SURGE, BattleSkillDef.TRAP:            # retired kinds, kept for archived records
 			var parts: PackedStringArray = ["%d dmg" % s.surge_damage, "trap" if s.kind == BattleSkillDef.TRAP else "in %d turns" % s.surge_turns, _area(s)]
 			if s.surge_displacement != "none":
 				parts.append(s.surge_displacement + " 1")
-			if s.surge_mountain == "blank":
-				parts.append("not on Mountain")
-			if s.surge_hits_air:
-				parts.append("hits air")
 			rows.append(["", SEP.join(parts)])
 			var after := ops_tokens(c, s.board_ops, true)
 			if not after.is_empty():
 				rows.append(["", SEP.join(after)])
 		BattleSkillDef.ZONE:
-			rows.append(["", "%s%s%d rd%s%s" % [effects_text(s.zone.effects) if s.zone != null else "—", SEP, s.duration, SEP, _area(s)]])
+			rows.append(["", _area(s)])
+			if s.zone != null:
+				rows.append(["", "creates zone: %s%s%d rd" % [s.zone.display_name, SEP, s.duration]])
+				rows.append(["", "  %s: %s" % [s.zone.display_name, zone_brief(s.zone)]])
+			rows.append_array(created_rows(c, s))
 		BattleSkillDef.GROUND:
-			rows.append(["", "%s%s%s" % [SEP.join(ops_tokens(c, s.board_ops)), SEP, _area(s)]])
+			rows.append(["", _area(s)])
+			rows.append_array(created_rows(c, s))
 		BattleSkillDef.MOVE:
 			var parts: PackedStringArray = [PATHS.get(s.move_path, s.move_path),
 				"Move" + ("" if s.distance_mod == 0 else " %d" % s.distance_mod)]
 			if s.blocked_by_height:
 				parts.append("not on Mountain")
+			if s.impact_push == "ahead":
+				parts.append("pushes the monster ahead")
+			elif s.impact_push == "ring":
+				parts.append("pushes all neighbours")
 			rows.append(["", SEP.join(parts)])
+			var behind := created_rows(c, s)
+			if not behind.is_empty():
+				behind[0][1] = String(behind[0][1]).replace("creates ", "leaves on its path: ")
+			rows.append_array(behind)
 		BattleSkillDef.BUFF:
-			rows.append(["", "self: %s%s%d rd" % [effects_text(s.buff_effects), SEP, s.duration]])
+			var fx: PackedStringArray = []
+			for e in s.buff_effects:
+				fx.append(effect_words(e))
+			rows.append(["", "self: %s%s%d rd" % [", ".join(fx), SEP, s.duration]])
 		BattleSkillDef.PASSIVE:
 			rows.append(["", s.description if s.description != "" else "passive"])
 	if not rows.is_empty() and s.is_active():

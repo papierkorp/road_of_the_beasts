@@ -12,6 +12,7 @@ ground = &"thornbed"
 script = ExtResource("3_uk2hh")
 id = &"spring_burst"
 display_name = "Spring Burst"
+content_status = "archived"
 kind = "trap"
 description = "Flood: 2 damage, push 1, leaves Thornbed I. (Lob twist not applied: undecided.)"
 status = "test data (Skills §10 prior draft, decided mechanics only)"

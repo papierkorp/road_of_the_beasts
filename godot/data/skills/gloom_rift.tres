@@ -1,24 +1,25 @@
 [gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_soasc"]
-[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_4yjg1"]
-[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_t5xiq"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3"]
 
-[sub_resource type="Resource" id="Resource_8cdxh"]
-script = ExtResource("1_soasc")
-op = "destroy_mountain"
-
-[sub_resource type="Resource" id="Resource_2ws8c"]
-script = ExtResource("1_soasc")
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("1")
 ground = &"blight"
-on_mountain = true
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("1")
+op = "create_zone"
+zone = &"mire"
+zone_rounds = 2
 
 [resource]
-script = ExtResource("3_t5xiq")
+script = ExtResource("3")
 id = &"gloom_rift"
 display_name = "Gloom Rift"
-kind = "surge"
-description = "Rift: 3 damage, destroys Mountains, leaves Blight I."
-status = "test data (Skills §10 prior draft, decided mechanics only)"
+kind = "ground"
+description = "1 AP · line of 3 within Reach · creates ground: Blight · creates zone: Mire."
+status = "reshape 2026-11-13 (skill card, Skills §2); working draft, not priced"
 footprint = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1)])
-board_ops = Array[ExtResource("1_soasc")]([SubResource("Resource_8cdxh"), SubResource("Resource_2ws8c")])
+board_ops = Array[ExtResource("1")]([SubResource("o1"), SubResource("o2")])

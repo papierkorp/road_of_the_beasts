@@ -12,6 +12,7 @@ ground = &"thornbed"
 script = ExtResource("3_elpjq")
 id = &"tidal_shell"
 display_name = "Tidal Shell"
+content_status = "archived"
 kind = "surge"
 description = "Flood: 2 damage, pushes 1 in the cast direction, leaves Thornbed I. Cannot reach Mountains. (Slow-burn twist not applied: undecided.)"
 status = "test data (Skills §10 prior draft, decided mechanics only)"

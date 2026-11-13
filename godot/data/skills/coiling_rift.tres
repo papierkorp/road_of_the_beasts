@@ -1,25 +1,26 @@
 [gd_resource type="Resource" script_class="BattleSkillDef" format=3]
 
-[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_y7l6u"]
-[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_nrmaj"]
-[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_2556x"]
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3"]
 
-[sub_resource type="Resource" id="Resource_1nexp"]
-script = ExtResource("1_y7l6u")
-op = "destroy_mountain"
-
-[sub_resource type="Resource" id="Resource_u2fem"]
-script = ExtResource("1_y7l6u")
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("1")
 ground = &"blight"
-on_mountain = true
+
+[sub_resource type="Resource" id="o2"]
+script = ExtResource("1")
+op = "create_zone"
+zone = &"void_pull"
+zone_rounds = 2
 
 [resource]
-script = ExtResource("3_2556x")
+script = ExtResource("3")
 id = &"coiling_rift"
 display_name = "Coiling Rift"
-kind = "surge"
-description = "Rift: 3 damage, then pulls struck monsters 1 toward the anchor; destroys Mountains, leaves Blight I."
-status = "test data (Skills §10 prior draft, decided mechanics only)"
+kind = "ground"
+description = "2 AP · 4 squares within Reach · creates ground: Blight · creates zone: Void Pull."
+status = "reshape 2026-11-13 (skill card, Skills §2); working draft, not priced"
+ap_cost = 2
 footprint = Array[Vector2i]([Vector2i(-1, 0), Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 1)])
-surge_displacement = "pull"
-board_ops = Array[ExtResource("1_y7l6u")]([SubResource("Resource_1nexp"), SubResource("Resource_u2fem")])
+board_ops = Array[ExtResource("1")]([SubResource("o1"), SubResource("o2")])

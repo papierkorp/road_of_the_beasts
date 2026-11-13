@@ -78,7 +78,10 @@ static var surge_ground := &""
 static var surge_at_caster := false
 ## A timed Surge that is due waits until every monster standing on its squares has finished a turn
 ## since the cast (draft T39: nobody is hit by a Surge it had no turn to leave).
-static var surge_fair := false
+static var surge_fair := true
+## Rule since the reshape of 2026-11-13: a Dragon Vein belongs to the side that touched it last and
+## deals its damage for that side whether or not a monster stands on it. false = only while held.
+static var vein_touch := true
 ## Late-round pressure: "idle" (build rule) only at the end of a round in which nobody holds a
 ## Wellspring · "always" as before 2026-11-13 · "none" never.
 static var pressure_mode := "idle"
@@ -113,7 +116,8 @@ static func reset() -> void:
 	surge_wall = false
 	surge_ground = &""
 	surge_at_caster = false
-	surge_fair = false
+	surge_fair = true
+	vein_touch = true
 
 
 ## The Wellspring squares of a board of this size: evenly spread on the centre row.

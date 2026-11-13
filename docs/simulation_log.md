@@ -82,6 +82,8 @@ Kinds: strike_jab = strike · magma_pounce, cinder_dive, eclipse, gloom_rift, co
 
 **Kit set `164984ea835f`** (content `2026-11-12.3`): as `736eb4e604a6` with two slots changed after the user decision of 2026-11-12 (no shield zone in a kit): moss_turtle carries `mire` (zone) instead of `bark_veil`, dusk_moth `blink` (move) instead of `shade_veil`. First used in S012.
 
+**Kit set `230e32c911cc`** (content `2026-11-13.1`): the reshaped build without Surges and traps: 26 skills on the skill card, the nine kits of [gdd_skills.md §10](gdd_skills.md#10-kits-of-the-nine-monsters), spread test stats (S019). The fingerprint of the S018 runs (reshape with Surges still in the kits) was not noted.
+
 **Kit set `6e152c78b752`** (content `2026-11-13.1`): stats and kits of `f4086ae48783`; the movement skills other than Run cover the full Movement stat and cost 2 AP (Glide, Burrow, Blink, Leap, Phase, Quake Leap, Headbutt; S016 Part D).
 
 **Kit set `f4086ae48783`** (content `2026-11-13.1`; HP/Init/Move/TPR/Reach/AP: slots): the kits of `164984ea835f` with the stats of the draft prices of 2026-11-13 (S015 set C).
@@ -89,6 +91,297 @@ Kinds: strike_jab = strike · magma_pounce, cinder_dive, eclipse, gloom_rift, co
 - blaze_tiger 7/7/5/1/2/3 · dusk_moth 5/7/3/1/4/3 · ember_hawk 5/9/5/2/2/3 · forge_golem 8/5/1/1/3/3 · gloom_wolf 6/9/3/1/3/3 · grove_wisp 5/9/5/1/3/3 · hollow_serpent 7/5/3/1/3/3 · moss_turtle 8/3/2/1/3/3 · thorn_mites 6/3/3/2/3/3
 
 # Entries
+
+## S019 · 2026-11-13 · without Surges and traps: a skill only delivers; stats, skills and skill parts again
+
+**State:** `eed1ade` dirty (uncommitted reshape, temp_todo T40) · content `2026-11-13.1` · kit set `230e32c911cc`. Godot 4.7.2. 3v3, random teams on seeded boards, `--paired`, bots `tactic` on both sides, 20 battles per seed (8 seeds = 160 battles, 16 seeds = 320). **Build rules since S018** (user decision 2026-11-13): no Surge and no trap is in the game; a skill strikes, moves its user, acts on its user or creates ground, a zone or a prop; Gloom Rift, Cinder Dive and Coiling Rift create ground (Coiling Rift also a Void Pull zone); kits of Wisp, Serpent and Turtle changed. The runs were made before two later changes of the same day (ground may be laid under a prop; a push zone left by a combined skill takes its direction from the rotation).
+
+**Question (user):** how much do the stats, the skills and the parts of a skill matter on this state.
+
+### Part A · the build
+
+| Variant | Battles | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) | Hawk / Wisp / Moth | Tiger / Wolf / Serpent | Golem / Turtle / Mites |
+|---|---|---|---|---|---|---|---|---|
+| build without Surges and traps | 160 | 75 / 80 / 5 | 3.1 | 24 / 0 % | 1.3 | 35 / 32 / 22 % | 49 / 47 / 59 % | 62 / 68 / 63 % |
+
+Seeds 1 and 2: damage by Strike 24–27 %, ground 7 %, collision 34–36 %, the rest Dragon Veins, surrounding and aftermath; no Surge damage.
+
+### Part B · random stats with random skills or generated skills
+
+| Row | Battles | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) |
+|---|---|---|---|---|---|
+| `mixskills,mixstats` (the 26 skills of the game) | 320 | 161 / 155 / 4 | 3.5 | 13 / 0 % | 1.9 |
+| `genskills=48,mixstats` | 320 | 152 / 163 / 5 | 3.6 | 10 / 0 % | 2.0 |
+
+In `mixskills` the first slot is a Strike with damage, so Jab, Thrust and Thorn Lash are held about three times as often as the others.
+
+| Stat value | real skills | 48 generated |
+|---|---|---|
+| hp=3 | 39% (320) | 38% (307) |
+| hp=4 | 43% (316) | 44% (345) |
+| hp=5 | 50% (310) | 46% (315) |
+| hp=6 | 49% (346) | 58% (322) |
+| hp=7 | 54% (317) | 57% (312) |
+| hp=8 | 61% (311) | 54% (319) |
+| init=1 | 54% (206) | 55% (212) |
+| init=2 | 47% (234) | 48% (212) |
+| init=3 | 50% (215) | 49% (236) |
+| init=4 | 49% (232) | 45% (226) |
+| init=5 | 46% (210) | 50% (207) |
+| init=6 | 49% (203) | 51% (201) |
+| init=7 | 52% (191) | 48% (184) |
+| init=8 | 45% (230) | 50% (229) |
+| init=9 | 53% (199) | 48% (213) |
+| move=1 | 49% (416) | 49% (382) |
+| move=2 | 52% (373) | 50% (359) |
+| move=3 | 49% (381) | 49% (404) |
+| move=4 | 49% (391) | 49% (388) |
+| move=5 | 48% (359) | 50% (387) |
+| reach=2 | 49% (657) | 48% (621) |
+| reach=3 | 48% (666) | 51% (658) |
+| reach=4 | 52% (597) | 48% (641) |
+| tpr=1 | 46% (966) | 48% (921) |
+| tpr=2 | 53% (954) | 51% (999) |
+| ap=2 | 41% (958) | 42% (949) |
+| ap=3 | 58% (962) | 56% (971) |
+
+| Skill | Win rate (plays) |
+|---|---|
+| gale | 62% (255) |
+| void_pull | 61% (234) |
+| time_split | 55% (240) |
+| bog | 54% (254) |
+| immovable | 54% (228) |
+| run | 54% (239) |
+| thornbed | 52% (221) |
+| glide | 51% (252) |
+| gloom_rift | 51% (238) |
+| plant_bamboo | 50% (247) |
+| strike_jab | 50% (817) |
+| battle_trance | 49% (233) |
+| fire_trail | 49% (267) |
+| tailwind | 49% (235) |
+| leap | 48% (257) |
+| strike_thrust | 48% (792) |
+| mire | 46% (249) |
+| snare | 46% (227) |
+| thorn_lash | 46% (802) |
+| headbutt | 45% (236) |
+| lava_field | 45% (222) |
+| set_gong | 45% (239) |
+| shove | 45% (235) |
+| cinder_dive | 44% (206) |
+| coiling_rift | 42% (255) |
+
+| Part | Win rate (plays) |
+|---|---|
+| ap=1 | 51% (2217) |
+| ap=2 | 49% (4085) |
+| ap=3 | 46% (1378) |
+| damage=0 | 49% (636) |
+| damage=2 | 49% (2608) |
+| impact=none | 48% (1512) |
+| kind=ground | 49% (1481) |
+| kind=move | 48% (1512) |
+| kind=strike | 49% (3244) |
+| kind=zone | 51% (1443) |
+| path=free | 49% (501) |
+| path=line | 48% (372) |
+| path=walk | 48% (639) |
+| shape=angle | 51% (257) |
+| shape=block | 52% (591) |
+| shape=cross | 49% (356) |
+| shape=line2 | 52% (629) |
+| shape=line3 | 45% (340) |
+| shape=one | 50% (751) |
+| stays=ground:blight | 50% (623) |
+| stays=ground:lava | 47% (621) |
+| stays=ground:mossbed | 49% (103) |
+| stays=ground:thornbed | 49% (878) |
+| stays=none | 49% (3297) |
+| stays=prop:bamboo_stand | 48% (395) |
+| stays=prop:bronze_gong | 48% (320) |
+| stays=zone:gale | 67% (116) |
+| stays=zone:mire | 48% (349) |
+| stays=zone:slowing | 48% (343) |
+| stays=zone:tailwind | 45% (121) |
+| stays=zone:void_pull | 54% (514) |
+| strike=arc | 46% (656) |
+| strike=jab | 51% (1866) |
+| strike=thrust | 45% (722) |
+
+**Observations** (indications; bots only; ±7 points for a monster in the 160-battle row, about ±5 for an HP value, ±7 for an initiative value or a skill):
+
+- *Removing Surges and traps changes little for the bots:* 3.1 rounds and 24 % under 3 (S018: 3.1 and 27 %); the fragile monsters stay last (Moth 22 %, Wisp 32 %, Hawk 35 %), the sturdy ones first (Turtle 68 %, Mites 63 %, Golem 62 %). A third of the damage is still collisions.
+- *With random skills battles last 3.5–3.6 rounds, 10–13 % under 3 and none over 7:* shorter than with Surges in the pool (S018: 3.8–4.7), because ground deals 1 where a Surge dealt 2 and Strikes and pushes decide.
+- *Stats as before:* HP from 38–39 % at 3 to 54–61 % at 8; AP 3 against 2 now 14–17 points (more than in S018: without 1-AP Surges a monster with 2 AP can do one thing per turn); a second turn 3–7; **initiative, Movement and Reach flat.**
+- *Skills:* Gale and Void Pull lead (61–62 %), Coiling Rift (Blight and a pull for 2 AP) is last (42 %); the experiment Time Split reads 55 %, Battle Trance 49 %.
+- *Parts:* flat again (45–54 %) except a Gale zone left behind (67 %, few plays).
+
+**Follow-up:** T40 (a job for initiative and Movement; short battles through the kits; the fragile bodies), T03 (AP 3 is worth more than any other single step), T10/T11 (kits). No rule was changed by this entry.
+
+About 800 battles in 40 runs.
+
+## S018 · 2026-11-13 · the reshaped build: no height, Dragon Veins by last touch, fair Surges, new skill list and kits; what stats, skills and skill parts are worth
+
+**State:** `eed1ade` dirty (uncommitted reshape, temp_todo T40) · content `2026-11-13.1`. Godot 4.7.2. 3v3, random teams on seeded boards, `--paired`, bots `tactic` on both sides, 20 battles per seed (seeds 1–8 = 160 battles, 16 seeds = 320). **Build rules since S017:** no Mountains and no flying; a Dragon Vein (the earlier Wellspring) belongs to the side that touched it last; a due Surge waits until every monster on it has had a turn; highest single hit 2 (every Surge and trap); ground acts on entering, on leaving, at the end of a turn or of a round; 28 skills in the sentence form and new kits; spread test stats (S016 set “wide”).
+
+**Questions (user):** does the reshaped build hold; how much do the stats, the skills and the single parts of a skill matter.
+
+**Variants:** `calm=1`, `veinhold`, `mixstats`, `mixskills` (four random skills of the game's 28 active ones and the passive, the first one dealing damage), `genskills=N` (four random skills out of N drawn by `SkillGen.draw`, seed 4711; a part's win rate is that of the monsters holding a skill with it), `mixkits`.
+
+### Part A · the reshaped build
+
+| Variant | Battles | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) | Hawk / Wisp / Moth | Tiger / Wolf / Serpent | Golem / Turtle / Mites |
+|---|---|---|---|---|---|---|---|---|
+| reshaped build | 160 | 87 / 71 / 2 | 3.1 | 27 / 0 % | 1.4 | 34 / 32 / 29 % | 49 / 44 / 57 % | 66 / 76 / 60 % |
+| `calm=1` | 160 | 74 / 81 / 5 | 3.6 | 9 / 0 % | 2.0 | 37 / 44 / 27 % | 36 / 50 / 56 % | 53 / 70 / 67 % |
+| `veinhold` (a Dragon Vein only works while held) | 160 | 81 / 78 / 1 | 4.1 | 17 / 3 % | 1.4 | 40 / 38 / 26 % | 47 / 46 / 55 % | 63 / 73 / 62 % |
+
+Seed 1 of the first row: damage by strike 24 %, Surge 6 %, ground 5 %, collision 34 %, the rest Dragon Veins, surrounding and aftermath; most used after Step and Run: Jab, Void Pull, Bog.
+
+### Part B · random stats with random skills, generated skills or random kits
+
+| Row | Battles | Side 0 / 1 / Draw | Mean rounds | Under 3 / over 7 | First defeat (round, mean) |
+|---|---|---|---|---|---|
+| `mixskills,mixstats` (the 28 skills of the game) | 320 | 147 / 163 / 10 | 3.8 | 11 / 0 % | 2.0 |
+| `genskills=36,mixstats` | 320 | 149 / 164 / 7 | 4.5 | 2 / 2 % | 2.5 |
+| `genskills=60,mixstats` (seeds 17–32) | 320 | 152 / 163 / 5 | 4.7 | 2 / 5 % | 2.6 |
+| `mixkits,mixstats` (the nine new kits) | 320 | 147 / 167 / 6 | 3.3 | 18 / 0 % | 1.9 |
+
+Win rate of the monsters holding the value (about 950 plays per AP and TPR value, 630 per Reach value, 380 per Movement value, 320 per HP value, 210 per initiative value in each row):
+
+| Stat value | real skills | 36 generated | 60 generated | kits | mean |
+|---|---|---|---|---|---|
+| hp=3 | 40% | 39% | 37% | 37% | 38 % |
+| hp=4 | 42% | 45% | 45% | 46% | 44 % |
+| hp=5 | 50% | 46% | 48% | 47% | 48 % |
+| hp=6 | 51% | 53% | 54% | 51% | 52 % |
+| hp=7 | 50% | 49% | 54% | 58% | 53 % |
+| hp=8 | 57% | 61% | 56% | 57% | 58 % |
+| init=1 | 50% | 48% | 50% | 52% | 50 % |
+| init=2 | 48% | 46% | 54% | 50% | 50 % |
+| init=3 | 47% | 53% | 45% | 51% | 49 % |
+| init=4 | 50% | 47% | 50% | 50% | 49 % |
+| init=5 | 49% | 48% | 47% | 45% | 47 % |
+| init=6 | 51% | 48% | 49% | 51% | 50 % |
+| init=7 | 50% | 48% | 51% | 50% | 50 % |
+| init=8 | 44% | 46% | 46% | 48% | 46 % |
+| init=9 | 47% | 56% | 51% | 44% | 50 % |
+| move=1 | 46% | 44% | 50% | 48% | 47 % |
+| move=2 | 50% | 50% | 48% | 51% | 50 % |
+| move=3 | 48% | 45% | 50% | 46% | 47 % |
+| move=4 | 54% | 52% | 49% | 53% | 52 % |
+| move=5 | 44% | 52% | 49% | 48% | 48 % |
+| reach=2 | 46% | 49% | 48% | 48% | 48 % |
+| reach=3 | 49% | 48% | 49% | 47% | 48 % |
+| reach=4 | 50% | 50% | 50% | 52% | 50 % |
+| tpr=1 | 45% | 43% | 45% | 44% | 44 % |
+| tpr=2 | 52% | 55% | 54% | 54% | 54 % |
+| ap=2 | 43% | 43% | 44% | 43% | 43 % |
+| ap=3 | 54% | 54% | 55% | 55% | 54 % |
+
+| Skill | Win rate (plays) |
+|---|---|
+| bog | 60% (230) |
+| gale | 58% (194) |
+| lava_field | 55% (205) |
+| set_gong | 54% (203) |
+| immovable | 53% (220) |
+| void_pull | 52% (227) |
+| run | 51% (203) |
+| gloom_rift | 50% (410) |
+| leap | 50% (234) |
+| strike_jab | 50% (415) |
+| fire_trail | 48% (208) |
+| mire | 48% (222) |
+| spring_burst | 48% (410) |
+| thorn_lash | 48% (389) |
+| thornbed | 48% (217) |
+| tidal_shell | 48% (422) |
+| time_split | 48% (213) |
+| glide | 47% (206) |
+| shove | 47% (215) |
+| ambush_rift | 46% (388) |
+| battle_trance | 46% (215) |
+| cinder_dive | 46% (408) |
+| strike_thrust | 46% (384) |
+| tailwind | 46% (204) |
+| headbutt | 44% (190) |
+| plant_bamboo | 44% (217) |
+| coiling_rift | 43% (406) |
+| snare | 42% (225) |
+
+| Kit of | Win rate (plays) |
+|---|---|
+| ember_hawk | 59% (228) |
+| hollow_serpent | 55% (211) |
+| moss_turtle | 54% (221) |
+| thorn_mites | 53% (211) |
+| gloom_wolf | 51% (193) |
+| grove_wisp | 47% (212) |
+| forge_golem | 44% (226) |
+| blaze_tiger | 40% (198) |
+| dusk_moth | 37% (220) |
+
+| Part | 36 generated: win rate (plays) | 60 generated: win rate (plays) |
+|---|---|---|
+| ap=1 | 46% (1861) | 48% (2100) |
+| ap=2 | 50% (5001) | 50% (4582) |
+| ap=3 | 47% (818) | 49% (998) |
+| damage=0 | 55% (165) | 49% (208) |
+| damage=2 | 50% (1361) | 51% (1291) |
+| impact=none | 49% (867) | 49% (856) |
+| impact=ring | 60% (178) | 64% (99) |
+| kind=ground | 46% (1000) | 48% (980) |
+| kind=move | 51% (1045) | 50% (955) |
+| kind=strike | 51% (1526) | 50% (1499) |
+| kind=surge | 48% (1536) | 48% (1665) |
+| kind=trap | 47% (1618) | 48% (1571) |
+| kind=zone | 52% (955) | 51% (1010) |
+| move_target=none | 46% (1614) | 46% (1431) |
+| move_target=pull | 48% (782) | 50% (655) |
+| move_target=push | 49% (758) | 49% (1150) |
+| path=free | 55% (186) | 53% (280) |
+| path=line | 50% (692) | 51% (410) |
+| path=walk | 52% (167) | 47% (265) |
+| shape=angle | 46% (677) | 52% (756) |
+| shape=block | — | 48% (426) |
+| shape=cross | 47% (531) | 46% (675) |
+| shape=line2 | 47% (1040) | 51% (720) |
+| shape=line3 | 47% (765) | 48% (1012) |
+| shape=one | 50% (2096) | 47% (1637) |
+| stays=ground:blight | 49% (437) | 50% (602) |
+| stays=ground:lava | 50% (1081) | 50% (800) |
+| stays=ground:mossbed | 46% (431) | 49% (953) |
+| stays=ground:snare | 51% (574) | 49% (594) |
+| stays=ground:thornbed | 48% (196) | 47% (521) |
+| stays=none | 49% (2733) | 50% (2257) |
+| stays=prop:bamboo_stand | — | 49% (107) |
+| stays=zone:bog | 49% (646) | 46% (556) |
+| stays=zone:gale | 53% (596) | 55% (349) |
+| stays=zone:mire | 44% (564) | 47% (490) |
+| stays=zone:slowing | 45% (162) | 52% (103) |
+| stays=zone:tailwind | — | 45% (92) |
+| stays=zone:void_pull | 48% (260) | 53% (256) |
+| strike=arc | 49% (549) | 49% (492) |
+| strike=jab | 55% (708) | 54% (501) |
+| strike=thrust | 43% (269) | 48% (506) |
+
+**Observations** (indications; bots only; ±7 points for a monster in a 160-battle row, about ±5 for an HP value, ±7 for an initiative value or a skill in one row):
+
+- *The reshaped build is too fast with the hand-made kits:* 3.1 rounds and 27 % of battles under 3. Dragon Veins by touch take a round off (4.1 rounds and 17 % with `veinhold`); a calm first round gives 9 % under 3 and the first defeat in round 2.0. A third of the damage is collisions.
+- *The fragile monsters are weaker than before* (Moth 29 %, Wisp 32 %, Hawk 34 %; Turtle 76 %, Golem 66 %): a vein hits the nearest enemy every round and 3 HP go quickly.
+- *With random or generated skills the same rules give 3.8–4.7 rounds, 2–11 % under 3 and the first defeat in round 2.0–2.6:* the short battles come from the kits (pulls and collisions), not from the rules alone.
+- *Stats, four rows in agreement:* HP rises from 37–40 % at 3 to 56–61 % at 8, about 4 points per HP; AP 3 against 2 is worth 11 points, a second turn 7–12; **initiative shows no trend in any row, Movement and Reach none beyond noise.** The reshape has not given initiative or Movement a job the bots use.
+- *Skills:* the displacing zones lead again (Bog 60 %, Gale 58 %), then Lava Field and Set Gong; every Surge, trap and Strike lies at 43–50 %; Snare is last (42 %). The two experiment skills are unremarkable (46–48 %).
+- *Skill parts:* almost flat. Kind, shape, AP cost, damage and what stays all lie within 46–55 %; only “pushes all neighbours on landing” stands out (60–64 %, few plays) and a Gale zone left behind (53–55 %). A skill that moves its target is a little better than one that does not (48–50 % against 46 %).
+- *Kits over random bodies:* Hawk's kit 59 %, Serpent's 55 %, Turtle's 54 %; Tiger's 40 % and the Moth's 37 %.
+- *Limits:* `tactic` plans against a `greedy` opponent and may not use initiative or Binding Vines as a person would; a part's win rate is diluted by the three other skills of the monster.
+
+**Follow-up:** T40 (kits too deadly; Dragon Vein damage from round 1; initiative and Movement still without measurable value; the Moth's and Tiger's kits), T03 (stat prices: HP, AP and a second turn carry the value), T13.
+
+About 1 800 battles in 136 runs.
 
 ## S017 · 2026-11-13 · postponing in two forms, a calm first round, Surge wall; kits and stats drawn at random
 

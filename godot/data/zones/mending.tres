@@ -12,6 +12,7 @@ cap = 2
 script = ExtResource("2_sd1kd")
 id = &"mending"
 display_name = "Mending Zone"
+content_status = "archived"
 internal_calc_cost = 3.0
 effects = Array[ExtResource("1_uf13v")]([SubResource("Resource_jfofl")])
 color = Color(0.6, 0.9, 0.7, 1)

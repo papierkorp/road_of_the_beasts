@@ -8,6 +8,7 @@
 script = ExtResource("3_r12dq")
 id = &"delayed_burst_reference"
 display_name = "Delayed Burst"
+content_status = "archived"
 kind = "surge"
 description = "Residue-free Minor Surge: 3 damage on a horizontal I3, no board change."
 status = "GDD reference record (Skills §11), draft"

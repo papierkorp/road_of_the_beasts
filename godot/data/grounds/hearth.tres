@@ -12,6 +12,7 @@ tag = "quicken"
 script = ExtResource("2_j73mo")
 id = &"hearth"
 display_name = "Hearth"
+content_status = "archived"
 group = "blessed"
 effects = Array[ExtResource("1_u8u1s")]([SubResource("Resource_vd1bn")])
 color = Color(0.92, 0.72, 0.36, 1)

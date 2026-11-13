@@ -12,6 +12,7 @@ ground = &"thornbed"
 script = ExtResource("3_e06uu")
 id = &"bramble_tide"
 display_name = "Bramble Tide"
+content_status = "archived"
 kind = "trap"
 description = "Flood on 2 squares: 2 damage, push 1, leaves Thornbed I. (Deep Residue not applied: undecided.)"
 status = "test data (Skills §10 prior draft, decided mechanics only)"

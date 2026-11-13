@@ -11,6 +11,7 @@ script = ExtResource("1_5cbag")
 script = ExtResource("3_7qqxn")
 id = &"thunder_cloud"
 display_name = "Thunder Cloud"
+content_status = "archived"
 prop_class = "burst"
 layer = "air"
 aftermath = Array[ExtResource("1_5cbag")]([SubResource("Resource_8iqgb")])

@@ -284,8 +284,8 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 				BattleBoardOps.place_prop(b, b.content.prop(op.prop), cell)
 	# (e) ground: what destroyed props leave behind, then authored ground / residue
 	for prop in removed:
-		if prop.def.ground_left == &"":
-			continue
+		if prop.def.ground_left == &"" or prop.def.ground_left == GroundDef.PLAIN:
+			continue                          # leaves nothing: the ground under it stays as it is
 		var c := b.board.at(prop.pos)
 		if c.is_mountain() or c.prop != null:
 			continue                          # never changes a Mountain square (gdd_battle §4.10)
@@ -294,11 +294,20 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 		for op in p["skill"].ops_of(BoardOp.GROUND):
 			for cell: Vector2i in p["cells"]:
 				var c := b.board.at(cell)
-				if c.prop != null:
-					continue                  # legality at execution: no ground under a prop
+				if c == null:
+					continue
 				if (c.is_mountain() or p["destroyed"].has(cell)) and not op.on_mountain:
 					continue
 				BattleBoardOps.lay_ground(b, c, op.ground, p["label"])
+		for op in p["skill"].ops_of(BoardOp.CREATE_ZONE):              # (f) a zone the skill leaves
+			var zdef := b.content.zone(op.zone)
+			if zdef == null:
+				continue
+			b._next_gid += 1
+			for cell: Vector2i in p["cells"]:
+				var zc := b.board.at(cell)
+				if zc != null:
+					BattleBoardOps.land_zone(b, zc, zdef, b._next_gid, p["owner"], op.zone_rounds, p.get("dir", Vector2i.ZERO), p.get("anchor", cell))
 		# test switch surge_ground: a timed Surge without ground of its own leaves one
 		var sk: BattleSkillDef = p["skill"]
 		if BattleExperiment.surge_ground != &"" and p["kind"] == "surge" and sk.kind == BattleSkillDef.SURGE and sk.ops_of(BoardOp.GROUND).is_empty():

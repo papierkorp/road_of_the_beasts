@@ -22,6 +22,9 @@ static func build(b: Battle) -> Array[Dictionary]:
 		var eff := BattleStats.initiative(b, u)
 		totals[u.side] += eff
 		var turns := 1 if b.round_number < BattleExperiment.tpr_from_round else u.sheet.tpr      # test switch
+		for fx in u.effects:                      # experiment: one more turn while the effect lasts
+			if fx["tag"] == FieldEffect.TEMPO:
+				turns += int(fx["value"])
 		for k in turns:
 			entries.append({"id": id, "init": maxf(BattleStats.MIN_INITIATIVE, snappedf(eff - EXTRA_TURN_PENALTY * k, 0.1)),
 				"base": u.sheet.initiative, "side": u.side, "slot": u.slot, "extra": k})

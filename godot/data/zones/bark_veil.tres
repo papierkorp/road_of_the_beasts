@@ -13,6 +13,7 @@ cap = 3
 script = ExtResource("2_4icmj")
 id = &"bark_veil"
 display_name = "Bark Veil"
+content_status = "archived"
 internal_calc_cost = 2.0
 effects = Array[ExtResource("1_qf3yp")]([SubResource("Resource_pq2vj")])
 color = Color(0.56, 0.74, 0.5, 1)

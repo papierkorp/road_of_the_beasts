@@ -4,8 +4,8 @@
 [ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
 [ext_resource type="Resource" path="res://data/skills/quake_leap.tres" id="s0"]
 [ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
-[ext_resource type="Resource" path="res://data/skills/spring_burst.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/gale.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/gale.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -14,12 +14,12 @@ display_name = "Grove Wisp"
 kin = 4
 aspect = 2
 reference_shape = 3
-hp = 5
+hp = 3
 initiative = 9.0
 move = 5
 tpr = 1
 reach = 3
 ap = 3
 skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
-blurb = "Throws weak Floods from far away, phases through props, and is the only one that can turn its shapes in battle."
-notes = "Trap and displacement test kit (T38). Quake Leap replaces Phase."
+blurb = "Leaps into a group and scatters it, blows a line back and lays slowing thorns."
+notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

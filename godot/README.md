@@ -87,62 +87,53 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
 
 ## Content status and build rules
 
-- **Everything is test data or a GDD draft**, never approved content (docs/temp_todo.md T10–T13). Skills and monsters
-  carry `content_status` (`approved` / `draft` / `test` / `simulation` / `archived`); the game never fields test-only,
-  simulation-only or archived records (filter in `BattleContent`). Details: [tools/README.md](tools/README.md).
-- **Build rules that are GDD working drafts since 2026-11-12** (user directions, docs/temp_todo.md T38, not validated):
-  **Surge** and **trap** are two skill kinds: a Surge is cast on any squares and detonates after its turns (2) of any
-  monster; a trap needs monster-free squares, stays until a monster, a new prop or a new Mountain appears on it, never
-  lapses and may be set repeatedly; a Surge replaces a trap square by square; a monster pushed against
-  the **board edge** takes 1 damage; a monster pushed into a **spiky prop** (`PropDef.spiky`: Bamboo Stand, Stone Lion)
-  takes 2; movement skills may displace on landing (`BattleSkillDef.impact_push`).
-  Since the user decisions of 2026-11-12 also: Step 1 AP, slotted movement skills 1 AP, shield / mend zone skills 2 AP,
-  push and pull zones also move the monsters in them at cast, every Strike pushes each struck monster 1 square away,
-  and everyone may rotate a placed shape.
-- **Test content without a GDD skill record** (T38): board skills Set Gong and Plant Bamboo (place a Bronze Gong / a
-  spiky Bamboo Stand on a free square in Reach); props Vortex Urn (destroyed: pulls the eight neighbours 1 square in)
-  and Storm Drum (pushes a monster that ends its turn orthogonally next to it 1 square away).
-- **Test switches, build only** (`battle/core/battle_experiment.gd`, set in the draft screen or by `sim.gd --variant`): pushes
-  over 2 squares / sliding, the Spirit swap, no rotation, AP of Step / Jab / movement, and the aggressive bot, and `soft_pressure` (late-round pressure without damage: the outer ring breaks away
-  every N rounds down to 3×3; not shown by the battle view yet).
-- **Build rules since simulation S011** (user decision 2026-11-12; working drafts in gdd_battle §4.5 and gdd_skills §3,
-  [docs/simulation_log.md](../docs/simulation_log.md) S011/S012): ground laid during the battle turns back into Plain at
-  the end of the round after the one it was laid in (`ground_rounds` = 2), a monster holds one trap per trap skill
-  (`trap_cap` = 1; setting it again moves the trap), no kit holds a shield zone (Moss Turtle: Mire, Dusk Moth: Blink) and
-  the AI walks up to the enemy instead of ending a turn with AP left (`ai_hunt`, not a rule). The three values stay
-  switches of `battle_experiment.gd` so that `sim.gd` can compare (0 / off = the earlier behaviour). The battle view
-  does not show how long ground still lasts.
-- **Movement skills, build test since 2026-11-13** (user choice in the discussion of that day; not a GDD rule, gdd_skills §8.2
-  still prices dropped restrictions in distance; simulation S016 Part D): every movement skill covers the full Movement
-  stat. Run costs 1 AP; Glide, Burrow, Blink, Leap, Phase, Quake Leap and Headbutt cost 2 AP and have no distance
-  deduction or fixed distance any more. `sim.gd --variant freeap=N` / `freemod=N` set their AP and a deduction for a run.
-- **Switches of simulation S017** (2026-11-13; off by default, `battle/core/battle_experiment.gd`): `delay_reverse` and
-  `delay_first_round` (two forms of postponing a turn), `damage_from_round` (no damage before that round), `surge_wall`
-  (a charging timed Surge lets no movement onto its squares), `surge_ground` (ground a timed Surge leaves). Content status
-  `experiment` (user decision): in the game and labelled in the overview, for mechanics to try. The reshape decisions of
-  gdd_battle §1.2 (no height, Wellspring by last touch, fair damage at range, skills as one sentence) are **not built**.
-- **Wellspring rules, build rules since 2026-11-13** (user decision, working draft in gdd_battle §4.2 / §2.2, temp_todo T39;
-  simulations S013–S015): three Wellspring squares on the centre row of the 7×7 board (`wells` = 3, ground
-  `data/grounds/wellspring.tres`; no prop or Mountain there; boards with an even side or under 7×7 get none). At the end of a
-  round a monster standing on one deals 1 damage to the nearest enemy (ties: more HP, more initiative, then roster order
-  as a stand-in for the holder's choice), and a monster with two enemies on its eight neighbour squares takes 1 damage
-  (`flank`). In round 1 every monster has one turn (`tpr_from_round` = 2). Late-round pressure runs only at the end of a
-  round in which nobody holds a Wellspring (`pressure_mode` = `idle`; `always` / `none` to compare). `AiBrain` values held
-  Wellsprings and surrounded monsters and walks toward a free Wellspring. The battle view colours the square; it does not
-  show who a Wellspring hits next.
-- **Stats of the nine monsters** follow the draft prices of 2026-11-13 (gdd_monsters §2.2: HP 2 per point from a base of 4,
-  initiative 0.5, second turn 3; four frames). `MonsterDef.reference_shape`, the overworld `StatShape` and the overview
-  screen still name the six earlier shapes and prices.
-- **Open switches of T39, off by default, no GDD rule:** `delay_turn` (action `delay`: before it has acted a monster may
-  move its queue entry to the end of the round, once per round), `surge_at_caster` (a timed Surge fires at its caster's
-  next turn), `surge_fair` (a Surge that is due waits until every monster on its squares has finished a turn since the
-  cast) and the AI switch `ai_careful` (bot `careful`).
-- **Further switches of S011, off by default, no GDD rule:** `trap_rounds` (an unsprung trap lapses at the end of the
-  N-th round), `no_shield_zones` (shield zone skills cannot be used), `start_back` (back-row starts), `ai_hunt_behind`
-  (only the side that is not ahead walks up) and `ai_no_kind` (a side plays without one skill kind; simulations only).
-  Tests: `tests/battle/test_battle_experiment.gd`.
-- **Removed:** the legacy skill model of the overworld (`SkillDef`, `ZoneDef`, skill evolution at the Evolution
-  Pillar). Slot development (gdd_skills §6) is not built.
+- **Everything is test data or a working draft**, never approved content (docs/temp_todo.md T10–T13). Skills, monsters,
+  grounds, zones and props carry `content_status` (`approved` / `draft` / `experiment` / `test` / `simulation` /
+  `archived`); the game fields `approved`, `draft` and `experiment` (filter `ContentStatus.in_game`, called by
+  `BattleContent` and `GameData`). Details: [tools/README.md](tools/README.md).
+- **The build plays the reshape of 2026-11-13** (user decisions; docs/gdd_battle.md §1.2, §4, §6 and docs/gdd_skills.md
+  §2–§4; every choice made while building it: docs/temp_todo.md T40):
+  - **A square is ground + zone + occupant.** Ground acts at a moment (on entering, on leaving, at the end of the
+    occupant's turn, at the end of the round; `GroundTrigger`), a zone while a monster stands inside (stat changes,
+    push or pull at the end of its turn). No Mountains, no flying, no Surges, no traps.
+  - **A skill only delivers** (`BattleSkillDef`): a Strike, the user's movement, an effect on the user (self buff,
+    passive), and the ground, zone or prop it creates (`board_ops`: `ground`, `create_zone`, `create_prop`; a zone
+    skill names its zone directly). A Strike leaves them on the struck squares, a movement on the squares it left.
+    `SkillGen.card` (`battle/defs/skill_gen.gd`) turns any skill into its card.
+  - **Dragon Veins** (ground `dragon_vein`, three on the centre row of 7×7; `BattleExperiment.wells`) belong to the side
+    that touched them last (`BoardCell.owner_side`, `Battle.touch_veins`; switch `vein_touch`) and deal 1 damage to the
+    nearest enemy of their owner at the end of a round. A monster with two enemies on its eight neighbour squares
+    takes 1 (`flank`). Late-round pressure runs only when nobody owns a vein (`pressure_mode` = `idle`).
+  - **Working values:** highest hit 2, lowest HP 3; ground laid in battle lasts 2 rounds (`ground_rounds`); every
+    Strike pushes 1; the board edge deals 1 and a spiky prop 2 to a monster moved into it; Step 1 AP, Run 1 AP, every
+    other movement skill 2 AP over the full Movement stat; extra turns count from round 2 (`tpr_from_round`); push and
+    pull zones also move at cast; everyone may rotate a placed shape; a push zone left by a skill that also creates
+    something else points where the placement is turned (`BattleCasting.rot_dir`).
+  - **Content:** 26 skills, nine kits and spread test stats in `data/`; the experiment effects `vigor`, `sap` and
+    `tempo` (AP and turns) with the self buffs Battle Trance and Time Split. Everything retired is `archived`.
+- **Still in the code, unused by the game** (to be removed, temp_todo I56/I57): height and Mountains, the air layer,
+  Surges and traps (`PendingSurge`, the Surge fields of `BattleSkillDef`), the `shield` / `mend` / `expose` effects,
+  and the switches that belong to them (`surge_fair`, `surge_at_caster`, `surge_wall`, `surge_ground`, `trap_cap`,
+  `trap_rounds`, `no_shield_zones`). Tests that build these by hand still run.
+- **Overview and skill builder:** `game/overview.gd` has five tables (skills as cards, monsters, grounds, zones,
+  props) with one row per Resource file under `data/`. Its button **Skill builder** (`game/skill_builder.gd`) builds a
+  skill from the parts of the card or draws a random one, saves it to `data/skills/<id>.tres` with the status
+  `experiment` and can write it into a kit slot of a monster file. Writing needs the project to run from its folder;
+  nothing checks a price.
+- **Monster builder** (`game/monster_builder.gd`; button in the draft sandbox and in the overview): create a monster or
+  change one (name, Kin, six stats, four kit slots), saved to `data/monsters/<id>.tres` (new ones with the status
+  `experiment`) and registered in `BattleContent` and `GameData` (`GameData.register`), so it stands in the team choice at
+  once. “New skill” opens the skill builder, which returns to the caller (`SkillBuilder.return_scene`). No price, budget
+  or Kin access is checked. Changing one of the nine monsters rewrites its file: Git is the way back.
+- **Test switches** (`battle/core/battle_experiment.gd`, set by `sim.gd --variant` and partly in the draft screen;
+  none is a rule): `delay_turn` with `delay_reverse` / `delay_first_round` (postponing a turn), `damage_from_round`
+  (a calm first round), `start_back` (back-row starts), `push_steps`, `kin_push`, `no_rotation`, `step_ap` / `jab_ap` /
+  `move_ap`, `soft_pressure`, and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
+  `ai_no_kind`. Tests: `tests/battle/test_battle_experiment.gd`.
+- **Not built:** an owner mark for Dragon Veins in the battle view; Dragon Veins on 1v1, 2v2 and 5v5 boards; slot
+  development (gdd_skills §6). `MonsterDef.reference_shape` and the overworld `StatShape` still name the six earlier
+  stat shapes.
+- **Removed:** the legacy skill model of the overworld (`SkillDef`, `ZoneDef`, skill evolution at the Evolution Pillar).
 
 ## Running the checks
 

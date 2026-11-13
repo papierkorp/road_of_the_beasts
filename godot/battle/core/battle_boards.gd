@@ -65,8 +65,7 @@ static func build(b: Battle, mode: StringName, seed_value := 0) -> Array[Vector2
 	var size: int = d["size"]
 	b.board = Board.new(size)
 	b.voidscar_from = d["voidscar_from"]
-	for p: Vector2i in d["mountains"]:
-		b.board.at(p).height = 1
+	# no height since the reshape of 2026-11-13: the Mountains of the layouts are not placed
 	place_wells(b)
 	var starts: Array[Vector2i] = []
 	starts.assign(d["starts"])

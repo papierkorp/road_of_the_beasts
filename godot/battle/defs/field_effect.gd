@@ -16,8 +16,12 @@ const PULL := "pull"
 const SHIELD := "shield"
 const EXPOSE := "expose"      # reserved: no approved source (gdd_battle §4.6)
 const MEND := "mend"
+## Experiment (reshape 2026-11-13): AP +value / -value on the bearer's turns, one more turn per round.
+const VIGOR := "vigor"
+const SAP := "sap"
+const TEMPO := "tempo"
 
-const TAGS: Array[String] = [SLOW, HASTE, DRAIN_INIT, QUICKEN, DRAIN_RANGE, EXTEND, PUSH, PULL, SHIELD, EXPOSE, MEND]
+const TAGS: Array[String] = [SLOW, HASTE, DRAIN_INIT, QUICKEN, DRAIN_RANGE, EXTEND, PUSH, PULL, SHIELD, EXPOSE, MEND, VIGOR, SAP, TEMPO]
 ## Every effect but `mend` has an opposite; zones are compared by effects, never by name.
 const OPPOSITE := {
 	SLOW: HASTE, HASTE: SLOW,
@@ -27,7 +31,7 @@ const OPPOSITE := {
 	SHIELD: EXPOSE, EXPOSE: SHIELD,
 }
 
-@export_enum("slow", "haste", "drain_init", "quicken", "drain_range", "extend", "push", "pull", "shield", "expose", "mend")
+@export_enum("slow", "haste", "drain_init", "quicken", "drain_range", "extend", "push", "pull", "shield", "expose", "mend", "vigor", "sap", "tempo")
 var tag: String = SLOW
 ## Level-to-value (gdd_battle §4.6): value = min(cap, base + level - 1), min 1.
 ## The definition owns base and cap; level III never implies value 3.

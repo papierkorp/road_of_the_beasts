@@ -225,6 +225,13 @@ static func _end_round(b: Battle) -> void:
 			if int(fx["ends_round"]) > ended:
 				keep.append(fx)
 		u.effects = keep
+	# ground that acts at the end of a round (gdd_battle §4.7), then Dragon Veins and surrounding
+	for id in b.roster:
+		var ru: BattleUnit = b.units[id]
+		if ru.is_alive() and ru.on_field:
+			BattleDamage.ground_triggers(b, ru, GroundTrigger.END_OF_ROUND)
+	if b.check_over():
+		return
 	var held := _positional(b)
 	if b.check_over():
 		return
@@ -263,12 +270,21 @@ static func _positional(b: Battle) -> int:
 	var held := [0, 0]
 	for p in BattleExperiment.well_squares(b.board.size):
 		var holder := b.any_unit_at(p)
-		if holder == null or b.board.at(p).ground != GroundDef.WELL:
+		var vein := b.board.at(p)
+		if vein.ground != GroundDef.WELL:
 			continue
-		held[holder.side] += 1
-		var target := _well_target(b, p, holder.side)
+		if holder != null:
+			vein.owner_side = holder.side         # whoever stands on it has touched it
+		var side := vein.owner_side if BattleExperiment.vein_touch else (holder.side if holder != null else -1)
+		if side < 0:
+			continue
+		held[side] += 1
+		var target := _well_target(b, p, side)
 		if target != null:
-			hits.append({"unit": target.id, "base": 1, "type": BattleDamage.WELL, "source": "Wellspring", "by": holder.id})
+			var hit := {"unit": target.id, "base": 1, "type": BattleDamage.WELL, "source": "Dragon Vein"}
+			if holder != null and holder.side == side:
+				hit["by"] = holder.id
+			hits.append(hit)
 	if BattleExperiment.flank:
 		for u in b.living():
 			var around := 0

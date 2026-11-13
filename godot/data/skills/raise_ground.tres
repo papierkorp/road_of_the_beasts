@@ -12,6 +12,7 @@ op = "raise_mountain"
 script = ExtResource("3_3hk7f")
 id = &"raise_ground"
 display_name = "Raise Ground"
+content_status = "archived"
 kind = "ground"
 description = "Raises a Mountain on its squares and resets their ground to Plain (not Voidscar)."
 status = "test data (Skills §10 prior draft, decided mechanics only)"

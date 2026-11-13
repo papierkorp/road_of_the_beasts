@@ -110,7 +110,7 @@ func _well_battle(units: Array) -> Battle:
 func test_wellsprings_lie_on_the_centre_row_and_take_no_prop_or_mountain() -> void:
 	var b := _well_battle([[0, Vector2i(3, 6), {}], [1, Vector2i(3, 0), {}]])
 	for p: Vector2i in [Vector2i(1, 3), Vector2i(3, 3), Vector2i(5, 3)]:
-		assert_str(String(b.board.at(p).ground)).is_equal("wellspring")
+		assert_str(String(b.board.at(p).ground)).is_equal("dragon_vein")
 		assert_object(b.add_prop(&"clay_urn", p)).is_null()
 		assert_bool(BattleBoardOps.raise_mountain(b, b.board.at(p))).is_false()
 	assert_str(String(b.board.at(Vector2i(2, 3)).ground)).is_equal("plain")
@@ -278,3 +278,88 @@ func test_a_charging_surge_can_block_its_squares_and_leave_ground() -> void:
 			b.end_turn()
 	assert_int(b.surges.size()).is_equal(0)
 	assert_that(b.board.at(Vector2i(2, 3)).ground).is_equal(&"thornbed")
+
+
+# --- reshape of 2026-11-13 (temp_todo T40) ---
+
+func test_a_dragon_vein_belongs_to_the_side_that_touched_it_last() -> void:
+	var b := _well_battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 3}], [1, Vector2i(3, 0), {"init": 5.0}]])
+	assert_int(b.board.at(Vector2i(3, 3)).owner_side).is_equal(-1)
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 4)})).is_true()      # it walks off again
+	assert_int(b.board.at(Vector2i(3, 3)).owner_side).is_equal(0)
+	var foe := H.unit(b, 1)
+	_end_round(b)
+	assert_int(foe.hp).is_equal(foe.max_hp - 1)                                # the vein still works for side 0
+	BattleExperiment.vein_touch = false
+	_end_round(b)
+	assert_int(foe.hp).is_equal(foe.max_hp - 1)                                # the earlier rule: only while held
+
+
+func test_binding_vines_hurt_on_leaving_also_when_pushed() -> void:
+	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "skills": ["strike_jab"]}], [1, Vector2i(3, 5), {"init": 5.0, "hp": 8}],
+		[1, Vector2i(0, 0), {"init": 4.0, "hp": 8}]])
+	b.set_ground(Vector2i(3, 5), &"snare")
+	b.set_ground(Vector2i(0, 0), &"snare")
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 6)})).is_true()
+	assert_int(H.unit(b, 1).hp).is_equal(4)                    # 2 from the Jab, 2 for being pushed off the vines
+	b.end_turn()
+	b.end_turn()
+	assert_int(H.unit(b, 2).hp).is_equal(8)                    # standing still costs nothing
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(1, 0)})).is_true()
+	assert_int(H.unit(b, 2).hp).is_equal(6)
+
+
+func test_a_movement_skill_can_leave_ground_on_its_path_and_a_strike_on_its_square() -> void:
+	var b := H.battle([[0, Vector2i(1, 6), {"init": 9.0, "ap": 4, "move": 3, "skills": ["fire_trail", "thorn_lash"]}], [1, Vector2i(4, 5), {"init": 5.0, "hp": 8}]])
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(4, 6)})).is_true()
+	for x in [1, 2, 3]:
+		assert_that(b.board.at(Vector2i(x, 6)).ground).is_equal(&"lava")
+	assert_that(b.board.at(Vector2i(4, 6)).ground).is_equal(&"plain")      # not under the monster itself
+	assert_bool(b.apply({"type": &"skill", "slot": 1, "dir": H.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(4, 6)})).is_true()
+	assert_that(b.board.at(Vector2i(4, 5)).ground).is_equal(&"thornbed")
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(4, 4))
+
+
+func test_experiment_effects_change_ap_and_turns() -> void:
+	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "skills": ["battle_trance", "time_split"]}], [1, Vector2i(3, 0), {"init": 5.0}]])
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0})).is_true()
+	assert_int(BattleStats.ap(H.unit(b, 0))).is_equal(4)
+	_end_round(b)
+	assert_int(b.ap).is_equal(4)                                # one more AP on its next turn
+	assert_bool(b.apply({"type": &"skill", "slot": 1})).is_true()
+	_end_round(b)
+	var mine := 0
+	for e in b.queue:
+		if e["id"] == H.unit(b, 0).id:
+			mine += 1
+	assert_int(mine).is_equal(2)                                # a second turn in the round after
+
+
+func test_a_push_zone_left_by_another_skill_points_where_the_placement_is_turned() -> void:
+	var c := BattleContent.shared()
+	var pit := SkillGen.build(c, {"name": "Wind Pit", "shape": "one", "ground": "thornbed", "zone": "gale"})
+	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 4, "reach": 4, "skills": [pit]}], [1, Vector2i(3, 3), {"init": 5.0, "hp": 8}]])
+	b.begin()
+	assert_bool(BattleCasting.pushes_by_rotation(b, pit)).is_true()
+	assert_bool(pit.needs_direction()).is_false()                                 # no direction input of its own
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3), "rot": 1})).is_true()
+	var cell := b.board.at(Vector2i(3, 3))
+	assert_that(cell.ground).is_equal(&"thornbed")
+	assert_that(cell.zone.def.id).is_equal(&"gale")
+	assert_that(cell.zone.dir).is_equal(BattleSkillDef.rotated(Vector2i(0, -1), 1))
+	var from := H.unit(b, 1).pos
+	b.end_turn()
+	b.end_turn()                                                                  # the occupant's turn ends: the zone pushes it that way
+	assert_that(H.unit(b, 1).pos).is_equal(from + cell.zone.dir)
+	# the AI looks at all four turns of such a skill, also for a shape that covers the same squares
+	var b2 := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 4, "reach": 4, "skills": [pit]}], [1, Vector2i(3, 3), {"init": 5.0, "hp": 8}]])
+	b2.begin()
+	var rots := {}
+	for a in AiBrain.candidates(b2):
+		if a["type"] == &"skill" and a.get("anchor") == Vector2i(3, 3):
+			rots[int(a["rot"])] = true
+	assert_int(rots.size()).is_equal(4)

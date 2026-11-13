@@ -13,6 +13,7 @@ cap = 3
 script = ExtResource("2_8jeh6")
 id = &"shade_veil"
 display_name = "Shade Veil"
+content_status = "archived"
 internal_calc_cost = 2.0
 effects = Array[ExtResource("1_gvdw7")]([SubResource("Resource_knx5f")])
 color = Color(0.5, 0.46, 0.7, 1)

@@ -17,6 +17,8 @@ var air_prop: BoardProp = null
 var zone: BoardZone = null
 ## Id of the pending Surge claiming this square, -1 = none.
 var surge: int = -1
+## Dragon Vein (gdd_battle §4.2): the side whose monster touched the square last, -1 = nobody yet.
+var owner_side: int = -1
 
 
 func _init(p: Vector2i = Vector2i.ZERO) -> void:
@@ -34,6 +36,7 @@ func clone(props_seen: Dictionary) -> BoardCell:
 	c.ground_until = ground_until
 	c.height = height
 	c.surge = surge
+	c.owner_side = owner_side
 	if zone != null:
 		c.zone = zone.clone()
 	if prop != null:

@@ -8,7 +8,7 @@ const H := preload("res://tests/battle/helpers.gd")
 func test_the_shipped_content_loads_without_problems() -> void:
 	var c := BattleContent.reload_shared()
 	assert_array(c.problems).is_empty()
-	assert_array(c.grounds.keys()).contains_exactly_in_any_order([&"plain", &"rubble", &"voidscar", &"wellspring", &"lava", &"thornbed",
+	assert_array(c.grounds.keys()).contains_exactly_in_any_order([&"plain", &"rubble", &"voidscar", &"dragon_vein", &"snare", &"lava", &"thornbed",
 		&"blight", &"hearth", &"mossbed", &"umbra", &"hallowed"])
 	assert_int(c.props.size()).is_equal(19)      # the catalogue of gdd_battle §4.10 plus Vortex Urn and Storm Drum
 	assert_int(c.tamer.size()).is_equal(7)       # the confirmed tamer skills of gdd_battle §5.2
@@ -21,7 +21,7 @@ func test_the_catalogue_matches_the_gdd_table() -> void:
 	# [hp, layer, ground left]
 	var expect := {
 		&"stone_lion": [3, "ground", &"rubble"], &"clay_urn": [1, "ground", &"plain"], &"bamboo_stand": [2, "ground", &"plain"],
-		&"paper_lantern": [1, "ground", &"lava"], &"peach_tree": [2, "ground", &"mossbed"], &"ancestor_tablet": [2, "ground", &"hallowed"],
+		&"paper_lantern": [1, "ground", &"lava"], &"peach_tree": [2, "ground", &"mossbed"], &"ancestor_tablet": [2, "ground", &"mossbed"],
 		&"bronze_gong": [2, "ground", &"plain"], &"pagoda_column": [3, "ground", &"rubble"], &"beam": [1, "ground", &"plain"],
 		&"wind_chime": [1, "air", &""], &"thunder_cloud": [1, "air", &""], &"gale_banner": [2, "air", &""],
 		&"pagoda_bridge": [3, "both", &"rubble"], &"shrine": [2, "ground", &"rubble"], &"totem": [2, "ground", &"rubble"],
@@ -42,9 +42,11 @@ func test_the_catalogue_matches_the_gdd_table() -> void:
 
 func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> void:
 	var c := H.content()
-	assert_int(c.monsters.size()).is_equal(19)              # nine of the game and ten simulation-only kits (kit_*, S017)
-	assert_array(c.game_monster_ids()).has_size(9)
-	assert_array(GameData.monster_ids()).has_size(9)        # the roster the game offers
+	# the nine monsters of the roster draft; monsters made in the monster builder may come on top
+	for nine: StringName in [&"blaze_tiger", &"ember_hawk", &"dusk_moth", &"forge_golem", &"gloom_wolf", &"grove_wisp", &"hollow_serpent",
+			&"moss_turtle", &"thorn_mites"]:
+		assert_object(c.monster(nine)).is_not_null()
+	assert_int(c.game_monster_ids().size()).is_equal(GameData.monster_ids().size())   # both registries offer the same roster
 	for id in GameData.monster_ids():
 		var def := c.monster(id)
 		assert_object(def).is_same(GameData.monster(id))      # one definition, two registries
@@ -52,24 +54,19 @@ func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> 
 		var sheet := UnitSheets.from_instance(MonsterInstance.of_species(def))
 		assert_array(sheet.problems()).is_empty()
 		assert_bool(sheet.active_skills().size() >= 1).is_true()
-		# gdd_monsters §4.1: every Core High reference individual spends 16 points above base
-		# (draft prices of 2026-11-13: HP 2 per point above 4, initiative 0.5 per point above 1, Movement 1
-		# per point above 1, Reach 3 per point above 2, second turn 3, AP 3 3)
-		var points: float = (sheet.hp - 4) * 2.0 + (sheet.initiative - 1.0) * 0.5 + (sheet.movement - 1) + (sheet.reach - 2) * 3.0 \
-			+ (3.0 if sheet.tpr == 2 else 0.0) + (3.0 if sheet.ap == 3 else 0.0)
-		assert_float(points).is_equal(16.0)
+		# reshape 2026-11-13 (T40): spread test stats, no price or budget is checked (stat prices are open);
+		# no single hit takes a monster from full HP to zero: HP 3 or more against a highest hit of 2
+		assert_int(sheet.hp).is_between(3, 8)
 	# Swarm Surges are limited to 2 cells (gdd_monsters §3.1)
 	assert_int(c.skill(&"bramble_tide").footprint.size()).is_equal(2)
-	# basic Surges and traps keep the 1-AP target; Run costs 1 AP, every other movement skill 2
-	# (build test since 2026-11-13: full Movement for all of them, the dropped restrictions are paid in AP)
+	# every movement skill of the game covers the full Movement stat (build rule since 2026-11-13); what a
+	# skill costs is not checked: prices are open and kits and skills may be changed in the builders
 	for id: StringName in c.skills:
 		var s := c.skill(id)
-		if s.kind == "surge" or s.kind == "trap":
-			assert_int(s.cost()).is_equal(1)
-		if s.kind == "move":
-			assert_int(s.cost()).is_equal(1 if id == &"run" else 2)
+		if s.kind == "move" and ContentStatus.in_game(s):
 			assert_int(s.distance_mod).is_equal(0)
 			assert_int(s.fixed_distance).is_equal(0)
+	assert_int(c.skill(&"run").cost()).is_equal(1)
 
 
 func test_a_new_ground_type_is_only_a_new_definition() -> void:

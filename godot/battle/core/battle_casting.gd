@@ -33,6 +33,23 @@ static func effective_rot(u: BattleUnit, s: BattleSkillDef, rot: int) -> int:
 	return posmod(rot, 4) if (s.anchor_mode == "reach" or s.anchor_mode == "adjacent") else 0
 
 
+## True if a skill other than a zone skill leaves a push zone: its push direction then follows
+## the rotation of the placement (`rot_dir`), so it needs no direction input of its own.
+static func pushes_by_rotation(b: Battle, s: BattleSkillDef) -> bool:
+	if s.kind == BattleSkillDef.ZONE:
+		return false
+	for op in s.ops_of(BoardOp.CREATE_ZONE):
+		var z := b.content.zone(op.zone)
+		if z != null and z.has_tag(FieldEffect.PUSH):
+			return true
+	return false
+
+
+## The direction a placement points to: "up" (0, -1) turned like the footprint.
+static func rot_dir(u: BattleUnit, s: BattleSkillDef, rot: int) -> Vector2i:
+	return BattleSkillDef.rotated(Vector2i(0, -1), effective_rot(u, s, rot))
+
+
 ## Footprint cells of a cast (possibly off the board; `error` reports that).
 static func cells(u: BattleUnit, s: BattleSkillDef, anchor: Vector2i, rot := 0) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
@@ -88,8 +105,10 @@ static func error(b: Battle, u: BattleUnit, s: BattleSkillDef, anchor: Vector2i,
 		if s.kind == BattleSkillDef.SURGE and cell.surge >= 0 and b.surge_by_id(cell.surge).turns_left >= 0:
 			return "[%d,%d] already holds a Surge" % [c.x, c.y]
 		if s.kind == BattleSkillDef.GROUND:
-			if (s.has_op(BoardOp.GROUND) or s.has_op(BoardOp.RAISE_MOUNTAIN)) and cell.prop != null:
-				return "[%d,%d] holds a %s: ground and height need prop-free squares" % [c.x, c.y, cell.prop.def.display_name]
+			# ground is laid under a prop as anywhere else (user decision 2026-11-13); only the removed
+			# height operation still needs a prop-free square
+			if s.has_op(BoardOp.RAISE_MOUNTAIN) and cell.prop != null:
+				return "[%d,%d] holds a %s: height needs a prop-free square" % [c.x, c.y, cell.prop.def.display_name]
 			for op in s.ops_of(BoardOp.CREATE_PROP):
 				var def := b.content.prop(op.prop)
 				if def == null:

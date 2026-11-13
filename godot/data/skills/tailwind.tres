@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3"]
+[ext_resource type="Resource" path="res://data/zones/tailwind.tres" id="4"]
+
+[resource]
+script = ExtResource("3")
+id = &"tailwind"
+display_name = "Tailwind"
+kind = "zone"
+description = "1 AP · line of 3 within Reach · now · Movement +2 for whoever stands in it · zone, 2 rounds."
+content_status = "archived"
+status = "reshape 2026-11-13 (skill sentence, Skills §2); working draft, not priced"
+footprint = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1)])
+zone = ExtResource("4")

@@ -8,11 +8,14 @@ extends Resource
 
 const PLAIN := &"plain"
 const RUBBLE := &"rubble"
-## Wellspring (gdd_battle §4.2): held at the end of a round it damages the nearest enemy.
-const WELL := &"wellspring"
+## Dragon Vein (gdd_battle §4.2; called Wellspring before 2026-11-13): owned by the side that touched it
+## last, it damages the nearest enemy of that side at the end of a round.
+const WELL := &"dragon_vein"
 
 @export var id: StringName
 @export var display_name: String
+## How far the record is (ContentStatus): the game, the overview filter and the skill builder use only what is in the game.
+@export_enum("approved", "draft", "experiment", "test", "simulation", "archived") var content_status: String = ContentStatus.DRAFT
 ## Internal calculation cost in construction points (gdd_skills §5 working drafts): an
 ## authoring note, not a rule, not a player value and not settled. Per created cell (permanent-state package).
 ## -1 = not calculated.

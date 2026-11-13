@@ -78,6 +78,12 @@ static func problems() -> Array[String]:
 	return _problems
 
 
+## Adds or replaces a species at runtime (the monster builder of the battle prototype).
+static func register(def: MonsterDef) -> void:
+	_ensure()
+	_monsters[def.id] = def
+
+
 static func reload() -> void:
 	_loaded = false
 	_ensure()

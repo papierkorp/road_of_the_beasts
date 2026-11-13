@@ -14,6 +14,7 @@ affects_air = true
 script = ExtResource("3_p68rx")
 id = &"gale_banner"
 display_name = "Gale Banner"
+content_status = "archived"
 prop_class = "aura"
 layer = "air"
 hp = 2

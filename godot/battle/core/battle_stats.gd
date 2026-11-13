@@ -149,7 +149,13 @@ static func reach(b: Battle, u: BattleUnit) -> int:
 
 ## Battle-AP per turn: the AP stat; no temporary AP edits exist (gdd_skills §4).
 static func ap(u: BattleUnit) -> int:
-	return u.sheet.ap
+	var bonus := 0                            # experiment: timed unit effects vigor / sap
+	for fx in u.effects:
+		if fx["tag"] == FieldEffect.VIGOR:
+			bonus += int(fx["value"])
+		elif fx["tag"] == FieldEffect.SAP:
+			bonus -= int(fx["value"])
+	return maxi(1, u.sheet.ap + bonus)
 
 
 ## Value reduction against Surge damage (gdd_battle §6.1): zone shield, Hallowed, Wardstone,

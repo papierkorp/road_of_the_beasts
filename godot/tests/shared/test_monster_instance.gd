@@ -29,7 +29,7 @@ func test_battle_unit_is_a_copy_of_the_species() -> void:
 	inst.stats["hp"] = 3
 	var unit := inst.to_battle_unit()
 	assert_int(unit.hp).is_equal(3)
-	assert_int(def.hp).is_equal(7)
+	assert_int(def.hp).is_greater(3)                    # the species keeps its own value
 	assert_object(unit).is_not_same(def)
 	assert_str(String(unit.id)).is_equal("blaze_tiger")
 
@@ -105,8 +105,8 @@ func test_create_by_ids_still_builds_the_same_battle() -> void:
 	var b := BattleSetup.create(&"3v3", p, e)
 	assert_int(b.units.size()).is_equal(6)
 	var tiger: BattleUnit = b.units[&"p0_blaze_tiger"]
-	assert_int(tiger.hp).is_equal(7)
-	assert_float(tiger.sheet.initiative).is_equal(7.0)
+	assert_int(tiger.hp).is_equal(GameData.monster(&"blaze_tiger").hp)
+	assert_float(tiger.sheet.initiative).is_equal(GameData.monster(&"blaze_tiger").initiative)
 
 
 func test_dictionary_round_trip() -> void:

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_2swok"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_rx0hs"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_0booy"]
+[ext_resource type="Resource" path="res://data/zones/gale.tres" id="4_qvxpq"]
+
+[resource]
+script = ExtResource("3_0booy")
+id = &"asdf_3"
+display_name = "asdf3"
+kind = "zone"
+description = "1 AP · within Reach · 5 sq · creates zone: Gale · 2 rd"
+content_status = "experiment"
+status = "built in the skill builder (gdd_skills §2 skill card); experiment, not priced"
+footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)])
+zone = ExtResource("4_qvxpq")

@@ -8,6 +8,7 @@
 script = ExtResource("3_qfj8a")
 id = &"wind_chime"
 display_name = "Wind Chime"
+content_status = "archived"
 layer = "air"
 color = Color(0.7, 0.86, 0.9, 1)
 description = "Air layer only: blocks flight and air occupancy."

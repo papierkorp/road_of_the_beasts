@@ -531,6 +531,8 @@ func _placement_highlights(u: BattleUnit, s: BattleSkillDef, out: Dictionary, ar
 			continue
 		if s.needs_direction():
 			arrows[c] = aim_dir
+		elif BattleCasting.pushes_by_rotation(battle, s):
+			arrows[c] = BattleCasting.rot_dir(u, s, rot)      # the push zone it leaves points where the shape points
 		elif (s.kind == BattleSkillDef.ZONE and s.zone != null and s.zone.has_tag(FieldEffect.PULL)) or s.surge_displacement == "pull":
 			var v := anchor - c
 			if v != Vector2i.ZERO and absi(v.x) != absi(v.y):

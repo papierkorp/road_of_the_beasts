@@ -12,6 +12,7 @@ ground = &"lava"
 script = ExtResource("3_7svma")
 id = &"magma_pounce"
 display_name = "Magma Pounce"
+content_status = "archived"
 kind = "surge"
 description = "Eruption next to the caster: 3 damage, leaves Lava I."
 status = "test data (Skills §10 prior draft, decided mechanics only)"

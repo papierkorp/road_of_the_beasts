@@ -216,6 +216,16 @@ func put(u: BattleUnit, p: Vector2i) -> void:
 func relocate(u: BattleUnit, to: Vector2i) -> void:
 	lift(u)
 	put(u, to)
+	touch_veins(u)
+
+
+## A Dragon Vein belongs to the side whose monster touched it last (walked, was pushed or set onto it).
+func touch_veins(u: BattleUnit) -> void:
+	for c in u.cells():
+		var cell := board.at(c)
+		if cell != null and cell.ground == GroundDef.WELL and cell.owner_side != u.side:
+			cell.owner_side = u.side
+			emit(&"vein_taken", {"pos": c, "side": u.side, "who": u.id})
 
 
 ## Timed unit effect lasting until the round end of the N-th following round. The same key
@@ -407,8 +417,32 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 	match s.kind:
 		BattleSkillDef.MOVE:
 			var started := u.pos
+			var trail: Array[Vector2i] = []
+			if not s.board_ops.is_empty():            # a movement that leaves something on its path
+				var route: Array = a.get("path", [])
+				if route.is_empty():
+					var opts := BattleMoves.options(self, u, BattleMoves.profile_of(s))
+					route = opts[a["to"]]["path"] if opts.has(a["to"]) else []
+				trail.append(started)
+				for i in maxi(0, route.size() - 1):
+					trail.append(route[i])
+				var span: Vector2i = a["to"] - started
+				if route.size() == 1 and (span.x == 0 or span.y == 0 or absi(span.x) == absi(span.y)):
+					var unit_step := Vector2i(signi(span.x), signi(span.y))      # a line names only its landing square
+					for k in range(1, maxi(absi(span.x), absi(span.y))):
+						trail.append(started + unit_step * k)
 			BattleMoves.execute(self, u, BattleMoves.profile_of(s), a["to"], s.display_name, a.get("path", []) if trusted else [])
 			BattleMoves.impact(self, u, s, started, a["to"])
+			if not trail.is_empty() and u.is_alive():
+				var left: Array[Vector2i] = []
+				for c in trail:
+					if not u.covers(c) and any_unit_at(c) == null:
+						left.append(c)
+				var behind := BattlePayload.board(self, u, s, left)
+				var way: Vector2i = a["to"] - started   # a push zone left on the path pushes the way the monster went
+				behind["dir"] = Vector2i(signi(way.x), 0) if absi(way.x) >= absi(way.y) else Vector2i(0, signi(way.y))
+				behind["anchor"] = a["to"]
+				BattlePayload.resolve(self, [behind])
 		BattleSkillDef.STRIKE:
 			BattlePayload.resolve(self, [BattlePayload.strike(self, u, s, a.get("origin", u.pos),
 				a.get("dir", Vector2i.ZERO), a.get("push_dir", Vector2i.ZERO))])
@@ -435,7 +469,10 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 		BattleSkillDef.GROUND:
 			var cells := BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 			emit(&"cast", {"who": u.id, "skill": s.id, "cells": cells.duplicate()})
-			BattlePayload.resolve(self, [BattlePayload.board(self, u, s, cells)])
+			var placed := BattlePayload.board(self, u, s, cells)
+			placed["anchor"] = a.get("anchor", u.pos)   # a zone the skill leaves pulls toward it
+			placed["dir"] = BattleCasting.rot_dir(u, s, int(a.get("rot", 0))) if BattleCasting.pushes_by_rotation(self, s) else a.get("dir", Vector2i.ZERO)
+			BattlePayload.resolve(self, [placed])
 		BattleSkillDef.BUFF:
 			emit(&"cast", {"who": u.id, "skill": s.id, "cells": u.cells()})
 			for e in s.buff_effects:

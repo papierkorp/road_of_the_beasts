@@ -22,8 +22,8 @@ const ARCHIVED := "archived"
 
 
 ## True if the game itself may use the Resource (approved, draft or experiment). THE filter: GameData and
-## BattleContent call it, nothing else decides what the game sees. Definitions without the
-## field (grounds, props, zones, tamer skills) are game content.
+## BattleContent call it, nothing else decides what the game sees. Skills, monsters, grounds,
+## zones and props carry the field; definitions without it (tamer skills) are game content.
 static func in_game(res: Resource) -> bool:
 	if res == null:
 		return false

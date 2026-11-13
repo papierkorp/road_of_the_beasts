@@ -9,6 +9,7 @@
 script = ExtResource("3_wf08k")
 id = &"mire"
 display_name = "Mire"
+content_status = "archived"
 kind = "zone"
 description = "Slow 1, initiative -2 (up to -3), Reach -1 while inside."
 status = "test data (Skills §10 prior draft, decided mechanics only)"

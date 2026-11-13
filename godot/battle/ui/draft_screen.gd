@@ -125,6 +125,12 @@ func _ready() -> void:
 	back.custom_minimum_size = Vector2(160, 46)
 	back.pressed.connect(func(): get_tree().change_scene_to_file("res://game/menu.tscn"))
 	row.add_child(back)
+	var build := Button.new()
+	build.text = "Monster builder"
+	build.custom_minimum_size = Vector2(200, 46)
+	build.tooltip_text = "Create a monster or change one: stats, Kin and the four skills. New skills are made in the skill builder, reachable from there."
+	build.pressed.connect(func(): get_tree().change_scene_to_file("res://game/monster_builder.tscn"))
+	row.add_child(build)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)

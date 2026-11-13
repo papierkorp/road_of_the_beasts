@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_h0hwc"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_8cvvn"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_uipbs"]
+
+[resource]
+script = ExtResource("3_uipbs")
+id = &"new_skill"
+display_name = "New Skill"
+kind = "strike"
+description = "3 AP · neighbour · arc · strike: 2 dmg, push 1"
+content_status = "experiment"
+status = "built in the skill builder (gdd_skills §2 skill card); experiment, not priced"
+strike_shape = "arc"

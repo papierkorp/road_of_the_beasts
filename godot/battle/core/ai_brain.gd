@@ -67,7 +67,7 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 				for rot: int in rots:
 					var shape_key := s.offsets(rot)
 					shape_key.sort()
-					if seen_shapes.has(shape_key):
+					if seen_shapes.has(shape_key) and not BattleCasting.pushes_by_rotation(b, s):
 						continue                  # this turn of the shape covers the same squares
 					seen_shapes[shape_key] = true
 					# a zone only matters on a monster; a trap or ground next to one
@@ -152,9 +152,12 @@ static func evaluate(b: Battle, side: int) -> float:
 			var cost := DANGER_LETHAL * (14.0 + 10.0 * u.hp) if threat >= u.hp else DANGER_HIT * threat
 			score += -cost if u.side == side else cost * DANGER_ENEMY
 	for p in BattleExperiment.well_squares(b.board.size):
+		var vein_side := b.board.at(p).owner_side if BattleExperiment.vein_touch else -1
 		var holder := b.any_unit_at(p)
 		if holder != null:
-			score += WELL_VALUE if holder.side == side else -WELL_VALUE
+			vein_side = holder.side
+		if vein_side >= 0:
+			score += WELL_VALUE if vein_side == side else -WELL_VALUE
 	if BattleExperiment.flank:
 		for u in b.living():
 			var around := 0
@@ -252,7 +255,9 @@ static func _standing_cost(b: Battle, u: BattleUnit) -> float:
 	var g := b.content.ground(cell.ground)
 	if g != null and not BattleStats.ignores_ground(u, cell.ground):
 		for t in g.triggers:
-			if t.timing != GroundTrigger.ON_ENTER:
+			if t.timing == GroundTrigger.ON_LEAVE:
+				cost += 1.5 * t.value_at(cell.level)      # pinned: moving away costs HP
+			elif t.timing != GroundTrigger.ON_ENTER:
 				cost += (3.0 if t.kind == "damage" else -3.0) * t.value_at(cell.level)
 		for e in g.effects:
 			cost += _tag_cost(e.tag, float(e.value_at(cell.level)), u)
@@ -386,7 +391,7 @@ static func _walk_to_enemy(b: Battle, side: int, from: Vector2i) -> int:
 	for e in b.living(1 - side):
 		best = mini(best, e.manhattan_to(from))
 	for p in BattleExperiment.well_squares(b.board.size):      # a free Wellspring is a goal too
-		if b.any_unit_at(p) == null:
+		if b.any_unit_at(p) == null and (not BattleExperiment.vein_touch or b.board.at(p).owner_side != side):
 			best = mini(best, absi(p.x - from.x) + absi(p.y - from.y) + 1)
 	return best
 

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MonsterDef" format=3]
+
+[ext_resource type="Script" path="res://shared/monster_def.gd" id="1_13atv"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2_r83sc"]
+[ext_resource type="Resource" path="res://data/skills/asdf.tres" id="3_x4qkc"]
+[ext_resource type="Resource" path="res://data/skills/asdf_2.tres" id="4_5pi23"]
+[ext_resource type="Resource" path="res://data/skills/asdf_3.tres" id="5_k1rv0"]
+[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="6_sjapi"]
+
+[resource]
+script = ExtResource("1_13atv")
+id = &"asdf"
+display_name = "asdf"
+content_status = "experiment"
+move = 3
+reach = 3
+ap = 3
+skills = Array[ExtResource("2_r83sc")]([ExtResource("3_x4qkc"), ExtResource("4_5pi23"), ExtResource("5_k1rv0"), ExtResource("6_sjapi")])
+notes = "Built in the monster builder of the battle prototype; no price or budget was checked."

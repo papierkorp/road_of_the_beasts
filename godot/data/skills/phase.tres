@@ -8,6 +8,7 @@
 script = ExtResource("3_hipo3")
 id = &"phase"
 display_name = "Phase"
+content_status = "archived"
 kind = "move"
 description = "Walk through props up to Movement squares; monsters and charging Surges block."
 status = "GDD movement preset (Skills §3/§8.2)"

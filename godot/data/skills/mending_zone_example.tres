@@ -9,6 +9,7 @@
 script = ExtResource("3_gxong")
 id = &"mending_zone_example"
 display_name = "Mending Zone"
+content_status = "archived"
 kind = "zone"
 ap_cost = 2
 description = "Heals min(2, level) at the end of the occupant's turn. Works for enemies too."

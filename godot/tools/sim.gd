@@ -48,6 +48,7 @@ extends SceneTree
 const Cli := preload("res://tools/lib/cli.gd")
 const Runner := preload("res://tools/lib/sim_runner.gd")
 const Bots := preload("res://tools/lib/sim_bots.gd")
+const Gen := preload("res://battle/defs/skill_gen.gd")
 
 const MAX_TURNS := 600
 var _shield_ap := 0
@@ -56,6 +57,8 @@ var _defence_ap := 0
 var _mix_kits := false
 var _mix_skills := false
 var _mix_stats := false
+var _gen_skills := 0
+var _generated: Array[BattleSkillDef] = []
 const DAMAGE_KINDS := ["strike", "surge", "ground", "collision", "fall", "collapse", "aftermath", "arena"]
 const OPTIONS: Array[String] = ["bot-a", "bot-b", "team-a", "team-b", "board", "props", "experiment", "pairs", "trace", "help",
 	"variant", "shield-once", "pressure", "compact", "compact-head", "paired", "no-kind-a", "no-kind-b"]
@@ -175,6 +178,7 @@ func _apply_variant(text: String) -> String:
 	_mix_kits = false
 	_mix_skills = false
 	_mix_stats = false
+	_gen_skills = 0
 	for part in Cli.names(text):
 		var kv := part.split("=")
 		var key := kv[0]
@@ -235,6 +239,13 @@ func _apply_variant(text: String) -> String:
 				_mix_kits = true
 			"mixskills":                              # every monster plays four random skills (one of them deals damage)
 				_mix_skills = true
+			"genskills":                              # genskills=N: mixskills draws from N generated skills (tools/lib/skill_gen.gd)
+				_gen_skills = maxi(8, val.to_int())
+				_mix_skills = true
+			"veinhold":                               # a Dragon Vein only works while a monster stands on it (rule before the reshape)
+				BattleExperiment.vein_touch = false
+			"unfairsurge":                            # a due Surge does not wait for the monsters on it (rule before the reshape)
+				BattleExperiment.surge_fair = false
 			"mixstats":                               # every monster plays random stats: HP 3-8, initiative 1-9, Movement 1-5, Reach 2-4, TPR 1-2, AP 2-3
 				_mix_stats = true
 			"calm":                                   # calm=N: no damage in the first N rounds
@@ -316,7 +327,7 @@ func _apply_variant(text: String) -> String:
 					if sd.kind == BattleSkillDef.SURGE:
 						sd.surge_turns = maxi(1, val.to_int())
 			_:
-				return "unknown variant '%s' (push, kinpush, step, jab, move, freeap, freemod, mixkits, mixskills, mixstats, calm, surgewall, surgeground, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, groundfade, trapfade, startback, trapcap)" % key
+				return "unknown variant '%s' (push, kinpush, step, jab, move, freeap, freemod, mixkits, mixskills, mixstats, genskills, veinhold, unfairsurge, calm, surgewall, surgeground, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, groundfade, trapfade, startback, trapcap)" % key
 	if _defence_ap > 0:
 		for sid in BattleContent.shared().skills:
 			var sd: BattleSkillDef = BattleContent.shared().skills[sid]
@@ -362,7 +373,7 @@ func _series(setup: Dictionary, label: String) -> int:
 	var well_held := [0, 0, 0, 0, 0]     # Wellsprings held at round ends by side 0, side 1; round ends counted; bonus squares taken by side 0, side 1
 	# battles that reached late-round pressure: [HP leader won, HP leader lost, HP level, Draw or timeout after a lead]
 	var lead := [0, 0, 0, 0]
-	var length := [0, 0, 0, 0]             # battles under 3 rounds, over 7, over 10; the longest battle
+	var length := [0, 0, 0, 0, 0, 0]       # battles under 3 rounds, over 7, over 10; the longest battle; under 2, over 5 (target 2–5)
 	var unacted := 0                       # monsters defeated before their own first turn
 	var first_defeat := [0, 0]             # rounds of the first defeat summed, battles with a defeat
 	for i in n:
@@ -387,11 +398,18 @@ func _series(setup: Dictionary, label: String) -> int:
 			for mid in BattleContent.sorted_ids(content.monsters):       # plus the simulation-only kits
 				if String(mid).begins_with("kit_"):
 					donors.append(mid)
-			var pool: Array[BattleSkillDef] = []                         # every skill some kit holds
-			for mid: StringName in donors:
-				for sd: BattleSkillDef in content.monster(mid).skills:
-					if not pool.has(sd):
-						pool.append(sd)
+			var pool: Array[BattleSkillDef] = []                         # every skill the game can field
+			for sid in BattleContent.sorted_ids(content.skills):
+				var psd: BattleSkillDef = content.skills[sid]
+				if ContentStatus.in_game(psd):
+					pool.append(psd)
+			if _gen_skills > 0:                                           # generated skills replace the pool
+				if _generated.is_empty():
+					var grng := RandomNumberGenerator.new()
+					grng.seed = 4711
+					for gi in _gen_skills:
+						_generated.append(Gen.draw(content, grng, gi))
+				pool.assign(_generated)
 			for id in b.roster:
 				var mu: BattleUnit = b.units[id]
 				if _mix_kits:
@@ -409,7 +427,11 @@ func _series(setup: Dictionary, label: String) -> int:
 				mu.sheet.skills = drawn
 				var tags: Array = []
 				for sd in drawn:
-					tags.append("skill:%s" % sd.id)
+					if sd.has_meta("parts"):
+						for part: String in sd.get_meta("parts"):
+							tags.append("part:%s" % part)
+					else:
+						tags.append("skill:%s" % sd.id)
 				kit_of[id] = tags
 		if _mix_stats:
 			for id in b.roster:
@@ -456,6 +478,8 @@ func _series(setup: Dictionary, label: String) -> int:
 		length[1] += 1 if b.round_number > 7 else 0
 		length[2] += 1 if b.round_number > 10 else 0
 		length[3] = maxi(length[3], b.round_number)
+		length[4] += 1 if b.round_number < 2 else 0
+		length[5] += 1 if b.round_number > 5 else 0
 		if not hp_at_pressure.is_empty():
 			if hp_at_pressure[0] == hp_at_pressure[1]:
 				lead[2] += 1
@@ -675,6 +699,7 @@ func _series(setup: Dictionary, label: String) -> int:
 	print("Rounds: under 3 in %d %%, over 7 in %d %%, over 10 in %d %% of the battles, longest %d; first defeat in round %s (mean); monsters defeated before their own first turn: %s per battle" % [
 		roundi(100.0 * length[0] / n), roundi(100.0 * length[1] / n), roundi(100.0 * length[2] / n), length[3],
 		("%.1f" % (float(first_defeat[0]) / first_defeat[1])) if first_defeat[1] > 0 else "—", per.call(unacted, n)])
+	print("Target 2-5 rounds: ended in round 1 in %d %%, after round 5 in %d %% of the battles" % [roundi(100.0 * length[4] / n), roundi(100.0 * length[5] / n)])
 	if label != "":
 		print("")
 	return 0

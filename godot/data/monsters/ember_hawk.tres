@@ -5,7 +5,7 @@
 [ext_resource type="Resource" path="res://data/skills/glide.tres" id="s0"]
 [ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
 [ext_resource type="Resource" path="res://data/skills/cinder_dive.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/shockwave.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/gale.tres" id="s3"]
 
 [resource]
 script = ExtResource("1")
@@ -14,12 +14,12 @@ display_name = "Ember Hawk"
 kin = 1
 aspect = 1
 reference_shape = 1
-hp = 5
+hp = 3
 initiative = 9.0
 move = 5
 tpr = 2
-reach = 2
-ap = 3
+reach = 3
+ap = 2
 skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
-blurb = "Strafes a burning line from where it stands, pushes enemies with Shockwave, dodges away after a hit."
-notes = "Passive Skittish omitted: automatic target selection is unresolved (T11). Shockwave without the retired collision bonus."
+blurb = "Two short turns from round 2: glides anywhere, strikes, burns a line in front of it and blows enemies back."
+notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

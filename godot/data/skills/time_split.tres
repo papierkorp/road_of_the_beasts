@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3"]
+
+[sub_resource type="Resource" id="f1"]
+script = ExtResource("2")
+tag = "tempo"
+
+[resource]
+script = ExtResource("3")
+id = &"time_split"
+display_name = "Time Split"
+kind = "buff"
+description = "EXPERIMENT · 3 AP, once per battle · self · now · one more turn in the next round."
+content_status = "experiment"
+status = "reshape 2026-11-13 (skill sentence, Skills §2); working draft, not priced"
+ap_cost = 3
+repetition = "once_per_battle"
+duration = 1
+buff_effects = Array[ExtResource("2")]([SubResource("f1")])

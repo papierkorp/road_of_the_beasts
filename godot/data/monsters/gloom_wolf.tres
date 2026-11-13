@@ -3,8 +3,8 @@
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
 [ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
 [ext_resource type="Resource" path="res://data/skills/run.tres" id="s0"]
-[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
-[ext_resource type="Resource" path="res://data/skills/gloom_rift.tres" id="s2"]
+[ext_resource type="Resource" path="res://data/skills/thorn_lash.tres" id="s1"]
+[ext_resource type="Resource" path="res://data/skills/shove.tres" id="s2"]
 [ext_resource type="Resource" path="res://data/skills/plant_bamboo.tres" id="s3"]
 
 [resource]
@@ -14,12 +14,12 @@ display_name = "Gloom Wolf"
 kin = 0
 aspect = 3
 reference_shape = 5
-hp = 6
+hp = 4
 initiative = 9.0
 move = 3
 tpr = 1
 reach = 3
 ap = 3
 skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
-blurb = "The baseline: Mire flips the turn order, its Rift does the rest; stronger with an ally next to the target."
-notes = "Trap and displacement test kit (T38). Plant Bamboo replaces Shove (every Strike pushes now)."
+blurb = "Leaves thorns where it strikes, plants a spiky stand and shoves enemies into it or off a Dragon Vein."
+notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

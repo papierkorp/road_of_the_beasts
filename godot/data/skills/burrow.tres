@@ -8,6 +8,7 @@
 script = ExtResource("3_i0kuf")
 id = &"burrow"
 display_name = "Burrow"
+content_status = "archived"
 kind = "move"
 description = "Any path up to Movement squares; cannot start or end on a Mountain."
 status = "GDD movement preset (Skills §3/§8.2)"

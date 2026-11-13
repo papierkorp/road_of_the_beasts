@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="2"]
+
+[sub_resource type="Resource" id="t1"]
+script = ExtResource("2")
+timing = "on_leave"
+amount = 2
+
+[resource]
+script = ExtResource("1")
+id = &"snare"
+display_name = "Binding Vines"
+group = "hazard"
+triggers = Array[ExtResource("2")]([SubResource("t1")])
+color = Color(0.45, 0.3, 0.55, 1)
+description = "2 damage when you leave the square, by walking or by being pushed or pulled. Standing still costs nothing."

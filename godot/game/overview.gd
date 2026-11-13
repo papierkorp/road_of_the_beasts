@@ -1,13 +1,15 @@
 class_name Overview
 extends Control
-## Debug overview: one table per content kind (skills, monsters), one row per record under
-## res://data, whatever its content status. Reads the definitions and BattleText only; it
-## decides and prices nothing.
-## Click a column title to sort (again: reverse); the tooltip of a row holds its notes, the one
-## of a monster's "Stat pts" cell a second table with how the points come about.
+## Debug overview: one table per content kind (skills, monsters, grounds, zones, props), one row per Resource file under
+## res://data (read through BattleContent), whatever its content status. Skills are shown as their
+## card (gdd_skills §2: cost · where · strike · movement · on itself · creates ground / zone / prop,
+## SkillGen.card); what a ground, zone or prop does stands in its own table. It
+## decides and prices nothing; stat prices are open, so no point totals are shown.
+## Click a column title to sort (again: reverse); the tooltip of a row holds its notes.
+## "Skill builder" opens game/skill_builder.gd, which writes new skill files.
 
 const MENU_SCENE := "res://game/menu.tscn"
-const USAGE := {"repeatable": "", "once_per_round": "1/round", "once_per_battle": "1/battle"}
+const BUILDER_SCENE := "res://game/skill_builder.tscn"
 ## Per table: title, the row key the dropdown filters on with its label, and the columns as
 ## [row key, title, minimum width, expands, numeric].
 const TABLES := {
@@ -16,12 +18,16 @@ const TABLES := {
 		"columns": [
 			["name", "Skill", 190, false, false],
 			["kind", "Kind", 100, false, false],
-			["ap", "AP", 50, false, true],
-			["usage", "Use", 90, false, false],
-			["effect", "Effect", 420, true, false],
-			["calc", "Calc", 60, false, true],
+			["cost", "Cost", 110, false, false],
+			["where", "Where", 200, false, false],
+			["strike", "Strike", 130, false, false],
+			["move", "Movement", 200, true, false],
+			["self", "On itself", 170, true, false],
+			["ground", "Creates ground", 140, false, false],
+			["zone", "Creates zone", 140, false, false],
+			["prop", "Creates prop", 130, false, false],
 			["status", "Status", 100, false, false],
-			["monsters", "Used by", 260, true, false],
+			["monsters", "Used by", 180, true, false],
 			["id", "Id", 190, false, false],
 		],
 	},
@@ -31,24 +37,56 @@ const TABLES := {
 			["name", "Monster", 190, false, false],
 			["kin", "Kin", 90, false, false],
 			["strike", "Kin Strike", 110, false, false],
-			["shape", "Shape", 120, false, false],
 			["hp", "HP", 50, false, true],
 			["initiative", "Init", 60, false, true],
 			["move", "Move", 60, false, true],
 			["tpr", "TPR", 50, false, true],
 			["reach", "Reach", 65, false, true],
 			["ap", "AP", 50, false, true],
-			["points", "Stat pts", 85, false, true],
 			["kit", "Kit", 420, true, false],
 			["status", "Status", 100, false, false],
 			["id", "Id", 190, false, false],
 		],
 	},
+	"grounds": {
+		"title": "Grounds", "filter": "group", "filter_all": "All groups",
+		"columns": [
+			["name", "Ground", 190, false, false],
+			["group", "Group", 100, false, false],
+			["effect", "Effect (acts at a moment)", 360, true, false],
+			["move_cost", "Move cost", 100, false, true],
+			["levels", "Levels", 80, false, true],
+			["lasts", "Lasts", 150, false, false],
+			["sources", "Laid by", 360, true, false],
+			["status", "Status", 100, false, false],
+			["id", "Id", 160, false, false],
+		],
+	},
+	"zones": {
+		"title": "Zones", "filter": "group", "filter_all": "All zones",
+		"columns": [
+			["name", "Zone", 190, false, false],
+			["effect", "Effect (while inside)", 420, true, false],
+			["sources", "Left by", 420, true, false],
+			["status", "Status", 100, false, false],
+			["id", "Id", 160, false, false],
+		],
+	},
+	"props": {
+		"title": "Props", "filter": "class", "filter_all": "All classes",
+		"columns": [
+			["name", "Prop", 190, false, false],
+			["class", "Class", 90, false, false],
+			["hp", "HP", 50, false, true],
+			["traits", "Traits", 170, false, false],
+			["effect", "Effect", 420, true, false],
+			["ground_left", "Leaves", 130, false, false],
+			["sources", "Placed by", 260, true, false],
+			["status", "Status", 100, false, false],
+			["id", "Id", 160, false, false],
+		],
+	},
 }
-
-## Absolute stat point costs per value (gdd_monsters §2.2, working draft).
-const TPR_POINTS := {1: 3, 2: 8, 3: 15}
-const AP_POINTS := {2: 6, 3: 9, 4: 14, 5: 21}
 
 var _data := {}                 # table id → Array[Dictionary]
 var _table := "skills"
@@ -77,18 +115,25 @@ static func skill_rows(c: BattleContent) -> Array[Dictionary]:
 			var m: MonsterDef = c.monsters[mid]
 			if m.skills.has(s):
 				users.append(m.display_name)
+		var parts := SkillGen.card(c, s)
 		out.append({
 			"id": String(id),
 			"name": s.display_name,
 			"kind": s.kind_label(),
-			"ap": s.cost() if s.is_active() else -1,
-			"usage": USAGE.get(s.repetition, s.repetition) if s.is_active() else "",
+			"cost": parts["cost"],
+			"where": parts["where"],
+			"strike": parts["strike"],
+			"move": parts["move"],
+			"self": parts["self"],
+			"ground": parts["ground"],
+			"zone": parts["zone"],
+			"prop": parts["prop"],
 			"effect": BattleText.SEP.join(lines),
 			"calc": s.internal_calc_cost,
 			"status": s.content_status,
 			"in_game": ContentStatus.in_game(s),
 			"monsters": ", ".join(users),
-			"tooltip": _notes([s.description, s.status]),
+			"tooltip": _notes([s.description, BattleText.SEP.join(lines), s.status]),
 		})
 	return out
 
@@ -104,15 +149,12 @@ static func monster_rows(c: BattleContent) -> Array[Dictionary]:
 			"name": m.display_name,
 			"kin": MonsterDef.kin_name(m.kin),
 			"strike": m.strike_name(),
-			"shape": StatShape.shape_name(m.reference_shape as StatShape.Id) if m.reference_shape != StatShape.Id.NONE else "—",
 			"hp": m.hp,
 			"initiative": m.initiative,
 			"move": m.move,
 			"tpr": m.tpr,
 			"reach": m.reach,
 			"ap": m.ap,
-			"points": stat_points(m.hp, m.initiative, m.move, m.reach, m.tpr, m.ap),
-			"points_table": stat_table(m.hp, m.initiative, m.move, m.reach, m.tpr, m.ap),
 			"kit": m.kit_text(),
 			"status": m.content_status,
 			"in_game": ContentStatus.in_game(m),
@@ -121,43 +163,102 @@ static func monster_rows(c: BattleContent) -> Array[Dictionary]:
 	return out
 
 
-## Absolute stat point total of a stat line by the working-draft prices of gdd_monsters §2.2
-## (base 15 included; the Core Formation High reference budget is 31): HP, Initiative and
-## Movement 1 per point, Reach 3 per point above 1, TPR and AP by their step tables.
-## -1 if TPR or AP lies outside the priced steps. A display aid, not a rule or a check.
-static func stat_points(hp: int, initiative: float, move: int, reach: int, tpr: int, ap: int) -> float:
-	var total := 0.0
-	for line in stat_breakdown(hp, initiative, move, reach, tpr, ap):
-		if line[3] < 0:
-			return -1.0
-		total += line[3]
-	return total
-
-
-## How `stat_points` comes about: one line [stat, value, price rule, points] per stat
-## (points -1 = this value has no price step).
-static func stat_breakdown(hp: int, initiative: float, move: int, reach: int, tpr: int, ap: int) -> Array:
-	return [
-		["HP", hp, "1 per point", float(hp)],
-		["Init", initiative, "1 per point", initiative],
-		["Move", move, "1 per point", float(move)],
-		["Reach", reach, "3 per point above 1", (reach - 1) * 3.0],
-		["TPR", tpr, "steps 3 / 8 / 15", float(TPR_POINTS.get(tpr, -1))],
-		["AP", ap, "from AP 2: 6 / 9 / 14 / 21", float(AP_POINTS.get(ap, -1))],
-	]
-
-
 ## "5", "7.5", "—" for a negative (missing) number.
 static func num_text(v: float) -> String:
 	return "—" if v < 0 else String.num(v, 1).trim_suffix(".0")
 
 
-## The breakdown as tooltip table lines [[cell, ...], ...] with a header and a total line.
-static func stat_table(hp: int, initiative: float, move: int, reach: int, tpr: int, ap: int) -> Array:
-	var out: Array = [["Stat", "Value", "Price (draft)", "Points"]]
-	for line in stat_breakdown(hp, initiative, move, reach, tpr, ap):
-		out.append([line[0], num_text(line[1]), line[2], num_text(line[3])])
-	out.append(["Total", "", "base 15 included", num_text(stat_points(hp, initiative, move, reach, tpr, ap))])
+## Names of the game's skills that create something: by ground id, zone id and prop id.
+static func _makers(c: BattleContent) -> Dictionary:
+	var out := {"ground": {}, "zone": {}, "prop": {}}
+	for id in BattleContent.sorted_ids(c.skills):
+		var s: BattleSkillDef = c.skills[id]
+		if not ContentStatus.in_game(s):
+			continue
+		if s.zone != null:
+			_note(out["zone"], s.zone.id, s.display_name)
+		for op in s.board_ops:
+			match op.op:
+				BoardOp.GROUND:
+					_note(out["ground"], op.ground, s.display_name)
+				BoardOp.CREATE_ZONE:
+					_note(out["zone"], op.zone, s.display_name)
+				BoardOp.CREATE_PROP:
+					_note(out["prop"], op.prop, s.display_name)
+	for id in BattleContent.sorted_ids(c.props):
+		var d: PropDef = c.props[id]
+		if d.ground_left != &"" and d.ground_left != GroundDef.PLAIN:
+			_note(out["ground"], d.ground_left, "prop " + d.display_name)
+	return out
+
+
+static func _note(table: Dictionary, key: StringName, label: String) -> void:
+	if not table.has(key):
+		table[key] = PackedStringArray()
+	if not table[key].has(label):
+		table[key].append(label)
+
+
+## One Dictionary per ground file, alphabetical by id.
+static func ground_rows(c: BattleContent) -> Array[Dictionary]:
+	var makers: Dictionary = _makers(c)["ground"]
+	var out: Array[Dictionary] = []
+	for id in BattleContent.sorted_ids(c.grounds):
+		var g: GroundDef = c.grounds[id]
+		var lasts := "always" if g.immutable else ("board start: stays · laid in battle: %d rounds" % BattleExperiment.ground_rounds if BattleExperiment.ground_rounds > 0 else "until changed")
+		if id == GroundDef.PLAIN:
+			lasts = "—"
+		var brief := BattleText.ground_brief(g, g.max_level)
+		out.append({
+			"id": String(id), "name": g.display_name, "group": g.group,
+			"effect": brief if brief != "" else "—",
+			"move_cost": g.move_cost, "levels": g.max_level, "lasts": lasts,
+			"sources": ", ".join(makers.get(id, PackedStringArray())),
+			"status": g.content_status, "in_game": ContentStatus.in_game(g), "tooltip": _notes([g.description]),
+		})
+	return out
+
+
+## One Dictionary per zone file, alphabetical by id.
+static func zone_rows(c: BattleContent) -> Array[Dictionary]:
+	var makers: Dictionary = _makers(c)["zone"]
+	var out: Array[Dictionary] = []
+	for id in BattleContent.sorted_ids(c.zones):
+		var z: BattleZoneDef = c.zones[id]
+		out.append({
+			"id": String(id), "name": z.display_name, "group": "zone",
+			"effect": BattleText.effects_text(z.effects),
+			"sources": ", ".join(makers.get(id, PackedStringArray())),
+			"status": z.content_status, "in_game": ContentStatus.in_game(z), "tooltip": BattleText.effects_text(z.effects),
+		})
+	return out
+
+
+## One Dictionary per prop file, alphabetical by id.
+static func prop_rows(c: BattleContent) -> Array[Dictionary]:
+	var makers: Dictionary = _makers(c)["prop"]
+	var out: Array[Dictionary] = []
+	for id in BattleContent.sorted_ids(c.props):
+		var d: PropDef = c.props[id]
+		var traits: PackedStringArray = []
+		if d.heavy:
+			traits.append("heavy")
+		if d.spiky:
+			traits.append("spiky")
+		if d.repel:
+			traits.append("repels")
+		if not d.creatable_by_skill:
+			traits.append("board only")
+		var left := c.ground(d.ground_left)
+		var brief := BattleText.prop_brief(c, d)
+		out.append({
+			"id": String(id), "name": d.display_name, "class": d.prop_class, "hp": d.hp,
+			"traits": ", ".join(traits),
+			"effect": brief if brief != "" else "blocks the way",
+			"ground_left": left.display_name if left != null else "—",
+			"sources": ", ".join(makers.get(id, PackedStringArray())),
+			"status": d.content_status, "in_game": ContentStatus.in_game(d), "tooltip": _notes([d.description, brief]),
+		})
 	return out
 
 
@@ -173,7 +274,8 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = UiTheme.create()
 	var content := BattleContent.shared()
-	_data = {"skills": skill_rows(content), "monsters": monster_rows(content)}
+	_data = {"skills": skill_rows(content), "monsters": monster_rows(content), "grounds": ground_rows(content),
+		"zones": zone_rows(content), "props": prop_rows(content)}
 
 	var bg := ColorRect.new()
 	bg.color = Color(0.075, 0.082, 0.094)
@@ -205,7 +307,7 @@ func _ready() -> void:
 		var tab := Button.new()
 		tab.text = TABLES[id]["title"]
 		tab.toggle_mode = true
-		tab.custom_minimum_size = Vector2(120, 0)
+		tab.custom_minimum_size = Vector2(100, 0)
 		tab.pressed.connect(show_table.bind(id))
 		bar.add_child(tab)
 		_tabs[id] = tab
@@ -214,9 +316,19 @@ func _ready() -> void:
 	_filter.item_selected.connect(func(_i): _refresh())
 	bar.add_child(_filter)
 	_game_only = CheckButton.new()
-	_game_only.text = "In game only (approved / draft)"
+	_game_only.text = "In game only (approved / draft / experiment)"
 	_game_only.toggled.connect(func(_on): _refresh())
 	bar.add_child(_game_only)
+	var builder := Button.new()
+	builder.text = "Skill builder"
+	builder.pressed.connect(func(): get_tree().change_scene_to_file(BUILDER_SCENE))
+	bar.add_child(builder)
+	var monsters := Button.new()
+	monsters.text = "Monster builder"
+	monsters.pressed.connect(func():
+		MonsterBuilder.return_scene = "res://game/overview.tscn"
+		get_tree().change_scene_to_file(MonsterBuilder.SCENE))
+	bar.add_child(monsters)
 	_count = Label.new()
 	_count.add_theme_color_override("font_color", UiTheme.DIM)
 	bar.add_child(_count)
@@ -230,7 +342,8 @@ func _ready() -> void:
 	col.add_child(_tree)
 
 	var hint := Label.new()
-	hint.text = "Click a column title to sort. Hover a row for its notes. Calc = internal_calc_cost (authoring note, not a price). Monster stats = reference individual, Shape = the stat shape it was built with; hover Stat pts for the breakdown; Stat pts = gdd_monsters §2.2 draft prices (Core High budget 31)."
+	hint.text = "One row per Resource file under res://data. Click a column title to sort; hover a row for its notes. A skill only delivers: it strikes, moves or acts on its user and creates ground, a zone or a prop; what those do and when stands in their own tables. Monster stats = the species' reference sheet; stat prices are open, so no point totals. Grounds act at a moment, zones while a monster stands inside; props block the way and act when destroyed. Greyed rows are not in the game (status test, simulation or archived)."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # without it the long line widens the whole screen
 	hint.add_theme_color_override("font_color", UiTheme.DIM)
 	hint.add_theme_font_size_override("font_size", 14)
 	col.add_child(hint)
@@ -316,6 +429,8 @@ func _refresh() -> void:
 			var v = r[cols[i][0]]
 			var text := String(v) if v is String else num_text(v)
 			item.set_text(i, text)
+			if cols[i][3]:                            # the wide text columns break long texts into lines
+				item.set_autowrap_mode(i, TextServer.AUTOWRAP_WORD_SMART)
 			var table: Array = r.get(cols[i][0] + "_table", [])
 			if table.is_empty():
 				item.set_tooltip_text(i, r["tooltip"] if r["tooltip"] != "" else text)

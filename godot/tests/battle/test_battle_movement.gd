@@ -130,15 +130,3 @@ func test_rooted_passive_forbids_step_and_movement_skills() -> void:
 	assert_str(b.check({"type": &"step", "to": Vector2i(3, 2)})).contains("cannot move")
 	assert_str(b.check({"type": &"skill", "slot": 0, "to": Vector2i(3, 2)})).contains("cannot move")
 	assert_int(BattleStats.reach(b, H.unit(b, 0))).is_equal(3)
-
-
-func test_kits_open_with_their_movement_skill() -> void:
-	# test kits (T38): Headbutt and Quake Leap are movement skills with displacement
-	var expect := {&"blaze_tiger": &"headbutt", &"ember_hawk": &"glide", &"moss_turtle": &"run", &"thorn_mites": &"burrow",
-		&"grove_wisp": &"quake_leap", &"gloom_wolf": &"run", &"dusk_moth": &"glide", &"hollow_serpent": &"burrow"}
-	for species: StringName in expect:
-		var def := H.content().monster(species)
-		assert_str(def.skills[0].id).is_equal(expect[species])
-	var golem := H.content().monster(&"forge_golem")
-	for s in golem.skills:
-		assert_str(s.kind).is_not_equal("move")             # Step only

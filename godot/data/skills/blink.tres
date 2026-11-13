@@ -8,6 +8,7 @@
 script = ExtResource("3_tgop2")
 id = &"blink"
 display_name = "Blink"
+content_status = "archived"
 kind = "move"
 description = "Any free square within Movement."
 status = "GDD movement preset (Skills §3/§8.2)"

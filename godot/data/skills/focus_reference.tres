@@ -12,6 +12,7 @@ tag = "quicken"
 script = ExtResource("3_44olw")
 id = &"focus_reference"
 display_name = "Focus"
+content_status = "archived"
 kind = "buff"
 description = "Self: initiative +1 for 2 rounds. Recasting refreshes, it never stacks."
 status = "GDD reference record (Skills §11), draft"

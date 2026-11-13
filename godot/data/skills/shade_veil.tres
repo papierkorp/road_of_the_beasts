@@ -9,6 +9,7 @@
 script = ExtResource("3_knn5v")
 id = &"shade_veil"
 display_name = "Shade Veil"
+content_status = "archived"
 kind = "zone"
 ap_cost = 2
 description = "Shield zone: Surge damage on its squares -2 (up to -3 with level)."

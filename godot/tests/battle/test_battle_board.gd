@@ -126,12 +126,12 @@ func test_ground_same_type_levels_hazards_and_different_type_replaces() -> void:
 	assert_str(c.ground).is_equal("voidscar")
 
 
-func test_field_skills_need_prop_free_squares_and_may_cover_mountains() -> void:
+func test_field_skills_lay_ground_under_props_too_and_may_cover_mountains() -> void:
 	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": ["lava_field"]}], [1, Vector2i(6, 6)]])
 	b.add_prop(&"clay_urn", Vector2i(2, 4))
 	b.board.at(Vector2i(4, 3)).height = 1
 	b.begin()
-	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 4)})).contains("prop-free")
+	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 4)})).is_empty()      # a prop in the shape does not forbid the cast
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(6, 5)})).contains("does not fit")
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 1)})).contains("out of Reach")
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})).is_true()   # O4: (3,3) (4,3) (3,4) (4,4)
@@ -172,7 +172,7 @@ func test_burst_props_damage_their_pattern_once_and_never_other_props() -> void:
 	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp, H.unit(b, 3).hp]).is_equal([4, 4, 5])   # ring of 8
 	assert_int(H.unit(b, 0).hp).is_equal(4)                 # the striker stands in the ring too
 	assert_int(neighbour.hp).is_equal(1)                    # no chain reaction
-	assert_str(b.board.at(Vector2i(3, 3)).ground).is_equal("plain")   # the Urn leaves Plain
+	assert_str(b.board.at(Vector2i(3, 3)).ground).is_equal("lava")    # the Urn leaves the ground as it is
 	var c := _strike_setup(&"bamboo_stand", [[1, Vector2i(2, 2)], [1, Vector2i(3, 2)]])
 	c.begin()
 	c.apply({"type": &"skill", "slot": 0, "dir": H.UP})
@@ -180,7 +180,7 @@ func test_burst_props_damage_their_pattern_once_and_never_other_props() -> void:
 
 
 func test_residue_props_leave_their_ground_except_on_mountain_and_voidscar() -> void:
-	var expect := {&"paper_lantern": "lava", &"peach_tree": "mossbed", &"ancestor_tablet": "hallowed", &"stone_lion": "rubble"}
+	var expect := {&"paper_lantern": "lava", &"peach_tree": "mossbed", &"ancestor_tablet": "mossbed", &"stone_lion": "rubble"}
 	for prop: StringName in expect:
 		var b := _strike_setup(prop, [[1, Vector2i(6, 6)]])
 		b.begin()

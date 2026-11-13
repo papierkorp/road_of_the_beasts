@@ -5,8 +5,13 @@ extends Resource
 const START_OF_TURN := "start_of_turn"
 const ON_ENTER := "on_enter"
 const END_OF_TURN := "end_of_turn"
+## End of a round: every monster has had its turn (reshape 2026-11-13).
+const END_OF_ROUND := "end_of_round"
+## When the monster leaves the square, by its own movement or by being pushed or pulled: the
+## "damage when moving" ground (reshape 2026-11-13). Standing still costs nothing.
+const ON_LEAVE := "on_leave"
 
-@export_enum("start_of_turn", "on_enter", "end_of_turn") var timing: String = ON_ENTER
+@export_enum("start_of_turn", "on_enter", "end_of_turn", "end_of_round", "on_leave") var timing: String = ON_ENTER
 @export_enum("damage", "heal") var kind: String = "damage"
 ## 0 = the ground's level (hazard grounds); otherwise a fixed amount.
 @export var amount: int = 0

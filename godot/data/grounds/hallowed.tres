@@ -12,6 +12,7 @@ tag = "shield"
 script = ExtResource("2_h400a")
 id = &"hallowed"
 display_name = "Hallowed"
+content_status = "archived"
 group = "blessed"
 effects = Array[ExtResource("1_325sm")]([SubResource("Resource_bvaub")])
 color = Color(0.88, 0.88, 0.74, 1)

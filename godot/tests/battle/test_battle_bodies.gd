@@ -28,9 +28,9 @@ func test_mixed_ground_every_type_once_and_the_highest_hazard_level() -> void:
 	b.set_ground(Vector2i(3, 2), &"lava", 2)
 	b.set_ground(Vector2i(2, 3), &"blight", 1)
 	b.begin()
-	assert_int(H.unit(b, 0).hp).is_equal(8)      # Blight I once at the start of the turn
+	assert_int(H.unit(b, 0).hp).is_equal(9)      # nothing at the start of the turn (Blight acts at the end of the round)
 	b.end_turn()
-	assert_int(H.unit(b, 0).hp).is_equal(6)      # Lava once, at its highest level II
+	assert_int(H.unit(b, 0).hp).is_equal(7)      # Lava once, at its highest level II
 
 
 func test_entry_triggers_use_only_newly_covered_squares_and_net_with_healing() -> void:

@@ -6,7 +6,7 @@
 
 [sub_resource type="Resource" id="Resource_vt44f"]
 script = ExtResource("3_lcrak")
-timing = "start_of_turn"
+timing = "end_of_round"
 
 [resource]
 script = ExtResource("2_tii04")
@@ -16,5 +16,5 @@ group = "hazard"
 max_level = 2
 triggers = Array[ExtResource("3_lcrak")]([SubResource("Resource_vt44f")])
 color = Color(0.42, 0.26, 0.5, 1)
-description = "Damage = level at the start of your turn."
+description = "Damage = level at the end of the round to whoever stands on it."
 internal_calc_cost = 4.0

@@ -117,7 +117,8 @@ static func _step_cost(b: Battle, u: BattleUnit, from: Vector2i, to: Vector2i, p
 static func _entry_harm(b: Battle, u: BattleUnit, from: Vector2i, to: Vector2i) -> int:
 	if u.layer == Board.AIR:
 		return 0
-	return BattleDamage.ground_harm(b, u, GroundTrigger.ON_ENTER, fresh_cells(u, from, to))
+	return BattleDamage.ground_harm(b, u, GroundTrigger.ON_ENTER, fresh_cells(u, from, to)) \
+		+ BattleDamage.ground_harm(b, u, GroundTrigger.ON_LEAVE, u.cells_at(from))
 
 
 ## Reachable destinations: {origin: {cost, harm, path}}. `path` lists the origins entered in
@@ -217,6 +218,10 @@ static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, la
 	var from := u.pos
 	b.emit(&"moved", {"who": u.id, "from": from, "to": to, "path": path.duplicate(), "skill": label})
 	for n: Vector2i in path:
+		if u.layer == Board.GROUND:
+			BattleDamage.ground_triggers(b, u, GroundTrigger.ON_LEAVE)
+			if not u.is_alive():
+				break
 		var fresh := fresh_cells(u, u.pos, n)
 		b.relocate(u, n)
 		if u.layer == Board.GROUND:

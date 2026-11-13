@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3"]
+
+[sub_resource type="Resource" id="o1"]
+script = ExtResource("1")
+ground = &"thornbed"
+
+[resource]
+script = ExtResource("3")
+id = &"thorn_lash"
+display_name = "Thorn Lash"
+kind = "strike"
+description = "2 AP · neighbouring square · now · 2 damage, push 1 · leaves Thornbed on the struck square."
+content_status = "draft"
+status = "reshape 2026-11-13 (skill sentence, Skills §2); working draft, not priced"
+ap_cost = 2
+board_ops = Array[ExtResource("1")]([SubResource("o1")])

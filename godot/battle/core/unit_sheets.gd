@@ -43,7 +43,7 @@ static func from_instance(inst: MonsterInstance, _content: BattleContent = null)
 		s.notes.append("AP %d (base)" % BASE_AP)
 		if int(inst.stats["reach"]) < MIN_REACH:
 			s.notes.append("Reach raised to %d" % MIN_REACH)
-		s.airborne = def.kin == MonsterDef.Kin.WINGED and int(inst.stage) >= int(Stage.Type.SOUL)
+		# no air layer since the reshape of 2026-11-13: Winged monsters stand on the ground
 	if def.skills.is_empty():
 		s.notes.append("no kit: Step only")
 		return s

@@ -2,15 +2,15 @@ extends GdUnitTestSuite
 ## HUD texts stay short: tokens instead of sentences, built from the data (battle/ui/battle_text.gd).
 
 const H := preload("res://tests/battle/helpers.gd")
-const MAX_CARD_ROWS := 3
-const MAX_LINE := 64
+const MAX_CARD_ROWS := 6
+const MAX_LINE := 72
 
 
 func _values(rows: Array) -> Array:
 	return rows.map(func(r): return r[1])
 
 
-func test_skill_cards_are_at_most_three_short_lines() -> void:
+func test_skill_cards_are_a_few_short_lines() -> void:
 	var c := H.content()
 	for id: StringName in c.skills:
 		for kin in MonsterDef.Kin.values():
@@ -23,30 +23,42 @@ func test_skill_cards_are_at_most_three_short_lines() -> void:
 
 func test_skill_cards_say_what_matters() -> void:
 	var c := H.content()
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"magma_pounce")))).is_equal(["3 dmg · in 2 turns · 4 sq · adjacent", "leaves Lava I"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"tidal_shell")))).is_equal(["2 dmg · in 2 turns · 3 sq · push 1 · not on Mountain", "leaves Thornbed I"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"gloom_rift")))).is_equal(["3 dmg · in 2 turns · 3 sq", "breaks Mountain · leaves Blight I"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"crucible")))).is_equal(["3 dmg · trap · 4 sq · around caster", "leaves Lava I"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"mire")))).is_equal(["slow 1, drain_init 2, drain_range 1 · 2 rd · 4 sq"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"lava_field")))).is_equal(["Lava I · 4 sq"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"raise_ground")))).is_equal(["Mountain · 2 sq"])
+	# a skill that creates something: where, what it creates, and below it what that thing does
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"lava_field")))).is_equal(["4 sq · within Reach", "creates ground: Lava · 2 rd",
+		"  Lava: 1 dmg at turn end (II: 2)"])
+	# a stat zone only comes along with something else (user decision 2026-11-13)
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"thornbed")))).is_equal(["3 sq · within Reach", "creates ground: Thornbed · 2 rd",
+		"  Thornbed: 1 dmg on entering (II: 2)", "creates zone: Slowing Zone · 2 rd", "  Slowing Zone: while inside: Movement −1"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"snare")))).is_equal(["1 sq · within Reach", "creates ground: Binding Vines · 2 rd",
+		"  Binding Vines: 2 dmg on leaving"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"bog")))).is_equal(["3 sq · within Reach", "creates zone: Bog · 2 rd",
+		"  Bog: while inside: Movement −1 · pulls 1 at cast and turn end"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"plant_bamboo")))).is_equal(["1 sq · within Reach", "creates prop: Bamboo Stand",
+		"  Bamboo Stand: 2 HP · spiky · burst 1"])
+	# two things at once
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"coiling_rift")))).is_equal(["4 sq · within Reach", "creates ground: Blight · 2 rd",
+		"  Blight: 1 dmg at round end (II: 2)", "creates zone: Void Pull · 2 rd", "  Void Pull: pulls 1 at cast and turn end"])
+	# a Strike and a movement that leave something
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"thorn_lash")))).is_equal(["2 dmg · 1 sq", "creates ground: Thornbed · 2 rd",
+		"  Thornbed: 1 dmg on entering (II: 2)"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"fire_trail")))).is_equal(["straight line · Move", "leaves on its path: ground: Lava · 2 rd",
+		"  Lava: 1 dmg at turn end (II: 2)"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"leap")))).is_equal(["straight line · Move"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"burrow")))).is_equal(["any path · Move · not on Mountain"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"focus_reference")))).is_equal(["self: quicken 1 · 2 rd"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"headbutt")))).is_equal(["straight line · Move · pushes the monster ahead"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"battle_trance")))).is_equal(["self: AP +1 · 2 rd · 1/battle"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"immovable")))).is_equal(["Ignores push and pull."])
 	# the Kin twist is one extra line, and only if the Kin has one
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.BEAST))).is_equal(["2 dmg · 1 sq"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.SCALED))).is_equal(["2 dmg · 1 sq", "push 1 (WASD)"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_cleave"), MonsterDef.Kin.ANCIENT))).is_equal(["2 dmg · 6 sq", "breaks Mountain"])
 	var limited: BattleSkillDef = c.skill(&"lava_field").duplicate()
 	limited.repetition = "once_per_round"
-	assert_array(_values(BattleText.skill_rows(c, limited))).is_equal(["Lava I · 4 sq · 1/round"])
+	assert_str(_values(BattleText.skill_rows(c, limited))[0]).is_equal("4 sq · within Reach · 1/round")
 
 
 func test_ground_and_prop_lines_come_from_the_data() -> void:
 	var c := H.content()
-	var grounds := {&"plain": "", &"rubble": "move cost 2", &"voidscar": "1 dmg at turn start", &"lava": "2 dmg at turn end",
-		&"thornbed": "2 dmg on enter", &"blight": "2 dmg at turn start", &"hearth": "quicken 1", &"mossbed": "heal 1 on enter",
+	var grounds := {&"plain": "", &"rubble": "move cost 2", &"voidscar": "1 dmg at turn end", &"lava": "2 dmg at turn end",
+		&"thornbed": "2 dmg on entering", &"blight": "2 dmg at round end", &"hearth": "quicken 1", &"mossbed": "heal 1 on entering",
 		&"umbra": "extend 1", &"hallowed": "shield 1"}
 	for id: StringName in grounds:
 		assert_str(BattleText.ground_brief(c.ground(id), 2)).is_equal(grounds[id])
@@ -101,12 +113,9 @@ func test_the_cast_preview_is_a_few_merged_lines() -> void:
 	b.begin()
 	# ground skill: one merged line instead of one per square
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)}))).is_equal(["Lava I ×4"])
-	# Surge (a trap): nothing now, the forecast of its detonation in short
-	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 3)}))).is_equal([
-		"when it fires:", "  Wolf −3", "  Wolf falls", "  Mountain breaks", "  Blight I ×3"])   # a timed Surge may be cast on a monster
-	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 2)}))).is_equal([
-		"when it fires:", "  Mountain breaks", "  Blight I ×3"])
-	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(0, 5)}))).is_equal(["when it fires:", "  Blight I ×3"])
+	# Gloom Rift lays ground since the reshape (no Surges): the same merged line; the hand-made Mountain square takes none
+	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 3)}))).is_equal(["3 new", "Blight I ×2"])
+	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(0, 5)}))).is_equal(["3 new", "Blight I ×3"])
 	# Strike with a push; a zone; an illegal aim
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 2, "dir": H.UP, "push_dir": H.LEFT}))).is_equal(["Wolf −2", "Wolf → [2,4]"])
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 3, "anchor": Vector2i(3, 4)}))).is_equal(["3 new"])

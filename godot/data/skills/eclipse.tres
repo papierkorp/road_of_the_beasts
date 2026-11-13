@@ -17,6 +17,7 @@ on_mountain = true
 script = ExtResource("3_qfomt")
 id = &"eclipse"
 display_name = "Eclipse"
+content_status = "archived"
 kind = "surge"
 description = "Rift on 4 squares: 3 damage, destroys Mountains, leaves Blight I."
 status = "test data (Skills §10 prior draft, decided mechanics only)"
