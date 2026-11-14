@@ -128,6 +128,27 @@ func test_a_held_wellspring_damages_the_nearest_enemy_at_the_end_of_the_round() 
 	assert_int(H.unit(b, 0).hp).is_equal(H.unit(b, 0).max_hp)
 
 
+func test_dragon_vein_damage_uses_actual_fields_outside_the_default_row() -> void:
+	for p in [Vector2i(1, 2), Vector2i(5, 4)]:
+		var b := H.battle([[0, p, {"init": 9.0}], [1, Vector2i(3, 0), {"init": 5.0, "hp": 5}]])
+		b.board.at(p).ground = GroundDef.WELL
+		b.begin()
+		_end_round(b)
+		assert_int(H.unit(b, 1).hp).is_equal(4)
+		assert_int(b.board.at(p).owner_side).is_equal(0)
+		assert_array(H.events_of(b, &"wells_held").back()["held"]).is_equal([1, 0])
+
+
+func test_disabling_veins_also_disables_damage_from_authored_vein_fields() -> void:
+	BattleExperiment.wells = 0
+	var b := H.battle([[0, Vector2i(1, 2), {"init": 9.0}], [1, Vector2i(3, 0), {"init": 5.0, "hp": 5}]])
+	b.board.at(Vector2i(1, 2)).ground = GroundDef.WELL
+	b.begin()
+	_end_round(b)
+	assert_int(H.unit(b, 1).hp).is_equal(5)
+	assert_array(H.events_of(b, &"wells_held")).is_empty()
+
+
 func test_a_wellspring_tie_goes_to_the_enemy_with_more_hp() -> void:
 	var b := _well_battle([
 		[0, Vector2i(3, 3), {"init": 9.0}],

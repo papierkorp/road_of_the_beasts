@@ -24,16 +24,19 @@ battle/      the deterministic grid battle (docs/gdd_battle.md, gdd_skills.md, g
   battle.tscn, draft.tscn
 overworld/   days, AP, night phase, economy, internal world (gdd_overworld.md)
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession), Overview (debug tables
-             of every skill and monster record, reached from the main menu)
+             of content with an optional in-game-only filter, reached from the main menu)
 data/        ALL content as Resource files, one folder per kind (a new file = new content)
              monsters/ skills/ zones/ grounds/ props/ tamer/  — the game's content and, with the status
                                                                "simulation", test monsters of the tools; every
-                                                               resource carries its internal_calc_cost
+                                                               skill/ground/zone/prop carries an internal_calc_cost authoring note
 tests/       gdUnit4 suites: tests/battle, tests/shared, tests/overworld, tests/game
 tools/       headless tools (tools/README.md): sim.gd (AI-vs-AI runs), compare.gd (comparison of two
-             monsters), smoke_ui.gd (plays the real UI);
+             monsters), progression.gd (entry/upgrade interventions), discovery.gd (authored new-skill/map
+             experiments), smoke_ui.gd (plays the real UI);
              lib/ their shared scripts (their data lies under data/, their Resource classes in battle/defs/)
 ```
+
+**Simulation-only discovery content:** Mist Step, Receding Blow, Cloudstep Token, Raise Reed Screen and the Reed Screen prop are experimental Resources under `data/`, not enabled in regular kits or the builders' in-game choices. The overview's **In game only** filter excludes them; with that filter off it can display them as non-game records. The discovery tool substitutes them only for its runs, tests light-obstacle/split-vein maps, and leaves authored stats intact. These trials are not approved GDD content, item/loadout rules or prices; commands and limits are in [tools/README.md](tools/README.md), results in [S023](../docs/simulation_log.md#s023--2026-11-14--authored-gameplay-discovery-and-mist-step-ablation).
 
 ## Dependency rule
 
@@ -57,11 +60,11 @@ that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends
   `fingerprint()`) + same ordered actions = same `events` and `state_hash()`. `Battle.actions` is the replayable
   log (`Battle.replay`). Seeds exist only outside the rules: board layout (`BattleRequest.board_seed`) and the
   AI's tie-breaks.
-- **Preview = dry run:** `Battle.preview(action)` applies the action to a muted copy and returns its events (for a
-  Surge also the forecast of its detonation). The cast preview, the AI and the real resolution therefore share one
-  implementation.
-- **Fixed resolution order:** `BattlePayload` resolves every Strike, Surge detonation and board skill as
-  damage → defeat → displacement → board operations (removals, height, props, ground) → self retreat → passive
+- **Preview = dry run:** `Battle.preview(action)` applies the action to a muted copy and returns its events.
+  The cast preview, the AI and the real resolution therefore share one implementation. Surge forecasting remains
+  legacy/test-only code, not an active game mechanic.
+- **Fixed resolution order:** `BattlePayload` resolves Strikes and board skills as
+  damage → defeat → displacement → board operations (removals, props, ground, zones) → self retreat → passive
   reactions (gdd_battle §6.2). Skills only supply data to these phases.
 - **Shared effect vocabulary:** zones, blessed ground, aura props, timed unit effects and passives all contribute
   `FieldEffect` entries (`slow`, `quicken`, `shield`, …); `BattleStats` is the one place that collects them.
@@ -76,7 +79,7 @@ validates the whole set and shows a new ground, prop and skill built from existi
 | **Ground type** | new `GroundDef` in `data/grounds/`: movement cost, max level, `GroundTrigger`s (start of turn / on enter / end of turn, damage or heal), while-standing `FieldEffect`s, colour | it needs a behaviour element that does not exist yet (a new trigger timing, a new effect tag): extend `GroundTrigger` / `FieldEffect` and the one function that reads them (`BattleDamage.ground_effects`, `BattleStats.contributions`) |
 | **Prop** | new `PropDef` in `data/props/`: layer, HP, `heavy`, aura effects, `PropAftermath` list (damage / push / spawn + pattern), ground left | a new aftermath operation: add it to `PropAftermath` and `BattlePayload._removal_round` |
 | **Zone** | new `BattleZoneDef` in `data/zones/` (effects with base / cap and recipient layers) + a zone skill | a new effect tag (see ground) |
-| **Skill** | new `BattleSkillDef` in `data/skills/`: `kind` picks the profile (strike, surge, zone, ground, move, buff, passive); fill that profile's group; `board_ops` for ground / height / prop changes | a new execution profile or a new `BoardOp`: add the data fields and one branch in `Battle._use_skill` / the matching `BattlePayload` phase |
+| **Skill** | new `BattleSkillDef` in `data/skills/`: `kind` picks the active profile (strike, zone, ground, move, buff, passive); fill that profile's group; `board_ops` for ground / zone / prop changes (Surge and height fields are legacy/test-only) | a new execution profile or a new `BoardOp`: add the data fields and one branch in `Battle._use_skill` / the matching `BattlePayload` phase |
 | **Strike shape** | one entry in `StrikeShapes` (offsets, directions, AP) | — |
 | **Passive** | a `BattleSkillDef` of kind `passive` using the Passive group (stat effects, ignored effects / grounds, damage reductions, immovable, …) | a new kind of rule modifier: add the field and read it in `BattleStats` |
 | **Monster** | new `MonsterDef` in `data/monsters/<id>.tres`: Kin, reference stats and the kit of up to 4 skills in one file | — |
@@ -87,7 +90,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
 
 ## Content status and build rules
 
-- **Everything is test data or a working draft**, never approved content (docs/temp_todo.md T10–T13). Skills, monsters,
+- **Current content is test data, working drafts or experiments**, not approved content (docs/temp_todo.md T10–T13). Skills, monsters,
   grounds, zones and props carry `content_status` (`approved` / `draft` / `experiment` / `test` / `simulation` /
   `archived`); the game fields `approved`, `draft` and `experiment` (filter `ContentStatus.in_game`, called by
   `BattleContent` and `GameData`). Details: [tools/README.md](tools/README.md).
@@ -105,18 +108,22 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     nearest enemy of their owner at the end of a round. A monster with two enemies on its eight neighbour squares
     takes 1 (`flank`). Late-round pressure runs only when nobody owns a vein (`pressure_mode` = `idle`).
   - **Working values:** highest hit 2, lowest HP 3; ground laid in battle lasts 2 rounds (`ground_rounds`); every
-    Strike pushes 1; the board edge deals 1 and a spiky prop 2 to a monster moved into it; Step 1 AP, Run 1 AP, every
-    other movement skill 2 AP over the full Movement stat; extra turns count from round 2 (`tpr_from_round`); push and
+    Strike pushes 1; the board edge deals 1 and a spiky prop 2 to a monster moved into it; Step 1 AP, Run 1 AP; authored movement costs vary (including user experiments), with the reference
+    non-Run movement skills at 2 AP over the full Movement stat; extra turns count from round 2 (`tpr_from_round`); push and
     pull zones also move at cast; everyone may rotate a placed shape; a push zone left by a skill that also creates
     something else points where the placement is turned (`BattleCasting.rot_dir`).
-  - **Content:** 26 skills, nine kits and spread test stats in `data/`; the experiment effects `vigor`, `sap` and
-    `tempo` (AP and turns) with the self buffs Battle Trance and Time Split. Everything retired is `archived`.
+  - **Content:** the in-game pool is status-filtered, not a fixed nine-monster catalogue; it includes the user
+    experiment `asdf` and user-built skills. Spread authored stats and kits live in `data/`; `vigor`, `sap` and
+    `tempo` (AP and turns), Battle Trance and Time Split are experiments. Retired records are `archived`.
+  - **Normal versus trial defaults:** in-game ZONE skills carrying PUSH/PULL (including mixed effects such as Bog)
+    currently cost 1 AP. The tools' 2-AP candidate and discovery's `single_vein` map are not adopted game defaults;
+    normal 7×7 remains three veins. These switches do not set monster AP. See [tools](tools/README.md#commands).
 - **Still in the code, unused by the game** (to be removed, temp_todo I56/I57): height and Mountains, the air layer,
   Surges and traps (`PendingSurge`, the Surge fields of `BattleSkillDef`), the `shield` / `mend` / `expose` effects,
   and the switches that belong to them (`surge_fair`, `surge_at_caster`, `surge_wall`, `surge_ground`, `trap_cap`,
   `trap_rounds`, `no_shield_zones`). Tests that build these by hand still run.
 - **Overview and skill builder:** `game/overview.gd` has five tables (skills as cards, monsters, grounds, zones,
-  props) with one row per Resource file under `data/`. Its button **Skill builder** (`game/skill_builder.gd`) builds a
+  props) with one row per Resource under `data/`. **In game only** excludes `test`, `simulation` and `archived`; the checkbox is initially off, so these records can still appear in the unfiltered debug overview. Its button **Skill builder** (`game/skill_builder.gd`) builds a
   skill from the parts of the card or draws a random one, saves it to `data/skills/<id>.tres` with the status
   `experiment` and can write it into a kit slot of a monster file. Writing needs the project to run from its folder;
   nothing checks a price.
@@ -124,7 +131,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   change one (name, Kin, six stats, four kit slots), saved to `data/monsters/<id>.tres` (new ones with the status
   `experiment`) and registered in `BattleContent` and `GameData` (`GameData.register`), so it stands in the team choice at
   once. “New skill” opens the skill builder, which returns to the caller (`SkillBuilder.return_scene`). No price, budget
-  or Kin access is checked. Changing one of the nine monsters rewrites its file: Git is the way back.
+  or Kin access is checked. Changing an existing monster rewrites its file: Git is the way back.
 - **Test switches** (`battle/core/battle_experiment.gd`, set by `sim.gd --variant` and partly in the draft screen;
   none is a rule): `delay_turn` with `delay_reverse` / `delay_first_round` (postponing a turn), `damage_from_round`
   (a calm first round), `start_back` (back-row starts), `push_steps`, `kin_push`, `no_rotation`, `step_ap` / `jab_ap` /
@@ -135,13 +142,32 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   stat shapes.
 - **Removed:** the legacy skill model of the overworld (`SkillDef`, `ZoneDef`, skill evolution at the Evolution Pillar).
 
+## Execution and validation boundaries
+
+Full CPU use is authorized as of 2026-11-14. Invoke Godot directly with normal process/CPU settings; no code
+change is needed. The optional [low-load launcher](tools/README.md#cpu-use-and-optional-low-load-launcher)
+deliberately restricts CPU availability. Permission does not imply automatic parallelism or 100% use of every CPU.
+
+`progression.gd` tests an entry action-economy proxy; `discovery.gd` retains authored stats, AP and TPR. Both use
+matched teams with complete side swaps and source/completion guards. These are harness safeguards, not approval
+of starts, upgrades, content, prices or fun. A usable active skill or budget fit does not establish viable starting
+monsters or meaningful upgrade alternatives; owners are [Monsters §2.2](../docs/gdd_monsters.md#22-frame-budget-level-ups)
+and [Skills §5](../docs/gdd_skills.md#5-value-and-prices)/[§6](../docs/gdd_skills.md#6-slot-levels-development-and-replacement), with validation under [T13](../docs/temp_todo.md).
+
+Latest executed checks (2026-11-14, normal CPU settings): the full suite ran **303 cases**, including all
+**158 passing Battle cases**. Two known non-Battle cases still fail: reference individual stats and roamer
+movement (I46 in [temp_todo.md](../docs/temp_todo.md)); the suite is not green. Focused harness self-tests:
+`progression.gd` **1183 passed / 0 failed**, `discovery.gd` **6930 passed / 0 failed**, including 37 real-action
+fixtures. UI inspection and focused human play remain pending; these checks are not gameplay acceptance.
+Historical simulation reports retain their original execution settings and results.
+
 ## Running the checks
 
 ```
 godot --headless --path godot --import
 godot --headless --path godot -s -d res://addons/gdUnit4/bin/GdUnitCmdTool.gd --ignoreHeadlessMode -c -a res://tests < /dev/null
 godot --headless --path godot -s res://tools/smoke_ui.gd -- 3v3 7      # draft → placement → battle through the real UI
-godot --headless --path godot -s res://tools/sim.gd -- 20 3v3 1 "$(git rev-parse --short HEAD)"   # AI vs AI; prints a run block for docs/simulation_log.md
+godot --headless --path godot -s res://tools/sim.gd -- 20 3v3 1 "<state>"   # AI vs AI; prints a run block for docs/simulation_log.md
 godot --headless --path godot -s res://tools/compare.gd -- --bot rush                             # two monsters, side-swapped
 ```
 

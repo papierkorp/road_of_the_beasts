@@ -79,7 +79,7 @@ The battle only ever sees this finished sheet.
 |---------------------------|---------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | **Kin** (body)            | Strike effect, stat lean, skill access                                    | Beast bites and is fast; a Winged Strike retreats; a Scaled one picks its push direction ([Skills §8](gdd_skills.md#8-strikes-and-movement)) |
 | **Themes** (description)  | free-form flavour and visual identity, no mechanical eligibility rules   | fire, moss, shadows, storms — motifs may mix freely                        |
-| **Species** (the monster) | its default kit of 4 slots and its learnable list ([Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters))        | Blaze Tiger: Headbutt, Jab, Fire Trail, Lava Field — charges in and burns the ground it runs over |
+| **Species** (the monster) | its default kit of 4 slots and its learnable list ([Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters))        | Blaze Tiger's current prototype kit: [Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters); manual experiments are not approved species defaults |
 
 - **No fixed roles:** Kin is not class (Beast ≠ "damage dealer"); kits determine team function, so two Beasts can play completely differently.
 - Build teams from *combinations*: one monster pulls, another Strikes; one lays Binding Vines under a target and another pushes it off them.
@@ -106,13 +106,19 @@ The stat shapes are frames of min–max values per stat, not fixed stats (§2.2)
 
 Zones, aura props and self buffs change these values during a fight: effective stats, [gdd_battle §3.1](gdd_battle.md#31-effective-stats).
 
-**What the stats are worth is open** *(2026-11-13)*: in bot runs on the reshaped build HP is worth about 4 win-rate points per point, AP 3 against 2 about 11 and a second turn 7–12, while **initiative, Movement and Reach show no measurable value** ([simulation_log.md](simulation_log.md) S017–S019). The goal that every stat matters is not met yet; it needs rules that give initiative and Movement a job (T40), not prices.
+**Stat value remains open:** every stat should support meaningful decisions. Bot observations depend on kits, maps, opponents and action thresholds; they neither prove a stat has no value nor establish additive prices. First human play exists; systematic gameplay and progression validation remain open ([temp_todo.md](temp_todo.md) T03/T13, including S020–S024).
 
 **Every stat is paid for:** monsters at the same stage/sub-tier share a budget, allocated by shape (§2.2). Acting first, possibly several times consecutively, costs HP or Reach; poor turn order buys HP, Reach or AP.
 
 ### 2.2 Frame, Budget, Level-Ups
 
-**Section status** *(user direction 2026-11-13)*: **the prices, frames and budgets below are the draft of the morning of 2026-11-13, made before the reshape; the build no longer follows them** (its monsters carry spread test stats, §4.1; lowest HP is 3, not 4). They are kept as the last worked-out draft until new values are found. every number in this section (stat prices, budgets, frames) is a **working value, not fixed**. Statements elsewhere that treat them as settled are wrong. They are worked out in play and simulation together with the battle rules and the skills ([temp_todo.md](temp_todo.md) T03). The prices and frames below were reset on 2026-11-13 after the first measurements ([simulation_log.md](simulation_log.md) S012–S015).
+**Section status:** all numerical prices, frames and budgets below are **working values, not fixed or validated**. This retained pre-reshape calculation draft is not enforced by the build (§4.1); its free HP base of 4 is not the build's HP floor of 3. Values are to be found through gameplay together with battle rules and skills; arithmetic, rule tests and bot runs do not confirm them ([temp_todo.md](temp_todo.md) T03/T13).
+
+**Confirmed progression principles:** battle must work from the start; progression expands a viable build rather than repairs it.
+
+- **Viable entry build:** starting stats and the intended starter kit must work together without a mandatory HP, AP or Movement purchase. Starting AP must support that kit; no stat is a compulsory first purchase.
+- **Meaningful routes:** several stat-development routes must be useful. Validate the starting build, then each single upgrade, then combinations, including interactions with skill-slot development ([Skills §6](gdd_skills.md#6-slot-levels-development-and-replacement)) and thresholds that change which actions or action combinations are possible.
+- **Separate ledgers, joint validation:** permanent stat upgrades change the monster's stats; slot upgrades develop a skill slot, not those stats. Stat and skill accounting remain separate, but their gameplay interactions are validated together. Calculators describe balance derived from gameplay; they do not dictate it. The numerical drafts below do not establish entry-build viability or useful upgrade routes.
 
 A monster **starts** with stats rolled by its stat shape; **after that the player decides** where each level-up goes. Three rules keep this fair:
 
@@ -122,7 +128,7 @@ BUDGET  every monster of a stage and sub-tier has the same total of stat points
 PRICE   stats cost points: a strong stat is paid for with the others
 ```
 
-**Stat prices** *(working draft of 2026-11-13, replaces the first draft; derived from bot runs, [simulation_log.md](simulation_log.md) S014/S015; not played)*: base values are free; every monster of a stage and sub-tier spends the same budget on top.
+**Stat prices** *(unvalidated calculation draft; T03)*: base values are free; every monster of a stage and sub-tier spends the same budget on top.
 
 |   Stat   | Base (free) | Price above base |
 |----------|-------------|------------------|
@@ -133,7 +139,7 @@ PRICE   stats cost points: a strong stat is paid for with the others
 | TPR      | 1           | second turn **3** (a third: open) |
 | AP       | 2           | AP 3 **3** · AP 4 **+5** · AP 5 **+7** |
 
-- **What changed and why:** HP cost 1 per point from a base of 1 and a second turn 5. In the runs a point of HP was worth four to six times a point of initiative or Movement, a 2-HP monster fell to a single Strike, and with extra turns counting from round 2 ([Battle §2.2](gdd_battle.md#22-initiative-rules)) a second turn was worth less than its price. Hence: no monster below 4 HP, HP at twice its old price, initiative at half, the second turn at 3.
+
 - **Known weak spots of this draft:** at Core every reference individual buys AP 3 (3 points for a third of all its actions), so AP does not tell monsters apart there; the value of a second turn depends on the body that takes it; the price of a third turn and the prices above AP 3 are carried over untested.
 - **One AP ceiling for every monster** *(user decision 2026-11-11)*: the stage ceiling of §2.3 applies to all monsters alike; no TPR value lowers it and no AP value restricts TPR. AP additionally unlocks larger Strike shapes ([Skills §8.1](gdd_skills.md#81-strike-shapes)).
 
@@ -146,7 +152,7 @@ PRICE   stats cost points: a strong stat is paid for with the others
 | Core Formation      | 14    | 15     | 16   |
 | Soul Tier and above | 18    | 19     | 20   |
 
-So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Foundation**, because TPR 2 opens there). Immortal and Sovereign add no points; reason and replacement: [§5.3](#53-monster-progression-the-18-steps). The budgets are the earlier ones; only Core Formation High (16) has been simulated with the new prices.
+So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Foundation**, because TPR 2 opens there). Immortal and Sovereign add no points; reason and replacement: [§5.3](#53-monster-progression-the-18-steps). No stage budget is gameplay-validated; simulation inputs do not confirm a budget.
 
 **The four frames at Core Formation** (min–max of the roll). The earlier six frames are replaced: Glass cannon, Berserker and Fragile became **Swift**, Balanced joined **Skirmisher**, Anvil is **Bulwark**, and **Caster** is new.
 
@@ -172,7 +178,7 @@ So a sub-tier up gives **+1 stat point**, a breakthrough **+2** (**+4 into Found
 
 ### 2.3 Stat Ceilings per Stage
 
-Each stage defines hard caps, no shape and no point can go above them:
+**Working numerical ceilings, not validated (T03):** within this progression draft, no shape or point can exceed the stage cap. These values are not enforced by the battle sandbox.
 
 |                                                  | Qi Gathering | Foundation | Core Formation | Soul+ |
 |--------------------------------------------------|--------------|------------|----------------|-------|
@@ -185,7 +191,7 @@ Each stage defines hard caps, no shape and no point can go above them:
 
 Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 
-- **Lifetime scale:** HP 4–10, Init 0.1–10.0, TPR 1–3, AP 2–5 span the entire game; inflation would destroy its deterministic low-HP feel.
+- **Draft lifetime scale:** HP 4–10, Init 0.1–10.0, TPR 1–3, AP 2–5. The HP base/ceiling conflict with the build's HP floor of 3 remains under T03; this table does not restore a minimum of 4.
 - **Damage never scales by stage** ([gdd_battle §6.1](gdd_battle.md#61-the-damage-law)): Strike (max 2), ground and collision damage stay equal from Qi Gathering to Sovereign.
 
 ---
@@ -218,11 +224,11 @@ Soul+ is split for AP only: **Soul 3 · Immortal 4 · Sovereign 5**.
 ### 4.1 First Roster Draft — 9 monsters
 
 **Working draft.** Names, descriptions and shapes are unvalidated; the kits of the build are in [Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters).
-- **Reference individuals:** shape belongs to individuals (§1.1); these are typical species rolls at **Core Formation High**, each spending exactly 16 points within frame by the draft prices of 2026-11-13 (caps HP 8, Init 9, TPR 2, Move 5, Reach 4, AP 3; §2.2–2.3). These are the stats of the Godot build (kit set `f4086ae48783`); they were chosen among four simulated sets for the narrowest spread of win rates ([simulation_log.md](simulation_log.md) S015).
+- **Reference individuals:** shape belongs to individuals (§1.1). The left column contains calculation examples at **Core Formation High**, each spending 16 points within the draft frames (§2.2–2.3), not current build stats or validated species defaults.
 
-**Reshape note (2026-11-13, [temp_todo.md](temp_todo.md) T40):** the Godot build fields the nine monsters with **spread test stats** (below, right column) and new kits ([Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters)); they follow no price and no frame, because stat prices are open again after [simulation_log.md](simulation_log.md) S016–S019 (initiative and Movement showed no value under the earlier rules). The HP floor of 4 is dropped: lowest HP 3 against a highest single hit of 2. Winged monsters are ground monsters. The left column is the price draft of 2026-11-13 and is kept until new prices exist.
+**Prototype interface:** the right column records the nine monsters' current Resource stats under `godot/data/monsters/`; omitted fields inherit `MonsterDef` defaults. The build checks no price, budget or frame. Manual builder edits are experiments, not automatic GDD approval ([godot/README.md](../godot/README.md#content-status-and-build-rules), [temp_todo.md](temp_todo.md) T03/T13). Kits have one owner: [Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters). Lowest HP 3 and highest single hit 2 remain working values; Winged monsters stand on the ground.
 
-| Monster | Kin | Descriptive themes | Shape · HP / Init / Move / TPR / Reach / AP | Build since 2026-11-13 (test stats) |
+| Monster | Kin | Descriptive themes | Shape · HP / Init / Move / TPR / Reach / AP | Current prototype stats (not approved defaults) |
 |---|---|---|---|---|
 | **Blaze Tiger** | Beast | flame, hunting | skirmisher · 7 / 7.0 / 5 / 1 / 2 / 3 | 5 / 7.0 / 5 / 1 / 2 / 3 |
 | **Ember Hawk** | Winged | embers, flight | swift · 5 / 9.0 / 5 / 2 / 2 / 3 | 3 / 9.0 / 5 / 2 / 3 / 2 |

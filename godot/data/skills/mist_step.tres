@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_bo"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2_skill"]
+
+[sub_resource type="Resource" id="Resource_zone"]
+script = ExtResource("1_bo")
+op = "create_zone"
+zone = &"slowing"
+zone_rounds = 2
+
+[resource]
+script = ExtResource("2_skill")
+id = &"mist_step"
+display_name = "Mist Step"
+kind = "move"
+description = "2 AP · walk up to full effective Movement, blocked by props and monsters · moves · creates Slowing Zone for 2 rounds on vacated path cells, including the starting cell but not the landing cell."
+content_status = "simulation"
+status = "Simulation-only gameplay candidate; unapproved working experiment, unpriced; recombines existing movement and zone rules."
+internal_calc_cost = -1.0
+ap_cost = 2
+move_path = "walk"
+blocked_by_objects = true
+blocked_by_monsters = true
+ground_costs = true
+distance_mod = 0
+fixed_distance = 0
+board_ops = Array[ExtResource("1_bo")]([SubResource("Resource_zone")])

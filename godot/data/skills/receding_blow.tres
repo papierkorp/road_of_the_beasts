@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"receding_blow"
+display_name = "Receding Blow"
+kind = "strike"
+description = "2 AP · Jab shape · strikes for 2 damage with normal Strike push and the user's Kin effect, then attempts to retreat 1 under the existing retreat rules. Winged still retreats only once. No additional board operations."
+content_status = "simulation"
+status = "Simulation-only gameplay candidate; unapproved working experiment, unpriced; recombines existing Strike and retreat rules."
+internal_calc_cost = -1.0
+ap_cost = 2
+strike_shape = "jab"
+strike_damage = 2
+kin_effect = true
+self_retreat = true

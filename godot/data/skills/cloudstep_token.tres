@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+id = &"cloudstep_token"
+display_name = "Cloudstep Token"
+kind = "move"
+description = "1 AP · once per battle · free path up to effective Movement + 2, passing over props and monsters and ignoring ground movement costs; requires a legal landing cell. No flight, AP bonus, damage or board operations. A one-shot movement skill occupying a kit slot, not a slot-free consumable item."
+content_status = "simulation"
+status = "Simulation-only gameplay candidate; unapproved working experiment, unpriced; recombines existing Glide movement, distance modifier and repetition limit."
+internal_calc_cost = -1.0
+ap_cost = 1
+repetition = "once_per_battle"
+move_path = "free"
+blocked_by_objects = false
+blocked_by_monsters = false
+ground_costs = false
+distance_mod = 2
+fixed_distance = 0

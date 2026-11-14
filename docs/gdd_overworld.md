@@ -7,8 +7,8 @@
 
 - **Confirmed:** no fixed monster aspects, aspect triangle, replacement elements or Attunement. Free-form themes and concrete effects imply no affinity, matchup or learning restriction; species define learnlists. This supersedes older aspect-based proposals and prototype descriptions.
 
-- **Authority:** [gdd_skills.md](gdd_skills.md) alone defines monster skills: §1 kit/access, §2 shared data model/construction fields, §3 execution profiles, §4 effect/board contracts, §5 construction costs/AP efficiency, §6 slot development/replacement/upgrades, §7 validation, §8 Kin Strikes/movement, §9 passives, §10 species assignments, §11 concrete skill records.
-- This document owns meta integration, progression economy, ritual logistics, still-open day-AP costs and independent tamer-skill/loadout systems; gdd_battle owns runtime execution/resolution. Historical prototype notes override neither.
+- **Authority:** [gdd_skills.md](gdd_skills.md) alone defines monster skills: §1 kit/access, §2 the skill card, §3 what a skill does itself, §4 what it creates, §5 value and prices (open), §6 slot development/replacement/upgrades, §7 data and validation, §8 Strikes and movement, §9 passives, §10 kits, §11 the skill list. [Battle §4](gdd_battle.md#4-battlefield) owns what ground, zones and props do and when.
+- This document owns meta integration, progression economy, ritual logistics, still-open day-AP costs and independent tamer-skill/loadout systems; gdd_battle owns runtime execution/resolution. Historical prototype notes override neither. **Battle first:** Overworld development waits until the Battle stands and the user accepts it; meta drafts do not constrain Battle decisions ([temp_todo.md](temp_todo.md#recommended-work-order)).
 
 A wuxia **management + cultivation layer** around deterministic grid battles (gdd_battle.md) and monster collection (gdd_monsters.md): a disrespected clan beast tamer builds a city business empire and cultivates toward immortality.
 
@@ -60,7 +60,7 @@ The overworld prepares a closed, deterministic fight and reads its result (rules
 | Tamer skills | [§6.4](#64-tamer-skills): authored effects and usage |
 | Medicines / arrays *(planned)* | [§6.6](#66-pills--medicines), [§6.8](#68-arrays-artifacts-for-places) and [§7.9](#79-inventory-and-loadout): items and pre-battle selection |
 
-- **No hidden information:** both sides' full sheets/loadouts are known pre-battle (gdd_battle pillar 6). Wild monsters visually telegraph Kin/themes; engaging reveals the exact sheet. Team selection/inspection follows [§2.6](#26-action-catalog).
+- **No hidden information:** both sides' full sheets/loadouts are known pre-battle ([Battle §1.2](gdd_battle.md#12-battle-design-pillars)). Wild monsters visually telegraph Kin/themes; engaging reveals the exact sheet. Team selection/inspection follows [§2.6](#26-action-catalog).
 - **Fixed loadout:** choose *what* before battle, *when* during it; all effects are deterministic and previewed. Medicines and some arrays are consumed; tamer skills are not.
 - Battle reads only finished unit sheets/loadouts, never level-based bonuses, and returns **facts, not rewards**; the overworld values them.
 
@@ -436,6 +436,7 @@ BREAKTHROUGH  High → next stage's Lower
 ### 6.3 Stage Unlock Table
 
 - **[Skills §1](gdd_skills.md#1-the-kit)** owns starting kit/legal access; table covers stage integration only; rarity slots and development steps: [Monsters §5.1](gdd_monsters.md#51-monster-rarity)/[§5.3](gdd_monsters.md#53-monster-progression-the-18-steps). Progression adds *choices/modes*, not basic verbs—battles must never lack options.
+- **Battle-facing status:** a viable start and alternative upgrade paths are confirmed goals, not approval of the table's numeric starting stats or unlock thresholds. Stat prices, frames and budgets remain unvalidated ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)); skill prices remain open ([Skills §5](gdd_skills.md#5-value-and-prices)). Starter affordability and developed states need Battle validation before meta pacing is tuned ([temp_todo.md](temp_todo.md), T02/T03/T05/T13).
 
 |     Stage      |                            Monster unlock                            |                                     Player unlock                                      |
 |----------------|----------------------------------------------------------------------|----------------------------------------------------------------------------------------|

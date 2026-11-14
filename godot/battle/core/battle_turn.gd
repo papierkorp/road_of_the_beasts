@@ -268,11 +268,11 @@ static func _end_round(b: Battle) -> void:
 static func _positional(b: Battle) -> int:
 	var hits: Array = []
 	var held := [0, 0]
-	for p in BattleExperiment.well_squares(b.board.size):
-		var holder := b.any_unit_at(p)
-		var vein := b.board.at(p)
-		if vein.ground != GroundDef.WELL:
+	for vein in b.board.cells:
+		if BattleExperiment.wells <= 0 or vein.ground != GroundDef.WELL:
 			continue
+		var p: Vector2i = vein.pos
+		var holder := b.any_unit_at(p)
 		if holder != null:
 			vein.owner_side = holder.side         # whoever stands on it has touched it
 		var side := vein.owner_side if BattleExperiment.vein_touch else (holder.side if holder != null else -1)

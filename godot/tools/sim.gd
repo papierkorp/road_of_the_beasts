@@ -19,7 +19,7 @@ extends SceneTree
 ##   --experiment props   build runs: one block without props, then one per catalogue prop
 ##                        (--pairs N mirrored pairs each, default 2)
 ##   --experiment bots    one block per bot pairing
-##   --trace              one battle, with the board printed before every turn
+##   --trace              one battle, board before every turn and detailed event timeline after battle
 ##   --variant a,b        open test switches (battle/core/battle_experiment.gd): push=2 /
 ##                        push=slide (Strike and Surge pushes and pulls move further) ·
 ##                        kinpush (Beast Strikes push, a Spirit Strike trades squares)
@@ -36,6 +36,8 @@ extends SceneTree
 ##                        · for this run only: swap=old>new (kits), hp=±N, hpmin=N, hpmax=N,
 ##                        stat=monster.field:value, tprmax=N, apmin=N, surgedmg=±N, strikedmg=N, zoneonce / castonce (zone
 ##                        skills / all placed skills once per round)
+##                        · currentap=N / currentonce (all in-game PUSH/PULL zone skills: positive AP / once per round)
+##                        · openmap (remove preplaced props only) · lifethread (one existing Life Thread per fielded unit)
 ##   --no-kind-a / -b K   the bot of side 0 / 1 never uses skills of kind K (what is the kind worth)
 ##   --shield-once        test change: every shield zone skill is once per global round
 ##   --pressure N         late-round pressure starts N rounds later (negative: earlier)
@@ -58,8 +60,12 @@ var _mix_kits := false
 var _mix_skills := false
 var _mix_stats := false
 var _gen_skills := 0
+var _current_ap := 0
+var _current_once := false
+var _open_map := false
+var _life_thread := false
 var _generated: Array[BattleSkillDef] = []
-const DAMAGE_KINDS := ["strike", "surge", "ground", "collision", "fall", "collapse", "aftermath", "arena"]
+const DAMAGE_KINDS := ["strike", "surge", "ground", "collision", "fall", "collapse", "aftermath", "arena", "well", "flank"]
 const OPTIONS: Array[String] = ["bot-a", "bot-b", "team-a", "team-b", "board", "props", "experiment", "pairs", "trace", "help",
 	"variant", "shield-once", "pressure", "compact", "compact-head", "paired", "no-kind-a", "no-kind-b"]
 const HELP := "sim.gd -- [battles] [mode 1v1|2v2|3v3|5v5] [seed] [state] [kits] [--team-a monsters] [--team-b monsters]\n" \
@@ -175,6 +181,10 @@ func _run() -> int:
 ## Sets the experiment switches from a comma list ("" = the confirmed rules).
 func _apply_variant(text: String) -> String:
 	BattleExperiment.reset()
+	_current_ap = 0
+	_current_once = false
+	_open_map = false
+	_life_thread = false
 	_mix_kits = false
 	_mix_skills = false
 	_mix_stats = false
@@ -184,6 +194,16 @@ func _apply_variant(text: String) -> String:
 		var key := kv[0]
 		var val := kv[1] if kv.size() > 1 else ""
 		match key:
+			"currentap":
+				if kv.size() != 2 or not val.is_valid_int() or val.to_int() < 1:
+					return "currentap needs a positive integer (got '%s')" % val
+				_current_ap = val.to_int()
+			"currentonce":
+				_current_once = true
+			"openmap":
+				_open_map = true
+			"lifethread":
+				_life_thread = true
 			"push":
 				BattleExperiment.push_steps = 99 if val == "slide" else maxi(1, val.to_int())
 			"kinpush":
@@ -327,7 +347,7 @@ func _apply_variant(text: String) -> String:
 					if sd.kind == BattleSkillDef.SURGE:
 						sd.surge_turns = maxi(1, val.to_int())
 			_:
-				return "unknown variant '%s' (push, kinpush, step, jab, move, freeap, freemod, mixkits, mixskills, mixstats, genskills, veinhold, unfairsurge, calm, surgewall, surgeground, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, groundfade, trapfade, startback, trapcap)" % key
+				return "unknown variant '%s' (push, kinpush, step, jab, move, freeap, freemod, mixkits, mixskills, mixstats, genskills, veinhold, unfairsurge, calm, surgewall, surgeground, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, currentap, currentonce, openmap, lifethread, groundfade, trapfade, startback, trapcap)" % key
 	if _defence_ap > 0:
 		for sid in BattleContent.shared().skills:
 			var sd: BattleSkillDef = BattleContent.shared().skills[sid]
@@ -338,6 +358,15 @@ func _apply_variant(text: String) -> String:
 			var sd: BattleSkillDef = BattleContent.shared().skills[sid]
 			if sd.kind == BattleSkillDef.ZONE and sd.zone != null and sd.zone.has_tag(FieldEffect.SHIELD):
 				sd.ap_cost = _shield_ap           # 99 = nobody can pay for it
+	if _current_ap > 0 or _current_once:
+		for sid in BattleContent.shared().skills:
+			var sd: BattleSkillDef = BattleContent.shared().skills[sid]
+			if ContentStatus.in_game(sd) and sd.kind == BattleSkillDef.ZONE and sd.zone != null \
+					and (sd.zone.has_tag(FieldEffect.PUSH) or sd.zone.has_tag(FieldEffect.PULL)):
+				if _current_ap > 0:
+					sd.ap_cost = _current_ap
+				if _current_once:
+					sd.repetition = "once_per_round"
 	return ""
 
 
@@ -359,6 +388,9 @@ func _series(setup: Dictionary, label: String) -> int:
 	var by_kit := {}                      # mixkits: kit donor -> [played, won]; "body+kit" -> the same
 	var kit_of := {}                      # mix variants: unit id -> tags of what it drew in this battle
 	var damage := {}                      # kind -> total
+	var damage_by_source := {}            # kind -> source -> [damage sum, positive instances]
+	var activations := {}                 # skill -> total activation events
+	var repeated_activations := {}        # skill -> second and later activations within one turn
 	var counts := {&"surge_declared": 0, &"strike": 0, &"cast": 0, &"prop_destroyed": 0, &"defeated": 0}
 	var props_placed := {}                # prop id -> count at battle start
 	var skills_used := {}                 # skill id -> uses
@@ -373,12 +405,19 @@ func _series(setup: Dictionary, label: String) -> int:
 	var well_held := [0, 0, 0, 0, 0]     # Wellsprings held at round ends by side 0, side 1; round ends counted; bonus squares taken by side 0, side 1
 	# battles that reached late-round pressure: [HP leader won, HP leader lost, HP level, Draw or timeout after a lead]
 	var lead := [0, 0, 0, 0]
-	var length := [0, 0, 0, 0, 0, 0]       # battles under 3 rounds, over 7, over 10; the longest battle; under 2, over 5 (target 2–5)
+	var length := [0, 0, 0, 0, 0, 0]       # battles under 3 rounds, over 7, over 10; the longest battle; under 2, over 5 (mean target 3–5)
+	var round_histogram := {}
+	var outliers: Array[String] = []
+	var slots_by_skill := {}
+	_fielded.clear()
 	var unacted := 0                       # monsters defeated before their own first turn
+	var unacted_battles := 0
 	var first_defeat := [0, 0]             # rounds of the first defeat summed, battles with a defeat
 	for i in n:
 		if setup["paired"]:
 			rng.seed = seed_value * 1000003 + i
+		var battle_seed: int = seed_value * 1000003 + i if setup["paired"] else seed_value
+		var start_rng_state: int = rng.state
 		var b: Battle
 		if builds:
 			var made := Runner.make_battle(mode, setup["teams"], setup["board"], rng, setup["props"])
@@ -392,6 +431,10 @@ func _series(setup: Dictionary, label: String) -> int:
 			var r := BattleRequest.from_ids(mode, p, e)
 			r.board_seed = rng.randi_range(1, 1 << 30) if setup["board"] == "seeded" else 0
 			b = BattleSetup.build(r)
+		if _open_map:
+			# Board-only removal: no destruction, aftermath, RNG draw or regeneration.
+			for prop in b.board.props():
+				b.board.remove_prop(prop)
 		kit_of.clear()
 		if _mix_kits or _mix_skills:
 			var donors := content.game_monster_ids()
@@ -454,6 +497,11 @@ func _series(setup: Dictionary, label: String) -> int:
 		pressure_from = b.voidscar_from
 		for prop in b.board.props():
 			props_placed[prop.def.id] = int(props_placed.get(prop.def.id, 0)) + 1
+		if _life_thread:
+			for id in b.roster:
+				var unit: BattleUnit = b.units[id]
+				if unit.on_field:
+					unit.life_thread = true
 		b.begin()
 		var guard := 0
 		var hp_at_pressure: Array = []
@@ -473,6 +521,15 @@ func _series(setup: Dictionary, label: String) -> int:
 			draws += 1
 		else:
 			wins[b.winner_side] += 1
+		round_histogram[b.round_number] = int(round_histogram.get(b.round_number, 0)) + 1
+		if not setup["compact"] and (b.round_number < 2 or b.round_number > 5):
+			var teams: Array[PackedStringArray] = [PackedStringArray(), PackedStringArray()]
+			for id in b.roster:
+				var unit: BattleUnit = b.units[id]
+				teams[unit.side].append(String(unit.sheet.species_id))
+			var winner := "timeout" if not b.over else ("Draw" if b.draw else "side %d" % b.winner_side)
+			outliers.append("| %d | %d | %d | %s | %s | %s | %d |" % [
+				i + 1, battle_seed, start_rng_state, ", ".join(teams[0]), ", ".join(teams[1]), winner, b.round_number])
 		rounds_total += b.round_number
 		length[0] += 1 if b.round_number < 3 else 0
 		length[1] += 1 if b.round_number > 7 else 0
@@ -498,6 +555,10 @@ func _series(setup: Dictionary, label: String) -> int:
 		var acted := {}                   # unit id -> it has started a turn of its own
 		var event_round := 1
 		var had_defeat := false
+		var had_unacted_defeat := false
+		var turn_activations := {}
+		if setup["trace"]:
+			print("Event timeline after battle (round · event dictionary):")
 		extra["left"] += b.surges.size()
 		for ev in b.events:
 			match ev["type"]:
@@ -523,9 +584,11 @@ func _series(setup: Dictionary, label: String) -> int:
 					well_held[2] += 1
 				&"turn_started":
 					acted[ev["who"]] = true
+					turn_activations.clear()
 				&"defeated":
 					if not acted.has(ev["who"]):
 						unacted += 1
+						had_unacted_defeat = true
 					if setup.get("debug", false):
 						print("DBG round %d: %s defeated by %s (acted %s)" % [event_round, ev["who"], last_kind.get(ev["who"], "other"), acted.has(ev["who"])])
 						print("DBGHIT round %d | %s | hp %d | %s" % [event_round, b.units[ev["who"]].sheet.species_id, b.units[ev["who"]].max_hp, " + ".join(hit_log.get(ev["who"], PackedStringArray()))])
@@ -560,13 +623,45 @@ func _series(setup: Dictionary, label: String) -> int:
 					extra["enemy_dmg" if foe else "own_dmg"] += int(ev["amount"])
 					if String(ev.get("source", "")).ends_with("(edge)"):
 						extra["edge_dmg"] += int(ev["amount"])
+			if setup["trace"] and ev["type"] in [&"turn_started", &"cast", &"strike", &"moved", &"damage", &"collision", &"defeated", &"round_started", &"displaced", &"survived", &"wells_held"]:
+				print("round %d · %s" % [event_round, str(ev)])
 			if ev["type"] == &"damage":
+				var raw_kind := String(ev["kind"])
+				var source := String(ev.get("source", ""))
+				if not damage_by_source.has(raw_kind):
+					damage_by_source[raw_kind] = {}
+				var sources: Dictionary = damage_by_source[raw_kind]
+				if not sources.has(source):
+					sources[source] = [0, 0]
+				sources[source][0] += int(ev["amount"])
+				if int(ev["amount"]) > 0:
+					sources[source][1] += 1
 				damage[ev["kind"]] = int(damage.get(ev["kind"], 0)) + int(ev["amount"])
 			elif counts.has(ev["type"]):
 				counts[ev["type"]] += 1
 			if ev["type"] in [&"surge_declared", &"cast", &"strike", &"moved"] and ev.has("skill"):
 				var key := String(ev["skill"])
+				# Only movement events use display names; resolve against the actor's actual kit.
+				if ev["type"] == &"moved" and key != "Step":
+					var actor: BattleUnit = b.units[ev["who"]]
+					for sk in actor.sheet.skills:
+						if sk.kind == BattleSkillDef.MOVE and sk.display_name == key:
+							key = String(sk.id)
+							break
 				skills_used[key] = int(skills_used.get(key, 0)) + 1
+				# These are one-per-activation events, not later zone/displacement/damage ticks.
+				# Events carry no slot; use actor + resolved skill as the fallback identity.
+				if key != "Step":
+					var actor_id := String(ev["who"])
+					if not turn_activations.has(actor_id):
+						turn_activations[actor_id] = {}
+					var actor_uses: Dictionary = turn_activations[actor_id]
+					activations[key] = int(activations.get(key, 0)) + 1
+					if actor_uses.has(key):
+						repeated_activations[key] = int(repeated_activations.get(key, 0)) + 1
+					actor_uses[key] = true
+		if had_unacted_defeat:
+			unacted_battles += 1
 		if setup.get("debug", false):
 			print("DBG end: winner %s after %d rounds" % [str(b.winner_side) if b.over and not b.draw else "none", b.round_number])
 		if b.over and final_kind != "":
@@ -575,6 +670,8 @@ func _series(setup: Dictionary, label: String) -> int:
 			var u: BattleUnit = b.units[id]
 			for sk in u.sheet.skills:              # what the kits offer, by skill kind
 				_fielded[sk.id] = true
+				var skill_id := String(sk.id)
+				slots_by_skill[skill_id] = int(slots_by_skill.get(skill_id, 0)) + 1
 				slots_by_kind[sk.kind] = int(slots_by_kind.get(sk.kind, 0)) + 1
 			var k := "%s · side %d" % [u.sheet.species_id, u.side] if builds else String(u.sheet.species_id)
 			if not by_monster.has(k):
@@ -643,7 +740,7 @@ func _series(setup: Dictionary, label: String) -> int:
 	else:
 		print("| Loadout / AI | no tamer skills · bots `%s` (side 0) and `%s` (side 1), tools/lib/sim_bots.gd |" % bots)
 	if _variant_text(setup) != "build rules":
-		print("| Experiment | %s (test switches of battle/core/battle_experiment.gd) |" % _variant_text(setup))
+		print("| Experiment | %s (in-memory simulation variants / battle experiment switches) |" % _variant_text(setup))
 	print("| Not covered | 2×2 and air units, tamer skills, human play%s |" % (", Mountains" if builds and setup["board"] == "flat" else ""))
 	print("")
 	print("| Battles | Side 0 / side 1 / Draw / timeout | Mean rounds | Defeats per battle | Props destroyed per battle |")
@@ -664,6 +761,29 @@ func _series(setup: Dictionary, label: String) -> int:
 	print(rule + "|---|")
 	print(row + " | 100 % |")
 	print(row2 + " | %s |" % per.call(total_damage, n))
+	print("")
+	print("Damage by raw event kind and source (collision rows are collision damage only; no fall reclassification):")
+	print("| Damage kind | Source | Damage sum | Positive instances |")
+	print("|---|---|---|---|")
+	var source_kinds := damage_by_source.keys()
+	source_kinds.sort()
+	for kind: String in source_kinds:
+		var sources: Dictionary = damage_by_source[kind]
+		var source_names := sources.keys()
+		source_names.sort()
+		for source: String in source_names:
+			print("| %s | %s | %d | %d |" % [kind, source if source != "" else "(unspecified)", sources[source][0], sources[source][1]])
+	if not damage_by_source.has("collision"):
+		print("| collision | (none) | 0 | 0 |")
+	print("")
+	print("Skill activations (not later zone ticks; repeats count second and later actor + skill activations within the same turn):")
+	print("| Skill | Activations | Repeated activations in same turn |")
+	print("|---|---|---|")
+	var activation_names := activations.keys()
+	activation_names.sort()
+	for sid: String in activation_names:
+		print("| %s | %d | %d |" % [sid, activations[sid], int(repeated_activations.get(sid, 0))])
+	print("Defeats before own first turn: %d exact; battles with at least one: %d / %d" % [unacted, unacted_battles, n])
 	print("")
 	print("| Surges declared | Surge damage per Surge | Strikes | Strike damage per Strike | Zone / board casts |")
 	print("|---|---|---|---|---|")
@@ -687,19 +807,45 @@ func _series(setup: Dictionary, label: String) -> int:
 		print("| %s | %d | %d %% |" % [k, by_monster[k][0], roundi(100.0 * by_monster[k][1] / by_monster[k][0])])
 	if not by_kit.is_empty():
 		print("")
-		print("| Random draw (mixkits / mixskills / mixstats) | Played | Win rate |")
-		print("|---|---|---|")
+		print("| Random draw (mixkits / mixskills / mixstats) | Played | Won | Win rate |")
+		print("|---|---|---|---|")
 		var kk_names := by_kit.keys()
 		kk_names.sort()
 		for kk: String in kk_names:
-			print("| %s | %d | %d %% |" % [kk, by_kit[kk][0], roundi(100.0 * by_kit[kk][1] / by_kit[kk][0])])
+			print("| %s | %d | %d | %.2f %% |" % [kk, by_kit[kk][0], by_kit[kk][1], 100.0 * by_kit[kk][1] / by_kit[kk][0]])
 	print("")
-	print("Skill uses per battle: %s" % _pairs(skills_used, n, false))
+	print("| Fielded skill | Uses | Fielded slots | Uses/slot |")
+	print("|---|---|---|---|")
+	var skill_names := slots_by_skill.keys()
+	skill_names.sort_custom(func(a: String, c: String) -> bool:
+		var ua := int(skills_used.get(a, 0))
+		var uc := int(skills_used.get(c, 0))
+		return ua > uc if ua != uc else a < c)
+	for sid: String in skill_names:
+		var uses := int(skills_used.get(sid, 0))
+		print("| %s | %d | %d | %s |" % [sid, uses, slots_by_skill[sid], per.call(uses, slots_by_skill[sid])])
+	print("Step uses (not a kit slot): %d" % int(skills_used.get("Step", 0)))
+	print("")
 	print("Reached late-round pressure: HP leader won %d, lost %d, HP level %d, no winner %d" % lead)
 	print("Rounds: under 3 in %d %%, over 7 in %d %%, over 10 in %d %% of the battles, longest %d; first defeat in round %s (mean); monsters defeated before their own first turn: %s per battle" % [
 		roundi(100.0 * length[0] / n), roundi(100.0 * length[1] / n), roundi(100.0 * length[2] / n), length[3],
 		("%.1f" % (float(first_defeat[0]) / first_defeat[1])) if first_defeat[1] > 0 else "—", per.call(unacted, n)])
-	print("Target 2-5 rounds: ended in round 1 in %d %%, after round 5 in %d %% of the battles" % [roundi(100.0 * length[4] / n), roundi(100.0 * length[5] / n)])
+	print("Mean target 3-5 rounds; outliers <2 / >5: ended in round 1 in %d %%, after round 5 in %d %% of the battles" % [roundi(100.0 * length[4] / n), roundi(100.0 * length[5] / n)])
+	print("")
+	print("| Exact round count | Battles | Share |")
+	print("|---|---|---|")
+	var round_keys := round_histogram.keys()
+	round_keys.sort()
+	for rounds: int in round_keys:
+		print("| %d | %d | %.2f %% |" % [rounds, round_histogram[rounds], 100.0 * int(round_histogram[rounds]) / n])
+	print("")
+	print("Outliers (<2 or >5 rounds), including Draws and timeouts:")
+	print("| Battle (1-based) | Seed | RNG state before setup | Team side 0 | Team side 1 | Winner / result | Rounds |")
+	print("|---|---|---|---|---|---|---|")
+	for line in outliers:
+		print(line)
+	if outliers.is_empty():
+		print("none")
 	if label != "":
 		print("")
 	return 0

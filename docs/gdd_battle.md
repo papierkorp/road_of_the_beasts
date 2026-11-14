@@ -28,22 +28,22 @@ The encounter chooses a mode within the player's available team size; stage avai
 
 ### 1.2 Battle Design Pillars
 
-**Status:** the pillars were rewritten on 2026-11-13 with the reshape of square and skills *(user decisions of that day; built in the Godot build, bot runs only, not played; [temp_todo.md](temp_todo.md) T40)*. Numbers in this document are working values.
+**Status:** the pillars reflect the square and skill reshape *(user decisions 2026-11-13; implemented in the Godot build)*. First human play and feedback have occurred; systematic gameplay and balance validation remain open ([temp_todo.md](temp_todo.md), T13/T40). Numbers in this document are working values.
 
-1. **Control squares, not just units** — every skill works on squares: a Strike hits a shape next to its user, everything else creates ground, a zone or a prop there ([skill card](gdd_skills.md#2-the-skill-card)). The board is the weapon.
+1. **Control squares, not just units** — skills act through a Strike, movement, an effect on the user, or the creation of ground, a zone or a prop ([skill card](gdd_skills.md#2-the-skill-card)). The board is the weapon.
 2. **Deterministic and readable** — no dice, no hidden information; before confirming, the player sees which squares a skill takes, what it creates there and where every pushed monster lands.
 3. **A square has two layers with one role each** — **ground acts at a moment** (on entering, on leaving, at the end of the occupant's turn, at the end of the round), **a zone acts while a monster stands in it** (stat changes; push or pull at the end of its turn). A monster or a prop occupies the square. There is no height, no air layer and no Surge or trap marker (§4.3).
 4. **A skill only delivers** — what a ground, a zone or a prop does, and when, is written once, in its own definition (§4.6, §4.7, §4.10); a skill names what it creates. Learning the grounds and zones is learning the game.
 5. **Fair damage** — damage from a distance never hits a monster that has had no turn of its own since the cast: it comes only from ground, and ground never acts at the start of a turn or round. Immediate damage exists only as a Strike on a neighbouring square (§6.1).
 6. **Small HP, no one-hit defeats** — the highest single hit is 2 and the lowest HP 3 *(working values)*: no hit takes a monster from full HP to zero, but two mistakes do.
 7. **Hold the Dragon Veins** — the win condition is “all enemy monsters defeated”; the way there is square control: a Dragon Vein works for the side that touched it last, and whoever waits loses HP (§4.2).
-8. **Being moved is movement** — every effect that reacts to entering or leaving a square also reacts to a push or pull; displacement is the strongest tool on the board ([simulation_log.md](simulation_log.md) S017/S018).
+8. **Being moved is movement** — every effect that reacts to entering or leaving a square also reacts to a push or pull; displacement combines with ground, collision and Dragon Vein control.
 9. **One skill source** — monster-skill authoring and access: [gdd_skills.md](gdd_skills.md), linked from [§5](#5-skill-integration). No aspects, no element triangle, no attunement.
 
 **Battle goals** *(user, 2026-11-12; restated 2026-11-13)* — what a battle has to deliver; the pillars above are the means, and rules, content and prices are judged against these goals ([temp_todo.md](temp_todo.md) T13 measures them):
 - **Influence and consequence:** the player's decisions shape the board and the battle and have visible consequences.
 - **Deterministic:** no dice, no hidden information.
-- **Short:** a battle of about 15 rounds is already very long. **Target for 3v3 *(user, after first play of the reshaped build, 2026-11-13; replaces 3–7 rounds)*:** **2–5 rounds**, ended by fighting and not by late-round pressure (§4.2). In two rounds every monster already makes at least six decisions, depending on its AP and turns. Where possible no monster is defeated in round 1.
+- **Short:** a battle of about 15 rounds is already very long. **Target for 3v3 *(user, 2026-11-13)*:** **3–5 rounds on average**, with battles **under 2 or over 5 rounds** measured separately as outliers, ended by fighting and not by late-round pressure (§4.2). Even short battles must offer meaningful decisions through AP, turns and positioning. Where possible no monster is defeated in round 1.
 - **Tactical:** repeating one skill must not win a battle; position and combination decide.
 - **Every skill has its situation:** each skill is the right choice in some situations and none in all.
 - **Fair defeats:** a loss reads as the player's own mistake; no monster is defeated without its player having had a chance to act.
@@ -51,7 +51,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 - **Monsters differ:** different monsters offer different ways to play, and every stat matters ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)).
 - **Win condition:** the battle ends when every monster of one side has 0 HP.
 
-**Known gaps of the reshape** *(2026-11-13)*: in bot runs initiative and Movement still show no measurable value, the hand-made kits end a quarter of the battles in under 3 rounds, and the fragile monsters lose more often than the sturdy ones ([simulation_log.md](simulation_log.md) S018/S019); squares that act once and vanish are a parked idea. Open points: T40.
+**Development and validation:** a viable starting build and alternative upgrade paths must be tested together, including starter-kit affordability, meaningful stat roles and the battle goals above. Concrete starting stats and upgrades are not approved by bot results. Stat prices, frames and budgets remain unvalidated ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)); skill prices remain open ([Skills §5](gdd_skills.md#5-value-and-prices)). Open checks and candidate comparisons: [temp_todo.md](temp_todo.md), T02/T03/T05/T13/T40; measurements: [simulation_log.md](simulation_log.md).
 
 ---
 
@@ -160,7 +160,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 
 ### 4.2 Dragon Veins, Surrounding and Late-Round Pressure
 
-**Status: working draft** *(user decisions 2026-11-13; standard of the Godot build; only bot runs, [simulation_log.md](simulation_log.md) S013–S019; not played; open points: T39/T40 in [temp_todo.md](temp_todo.md))*. The win condition is unchanged: all enemy monsters defeated. Holding squares is the way there, and whoever waits loses HP.
+**Status: working draft** *(user decisions 2026-11-13; standard of the Godot build; first human play and feedback have occurred, systematic validation remains open: T13/T39/T40 in [temp_todo.md](temp_todo.md))*. The win condition is unchanged: all enemy monsters defeated. Holding squares is the way there, and whoever waits loses HP.
 
 - **Dragon Veins:** three squares on the centre row of the 3v3 board (7×7: x = 1, 3, 5) are **Dragon Vein**, a ground type that nothing changes ([§4.7](#47-ground--neutral-hazard-and-blessed)). No prop may stand on one and no ground is laid on it; a zone may lie on it. Count and squares for other modes are open (boards with an even side have no centre row; the build places none there). *(The squares were called Wellspring until 2026-11-13.)*
 - **Ownership by last touch** *(user decision 2026-11-13)*: a Dragon Vein belongs to the side whose monster **touched it last**: walked onto or across it, was pushed or pulled onto it, or stands on it. It stays with that side after the monster has left, until a monster of the other side touches it. At the start nobody owns one.
@@ -468,13 +468,15 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 - Battle logic stays headless and engine-independent; runtime state: [§4.4](#44-square-data-model)
 - Preview, AI and resolution share the same deterministic rules and show what a skill creates and where every displaced monster lands
 
+**Dragon Vein implementation boundary:** round-end resolution reads actual Dragon Vein ground cells, not a fixed list of generated positions. Normal 3v3 generation still places the three centre-row veins of §4.1; a single central vein is a tested candidate, not an adopted default. Simulation-only skills/props and push/pull-zone AP overrides likewise change no GDD rule or active content.
+
 **Implementation status (not a design source):** `godot/battle` implements this document with unvalidated test content; its layout, extension points, test switches and the commands for its automated checks are in [godot/README.md](../godot/README.md). **The code for the removed mechanics** (height, air layer, Surges and traps) is still in the battle core and unused by the game; removing it is part of T40. Readings the code had to choose and its other open points: [Implementation](temp_todo.md#implementation). The implementation approves no draft value.
 
 ### 7.2 Prototype & Playtests
 
 **Builds:**
 
-- `godot/`: main menu → draft sandbox (1, 2 or 3 of the nine monsters with their kits of [Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters), optional test loadout) → placement → **1v1 on 5×5**, **2v2 on 6×6** or **3v3 on 7×7** against an AI team drawn from the rest; the overworld starts battles through the same request. Its **Monster builder** creates or changes monsters (stats, Kin, kit) and leads to the skill builder for new skills ([Skills §7](gdd_skills.md#7-data-and-validation)). Menu → Overview lists every skill, monster, ground, zone and prop file. All content is test data and nothing is validated.
+- `godot/`: main menu → draft sandbox (1, 2 or 3 monsters from the current in-game content, reference kits in [Skills §10](gdd_skills.md#10-kits-of-the-nine-monsters), optional test loadout) → placement → **1v1 on 5×5**, **2v2 on 6×6** or **3v3 on 7×7** against an AI team drawn from the rest; the overworld starts battles through the same request. Its **Monster builder** creates or changes monsters (stats, Kin, kit) and leads to the skill builder for new skills ([Skills §7](gdd_skills.md#7-data-and-validation)). Menu → Overview exposes the content and its status; `approved`, `draft` and `experiment` content is available in-game, while `test`, `simulation` and `archived` content is excluded. Content status is not gameplay or balance validation.
 - `tools/html_prototype/battle-prototype-v5-zones-ground.html` is the historical v5 reference and validates nothing of the current design.
 
 **Tools:**
@@ -483,7 +485,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 - `godot/tools/sim.gd`: bot-versus-bot batch runs with win rates per monster, per stat value, per skill and per skill part; results: [simulation_log.md](simulation_log.md).
 - `godot/tools/smoke_ui.gd`: plays the player's side through the real UI headless.
 
-**No gameplay or balance test of the current design by a human has been run.** Bot runs give indications only. Playtest planning and outstanding checks: [temp_todo.md](temp_todo.md), T13.
+**First human play and feedback have occurred; systematic gameplay and balance validation remain open.** Bot runs and automated regression checks do not establish human agency, fun, fairness or balanced prices. Candidate map, skill and AP-cost variants are not adopted rules or content. Playtest planning and outstanding checks: [temp_todo.md](temp_todo.md), T13/T40.
 
 ---
 

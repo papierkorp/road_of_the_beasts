@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="1_prop"]
+
+[resource]
+script = ExtResource("1_prop")
+id = &"reed_screen"
+display_name = "Reed Screen"
+content_status = "simulation"
+internal_calc_cost = -1.0
+prop_class = "inert"
+layer = "ground"
+hp = 1
+heavy = false
+spiky = false
+repel = false
+creatable_by_skill = true
+ground_left = &""
+description = "Simulation-only gameplay candidate; unapproved working experiment, unpriced. Inert 1 HP ground prop: blocks ordinary movement, can be displaced under existing rules, has no aura or aftermath and leaves the underlying ground unchanged on destruction. No ranged-cover rule."
