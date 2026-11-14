@@ -79,12 +79,45 @@ static var surge_at_caster := false
 ## A timed Surge that is due waits until every monster standing on its squares has finished a turn
 ## since the cast (draft T39: nobody is hit by a Surge it had no turn to leave).
 static var surge_fair := true
-## Rule since the reshape of 2026-11-13: a Dragon Vein belongs to the side that touched it last and
-## deals its damage for that side whether or not a monster stands on it. false = only while held.
+## true (GDD rule of the reshape of 2026-11-13, kept by the user after S028): a Dragon Vein belongs to
+## the side that touched it last and deals its damage for that side whether or not a monster stands
+## on it. false = only while a monster stands on it at the round end (measured in S028).
 static var vein_touch := true
 ## Late-round pressure: "idle" (build rule) only at the end of a round in which nobody holds a
 ## Wellspring · "always" as before 2026-11-13 · "none" never.
 static var pressure_mode := "idle"
+## Build rule since 2026-11-14 (user decision): every slotted skill at most `usage_limit` times per
+## turn of its monster (1 unless the skill says more; the universal Step is not slotted). false = no limit.
+static var once_per_turn := true
+## Build default since 2026-11-14 (S025, not a GDD rule): a push or pull zone does not move its
+## occupants when it is cast, only at the end of their turn. true = it also moves them at cast.
+static var zone_cast_push := false
+## false: a monster pushed or pulled into another monster takes the collision damage alone;
+## the blocking monster takes none.
+static var collision_both := true
+## Charged Dragon Veins (draft, S026): every vein is charged at the start of a round. The first
+## monster that touches it (walks onto or across it, is pushed or pulled onto it), or the monster
+## standing on it at the end of its own turn, discharges it: 1 damage to the enemy nearest to the
+## square. Then it is empty until the next round. No ownership and no vein damage at the round end.
+static var vein_charge := false
+## With vein_charge: the discharge deals no damage at once. The side that touched the vein first in
+## the round has won it for that round, wherever its monster stands afterwards, and the vein deals
+## its 1 damage for that side at the end of the round (user idea 2026-11-14, S027).
+static var vein_charge_late := false
+## The universal Step walks up to the monster's Movement for its AP (like Run), instead of 1 square.
+static var step_full_move := false
+## Stamina draft (user idea 2026-11-14, S028/S029; not a rule): the Movement stat is read as Stamina, a
+## pool a monster spends in battle. A slotted movement skill costs 1 Stamina per movement point it
+## uses (a square, or what its ground costs) and reaches at most the range the skill names
+## (`move_range`, 3 unless authored) and never further than the Stamina left. Every monster regains
+## `stamina_regen` at the end of a round, up to its stat. The universal Step stays 1 AP for 1 square
+## and costs no Stamina.
+static var stamina := false
+static var stamina_regen := 1
+## With stamina: a movement skill also costs its AP (false = Stamina only).
+static var stamina_ap := true
+## Board switch: mirrored prop pairs a board starts with (-1 = as the layout or its seed says, 0 = none).
+static var map_props := -1
 
 
 static func reset() -> void:
@@ -118,6 +151,16 @@ static func reset() -> void:
 	surge_at_caster = false
 	surge_fair = true
 	vein_touch = true
+	once_per_turn = true
+	zone_cast_push = false
+	collision_both = true
+	vein_charge = false
+	vein_charge_late = false
+	step_full_move = false
+	stamina = false
+	stamina_regen = 1
+	stamina_ap = true
+	map_props = -1
 
 
 ## The Wellspring squares of a board of this size: evenly spread on the centre row.

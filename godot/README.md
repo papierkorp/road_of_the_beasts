@@ -77,7 +77,7 @@ validates the whole set and shows a new ground, prop and skill built from existi
 | To add | Do this | New code needed when |
 |--------|---------|----------------------|
 | **Ground type** | new `GroundDef` in `data/grounds/`: movement cost, max level, `GroundTrigger`s (start of turn / on enter / end of turn, damage or heal), while-standing `FieldEffect`s, colour | it needs a behaviour element that does not exist yet (a new trigger timing, a new effect tag): extend `GroundTrigger` / `FieldEffect` and the one function that reads them (`BattleDamage.ground_effects`, `BattleStats.contributions`) |
-| **Prop** | new `PropDef` in `data/props/`: layer, HP, `heavy`, aura effects, `PropAftermath` list (damage / push / spawn + pattern), ground left | a new aftermath operation: add it to `PropAftermath` and `BattlePayload._removal_round` |
+| **Prop** | new `PropDef` in `data/props/`: layer, HP, `solid`, `heavy`, `PropAftermath` list (moment `when` + operation + pattern), ground left | a new operation: add it to `PropAftermath` and `BattleProps.collect` |
 | **Zone** | new `BattleZoneDef` in `data/zones/` (effects with base / cap and recipient layers) + a zone skill | a new effect tag (see ground) |
 | **Skill** | new `BattleSkillDef` in `data/skills/`: `kind` picks the active profile (strike, zone, ground, move, buff, passive); fill that profile's group; `board_ops` for ground / zone / prop changes (Surge and height fields are legacy/test-only) | a new execution profile or a new `BoardOp`: add the data fields and one branch in `Battle._use_skill` / the matching `BattlePayload` phase |
 | **Strike shape** | one entry in `StrikeShapes` (offsets, directions, AP) | — |
@@ -103,15 +103,34 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     passive), and the ground, zone or prop it creates (`board_ops`: `ground`, `create_zone`, `create_prop`; a zone
     skill names its zone directly). A Strike leaves them on the struck squares, a movement on the squares it left.
     `SkillGen.card` (`battle/defs/skill_gen.gd`) turns any skill into its card.
-  - **Dragon Veins** (ground `dragon_vein`, three on the centre row of 7×7; `BattleExperiment.wells`) belong to the side
-    that touched them last (`BoardCell.owner_side`, `Battle.touch_veins`; switch `vein_touch`) and deal 1 damage to the
-    nearest enemy of their owner at the end of a round. A monster with two enemies on its eight neighbour squares
+  - **Dragon Veins** (ground `dragon_vein`, three on the centre row of 7×7; `BattleExperiment.wells`) deal 1 damage at the end of a round to the
+    nearest enemy of the side that touched them last (GDD rule, kept by the user after S028; `BoardCell.owner_side`,
+    `Battle.touch_veins`; the board tints an owned vein in its side colour and labels it yours / enemy / unclaimed;
+    `vein_touch` = false: only while a monster stands on it at the round end). A vein takes props like any other ground. A monster with two enemies on its eight neighbour squares
     takes 1 (`flank`). Late-round pressure runs only when nobody owns a vein (`pressure_mode` = `idle`).
   - **Working values:** highest hit 2, lowest HP 3; ground laid in battle lasts 2 rounds (`ground_rounds`); every
     Strike pushes 1; the board edge deals 1 and a spiky prop 2 to a monster moved into it; Step 1 AP, Run 1 AP; authored movement costs vary (including user experiments), with the reference
     non-Run movement skills at 2 AP over the full Movement stat; extra turns count from round 2 (`tpr_from_round`); push and
-    pull zones also move at cast; everyone may rotate a placed shape; a push zone left by a skill that also creates
+    pull zones move only at the end of their occupant's turn, not at cast (build default since 2026-11-14, S025; `zone_cast_push`); everyone may rotate a placed shape; a push zone left by a skill that also creates
     something else points where the placement is turned (`BattleCasting.rot_dir`).
+  - **Build since 2026-11-14 (user decisions and drafts of that day; S028–S030; docs/temp_todo.md T40):**
+    - *Decided:* every slotted skill at most `usage_limit` times per turn of its monster (1 unless the record says
+      more; `once_per_turn` = false switches the limit off) and up to 6 kit slots (kits still hold 4).
+    - *Prop rework (draft, GDD §4.9–§4.11 unchanged):* `PropDef.solid` (false = a walkable prop: blocks no movement,
+      push or Strike line, still has HP); every `PropAftermath` names its moment `when`: `destroyed`, `hit` (lost HP
+      and still stands), `enter` (a monster came onto a walkable prop: a trap, used up) or `round_end`; operations
+      `damage`, `push`, `pull`, `spawn`, `ground`, `zone` on `ring8`, `cardinal4` or `self`. Rules in
+      `battle/core/battle_props.gd`; round order: round-end ground, props, Dragon Veins. Aura props (Banner, Shrine,
+      Totem, Wardstone) are `archived`; the Storm Drum pushes at the round end instead of at turn ends. New: Earth
+      Wall, Thorn Idol, Ember Brazier, Spike Trap, Vortex Trap and seven skills that place props (`raise_wall`,
+      `set_idol`, `light_brazier`, `set_drum`, `set_urn`, `lay_spikes`, `lay_vortex`). Each of the nine kits carries one
+      of them as a fifth slot (gdd_skills §10 still lists four). A multi-square prop is a skill that places several one-square props.
+    - *Stamina (test switch `stamina`, off; S029):* the Movement stat is a pool; a movement skill costs 1 Stamina per
+      movement point of its route, reaches at most `move_range` squares (3) and never further than the Stamina left, and
+      also costs its AP (`stamina_ap` = false: Stamina only); `stamina_regen` (1) comes back at the round end; Step
+      stays 1 AP for 1 square without Stamina.
+    - *Board switches:* `wells` (Dragon Veins on the centre row) and `map_props` (mirrored prop pairs at the start,
+      -1 = layout); the draft screen has number fields for both and for the Stamina per round.
   - **Content:** the in-game pool is status-filtered, not a fixed nine-monster catalogue; it includes the user
     experiment `asdf` and user-built skills. Spread authored stats and kits live in `data/`; `vigor`, `sap` and
     `tempo` (AP and turns), Battle Trance and Time Split are experiments. Retired records are `archived`.
@@ -128,14 +147,15 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   `experiment` and can write it into a kit slot of a monster file. Writing needs the project to run from its folder;
   nothing checks a price.
 - **Monster builder** (`game/monster_builder.gd`; button in the draft sandbox and in the overview): create a monster or
-  change one (name, Kin, six stats, four kit slots), saved to `data/monsters/<id>.tres` (new ones with the status
+  change one (name, Kin, six stats, six kit slots), saved to `data/monsters/<id>.tres` (new ones with the status
   `experiment`) and registered in `BattleContent` and `GameData` (`GameData.register`), so it stands in the team choice at
   once. “New skill” opens the skill builder, which returns to the caller (`SkillBuilder.return_scene`). No price, budget
   or Kin access is checked. Changing an existing monster rewrites its file: Git is the way back.
 - **Test switches** (`battle/core/battle_experiment.gd`, set by `sim.gd --variant` and partly in the draft screen;
   none is a rule): `delay_turn` with `delay_reverse` / `delay_first_round` (postponing a turn), `damage_from_round`
   (a calm first round), `start_back` (back-row starts), `push_steps`, `kin_push`, `no_rotation`, `step_ap` / `jab_ap` /
-  `move_ap`, `soft_pressure`, and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
+  `move_ap`, `soft_pressure`, the switches of S025–S030 (`zone_cast_push`, `once_per_turn`, `vein_touch`, `collision_both`,
+  `vein_charge`, `vein_charge_late`, `step_full_move`, `stamina` / `stamina_regen` / `stamina_ap`, `map_props`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
   `ai_no_kind`. Tests: `tests/battle/test_battle_experiment.gd`.
 - **Not built:** an owner mark for Dragon Veins in the battle view; Dragon Veins on 1v1, 2v2 and 5v5 boards; slot
   development (gdd_skills §6). `MonsterDef.reference_shape` and the overworld `StatShape` still name the six earlier

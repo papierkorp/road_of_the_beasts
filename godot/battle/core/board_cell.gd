@@ -19,6 +19,8 @@ var zone: BoardZone = null
 var surge: int = -1
 ## Dragon Vein (gdd_battle §4.2): the side whose monster touched the square last, -1 = nobody yet.
 var owner_side: int = -1
+## Test switch `vein_charge`: a Dragon Vein that has not been discharged this round.
+var charged := false
 
 
 func _init(p: Vector2i = Vector2i.ZERO) -> void:
@@ -37,6 +39,7 @@ func clone(props_seen: Dictionary) -> BoardCell:
 	c.height = height
 	c.surge = surge
 	c.owner_side = owner_side
+	c.charged = charged
 	if zone != null:
 		c.zone = zone.clone()
 	if prop != null:

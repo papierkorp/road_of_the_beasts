@@ -4,6 +4,10 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
 func after_test() -> void:
 	BattleExperiment.reset()
 

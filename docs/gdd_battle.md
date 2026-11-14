@@ -83,7 +83,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 
 - Pay the resolved monster action's authored Battle-AP cost: **at least 1 Battle-AP, never 0**. This does not redefine tamer/loadout usage.
 - **Step** (every monster): 1 AP, 1 square. Costs of skills: their [skill card](gdd_skills.md#2-the-skill-card); what a skill may cost is open ([Skills §5](gdd_skills.md#5-value-and-prices)). Tamer/loadout costs use their own Overworld sources ([§5.2](#52-tamer-skills-and-battle-loadout)).
-- **Repetition:** a skill may be used any number of times for its AP unless its card says once per round or once per battle ([Skills §2](gdd_skills.md#usage-and-repetition)). A zone may be cast again to level it up, ground laid again to level a hazard. No generic multi-round cooldown system.
+- **Repetition:** each equipped skill may be used once per turn of its monster unless its card names more uses, once per round or once per battle ([Skills §2](gdd_skills.md#usage-and-repetition)). A zone may be cast again to level it up, ground laid again to level a hazard. No generic multi-round cooldown system.
 - **Positioning** competes with attacking for Battle-AP: with AP 2 a monster strikes or moves, with AP 3 it can do both.
 
 ### 2.4 Effect Timing Reference

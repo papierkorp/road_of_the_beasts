@@ -4,6 +4,14 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _opts(b: Battle, i: int, preset: String) -> Dictionary:
 	return BattleMoves.options(b, H.unit(b, i), BattleMoves.profile_of(H.skill(preset)))
 

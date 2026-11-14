@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://data/skills/set_gong.tres" id="s2"]
 [ext_resource type="Resource" path="res://data/skills/gale.tres" id="s3"]
 
+[ext_resource type="Resource" path="res://data/skills/raise_wall.tres" id="9_slot5"]
 [resource]
 script = ExtResource("1")
 id = &"forge_golem"
@@ -20,6 +21,6 @@ move = 1
 tpr = 1
 reach = 3
 ap = 3
-skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
+skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3"), ExtResource("9_slot5")])
 blurb = "Holds a square, strikes two deep, sets a Gong that scatters its neighbours and blows a line of enemies off their squares."
 notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

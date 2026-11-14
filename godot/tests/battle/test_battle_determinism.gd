@@ -5,6 +5,14 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _request(mode: StringName, board_seed := 0) -> BattleRequest:
 	var p: Array[StringName] = [&"blaze_tiger", &"moss_turtle", &"gloom_wolf"]
 	var e: Array[StringName] = [&"hollow_serpent", &"grove_wisp", &"ember_hawk"]

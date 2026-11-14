@@ -21,6 +21,9 @@ const WALK_DIRS: Array[Vector2i] = Board.CARDINAL
 
 
 static func step_profile() -> Dictionary:
+	if BattleExperiment.step_full_move:
+		return {"path": "walk", "objects": true, "monsters": true, "surges": true, "height": false,
+			"ground_costs": true, "distance_mod": 0, "fixed": 0}
 	return {"path": "walk", "objects": true, "monsters": true, "surges": true, "height": false,
 		"ground_costs": false, "distance_mod": 0, "fixed": 1}
 
@@ -28,10 +31,14 @@ static func step_profile() -> Dictionary:
 static func profile_of(s: BattleSkillDef) -> Dictionary:
 	return {"path": s.move_path, "objects": s.blocked_by_objects, "monsters": s.blocked_by_monsters,
 		"surges": s.blocked_by_surges, "height": s.blocked_by_height, "ground_costs": s.ground_costs,
-		"distance_mod": s.distance_mod, "fixed": s.fixed_distance}
+		"distance_mod": s.distance_mod, "fixed": s.fixed_distance, "range": s.move_range}
 
 
 static func distance(b: Battle, u: BattleUnit, prof: Dictionary) -> int:
+	if BattleExperiment.stamina and prof.has("range"):      # the range stands on the skill; haste and slow still count
+		var base: int = int(prof["range"]) if int(prof["range"]) > 0 else 3
+		var reach: int = int(prof["fixed"]) if int(prof["fixed"]) > 0 else maxi(1, base + BattleStats.movement(b, u) - u.sheet.movement + int(prof["distance_mod"]))
+		return mini(reach, u.stamina)                      # every movement point costs 1 Stamina
 	if int(prof["fixed"]) > 0:
 		return int(prof["fixed"])
 	return maxi(1, BattleStats.movement(b, u) + int(prof["distance_mod"]))
@@ -62,7 +69,7 @@ static func _passable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 		if _walled(b, cell):
 			return false
 		if not through_props or flying:
-			if b.board.prop_at(c, u.layer) != null:
+			if b.board.solid_at(c, u.layer) != null:
 				return false
 		var other := b.board.unit_id_at(c, u.layer)
 		if other != &"" and other != u.id and (prof["monsters"] or flying):
@@ -87,7 +94,7 @@ static func _landable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 		var cell := b.board.at(c)
 		if _walled(b, cell):
 			return false
-		if b.board.prop_at(c, u.layer) != null:
+		if b.board.solid_at(c, u.layer) != null:
 			return false
 		var other := b.board.unit_id_at(c, u.layer)
 		if other != &"" and other != u.id:
@@ -118,6 +125,7 @@ static func _entry_harm(b: Battle, u: BattleUnit, from: Vector2i, to: Vector2i) 
 	if u.layer == Board.AIR:
 		return 0
 	return BattleDamage.ground_harm(b, u, GroundTrigger.ON_ENTER, fresh_cells(u, from, to)) \
+		+ BattleProps.enter_harm(b, u, fresh_cells(u, from, to)) \
 		+ BattleDamage.ground_harm(b, u, GroundTrigger.ON_LEAVE, u.cells_at(from))
 
 

@@ -11,6 +11,7 @@ tag = "quicken"
 [resource]
 script = ExtResource("3_g8ntj")
 id = &"shrine"
+content_status = "archived"
 display_name = "Shrine"
 prop_class = "aura"
 hp = 2

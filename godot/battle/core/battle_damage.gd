@@ -149,7 +149,8 @@ static func ground_triggers(b: Battle, u: BattleUnit, timing: String, cells: Arr
 	var parts := ground_effects(b, u, timing, over)
 	var heals: Array = parts["heals"]
 	heals.append_array(extra_heals)
-	if parts["hits"].is_empty() and heals.is_empty():
-		return
-	apply_round(b, parts["hits"], heals)
-	defeat_step(b)
+	if not parts["hits"].is_empty() or not heals.is_empty():
+		apply_round(b, parts["hits"], heals)
+		defeat_step(b)
+	if timing == GroundTrigger.ON_ENTER:
+		BattleProps.enter(b, u, over)         # a trap on the entered squares springs

@@ -92,7 +92,449 @@ Kinds: strike_jab = strike · magma_pounce, cinder_dive, eclipse, gloom_rift, co
 
 **Kit set `a30a9be42850`** (content `2026-11-13.1`; S020): current ten-monster pool (the nine named monsters plus the user experiment `asdf`), with more displacement in the kits and stat zones as extras. Includes the user skills `asdf`, `asdf_2`, `asdf_3` and Blaze Tiger slot 1 `new_skill`, deliberately preserved. The fingerprint identifies this content, not the earlier nine-kit set or a content approval.
 
+**Kit set `789f3d326286`** (content `2026-11-13.1`; S028): the same ten-monster pool; each of the nine named monsters carries a fifth slot with a prop skill (Blaze Tiger Light Brazier, Dusk Moth Lay Vortex, Ember Hawk Lay Spikes, Forge Golem Earth Wall, Gloom Wolf Lay Spikes, Grove Wisp Set Thorn Idol, Hollow Serpent Lay Vortex, Moss Turtle Earth Wall, Thorn Mites Set Clay Urn). New props Earth Wall, Thorn Idol, Ember Brazier, Spike Trap, Vortex Trap; the Storm Drum pushes at the round end; Banner, Shrine, Totem and Wardstone are archived. User records unchanged. Not a content approval.
+
 # Entries
+
+## S029 · 2026-11-14 · Stamina at 1 per square, last touch back as the build default
+
+**State:** main, base `593f770` dirty; content `2026-11-13.1`, kit set `789f3d326286` (as S028); Godot 4.7.2, normal CPU settings, runs in parallel. Battle suite before the runs: 177 cases, 0 errors, 0 failures.
+
+**Build default changed after S028 (user decision):** a Dragon Vein belongs to the side that touched it last (`vein_touch` = true, the GDD rule) again. **Stamina reworked after user feedback** (test switch, not a rule): a slotted movement skill costs 1 Stamina per movement point of its route (a square, or what slowing ground costs), reaches at most the range on the skill (3) and never further than the Stamina left, and also costs its AP (`staminafree`: Stamina only); `stamina=N` comes back at the round end (default 1); Step stays 1 AP for 1 square without Stamina. The Stamina of S028 (a flat cost per use, no AP) is gone. The bots do not budget Stamina: they spend it like Movement and Step once it is empty.
+
+**Runs:** greedy: 8 seeds (1–8) × 32 = 256 battles per kit row; greedy with `balanced,mixstats`: 8 seeds × 60 = 480 battles per row and column. All `--paired`, **not side-swapped**. Rows are sums over the full blocks of the eight seeds; the blocks themselves are not pasted.
+
+| Bot · content · variant | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 | Over 5 | Longest | Defeated before own first turn / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| greedy · kits · build defaults (last touch) | 256 | 127 / 124 / 5 / 0 | 3.50 | 11 % | 3 % | 8 | 0.00 | 9.5 | 2.2 | 4.6 | 0.9 | 7.7 | 0.8 | 25.7 |
+| greedy · kits · stamina | 256 | 133 / 113 / 10 / 0 | 3.68 | 12 % | 6 % | 7 | 0.00 | 8.7 | 2.2 | 4.3 | 1.1 | 8.7 | 0.6 | 25.8 |
+| greedy · kits · stamina=2 | 256 | 122 / 127 / 7 / 0 | 3.61 | 12 % | 4 % | 7 | 0.00 | 9.3 | 2.1 | 4.5 | 1.1 | 8.4 | 0.7 | 26.0 |
+| greedy · kits · stamina,staminafree | 256 | 131 / 120 / 5 / 0 | 3.27 | 21 % | 4 % | 8 | 0.00 | 10.1 | 2.4 | 4.0 | 1.1 | 7.4 | 0.3 | 25.4 |
+| greedy · balanced,mixstats | 480 | 231 / 242 / 7 / 0 | 3.44 | 13 % | 3 % | 9 | 0.01 | 9.9 | 2.0 | 5.5 | 1.6 | 7.4 | 1.0 | 27.4 |
+| greedy · balanced,mixstats,stamina | 480 | 223 / 243 / 14 / 0 | 3.58 | 13 % | 6 % | 12 | 0.00 | 9.5 | 2.1 | 5.1 | 1.8 | 8.5 | 0.8 | 27.6 |
+| greedy · balanced,mixstats,stamina=2 | 480 | 223 / 249 / 8 / 0 | 3.52 | 14 % | 4 % | 17 | 0.00 | 9.8 | 2.0 | 5.3 | 1.7 | 8.0 | 0.8 | 27.5 |
+| greedy · balanced,mixstats,stamina,staminafree | 480 | 218 / 246 / 16 / 0 | 3.06 | 33 % | 2 % | 9 | 0.01 | 11.3 | 2.2 | 5.0 | 1.6 | 6.8 | 0.6 | 27.6 |
+
+### Team win rate by fielded stat band, greedy with `balanced,mixstats`
+
+480 battles per column; each cell wins / times fielded on a team. Team win rates conditional on a fielded stat, not individual win rates or prices; about ±3 points of band noise (single Movement values about ±4).
+
+| Stat band | balanced,mixstats (Movement) | + stamina (+1 per round) | + stamina=2 | + stamina,staminafree |
+|---|---|---|---|---|
+| HP 3–4 | 404/1018 = 40 % | 386/1018 = 38 % | 389/1018 = 38 % | 370/1018 = 36 % |
+| HP 5–6 | 473/923 = 51 % | 455/923 = 49 % | 463/923 = 50 % | 478/923 = 52 % |
+| HP 7–8 | 542/939 = 58 % | 557/939 = 59 % | 564/939 = 60 % | 544/939 = 58 % |
+| Initiative 1–3 | 482/969 = 50 % | 470/969 = 49 % | 474/969 = 49 % | 502/969 = 52 % |
+| Initiative 4–6 | 460/947 = 49 % | 445/947 = 47 % | 471/947 = 50 % | 450/947 = 48 % |
+| Initiative 7–9 | 477/964 = 49 % | 483/964 = 50 % | 471/964 = 49 % | 440/964 = 46 % |
+| Movement / Stamina 1 | 246/578 = 43 % | 271/578 = 47 % | 279/578 = 48 % | 268/578 = 46 % |
+| Movement / Stamina 2 | 273/581 = 47 % | 261/581 = 45 % | 282/581 = 49 % | 265/581 = 46 % |
+| Movement / Stamina 3 | 302/580 = 52 % | 297/580 = 51 % | 298/580 = 51 % | 293/580 = 51 % |
+| Movement / Stamina 4 | 293/553 = 53 % | 270/553 = 49 % | 269/553 = 49 % | 287/553 = 52 % |
+| Movement / Stamina 5 | 305/588 = 52 % | 299/588 = 51 % | 288/588 = 49 % | 279/588 = 47 % |
+| Reach 2 | 446/941 = 47 % | 443/941 = 47 % | 436/941 = 46 % | 450/941 = 48 % |
+| Reach 3 | 496/980 = 51 % | 485/980 = 49 % | 500/980 = 51 % | 491/980 = 50 % |
+| Reach 4 | 477/959 = 50 % | 470/959 = 49 % | 480/959 = 50 % | 451/959 = 47 % |
+| TPR 1 | 614/1419 = 43 % | 615/1419 = 43 % | 641/1419 = 45 % | 644/1419 = 45 % |
+| TPR 2 | 805/1461 = 55 % | 783/1461 = 54 % | 775/1461 = 53 % | 748/1461 = 51 % |
+| AP 2 | 647/1434 = 45 % | 628/1434 = 44 % | 639/1434 = 45 % | 622/1434 = 43 % |
+| AP 3 | 772/1446 = 53 % | 770/1446 = 53 % | 777/1446 = 54 % | 770/1446 = 53 % |
+
+**Observations** (indications; bots on working content):
+
+- **Last touch as the default** reproduces S028: 3.50 rounds on the kits (S028: 3.48), 3 % of the battles over 5 rounds, no defeat before the victim's own first turn.
+- **Stamina at 1 per square does not make the stat worth more than Movement is, with these bots:** Movement 1 / 2 / 3 / 4 / 5 wins 43 / 47 / 52 / 53 / 52 %; as a Stamina pool with +1 per round 47 / 45 / 51 / 49 / 51 %, with +2 per round 48 / 49 / 51 / 49 / 49 % (flat). A pool of 1–2 no longer limits the range of every move, only how often a monster moves far; the bot then Steps. A bot that saves Stamina for the right moment could read differently; these runs cannot show that.
+- **Recovery:** +2 per round removes what slope +1 has. With +1 the pool is the stat; a recovery stat next to it would mostly decide the late rounds of long battles (3.5 rounds on average here).
+- **AP on top or Stamina only:** with AP the length stays where Movement has it (3.58 / 3.68 against 3.44 / 3.50). Stamina only shortens battles (3.06 / 3.27, a third / a fifth under 3 rounds) because moving no longer competes with Strikes for AP, as in S028.
+- **Other stats** as in S028: HP steepest (36–40 → 58–60 %), TPR and AP next, initiative and Reach flat in every column.
+
+**Follow-up:** T39 (vein rule kept: last touch; Stamina open with the user), T38 (switches), T13 (stat value). No rule or price follows from this entry.
+
+## S028 · 2026-11-14 · New build defaults, prop rework, balanced kit draw and Stamina
+
+**State:** main, base `593f770` dirty; content `2026-11-13.1`, kit set `789f3d326286` (the nine kits carry a fifth slot with a prop skill; five new props, seven new prop skills; aura props archived; the user records `asdf*` and `new_skill` unchanged); Godot 4.7.2, normal CPU settings, runs in parallel. Battle suite before the runs: 176 cases, 0 errors, 0 failures. One autonomous session after the user's requests of 2026-11-14; decisions taken in it are listed in [temp_todo.md](temp_todo.md#current-state-and-immediate-next-step).
+
+**Build defaults measured** (not GDD rules except the first): every slotted skill at most `usage_limit` (1) times per turn; push and pull zones do not move at cast; a Dragon Vein works only for the side whose monster stands on it at the round end ("vein held", user wish for these tests); generated boards never start with a prop on a vein. **Variants** (`sim.gd --variant`, in memory only): `turnfree`, `castpush`, `veintouch` undo one default each; `veinlate` as S027; `balanced` / `balanced=6`: every monster plays one Strike, one movement skill and 2 / 4 skills of different kinds from zone, ground, prop and trap, kinds going round per side (draft-status skills only); `mixstats` as S026; `stamina` / `stamina=N`: Movement is a Stamina pool, a movement skill costs Stamina (its AP cost) instead of AP and covers 3 squares, +N (1) per monster at the round end; `openmap` removes the pre-placed props.
+
+**Runs:** greedy: 8 seeds (1–8) × 32 = 256 battles per row; tactic both sides: 8 seeds × 4 = 32 battles per row; greedy with `balanced,mixstats`: 8 seeds × 60 = 480 battles per column. All `--paired`, **not side-swapped**. Rows are sums over the full blocks of the eight seeds (mean rounds from the exact histograms, damage from the per-battle rows); the blocks themselves are not pasted. A first pass of the same series is discarded and not reported: its boards started with props on Dragon Veins (side effect of allowing props on veins), which lengthened battles (greedy · kits · veintouch: 4.18 against 3.48 rounds; the fifth kit slot was also added in between).
+
+### Length and damage
+
+| Bot · content · variant | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 | Over 5 | Longest | Defeated before own first turn / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| greedy · kits · turnfree,castpush,veintouch (rules before this session) | 256 | 125 / 129 / 2 / 0 | 2.46 | 57 % | 0 % | 4 | 0.05 | 4.8 | 2.1 | 12.4 | 0.9 | 4.7 | 0.4 | 25.3 |
+| greedy · kits · build defaults (vein held) | 256 | 133 / 120 / 3 / 0 | 4.73 | 5 % | 27 % | 19 | 0.00 | 9.4 | 2.9 | 5.0 | 1.3 | 6.1 | 0.6 | 25.5 |
+| greedy · kits · veintouch | 256 | 107 / 146 / 3 / 0 | 3.48 | 11 % | 2 % | 7 | 0.00 | 9.8 | 2.3 | 4.1 | 0.8 | 7.8 | 0.9 | 25.6 |
+| greedy · kits · veinlate | 256 | 110 / 143 / 3 / 0 | 3.99 | 8 % | 11 % | 12 | 0.00 | 10.2 | 2.3 | 4.3 | 0.9 | 6.9 | 0.8 | 25.4 |
+| greedy · kits · stamina | 256 | 117 / 136 / 3 / 0 | 4.14 | 13 % | 17 % | 14 | 0.00 | 10.7 | 2.4 | 4.8 | 1.7 | 5.1 | 0.3 | 25.2 |
+| greedy · balanced (4 slots) | 256 | 110 / 143 / 3 / 0 | 4.48 | 6 % | 18 % | 21 | 0.00 | 10.0 | 2.0 | 4.9 | 1.9 | 5.4 | 0.6 | 24.9 |
+| greedy · balanced=6 | 256 | 125 / 127 / 4 / 0 | 4.82 | 7 % | 26 % | 17 | 0.00 | 9.0 | 2.7 | 4.9 | 2.3 | 5.7 | 0.6 | 25.3 |
+| greedy · balanced,veintouch | 256 | 116 / 130 / 10 / 0 | 3.41 | 12 % | 4 % | 9 | 0.01 | 9.7 | 1.7 | 4.1 | 1.4 | 7.6 | 1.0 | 25.5 |
+| greedy · balanced,openmap | 256 | 115 / 138 / 3 / 0 | 4.39 | 7 % | 17 % | 16 | 0.00 | 11.2 | 2.0 | 3.6 | 1.6 | 6.2 | 0.9 | 25.4 |
+| greedy · balanced,stamina | 256 | 132 / 121 / 3 / 0 | 3.90 | 18 % | 13 % | 13 | 0.00 | 11.8 | 1.8 | 4.7 | 1.6 | 4.8 | 0.4 | 25.1 |
+| greedy · balanced,stamina=0 | 256 | 128 / 125 / 3 / 0 | 4.66 | 15 % | 25 % | 21 | 0.00 | 10.8 | 2.0 | 4.0 | 1.7 | 5.8 | 0.4 | 24.9 |
+| tactic · kits · build defaults (vein held) | 32 | 16 / 16 / 0 / 0 | 5.50 | 3 % | 50 % | 9 | 0.00 | 6.9 | 2.8 | 4.7 | 1.1 | 7.8 | 0.8 | 24.3 |
+| tactic · kits · veintouch | 32 | 16 / 14 / 2 / 0 | 4.25 | 6 % | 9 % | 9 | 0.00 | 7.9 | 2.3 | 5.0 | 0.9 | 9.4 | 0.8 | 26.2 |
+| tactic · kits · veinlate | 32 | 11 / 21 / 0 / 0 | 5.16 | 9 % | 38 % | 12 | 0.00 | 7.3 | 2.6 | 4.4 | 1.3 | 8.8 | 0.9 | 25.3 |
+| tactic · kits · stamina | 32 | 13 / 19 / 0 / 0 | 3.94 | 9 % | 19 % | 8 | 0.03 | 11.6 | 2.3 | 5.0 | 1.0 | 4.5 | 0.3 | 24.8 |
+| tactic · balanced (4 slots) | 32 | 12 / 20 / 0 / 0 | 5.91 | 3 % | 53 % | 11 | 0.00 | 8.4 | 2.7 | 5.0 | 2.3 | 7.2 | 0.4 | 26.1 |
+| tactic · balanced,veintouch | 32 | 14 / 18 / 0 / 0 | 4.62 | 3 % | 16 % | 10 | 0.00 | 7.6 | 2.0 | 4.4 | 1.9 | 11.0 | 0.8 | 27.7 |
+| tactic · balanced,stamina | 32 | 17 / 15 / 0 / 0 | 4.41 | 12 % | 22 % | 12 | 0.00 | 12.8 | 1.4 | 5.0 | 2.1 | 4.3 | 0.4 | 25.9 |
+
+"Prop" is the tool's `aftermath` column (all prop damage: destroyed, hit, entered, round end). Balanced, greedy, 256 battles, prop damage by source: Spike Trap 176 · Ember Brazier 145 · Clay Urn 65 · Thorn Idol 62 · Bamboo Stand 29.
+
+### Skill use in the balanced draw (greedy, 256 battles, vein held)
+
+Team win rate by drawn kind: strike 49 %, move 49 %, zone 49 %, ground 51 %, prop 49 %, trap 48 % (742–786 fielded slots per flexible kind; all within noise).
+
+| Drawn kind | Skill | Uses | Fielded slots | Uses / slot | Team win rate when fielded |
+|---|---|---|---|---|---|
+| strike | strike_jab | 550 | 516 | 1.07 | 49 % |
+| strike | strike_thrust | 475 | 508 | 0.94 | 47 % |
+| strike | thorn_lash | 538 | 512 | 1.05 | 52 % |
+| move | run | 496 | 263 | 1.89 | 54 % |
+| move | glide | 430 | 256 | 1.68 | 50 % |
+| move | leap | 409 | 247 | 1.66 | 46 % |
+| move | quake_leap | 530 | 250 | 2.12 | 51 % |
+| move | headbutt | 476 | 276 | 1.72 | 52 % |
+| move | fire_trail | 380 | 244 | 1.56 | 42 % |
+| zone | bog | 261 | 230 | 1.13 | 53 % |
+| zone | gale | 96 | 277 | 0.35 | 48 % |
+| zone | void_pull | 70 | 256 | 0.27 | 47 % |
+| ground | cinder_dive | 92 | 132 | 0.70 | 51 % |
+| ground | coiling_rift | 80 | 102 | 0.78 | 54 % |
+| ground | gloom_rift | 337 | 150 | 2.25 | 47 % |
+| ground | lava_field | 180 | 121 | 1.49 | 55 % |
+| ground | snare | 61 | 141 | 0.43 | 49 % |
+| ground | thornbed | 247 | 140 | 1.76 | 54 % |
+| prop | plant_bamboo | 161 | 119 | 1.35 | 45 % |
+| prop | set_gong | 44 | 106 | 0.42 | 53 % |
+| prop | set_urn | 122 | 93 | 1.31 | 51 % |
+| prop | raise_wall | 18 | 120 | 0.15 | 43 % |
+| prop | set_idol | 112 | 87 | 1.29 | 51 % |
+| prop | light_brazier | 80 | 105 | 0.76 | 49 % |
+| prop | set_drum | 42 | 112 | 0.38 | 53 % |
+| trap | lay_spikes | 622 | 402 | 1.55 | 47 % |
+| trap | lay_vortex | 96 | 379 | 0.25 | 50 % |
+
+Per-skill win rates rest on 87–516 fielded slots: about ±5 to ±10 points, none is established.
+
+### Team win rate by fielded stat band, greedy with `balanced,mixstats`
+
+480 battles per column; each cell wins / times fielded on a team. Team win rates conditional on a fielded stat, not individual win rates or prices; about ±3 points of band noise.
+
+| Stat band | balanced,mixstats (vein held) | + veintouch | + veinlate | + stamina (band = Stamina pool) |
+|---|---|---|---|---|
+| Mean rounds | 4.26 | 3.41 | 3.84 | 3.61 |
+| HP 3–4 | 407/1018 = 40 % | 396/1018 = 39 % | 418/1018 = 41 % | 409/1018 = 40 % |
+| HP 5–6 | 474/923 = 51 % | 471/923 = 51 % | 487/923 = 53 % | 463/923 = 50 % |
+| HP 7–8 | 535/939 = 57 % | 543/939 = 58 % | 535/939 = 57 % | 544/939 = 58 % |
+| Initiative 1–3 | 463/969 = 48 % | 487/969 = 50 % | 484/969 = 50 % | 490/969 = 51 % |
+| Initiative 4–6 | 465/947 = 49 % | 439/947 = 46 % | 452/947 = 48 % | 460/947 = 49 % |
+| Initiative 7–9 | 488/964 = 51 % | 484/964 = 50 % | 504/964 = 52 % | 466/964 = 48 % |
+| Movement 1–2 | 553/1159 = 48 % | 513/1159 = 44 % | 551/1159 = 48 % | 554/1159 = 48 % |
+| Movement 3 | 304/580 = 52 % | 305/580 = 53 % | 302/580 = 52 % | 299/580 = 52 % |
+| Movement 4–5 | 559/1141 = 49 % | 592/1141 = 52 % | 587/1141 = 51 % | 563/1141 = 49 % |
+| Reach 2 | 462/941 = 49 % | 468/941 = 50 % | 462/941 = 49 % | 456/941 = 48 % |
+| Reach 3 | 478/980 = 49 % | 473/980 = 48 % | 491/980 = 50 % | 493/980 = 50 % |
+| Reach 4 | 476/959 = 50 % | 469/959 = 49 % | 487/959 = 51 % | 467/959 = 49 % |
+| TPR 1 | 621/1419 = 44 % | 633/1419 = 45 % | 635/1419 = 45 % | 640/1419 = 45 % |
+| TPR 2 | 795/1461 = 54 % | 777/1461 = 53 % | 805/1461 = 55 % | 776/1461 = 53 % |
+| AP 2 | 632/1434 = 44 % | 649/1434 = 45 % | 656/1434 = 46 % | 633/1434 = 44 % |
+| AP 3 | 784/1446 = 54 % | 761/1446 = 53 % | 784/1446 = 54 % | 783/1446 = 54 % |
+
+**Observations** (indications; bots on working content):
+
+- **Length:** the rules before this session end in 2.46 rounds (greedy, 57 % under 3). The new defaults reach 3.5–4.7 with greedy and 4.3–5.5 with tactic, with no defeat before the victim's own first turn. Which vein rule is on decides the top end: vein held 4.73 / 5.50 (27 % / 50 % of the battles over 5 rounds, longest 19), last touch 3.48 / 4.25 (2 % / 9 % over 5), first touch with round-end damage 3.99 / 5.16.
+- **Vein held flattens Movement and initiative:** Movement bands 48 / 52 / 49 % and initiative 48 / 49 / 51 %. Under last touch Movement 1–2 falls to 44 % against 52–53 % (the only Movement slope so far); initiative stays flat in every column of this entry (the S026/S027 initiative slope of `veinlate`, 46 / 48 / 53 %, shows here as 50 / 48 / 52 %: not confirmed on the balanced draw). HP keeps the steepest slope (about 40 → 57 %), TPR and AP follow (44–46 → 53–55 %), Reach is flat.
+- **Props:** in the balanced draw props deal 1.4–2.3 damage per battle (kits: 0.8–1.7), mostly Spike Trap and Ember Brazier. No drawn kind stands out in win rate. The greedy bot hardly uses what it cannot score: Earth Wall 0.15 uses per slot, Vortex Trap 0.25, Storm Drum 0.38, Bronze Gong 0.42 (and the push and pull zones Gale 0.35, Void Pull 0.27 now that they no longer move at cast). That is a limit of the bot, not a finding about the skills.
+- **Six slots** (balanced=6): 4.82 against 4.48 rounds with greedy; strike damage falls from 10.0 to 9.0 per battle, prop and ground damage rise. A small shift, within what one rerun can move.
+- **Stamina:** battles get shorter, because movement no longer competes with Strikes for AP (strike damage 10.0 → 11.8 per battle with greedy, 8.4 → 12.8 with tactic; length 4.48 → 3.90 and 5.91 → 4.41). The size of the pool shows no slope (48 / 52 / 49 %): with +1 per round and once-per-turn movement a pool of 2 is rarely empty in a battle of four rounds. Without regeneration (`stamina=0`) length returns to 4.66.
+- **Side balance:** several greedy rows give side 1 about 56 % (107 / 146, 110 / 143 twice), others are level; teams are random and not side-swapped. A lead to check, not established.
+
+**Follow-up:** T13 (length target, vein rule), T39 (vein rule), T03 (stat values: HP, Movement, initiative), T40 (prop rework, Stamina, slots), T10 (prop skills). No rule, price or kit is approved by this entry.
+
+## S027 · 2026-11-14 · Charged Dragon Veins with the damage at the end of the round
+
+**State:** main, base `593f770` dirty (switches of S025/S026 plus `vein_charge_late`, all off by default; no resource change); content `2026-11-13.1`, kit set `a30a9be42850`; Godot 4.7.2, normal CPU settings, runs in parallel. Battle suite before the runs: 165 cases, 0 errors, 0 failures. User idea after S026: the first monster to reach a vein wins it for the round, where it stands afterwards does not matter, and the damage comes at the end of the round.
+
+**Variant** `veinlate` (`sim.gd --variant`, in memory only): as `veincharge` of S026 (every vein charged at round start; first touch, or the occupant at the end of its own turn, takes the charge), but the touch deals no damage. At the end of the round every vein taken in that round deals 1 damage to the enemy nearest to it, for the side that took it, in the same simultaneous step as surround damage. The greedy bot scores a taken vein for the side that took it. Other settings as S026.
+
+**Runs:** greedy, authored stats: 2 variants × 4 seeds (202–505) × 32 = 256 battles. Tactic both sides: 4 seeds × 8 = 32 battles. Greedy with `mixstats`: 6 seeds (202–707) × 80 = 480 battles. `--paired` with the S025/S026 rows of the same seeds, **not side-swapped**; the comparison rows below are copied from S025/S026, not rerun. Each run was executed twice (full block, then `--compact`); the second execution is an exact rerun.
+
+### Exact histogram summary, authored stats
+
+| Bot | Variant | Battles | Round sum / battles = mean | Ended <2 / >5 · longest | Defeats before own first turn | Damage per battle: strike / ground / collision / vein / total |
+|---|---|---|---|---|---|---|
+| greedy | veinlate | 128 | 326/128 = 2.547 | 1 / 0 · 5 | 8 | 5.3 / 2.9 / 12.0 / 4.4 / 25.2 |
+| greedy | nocastpush (S025) | 128 | 437/128 = 3.414 | 0 / 3 · 6 | 0 | 10.0 / 2.8 / 3.8 / 8.2 / 26.0 |
+| greedy | nocastpush,veincharge (S026) | 128 | 459/128 = 3.586 | 0 / 4 · 6 | 10 | 9.8 / 2.2 / 3.6 / 7.9 / 24.5 |
+| greedy | nocastpush,veinlate | 128 | 466/128 = 3.641 | 0 / 4 · 7 | 0 | 10.8 / 2.7 / 4.2 / 7.4 / 26.3 |
+| tactic | nocastpush (S025) | 32 | 108/32 = 3.375 | 0 / 0 · 5 | 0 | 7.3 / 3.3 / 3.9 / 8.9 / 24.5 |
+| tactic | nocastpush,veincharge (S026) | 32 | 143/32 = 4.469 | 0 / 7 · 7 | 2 | 7.8 / 2.7 / 3.4 / 9.4 / 24.0 |
+| tactic | nocastpush,veinlate | 32 | 137/32 = 4.281 | 0 / 6 · 7 | 0 | 8.1 / 3.1 / 4.4 / 9.3 / 26.2 |
+
+### Team win rate by fielded stat band, greedy with `mixstats`
+
+480 battles per variant; each cell wins / times fielded on a team. Team win rates conditional on a fielded stat, not individual win rates or prices; about ±3 points of band noise.
+
+| Stat band | nocastpush (S026) | + veincharge (S026) | + veinlate |
+|---|---|---|---|
+| Mean rounds | 3.31 | 3.68 | 3.61 |
+| Defeats before own first turn | 2 | 12 | 2 |
+| HP 3–4 | 381/928 = 41 % | 388/928 = 42 % | 371/928 = 40 % |
+| HP 5–6 | 497/998 = 50 % | 493/998 = 49 % | 490/998 = 49 % |
+| HP 7–8 | 544/954 = 57 % | 559/954 = 59 % | 561/954 = 59 % |
+| Initiative 1–3 | 492/979 = 50 % | 444/979 = 45 % | 455/979 = 46 % |
+| Initiative 4–6 | 461/946 = 49 % | 478/946 = 51 % | 458/946 = 48 % |
+| Initiative 7–9 | 469/955 = 49 % | 518/955 = 54 % | 509/955 = 53 % |
+| Movement 1–2 | 529/1155 = 46 % | 544/1155 = 47 % | 537/1155 = 46 % |
+| Movement 3 | 298/580 = 51 % | 312/580 = 54 % | 292/580 = 50 % |
+| Movement 4–5 | 595/1145 = 52 % | 584/1145 = 51 % | 593/1145 = 52 % |
+| Reach 2 / 3 / 4 | 49 / 49 / 50 % | 51 / 50 / 50 % | 49 / 50 / 49 % |
+| TPR 1 / 2 | 45 / 54 % | 46 / 54 % | 44 / 54 % |
+| AP 2 / 3 | 46 / 53 % | 46 / 54 % | 46 / 53 % |
+
+### Compact rows
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| veinlate | 3v3 · 202 · 32 | 13 / 19 / 0 / 0 | 2.4 | 100 % | 22 / 0 / 0 / 16 / 34 / 0 / 0 | 16 / 0 / 0 / 14 / 53 / 0 / 0 | 22 / 0 / 0 / 13 / 46 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.78 | 2.7 / 0.0 / 0.0 / 8.8 / 4.2 / 7.0 / 1.3 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.39 / — / — / 1.81 / 0.62 / 1.28 | run 17 % | cinder_dive, set_gong, snare | 0 / 0 / 0 / 0 | 63 / 0 / 0 · 4 | 1.1 | 0.12 | 22 / 0 · 11 / 2 · 16 / 1 · 1.25 / 1.17 |
+| veinlate | 3v3 · 303 · 32 | 8 / 24 / 0 / 0 | 2.5 | 100 % | 19 / 0 / 0 / 13 / 47 / 0 / 0 | 18 / 0 / 0 / 12 / 55 / 0 / 0 | 22 / 0 / 0 / 12 / 47 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.41 | 2.8 / 0.0 / 0.0 / 8.5 / 3.7 / 7.9 / 0.9 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.39 / — / — / 1.86 / 0.55 / 1.47 | run 20 % | set_gong, snare | 0 / 0 / 0 / 0 | 59 / 0 / 0 · 4 | 1.1 | 0.06 | 19 / 3 · 11 / 2 · 17 / 1 · 1.13 / 1.35 |
+| veinlate | 3v3 · 404 · 32 | 16 / 15 / 1 / 0 | 2.6 | 100 % | 25 / 0 / 0 / 22 / 28 / 0 / 0 | 16 / 0 / 0 / 19 / 51 / 0 / 0 | 22 / 0 / 0 / 12 / 46 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.31 | 3.0 / 0.0 / 0.0 / 10.4 / 3.3 / 7.0 / 0.8 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.41 / — / — / 2.04 / 0.52 / 1.30 | run 13 % | snare | 0 / 0 / 0 / 0 | 56 / 0 / 0 · 5 | 1.1 | 0.03 | 22 / 3 · 9 / 4 · 17 / 2 · 1.20 / 1.22 |
+| veinlate | 3v3 · 505 · 32 | 17 / 15 / 0 / 0 | 2.7 | 100 % | 25 / 0 / 0 / 16 / 28 / 0 / 0 | 19 / 0 / 0 / 12 / 53 / 0 / 0 | 19 / 0 / 0 / 10 / 51 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.38 | 2.5 / 0.0 / 0.0 / 10.5 / 4.0 / 8.1 / 1.2 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.37 / — / — / 2.12 / 0.59 / 1.45 | run 16 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 44 / 0 / 0 · 4 | 1.1 | 0.03 | 25 / 0 · 11 / 3 · 19 / 1 · 1.13 / 1.35 |
+| nocastpush,veinlate | 3v3 · 202 · 32 | 13 / 19 / 0 / 0 | 3.5 | 100 % | 38 / 0 / 0 / 13 / 19 / 0 / 0 | 36 / 0 / 0 / 12 / 29 / 0 / 0 | 40 / 0 / 0 / 12 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.41 | 5.6 / 0.0 / 0.0 / 2.9 / 8.7 / 13.3 / 3.7 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.82 / — / — / 0.60 / 1.27 / 2.43 | run 21 % | snare | 0 / 0 / 0 / 0 | 6 / 0 / 0 · 5 | 1.6 | 0.00 | 31 / 0 · 14 / 8 · 26 / 4 · 1.08 / 1.31 |
+| nocastpush,veinlate | 3v3 · 303 · 32 | 16 / 16 / 0 / 0 | 3.6 | 100 % | 28 / 0 / 0 / 9 / 9 / 0 / 0 | 33 / 0 / 0 / 14 / 26 / 0 / 0 | 42 / 0 / 0 / 11 / 15 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.19 | 5.9 / 0.0 / 0.0 / 2.8 / 8.8 / 12.2 / 4.0 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.82 / — / — / 0.61 / 1.30 / 2.27 | run 20 % | cinder_dive | 0 / 0 / 0 / 0 | 6 / 0 / 0 · 6 | 1.6 | 0.00 | 50 / 3 · 23 / 3 · 29 / 3 · 1.20 / 1.24 |
+| nocastpush,veinlate | 3v3 · 404 · 32 | 14 / 17 / 1 / 0 | 3.8 | 100 % | 44 / 0 / 0 / 6 / 9 / 0 / 0 | 43 / 0 / 0 / 9 / 22 / 0 / 0 | 42 / 0 / 0 / 9 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.19 | 6.2 / 0.0 / 0.0 / 3.2 / 8.3 / 12.9 / 4.3 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.86 / — / — / 0.63 / 1.32 / 2.38 | run 17 % | snare | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 6 | 1.6 | 0.00 | 31 / 9 · 15 / 7 · 28 / 5 · 1.17 / 1.08 |
+| nocastpush,veinlate | 3v3 · 505 · 32 | 11 / 20 / 1 / 0 | 3.7 | 100 % | 38 / 0 / 0 / 0 / 9 / 0 / 0 | 45 / 0 / 0 / 9 / 18 / 0 / 0 | 41 / 0 / 0 / 10 / 15 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.47 | 6.3 / 0.0 / 0.0 / 3.7 / 9.2 / 13.7 / 4.2 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.93 / — / — / 0.74 / 1.38 / 2.46 | run 18 % | cinder_dive | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 7 | 1.8 | 0.00 | 50 / 3 · 21 / 6 · 29 / 4 · 1.07 / 1.40 |
+| nocastpush,veinlate + bots tactic | 3v3 · 202 · 8 | 5 / 3 / 0 / 0 | 3.9 | 100 % | 13 / 0 / 0 / 0 / 25 / 0 / 0 | 20 / 0 / 0 / 14 / 34 / 0 / 0 | 28 / 0 / 0 / 14 / 19 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.38 | 4.1 / 0.0 / 0.0 / 2.0 / 9.8 / 14.4 / 7.5 | 7.0 / 0.0 / 0.0 / 4.6 / 7.0 / 5.4 / 0.0 | 0.59 / — / — / 0.43 / 1.39 / 2.67 | run 24 % | asdf, cinder_dive, new_skill, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 5 | 1.5 | 0.00 | 50 / 13 · 20 / 11 · 33 / 5 · 1.43 / 1.07 |
+| nocastpush,veinlate + bots tactic | 3v3 · 303 · 8 | 5 / 2 / 1 / 0 | 4.2 | 100 % | 13 / 0 / 0 / 25 / 13 / 0 / 0 | 31 / 0 / 0 / 23 / 14 / 0 / 0 | 34 / 0 / 0 / 15 / 11 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.38 | 5.0 / 0.0 / 0.0 / 2.8 / 11.5 / 12.4 / 7.6 | 7.1 / 0.0 / 0.0 / 4.6 / 6.6 / 5.6 / 0.0 | 0.70 / — / — / 0.59 / 1.74 / 2.20 | Step 19 % | asdf, asdf_3, snare, strike_thrust | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 6 | 1.8 | 0.00 | 50 / 0 · 20 / 9 · 35 / 4 · 1.47 / 1.00 |
+| nocastpush,veinlate + bots tactic | 3v3 · 404 · 8 | 3 / 5 / 0 / 0 | 4.4 | 100 % | 38 / 0 / 0 / 13 / 13 / 0 / 0 | 38 / 0 / 0 / 12 / 29 / 0 / 0 | 32 / 0 / 0 / 8 / 22 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.12 | 4.6 / 0.0 / 0.0 / 5.8 / 10.1 / 13.4 / 11.0 | 7.1 / 0.0 / 0.0 / 5.4 / 6.2 / 5.2 / 0.0 | 0.65 / — / — / 1.07 / 1.62 / 2.55 | Step 25 % | snare, strike_thrust | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 6 | 1.5 | 0.00 | 25 / 13 · 15 / 6 · 33 / 6 · 1.30 / 1.00 |
+| nocastpush,veinlate + bots tactic | 3v3 · 505 · 8 | 4 / 4 / 0 / 0 | 4.6 | 100 % | 25 / 0 / 0 / 0 / 0 / 0 / 0 | 32 / 0 / 0 / 12 / 26 / 0 / 0 | 30 / 0 / 0 / 11 / 15 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.12 | 4.9 / 0.0 / 0.0 / 4.0 / 12.0 / 14.9 / 9.9 | 6.9 / 0.0 / 0.0 / 4.5 / 7.1 / 5.5 / 0.0 | 0.71 / — / — / 0.89 / 1.68 / 2.70 | Step 22 % | new_skill, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 7 | 1.8 | 0.00 | 75 / 0 · 26 / 3 · 41 / 3 · 0.91 / 1.51 |
+| mixstats,nocastpush,veinlate | 3v3 · 202 · 80 | 42 / 37 / 1 / 0 | 3.6 | 100 % | 31 / 0 / 0 / 8 / 15 / 0 / 0 | 33 / 0 / 0 / 13 / 29 / 0 / 0 | 36 / 0 / 0 / 13 / 19 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.93 | 5.6 / 0.0 / 0.0 / 2.8 / 11.2 / 12.5 / 5.4 | 7.2 / 0.0 / 0.0 / 4.8 / 6.6 / 5.3 / 0.0 | 0.78 / — / — / 0.59 / 1.69 / 2.35 | run 15 % | none | 0 / 0 / 0 / 0 | 14 / 1 / 0 · 8 | 2.0 | 0.00 | 40 / 4 · 21 / 3 · 26 / 4 · 1.18 / 1.22 |
+| mixstats,nocastpush,veinlate | 3v3 · 303 · 80 | 44 / 34 / 2 / 0 | 3.5 | 100 % | 28 / 0 / 0 / 13 / 16 / 0 / 0 | 33 / 0 / 0 / 19 / 21 / 0 / 0 | 36 / 0 / 0 / 15 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.98 | 5.5 / 0.0 / 0.0 / 3.2 / 11.5 / 13.0 / 5.6 | 7.1 / 0.0 / 0.0 / 4.6 / 6.8 / 5.5 / 0.0 | 0.77 / — / — / 0.68 / 1.71 / 2.38 | run 17 % | none | 0 / 0 / 0 / 0 | 10 / 0 / 0 · 7 | 1.9 | 0.01 | 38 / 6 · 20 / 5 · 26 / 4 · 1.22 / 1.25 |
+| mixstats,nocastpush,veinlate | 3v3 · 404 · 80 | 45 / 35 / 0 / 0 | 3.6 | 99 % | 25 / 0 / 0 / 16 / 18 / 0 / 0 | 35 / 0 / 0 / 19 / 22 / 0 / 0 | 36 / 0 / 0 / 14 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.24 | 5.8 / 0.0 / 0.0 / 3.4 / 10.5 / 12.6 / 5.7 | 7.2 / 0.0 / 0.0 / 5.0 / 6.4 / 5.4 / 0.0 | 0.82 / — / — / 0.68 / 1.63 / 2.32 | run 15 % | none | 0 / 0 / 1 / 0 | 8 / 1 / 0 · 9 | 1.9 | 0.00 | 39 / 3 · 18 / 5 · 26 / 5 · 1.26 / 1.16 |
+| mixstats,nocastpush,veinlate | 3v3 · 505 · 80 | 36 / 43 / 1 / 0 | 3.7 | 99 % | 19 / 0 / 0 / 16 / 18 / 0 / 0 | 34 / 0 / 0 / 20 / 22 / 0 / 0 | 34 / 0 / 0 / 16 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.04 | 5.5 / 0.0 / 0.0 / 3.7 / 11.0 / 13.2 / 5.8 | 7.0 / 0.0 / 0.0 / 4.9 / 6.7 / 5.5 / 0.0 | 0.78 / — / — / 0.76 / 1.65 / 2.42 | run 17 % | none | 0 / 1 / 0 / 0 | 9 / 1 / 0 · 9 | 1.9 | 0.01 | 44 / 4 · 18 / 4 · 27 / 4 · 1.18 / 1.18 |
+| mixstats,nocastpush,veinlate | 3v3 · 606 · 80 | 39 / 40 / 1 / 0 | 3.6 | 100 % | 20 / 0 / 0 / 16 / 14 / 0 / 0 | 32 / 0 / 0 / 17 / 23 / 0 / 0 | 36 / 0 / 0 / 15 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.01 | 5.7 / 0.0 / 0.0 / 3.4 / 10.8 / 12.1 / 5.3 | 7.3 / 0.0 / 0.0 / 4.9 / 6.5 / 5.4 / 0.0 | 0.79 / — / — / 0.69 / 1.67 / 2.25 | run 15 % | none | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 6 | 2.0 | 0.00 | 39 / 9 · 20 / 5 · 26 / 4 · 1.18 / 1.18 |
+| mixstats,nocastpush,veinlate | 3v3 · 707 · 80 | 44 / 35 / 1 / 0 | 3.6 | 100 % | 28 / 0 / 0 / 9 / 14 / 0 / 0 | 36 / 0 / 0 / 14 / 23 / 0 / 0 | 36 / 0 / 0 / 14 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.20 | 5.7 / 0.0 / 0.0 / 3.5 / 11.1 / 12.5 / 6.0 | 7.3 / 0.0 / 0.0 / 4.7 / 6.6 / 5.4 / 0.0 | 0.78 / — / — / 0.75 / 1.69 / 2.33 | Step 15 % | none | 0 / 0 / 0 / 0 | 11 / 0 / 0 · 7 | 2.1 | 0.00 | 44 / 5 · 21 / 4 · 27 / 4 · 1.25 / 1.25 |
+
+**Observations** (indications; bots on working content, not tuned for these rules):
+
+- **The early defeats of S026 are gone:** with `nocastpush,veinlate` no monster is defeated before its own first turn in the authored-stat rows (greedy 0 of 128 battles, tactic 0 of 32; `veincharge` 10 and 2), and 2 against 12 with random stats, the level of `nocastpush` alone.
+- **The initiative slope stays:** 46 / 48 / 53 % against 45 / 51 / 54 % with the immediate discharge and 50 / 49 / 49 % without charged veins. Movement and Reach stay level; HP keeps the steepest slope (40 → 59 %).
+- **Length** about as with the immediate discharge: greedy 3.64 (3.59), tactic 4.28 (4.47) with 6 of 32 battles past round 5, longest 7.
+- Vein damage per battle (7.4–9.3) is at the level of last-touch ownership; the variant changes who gets it, not how much there is.
+- Not measured: human play, side-swapped fairness, one vein instead of three under this rule.
+
+**Follow-up:** T39/T40/T13: human play of `veinlate` with `zone_cast_push` off against the current rule; Movement still has no measured lever (T03). No rule or default is changed by this entry.
+
+## S026 · 2026-11-14 · Charged Dragon Veins and a Step over the full Movement
+
+**State:** main, base `593f770` dirty (the three switches of S025 plus two new ones, all off by default; no resource change); content `2026-11-13.1`, kit set `a30a9be42850`; Godot 4.7.2, normal CPU settings, runs in parallel. Battle suite before the runs: 164 cases, 0 errors, 0 failures. User request: build and measure the charged veins and the basic move.
+
+**Variants** (`sim.gd --variant`, in memory only):
+- `veincharge`: every Dragon Vein is charged at the start of a round (round 1 included). The first monster that touches it (walks onto or across it, is pushed or pulled onto it), or the monster standing on it at the end of its own turn, discharges it: 1 damage at once to the enemy nearest to the square (ties as in Battle §4.2, last tie roster order). Then it is empty until the next round. No ownership, no Dragon Vein damage at the end of the round; surround damage unchanged. Late-round pressure `idle` counts a vein discharged in the round as held.
+- `fullstep`: the universal Step walks up to the monster's Movement for 1 AP with the walking profile of Run; kits unchanged, so Run stays in the kits that have it.
+- `nocastpush`: as in S025. Three veins, authored kits, cost 1 for zone push/pull.
+- The greedy bot's ownership term for veins is off under `veincharge` (its copy of the battle already shows the discharge damage); it walks toward charged veins. Neither bot was tuned for the new rules.
+
+**Runs:** greedy, authored stats: 5 new variants × 4 seeds (202–505) × 32 = 640 battles; control and `nocastpush` rows are the S025 runs, repeated here with identical results. Tactic both sides: 2 new variants × 4 seeds × 8 = 64 battles. Greedy with `mixstats` (every monster random stats: HP 3–8, initiative 1–9, Movement 1–5, Reach 2–4, TPR 1–2, AP 2–3): 4 variants × 6 seeds (202–707) × 80 = 1920 battles. All `--paired` within a seed, **not side-swapped**; variants of a seed are correlated. Each run was executed twice (full block, then `--compact`); the second execution is an exact rerun.
+
+### Exact histogram summary, authored stats
+
+| Bot | Variant | Battles | Round sum / battles = mean | Ended <2 / >5 · longest | Defeats before own first turn | Damage per battle: strike / ground / collision / vein / total |
+|---|---|---|---|---|---|---|
+| greedy | control (S025) | 128 | 308/128 = 2.406 | 3 / 0 · 4 | 8 | 5.0 / 2.3 / 12.2 / 4.8 / 25.0 |
+| greedy | veincharge | 128 | 335/128 = 2.617 | 0 / 0 · 5 | 18 | 4.9 / 2.5 / 11.1 / 5.5 / 24.5 |
+| greedy | fullstep | 128 | 309/128 = 2.414 | 3 / 0 · 4 | 8 | 6.2 / 2.3 / 11.8 / 4.8 / 25.6 |
+| greedy | veincharge,fullstep | 128 | 339/128 = 2.648 | 3 / 0 · 5 | 17 | 6.5 / 2.4 / 10.5 / 5.7 / 25.5 |
+| greedy | nocastpush (S025) | 128 | 437/128 = 3.414 | 0 / 3 · 6 | 0 | 10.0 / 2.8 / 3.8 / 8.2 / 26.0 |
+| greedy | nocastpush,veincharge | 128 | 459/128 = 3.586 | 0 / 4 · 6 | 10 | 9.8 / 2.2 / 3.6 / 7.9 / 24.5 |
+| greedy | nocastpush,veincharge,fullstep | 128 | 459/128 = 3.586 | 0 / 8 · 9 | 11 | 10.0 / 2.8 / 3.9 / 7.9 / 25.5 |
+| tactic | control (S025) | 32 | 77/32 = 2.406 | 0 / 0 · 4 | 3 | 2.9 / 2.8 / 14.5 / 4.5 / 25.5 |
+| tactic | nocastpush (S025) | 32 | 108/32 = 3.375 | 0 / 0 · 5 | 0 | 7.3 / 3.3 / 3.9 / 8.9 / 24.5 |
+| tactic | nocastpush,veincharge | 32 | 143/32 = 4.469 | 0 / 7 · 7 | 2 | 7.8 / 2.7 / 3.4 / 9.4 / 24.0 |
+| tactic | nocastpush,veincharge,fullstep | 32 | 119/32 = 3.719 | 0 / 2 · 7 | 3 | 8.6 / 2.2 / 3.2 / 9.2 / 24.1 |
+
+Damage per battle is the mean of the per-seed “per battle” rows (rounded inputs); the other columns are exact counts.
+
+### Team win rate by fielded stat band, greedy with `mixstats`
+
+480 battles per variant (6 seeds × 80). Each cell: wins / times fielded on a team. **Team win rates conditional on a fielded stat, not individual win rates or prices;** bands pool the per-value rows of the six full blocks. A band of about 950 fielded slots moves by roughly ±3 points between seeds.
+
+| Stat band | nocastpush | + veincharge | + fullstep | + veincharge,fullstep |
+|---|---|---|---|---|
+| Mean rounds | 3.31 | 3.68 | 3.19 | 3.39 |
+| HP 3–4 | 381/928 = 41 % | 388/928 = 42 % | 369/928 = 40 % | 366/928 = 39 % |
+| HP 5–6 | 497/998 = 50 % | 493/998 = 49 % | 480/998 = 48 % | 519/998 = 52 % |
+| HP 7–8 | 544/954 = 57 % | 559/954 = 59 % | 552/954 = 58 % | 555/954 = 58 % |
+| Initiative 1–3 | 492/979 = 50 % | 444/979 = 45 % | 489/979 = 50 % | 447/979 = 46 % |
+| Initiative 4–6 | 461/946 = 49 % | 478/946 = 51 % | 461/946 = 49 % | 473/946 = 50 % |
+| Initiative 7–9 | 469/955 = 49 % | 518/955 = 54 % | 451/955 = 47 % | 520/955 = 54 % |
+| Movement 1–2 | 529/1155 = 46 % | 544/1155 = 47 % | 502/1155 = 43 % | 522/1155 = 45 % |
+| Movement 3 | 298/580 = 51 % | 312/580 = 54 % | 299/580 = 52 % | 307/580 = 53 % |
+| Movement 4–5 | 595/1145 = 52 % | 584/1145 = 51 % | 600/1145 = 52 % | 611/1145 = 53 % |
+| Reach 2 / 3 / 4 | 49 / 49 / 50 % | 51 / 50 / 50 % | 49 / 48 / 49 % | 50 / 50 / 50 % |
+| TPR 1 / 2 | 45 / 54 % | 46 / 54 % | 44 / 53 % | 47 / 53 % |
+| AP 2 / 3 | 46 / 53 % | 46 / 54 % | 44 / 53 % | 47 / 54 % |
+
+### Compact rows, greedy, authored stats
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| veincharge | 3v3 · 202 · 32 | 16 / 16 / 0 / 0 | 2.5 | 100 % | 31 / 0 / 0 / 19 / 19 / 0 / 0 | 19 / 0 / 0 / 13 / 52 / 0 / 0 | 21 / 0 / 0 / 12 / 43 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.56 | 2.6 / 0.0 / 0.0 / 8.2 / 4.4 / 7.1 / 1.0 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.38 / — / — / 1.69 / 0.64 / 1.30 | run 18 % | cinder_dive, set_gong, snare | 0 / 0 / 0 / 0 | 53 / 0 / 0 · 4 | 1.1 | 0.19 | 31 / 0 · 15 / 2 · 22 / 1 · 1.27 / 1.35 |
+| veincharge | 3v3 · 303 · 32 | 8 / 24 / 0 / 0 | 2.6 | 100 % | 19 / 0 / 0 / 9 / 41 / 0 / 0 | 17 / 0 / 0 / 13 / 52 / 0 / 0 | 21 / 0 / 0 / 9 / 44 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.81 | 2.7 / 0.0 / 0.0 / 8.1 / 3.3 / 7.7 / 0.8 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.37 / — / — / 1.76 / 0.50 / 1.43 | run 20 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 53 / 0 / 0 · 5 | 1.0 | 0.09 | 25 / 0 · 14 / 1 · 23 / 1 · 1.29 / 1.31 |
+| veincharge | 3v3 · 404 · 32 | 14 / 18 / 0 / 0 | 2.5 | 100 % | 19 / 0 / 0 / 9 / 44 / 0 / 0 | 14 / 0 / 0 / 14 / 58 / 0 / 0 | 20 / 0 / 0 / 9 / 47 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.16 | 2.5 / 0.0 / 0.0 / 9.1 / 3.1 / 7.2 / 0.8 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.35 / — / — / 1.77 / 0.49 / 1.33 | run 14 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 56 / 0 / 0 · 4 | 1.1 | 0.12 | 25 / 3 · 11 / 2 · 22 / 2 · 1.16 / 1.41 |
+| veincharge | 3v3 · 505 · 32 | 14 / 18 / 0 / 0 | 2.8 | 100 % | 13 / 0 / 0 / 19 / 41 / 0 / 0 | 15 / 0 / 0 / 12 / 55 / 0 / 0 | 18 / 0 / 0 / 10 / 47 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.47 | 2.4 / 0.0 / 0.0 / 9.7 / 3.8 / 8.5 / 1.5 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.35 / — / — / 1.94 / 0.57 / 1.53 | run 18 % | set_gong, snare | 0 / 0 / 0 / 0 | 34 / 0 / 0 · 5 | 1.1 | 0.16 | 22 / 3 · 12 / 4 · 23 / 1 · 1.17 / 1.33 |
+| fullstep | 3v3 · 202 · 32 | 15 / 17 / 0 / 0 | 2.3 | 100 % | 22 / 0 / 0 / 22 / 31 / 0 / 0 | 21 / 0 / 0 / 8 / 54 / 0 / 0 | 22 / 0 / 0 / 8 / 49 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.78 | 2.8 / 0.0 / 0.0 / 7.6 / 3.2 / 4.0 / 5.2 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.41 / — / — / 1.56 / 0.47 / 0.74 | Step 23 % | cinder_dive, set_gong, snare | 0 / 0 / 0 / 0 | 69 / 0 / 0 · 4 | 1.1 | 0.12 | 22 / 0 · 13 / 1 · 18 / 1 · 1.62 / 1.26 |
+| fullstep | 3v3 · 303 · 32 | 11 / 21 / 0 / 0 | 2.4 | 100 % | 28 / 0 / 0 / 16 / 28 / 0 / 0 | 18 / 0 / 0 / 13 / 53 / 0 / 0 | 23 / 0 / 0 / 11 / 45 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.56 | 3.1 / 0.0 / 0.0 / 8.2 / 3.7 / 4.3 / 4.8 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.43 / — / — / 1.79 / 0.54 / 0.81 | Step 20 % | snare | 0 / 0 / 0 / 0 | 56 / 0 / 0 · 4 | 1.0 | 0.06 | 19 / 6 · 11 / 3 · 19 / 1 · 1.30 / 1.56 |
+| fullstep | 3v3 · 404 · 32 | 14 / 18 / 0 / 0 | 2.4 | 100 % | 16 / 0 / 0 / 19 / 44 / 0 / 0 | 23 / 0 / 0 / 13 / 49 / 0 / 0 | 26 / 0 / 0 / 8 / 46 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.34 | 3.3 / 0.0 / 0.0 / 8.3 / 2.5 / 4.6 / 4.9 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.47 / — / — / 1.62 / 0.40 / 0.85 | Step 21 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 56 / 0 / 0 · 4 | 1.0 | 0.03 | 22 / 0 · 10 / 4 · 18 / 2 · 1.32 / 1.49 |
+| fullstep | 3v3 · 505 · 32 | 13 / 18 / 1 / 0 | 2.4 | 100 % | 16 / 0 / 0 / 3 / 28 / 0 / 0 | 18 / 0 / 0 / 8 / 52 / 0 / 0 | 25 / 0 / 0 / 9 / 44 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.78 | 3.4 / 0.0 / 0.0 / 9.5 / 3.1 / 3.8 / 5.2 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.51 / — / — / 1.92 / 0.47 / 0.67 | Step 21 % | cinder_dive, set_gong | 0 / 0 / 0 / 0 | 56 / 0 / 0 · 3 | 1.1 | 0.03 | 50 / 0 · 19 / 1 · 20 / 1 · 1.13 / 1.66 |
+| veincharge,fullstep | 3v3 · 202 · 32 | 15 / 17 / 0 / 0 | 2.7 | 100 % | 19 / 0 / 0 / 9 / 47 / 0 / 0 | 22 / 0 / 0 / 9 / 53 / 0 / 0 | 26 / 0 / 0 / 8 / 41 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.28 | 3.2 / 0.0 / 0.0 / 7.5 / 2.9 / 3.8 / 5.5 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.48 / — / — / 1.53 / 0.42 / 0.69 | Step 24 % | set_gong, snare | 0 / 0 / 0 / 0 | 56 / 0 / 0 · 5 | 1.1 | 0.19 | 25 / 0 · 12 / 1 · 23 / 1 · 1.09 / 1.42 |
+| veincharge,fullstep | 3v3 · 303 · 32 | 18 / 14 / 0 / 0 | 2.7 | 100 % | 34 / 0 / 0 / 9 / 31 / 0 / 0 | 24 / 0 / 0 / 10 / 55 / 0 / 0 | 26 / 0 / 0 / 11 / 38 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.16 | 3.7 / 0.0 / 0.0 / 7.3 / 3.4 / 3.5 / 5.2 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.51 / — / — / 1.59 / 0.50 / 0.65 | Step 23 % | set_gong, snare | 0 / 0 / 0 / 0 | 38 / 0 / 0 · 4 | 1.0 | 0.06 | 22 / 0 · 9 / 0 · 22 / 1 · 1.38 / 1.22 |
+| veincharge,fullstep | 3v3 · 404 · 32 | 13 / 19 / 0 / 0 | 2.7 | 100 % | 22 / 0 / 0 / 6 / 38 / 0 / 0 | 20 / 0 / 0 / 11 / 55 / 0 / 0 | 25 / 0 / 0 / 9 / 42 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.69 | 3.2 / 0.0 / 0.0 / 8.6 / 2.8 / 3.8 / 4.7 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.45 / — / — / 1.68 / 0.45 / 0.69 | Step 20 % | cinder_dive, set_gong, shove, snare | 0 / 0 / 0 / 0 | 44 / 0 / 0 · 4 | 1.0 | 0.12 | 28 / 3 · 10 / 3 · 22 / 1 · 1.31 / 1.25 |
+| veincharge,fullstep | 3v3 · 505 · 32 | 13 / 19 / 0 / 0 | 2.5 | 100 % | 22 / 0 / 0 / 9 / 38 / 0 / 0 | 22 / 0 / 0 / 11 / 54 / 0 / 0 | 24 / 0 / 0 / 9 / 43 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.91 | 3.1 / 0.0 / 0.0 / 8.0 / 3.3 / 3.6 / 5.4 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.45 / — / — / 1.62 / 0.50 / 0.65 | Step 23 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 50 / 0 / 0 · 4 | 1.0 | 0.16 | 25 / 3 · 11 / 1 · 23 / 1 · 1.04 / 1.58 |
+| nocastpush,veincharge | 3v3 · 202 · 32 | 15 / 17 / 0 / 0 | 3.8 | 100 % | 22 / 0 / 0 / 22 / 6 / 0 / 0 | 34 / 0 / 0 / 14 / 25 / 0 / 0 | 38 / 0 / 0 / 11 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.66 | 5.4 / 0.0 / 0.0 / 3.2 / 8.4 / 13.2 / 3.6 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.80 / — / — / 0.65 / 1.23 / 2.42 | run 21 % | none | 0 / 0 / 0 / 0 | 6 / 0 / 0 · 6 | 1.7 | 0.09 | 47 / 3 · 22 / 4 · 32 / 3 · 1.09 / 1.31 |
+| nocastpush,veincharge | 3v3 · 303 · 32 | 16 / 16 / 0 / 0 | 3.5 | 100 % | 34 / 0 / 0 / 3 / 25 / 0 / 0 | 43 / 0 / 0 / 10 / 20 / 0 / 0 | 44 / 0 / 0 / 9 / 13 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.75 | 5.8 / 0.0 / 0.0 / 2.0 / 7.0 / 11.6 / 3.1 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.80 / — / — / 0.44 / 1.04 / 2.16 | run 21 % | snare | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 5 | 1.6 | 0.03 | 34 / 0 · 23 / 1 · 30 / 3 · 1.28 / 1.19 |
+| nocastpush,veincharge | 3v3 · 404 · 32 | 13 / 19 / 0 / 0 | 3.5 | 100 % | 31 / 0 / 0 / 3 / 9 / 0 / 0 | 39 / 0 / 0 / 10 / 21 / 0 / 0 | 39 / 0 / 0 / 7 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.50 | 5.3 / 0.0 / 0.0 / 2.7 / 7.2 / 11.9 / 3.6 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.74 / — / — / 0.52 / 1.15 / 2.21 | run 17 % | snare | 0 / 0 / 0 / 0 | 22 / 0 / 0 · 6 | 1.5 | 0.06 | 50 / 6 · 24 / 5 · 33 / 4 · 1.36 / 1.19 |
+| nocastpush,veincharge | 3v3 · 505 · 32 | 11 / 21 / 0 / 0 | 3.6 | 100 % | 28 / 0 / 0 / 9 / 19 / 0 / 0 | 39 / 0 / 0 / 11 / 24 / 0 / 0 | 39 / 0 / 0 / 8 / 15 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.22 | 5.7 / 0.0 / 0.0 / 3.3 / 8.2 / 12.8 / 3.1 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.84 / — / — / 0.66 / 1.22 / 2.30 | run 20 % | snare | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 6 | 1.7 | 0.12 | 41 / 3 · 22 / 4 · 33 / 4 · 1.17 / 1.42 |
+| nocastpush,veincharge,fullstep | 3v3 · 202 · 32 | 17 / 15 / 0 / 0 | 3.4 | 100 % | 28 / 0 / 0 / 19 / 13 / 0 / 0 | 35 / 0 / 0 / 13 / 27 / 0 / 0 | 38 / 0 / 0 / 10 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.78 | 5.2 / 0.0 / 0.0 / 3.2 / 7.7 / 5.5 / 9.3 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.77 / — / — / 0.66 / 1.13 / 1.00 | Step 30 % | snare | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 6 | 1.5 | 0.09 | 31 / 3 · 20 / 2 · 30 / 3 · 1.24 / 1.19 |
+| nocastpush,veincharge,fullstep | 3v3 · 303 · 32 | 17 / 15 / 0 / 0 | 3.4 | 100 % | 41 / 0 / 0 / 16 / 9 / 0 / 0 | 43 / 0 / 0 / 19 / 17 / 0 / 0 | 42 / 0 / 0 / 12 / 13 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.25 | 5.6 / 0.0 / 0.0 / 2.6 / 7.0 / 7.1 / 9.2 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.77 / — / — / 0.57 / 1.04 / 1.31 | Step 29 % | none | 0 / 0 / 0 / 0 | 16 / 0 / 0 · 5 | 1.5 | 0.03 | 31 / 3 · 16 / 3 · 32 / 2 · 1.48 / 1.13 |
+| nocastpush,veincharge,fullstep | 3v3 · 404 · 32 | 18 / 14 / 0 / 0 | 3.7 | 100 % | 22 / 0 / 0 / 13 / 16 / 0 / 0 | 33 / 0 / 0 / 12 / 26 / 0 / 0 | 39 / 0 / 0 / 10 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.94 | 5.5 / 0.0 / 0.0 / 3.7 / 7.5 / 7.1 / 9.2 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.77 / — / — / 0.71 / 1.19 / 1.31 | Step 28 % | snare | 0 / 0 / 0 / 0 | 6 / 0 / 0 · 7 | 1.4 | 0.09 | 44 / 6 · 24 / 5 · 30 / 4 · 1.16 / 1.07 |
+| nocastpush,veincharge,fullstep | 3v3 · 505 · 32 | 14 / 18 / 0 / 0 | 3.8 | 97 % | 19 / 0 / 0 / 6 / 22 / 0 / 0 | 41 / 0 / 0 / 14 / 20 / 0 / 0 | 38 / 0 / 0 / 12 / 14 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.91 | 5.6 / 0.0 / 0.0 / 3.7 / 8.3 / 7.1 / 10.0 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.82 / — / — / 0.75 / 1.24 / 1.28 | Step 29 % | snare | 0 / 0 / 1 / 0 | 0 / 3 / 0 · 9 | 1.6 | 0.12 | 53 / 0 · 23 / 2 · 33 / 3 · 1.09 / 1.48 |
+
+### Compact rows, tactic on both sides
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nocastpush,veincharge + bots tactic | 3v3 · 202 · 8 | 5 / 3 / 0 / 0 | 4.4 | 100 % | 25 / 0 / 0 / 0 / 0 / 0 / 0 | 32 / 0 / 0 / 12 / 26 / 0 / 0 | 36 / 0 / 0 / 14 / 13 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.88 | 4.5 / 0.0 / 0.0 / 2.1 / 10.8 / 11.6 / 7.4 | 7.0 / 0.0 / 0.0 / 4.6 / 7.0 / 5.4 / 0.0 | 0.64 / — / — / 0.46 / 1.54 / 2.16 | run 21 % | asdf, coiling_rift, new_skill, shove, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 6 | 1.8 | 0.00 | 75 / 0 · 29 / 0 · 36 / 2 · 1.11 / 1.00 |
+| nocastpush,veincharge + bots tactic | 3v3 · 303 · 8 | 6 / 2 / 0 / 0 | 4.2 | 100 % | 25 / 0 / 0 / 0 / 13 / 0 / 0 | 26 / 0 / 0 / 13 / 26 / 0 / 0 | 31 / 0 / 0 / 13 / 14 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.62 | 4.5 / 0.0 / 0.0 / 3.5 / 9.8 / 12.8 / 8.4 | 7.1 / 0.0 / 0.0 / 4.6 / 6.6 / 5.6 / 0.0 | 0.63 / — / — / 0.76 / 1.47 / 2.27 | Step 22 % | asdf, new_skill, snare, strike_thrust | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 6 | 1.6 | 0.00 | 63 / 0 · 26 / 10 · 39 / 4 · 1.62 / 0.69 |
+| nocastpush,veincharge + bots tactic | 3v3 · 404 · 8 | 6 / 2 / 0 / 0 | 4.5 | 100 % | 38 / 0 / 0 / 13 / 13 / 0 / 0 | 38 / 0 / 0 / 12 / 21 / 0 / 0 | 29 / 0 / 0 / 9 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.62 | 4.6 / 0.0 / 0.0 / 3.4 / 8.9 / 14.2 / 9.1 | 7.1 / 0.0 / 0.0 / 5.4 / 6.2 / 5.2 / 0.0 | 0.65 / — / — / 0.63 / 1.42 / 2.71 | Step 23 % | coiling_rift, new_skill, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 6 | 1.4 | 0.00 | 38 / 0 · 26 / 3 · 40 / 4 · 1.54 / 0.89 |
+| nocastpush,veincharge + bots tactic | 3v3 · 505 · 8 | 3 / 5 / 0 / 0 | 4.8 | 100 % | 0 / 0 / 0 / 0 / 13 / 0 / 0 | 34 / 0 / 0 / 14 / 20 / 0 / 0 | 33 / 0 / 0 / 8 / 11 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.00 | 4.6 / 0.0 / 0.0 / 2.4 / 9.5 / 14.0 / 9.0 | 6.9 / 0.0 / 0.0 / 4.5 / 7.1 / 5.5 / 0.0 | 0.67 / — / — / 0.53 / 1.33 / 2.55 | run 23 % | coiling_rift, new_skill, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 7 | 1.5 | 0.25 | 88 / 0 · 26 / 6 · 43 / 3 · 0.90 / 1.37 |
+| nocastpush,veincharge,fullstep + bots tactic | 3v3 · 202 · 8 | 4 / 4 / 0 / 0 | 3.4 | 100 % | 38 / 0 / 0 / 0 / 25 / 0 / 0 | 34 / 0 / 0 / 17 / 23 / 0 / 0 | 39 / 0 / 0 / 11 / 12 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.75 | 5.1 / 0.0 / 0.0 / 1.0 / 8.1 / 1.5 / 15.2 | 7.0 / 0.0 / 0.0 / 4.6 / 7.0 / 5.4 / 0.0 | 0.73 / — / — / 0.22 / 1.16 / 0.28 | Step 49 % | cinder_dive, coiling_rift, run, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 4 | 1.5 | 0.12 | 38 / 0 · 23 / 3 · 33 / 6 · 0.63 / 2.00 |
+| nocastpush,veincharge,fullstep + bots tactic | 3v3 · 303 · 8 | 4 / 4 / 0 / 0 | 3.9 | 100 % | 13 / 0 / 0 / 0 / 38 / 0 / 0 | 33 / 0 / 0 / 9 / 27 / 0 / 0 | 35 / 0 / 0 / 9 / 15 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.25 | 5.4 / 0.0 / 0.0 / 2.2 / 8.9 / 2.8 / 17.6 | 7.1 / 0.0 / 0.0 / 4.6 / 6.6 / 5.6 / 0.0 | 0.75 / — / — / 0.49 / 1.34 / 0.49 | Step 48 % | new_skill, run, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 5 | 1.4 | 0.00 | 50 / 0 · 24 / 6 · 38 / 3 · 1.87 / 0.87 |
+| nocastpush,veincharge,fullstep + bots tactic | 3v3 · 404 · 8 | 4 / 4 / 0 / 0 | 3.2 | 100 % | 38 / 0 / 0 / 0 / 13 / 0 / 0 | 37 / 0 / 0 / 11 / 19 / 0 / 0 | 37 / 0 / 0 / 7 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 22.12 | 4.5 / 0.0 / 0.0 / 2.8 / 6.1 / 2.2 / 15.8 | 7.1 / 0.0 / 0.0 / 5.4 / 6.2 / 5.2 / 0.0 | 0.63 / — / — / 0.51 / 0.98 / 0.43 | Step 50 % | fire_trail, run, snare | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 5 | 1.5 | 0.12 | 38 / 13 · 26 / 7 · 37 / 3 · 1.63 / 1.21 |
+| nocastpush,veincharge,fullstep + bots tactic | 3v3 · 505 · 8 | 4 / 4 / 0 / 0 | 4.4 | 100 % | 13 / 0 / 0 / 25 / 25 / 0 / 0 | 28 / 0 / 0 / 8 / 25 / 0 / 0 | 33 / 0 / 0 / 9 / 11 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.38 | 4.6 / 0.0 / 0.0 / 2.8 / 10.8 / 2.6 / 20.9 | 6.9 / 0.0 / 0.0 / 4.5 / 7.1 / 5.5 / 0.0 | 0.67 / — / — / 0.61 / 1.51 / 0.48 | Step 50 % | asdf_3, cinder_dive, run, snare, strike_thrust | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 7 | 1.4 | 0.12 | 38 / 0 · 25 / 14 · 44 / 3 · 1.15 / 1.56 |
+
+### Compact rows, greedy with mixstats
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| mixstats,nocastpush | 3v3 · 202 · 80 | 44 / 36 / 0 / 0 | 3.3 | 100 % | 24 / 0 / 0 / 16 / 18 / 0 / 0 | 32 / 0 / 0 / 17 / 25 / 0 / 0 | 34 / 0 / 0 / 12 / 19 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.40 | 5.0 / 0.0 / 0.0 / 2.9 / 10.7 / 11.8 / 5.2 | 7.2 / 0.0 / 0.0 / 4.8 / 6.6 / 5.3 / 0.0 | 0.69 / — / — / 0.60 / 1.62 / 2.22 | run 15 % | none | 0 / 0 / 0 / 0 | 10 / 0 / 0 · 5 | 2.0 | 0.00 | 39 / 4 · 18 / 5 · 29 / 4 · 1.37 / 1.53 |
+| mixstats,nocastpush | 3v3 · 303 · 80 | 40 / 39 / 1 / 0 | 3.3 | 100 % | 28 / 0 / 0 / 11 / 14 / 0 / 0 | 35 / 0 / 0 / 14 / 23 / 0 / 0 | 36 / 0 / 0 / 14 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.98 | 5.6 / 0.0 / 0.0 / 2.9 / 10.8 / 12.1 / 5.8 | 7.1 / 0.0 / 0.0 / 4.6 / 6.8 / 5.5 / 0.0 | 0.78 / — / — / 0.62 / 1.61 / 2.21 | Step 16 % | none | 0 / 0 / 0 / 0 | 15 / 0 / 0 · 5 | 1.9 | 0.01 | 40 / 5 · 20 / 5 · 28 / 3 · 1.41 / 1.42 |
+| mixstats,nocastpush | 3v3 · 404 · 80 | 49 / 30 / 1 / 0 | 3.3 | 100 % | 23 / 0 / 0 / 14 / 18 / 0 / 0 | 35 / 0 / 0 / 16 / 21 / 0 / 0 | 36 / 0 / 0 / 12 / 19 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.75 | 5.7 / 0.0 / 0.0 / 3.1 / 9.9 / 11.8 / 5.3 | 7.2 / 0.0 / 0.0 / 5.0 / 6.4 / 5.4 / 0.0 | 0.80 / — / — / 0.62 / 1.54 / 2.17 | Step 15 % | none | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 5 | 1.9 | 0.00 | 41 / 4 · 19 / 6 · 28 / 4 · 1.51 / 1.35 |
+| mixstats,nocastpush | 3v3 · 505 · 80 | 42 / 37 / 1 / 0 | 3.3 | 100 % | 28 / 0 / 0 / 8 / 9 / 0 / 0 | 33 / 0 / 0 / 17 / 25 / 0 / 0 | 32 / 0 / 0 / 14 / 21 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.16 | 5.5 / 0.0 / 0.0 / 3.3 / 10.8 / 11.9 / 4.9 | 7.0 / 0.0 / 0.0 / 4.9 / 6.7 / 5.5 / 0.0 | 0.79 / — / — / 0.69 / 1.62 / 2.18 | run 16 % | none | 0 / 0 / 0 / 0 | 10 / 0 / 0 · 6 | 1.9 | 0.01 | 50 / 5 · 18 / 6 · 28 / 4 · 1.50 / 1.30 |
+| mixstats,nocastpush | 3v3 · 606 · 80 | 37 / 41 / 2 / 0 | 3.5 | 100 % | 21 / 0 / 0 / 9 / 16 / 0 / 0 | 29 / 0 / 0 / 18 / 23 / 0 / 0 | 34 / 0 / 0 / 14 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.09 | 5.4 / 0.0 / 0.0 / 3.5 / 10.5 / 11.9 / 5.7 | 7.3 / 0.0 / 0.0 / 4.9 / 6.5 / 5.4 / 0.0 | 0.75 / — / — / 0.73 / 1.62 / 2.22 | Step 15 % | none | 0 / 0 / 0 / 0 | 10 / 0 / 0 · 5 | 1.9 | 0.00 | 45 / 3 · 22 / 5 · 30 / 4 · 1.41 / 1.47 |
+| mixstats,nocastpush | 3v3 · 707 · 80 | 35 / 44 / 1 / 0 | 3.3 | 100 % | 21 / 0 / 0 / 9 / 19 / 0 / 0 | 35 / 0 / 0 / 12 / 23 / 0 / 0 | 35 / 0 / 0 / 12 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.36 | 5.4 / 0.0 / 0.0 / 3.1 / 10.5 / 11.8 / 5.5 | 7.3 / 0.0 / 0.0 / 4.7 / 6.6 / 5.4 / 0.0 | 0.73 / — / — / 0.66 / 1.61 / 2.19 | run 15 % | none | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 6 | 2.0 | 0.00 | 43 / 8 · 22 / 6 · 30 / 4 · 1.34 / 1.54 |
+| mixstats,nocastpush,veincharge | 3v3 · 202 · 80 | 40 / 40 / 0 / 0 | 3.7 | 100 % | 30 / 0 / 0 / 9 / 11 / 0 / 0 | 35 / 0 / 0 / 12 / 25 / 0 / 0 | 34 / 0 / 0 / 13 / 19 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.00 | 5.1 / 0.0 / 0.0 / 2.9 / 10.5 / 11.9 / 5.5 | 7.2 / 0.0 / 0.0 / 4.8 / 6.6 / 5.3 / 0.0 | 0.71 / — / — / 0.60 / 1.59 / 2.24 | Step 15 % | none | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 7 | 2.0 | 0.03 | 46 / 0 · 23 / 1 · 30 / 4 · 1.23 / 1.18 |
+| mixstats,nocastpush,veincharge | 3v3 · 303 · 80 | 41 / 39 / 0 / 0 | 3.6 | 100 % | 23 / 0 / 0 / 14 / 10 / 0 / 0 | 32 / 0 / 0 / 17 / 21 / 0 / 0 | 34 / 0 / 0 / 15 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.71 | 5.1 / 0.0 / 0.0 / 3.0 / 10.4 / 12.3 / 5.5 | 7.1 / 0.0 / 0.0 / 4.6 / 6.8 / 5.5 / 0.0 | 0.72 / — / — / 0.65 / 1.55 / 2.24 | run 17 % | none | 0 / 0 / 0 / 0 | 8 / 0 / 0 · 6 | 1.9 | 0.03 | 53 / 0 · 25 / 4 · 31 / 3 · 1.23 / 1.29 |
+| mixstats,nocastpush,veincharge | 3v3 · 404 · 80 | 42 / 38 / 0 / 0 | 3.7 | 100 % | 20 / 0 / 0 / 14 / 15 / 0 / 0 | 36 / 0 / 0 / 19 / 19 / 0 / 0 | 36 / 0 / 0 / 13 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.35 | 5.6 / 0.0 / 0.0 / 2.9 / 9.3 / 12.3 / 5.4 | 7.2 / 0.0 / 0.0 / 5.0 / 6.4 / 5.4 / 0.0 | 0.78 / — / — / 0.59 / 1.44 / 2.27 | run 16 % | none | 0 / 0 / 0 / 0 | 8 / 1 / 0 · 8 | 1.9 | 0.01 | 48 / 1 · 22 / 1 · 30 / 4 · 1.29 / 1.17 |
+| mixstats,nocastpush,veincharge | 3v3 · 505 · 80 | 36 / 44 / 0 / 0 | 3.8 | 99 % | 23 / 0 / 0 / 14 / 18 / 0 / 0 | 34 / 0 / 0 / 16 / 22 / 0 / 0 | 34 / 0 / 0 / 13 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.14 | 5.3 / 0.0 / 0.0 / 3.4 / 10.4 / 12.7 / 5.3 | 7.0 / 0.0 / 0.0 / 4.9 / 6.7 / 5.5 / 0.0 | 0.75 / — / — / 0.69 / 1.57 / 2.32 | run 17 % | none | 1 / 0 / 0 / 0 | 6 / 1 / 1 · 11 | 1.9 | 0.01 | 43 / 4 · 23 / 4 · 31 / 4 · 1.26 / 1.16 |
+| mixstats,nocastpush,veincharge | 3v3 · 606 · 80 | 37 / 43 / 0 / 0 | 3.7 | 100 % | 16 / 0 / 0 / 13 / 20 / 0 / 0 | 31 / 0 / 0 / 16 / 23 / 0 / 0 | 33 / 0 / 0 / 14 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.43 | 5.1 / 0.0 / 0.0 / 3.0 / 10.6 / 11.9 / 5.2 | 7.3 / 0.0 / 0.0 / 4.9 / 6.5 / 5.4 / 0.0 | 0.70 / — / — / 0.62 / 1.64 / 2.21 | run 16 % | none | 0 / 0 / 0 / 0 | 8 / 0 / 0 · 7 | 1.9 | 0.04 | 46 / 0 · 23 / 4 · 30 / 4 · 1.17 / 1.23 |
+| mixstats,nocastpush,veincharge | 3v3 · 707 · 80 | 43 / 37 / 0 / 0 | 3.6 | 100 % | 24 / 0 / 0 / 14 / 6 / 0 / 0 | 35 / 0 / 0 / 16 / 21 / 0 / 0 | 35 / 0 / 0 / 13 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.66 | 5.1 / 0.0 / 0.0 / 2.9 / 9.9 / 12.2 / 5.7 | 7.3 / 0.0 / 0.0 / 4.7 / 6.6 / 5.4 / 0.0 | 0.70 / — / — / 0.61 / 1.51 / 2.26 | run 17 % | none | 0 / 0 / 0 / 0 | 11 / 0 / 0 · 7 | 2.0 | 0.04 | 50 / 4 · 24 / 3 · 31 / 4 · 1.24 / 1.25 |
+| mixstats,nocastpush,fullstep | 3v3 · 202 · 80 | 41 / 36 / 3 / 0 | 3.2 | 100 % | 33 / 0 / 0 / 5 / 14 / 0 / 0 | 38 / 0 / 0 / 12 / 21 / 0 / 0 | 37 / 0 / 0 / 12 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.14 | 5.6 / 0.0 / 0.0 / 2.5 / 9.7 / 7.7 / 9.6 | 7.2 / 0.0 / 0.0 / 4.8 / 6.6 / 5.3 / 0.0 | 0.78 / — / — / 0.52 / 1.47 / 1.44 | Step 27 % | none | 0 / 0 / 0 / 0 | 21 / 0 / 0 · 6 | 1.8 | 0.00 | 43 / 5 · 20 / 8 · 28 / 5 · 1.44 / 1.47 |
+| mixstats,nocastpush,fullstep | 3v3 · 303 · 80 | 44 / 35 / 1 / 0 | 3.2 | 100 % | 30 / 0 / 0 / 10 / 13 / 0 / 0 | 37 / 0 / 0 / 15 / 21 / 0 / 0 | 38 / 0 / 0 / 13 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.26 | 6.0 / 0.0 / 0.0 / 2.3 / 10.1 / 7.2 / 9.4 | 7.1 / 0.0 / 0.0 / 4.6 / 6.8 / 5.5 / 0.0 | 0.84 / — / — / 0.49 / 1.50 / 1.32 | Step 27 % | none | 0 / 0 / 0 / 0 | 20 / 0 / 0 · 6 | 1.8 | 0.01 | 43 / 3 · 21 / 5 · 27 / 4 · 1.37 / 1.51 |
+| mixstats,nocastpush,fullstep | 3v3 · 404 · 80 | 37 / 39 / 4 / 0 | 3.2 | 100 % | 33 / 0 / 0 / 13 / 14 / 0 / 0 | 35 / 0 / 0 / 17 / 22 / 0 / 0 | 36 / 0 / 0 / 14 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.40 | 5.9 / 0.0 / 0.0 / 3.0 / 9.2 / 7.8 / 9.2 | 7.2 / 0.0 / 0.0 / 5.0 / 6.4 / 5.4 / 0.0 | 0.82 / — / — / 0.60 / 1.42 / 1.44 | Step 26 % | none | 0 / 0 / 0 / 0 | 14 / 0 / 0 · 5 | 1.8 | 0.00 | 34 / 6 · 18 / 6 · 26 / 4 · 1.45 / 1.44 |
+| mixstats,nocastpush,fullstep | 3v3 · 505 · 80 | 39 / 38 / 3 / 0 | 3.3 | 100 % | 23 / 0 / 0 / 11 / 18 / 0 / 0 | 28 / 0 / 0 / 19 / 24 / 0 / 0 | 35 / 0 / 0 / 13 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.60 | 5.6 / 0.0 / 0.0 / 3.2 / 9.9 / 7.9 / 9.6 | 7.0 / 0.0 / 0.0 / 4.9 / 6.7 / 5.5 / 0.0 | 0.80 / — / — / 0.66 / 1.49 / 1.45 | Step 26 % | none | 0 / 0 / 0 / 0 | 14 / 0 / 0 · 6 | 1.9 | 0.00 | 43 / 4 · 20 / 7 · 27 / 5 · 1.44 / 1.42 |
+| mixstats,nocastpush,fullstep | 3v3 · 606 · 80 | 41 / 39 / 0 / 0 | 3.2 | 100 % | 26 / 0 / 0 / 14 / 14 / 0 / 0 | 35 / 0 / 0 / 17 / 21 / 0 / 0 | 37 / 0 / 0 / 13 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 28.04 | 5.9 / 0.0 / 0.0 / 2.7 / 9.2 / 7.8 / 9.0 | 7.3 / 0.0 / 0.0 / 4.9 / 6.5 / 5.4 / 0.0 | 0.81 / — / — / 0.55 / 1.42 / 1.46 | Step 26 % | none | 0 / 0 / 0 / 0 | 18 / 0 / 0 · 5 | 1.8 | 0.01 | 41 / 3 · 19 / 6 · 27 / 5 · 1.37 / 1.46 |
+| mixstats,nocastpush,fullstep | 3v3 · 707 · 80 | 36 / 42 / 2 / 0 | 3.0 | 100 % | 25 / 0 / 0 / 9 / 20 / 0 / 0 | 36 / 0 / 0 / 14 / 23 / 0 / 0 | 39 / 0 / 0 / 13 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.06 | 5.8 / 0.0 / 0.0 / 2.3 / 8.3 / 7.3 / 9.3 | 7.3 / 0.0 / 0.0 / 4.7 / 6.6 / 5.4 / 0.0 | 0.78 / — / — / 0.49 / 1.26 / 1.36 | Step 28 % | none | 0 / 0 / 0 / 0 | 29 / 0 / 0 · 6 | 1.8 | 0.00 | 38 / 6 · 18 / 7 · 26 / 5 · 1.37 / 1.48 |
+| mixstats,nocastpush,veincharge,fullstep | 3v3 · 202 · 80 | 44 / 36 / 0 / 0 | 3.4 | 100 % | 29 / 0 / 0 / 9 / 14 / 0 / 0 | 36 / 0 / 0 / 14 / 21 / 0 / 0 | 36 / 0 / 0 / 13 / 14 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.65 | 5.2 / 0.0 / 0.0 / 2.3 / 9.3 / 7.3 / 9.2 | 7.2 / 0.0 / 0.0 / 4.8 / 6.6 / 5.3 / 0.0 | 0.72 / — / — / 0.48 / 1.41 / 1.36 | Step 28 % | none | 0 / 0 / 0 / 0 | 16 / 3 / 0 · 8 | 1.9 | 0.04 | 46 / 1 · 24 / 3 · 30 / 5 · 1.34 / 1.24 |
+| mixstats,nocastpush,veincharge,fullstep | 3v3 · 303 · 80 | 47 / 33 / 0 / 0 | 3.2 | 100 % | 34 / 0 / 0 / 14 / 11 / 0 / 0 | 33 / 0 / 0 / 17 / 22 / 0 / 0 | 37 / 0 / 0 / 13 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.88 | 5.6 / 0.0 / 0.0 / 2.3 / 9.2 / 7.4 / 9.1 | 7.1 / 0.0 / 0.0 / 4.6 / 6.8 / 5.5 / 0.0 | 0.78 / — / — / 0.49 / 1.37 / 1.35 | Step 27 % | none | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 6 | 1.8 | 0.05 | 38 / 4 · 24 / 3 · 28 / 4 · 1.32 / 1.31 |
+| mixstats,nocastpush,veincharge,fullstep | 3v3 · 404 · 80 | 38 / 42 / 0 / 0 | 3.4 | 100 % | 31 / 0 / 0 / 10 / 16 / 0 / 0 | 38 / 0 / 0 / 13 / 23 / 0 / 0 | 38 / 0 / 0 / 12 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.39 | 5.7 / 0.0 / 0.0 / 2.6 / 8.9 / 7.5 / 9.2 | 7.2 / 0.0 / 0.0 / 5.0 / 6.4 / 5.4 / 0.0 | 0.80 / — / — / 0.53 / 1.38 / 1.38 | Step 27 % | none | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 6 | 1.7 | 0.07 | 40 / 1 · 20 / 4 · 28 / 5 · 1.25 / 1.30 |
+| mixstats,nocastpush,veincharge,fullstep | 3v3 · 505 · 80 | 32 / 48 / 0 / 0 | 3.5 | 100 % | 26 / 0 / 0 / 14 / 15 / 0 / 0 | 36 / 0 / 0 / 13 / 21 / 0 / 0 | 37 / 0 / 0 / 12 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.19 | 5.5 / 0.0 / 0.0 / 3.0 / 9.4 / 7.3 / 9.8 | 7.0 / 0.0 / 0.0 / 4.9 / 6.7 / 5.5 / 0.0 | 0.77 / — / — / 0.61 / 1.41 / 1.34 | Step 28 % | none | 0 / 0 / 0 / 0 | 16 / 0 / 0 · 7 | 1.8 | 0.05 | 43 / 3 · 23 / 7 · 30 / 5 · 1.21 / 1.30 |
+| mixstats,nocastpush,veincharge,fullstep | 3v3 · 606 · 80 | 35 / 45 / 0 / 0 | 3.4 | 100 % | 30 / 0 / 0 / 14 / 15 / 0 / 0 | 35 / 0 / 0 / 16 / 20 / 0 / 0 | 36 / 0 / 0 / 13 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.90 | 5.4 / 0.0 / 0.0 / 2.4 / 9.1 / 7.3 / 9.5 | 7.3 / 0.0 / 0.0 / 4.9 / 6.5 / 5.4 / 0.0 | 0.75 / — / — / 0.48 / 1.41 / 1.35 | Step 28 % | none | 0 / 0 / 0 / 0 | 16 / 0 / 0 · 6 | 1.8 | 0.06 | 38 / 4 · 22 / 6 · 29 / 5 · 1.19 / 1.35 |
+| mixstats,nocastpush,veincharge,fullstep | 3v3 · 707 · 80 | 41 / 39 / 0 / 0 | 3.3 | 100 % | 26 / 0 / 0 / 14 / 21 / 0 / 0 | 33 / 0 / 0 / 17 / 25 / 0 / 0 | 37 / 0 / 0 / 12 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.68 | 5.2 / 0.0 / 0.0 / 2.5 / 8.4 / 7.3 / 8.7 | 7.3 / 0.0 / 0.0 / 4.7 / 6.6 / 5.4 / 0.0 | 0.71 / — / — / 0.53 / 1.29 / 1.35 | Step 27 % | none | 0 / 0 / 0 / 0 | 19 / 1 / 0 · 8 | 1.7 | 0.07 | 36 / 3 · 21 / 4 · 29 / 4 · 1.15 / 1.33 |
+
+**Observations** (indications; bots on working content, not tuned for these rules):
+
+- **Initiative gets a slope with charged veins:** with `nocastpush` alone the three initiative bands are level (50 / 49 / 49 %); with `veincharge` added they read 45 / 51 / 54 %, and the same with `fullstep` on top (46 / 50 / 54 %). The same teams and boards are compared; the spread of 9 points is larger than the band noise, the direction is the first one measured for initiative in this series. HP keeps the steepest slope (about 41 → 58 %) in every variant.
+- **Movement barely moves:** `veincharge` leaves the Movement bands within noise. `fullstep` lowers Movement 1–2 by 3 points (46 → 43 %) and changes nothing above 3; no established effect.
+- **Length:** `veincharge` adds little with greedy (3.41 → 3.59 with `nocastpush`; 2.41 → 2.62 without) and a full round with tactic (3.38 → 4.47, 32 battles, 7 of them past round 5). `fullstep` adds nothing with greedy and shortens the tactic rows (4.47 → 3.72). Vein damage per battle is about the same as under last-touch ownership (7.9 against 8.2).
+- **Early defeats return:** defeats before the victim's own first turn rise from 0 to 10–11 of 128 battles with `nocastpush,veincharge` (2–3 of 32 with tactic), and from 8 to 18 without `nocastpush`. A discharge hits at once, also in round 1 and also a monster that has not acted; three veins can hit one low-HP monster in a row. This is a measured conflict with the goal “no defeat without a chance to act”; no variant that charges from round 2 or spreads the hits was run.
+- **Not measured:** human play, whether `fullstep` frees a kit slot (kits still carry Run), side-swapped fairness, bots that play for the discharge order.
+
+**Follow-up:** T39/T40/T03/T13: human play of charged veins with `zone_cast_push` off; a variant without round-1 or repeated hits on one monster before it has acted; `fullstep` needs kits without Run before it says anything about Movement. No rule or default is changed by this entry.
+
+## S025 · 2026-11-14 · Three battle-length switches: once per turn, no cast push, one-sided collision
+
+**State:** main, base `593f770` dirty (three new test switches in `battle_experiment.gd`, off by default; no resource change); content `2026-11-13.1`, kit set `a30a9be42850`; Godot 4.7.2, normal CPU settings, runs in parallel. Battle suite before the runs: 158 cases, 0 errors, 0 failures (defaults unchanged). User request: test proposals 1–3 for longer battles; higher HP was declined by the user and is not part of this series.
+
+**Variants** (`sim.gd --variant`, in memory only): `turnonce` = every slotted skill at most once per turn of its monster (the universal Step is not slotted; Run is); `nocastpush` = a push or pull zone does not move its occupants when it is cast, only at the end of their turn; `collideone` = a monster moved into another monster takes the collision damage alone. Normal map with three Dragon Veins, authored stats and kits, cost 1 for zone push/pull.
+
+**Runs:** greedy (`AiBrain` both sides): 6 variants × 4 seeds (202, 303, 404, 505) × 32 = 768 battles. Tactic both sides: 3 variants × 4 seeds × 8 = 96 battles. `--paired`: the variants of one seed share teams, boards and starts, **not side-swapped**; rows of one seed are correlated, do not pool variants as independent samples. Each run was executed twice (full block for histograms and damage, `--compact` for the rows below); the second execution is an exact rerun, not new evidence.
+
+### Exact histogram summary
+
+| Bot | Variant | Battles | Round sum / battles = mean | Rounds 1 / 2 / 3 / 4 / 5 / 6 / 7 | Ended <2 / >5 | Defeats before own first turn | Damage per battle: strike / collision / vein / total |
+|---|---|---|---|---|---|---|---|
+| greedy | control | 128 | 308/128 = 2.406 | 3 / 78 / 39 / 8 / 0 / 0 / 0 | 3 / 0 | 8 | 5.0 / 12.2 / 4.8 / 25.0 |
+| greedy | turnonce | 128 | 326/128 = 2.547 | 2 / 63 / 54 / 9 / 0 / 0 / 0 | 2 / 0 | 7 | 6.2 / 10.5 / 5.2 / 25.3 |
+| greedy | nocastpush | 128 | 437/128 = 3.414 | 0 / 14 / 63 / 38 / 10 / 3 / 0 | 0 / 3 | 0 | 10.0 / 3.8 / 8.2 / 26.0 |
+| greedy | collideone | 128 | 321/128 = 2.508 | 2 / 64 / 57 / 5 / 0 / 0 / 0 | 2 / 0 | 1 | 5.3 / 10.8 / 5.1 / 24.1 |
+| greedy | turnonce,nocastpush | 128 | 430/128 = 3.359 | 0 / 18 / 57 / 46 / 4 / 2 / 1 | 0 / 3 | 0 | 10.3 / 4.2 / 8.0 / 26.0 |
+| greedy | turnonce,nocastpush,collideone | 128 | 435/128 = 3.398 | 0 / 16 / 56 / 46 / 9 / 1 / 0 | 0 / 1 | 0 | 10.5 / 3.4 / 8.0 / 25.7 |
+| tactic | control | 32 | 77/32 = 2.406 | 0 / 22 / 7 / 3 / 0 / 0 / 0 | 0 / 0 | 3 | 2.9 / 14.5 / 4.5 / 25.5 |
+| tactic | nocastpush | 32 | 108/32 = 3.375 | 0 / 3 / 15 / 13 / 1 / 0 / 0 | 0 / 0 | 0 | 7.3 / 3.9 / 8.9 / 24.5 |
+| tactic | turnonce,nocastpush,collideone | 32 | 128/32 = 4.000 | 0 / 1 / 7 / 16 / 7 / 1 / 0 | 0 / 1 | 0 | 8.8 / 3.3 / 10.0 / 26.1 |
+
+Damage per battle is the mean of the four per-seed “per battle” rows of the full blocks (rounded inputs); the histogram columns are exact counts.
+
+### Compact rows, greedy
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build rules | 3v3 · 202 · 32 | 16 / 15 / 1 / 0 | 2.2 | 100 % | 13 / 0 / 0 / 9 / 34 / 0 / 0 | 15 / 0 / 0 / 9 / 61 / 0 / 0 | 19 / 0 / 0 / 10 / 50 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.34 | 2.5 / 0.0 / 0.0 / 9.1 / 3.5 / 7.2 / 0.8 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.37 / — / — / 1.87 / 0.51 / 1.31 | run 16 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 75 / 0 / 0 · 4 | 1.1 | 0.12 | 38 / 3 · 12 / 1 · 18 / 1 · 1.49 / 1.23 |
+| build rules | 3v3 · 303 · 32 | 9 / 22 / 1 / 0 | 2.3 | 100 % | 6 / 0 / 0 / 6 / 50 / 0 / 0 | 14 / 0 / 0 / 8 / 61 / 0 / 0 | 19 / 0 / 0 / 11 / 49 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.16 | 2.5 / 0.0 / 0.0 / 8.5 / 3.4 / 7.9 / 0.8 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.34 / — / — / 1.84 / 0.50 / 1.47 | run 19 % | cinder_dive, set_gong, snare | 0 / 0 / 0 / 0 | 66 / 0 / 0 · 3 | 1.1 | 0.06 | 31 / 6 · 11 / 3 · 18 / 1 · 1.15 / 1.60 |
+| build rules | 3v3 · 404 · 32 | 16 / 16 / 0 / 0 | 2.4 | 100 % | 22 / 0 / 0 / 3 / 38 / 0 / 0 | 20 / 0 / 0 / 10 / 56 / 0 / 0 | 21 / 0 / 0 / 9 / 48 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.91 | 2.7 / 0.0 / 0.0 / 9.8 / 2.9 / 6.7 / 1.0 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.38 / — / — / 1.91 / 0.46 / 1.24 | run 13 % | none | 0 / 0 / 0 / 0 | 69 / 0 / 0 · 4 | 1.1 | 0.03 | 31 / 3 · 10 / 2 · 19 / 2 · 1.33 / 1.45 |
+| build rules | 3v3 · 505 · 32 | 18 / 14 / 0 / 0 | 2.7 | 100 % | 16 / 0 / 0 / 0 / 56 / 0 / 0 | 18 / 0 / 0 / 5 / 58 / 0 / 0 | 21 / 0 / 0 / 7 / 48 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.53 | 2.9 / 0.0 / 0.0 / 9.1 / 3.6 / 8.4 / 1.4 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.42 / — / — / 1.83 / 0.54 / 1.52 | run 17 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 44 / 0 / 0 · 4 | 1.1 | 0.03 | 28 / 0 · 12 / 5 · 21 / 2 · 1.31 / 1.38 |
+| turnonce | 3v3 · 202 · 32 | 12 / 19 / 1 / 0 | 2.4 | 100 % | 9 / 0 / 0 / 6 / 34 / 0 / 0 | 18 / 0 / 0 / 12 / 45 / 0 / 0 | 25 / 0 / 0 / 10 / 40 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.66 | 3.2 / 0.0 / 0.0 / 6.8 / 4.2 / 7.2 / 3.1 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.47 / — / — / 1.38 / 0.62 / 1.33 | run 15 % | snare | 0 / 0 / 0 / 0 | 56 / 0 / 0 · 3 | 1.2 | 0.12 | 41 / 9 · 16 / 7 · 22 / 2 · 1.30 / 1.49 |
+| turnonce | 3v3 · 303 · 32 | 7 / 25 / 0 / 0 | 2.6 | 100 % | 22 / 0 / 0 / 16 / 38 / 0 / 0 | 19 / 0 / 0 / 11 / 53 / 0 / 0 | 25 / 0 / 0 / 10 / 42 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.41 | 3.4 / 0.0 / 0.0 / 6.9 / 4.1 / 7.0 / 3.0 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.47 / — / — / 1.50 / 0.61 / 1.31 | run 15 % | none | 0 / 0 / 0 / 0 | 50 / 0 / 0 · 4 | 1.1 | 0.03 | 22 / 3 · 10 / 6 · 19 / 2 · 1.36 / 1.36 |
+| turnonce | 3v3 · 404 · 32 | 18 / 14 / 0 / 0 | 2.5 | 100 % | 22 / 0 / 0 / 19 / 16 / 0 / 0 | 22 / 0 / 0 / 16 / 43 / 0 / 0 | 25 / 0 / 0 / 9 / 42 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.03 | 3.2 / 0.0 / 0.0 / 7.3 / 4.0 / 7.6 / 2.3 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.44 / — / — / 1.43 / 0.64 / 1.40 | run 14 % | none | 0 / 0 / 0 / 0 | 53 / 0 / 0 · 4 | 1.2 | 0.03 | 34 / 6 · 14 / 3 · 21 / 1 · 1.52 / 1.21 |
+| turnonce | 3v3 · 505 · 32 | 14 / 17 / 1 / 0 | 2.7 | 100 % | 25 / 0 / 0 / 28 / 16 / 0 / 0 | 24 / 0 / 0 / 18 / 37 / 0 / 0 | 23 / 0 / 0 / 13 / 41 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.09 | 3.2 / 0.0 / 0.0 / 7.4 / 4.6 / 7.6 / 3.1 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.48 / — / — / 1.50 / 0.69 / 1.37 | run 15 % | snare | 0 / 0 / 0 / 0 | 44 / 0 / 0 · 4 | 1.3 | 0.03 | 22 / 9 · 11 / 8 · 21 / 3 · 1.23 / 1.43 |
+| nocastpush | 3v3 · 202 · 32 | 14 / 17 / 1 / 0 | 3.4 | 100 % | 22 / 0 / 0 / 13 / 13 / 0 / 0 | 37 / 0 / 0 / 14 / 18 / 0 / 0 | 37 / 0 / 0 / 13 / 13 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.03 | 5.5 / 0.0 / 0.0 / 2.9 / 9.0 / 11.8 / 3.9 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.81 / — / — / 0.60 / 1.32 / 2.16 | run 18 % | snare | 0 / 0 / 0 / 0 | 16 / 0 / 0 · 6 | 1.7 | 0.00 | 53 / 0 · 25 / 6 · 32 / 4 · 1.33 / 1.49 |
+| nocastpush | 3v3 · 303 · 32 | 16 / 16 / 0 / 0 | 3.3 | 100 % | 31 / 0 / 0 / 6 / 19 / 0 / 0 | 34 / 0 / 0 / 13 / 24 / 0 / 0 | 40 / 0 / 0 / 10 / 14 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.50 | 5.7 / 0.0 / 0.0 / 2.7 / 8.4 / 11.4 / 4.1 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.79 / — / — / 0.59 / 1.24 / 2.12 | run 19 % | cinder_dive, snare | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 5 | 1.5 | 0.00 | 41 / 3 · 21 / 6 · 31 / 3 · 1.45 / 1.46 |
+| nocastpush | 3v3 · 404 · 32 | 18 / 12 / 2 / 0 | 3.3 | 100 % | 44 / 0 / 0 / 6 / 3 / 0 / 0 | 38 / 0 / 0 / 10 / 24 / 0 / 0 | 39 / 0 / 0 / 7 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.00 | 5.6 / 0.0 / 0.0 / 3.5 / 7.9 / 12.0 / 3.5 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.78 / — / — / 0.68 / 1.25 / 2.22 | run 16 % | snare | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 6 | 1.6 | 0.00 | 44 / 3 · 23 / 5 · 31 / 4 · 1.69 / 1.19 |
+| nocastpush | 3v3 · 505 · 32 | 16 / 16 / 0 / 0 | 3.6 | 100 % | 34 / 0 / 0 / 16 / 6 / 0 / 0 | 41 / 0 / 0 / 16 / 16 / 0 / 0 | 37 / 0 / 0 / 12 / 13 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.53 | 5.7 / 0.0 / 0.0 / 3.7 / 9.7 / 12.4 / 3.9 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.83 / — / — / 0.75 / 1.45 / 2.23 | run 17 % | snare | 0 / 0 / 0 / 0 | 6 / 0 / 0 · 6 | 1.6 | 0.00 | 41 / 3 · 16 / 10 · 33 / 5 · 1.47 / 1.36 |
+| collideone | 3v3 · 202 · 32 | 14 / 18 / 0 / 0 | 2.5 | 100 % | 28 / 0 / 0 / 3 / 31 / 0 / 0 | 19 / 0 / 0 / 7 / 59 / 0 / 0 | 22 / 0 / 0 / 9 / 44 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.53 | 2.7 / 0.0 / 0.0 / 10.0 / 3.8 / 7.7 / 1.1 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.40 / — / — / 2.06 / 0.56 / 1.41 | run 17 % | cinder_dive, set_gong, snare | 0 / 0 / 0 / 0 | 47 / 0 / 0 · 3 | 1.0 | 0.03 | 34 / 0 · 10 / 2 · 22 / 2 · 1.43 / 1.28 |
+| collideone | 3v3 · 303 · 32 | 14 / 18 / 0 / 0 | 2.5 | 100 % | 13 / 0 / 0 / 3 / 44 / 0 / 0 | 16 / 0 / 0 / 7 / 59 / 0 / 0 | 22 / 0 / 0 / 9 / 44 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.22 | 2.8 / 0.0 / 0.0 / 9.4 / 3.9 / 8.0 / 0.6 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.38 / — / — / 2.04 / 0.58 / 1.49 | run 17 % | cinder_dive, set_gong, shove | 0 / 0 / 0 / 0 | 50 / 0 / 0 · 4 | 1.1 | 0.00 | 31 / 9 · 10 / 6 · 21 / 2 · 1.20 / 1.52 |
+| collideone | 3v3 · 404 · 32 | 14 / 18 / 0 / 0 | 2.3 | 100 % | 19 / 0 / 0 / 9 / 31 / 0 / 0 | 14 / 0 / 0 / 8 / 59 / 0 / 0 | 23 / 0 / 0 / 9 / 47 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.81 | 2.7 / 0.0 / 0.0 / 10.6 / 2.9 / 7.2 / 0.6 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.37 / — / — / 2.07 / 0.46 / 1.34 | gale 13 % | cinder_dive, set_gong, snare | 0 / 0 / 0 / 0 | 72 / 0 / 0 · 3 | 1.1 | 0.00 | 38 / 3 · 13 / 4 · 20 / 2 · 1.35 / 1.41 |
+| collideone | 3v3 · 505 · 32 | 19 / 13 / 0 / 0 | 2.8 | 100 % | 19 / 0 / 0 / 19 / 34 / 0 / 0 | 20 / 0 / 0 / 11 / 49 / 0 / 0 | 21 / 0 / 0 / 9 / 44 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.91 | 2.6 / 0.0 / 0.0 / 11.0 / 3.7 / 8.2 / 0.9 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.39 / — / — / 2.21 / 0.55 / 1.47 | run 16 % | none | 0 / 0 / 0 / 0 | 38 / 0 / 0 · 4 | 1.2 | 0.00 | 28 / 0 · 14 / 5 · 23 / 2 · 1.48 / 1.29 |
+| turnonce,nocastpush | 3v3 · 202 · 32 | 13 / 19 / 0 / 0 | 3.3 | 100 % | 28 / 0 / 0 / 9 / 13 / 0 / 0 | 35 / 0 / 0 / 13 / 19 / 0 / 0 | 38 / 0 / 0 / 12 / 14 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.06 | 5.3 / 0.0 / 0.0 / 2.9 / 7.4 / 10.2 / 5.4 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.78 / — / — / 0.60 / 1.08 / 1.87 | Step 17 % | none | 0 / 0 / 0 / 0 | 16 / 0 / 0 · 5 | 1.8 | 0.00 | 44 / 0 · 22 / 6 · 31 / 3 · 1.34 / 1.47 |
+| turnonce,nocastpush | 3v3 · 303 · 32 | 15 / 17 / 0 / 0 | 3.3 | 100 % | 38 / 0 / 0 / 6 / 9 / 0 / 0 | 38 / 0 / 0 / 5 / 30 / 0 / 0 | 43 / 0 / 0 / 8 / 15 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.34 | 6.1 / 0.0 / 0.0 / 2.3 / 6.2 / 9.8 / 4.9 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.84 / — / — / 0.50 / 0.91 / 1.81 | Step 17 % | cinder_dive | 0 / 0 / 0 / 0 | 19 / 0 / 0 · 4 | 1.6 | 0.00 | 47 / 0 · 21 / 4 · 30 / 3 · 1.35 / 1.45 |
+| turnonce,nocastpush | 3v3 · 404 · 32 | 19 / 12 / 1 / 0 | 3.2 | 100 % | 34 / 0 / 0 / 3 / 13 / 0 / 0 | 35 / 0 / 0 / 9 / 25 / 0 / 0 | 40 / 0 / 0 / 7 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.03 | 6.0 / 0.0 / 0.0 / 2.8 / 6.3 / 9.8 / 4.6 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.83 / — / — / 0.55 / 1.00 / 1.82 | Step 16 % | cinder_dive | 0 / 0 / 0 / 0 | 16 / 0 / 0 · 6 | 1.7 | 0.00 | 50 / 0 · 24 / 6 · 30 / 4 · 1.56 / 1.28 |
+| turnonce,nocastpush | 3v3 · 505 · 32 | 14 / 16 / 2 / 0 | 3.6 | 100 % | 19 / 0 / 0 / 16 / 13 / 0 / 0 | 35 / 0 / 0 / 13 / 22 / 0 / 0 | 38 / 0 / 0 / 10 / 17 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.72 | 5.9 / 0.0 / 0.0 / 3.1 / 7.6 / 9.9 / 6.5 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.88 / — / — / 0.63 / 1.14 / 1.78 | Step 20 % | none | 0 / 0 / 0 / 0 | 6 / 0 / 0 · 7 | 1.7 | 0.00 | 50 / 3 · 26 / 4 · 32 / 3 · 1.36 / 1.42 |
+| turnonce,nocastpush,collideone | 3v3 · 202 · 32 | 11 / 21 / 0 / 0 | 3.4 | 100 % | 41 / 0 / 0 / 6 / 16 / 0 / 0 | 40 / 0 / 0 / 14 / 17 / 0 / 0 | 40 / 0 / 0 / 12 / 11 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.09 | 5.7 / 0.0 / 0.0 / 2.8 / 7.9 / 10.2 / 5.3 | 6.8 / 0.0 / 0.0 / 4.9 / 6.8 / 5.5 / 0.0 | 0.83 / — / — / 0.58 / 1.15 / 1.87 | Step 17 % | none | 0 / 0 / 0 / 0 | 9 / 0 / 0 · 4 | 1.7 | 0.00 | 34 / 0 · 18 / 9 · 31 / 4 · 1.35 / 1.45 |
+| turnonce,nocastpush,collideone | 3v3 · 303 · 32 | 15 / 17 / 0 / 0 | 3.3 | 100 % | 34 / 0 / 0 / 9 / 16 / 0 / 0 | 44 / 0 / 0 / 7 / 25 / 0 / 0 | 44 / 0 / 0 / 9 / 12 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.09 | 6.1 / 0.0 / 0.0 / 2.4 / 6.3 / 9.7 / 5.1 | 7.3 / 0.0 / 0.0 / 4.6 / 6.8 / 5.4 / 0.0 | 0.84 / — / — / 0.52 / 0.94 / 1.80 | Step 17 % | cinder_dive | 0 / 0 / 0 / 0 | 16 / 0 / 0 · 5 | 1.6 | 0.00 | 38 / 3 · 18 / 5 · 31 / 3 · 1.41 / 1.41 |
+| turnonce,nocastpush,collideone | 3v3 · 404 · 32 | 20 / 11 / 1 / 0 | 3.2 | 100 % | 22 / 0 / 0 / 3 / 13 / 0 / 0 | 34 / 0 / 0 / 10 / 23 / 0 / 0 | 41 / 0 / 0 / 8 / 16 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.41 | 6.0 / 0.0 / 0.0 / 2.6 / 6.3 / 9.6 / 5.3 | 7.2 / 0.0 / 0.0 / 5.1 / 6.3 / 5.4 / 0.0 | 0.84 / — / — / 0.50 / 1.00 / 1.77 | Step 18 % | cinder_dive | 0 / 0 / 0 / 0 | 19 / 0 / 0 · 6 | 1.7 | 0.00 | 63 / 0 · 28 / 4 · 31 / 4 · 1.62 / 1.20 |
+| turnonce,nocastpush,collideone | 3v3 · 505 · 32 | 14 / 17 / 1 / 0 | 3.7 | 100 % | 38 / 0 / 0 / 13 / 3 / 0 / 0 | 39 / 0 / 0 / 18 / 16 / 0 / 0 | 39 / 0 / 0 / 12 / 14 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.25 | 6.0 / 0.0 / 0.0 / 3.2 / 7.5 / 10.2 / 5.8 | 6.8 / 0.0 / 0.0 / 5.0 / 6.7 / 5.6 / 0.0 | 0.88 / — / — / 0.65 / 1.12 / 1.84 | Step 18 % | none | 0 / 0 / 0 / 0 | 6 / 0 / 0 · 5 | 1.6 | 0.00 | 47 / 0 · 25 / 2 · 32 / 3 · 1.34 / 1.48 |
+
+### Compact rows, tactic on both sides
+
+| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| bots tactic | 3v3 · 202 · 8 | 4 / 4 / 0 / 0 | 2.4 | 100 % | 0 / 0 / 0 / 0 / 38 / 0 / 0 | 3 / 0 / 0 / 17 / 64 / 0 / 0 | 10 / 0 / 0 / 15 / 52 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 25.25 | 1.5 / 0.0 / 0.0 / 10.2 / 3.5 / 7.2 / 2.1 | 7.0 / 0.0 / 0.0 / 4.6 / 7.0 / 5.4 / 0.0 | 0.21 / — / — / 2.22 / 0.50 / 1.35 | gale 18 % | asdf, cinder_dive, coiling_rift, new_skill, shove, snare, strike_thrust | 0 / 0 / 0 / 0 | 63 / 0 / 0 · 3 | 1.2 | 0.12 | 63 / 0 · 14 / 3 · 20 / 3 · 1.44 / 1.06 |
+| bots tactic | 3v3 · 303 · 8 | 3 / 5 / 0 / 0 | 2.8 | 100 % | 25 / 0 / 0 / 0 / 50 / 0 / 0 | 11 / 0 / 0 / 5 / 57 / 0 / 0 | 15 / 0 / 0 / 6 / 54 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 27.12 | 2.4 / 0.0 / 0.0 / 8.9 / 3.2 / 7.4 / 3.5 | 7.1 / 0.0 / 0.0 / 4.6 / 6.6 / 5.6 / 0.0 | 0.33 / — / — / 1.92 / 0.49 / 1.31 | run 17 % | asdf, cinder_dive, coiling_rift, new_skill, snare, strike_thrust | 0 / 0 / 0 / 0 | 50 / 0 / 0 · 4 | 1.1 | 0.12 | 25 / 0 · 16 / 3 · 21 / 1 · 1.44 / 1.38 |
+| bots tactic | 3v3 · 404 · 8 | 7 / 1 / 0 / 0 | 2.1 | 100 % | 25 / 0 / 0 / 13 / 38 / 0 / 0 | 8 / 0 / 0 / 8 / 69 / 0 / 0 | 8 / 0 / 0 / 10 / 67 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.62 | 1.1 / 0.0 / 0.0 / 11.6 / 3.1 / 7.8 / 1.5 | 7.1 / 0.0 / 0.0 / 5.4 / 6.2 / 5.2 / 0.0 | 0.16 / — / — / 2.16 / 0.50 / 1.48 | gale 20 % | asdf, cinder_dive, coiling_rift, new_skill, shove, snare, thorn_lash | 0 / 0 / 0 / 0 | 88 / 0 / 0 · 3 | 1.0 | 0.00 | 25 / 0 · 8 / 3 · 13 / 0 · 1.73 / 0.73 |
+| bots tactic | 3v3 · 505 · 8 | 5 / 3 / 0 / 0 | 2.4 | 100 % | 0 / 0 / 0 / 25 / 50 / 0 / 0 | 6 / 0 / 0 / 15 / 62 / 0 / 0 | 12 / 0 / 0 / 13 / 54 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 23.12 | 1.5 / 0.0 / 0.0 / 9.8 / 4.5 / 7.5 / 3.2 | 6.9 / 0.0 / 0.0 / 4.5 / 7.1 / 5.5 / 0.0 | 0.22 / — / — / 2.17 / 0.63 / 1.36 | run 17 % | asdf, coiling_rift, snare, strike_thrust | 0 / 0 / 0 / 0 | 75 / 0 / 0 · 4 | 1.1 | 0.12 | 13 / 0 · 6 / 3 · 17 / 2 · 1.50 / 1.17 |
+| nocastpush + bots tactic | 3v3 · 202 · 8 | 5 / 3 / 0 / 0 | 3.4 | 100 % | 25 / 0 / 0 / 0 / 0 / 0 / 0 | 22 / 0 / 0 / 22 / 28 / 0 / 0 | 31 / 0 / 0 / 13 / 14 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.38 | 5.0 / 0.0 / 0.0 / 2.0 / 9.2 / 10.5 / 8.0 | 7.0 / 0.0 / 0.0 / 4.6 / 7.0 / 5.4 / 0.0 | 0.71 / — / — / 0.43 / 1.32 / 1.95 | Step 23 % | cinder_dive, coiling_rift, new_skill, snare | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 5 | 1.6 | 0.00 | 63 / 13 · 19 / 6 · 38 / 4 · 1.48 / 1.48 |
+| nocastpush + bots tactic | 3v3 · 303 · 8 | 4 / 4 / 0 / 0 | 3.5 | 100 % | 25 / 0 / 0 / 25 / 13 / 0 / 0 | 33 / 0 / 0 / 20 / 23 / 0 / 0 | 31 / 0 / 0 / 17 / 12 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.12 | 4.5 / 0.0 / 0.0 / 3.1 / 10.6 / 10.6 / 6.4 | 7.1 / 0.0 / 0.0 / 4.6 / 6.6 / 5.6 / 0.0 | 0.63 / — / — / 0.68 / 1.60 / 1.89 | Step 18 % | asdf_3, new_skill, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 4 | 1.6 | 0.00 | 38 / 0 · 17 / 7 · 35 / 4 · 1.39 / 1.52 |
+| nocastpush + bots tactic | 3v3 · 404 · 8 | 4 / 4 / 0 / 0 | 3.6 | 100 % | 13 / 0 / 0 / 0 / 0 / 0 / 0 | 19 / 0 / 0 / 22 / 19 / 0 / 0 | 26 / 0 / 0 / 13 / 18 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.62 | 4.6 / 0.0 / 0.0 / 3.8 / 9.4 / 13.2 / 8.8 | 7.1 / 0.0 / 0.0 / 5.4 / 6.2 / 5.2 / 0.0 | 0.65 / — / — / 0.70 / 1.50 / 2.52 | Step 22 % | new_skill, snare | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 4 | 1.6 | 0.00 | 63 / 25 · 31 / 9 · 39 / 4 · 1.43 / 1.54 |
+| nocastpush + bots tactic | 3v3 · 505 · 8 | 2 / 5 / 1 / 0 | 3.0 | 100 % | 0 / 0 / 0 / 25 / 0 / 0 / 0 | 29 / 0 / 0 / 6 / 26 / 0 / 0 | 32 / 0 / 0 / 11 / 20 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 22.75 | 4.1 / 0.0 / 0.0 / 3.0 / 10.4 / 11.1 / 5.4 | 6.9 / 0.0 / 0.0 / 4.5 / 7.1 / 5.5 / 0.0 | 0.60 / — / — / 0.67 / 1.46 / 2.02 | run 18 % | asdf_3, gale, snare, strike_thrust | 0 / 0 / 0 / 0 | 25 / 0 / 0 · 4 | 1.8 | 0.00 | 75 / 0 · 35 / 3 · 34 / 3 · 1.36 / 1.45 |
+| turnonce,nocastpush,collideone + bots tactic | 3v3 · 202 · 8 | 5 / 3 / 0 / 0 | 4.1 | 100 % | 25 / 0 / 0 / 13 / 0 / 0 / 0 | 34 / 0 / 0 / 20 / 17 / 0 / 0 | 33 / 0 / 0 / 14 / 11 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.25 | 5.2 / 0.0 / 0.0 / 3.2 / 8.9 / 10.2 / 11.1 | 7.0 / 0.0 / 0.0 / 4.6 / 7.0 / 5.4 / 0.0 | 0.75 / — / — / 0.70 / 1.27 / 1.91 | Step 29 % | cinder_dive, new_skill | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 6 | 1.9 | 0.00 | 63 / 0 · 23 / 6 · 40 / 1 · 1.17 / 1.60 |
+| turnonce,nocastpush,collideone + bots tactic | 3v3 · 303 · 8 | 6 / 2 / 0 / 0 | 4.1 | 100 % | 13 / 0 / 0 / 13 / 38 / 0 / 0 | 26 / 0 / 0 / 14 / 34 / 0 / 0 | 32 / 0 / 0 / 14 / 13 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.62 | 5.4 / 0.0 / 0.0 / 4.4 / 8.6 / 10.9 / 10.0 | 7.1 / 0.0 / 0.0 / 4.6 / 6.6 / 5.6 / 0.0 | 0.75 / — / — / 0.95 / 1.30 / 1.93 | Step 25 % | strike_thrust | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 5 | 2.0 | 0.00 | 13 / 13 · 17 / 3 · 37 / 2 · 1.74 / 1.19 |
+| turnonce,nocastpush,collideone + bots tactic | 3v3 · 404 · 8 | 3 / 4 / 1 / 0 | 3.9 | 100 % | 25 / 0 / 0 / 0 / 13 / 0 / 0 | 42 / 0 / 0 / 6 / 25 / 0 / 0 | 35 / 0 / 0 / 10 / 15 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 26.75 | 5.4 / 0.0 / 0.0 / 4.5 / 7.6 / 10.4 / 11.4 | 7.1 / 0.0 / 0.0 / 5.4 / 6.2 / 5.2 / 0.0 | 0.75 / — / — / 0.84 / 1.22 / 1.98 | Step 29 % | cinder_dive, new_skill, strike_thrust | 0 / 0 / 0 / 0 | 0 / 0 / 0 · 5 | 1.8 | 0.00 | 63 / 0 · 22 / 6 · 36 / 5 · 1.50 / 1.21 |
+| turnonce,nocastpush,collideone + bots tactic | 3v3 · 505 · 8 | 4 / 4 / 0 / 0 | 3.9 | 100 % | 25 / 0 / 0 / 0 / 13 / 0 / 0 | 40 / 0 / 0 / 3 / 20 / 0 / 0 | 34 / 0 / 0 / 7 / 12 / 0 / 0 | 0.00 | 0.00 / 0.00 / 0.00 | — / — | 24.88 | 5.0 / 0.0 / 0.0 / 3.1 / 7.9 / 10.8 / 10.6 | 6.9 / 0.0 / 0.0 / 4.5 / 7.1 / 5.5 / 0.0 | 0.73 / — / — / 0.69 / 1.11 / 1.95 | Step 28 % | cinder_dive | 0 / 0 / 0 / 0 | 13 / 0 / 0 · 5 | 1.6 | 0.00 | 63 / 0 · 29 / 9 · 41 / 6 · 1.54 / 1.39 |
+
+**Observations** (indications; bots on working content):
+
+- `nocastpush` is the only single switch with a clear effect: greedy 2.41 → 3.41 rounds, tactic 2.41 → 3.38, in every one of the four seeds. Collision damage per battle falls from about 12 to about 4; strike and Dragon Vein damage rise, total damage per battle stays near 25. Defeats before the victim's own first turn: 8 → 0 (greedy), 3 → 0 (tactic).
+- `turnonce` alone (+0.14) and `collideone` alone (+0.10) are within the seed spread of the control (per-seed means 2.2–2.7); no effect is established for either alone.
+- Added to `nocastpush`, the two others change nothing with greedy (3.36 and 3.40). With tactic the three together reach 4.00 against 3.38, on 32 battles per row: a lead, not a result.
+- No battle ends in round 1 with `nocastpush`; 1–3 of 128 greedy battles pass round 5 (longest 7).
+- With cast pushes off, the Dragon Veins carry about a third of all damage (8 of 26 per battle). The series does not tell whether the longer battles hold more decisions; that needs human play.
+- Not measured: stat roles (initiative, Movement), kit balance, side-swapped fairness. Per-monster win rates shift between variants but come from unswapped team draws.
+
+**Follow-up:** T13/T40/T39: human play with `zone_cast_push` off; the tactic lead for the combination needs more seeds before any reading. No rule or default is changed by this entry.
 
 ## S024 · 2026-11-14 · One Dragon Vein count control
 

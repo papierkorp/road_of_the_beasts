@@ -6,6 +6,14 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _cast(b: Battle, slot: int, anchor: Vector2i, dir := Vector2i.ZERO) -> bool:
 	return b.apply({"type": &"skill", "slot": slot, "anchor": anchor, "dir": dir})
 

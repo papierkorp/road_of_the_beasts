@@ -11,6 +11,7 @@ tag = "extend"
 [resource]
 script = ExtResource("3_eak5o")
 id = &"totem"
+content_status = "archived"
 display_name = "Totem"
 prop_class = "aura"
 hp = 2

@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://data/skills/fire_trail.tres" id="s2"]
 [ext_resource type="Resource" path="res://data/skills/lava_field.tres" id="s3"]
 
+[ext_resource type="Resource" path="res://data/skills/light_brazier.tres" id="9_slot5"]
 [resource]
 script = ExtResource("1")
 id = &"blaze_tiger"
@@ -15,6 +16,6 @@ reference_shape = 3
 initiative = 7.0
 move = 5
 ap = 3
-skills = Array[ExtResource("2")]([ExtResource("3_jhleh"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
+skills = Array[ExtResource("2")]([ExtResource("3_jhleh"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3"), ExtResource("9_slot5")])
 blurb = "Charges in, burns the ground it runs over and the squares around its target."
 notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

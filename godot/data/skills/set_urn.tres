@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_bo"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_sd"]
+
+[sub_resource type="Resource" id="Resource_prop"]
+script = ExtResource("1_bo")
+op = "create_prop"
+prop = &"clay_urn"
+
+[resource]
+script = ExtResource("3_sd")
+id = &"set_urn"
+display_name = "Set Clay Urn"
+kind = "ground"
+description = "Places a Clay Urn on a free square within Reach: destroyed, it deals 1 damage to monsters on its 8 neighbouring squares."
+status = "test data (prop rework 2026-11-14, no GDD record)"
+ap_cost = 1
+footprint = Array[Vector2i]([Vector2i(0, 0)])
+board_ops = Array[ExtResource("1_bo")]([SubResource("Resource_prop")])

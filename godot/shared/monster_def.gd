@@ -32,7 +32,7 @@ const STRIKE_NAMES := {
 @export var ap: int = 2
 
 @export_group("Kit")
-## Up to 4 slots, active or passive, at least one active (gdd_skills §1). Step needs no slot.
+## Up to 6 slots, active or passive, at least one active (build since 2026-11-14, user decision; the GDD still says 4). Step needs no slot.
 @export var skills: Array[BattleSkillDef] = []
 
 @export_multiline var blurb: String = ""

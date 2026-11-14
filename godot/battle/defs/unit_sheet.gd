@@ -63,10 +63,8 @@ func problems() -> Array[String]:
 		out.append("Movement %d below 1" % movement)
 	if size != 1 and size != 2:
 		out.append("size must be 1 or 2")
-	if skills.size() > 5:
-		out.append("more than 5 slots")
-	if skills.size() == 5 and skills[4].is_active():
-		out.append("the 5th slot is passive-only")
+	if skills.size() > 6:
+		out.append("more than 6 slots")
 	for s in skills:
 		if s == null:
 			out.append("empty skill reference")

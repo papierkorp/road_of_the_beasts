@@ -606,7 +606,7 @@ func _portrait_text() -> String:
 	var u := _active()
 	if u == null or placing:
 		return ""
-	return "%s %s%sMove %d%sReach %d" % [_side_tag(u), u.display_name(), BattleText.SEP, BattleStats.movement(battle, u),
+	return "%s %s%s%s%sReach %d" % [_side_tag(u), u.display_name(), BattleText.SEP, BattleText.move_text(battle, u),
 		BattleText.SEP, BattleStats.reach(battle, u)]
 
 
@@ -677,7 +677,7 @@ func _actions() -> Array:
 		var label := s.display_name
 		if s.kind == BattleSkillDef.STRIKE:
 			label = "%s (%s)" % [KinRules.strike_name(u.kin()) if s.kin_effect else s.display_name, StrikeShapes.shape_name(StringName(s.strike_shape))]
-		out.append({"id": StringName(SLOT_PREFIX + str(i)), "text": "%s\n%s" % [label, "passive" if not s.is_active() else "%d AP" % s.cost()],
+		out.append({"id": StringName(SLOT_PREFIX + str(i)), "text": "%s\n%s" % [label, "passive" if not s.is_active() else (("%d AP + Stamina" % s.cost() if s.cost() > 0 else "Stamina") if s.uses_stamina() else "%d AP" % s.cost())],
 			"enabled": mine and s.is_active() and why == "", "selected": mode == &"skill" and slot == i,
 			"card": {"title": label, "rows": rows}})
 	for def: TamerSkillDef in battle.tamer_loadout[PLAYER_SIDE]:

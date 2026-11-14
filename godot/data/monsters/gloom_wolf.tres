@@ -7,6 +7,7 @@
 [ext_resource type="Resource" path="res://data/skills/shove.tres" id="s2"]
 [ext_resource type="Resource" path="res://data/skills/plant_bamboo.tres" id="s3"]
 
+[ext_resource type="Resource" path="res://data/skills/lay_spikes.tres" id="9_slot5"]
 [resource]
 script = ExtResource("1")
 id = &"gloom_wolf"
@@ -20,6 +21,6 @@ move = 3
 tpr = 1
 reach = 3
 ap = 3
-skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3")])
+skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3"), ExtResource("9_slot5")])
 blurb = "Leaves thorns where it strikes, plants a spiky stand and shoves enemies into it or off a Dragon Vein."
 notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

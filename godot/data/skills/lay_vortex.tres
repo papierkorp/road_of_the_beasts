@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1_bo"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_sd"]
+
+[sub_resource type="Resource" id="Resource_prop"]
+script = ExtResource("1_bo")
+op = "create_prop"
+prop = &"vortex_trap"
+
+[resource]
+script = ExtResource("3_sd")
+id = &"lay_vortex"
+display_name = "Lay Vortex"
+kind = "ground"
+description = "Lays a walkable Vortex Trap on a free square within Reach: when a monster comes onto it, the monsters on the 8 neighbouring squares are pulled into it."
+status = "test data (prop rework 2026-11-14, no GDD record)"
+ap_cost = 1
+footprint = Array[Vector2i]([Vector2i(0, 0)])
+board_ops = Array[ExtResource("1_bo")]([SubResource("Resource_prop")])

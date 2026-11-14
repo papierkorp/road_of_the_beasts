@@ -11,6 +11,7 @@ tag = "shield"
 [resource]
 script = ExtResource("3_61hwc")
 id = &"wardstone"
+content_status = "archived"
 display_name = "Wardstone"
 prop_class = "aura"
 hp = 2

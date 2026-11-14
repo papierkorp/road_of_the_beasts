@@ -6,6 +6,10 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
 func after_test() -> void:
 	BattleExperiment.reset()
 
@@ -107,12 +111,12 @@ func _well_battle(units: Array) -> Battle:
 	return b
 
 
-func test_wellsprings_lie_on_the_centre_row_and_take_no_prop_or_mountain() -> void:
+func test_wellsprings_lie_on_the_centre_row_and_take_props_but_no_mountain() -> void:
 	var b := _well_battle([[0, Vector2i(3, 6), {}], [1, Vector2i(3, 0), {}]])
 	for p: Vector2i in [Vector2i(1, 3), Vector2i(3, 3), Vector2i(5, 3)]:
 		assert_str(String(b.board.at(p).ground)).is_equal("dragon_vein")
-		assert_object(b.add_prop(&"clay_urn", p)).is_null()
 		assert_bool(BattleBoardOps.raise_mountain(b, b.board.at(p))).is_false()
+		assert_object(b.add_prop(&"clay_urn", p)).is_not_null()     # a vein takes props like any ground (build since 2026-11-14)
 	assert_str(String(b.board.at(Vector2i(2, 3)).ground)).is_equal("plain")
 
 
@@ -384,3 +388,116 @@ func test_a_push_zone_left_by_another_skill_points_where_the_placement_is_turned
 		if a["type"] == &"skill" and a.get("anchor") == Vector2i(3, 3):
 			rots[int(a["rot"])] = true
 	assert_int(rots.size()).is_equal(4)
+
+
+# ---------- battle-length switches of 2026-11-14 (simulation S025) ----------
+
+func _gale_battle() -> Battle:
+	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "reach": 4, "skills": ["gale"]}], [1, Vector2i(3, 3), {"init": 5.0, "hp": 8}]])
+	b.begin()
+	return b
+
+
+func test_a_push_zone_moves_its_occupant_at_cast_by_default_and_only_at_turn_end_with_the_switch() -> void:
+	var cast := {"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3), "dir": H.UP}
+	var b := _gale_battle()
+	assert_bool(b.apply(cast)).is_true()
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 2))                        # the rule: moved when the zone is cast
+	BattleExperiment.zone_cast_push = false
+	var b2 := _gale_battle()
+	assert_bool(b2.apply(cast)).is_true()
+	assert_that(H.unit(b2, 1).pos).is_equal(Vector2i(3, 3))                       # not at cast
+	b2.end_turn()
+	b2.end_turn()                                                                 # the occupant's own turn ends in the zone
+	assert_that(H.unit(b2, 1).pos).is_equal(Vector2i(3, 2))
+
+
+func test_with_once_per_turn_a_skill_is_refused_a_second_time_in_the_turn_and_free_again_in_the_next() -> void:
+	BattleExperiment.once_per_turn = true
+	var cast := {"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3), "dir": H.UP}
+	var b := _gale_battle()
+	assert_bool(b.apply(cast)).is_true()
+	assert_bool(b.apply(cast)).is_false()
+	assert_int(b.ap).is_equal(2)                                                  # the refused use costs nothing
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 5)})).is_true()        # Step is not a slotted skill
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 6)})).is_true()
+	H.until_turn_of(b, H.unit(b, 0).id)
+	assert_bool(b.apply(cast)).is_true()
+
+
+func test_a_blocking_monster_takes_collision_damage_by_default_and_none_with_the_switch() -> void:
+	for both: bool in [true, false]:
+		BattleExperiment.collision_both = both
+		var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "skills": ["strike_jab"]}], [1, Vector2i(3, 5), {"init": 5.0, "hp": 8}],
+			[1, Vector2i(3, 4), {"init": 4.0, "hp": 8}]])
+		b.begin()
+		assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 6)})).is_true()
+		assert_int(H.unit(b, 1).hp).is_equal(5)                                   # 2 from the Jab, 1 for the collision
+		assert_int(H.unit(b, 2).hp).is_equal(7 if both else 8)
+
+
+# ---------- charged Dragon Veins and the full-Movement Step (simulation S026) ----------
+
+func _vein_battle() -> Battle:
+	BattleExperiment.vein_charge = true
+	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 3, "hp": 8}], [1, Vector2i(3, 0), {"init": 5.0, "hp": 8}],
+		[1, Vector2i(0, 0), {"init": 4.0, "hp": 8}]])
+	b.board.at(Vector2i(3, 3)).ground = GroundDef.WELL
+	b.begin()
+	return b
+
+
+func test_a_charged_vein_discharges_once_for_the_first_monster_that_touches_it() -> void:
+	var b := _vein_battle()
+	assert_bool(b.board.at(Vector2i(3, 3)).charged).is_true()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()
+	assert_int(H.unit(b, 1).hp).is_equal(7)                                       # the nearest enemy, at once
+	assert_int(H.unit(b, 2).hp).is_equal(8)
+	assert_bool(b.board.at(Vector2i(3, 3)).charged).is_false()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 4)})).is_true()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()        # empty: touching it again does nothing
+	assert_int(H.unit(b, 1).hp).is_equal(7)
+	_end_round(b)
+	assert_int(H.unit(b, 1).hp).is_equal(7)                                       # no vein damage at the end of the round
+	assert_bool(b.board.at(Vector2i(3, 3)).charged).is_true()                     # charged again for the new round
+
+
+func test_a_monster_standing_on_a_charged_vein_discharges_it_at_the_end_of_its_turn() -> void:
+	var b := _vein_battle()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()
+	_end_round(b)
+	assert_int(H.unit(b, 1).hp).is_equal(7)
+	b.end_turn()                                                                  # round 2: it stays on the vein and ends its turn
+	assert_int(H.unit(b, 2).hp).is_equal(7)                                       # equally near: the enemy with more HP
+	assert_bool(b.board.at(Vector2i(3, 3)).charged).is_false()
+
+
+func test_with_the_switch_the_step_walks_up_to_the_movement_stat() -> void:
+	var specs := [[0, Vector2i(3, 6), {"init": 9.0, "ap": 2, "move": 3}], [1, Vector2i(3, 0), {"init": 5.0}]]
+	var b := H.battle(specs)
+	b.begin()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_false()       # the rule: 1 square
+	BattleExperiment.step_full_move = true
+	var b2 := H.battle(specs)
+	b2.begin()
+	assert_bool(b2.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()
+	assert_int(b2.ap).is_equal(1)
+	assert_bool(b2.apply({"type": &"step", "to": Vector2i(3, 6)})).is_true()
+	assert_bool(b2.apply({"type": &"step", "to": Vector2i(3, 5)})).is_false()      # no AP left
+
+
+func test_with_late_charged_veins_the_first_touch_wins_the_round_and_the_damage_comes_at_its_end() -> void:
+	BattleExperiment.vein_charge_late = true
+	var b := _vein_battle()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()
+	assert_int(H.unit(b, 1).hp).is_equal(8)                                       # nothing at once
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 4)})).is_true()        # where it stands afterwards does not matter
+	b.end_turn()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 1)})).is_true()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 2)})).is_true()
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()        # the enemy arrives second: the vein stays won
+	assert_that(b.board.at(Vector2i(3, 3)).owner_side).is_equal(0)
+	_end_round(b)
+	assert_int(H.unit(b, 1).hp).is_equal(7)                                       # nearest enemy of the winner, at the round end
+	assert_int(H.unit(b, 0).hp).is_equal(8)
+	assert_bool(b.board.at(Vector2i(3, 3)).charged).is_true()

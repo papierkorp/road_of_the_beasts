@@ -184,6 +184,10 @@ func usage_error(u: BattleUnit, slot: int) -> String:
 		return "no such skill slot"
 	if BattleExperiment.no_shield_zones and s.kind == BattleSkillDef.ZONE and s.zone != null and s.zone.has_tag(FieldEffect.SHIELD):
 		return "%s is switched off (test switch: no shield zones)" % s.display_name
+	if BattleExperiment.once_per_turn and s.usage_limit > 0 and int(u.used_turn.get(slot, 0)) >= s.usage_limit:
+		return ("%s was already used this turn" if s.usage_limit == 1 else "%s has no uses left this turn") % s.display_name
+	if s.uses_stamina() and u.stamina <= 0:
+		return "%s needs Stamina, none left" % s.display_name
 	match s.repetition:
 		"once_per_round":
 			if int(u.used_round.get(slot, 0)) == round_number:
@@ -221,6 +225,9 @@ func relocate(u: BattleUnit, to: Vector2i) -> void:
 
 ## A Dragon Vein belongs to the side whose monster touched it last (walked, was pushed or set onto it).
 func touch_veins(u: BattleUnit) -> void:
+	if BattleExperiment.vein_charge:
+		BattleTurn.discharge_veins(self, u)
+		return
 	for c in u.cells():
 		var cell := board.at(c)
 		if cell != null and cell.ground == GroundDef.WELL and cell.owner_side != u.side:
@@ -414,9 +421,14 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 	ap -= s.cost()
 	u.used_round[slot] = round_number
 	u.used_battle[slot] = true
+	u.used_turn[slot] = int(u.used_turn.get(slot, 0)) + 1
 	match s.kind:
 		BattleSkillDef.MOVE:
 			var started := u.pos
+			var tired := 0                           # test switch stamina: 1 per movement point of the route
+			if s.uses_stamina():
+				var reach := BattleMoves.options(self, u, BattleMoves.profile_of(s))
+				tired = int(reach[a["to"]]["cost"]) if reach.has(a["to"]) else 1
 			var trail: Array[Vector2i] = []
 			if not s.board_ops.is_empty():            # a movement that leaves something on its path
 				var route: Array = a.get("path", [])
@@ -432,6 +444,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 					for k in range(1, maxi(absi(span.x), absi(span.y))):
 						trail.append(started + unit_step * k)
 			BattleMoves.execute(self, u, BattleMoves.profile_of(s), a["to"], s.display_name, a.get("path", []) if trusted else [])
+			u.stamina = maxi(0, u.stamina - tired)
 			BattleMoves.impact(self, u, s, started, a["to"])
 			if not trail.is_empty() and u.is_alive():
 				var left: Array[Vector2i] = []
@@ -455,7 +468,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 			for c in cells:
 				BattleBoardOps.land_zone(self, board.at(c), s.zone, _next_gid, u.id, s.duration,
 					a.get("dir", Vector2i.ZERO), a.get("anchor", u.pos))
-			if s.zone.has_tag(FieldEffect.PUSH) or s.zone.has_tag(FieldEffect.PULL):
+			if BattleExperiment.zone_cast_push and (s.zone.has_tag(FieldEffect.PUSH) or s.zone.has_tag(FieldEffect.PULL)):
 				# a current also moves whoever stands in it at the moment it is cast (T38)
 				var moved: Array = []
 				for c in cells:
@@ -591,7 +604,7 @@ func snapshot() -> Dictionary:
 	for id in roster:
 		var u: BattleUnit = units[id]
 		us.append([String(id), u.side, u.slot, u.pos, u.layer, u.hp, u.max_hp, u.on_field, u.defeated,
-			u.nullify, u.life_thread, u.effects.duplicate(true), u.used_round.duplicate(), u.used_battle.keys()])
+			u.nullify, u.life_thread, u.effects.duplicate(true), u.used_round.duplicate(), u.used_battle.keys(), u.used_turn.duplicate(), u.stamina])
 	var cs := []
 	for c in board.cells:
 		var z := []
@@ -599,7 +612,7 @@ func snapshot() -> Dictionary:
 			z = [String(c.zone.def.id), c.zone.gid, String(c.zone.owner), c.zone.level, c.zone.duration, c.zone.dir, c.zone.anchor]
 		var p := [] if c.prop == null else [String(c.prop.def.id), c.prop.hp, c.prop.uid]
 		var air := [] if c.air_prop == null else [String(c.air_prop.def.id), c.air_prop.hp, c.air_prop.uid]
-		cs.append([String(c.ground), c.level, c.height, p, air, z, c.surge, c.ground_until])
+		cs.append([String(c.ground), c.level, c.height, p, air, z, c.surge, c.ground_until, c.charged])
 	var ss := []
 	for s in surges:
 		ss.append([s.id, String(s.owner), String(s.skill.id), s.cells.duplicate(), s.dir, s.anchor, s.air_cells.duplicate(), s.orphaned])

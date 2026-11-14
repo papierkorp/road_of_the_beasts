@@ -38,6 +38,16 @@ extends SceneTree
 ##                        skills / all placed skills once per round)
 ##                        · currentap=N / currentonce (all in-game PUSH/PULL zone skills: positive AP / once per round)
 ##                        · openmap (remove preplaced props only) · lifethread (one existing Life Thread per fielded unit)
+##                        · turnonce (every slotted skill once per turn) · nocastpush (push / pull zones do not move at cast)
+##                        · collideone (a blocking monster takes no collision damage)
+##                        · veincharge (Dragon Veins discharge once per round for the first monster that touches them) · fullstep (Step walks up to Movement)
+##                        · veinlate (as veincharge, but the damage comes at the end of the round)
+##                        · build defaults since 2026-11-14 and their opposites: turnfree (no limit of uses per turn) ·
+##                        castpush (push / pull zones also move at cast) · veintouch (build default: a vein belongs to the last side that touched it)
+##                        · balanced / balanced=N (N = 3-6 kit slots: every monster plays a Strike, a movement skill and an even
+##                        draw of zone, ground, prop and trap skills from the draft pool; win rates per drawn skill and kind)
+##                        · stamina / stamina=N (Movement is a Stamina pool, 1 per square, +N per round, default 1) · staminafree (with stamina: no AP for movement skills)
+##                        · props=N (N mirrored prop pairs at the start, 0 = none) · veinhold (a vein works only while a monster stands on it)
 ##   --no-kind-a / -b K   the bot of side 0 / 1 never uses skills of kind K (what is the kind worth)
 ##   --shield-once        test change: every shield zone skill is once per global round
 ##   --pressure N         late-round pressure starts N rounds later (negative: earlier)
@@ -59,6 +69,7 @@ var _defence_ap := 0
 var _mix_kits := false
 var _mix_skills := false
 var _mix_stats := false
+var _balanced := 0                      # balanced=N: N kit slots per monster, drawn evenly over the skill kinds
 var _gen_skills := 0
 var _current_ap := 0
 var _current_once := false
@@ -188,6 +199,7 @@ func _apply_variant(text: String) -> String:
 	_mix_kits = false
 	_mix_skills = false
 	_mix_stats = false
+	_balanced = 0
 	_gen_skills = 0
 	for part in Cli.names(text):
 		var kv := part.split("=")
@@ -286,6 +298,34 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.pressure_mode = val
 			"softpressure":
 				BattleExperiment.soft_pressure = maxi(1, val.to_int())
+			"balanced":                               # balanced or balanced=N (4-6 slots): every monster plays a Strike, a movement skill and an even draw of zone, ground, prop and trap skills
+				_balanced = clampi(val.to_int() if val != "" else 4, 3, 6)
+			"stamina":                                # stamina or stamina=N: Movement is a Stamina pool, +N per round (default 1)
+				BattleExperiment.stamina = true
+				BattleExperiment.stamina_regen = val.to_int() if val != "" else 1
+			"staminafree":                            # with stamina: movement skills cost Stamina only, no AP
+				BattleExperiment.stamina_ap = false
+			"props":                                  # props=N: the board starts with N mirrored prop pairs (0 = none)
+				BattleExperiment.map_props = maxi(0, val.to_int())
+			"turnfree":                               # no limit of uses per turn (rule before 2026-11-14)
+				BattleExperiment.once_per_turn = false
+			"castpush":                               # push and pull zones also move their occupants at cast (before 2026-11-14)
+				BattleExperiment.zone_cast_push = true
+			"veintouch":                              # a Dragon Vein belongs to the side that touched it last (reshape rule of 2026-11-13)
+				BattleExperiment.vein_touch = true
+			"turnonce":                               # every slotted skill once per turn of its monster
+				BattleExperiment.once_per_turn = true
+			"nocastpush":                             # push and pull zones move only at the end of the occupant's turn
+				BattleExperiment.zone_cast_push = false
+			"veincharge":                             # charged Dragon Veins: first touch of a round discharges, no round-end vein damage
+				BattleExperiment.vein_charge = true
+			"veinlate":                               # charged veins: the first touch wins the vein for the round, damage at the round end
+				BattleExperiment.vein_charge = true
+				BattleExperiment.vein_charge_late = true
+			"fullstep":                               # the universal Step walks up to Movement
+				BattleExperiment.step_full_move = true
+			"collideone":                             # only the moved monster takes monster collision damage
+				BattleExperiment.collision_both = false
 			"noshield":
 				BattleExperiment.no_shield_zones = true
 			"hp":
@@ -476,6 +516,8 @@ func _series(setup: Dictionary, label: String) -> int:
 					else:
 						tags.append("skill:%s" % sd.id)
 				kit_of[id] = tags
+		if _balanced > 0:
+			_draw_balanced(b, content, rng, kit_of)
 		if _mix_stats:
 			for id in b.roster:
 				var mu: BattleUnit = b.units[id]
@@ -962,3 +1004,66 @@ func _well_column(ended_by: Dictionary, ended: int, defeats_by: Dictionary, defe
 		per_round = "%.2f / %.2f" % [float(held[0]) / held[2], float(held[1]) / held[2]]
 	return "%s / %s · %s / %s · %s / %s · %s" % [pct.call(ended_by, "well", ended), pct.call(ended_by, "flank", ended),
 		pct.call(defeats_by, "well", defeats), pct.call(defeats_by, "flank", defeats), pct.call(damage, "well", total), pct.call(damage, "flank", total), per_round]
+
+
+## Category of a skill for the balanced draw ("" = not drawn): strike, move, zone, ground, prop, trap.
+static func balanced_category(content: BattleContent, s: BattleSkillDef) -> String:
+	if s.content_status != ContentStatus.DRAFT and s.content_status != ContentStatus.APPROVED:
+		return ""
+	match s.kind:
+		BattleSkillDef.STRIKE:
+			return "strike" if s.strike_damage > 0 else ""
+		BattleSkillDef.MOVE:
+			return "move"
+		BattleSkillDef.ZONE:
+			return "zone"
+		BattleSkillDef.GROUND:
+			for op in s.ops_of(BoardOp.CREATE_PROP):
+				var pd := content.prop(op.prop)
+				return "trap" if pd != null and pd.is_trap() else "prop"
+			return "zone" if s.has_op(BoardOp.CREATE_ZONE) and not s.has_op(BoardOp.GROUND) else "ground"
+	return ""
+
+
+## Variant `balanced`: every monster gets a Strike, a movement skill and `_balanced` - 2 skills of
+## different kinds; the kinds go round a shuffled list per side, so each side fields every kind
+## about equally often.
+func _draw_balanced(b: Battle, content: BattleContent, rng: RandomNumberGenerator, kit_of: Dictionary) -> void:
+	var pools := {}
+	for sid in BattleContent.sorted_ids(content.skills):
+		var cat := balanced_category(content, content.skills[sid])
+		if cat != "":
+			if not pools.has(cat):
+				pools[cat] = []
+			pools[cat].append(content.skills[sid])
+	var flex := ["zone", "ground", "prop", "trap"]
+	var next := [0, 0]
+	var order := [[], []]
+	for side in 2:
+		var left := flex.duplicate()
+		while not left.is_empty():
+			order[side].append(left.pop_at(rng.randi_range(0, left.size() - 1)))
+	for id in b.roster:
+		var mu: BattleUnit = b.units[id]
+		var cats: Array = ["strike", "move"]
+		while cats.size() < _balanced:
+			cats.append(order[mu.side][next[mu.side] % flex.size()])
+			next[mu.side] += 1
+		var drawn: Array[BattleSkillDef] = []
+		var tags: Array = kit_of.get(id, [])
+		for cat: String in cats:
+			var pool: Array = pools.get(cat, [])
+			if pool.is_empty():
+				continue
+			var sd: BattleSkillDef = pool[rng.randi_range(0, pool.size() - 1)]
+			var tries := 0
+			while drawn.has(sd) and tries < 8:
+				sd = pool[rng.randi_range(0, pool.size() - 1)]
+				tries += 1
+			if drawn.has(sd):
+				continue
+			drawn.append(sd)
+			tags.append("skill:%s" % sd.id)
+			tags.append("kind:%s" % cat)
+		mu.sheet.skills = drawn
+		kit_of[id] = tags

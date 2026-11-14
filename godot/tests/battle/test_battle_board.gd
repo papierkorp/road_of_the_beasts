@@ -4,6 +4,14 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _zone(effects: Array, id: String) -> BattleZoneDef:
 	return H.zone_skill(effects, [Vector2i.ZERO], 2, id).zone
 
@@ -288,10 +296,11 @@ func test_a_vortex_urn_pulls_its_neighbours_in_and_a_storm_drum_pushes_them_away
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(2, 3))
 	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(4, 3))
 	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([8, 8])     # each collides with the one who got there
-	# Storm Drum: whoever ends its turn next to it is pushed 1 square away
+	# Storm Drum: at the round end the monsters on its four cardinal neighbours are pushed 1 square away
 	var d := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(6, 0)]])
 	d.add_prop(&"storm_drum", Vector2i(3, 3))
 	d.begin()
+	d.end_turn()
 	d.end_turn()
 	assert_that(H.unit(d, 0).pos).is_equal(Vector2i(3, 5))
 

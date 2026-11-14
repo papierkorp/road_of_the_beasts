@@ -15,11 +15,10 @@
 
 ```
 Monster = Step (always, no slot)
-        + 4 slots, each an active skill or a passive, at least one active
-          — Epic+ get a 5th, passive-only slot (Monsters §5.1)
+        + up to 6 slots, each an active skill or a passive, at least one active
 ```
 
-- **Slots:** all 4 open on day one. **Step** (1 square, 1 AP, slot-free) is the weakest movement, for monsters without a movement skill. No skill is mandatory, not even a Strike or a movement; the same skill may sit in two slots, each copy with its own usage count ([§2](#usage-and-repetition)).
+- **Slots:** 6 slots (user decision 2026-11-14; before: 4 plus a passive-only 5th for Epic+). *Draft, not decided (T05):* 4 are open on day one, slots 5 and 6 open as an upgrade path. **Step** (1 square, 1 AP, slot-free) is the weakest movement, for monsters without a movement skill. No skill is mandatory, not even a Strike or a movement; the same skill may sit in two slots, each copy with its own usage count ([§2](#usage-and-repetition)).
 - **The player shapes the kit:** which monster carries which skills is a decision of the player ([§6](#6-slot-levels-development-and-replacement)); the kits of §10 are working starting points, not validated defaults.
 - **Limits:** the species' learnable list and Kin lock-outs ([Monsters §3.1](gdd_monsters.md#31-kin-table), [§8](#8-strikes-and-movement)). Which skills a species may learn is content work that does not exist yet (T11); the kits of the build ignore Kin access.
 - **Species-specific and Signature skills** are ordinary skills with restricted access, not a mechanical kind of their own; Signature access stays Legendary/progression-bound ([Monsters §5.1](gdd_monsters.md#51-monster-rarity)) with no decided content (T32).
@@ -33,7 +32,7 @@ Monster = Step (always, no slot)
 
 | Part of the card | Content |
 |---|---|
-| **Cost** | AP · use (any number, once per round, once per battle); a passive has none |
+| **Cost** | AP · use (once per turn unless the card names more; once per round; once per battle); a passive has none |
 | **Where** | a Strike: neighbouring square and its shape · a movement: its path · a created thing: anchor (within Reach, line from the caster, next to the caster) and shape (1 square, line 2–3, block 2×2, angle, cross), freely rotated · an effect on the user: self |
 | **Strike** | no · or damage (at most 2) and push 1, now |
 | **Movement** | no · or the path kind (walks, straight line, any path), what it passes over, the distance (the Movement stat) and a push on landing |
@@ -53,7 +52,7 @@ Monster = Step (always, no slot)
 
 | Use | Meaning |
 |---|---|
-| any number | no cap beyond AP |
+| N per turn (default 1) | this equipped copy at most N times per turn of its monster (user decision 2026-11-14; data field `usage_limit`). A card may name a higher N; raising it is a candidate slot development ([§6](#6-slot-levels-development-and-replacement)), unpriced. Step is not slotted and has no limit |
 | once per round | one use of this equipped copy in the global battle round; extra turns within the round do not reset it |
 | once per battle | one use of this equipped copy in the battle |
 
@@ -139,7 +138,7 @@ A skill creates **ground**, a **zone** or a **prop** on its squares. What each o
 - **Ownership:** a development step develops one slot on one monster, not the skill or the species globally. The player picks from options written for the equipped skill, never free components.
 - **Replacement:** outside expeditions a slot may take another skill of the species' learnable list with a **relearning pill**; the slot keeps its development. Pill acquisition, recipe and price: T05/T16/T31.
 - **Levels 1–3** per slot; how steps map to levels and what a level allows is undecided (T05).
-- **What a development may change** *(candidate list on the skill card, not approved content)*: a larger or other shape, a longer zone, a movement that passes over more, a second thing created. **Never:** more damage than the caps of [Battle §6.1](gdd_battle.md#61-the-damage-law), lower AP, more Reach.
+- **What a development may change** *(candidate list on the skill card, not approved content)*: a larger or other shape, a longer zone, a movement that passes over more, a second thing created, one more use per turn. **Never:** more damage than the caps of [Battle §6.1](gdd_battle.md#61-the-damage-law), lower AP, more Reach.
 - **AP policy:** every skill has a complete path at its original AP; a bigger option may cost more AP, shown before selection, and is never the only path.
 - **Useful from the start:** starting AP must support the intended starter kit without a mandatory stat purchase. Slot development expands an already viable kit, with several useful routes and no compulsory first upgrade; it must not repair an unusable starting skill.
 - **Progression validation:** test the starting kit, then each single slot upgrade, then combinations, including permanent stat upgrades and the action thresholds they change ([Monsters §2.2](gdd_monsters.md#22-frame-budget-level-ups)). A slot upgrade develops that slot; a permanent stat upgrade changes the monster's stats. Keep their ledgers separate while validating their interaction.

@@ -97,7 +97,7 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 		var other := board.unit_id_at(c, u.layer)
 		if other != &"" and other != u.id:
 			block_units[other] = true
-		var prop := board.prop_at(c, u.layer)
+		var prop := board.solid_at(c, u.layer)
 		if prop != null:
 			block_props[prop.uid] = prop
 	if not block_units.is_empty() or not block_props.is_empty():
@@ -107,7 +107,7 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 				own = SPIKY_DAMAGE
 		var hits: Array = [{"unit": u.id, "base": own, "type": BattleDamage.COLLISION, "source": "Collision", "pushed": true}]
 		for id in b.roster:
-			if block_units.has(id):
+			if block_units.has(id) and BattleExperiment.collision_both:
 				hits.append({"unit": id, "base": 1, "type": BattleDamage.COLLISION, "source": "Collision"})
 		b.emit(&"collision", {"who": u.id, "units": block_units.keys(), "props": block_props.keys(), "cause": cause})
 		BattleDamage.apply_round(b, hits)

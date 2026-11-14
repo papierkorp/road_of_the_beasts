@@ -286,8 +286,8 @@ static func assign(c: BattleContent, s: BattleSkillDef, monster_id: StringName, 
 	var m := c.monster(monster_id)
 	if m == null:
 		return "unknown monster %s" % monster_id
-	if slot < 0 or slot >= 4:
-		return "a kit has four slots"
+	if slot < 0 or slot >= 6:
+		return "a kit has six slots"
 	while m.skills.size() <= slot:
 		m.skills.append(s)
 	m.skills[slot] = s

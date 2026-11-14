@@ -93,8 +93,8 @@ static func _validate_all() -> void:
 	for id in _monsters:
 		var m: MonsterDef = _monsters[id]
 		var where := "monster '%s'" % id
-		if m.skills.is_empty() or m.skills.size() > 4:
-			_problems.append(where + " needs 1-4 kit slots")
+		if m.skills.is_empty() or m.skills.size() > 6:
+			_problems.append(where + " needs 1-6 kit slots")
 		var active := 0
 		for s in m.skills:
 			if s == null:

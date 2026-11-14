@@ -7,6 +7,8 @@ var uid: int = 0
 var def: PropDef
 var hp: int = 1
 var pos := Vector2i.ZERO
+## It lost HP since its `hit` operations last ran (they run in the next board step).
+var struck := false
 
 
 func _init(p_uid: int = 0, p_def: PropDef = null, p_pos: Vector2i = Vector2i.ZERO) -> void:
@@ -19,4 +21,5 @@ func _init(p_uid: int = 0, p_def: PropDef = null, p_pos: Vector2i = Vector2i.ZER
 func clone() -> BoardProp:
 	var p := BoardProp.new(uid, def, pos)
 	p.hp = hp
+	p.struck = struck
 	return p

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_am"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_pd"]
+
+[resource]
+script = ExtResource("3_pd")
+id = &"earth_wall"
+display_name = "Earth Wall"
+content_status = "draft"
+prop_class = "inert"
+hp = 2
+solid = true
+
+ground_left = &""
+color = Color(0.5, 0.42, 0.32, 1)
+description = "Solid: blocks movement and Strike lines. Does nothing else."

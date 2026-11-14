@@ -21,17 +21,17 @@ const MODES := {
 		"props": {Vector2i(0, 3): &"clay_urn", Vector2i(4, 1): &"stone_lion"}, "pairs": [1, 2], "voidscar_from": 7},
 	&"3v3": {"size": 7, "starts": [Vector2i(1, 5), Vector2i(3, 6), Vector2i(5, 5)], "start_rows": 2, "corner": false,
 		"mountains": [Vector2i(3, 3), Vector2i(1, 3), Vector2i(5, 3)],
-		"props": {Vector2i(2, 2): &"stone_lion", Vector2i(4, 2): &"clay_urn", Vector2i(0, 3): &"shrine"},
+		"props": {Vector2i(2, 2): &"stone_lion", Vector2i(4, 2): &"clay_urn", Vector2i(0, 3): &"peach_tree"},
 		"pairs": [2, 3], "voidscar_from": 8},
 	&"5v5": {"size": 9, "starts": [Vector2i(0, 7), Vector2i(2, 8), Vector2i(4, 7), Vector2i(6, 8), Vector2i(8, 7)],
 		"start_rows": 2, "corner": false,
 		"mountains": [Vector2i(4, 4), Vector2i(2, 4), Vector2i(6, 4)],
-		"props": {Vector2i(3, 2): &"stone_lion", Vector2i(5, 2): &"clay_urn", Vector2i(1, 4): &"shrine", Vector2i(4, 3): &"bamboo_stand"},
+		"props": {Vector2i(3, 2): &"stone_lion", Vector2i(5, 2): &"clay_urn", Vector2i(1, 4): &"peach_tree", Vector2i(4, 3): &"bamboo_stand"},
 		"pairs": [3, 4], "voidscar_from": 10},
 }
 ## Ground-layer catalogue entries a seeded board may pre-place (no child props).
 const SEEDED_PROPS: Array[StringName] = [&"stone_lion", &"clay_urn", &"bamboo_stand", &"paper_lantern",
-	&"peach_tree", &"ancestor_tablet", &"bronze_gong", &"pagoda_column", &"shrine", &"totem", &"banner", &"wardstone",
+	&"peach_tree", &"ancestor_tablet", &"bronze_gong", &"pagoda_column", &"earth_wall", &"thorn_idol", &"ember_brazier",
 	&"vortex_urn", &"storm_drum"]
 
 
@@ -69,13 +69,19 @@ static func build(b: Battle, mode: StringName, seed_value := 0) -> Array[Vector2
 	place_wells(b)
 	var starts: Array[Vector2i] = []
 	starts.assign(d["starts"])
-	var props: Dictionary = d["props"] if seed_value == 0 else _seeded_props(b, mode, d, starts, seed_value)
+	var props: Dictionary = d["props"]
+	if BattleExperiment.map_props >= 0:            # board switch: that many mirrored pairs, drawn by the seed
+		props = _seeded_props(b, mode, d, starts, seed_value if seed_value != 0 else 1, BattleExperiment.map_props)
+	elif seed_value != 0:
+		props = _seeded_props(b, mode, d, starts, seed_value)
 	var squares := props.keys()
 	squares.sort()
 	for p: Vector2i in squares:
 		var twin := b.board.mirrored(p)
 		if p == twin:
 			continue                          # the centre never holds a prop
+		if b.board.at(p).ground == GroundDef.WELL or b.board.at(twin).ground == GroundDef.WELL:
+			continue                          # a board never starts with a prop on a Dragon Vein (skills may place one)
 		b.add_prop(props[p], p)
 		b.add_prop(props[p], twin)
 	return starts
@@ -90,11 +96,12 @@ static func place_wells(b: Battle) -> void:
 		cell.height = 0
 
 
-static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int) -> Dictionary:
+static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int, fixed_pairs := -1) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var size: int = d["size"]
 	var free: Array[Vector2i] = []
+	var spare: Array[Vector2i] = []
 	for y in size:
 		for x in size:
 			var p := Vector2i(x, y)
@@ -103,15 +110,26 @@ static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Ar
 				continue                      # one square of every mirrored pair
 			if b.board.at(p).is_mountain() or b.board.at(twin).is_mountain():
 				continue
+			if b.board.at(p).ground == GroundDef.WELL or b.board.at(twin).ground == GroundDef.WELL:
+				continue                  # a board never starts with a prop on a Dragon Vein
 			var near_start := false
 			for s in starts:
 				if Board.chebyshev(s, p) <= 1 or Board.chebyshev(s, twin) <= 1:
 					near_start = true
-			if not near_start and not in_start_area(mode, p, 0) and not in_start_area(mode, p, 1):
+			if in_start_area(mode, p, 0) or in_start_area(mode, p, 1):
+				continue
+			if near_start:
+				spare.append(p)           # only the prop pairs switch fills squares next to a start square
+			else:
 				free.append(p)
 	var pairs := rng.randi_range(int(d["pairs"][0]), int(d["pairs"][1]))
+	if fixed_pairs >= 0:
+		pairs = fixed_pairs
 	var out := {}
-	while out.size() < pairs and not free.is_empty():
+	while out.size() < pairs and not (free.is_empty() and (fixed_pairs < 0 or spare.is_empty())):
+		if free.is_empty():
+			free = spare
+			spare = []
 		var p: Vector2i = free.pop_at(rng.randi_range(0, free.size() - 1))
 		out[p] = SEEDED_PROPS[rng.randi_range(0, SEEDED_PROPS.size() - 1)]
 	return out

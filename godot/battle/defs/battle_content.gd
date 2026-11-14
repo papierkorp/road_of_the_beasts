@@ -151,7 +151,15 @@ func validate() -> void:
 			problems.append("prop '%s' leaves unknown ground '%s'" % [id, p.ground_left])
 		if p.ground_left != &"" and not p.on_ground():
 			problems.append("prop '%s': air props never change ground" % id)
+		if not p.solid and not p.on_ground():
+			problems.append("prop '%s': a walkable prop lies on the ground layer" % id)
 		for a in p.aftermath:
+			if a.when == PropAftermath.ENTER and p.solid:
+				problems.append("prop '%s': only a walkable prop can be entered" % id)
+			if a.op == "ground" and not grounds.has(a.ground):
+				problems.append("prop '%s' lays unknown ground '%s'" % [id, a.ground])
+			if a.op == "zone" and not zones.has(a.zone):
+				problems.append("prop '%s' creates unknown zone '%s'" % [id, a.zone])
 			if a.op == "spawn" and not props.has(a.spawn_prop):
 				problems.append("prop '%s' spawns unknown prop '%s'" % [id, a.spawn_prop])
 	for id in zones:
@@ -165,8 +173,8 @@ func validate() -> void:
 		_validate_skill(skills[id])
 	for id in monsters:
 		var m: MonsterDef = monsters[id]
-		if m.skills.is_empty() or m.skills.size() > 4:
-			problems.append("monster '%s' needs 1-4 kit slots" % id)
+		if m.skills.is_empty() or m.skills.size() > 6:
+			problems.append("monster '%s' needs 1-6 kit slots" % id)
 		var active := 0
 		for s in m.skills:
 			if s == null:

@@ -111,8 +111,9 @@ static func destroy_mountain(b: Battle, cell: BoardCell, keep_ground: bool) -> b
 # ---------- props (gdd_battle §4.9–§4.10) ----------
 
 ## True if a prop of this type may be placed here: its layers are free of props and monsters.
+## A Dragon Vein takes props like any other ground (build since 2026-11-14).
 static func can_place_prop(b: Battle, def: PropDef, p: Vector2i) -> bool:
-	if def == null or not b.board.in_bounds(p) or GroundDef.is_reserved(b.board.at(p).ground):
+	if def == null or not b.board.in_bounds(p):
 		return false
 	for layer in [Board.GROUND, Board.AIR]:
 		if not def.occupies(layer):
@@ -136,6 +137,7 @@ static func damage_prop(b: Battle, prop: BoardProp, amount: int) -> void:
 	if prop == null or amount <= 0 or prop.hp <= 0:
 		return
 	prop.hp = maxi(0, prop.hp - amount)
+	prop.struck = true
 	b.emit(&"prop_hit", {"pos": prop.pos, "prop": prop.def.id, "amount": amount, "hp": prop.hp})
 
 

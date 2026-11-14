@@ -15,6 +15,9 @@ extends Resource
 @export_enum("inert", "burst", "residue", "push", "spawn", "aura") var prop_class: String = "inert"
 @export_enum("ground", "air", "both") var layer: String = "ground"
 @export var hp: int = 1
+## false: a walkable prop. Monsters stand on it and are pushed onto it, it blocks no movement and
+## no Strike line; it still has HP and can be struck. One with an `enter` operation is a trap.
+@export var solid: bool = true
 ## `heavy`: cannot be moved by displacement or relocation and takes no collision damage.
 @export var heavy: bool = false
 ## A monster pushed or pulled into it takes 2 instead of 1 collision damage.
@@ -25,13 +28,26 @@ extends Resource
 @export var creatable_by_skill: bool = true
 ## While standing: monsters on orthogonal neighbours receive these effects (aura props).
 @export var aura: Array[FieldEffect] = []
-## On destruction, in this fixed order of kinds: damage, push, spawn (gdd_battle §6.2 step 4a).
+## What the prop does and when (PropAftermath.when): on destruction, when hit, when entered, at the
+## round end. Per moment in this fixed order of kinds: damage, spawn, ground, zone, push / pull.
 @export var aftermath: Array[PropAftermath] = []
 ## Ground left behind (laid in category (e)); empty = ground unchanged.
 @export var ground_left: StringName = &""
 @export var ground_left_level: int = 1
 @export var color: Color = Color(0.6, 0.58, 0.52)
 @export_multiline var description: String = ""
+
+
+func actions(when: String) -> Array[PropAftermath]:
+	var out: Array[PropAftermath] = []
+	for a in aftermath:
+		if a != null and a.when == when:
+			out.append(a)
+	return out
+
+
+func is_trap() -> bool:
+	return not solid and not actions(PropAftermath.ENTER).is_empty()
 
 
 func on_ground() -> bool:

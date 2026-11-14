@@ -375,9 +375,18 @@ func _ground_color(cell: BoardCell) -> Color:
 	base = base.darkened(0.45)
 	if g != null and g.max_level > 1 and cell.level > 1:
 		base = base.lightened(0.18)
+	if BattleExperiment.vein_charge and cell.ground == GroundDef.WELL and not cell.charged:
+		base = base.darkened(0.55)                    # test switch: a discharged Dragon Vein
+	if _vein_owned(cell):                              # a Dragon Vein shows the colour of the side that owns it
+		base = base.lerp(SIDE_COLORS[cell.owner_side], 0.6)
 	if cell.is_mountain():
 		base = base.lerp(Color(0.18, 0.35, 0.41), 0.55 if cell.ground == GroundDef.PLAIN else 0.3)
 	return base
+
+
+## Last touch owns (`vein_touch`): the side a Dragon Vein belongs to at the moment, if any.
+func _vein_owned(cell: BoardCell) -> bool:
+	return cell.ground == GroundDef.WELL and BattleExperiment.vein_touch and not BattleExperiment.vein_charge and cell.owner_side >= 0
 
 
 func _set_overlay(ov: Dictionary, y: float, color: Color, shown: bool) -> void:
@@ -457,7 +466,12 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 		lines += "%s %s · %dr\n" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1], cell.zone.duration]
 	if g != null and cell.ground != GroundDef.PLAIN:
 		lines += g.label(cell.level) + "\n"
+	if BattleExperiment.vein_charge and cell.ground == GroundDef.WELL:
+		lines += ("● charged" if cell.charged else ("○ side %d" % (cell.owner_side + 1) if BattleExperiment.vein_charge_late else "○ empty")) + "\n"
+	if cell.ground == GroundDef.WELL and BattleExperiment.vein_touch and not BattleExperiment.vein_charge:
+		lines += ("◆ yours" if cell.owner_side == 0 else ("◆ enemy" if cell.owner_side == 1 else "◇ unclaimed")) + "\n"
 	var label: Label3D = t["label"]
+	label.modulate = SIDE_COLORS[cell.owner_side].lerp(Color.WHITE, 0.5) if _vein_owned(cell) else Color.WHITE
 	label.text = lines.strip_edges()
 	label.position.y = h + 0.12
 	_update_prop(t, "prop", cell.prop, h)
@@ -484,7 +498,14 @@ func _update_prop(t: Dictionary, slot: String, prop: BoardProp, y: float) -> voi
 	mat.roughness = 0.85
 	mat.albedo_color = def.color.darkened(0.35) if prop.hp <= 0 else def.color
 	var height := 0.6
-	match def.prop_class:
+	match def.prop_class if def.solid else "walkable":
+		"walkable":                           # a flat plate a monster can stand on
+			var plate := CylinderMesh.new()
+			plate.top_radius = 0.4
+			plate.bottom_radius = 0.42
+			plate.height = 0.06
+			mi.mesh = plate
+			height = 0.06
 		"aura":
 			var col := CylinderMesh.new()
 			col.top_radius = 0.16

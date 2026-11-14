@@ -4,6 +4,14 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _big(pos: Vector2i, side := 0, o: Dictionary = {}) -> Array:
 	var sheet := {"size": 2, "hp": 9, "init": 9.0 if side == 0 else 5.0}
 	sheet.merge(o, true)

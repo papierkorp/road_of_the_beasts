@@ -11,6 +11,7 @@ extends RefCounted
 static func begin(b: Battle) -> void:
 	b.queue = BattleQueue.build(b)
 	b.queue_idx = 0
+	_charge_veins(b)
 	b.emit(&"round_started", {"round": b.round_number, "queue": _queue_ids(b)})
 	_start_entry(b)
 
@@ -52,6 +53,7 @@ static func _start_entry(b: Battle) -> void:
 			# 2. AP
 			b.ap = BattleStats.ap(u)
 			b.entry_acted = false
+			u.used_turn.clear()
 			b.emit(&"turn_started", {"who": u.id, "ap": b.ap, "extra": entry["extra"]})
 			return
 		b.queue_idx += 1
@@ -169,19 +171,10 @@ static func end_turn(b: Battle) -> void:
 			spring_traps(b)
 			if b.over:
 				return
-		# 1b. a repelling prop next to it pushes it 1 square away
-		if u.is_alive() and u.size == 1 and u.layer == Board.GROUND:
-			var away := Vector2i.ZERO
-			for dir in Board.CARDINAL:
-				var n := b.board.at(u.pos + dir)
-				if n != null and n.prop != null and n.prop.hp > 0 and n.prop.def.repel:
-					away -= dir
-			if (away.x == 0) != (away.y == 0):
-				BattleDisplace.shove(b, u, Vector2i(signi(away.x), signi(away.y)), "repel")
-				BattlePayload.settle(b)
-				spring_traps(b)
-				if b.over:
-					return
+		if u.is_alive() and BattleExperiment.vein_charge:      # a monster that stayed on a charged vein discharges it now
+			discharge_veins(b, u)
+			if b.check_over():
+				return
 		# 2. end-of-turn ground on the squares covered now, 3. mend
 		if u.is_alive():
 			var mend: Array = []
@@ -232,6 +225,9 @@ static func _end_round(b: Battle) -> void:
 			BattleDamage.ground_triggers(b, ru, GroundTrigger.END_OF_ROUND)
 	if b.check_over():
 		return
+	BattleProps.round_end(b)                  # props that act every round
+	if b.check_over():
+		return
 	var held := _positional(b)
 	if b.check_over():
 		return
@@ -240,12 +236,17 @@ static func _end_round(b: Battle) -> void:
 		_late_pressure(b, ended)
 	if b.check_over():
 		return
+	if BattleExperiment.stamina:               # test switch: every monster regains Stamina
+		for id in b.roster:
+			var su: BattleUnit = b.units[id]
+			su.stamina = mini(su.sheet.movement, su.stamina + BattleExperiment.stamina_regen)
 	# remember the finished queue: orphaned Surges order their sources by it
 	b.prev_queue = b.queue.duplicate(true)
 	b.round_number += 1
 	b.queue = BattleQueue.build(b)
 	b.queue_idx = 0
 	b.turn_owner = &""
+	_charge_veins(b)
 	b.emit(&"round_started", {"round": b.round_number, "queue": _queue_ids(b)})
 	if BattleExperiment.surge_at_caster:        # Surges of a caster that is gone detonate at the round start
 		var orphans: Array[PendingSurge] = []
@@ -270,6 +271,14 @@ static func _positional(b: Battle) -> int:
 	var held := [0, 0]
 	for vein in b.board.cells:
 		if BattleExperiment.wells <= 0 or vein.ground != GroundDef.WELL:
+			continue
+		if BattleExperiment.vein_charge:              # discharged during the round: no damage here, count who took it
+			if not vein.charged and vein.owner_side >= 0:
+				held[vein.owner_side] += 1
+				if BattleExperiment.vein_charge_late:
+					var won := _well_target(b, vein.pos, vein.owner_side)
+					if won != null:
+						hits.append({"unit": won.id, "base": 1, "type": BattleDamage.WELL, "source": "Dragon Vein"})
 			continue
 		var p: Vector2i = vein.pos
 		var holder := b.any_unit_at(p)
@@ -448,3 +457,36 @@ static func _soft_pressure(b: Battle, ended_round: int) -> void:
 		b.emit(&"displaced", {"who": u.id, "from": from, "to": best, "cause": "Arena shrinks"})
 	b.emit(&"arena_shrunk", {"margin": board.margin})
 	spring_traps(b)
+
+
+## Test switch `vein_charge`: every Dragon Vein is charged again at the start of a round.
+static func _charge_veins(b: Battle) -> void:
+	if not BattleExperiment.vein_charge or BattleExperiment.wells <= 0:
+		return
+	for cell in b.board.cells:
+		if cell.ground == GroundDef.WELL:
+			cell.charged = true
+			cell.owner_side = -1
+
+
+## Test switch `vein_charge`: `u` discharges every charged Dragon Vein under its body: 1 damage
+## each to the enemy nearest to that square (ties as for the round-end rule).
+static func discharge_veins(b: Battle, u: BattleUnit) -> void:
+	if not u.is_alive() or b.round_number < BattleExperiment.damage_from_round:
+		return
+	var hits: Array = []
+	for c in u.cells():
+		var cell := b.board.at(c)
+		if cell == null or cell.ground != GroundDef.WELL or not cell.charged:
+			continue
+		cell.charged = false
+		cell.owner_side = u.side
+		b.emit(&"vein_taken", {"pos": c, "side": u.side, "who": u.id})
+		if BattleExperiment.vein_charge_late:          # won for this round: the damage follows at the round end
+			continue
+		var target := _well_target(b, c, u.side)
+		if target != null:
+			hits.append({"unit": target.id, "base": 1, "type": BattleDamage.WELL, "source": "Dragon Vein", "by": u.id})
+	if not hits.is_empty():
+		BattleDamage.apply_round(b, hits)
+		BattleDamage.defeat_step(b)

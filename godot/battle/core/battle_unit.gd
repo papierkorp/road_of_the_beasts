@@ -30,6 +30,10 @@ var life_thread: bool = false
 ## Usage bookkeeping per equipped skill instance: slot -> round of the last use / used at all.
 var used_round := {}
 var used_battle := {}
+## Slots used in the current turn of this monster (test switch `once_per_turn`).
+var used_turn := {}
+## Test switch `stamina`: what is left of the pool (the Movement stat is its size).
+var stamina: int = 0
 var kills: int = 0
 
 
@@ -43,6 +47,7 @@ func _init(p_id: StringName = &"", p_sheet: UnitSheet = null, p_side := 0, p_slo
 		size = p_sheet.size
 		layer = Board.AIR if p_sheet.airborne else Board.GROUND
 		max_hp = p_sheet.hp
+		stamina = p_sheet.movement
 		hp = p_sheet.hp if p_sheet.current_hp < 0 else clampi(p_sheet.current_hp, 1, p_sheet.hp)
 
 
@@ -116,5 +121,7 @@ func clone() -> BattleUnit:
 	u.life_thread = life_thread
 	u.used_round = used_round.duplicate()
 	u.used_battle = used_battle.duplicate()
+	u.used_turn = used_turn.duplicate()
+	u.stamina = stamina
 	u.kills = kills
 	return u

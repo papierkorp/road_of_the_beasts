@@ -1,7 +1,7 @@
 class_name MonsterBuilder
 extends Control
 ## Monster builder of the battle prototype: create a monster or change an existing one — name, Kin,
-## the six stats and the four kit slots — and write it as a Resource file to res://data/monsters
+## the six stats and the six kit slots — and write it as a Resource file to res://data/monsters
 ## (a new monster gets the content status `experiment`). The skills come from res://data/skills;
 ## "New skill" opens the skill builder and returns here. Nothing checks a price or a budget: stat
 ## and skill prices are open. Writing works when the project runs from its folder (editor or
@@ -57,7 +57,7 @@ static func build(c: BattleContent, spec: Dictionary, base: MonsterDef = null) -
 	var kit: Array[BattleSkillDef] = []
 	for sid in spec.get("skills", []):
 		var s := c.skill(StringName(sid)) if String(sid) != "" else null
-		if s != null and kit.size() < 4:
+		if s != null and kit.size() < 6:
 			kit.append(s)
 	m.skills = kit
 	return m
@@ -158,7 +158,7 @@ func _ready() -> void:
 		spin.value_changed.connect(func(_v): _refresh())
 		_spins[st[0]] = spin
 		form.add_child(_row(st[1], spin))
-	for i in 4:
+	for i in 6:
 		var ob := OptionButton.new()
 		ob.item_selected.connect(func(_i): _refresh())
 		_slots.append(ob)
@@ -260,7 +260,7 @@ func _load_picked() -> void:
 		values = {"hp": m.hp, "initiative": m.initiative, "move": m.move, "reach": m.reach, "tpr": m.tpr, "ap": m.ap}
 	for key: String in _spins:
 		(_spins[key] as SpinBox).value = values[key]
-	for i in 4:
+	for i in 6:
 		var want := String(m.skills[i].id) if m != null and i < m.skills.size() and m.skills[i] != null else ""
 		_slots[i].select(0)
 		for k in _slots[i].item_count:

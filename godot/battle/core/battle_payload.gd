@@ -89,7 +89,7 @@ static func _collect_strike(b: Battle, p: Dictionary) -> void:
 			continue
 		if h["front"] != StrikeShapes.NONE:
 			var front := b.board.at(origin + h["front"])
-			if front != null and front.prop != null:
+			if front != null and front.prop != null and front.prop.def.solid:
 				continue                      # a solid prop takes the hit and blocks the cell behind it
 		p["cells"].append(cell)
 		for layer in [Board.GROUND, Board.AIR]:
@@ -266,9 +266,11 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 				mountains[cell] = mountains.get(cell, false) or skill.grounds_mountains()
 				p["destroyed"][cell] = true
 	var removed: Array[BoardProp] = []
+	BattleProps.resolve_hits(b)               # props that were hit and still stand act first
 	_removal_round(b, mountains, removed)
 	var guard := 0
-	while _has_dead_props(b) and guard < 64:  # a Gong push can break further props
+	while (_has_dead_props(b) or BattleProps.has_pending_hits(b)) and guard < 64:  # a Gong push can break further props
+		BattleProps.resolve_hits(b)
 		_removal_round(b, {}, removed)
 		guard += 1
 	# (b) Cleanse: no monster source beyond the Mountain-creation reset below (gdd_skills §4)
@@ -334,32 +336,10 @@ static func _removal_round(b: Battle, mountains: Dictionary, removed: Array[Boar
 			dead.append(prop)
 	if dead.is_empty() and mountains.is_empty():
 		return
-	var hits: Array = []
-	var pushes: Array = []
-	var spawns: Array = []
+	var step := BattleProps.new_step()
 	for prop in dead:
-		for a in prop.def.aftermath:
-			var per_unit := {}                # unit id -> summed offset (once per prop and unit)
-			for o in a.offsets():
-				var q: Vector2i = prop.pos + o
-				if not b.board.in_bounds(q):
-					continue
-				if a.op == "spawn":
-					var child := b.content.prop(a.spawn_prop)
-					if BattleBoardOps.can_place_prop(b, child, q):
-						spawns.append([child, q])
-					continue
-				for u in BattleBoardOps.units_in_reach_of(b, prop.def, q):
-					per_unit[u.id] = per_unit.get(u.id, Vector2i.ZERO) + o
-			for id in b.roster:
-				if not per_unit.has(id):
-					continue
-				if a.op == "damage":
-					hits.append({"unit": id, "base": a.amount, "type": BattleDamage.AFTERMATH, "source": prop.def.display_name})
-				elif a.op == "push":
-					pushes.append({"unit": id, "dir": _eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
-				elif a.op == "pull":
-					pushes.append({"unit": id, "dir": -_eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
+		BattleProps.collect(b, prop, PropAftermath.DESTROYED, step)
+	var hits: Array = step["hits"]
 	var collapsed := {}
 	var cells := mountains.keys()
 	cells.sort()
@@ -377,9 +357,7 @@ static func _removal_round(b: Battle, mountains: Dictionary, removed: Array[Boar
 	for cell: Vector2i in cells:
 		BattleBoardOps.destroy_mountain(b, b.board.at(cell), mountains[cell])
 	BattleDamage.defeat_step(b)
-	for s: Array in spawns:
-		BattleBoardOps.place_prop(b, s[0], s[1])
-	BattleDisplace.resolve(b, pushes)
+	BattleProps.finish(b, step)
 
 
 # ---------- 5: self retreat ----------

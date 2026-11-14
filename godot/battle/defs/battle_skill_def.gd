@@ -38,6 +38,9 @@ const PASSIVE := "passive"
 ## Per equipped instance (gdd_skills §2 Usage and Repetition). once_per_battle is the Major
 ## Surge profile limit; no multi-round cooldowns exist.
 @export_enum("repeatable", "once_per_round", "once_per_battle") var repetition: String = "repeatable"
+## Uses per turn of its monster (build rule since 2026-11-14: 1; 0 = no limit). A higher value is an
+## upgrade axis of the skill (draft, no price yet). The universal Step is not slotted and has no limit.
+@export var usage_limit: int = 1
 
 @export_group("Placement and area")
 ## reach: anchor within effective Reach (Manhattan) · adjacent: anchor next to the caster ·
@@ -102,6 +105,8 @@ var strike_shape: String = "jab"
 @export var distance_mod: int = 0
 ## > 0: a fixed distance that ignores Movement and `slow` (Step: 1).
 @export var fixed_distance: int = 0
+## Test switch `stamina`: the squares this movement covers (0 = 3); haste and slow still change it.
+@export var move_range: int = 0
 ## Movement with displacement (temp_todo T38): after landing, "ahead" pushes the monster on
 ## the next square in the travel direction 1 square on (a headbutt), "ring" pushes every
 ## monster on the eight neighbouring squares 1 square outward (a shockwave).
@@ -152,9 +157,16 @@ func is_placed() -> bool:
 func cost() -> int:
 	if kind == STRIKE:
 		return StrikeShapes.ap(StringName(strike_shape))
+	if kind == MOVE and BattleExperiment.stamina and not BattleExperiment.stamina_ap:
+		return 0                                  # test switch: movement is paid in Stamina only
 	if kind == MOVE and BattleExperiment.move_ap > 0:
 		return BattleExperiment.move_ap          # test switch
 	return maxi(1, ap_cost)
+
+
+## Test switch `stamina`: does this skill spend Stamina (1 per movement point of the move)?
+func uses_stamina() -> bool:
+	return kind == MOVE and BattleExperiment.stamina
 
 
 ## A cast-time cardinal direction is needed for push zones and pushing Surges.

@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_am"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_pd"]
+
+[sub_resource type="Resource" id="Resource_act"]
+script = ExtResource("1_am")
+when = "hit"
+op = "damage"
+pattern = "ring8"
+amount = 1
+[resource]
+script = ExtResource("3_pd")
+id = &"thorn_idol"
+display_name = "Thorn Idol"
+content_status = "draft"
+prop_class = "burst"
+hp = 3
+solid = true
+aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
+ground_left = &""
+color = Color(0.45, 0.6, 0.3, 1)
+description = "Hit (and still standing): 1 damage to monsters on the 8 neighbouring squares."

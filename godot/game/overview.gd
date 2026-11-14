@@ -245,8 +245,8 @@ static func prop_rows(c: BattleContent) -> Array[Dictionary]:
 			traits.append("heavy")
 		if d.spiky:
 			traits.append("spiky")
-		if d.repel:
-			traits.append("repels")
+		if not d.solid:
+			traits.append("trap" if d.is_trap() else "walkable")
 		if not d.creatable_by_skill:
 			traits.append("board only")
 		var left := c.ground(d.ground_left)

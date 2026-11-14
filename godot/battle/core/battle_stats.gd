@@ -19,7 +19,7 @@ static func zones_under(b: Battle, u: BattleUnit) -> Array[BoardZone]:
 	var by_gid := {}
 	for p in u.cells():
 		var c := b.board.at(p)
-		if c == null or c.zone == null or c.prop != null:
+		if c == null or c.zone == null or (c.prop != null and c.prop.def.solid):
 			continue
 		var z: BoardZone = c.zone
 		if not by_gid.has(z.gid) or by_gid[z.gid].level < z.level:

@@ -151,13 +151,16 @@ static func evaluate(b: Battle, side: int) -> float:
 				continue
 			var cost := DANGER_LETHAL * (14.0 + 10.0 * u.hp) if threat >= u.hp else DANGER_HIT * threat
 			score += -cost if u.side == side else cost * DANGER_ENEMY
-	for p in BattleExperiment.well_squares(b.board.size):
+	for p in (BattleExperiment.well_squares(b.board.size) if not BattleExperiment.vein_charge or BattleExperiment.vein_charge_late else []):
 		var vein_side := b.board.at(p).owner_side if BattleExperiment.vein_touch else -1
 		var holder := b.any_unit_at(p)
-		if holder != null:
+		if BattleExperiment.vein_charge:              # won by the first touch of the round, whoever stands there now
+			vein_side = -1 if b.board.at(p).charged else b.board.at(p).owner_side
+		elif holder != null:
 			vein_side = holder.side
 		if vein_side >= 0:
 			score += WELL_VALUE if vein_side == side else -WELL_VALUE
+	score += _prop_threat(b, side)
 	if BattleExperiment.flank:
 		for u in b.living():
 			var around := 0
@@ -167,6 +170,32 @@ static func evaluate(b: Battle, side: int) -> float:
 			if around >= 2:
 				score += -FLANK_VALUE if u.side == side else FLANK_VALUE
 	return score
+
+
+## What the standing props promise (prop rework 2026-11-14): damage a prop deals at the round end to
+## whoever stands in its pattern now, damage it would deal when hit or destroyed, and a trap next
+## to a monster. Positive when it threatens the enemy of `side`.
+const PROP_ROUND_END := 6.0
+const PROP_BURST := 2.0
+const PROP_TRAP := 1.0
+
+
+static func _prop_threat(b: Battle, side: int) -> float:
+	var total := 0.0
+	for prop in b.board.props():
+		if prop.hp <= 0:
+			continue
+		for a in prop.def.aftermath:
+			if a == null or a.op != "damage":
+				continue
+			var weight := PROP_ROUND_END if a.when == PropAftermath.ROUND_END else (PROP_TRAP if a.when == PropAftermath.ENTER else PROP_BURST)
+			var offsets: Array[Vector2i] = PropAftermath.RING8 if a.when == PropAftermath.ENTER else a.offsets()
+			for o in offsets:
+				var t := b.unit_at(prop.pos + o, Board.GROUND)
+				if t != null:
+					var w := weight * float(mini(a.amount, t.hp))
+					total += w if t.side != side else -w
+	return total
 
 
 ## Score points for how exposed `u` is to being pushed into harm by one of `pushers`: for each
@@ -201,8 +230,11 @@ static func _push_harm(b: Battle, u: BattleUnit, here: BoardCell, to: Vector2i) 
 	var cell := b.board.at(to) if b.board.in_bounds(to) else null
 	if cell == null:
 		return float(BattleDisplace.EDGE_DAMAGE)
-	if cell.prop != null and cell.prop.hp > 0:
+	if cell.prop != null and cell.prop.hp > 0 and cell.prop.def.solid:
 		return float(BattleDisplace.SPIKY_DAMAGE) if cell.prop.def.spiky else 1.0
+	if cell.prop != null and cell.prop.hp > 0 and b.unit_at(to, Board.GROUND) == null:
+		var on_trap: Array[Vector2i] = [to]
+		return float(BattleProps.enter_harm(b, u, on_trap))
 	if b.unit_at(to, Board.GROUND) != null:
 		return 1.0
 	if cell.height > here.height:
@@ -391,7 +423,10 @@ static func _walk_to_enemy(b: Battle, side: int, from: Vector2i) -> int:
 	for e in b.living(1 - side):
 		best = mini(best, e.manhattan_to(from))
 	for p in BattleExperiment.well_squares(b.board.size):      # a free Wellspring is a goal too
-		if b.any_unit_at(p) == null and (not BattleExperiment.vein_touch or b.board.at(p).owner_side != side):
+		if BattleExperiment.vein_charge:
+			if b.board.at(p).charged:
+				best = mini(best, absi(p.x - from.x) + absi(p.y - from.y) + 1)
+		elif b.any_unit_at(p) == null and (not BattleExperiment.vein_touch or b.board.at(p).owner_side != side):
 			best = mini(best, absi(p.x - from.x) + absi(p.y - from.y) + 1)
 	return best
 

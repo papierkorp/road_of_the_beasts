@@ -21,8 +21,24 @@ var _experiments := {}
 const EXPERIMENTS := [
 	["Beast pushes, Spirit swaps", "Beast Strikes push the target 1 square away; a Spirit Strike trades squares with it."],
 	["Push 2 squares", "Strike and Surge pushes and pulls move up to 2 squares."],
+	["No push when a zone is cast", "A push or pull zone moves its occupants only at the end of their turn, not when it is cast (S025)."],
+	["Each skill once per turn", "Every slotted skill at most once per turn of its monster; Step stays free (S025)."],
+	["Collision hurts only the moved monster", "A monster pushed or pulled into another monster takes the damage alone (S025)."],
+	["Charged Dragon Veins", "Every vein is charged at the start of a round. The first monster that touches it, or the one standing on it at the end of its turn, discharges it: 1 damage to the nearest enemy. No ownership, no vein damage at the round end (S026)."],
+	["Charged veins hit at the round end", "With Charged Dragon Veins: the first touch of a round wins the vein for that round, wherever the monster stands afterwards; its 1 damage comes at the end of the round (S027)."],
+	["Stamina instead of Movement", "The Movement stat is a Stamina pool: a movement skill costs 1 Stamina per square (per movement point on slowing ground) and reaches at most the range on the skill (3) and never further than the Stamina left. Everyone regains 'Stamina per round' at the round end. Step stays 1 AP for 1 square without Stamina (S029)."],
+	["Movement skills also cost AP", "With Stamina: a movement skill costs its AP and the Stamina. Off = Stamina only."],
+	["Dragon Veins: last touch owns", "GDD rule: a vein deals its round-end damage for the side that touched it last, whether or not a monster stands on it; the board shows the owner. Off = a monster has to stand on it at the round end (S028)."],
+	["Step walks the full Movement", "The Step of every monster walks up to its Movement for 1 AP, like Run (S026)."],
 ]
 
+## Board and value switches: label, min, max, unused, tooltip -> SpinBox.
+var _numbers := {}
+const NUMBERS := [
+	["Dragon Veins", 0, 7, 0, "Dragon Vein squares on the centre row (7×7 and larger boards only; 0 = none; the build rule is 3)."],
+	["Prop pairs", -1, 8, 0, "Mirrored prop pairs the board starts with: -1 = the fixed test layout (or the random board's own number), 0 = no props, N = that many pairs of random prop types on random squares."],
+	["Stamina per round", 0, 5, 0, "With Stamina instead of Movement: Stamina every monster regains at the end of a round."],
+]
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -65,7 +81,7 @@ func _ready() -> void:
 		var def := BattleSetup.load_def(id)
 		var b := Button.new()
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(380, 150)
+		b.custom_minimum_size = Vector2(300, 150)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -75,8 +91,9 @@ func _ready() -> void:
 		grid.add_child(b)
 		_cards[id] = b
 
-	var loadout := HBoxContainer.new()
-	loadout.add_theme_constant_override("separation", 8)
+	var loadout := HFlowContainer.new()
+	loadout.add_theme_constant_override("h_separation", 8)
+	loadout.add_theme_constant_override("v_separation", 4)
 	col.add_child(loadout)
 	var loadout_label := Label.new()
 	loadout_label.text = "Test loadout (tamer skills, max %d):" % MAX_TAMER
@@ -100,8 +117,9 @@ func _ready() -> void:
 	_random_board.tooltip_text = "Off: the fixed test layout of the mode. On: a seeded, point-symmetric layout."
 	loadout.add_child(_random_board)
 
-	var lab := HBoxContainer.new()
-	lab.add_theme_constant_override("separation", 8)
+	var lab := HFlowContainer.new()
+	lab.add_theme_constant_override("h_separation", 8)
+	lab.add_theme_constant_override("v_separation", 2)
 	col.add_child(lab)
 	var lab_label := Label.new()
 	lab_label.text = "Test switches:"
@@ -117,8 +135,34 @@ func _ready() -> void:
 		lab.add_child(cb)
 		_experiments[item[0]] = cb
 
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 12)
+	var nums := HFlowContainer.new()
+	nums.add_theme_constant_override("h_separation", 8)
+	nums.add_theme_constant_override("v_separation", 2)
+	col.add_child(nums)
+	var nums_label := Label.new()
+	nums_label.text = "Board and values:"
+	nums_label.add_theme_color_override("font_color", UiTheme.DIM)
+	nums.add_child(nums_label)
+	for item: Array in NUMBERS:
+		var nl := Label.new()
+		nl.text = item[0]
+		nl.tooltip_text = item[4]
+		nl.mouse_filter = Control.MOUSE_FILTER_STOP
+		nl.add_theme_font_size_override("font_size", 13)
+		nums.add_child(nl)
+		var sb := SpinBox.new()
+		sb.min_value = item[1]
+		sb.max_value = item[2]
+		sb.value = _number_now(item[0])
+		sb.tooltip_text = item[4]
+		sb.value_changed.connect(func(_v: float): _apply_experiments())
+		nums.add_child(sb)
+		_numbers[item[0]] = sb
+
+	var row := HFlowContainer.new()
+	row.alignment = FlowContainer.ALIGNMENT_END
+	row.add_theme_constant_override("h_separation", 12)
+	row.add_theme_constant_override("v_separation", 8)
 	col.add_child(row)
 	var back := Button.new()
 	back.text = "Back"
@@ -131,9 +175,6 @@ func _ready() -> void:
 	build.tooltip_text = "Create a monster or change one: stats, Kin and the four skills. New skills are made in the skill builder, reachable from there."
 	build.pressed.connect(func(): get_tree().change_scene_to_file("res://game/monster_builder.tscn"))
 	row.add_child(build)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(spacer)
 	_start1 = Button.new()
 	_start1.text = "Duel 1v1 (5×5)"
 	_start1.custom_minimum_size = Vector2(200, 46)
@@ -163,7 +204,35 @@ func _experiment_on(label: String) -> bool:
 	match label:
 		"Push 2 squares":
 			return BattleExperiment.push_steps > 1
+		"No push when a zone is cast":
+			return not BattleExperiment.zone_cast_push
+		"Each skill once per turn":
+			return BattleExperiment.once_per_turn
+		"Collision hurts only the moved monster":
+			return not BattleExperiment.collision_both
+		"Charged Dragon Veins":
+			return BattleExperiment.vein_charge
+		"Charged veins hit at the round end":
+			return BattleExperiment.vein_charge_late
+		"Step walks the full Movement":
+			return BattleExperiment.step_full_move
+		"Dragon Veins: last touch owns":
+			return BattleExperiment.vein_touch
+		"Stamina instead of Movement":
+			return BattleExperiment.stamina
+		"Movement skills also cost AP":
+			return BattleExperiment.stamina_ap
 	return BattleExperiment.kin_push
+
+
+## The value a number switch has at the moment.
+func _number_now(label: String) -> int:
+	match label:
+		"Dragon Veins":
+			return BattleExperiment.wells
+		"Prop pairs":
+			return BattleExperiment.map_props
+	return BattleExperiment.stamina_regen
 
 
 ## Sets the experiment switches from the check boxes and refreshes the cards (kits can change).
@@ -172,6 +241,19 @@ func _apply_experiments() -> void:
 	BattleExperiment.reset()
 	BattleExperiment.kin_push = on.call("Beast pushes, Spirit swaps")
 	BattleExperiment.push_steps = 2 if on.call("Push 2 squares") else 1
+	BattleExperiment.zone_cast_push = not on.call("No push when a zone is cast")
+	BattleExperiment.once_per_turn = on.call("Each skill once per turn")
+	BattleExperiment.collision_both = not on.call("Collision hurts only the moved monster")
+	BattleExperiment.vein_charge = on.call("Charged Dragon Veins")
+	BattleExperiment.vein_charge_late = on.call("Charged veins hit at the round end")
+	BattleExperiment.vein_charge = BattleExperiment.vein_charge or BattleExperiment.vein_charge_late
+	BattleExperiment.step_full_move = on.call("Step walks the full Movement")
+	BattleExperiment.vein_touch = on.call("Dragon Veins: last touch owns")
+	BattleExperiment.stamina = on.call("Stamina instead of Movement")
+	BattleExperiment.stamina_ap = on.call("Movement skills also cost AP")
+	BattleExperiment.wells = int((_numbers["Dragon Veins"] as SpinBox).value)
+	BattleExperiment.map_props = int((_numbers["Prop pairs"] as SpinBox).value)
+	BattleExperiment.stamina_regen = int((_numbers["Stamina per round"] as SpinBox).value)
 	for id in _cards:
 		(_cards[id] as Button).text = _card_text(BattleSetup.load_def(id))
 
@@ -212,7 +294,7 @@ func _start(m: StringName) -> void:
 	var enemy := BattleSetup.random_enemy(_picked, BattleSetup.team_size(m), rng)
 	var r := BattleRequest.from_ids(m, _picked.duplicate(), enemy)
 	r.player_tamer = _tamer.duplicate()
-	if _random_board.button_pressed:
+	if _random_board.button_pressed or BattleExperiment.map_props > 0:
 		r.board_seed = rng.randi_range(1, 1 << 30)
 	if _tamer.has(&"beast_swap"):
 		# Beast Swap needs someone to bring in: one unused species as a test bench

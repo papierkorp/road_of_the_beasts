@@ -2,6 +2,14 @@ extends GdUnitTestSuite
 ## HUD texts stay short: tokens instead of sentences, built from the data (battle/ui/battle_text.gd).
 
 const H := preload("res://tests/battle/helpers.gd")
+
+
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
 const MAX_CARD_ROWS := 6
 const MAX_LINE := 72
 

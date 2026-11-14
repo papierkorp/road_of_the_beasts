@@ -164,3 +164,13 @@ static func events_of(b: Battle, type: StringName) -> Array:
 		if e["type"] == type:
 			out.append(e)
 	return out
+
+
+## The switches most rule tests were written with: no limit of uses per turn, a push or pull zone
+## also moves at cast, a Dragon Vein belongs to the last side that touched it. Tests of the build
+## defaults of 2026-11-14 set what they need themselves.
+static func legacy_rules() -> void:
+	BattleExperiment.reset()
+	BattleExperiment.once_per_turn = false
+	BattleExperiment.zone_cast_push = true
+	BattleExperiment.vein_touch = true

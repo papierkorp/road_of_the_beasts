@@ -66,19 +66,31 @@ static func prop_brief(c: BattleContent, d: PropDef) -> String:
 		parts.append("air")
 	elif d.layer == "both":
 		parts.append("ground+air")
+	if not d.solid:
+		parts.append("trap" if d.is_trap() else "walkable")
 	if d.heavy:
 		parts.append("heavy")
 	if not d.aura.is_empty():
 		parts.append("aura " + effects_text(d.aura))
 	for a in d.aftermath:
+		var at: String = {"hit": "hit: ", "enter": "entered: ", "round_end": "round end: "}.get(a.when, "")
 		match a.op:
 			"damage":
-				parts.append("burst %d" % a.amount)
+				parts.append("%sburst %d" % [at, a.amount])
 			"push":
-				parts.append("push %d" % a.amount)
+				parts.append("%spush %d" % [at, a.amount])
+			"pull":
+				if at != "":
+					parts.append("%spull %d" % [at, a.amount])
 			"spawn":
 				var child := c.prop(a.spawn_prop)
-				parts.append("spawns %s" % (child.display_name if child != null else String(a.spawn_prop)))
+				parts.append("%sspawns %s" % [at, child.display_name if child != null else String(a.spawn_prop)])
+			"ground":
+				var laid := c.ground(a.ground)
+				parts.append("%slays %s" % [at, laid.display_name if laid != null else String(a.ground)])
+			"zone":
+				var made := c.zone(a.zone)
+				parts.append("%s%s zone" % [at, made.display_name if made != null else String(a.zone)])
 	if d.ground_left != &"" and d.ground_left != GroundDef.PLAIN:
 		var g := c.ground(d.ground_left)
 		parts.append("leaves %s" % (g.display_name if g != null else String(d.ground_left)))
@@ -246,7 +258,7 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 			rows.append_array(created_rows(c, s))
 		BattleSkillDef.MOVE:
 			var parts: PackedStringArray = [PATHS.get(s.move_path, s.move_path),
-				"Move" + ("" if s.distance_mod == 0 else " %d" % s.distance_mod)]
+				("up to %d sq, 1 Stamina each" % (s.fixed_distance if s.fixed_distance > 0 else (s.move_range if s.move_range > 0 else 3))) if BattleExperiment.stamina else ("Move" + ("" if s.distance_mod == 0 else " %d" % s.distance_mod))]
 			if s.blocked_by_height:
 				parts.append("not on Mountain")
 			if s.impact_push == "ahead":
@@ -271,7 +283,7 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 
 
 static func step_rows() -> Array:
-	return [["", "walk" + SEP + "1 sq"]]
+	return [["", "walk" + SEP + ("Movement" if BattleExperiment.step_full_move else "1 sq")]]
 
 
 ## The pre-battle datasheet: one stat line and the kit.
@@ -280,13 +292,20 @@ static func sheet_rows(_c: BattleContent, s: UnitSheet) -> Array:
 	for k in s.skills:
 		kit.append(k.display_name)
 	return [
-		["", "%s%sHP %d%sInit %.1f%sMove %d%sReach %d%sAP %d%s" % [MonsterDef.kin_name(s.kin), SEP, s.hp, SEP, s.initiative, SEP,
-			s.movement, SEP, s.reach, SEP, s.ap, "" if s.tpr <= 1 else SEP + "TPR %d" % s.tpr]],
+		["", "%s%sHP %d%sInit %.1f%s%s %d%sReach %d%sAP %d%s" % [MonsterDef.kin_name(s.kin), SEP, s.hp, SEP, s.initiative, SEP,
+			"Stamina" if BattleExperiment.stamina else "Move", s.movement, SEP, s.reach, SEP, s.ap, "" if s.tpr <= 1 else SEP + "TPR %d" % s.tpr]],
 		["", SEP.join(kit)],
 	]
 
 
 # ---------- state ----------
+
+## "Move 3", or under the test switch `stamina` what is left of the pool: "Stamina 2/4".
+static func move_text(b: Battle, u: BattleUnit) -> String:
+	if BattleExperiment.stamina:
+		return "Stamina %d/%d" % [u.stamina, u.sheet.movement]
+	return "Move %d" % BattleStats.movement(b, u)
+
 
 static func unit_title(u: BattleUnit) -> String:
 	return "%s%s%s%s" % [u.display_name(), SEP + MonsterDef.kin_name(u.kin()), SEP + "2×2" if u.size == 2 else "",
@@ -295,8 +314,8 @@ static func unit_title(u: BattleUnit) -> String:
 
 ## A monster under the cursor: live stats, what affects it, its kit. No sources, no sentences.
 static func unit_rows(b: Battle, u: BattleUnit) -> Array:
-	var rows: Array = [["", "HP %d/%d%sInit %.1f%sMove %d%sReach %d%sAP %d%s" % [u.hp, u.max_hp, SEP, BattleStats.initiative(b, u), SEP,
-		BattleStats.movement(b, u), SEP, BattleStats.reach(b, u), SEP, u.sheet.ap, "" if u.sheet.tpr <= 1 else SEP + "TPR %d" % u.sheet.tpr]]]
+	var rows: Array = [["", "HP %d/%d%sInit %.1f%s%s%sReach %d%sAP %d%s" % [u.hp, u.max_hp, SEP, BattleStats.initiative(b, u), SEP,
+		move_text(b, u), SEP, BattleStats.reach(b, u), SEP, u.sheet.ap, "" if u.sheet.tpr <= 1 else SEP + "TPR %d" % u.sheet.tpr]]]
 	var totals := {}
 	var order: Array = []
 	for c in BattleStats.contributions(b, u):
@@ -426,6 +445,10 @@ static func brief(b: Battle, e: Dictionary) -> String:
 			return "%s −%d" % [_prop_name(b, e["prop"]), e["amount"]]
 		&"prop_destroyed":
 			return "%s breaks" % _prop_name(b, e["prop"])
+		&"vein_taken":
+			return "%s takes a Dragon Vein" % unit_name(b, e["who"])
+		&"trap_sprung":
+			return "%s springs %s" % [unit_name(b, e["who"]), _prop_name(b, e["prop"])]
 		&"prop_placed":
 			return "+ %s" % _prop_name(b, e["prop"])
 		&"mountain_raised":

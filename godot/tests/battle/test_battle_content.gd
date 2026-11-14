@@ -5,12 +5,20 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func test_the_shipped_content_loads_without_problems() -> void:
 	var c := BattleContent.reload_shared()
 	assert_array(c.problems).is_empty()
 	assert_array(c.grounds.keys()).contains_exactly_in_any_order([&"plain", &"rubble", &"voidscar", &"dragon_vein", &"snare", &"lava", &"thornbed",
 		&"blight", &"hearth", &"mossbed", &"umbra", &"hallowed"])
-	assert_int(c.props.size()).is_equal(20)      # catalogue plus the simulation-only Reed Screen
+	assert_int(c.props.size()).is_equal(25)      # catalogue plus the simulation-only Reed Screen
 	assert_str(c.prop(&"reed_screen").content_status).is_equal("simulation")
 	assert_int(c.tamer.size()).is_equal(7)       # the confirmed tamer skills of gdd_battle §5.2
 	assert_int(c.fingerprint().length()).is_equal(64)
@@ -41,7 +49,7 @@ func test_the_catalogue_matches_the_gdd_table() -> void:
 	assert_int(c.ground(&"rubble").move_cost).is_equal(2)
 
 
-func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> void:
+func test_every_monster_has_a_legal_kit_with_the_reference_sheet() -> void:
 	var c := H.content()
 	# the nine monsters of the roster draft; monsters made in the monster builder may come on top
 	for nine: StringName in [&"blaze_tiger", &"ember_hawk", &"dusk_moth", &"forge_golem", &"gloom_wolf", &"grove_wisp", &"hollow_serpent",
@@ -51,7 +59,7 @@ func test_every_monster_has_a_legal_four_slot_kit_with_the_reference_sheet() -> 
 	for id in GameData.monster_ids():
 		var def := c.monster(id)
 		assert_object(def).is_same(GameData.monster(id))      # one definition, two registries
-		assert_int(def.skills.size()).is_equal(4)
+		assert_bool(def.skills.size() >= 1 and def.skills.size() <= 6).is_true()   # up to 6 slots since 2026-11-14; the nine carry 5
 		var sheet := UnitSheets.from_instance(MonsterInstance.of_species(def))
 		assert_array(sheet.problems()).is_empty()
 		assert_bool(sheet.active_skills().size() >= 1).is_true()

@@ -11,6 +11,7 @@ tag = "haste"
 [resource]
 script = ExtResource("3_puwrj")
 id = &"banner"
+content_status = "archived"
 display_name = "Banner"
 prop_class = "aura"
 hp = 2

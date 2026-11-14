@@ -4,6 +4,14 @@ extends GdUnitTestSuite
 const H := preload("res://tests/battle/helpers.gd")
 
 
+func before_test() -> void:
+	H.legacy_rules()
+
+
+func after_test() -> void:
+	BattleExperiment.reset()
+
+
 func _offsets(shape: StringName, d: Vector2i) -> Array:
 	var out := []
 	for h in StrikeShapes.hits(shape, d):

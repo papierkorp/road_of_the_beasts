@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_am"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_pd"]
+
+[sub_resource type="Resource" id="Resource_act"]
+script = ExtResource("1_am")
+when = "enter"
+op = "pull"
+pattern = "ring8"
+amount = 1
+[resource]
+script = ExtResource("3_pd")
+id = &"vortex_trap"
+display_name = "Vortex Trap"
+content_status = "draft"
+prop_class = "push"
+hp = 1
+solid = false
+aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
+ground_left = &""
+color = Color(0.5, 0.4, 0.75, 1)
+description = "Walkable trap. Entered: monsters on the 8 neighbouring squares are pulled 1 square toward it (they collide with the monster on it); the trap is used up."

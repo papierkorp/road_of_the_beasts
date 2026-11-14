@@ -62,6 +62,12 @@ func neighbors(p: Vector2i) -> Array[Vector2i]:
 	return out
 
 
+## The prop that blocks this square on `layer`: a solid one (walkable props block nothing).
+func solid_at(p: Vector2i, layer: int) -> BoardProp:
+	var prop := prop_at(p, layer)
+	return prop if prop != null and prop.def.solid else null
+
+
 ## Places a prop on the layer(s) of its definition.
 func put_prop(prop: BoardProp) -> void:
 	var c := at(prop.pos)

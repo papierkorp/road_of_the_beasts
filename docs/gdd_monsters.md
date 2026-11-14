@@ -21,7 +21,7 @@ A monster the player owns is **two layers**: a fixed *species* and a unique *ind
 ```
 SPECIES  (data file, shared by all individuals — §4.1)
   Kin · descriptive themes (free-form, no mechanical type) · default kit
-  (4 slots, active or passive) · learnable skills · blurb · art
+  (up to 6 slots, active or passive) · learnable skills · blurb · art
   Skills are cards ([Skills §2](gdd_skills.md#2-the-skill-card)); the species only lists which it may learn.
 
 INDIVIDUAL  (one per monster the player owns or meets in the wild)
@@ -57,7 +57,7 @@ TurnsPerRound
 AP            action points per turn
               (ranges and stage ceilings: §2.1, §2.3)
 
-SKILLS: Step (no slot, 1 AP) + 4 slots, active or passive, at least one active ([Skills §1](gdd_skills.md#1-the-kit))
+SKILLS: Step (no slot, 1 AP) + up to 6 slots, active or passive, at least one active ([Skills §1](gdd_skills.md#1-the-kit))
 ```
 
 The battle only ever sees this finished sheet.
@@ -68,7 +68,7 @@ The battle only ever sees this finished sheet.
 1. STAT SHAPE   bulwark / skirmisher / swift / caster   (per individual monster, rolled with the Kin's lean — §1.1)
 2. THEMES       free descriptive motifs; no fixed aspects, replacement element types or attunement
 3. KIN          creature type → Strike effect, stat lean, which skills it may learn
-4. KIT          4 slots (active or passive, ≥ 1 active), chosen by the player from the species' learnable list ([Skills §1](gdd_skills.md#1-the-kit))
+4. KIT          up to 6 slots (active or passive, ≥ 1 active), chosen by the player from the species' learnable list ([Skills §1](gdd_skills.md#1-the-kit))
 5. PASSIVE      the rule-bender — biggest personality driver
 6. SIZE         1x1 vs 2x2
 ```
@@ -268,7 +268,7 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 
 |                                  |                       Normal                       |        Rare       |        Epic       |            Legendary            |
 |----------------------------------|----------------------------------------------------|-------------------|-------------------|---------------------------------|
-| Base kit                         | 4 slots (active or passive, ≥ 1 active)            | same              | same              | same (+ signature at max stage) |
+| Base kit                         | up to 6 slots (active or passive, ≥ 1 active)      | same              | same              | same (+ signature at max stage) |
 | Extra passive slot               | —                                                  | —                 | 1                 | 1                               |
 | Slot-development steps per advancement |                      1                             |         1         |         2         |                2                |
 | Max stage reachable              | Core                                               | Soul              | Immortal          | Sovereign                       |
