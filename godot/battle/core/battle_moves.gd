@@ -225,17 +225,41 @@ static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, la
 		path = opts[to]["path"]
 	var from := u.pos
 	b.emit(&"moved", {"who": u.id, "from": from, "to": to, "path": path.duplicate(), "skill": label})
-	for n: Vector2i in path:
+	var expected := from
+	for i in path.size():
+		var n: Vector2i = path[i]
+		if u.pos != expected:
+			break                             # an entry effect moved the monster: the route is void
+		# the route was found on the board before the move; what an entry effect created on it
+		# (a wall from a rune, a pulled monster) blocks the rest of the way (2026-11-15)
+		if not _way_free(b, u, prof, n, i == path.size() - 1):
+			b.emit(&"move_blocked", {"who": u.id, "at": n, "skill": label})
+			break
 		if u.layer == Board.GROUND:
 			BattleDamage.ground_triggers(b, u, GroundTrigger.ON_LEAVE)
 			if not u.is_alive():
 				break
 		var fresh := fresh_cells(u, u.pos, n)
 		b.relocate(u, n)
+		expected = n
 		if u.layer == Board.GROUND:
 			BattleDamage.ground_triggers(b, u, GroundTrigger.ON_ENTER, fresh)
 		if not u.is_alive():
 			break
+	return true
+
+
+## Whether the next square of a route can still be entered: on the board, and free of what the
+## profile cannot pass over; the landing square is never a solid prop's or another monster's.
+static func _way_free(b: Battle, u: BattleUnit, prof: Dictionary, n: Vector2i, landing: bool) -> bool:
+	for c in fresh_cells(u, u.pos, n):
+		if not b.board.in_bounds(c):
+			return false
+		if (landing or bool(prof.get("objects", true))) and b.board.solid_at(c, u.layer) != null:
+			return false
+		var other := b.board.unit_id_at(c, u.layer)
+		if (landing or bool(prof.get("monsters", true))) and other != &"" and other != u.id:
+			return false
 	return true
 
 

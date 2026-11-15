@@ -476,6 +476,48 @@ func _ap_text() -> String:
 
 
 func _highlights(arrows: Dictionary) -> Dictionary:
+	var out := _action_highlights(arrows)
+	if not placing and not _awaiting_choice():
+		_prop_hover_highlights(out, arrows)
+	return out
+
+
+## Hovering a prop shows where its operations land (2026-11-15): walls and other spawns, ground,
+## zones, damage squares and push / pull arrows, for every moment it acts at. Open information,
+## shown in any mode on squares no action highlight uses.
+func _prop_hover_highlights(out: Dictionary, arrows: Dictionary) -> void:
+	if hover == NOWHERE:
+		return
+	var prop := battle.board.prop_at(hover, Board.GROUND)
+	if prop == null or prop.hp <= 0:
+		return
+	for a in prop.def.aftermath:
+		if a == null:
+			continue
+		for o in a.offsets():
+			var q: Vector2i = prop.pos + o
+			if not battle.board.in_bounds(q) or out.has(q):
+				continue
+			var cell := battle.board.at(q)
+			match a.op:
+				"spawn":
+					if o != Vector2i.ZERO and BattleBoardOps.can_place_prop(battle, battle.content.prop(a.spawn_prop), q):
+						out[q] = COL_AREA
+				"ground":
+					if cell.ground != battle.voidscar_ground and cell.ground != GroundDef.WELL:
+						out[q] = COL_REPLACE
+				"zone":
+					out[q] = COL_CANCEL
+				"damage":
+					out[q] = COL_HIT
+				_:
+					if o != Vector2i.ZERO and battle.any_unit_at(q) != null:
+						out[q] = COL_HARM
+						var d := BattlePayload._eight_dir(o)
+						arrows[q] = d if a.op == "push" else -d
+
+
+func _action_highlights(arrows: Dictionary) -> Dictionary:
 	var out := {}
 	if placing:
 		for p in _start_squares():

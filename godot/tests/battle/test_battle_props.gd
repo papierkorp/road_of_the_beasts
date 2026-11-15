@@ -272,3 +272,14 @@ func test_the_button_pairs_switch_places_mirrored_runes_off_veins_and_start_area
 			var twin: BoardProp = b.board.at(b.board.mirrored(cell.pos)).prop
 			assert_bool(twin != null and twin.def.id == cell.prop.def.id).is_true()
 	assert_int(runes).is_equal(6)
+
+
+func test_a_runner_that_collects_a_wall_rune_mid_way_stops_before_the_new_wall() -> void:
+	var run := H.skill("run")
+	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "move": 4, "skills": [run]}], [1, Vector2i(6, 0)]])
+	b.add_prop(&"wall_rune", Vector2i(3, 3))
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 1)})).is_true()
+	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 3))                # the rune's square; (3,2) is a wall now
+	assert_str(String(b.board.at(Vector2i(3, 2)).prop.def.id)).is_equal("earth_wall")
+	assert_int(H.events_of(b, &"move_blocked").size()).is_equal(1)

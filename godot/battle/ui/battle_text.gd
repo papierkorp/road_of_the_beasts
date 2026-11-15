@@ -380,6 +380,8 @@ static func event_line(b: Battle, e: Dictionary) -> String:
 		&"round_started":
 			var first: String = unit_name(b, e["queue"][0]) if not (e["queue"] as Array).is_empty() else "nobody"
 			return "Round %d — %s first" % [e["round"], first]
+		&"move_blocked":
+			return "%s stops at %s: the way is blocked" % [unit_name(b, e["who"]), pos(e["at"])]
 		&"moved":
 			return "%s: %s → %s" % [unit_name(b, e["who"]), e["skill"], pos(e["to"])]
 		&"strike":
