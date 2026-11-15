@@ -1,88 +1,111 @@
-# Architecture — Road of the Beasts
+# Architecture
 
-*Decided by the user on 2026-11-14 as the target picture for the clean rebuild (the current Godot build is a prototype); §4 extended on 2026-11-15 with what the shape and sheet generalisation showed · launch decisions: CSV translation, German and English, a mid-strength opponent AI · rules and content: [battle.md](battle.md), [monsters.md](monsters.md), [skills.md](skills.md), [overworld.md](overworld.md) · open work: [temp_todo.md](temp_todo.md) T42*
-
----
-
-## 1. Purpose and Status
-
-- **This file owns** the technical structure of the finished game: layers, folder layout, contracts between the parts, and the principles for translation, sound, animation and content loading. It owns **no game rule**; rules stay in the GDDs ([battle.md §7](battle.md#7-technical-requirements) holds only the technical requirements the rules impose).
-- **Status:** confirmed by the user on 2026-11-14 (layers, folder layout, contracts, event playback). The current `godot/` build is a prototype: its rules, tests and simulations are the specification to port, its code layout is not binding. Nothing here is built; the rebuild starts only after the Battle rules are decided ([temp_todo.md](temp_todo.md) T42).
+- **This file owns** the technical structure of the finished game: the two games and what they share, folder layout, contracts, content data, dialogue, story, translation, sound and animation. It owns no game rule.
+- **Status:** target picture for a clean rebuild. Nothing here is built. The current `godot/` build is a prototype: its rules, tests and tools are the specification to port, its code layout is not binding. The rebuild starts after the battle rules are decided.
 - **Not planned:** a generic rule language or a dependency-injection framework. Plain classes and Resources suffice.
 
-## 2. Layers
+## 1. Two Games and What They Share
 
-| Layer | Contains | May know | Must not know |
-|---|---|---|---|
-| **Core** (`core/`) | rules, board, queue, resolution, content loading, contracts | IDs, numbers, Resources | scenes, nodes, autoloads, audio, texts, graphics |
-| **Features** (`features/`) | battle view and UI, overworld logic/view/UI, menus, AI | core, services | each other, except through the contracts |
-| **Services** (`services/`) | autoloads: localization, audio, save, settings | engine APIs | rule details |
+**Battle and overworld are two separate games.** Neither knows the other. They meet only in a shared data format: the overworld writes it, the battle loads it before a fight and uses it.
 
-- **Headless core:** the core runs without a window. Tests, bot simulations (`tools/`) and replays use it unchanged. A test checks that `core/` contains no scene, node or autoload access.
-- **Determinism:** same initial state, same versioned content, same seed and same ordered actions give the same result ([battle.md §1](battle.md#1-goals-and-pillars)); the core never reads time, frame rate or scene state.
-- **Presentation follows results:** the core resolves an action completely and at once and returns events; the view only plays them.
+| Part | Contains | May use |
+|---|---|---|
+| **`battle/`** | everything of the battle: rules, AI, view, UI, the multiplayer mode, its tools and tests | `shared/`, `app/` |
+| **`overworld/`** | everything of the overworld: day, economy, progression, story, dialogue, view, UI, its tests | `shared/`, `app/` |
+| **`shared/`** | only the shared data format: the battle request and result, the monster sheet, and the content records both read | nothing |
+| **`app/`** | start and main menu, settings, translation, sound, saving | `shared/` |
 
-## 3. Contracts Between Parts
+- **A test checks the separation:** no file under `battle/` refers to `overworld/` and none under `overworld/` to `battle/`.
+- **Each game may be built differently.** The battle is rule-driven with an event list; the overworld has story, dialogue and a night resolution that the battle does not know.
+- **The multiplayer mode** builds its battle request itself and needs no overworld.
 
-- **`BattleRequest` / `BattleResult`** (in `core/contracts/`): the only link between Battle and Overworld ([overworld.md §8](overworld.md#8-technical-notes)). Request: mode, board parameters, both teams as finished unit sheets, the arrangement of every free shape the player laid out before the battle ([skills.md §2](skills.md#2-the-skill-card)), loadout. Result: winner or Draw, HP per monster, kills, used-up items. Open fields: T19/T23.
-- **Battle events** (in `core/contracts/`): a versioned list of event types with fixed fields (cast, strike, displaced, collision, prop_moved, damage, defeat, ground/zone laid, round end ...). The view, sound mapping, battle log, replays and tests all read this one list; a new event type is a contract change.
-- **Content references:** by stable ID only. Resources never hold file paths of art, sound or text.
-
-## 4. Content and Data
-
-- **One Resource file per record** under `data/` (`monsters/`, `skills/`, `grounds/`, `zones/`, `props/`, `tamer/`), with `content_status` ([skills.md §9](skills.md#9-data)). No JSON or Python data files.
-- **Data first:** new content with existing mechanics is data only; a new mechanic gets one local extension point in the core (a behaviour element), not scattered ID checks.
-- **Shared vocabularies, one each** *(insight of the generalisation of 2026-11-15)*: content is composed from three closed lists that every kind of record uses, never from per-kind copies:
-  - **shapes:** six base shapes with extensions, the own square, the block and the free shape ([skills.md §4](skills.md#4-shapes)); a Strike, a skill that creates something and a prop all name a shape from this one list, and a skill has exactly one shape field;
-  - **moments:** when something on the board acts ([battle.md §3](battle.md#3-timing));
-  - **effects:** what it does (damage, healing, stat changes, push, pull, creating ground, a zone or a prop).
-- **One sheet for ground, zones and props:** the three kinds stay separate record types (one per layer of a square), but each is a head plus lines of “when · what · how much · where”, and the roles are one permission table checked at load ([battle.md §4.8](battle.md#48-one-sheet-for-ground-zones-and-props)). In the rebuild the three record types share **one line type**. *Prototype state:* three line classes (`GroundTrigger`, `FieldEffect`, `PropAftermath`) that already name moments and shapes from the shared lists and are read through one sheet reader (`BoardSheet`); merging them is porting work, not a rule change.
-- **Per-unit copies, not global edits:** what a player configures for one monster (a free shape's arrangement, later a developed slot) lives on that unit's sheet as its own copy of the record; the content file is never changed by play.
-- **Validation:** loading checks references and status; automated content checks stay tests, not runtime rules.
-
-## 5. Translation
-
-- **All text is a key** (`skill.gale.name`, `skill.gale.desc`, `ui.battle.end_turn`); code and Resources hold IDs, never display text.
-- **Format (decided 2026-11-14):** Godot `TranslationServer` with CSV, one file set per language under `localization/`; **German and English from the start**.
-- **Generated text** (skill cards, hover cards, battle log) is assembled from translated building blocks with placeholders, not from fixed sentences, so order and plural work per language.
-- **Check:** a test lists keys missing in any language and keys unused.
-
-## 6. Sound
-
-- **`Audio` service:** one autoload with buses for music, effects and UI and per-bus volume from settings.
-- **Mapping by event:** a Resource maps battle event types (and UI events) to sounds with volume and variation; the battle view calls the service, the core never does.
-
-## 7. Animation and Graphics
-
-- **Event playback:** one small player per event type (move, hit, push, collision, ground/zone/prop appearing, defeat) with an awaitable duration; a queue plays them in order, so animation speed and “skip animations” are options, not rule changes. After the queue, the view compares itself with the core state.
-- **Assets by ID:** `assets/` holds models, textures, audio, fonts and effects in folders named after the content ID; the view finds art by ID.
-
-## 8. Folder Layout
+## 2. Folder Layout
 
 ```
 godot/
   project.godot
-  core/
-    battle/        rules: board, queue, payload, moves, damage, props, zones, ground
-    contracts/     BattleRequest/Result, battle events, IDs (the seam)
-    content/       load, filter, validate Resources
-    util/
-  features/
-    battle/        view/ · ui/ · ai/
-    overworld/     logic/ (headless-testable) · view/ · ui/
-    menus/         main menu, draft, overview, builders
-  services/        loc.gd · audio.gd · save.gd · settings.gd (autoloads)
-  data/            monsters/ skills/ grounds/ zones/ props/ tamer/
-  localization/    keys.csv · de · en
-  assets/          models/ textures/ audio/ fonts/ vfx/
-  tools/           sim, compare, progression, discovery
-  tests/           core/ battle/ overworld/ localization/
+  app/               start and main menu, settings, translation, sound, saving
+  shared/
+    formats/         battle request, battle result, monster sheet
+    data/            monsters/ skills/ grounds/ zones/ props/
+  battle/
+    rules/           board, queue, resolution, damage, displacement (runs without a window)
+    ai/
+    view/  ui/
+    multiplayer/     draft, monster builder, skill builder, overview
+    tools/           bot runs, comparisons
+    tests/
+  overworld/
+    logic/           day, economy, progression (runs without a window)
+    story/           story steps and their progress
+    dialogue/        dialogue flow
+    view/  ui/
+    data/            dialogues/ story/ items/ structures/ ...
+    tests/
+  localization/      texts per language, separate for battle and overworld
+  assets/            models/ textures/ audio/ fonts/ vfx/
 ```
 
-- Battle and Overworld stay separate folders under `features/`; shared types live only in `core/contracts/`.
-- The AI sits with the battle feature (it reads core state through the same options the player has). **Decided 2026-11-14:** develop a mid-strength opponent between the one-step evaluator and the tools bot `tactic` (plans a whole turn within a time budget); its design and time budget are open (I42, T42).
+## 3. The Shared Data Format
+
+- **Battle request** (written by the overworld or the multiplayer mode): mode, board parameters, both teams as finished monster sheets, the arrangement of every free shape the player laid out before the battle, the loadout.
+- **Battle result** (written by the battle): winner or Draw, HP per monster, kills, used-up items. The battle returns facts, never rewards.
+- **Content records** under `shared/data/`: one Resource file per monster, skill, ground, zone and prop, with a content status. Both games read them: the battle executes a skill, the overworld shows and swaps it. No JSON or Python data files.
+- **References by stable ID only.** A record never holds a file path of art, sound or text.
+- **Per-unit copies, not global edits:** what a player configures for one monster (a free shape's arrangement, a developed slot) lives on that monster's sheet; a content file is never changed by play.
+
+## 4. The Battle
+
+- **Rules run without a window.** Tests, bot runs and replays use them unchanged; `battle/rules/` contains no scene, node or autoload access.
+- **Determinism:** the same start, content, seed and ordered actions give the same result; the rules never read time, frame rate or scene state.
+- **Presentation follows results:** the rules resolve an action completely and return events; the view only plays them.
+- **Battle events:** a versioned list of event types with fixed fields (cast, strike, displaced, collision, damage, defeat, ground or zone laid, round end ...). View, sound, battle log, replays and tests all read this one list; a new event type is a contract change.
+- **Data first:** new content with existing mechanics is data only; a new mechanic gets one local extension point, not scattered ID checks.
+- **Shared vocabularies, one each:** shapes ([skills.md §4](skills.md#4-shapes)), moments ([battle.md §3](battle.md#3-timing)) and effects. Ground, zones and props stay three record types that share one line type of “when · what · how much · where” ([battle.md §4.8](battle.md#48-one-sheet-for-ground-zones-and-props)).
+- **AI:** it reads the state through the same options the player has. A mid-strength opponent that plans a whole turn within a time budget is intended; its design is not defined.
+
+## 5. Dialogue
+
+- **A dialogue is one record** under `overworld/data/dialogues/`. It holds structure only: nodes, who speaks, the answers and where each answer leads.
+- **No text in the record, only keys** (`dialogue.elder_first_meeting.line_03`); the texts live in the translation files ([§7](#7-translation)). Texts use placeholders for names and numbers.
+- **Conditions and consequences** sit on nodes and answers: an answer appears only if its condition holds (a story step done, a stage reached, favor high enough), and an answer may report a story event, give an item or start a battle.
+- **One loading point:** the dialogue flow never reads a file itself. It asks one loader for a dialogue by ID and always gets the same structure. The loader reads Resources; another source format replaces only the loader.
+- The dialogue flow runs without a window; the dialogue window is view only.
+
+## 6. Story
+
+**A story step is one record** under `overworld/data/story/`:
+
+| Field | Content |
+|---|---|
+| ID | a stable name |
+| Requires | the steps that must be done before |
+| Done by | one or more events: a dialogue finished, a battle won, a stage reached ... |
+| Locked by | steps that close this one for the save once they are done |
+| Opens | what becomes available afterwards: dialogues, places, requests |
+
+- **Events, not direct calls:** dialogues, battle results and progression only report what happened. The story listens and marks the matching step. A dialogue knows nothing of the story.
+- **A step may need several events,** and several steps may be open at once.
+- **The story branches:** a decision can lock later steps; a locked step stays closed for that save.
+- **Not every dialogue is story:** only marked places report an event.
+- **The save holds only the set of finished steps;** what is open or locked is derived from it.
+- **Chapters** only group steps for display.
+- **Checks:** every step is reachable on some path, and every “done by” event is reported somewhere.
+
+## 7. Translation
+
+- **All text is a key;** code and records hold IDs, never display text.
+- **Format:** Godot `TranslationServer` with CSV, one file set per language under `localization/`; German and English from the start.
+- **Generated text** (skill cards, hover cards, battle log) is assembled from translated building blocks with placeholders, so order and plural work per language.
+- **Check:** a test lists keys missing in any language and keys unused.
+
+## 8. Sound, Animation and Assets
+
+- **Sound:** one service with buses for music, effects and UI. A record maps event types to sounds; a view calls the service, rules never do.
+- **Animation:** one small player per battle event type with an awaitable duration; a queue plays them in order, so animation speed and “skip animations” are options, not rule changes. After the queue the view compares itself with the rule state.
+- **Assets by ID:** `assets/` holds models, textures, audio, fonts and effects in folders named after the content ID.
 
 ## 9. Porting From the Prototype
 
-- Port tests and simulations first (they pin the rules), then the core, then the view. Do not port code for removed mechanics (height, air layer, Surges and the marker traps that came with them; see [temp_todo.md](temp_todo.md) I56/I57). The traps of the game are walkable props ([battle.md §4.7](battle.md#47-props)).
-- Keep the prototype playable until the rebuilt battle passes the same rule tests and a comparable bot run ([godot/tools/README.md](../godot/tools/README.md)); equal results are a regression check, not gameplay validation.
+- Port tests and tools first (they pin the rules), then the battle rules, then the view. Do not port code for mechanics that no longer exist.
+- Keep the prototype playable until the rebuilt battle passes the same rule tests. Equal results are a regression check, not gameplay validation.

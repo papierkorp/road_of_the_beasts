@@ -117,10 +117,14 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-12 | Data | One data folder with one subfolder per kind; no second skill, kit or price sets; no Python or JSON files in the project | — | — | [CLAUDE.md](../CLAUDE.md) |
 | 2026-11-12 | Tools | Simulations are for trying out whether the game is fun and what prices are needed; they approve nothing | — | — | [CLAUDE.md](../CLAUDE.md) |
 | 2026-11-13 | Content status | `experiment` content is playable in the game | — | — | [skills.md §9](skills.md#9-data) |
-| 2026-11-14 | Architecture | Target architecture for a clean rebuild; CSV translation, German and English, a mid-strength AI | — | — | [architecture.md](architecture.md) |
+| 2026-11-14 | Architecture | Target architecture for a clean rebuild; CSV translation, German and English, a mid-strength AI. Its layers were **replaced by** “two games” (2026-11-15) | — | — | [architecture.md](architecture.md) |
 | 2026-11-14 | CPU | Full CPU use is allowed | mandatory low-priority runs | — | [CLAUDE.md](../CLAUDE.md) |
 | 2026-11-15 | Simulations | A series runs only on explicit request | series started by the agent on its own | the user wants changes delivered quickly | [CLAUDE.md](../CLAUDE.md) |
 | 2026-11-15 | Reporting | Every result states the battles under 3 and over 5 rounds | — | — | [CLAUDE.md](../CLAUDE.md) |
 | 2026-11-15 | Terms | The draft sandbox is called the multiplayer mode | “battle prototype” | — | [CLAUDE.md](../CLAUDE.md) |
 | 2026-11-15 | Board switches | 8×8 has four Dragon Veins by default (a test switch) | — | — | [todo/](todo/) |
+| 2026-11-15 | Two games | Battle and overworld are two separate games in their own folders; they share only a data format | the layers `core/` and `features/` | each game may be built differently; the battle has no story | [architecture.md §1](architecture.md#1-two-games-and-what-they-share) |
+| 2026-11-15 | Content data | The content records both games read lie in the shared data format | — | — | [architecture.md §3](architecture.md#3-the-shared-data-format) |
+| 2026-11-15 | Dialogue | A dialogue system that works with translation; Resources now, behind one loader so the format can change later | — | — | [architecture.md §5](architecture.md#5-dialogue) |
+| 2026-11-15 | Story | Story steps finished by dialogues and events; the story branches and a decision can lock later steps | — | — | [architecture.md §6](architecture.md#6-story) |
 | 2026-11-15 | Documentation | Rules and content in separate files; a decision log; tasks as single files by status; the simulation log keeps only the current rule era; Reach as the build plays it | — | docs had grown past their purpose | [CLAUDE.md](../CLAUDE.md) |
