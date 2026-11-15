@@ -20,6 +20,11 @@ static func pull_dir(u: BattleUnit, anchor: Vector2i) -> Vector2i:
 		if d < best:
 			best = d
 			from = c
+	return pull_dir_cell(from, anchor)
+
+
+## The same for a single square (a prop).
+static func pull_dir_cell(from: Vector2i, anchor: Vector2i) -> Vector2i:
 	var v := anchor - from
 	if v == Vector2i.ZERO or absi(v.x) == absi(v.y):
 		return Vector2i.ZERO
@@ -31,16 +36,28 @@ static func pull_dir(u: BattleUnit, anchor: Vector2i) -> Vector2i:
 ## How far along its movement a unit already is: squares left to the board edge in `dir`
 ## (smaller = further along). Orders "the unit furthest along the movement direction first".
 static func room_ahead(b: Battle, u: BattleUnit, dir: Vector2i) -> int:
+	return room_at(b, u.pos, u.size, dir)
+
+
+static func room_at(b: Battle, pos: Vector2i, size: int, dir: Vector2i) -> int:
 	var room := 1 << 20
 	if dir.x > 0:
-		room = mini(room, b.board.size - (u.pos.x + u.size))
+		room = mini(room, b.board.size - (pos.x + size))
 	elif dir.x < 0:
-		room = mini(room, u.pos.x)
+		room = mini(room, pos.x)
 	if dir.y > 0:
-		room = mini(room, b.board.size - (u.pos.y + u.size))
+		room = mini(room, b.board.size - (pos.y + size))
 	elif dir.y < 0:
-		room = mini(room, u.pos.y)
+		room = mini(room, pos.y)
 	return room
+
+
+## The standing prop with this uid, or null.
+static func prop_by_uid(b: Battle, uid: int) -> BoardProp:
+	for p in b.board.props():
+		if p.uid == uid:
+			return p
+	return null
 
 
 ## Resolves displacement entries [{unit, dir, key?, cause}] one unit at a time: smallest `key`
@@ -49,10 +66,20 @@ static func room_ahead(b: Battle, u: BattleUnit, dir: Vector2i) -> int:
 static func resolve(b: Battle, entries: Array) -> void:
 	var list: Array = []
 	for e: Dictionary in entries:
+		var item := e.duplicate()
+		if e.has("prop"):
+			# a prop is moved like a monster (user decision 2026-11-14); it ranks after every monster
+			var pr := prop_by_uid(b, int(e["prop"]))
+			if pr == null or pr.hp <= 0 or e["dir"] == Vector2i.ZERO:
+				continue
+			if not item.has("key"):
+				item["key"] = room_at(b, pr.pos, 1, e["dir"])
+			item["rank"] = 1000000 + pr.uid
+			list.append(item)
+			continue
 		var u: BattleUnit = b.units.get(e["unit"])
 		if u == null or not u.is_alive() or e["dir"] == Vector2i.ZERO:
 			continue
-		var item := e.duplicate()
 		if not item.has("key"):
 			item["key"] = room_ahead(b, u, e["dir"])
 		item["rank"] = b.queue_rank(u.id)
@@ -62,11 +89,17 @@ static func resolve(b: Battle, entries: Array) -> void:
 			return a["key"] < c["key"]
 		if a["rank"] != c["rank"]:
 			return a["rank"] < c["rank"]
+		if a.has("prop") or c.has("prop"):
+			return int(a.get("prop", -1)) < int(c.get("prop", -1))
 		return b.roster.find(a["unit"]) < b.roster.find(c["unit"]))
 	for item: Dictionary in list:
 		# experiment: a push or pull may move several squares and stops at the first blocker
 		for _i in maxi(1, BattleExperiment.push_steps if item.get("multi", false) else 1):
-			if not shove(b, b.units[item["unit"]], item["dir"], item.get("cause", "push")):
+			if item.has("prop"):
+				var pr := prop_by_uid(b, int(item["prop"]))
+				if pr == null or not shove_prop(b, pr, item["dir"], item.get("cause", "push")):
+					break
+			elif not shove(b, b.units[item["unit"]], item["dir"], item.get("cause", "push")):
 				break
 
 
@@ -142,4 +175,41 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 		BattleDamage.defeat_step(b)
 	if u.is_alive():
 		BattleDamage.ground_triggers(b, u, GroundTrigger.ON_ENTER, fresh)
+	return true
+
+
+## Moves a prop one square by force (user decision 2026-11-14: push and pull count for props).
+## A `heavy` prop cannot be moved. A blocked move (board edge, monster, other prop) is no move and
+## is one collision: the prop takes 1, a monster in the way takes 1 (2 from a `spiky` prop; with
+## `collision_both`), another prop in the way takes 1 (heavy none). Ground and zones never act on a
+## prop and nothing triggers when it is entered. Returns true if it moved.
+static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String) -> bool:
+	if prop == null or prop.hp <= 0 or dir == Vector2i.ZERO:
+		return false
+	if prop.def.heavy:
+		b.emit(&"unmoved", {"prop": prop.def.id, "pos": prop.pos, "reason": "heavy"})
+		return false
+	var to := prop.pos + dir
+	var blocker_unit: BattleUnit = null
+	var blocker_prop: BoardProp = null
+	if b.board.in_bounds(to):
+		blocker_unit = b.unit_at(to, Board.GROUND)
+		blocker_prop = b.board.prop_at(to, Board.GROUND)
+	var blocked := not b.board.in_bounds(to) or blocker_unit != null or blocker_prop != null
+	if blocked:
+		b.emit(&"collision", {"prop": prop.def.id, "pos": prop.pos, "cause": cause,
+			"units": [blocker_unit.id] if blocker_unit != null else [], "props": []})
+		BattleBoardOps.damage_prop(b, prop, 1)
+		if blocker_unit != null and BattleExperiment.collision_both:
+			BattleDamage.apply_round(b, [{"unit": blocker_unit.id, "base": SPIKY_DAMAGE if prop.def.spiky else 1,
+				"type": BattleDamage.COLLISION, "source": "Collision"}])
+		if blocker_prop != null and not blocker_prop.def.heavy:
+			BattleBoardOps.damage_prop(b, blocker_prop, 1)
+		BattleDamage.defeat_step(b)
+		return false
+	var from := prop.pos
+	b.board.remove_prop(prop)
+	prop.pos = to
+	b.board.put_prop(prop)
+	b.emit(&"prop_moved", {"from": from, "to": to, "prop": prop.def.id, "cause": cause})
 	return true

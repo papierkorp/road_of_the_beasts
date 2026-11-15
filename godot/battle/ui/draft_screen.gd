@@ -38,6 +38,7 @@ const NUMBERS := [
 	["Dragon Veins", 0, 7, 0, "Dragon Vein squares on the centre row (7×7 and larger boards only; 0 = none; the build rule is 3)."],
 	["Prop pairs", -1, 8, 0, "Mirrored prop pairs the board starts with: -1 = the fixed test layout (or the random board's own number), 0 = no props, N = that many pairs of random prop types on random squares."],
 	["Stamina per round", 0, 5, 0, "With Stamina instead of Movement: Stamina every monster regains at the end of a round."],
+	["Button pairs", 0, 4, 0, "Mirrored pairs of button squares the board starts with: walkable runes without damage that act on the board when a monster collects them (Moss Rune: Mossbed 3×3 · Bog Rune: Bog zone around it · Wall Rune: Earth Walls on its cardinal neighbours). 0 = none."],
 ]
 
 func _ready() -> void:
@@ -232,6 +233,8 @@ func _number_now(label: String) -> int:
 			return BattleExperiment.wells
 		"Prop pairs":
 			return BattleExperiment.map_props
+		"Button pairs":
+			return BattleExperiment.map_buttons
 	return BattleExperiment.stamina_regen
 
 
@@ -254,6 +257,7 @@ func _apply_experiments() -> void:
 	BattleExperiment.wells = int((_numbers["Dragon Veins"] as SpinBox).value)
 	BattleExperiment.map_props = int((_numbers["Prop pairs"] as SpinBox).value)
 	BattleExperiment.stamina_regen = int((_numbers["Stamina per round"] as SpinBox).value)
+	BattleExperiment.map_buttons = int((_numbers["Button pairs"] as SpinBox).value)
 	for id in _cards:
 		(_cards[id] as Button).text = _card_text(BattleSetup.load_def(id))
 
@@ -294,7 +298,7 @@ func _start(m: StringName) -> void:
 	var enemy := BattleSetup.random_enemy(_picked, BattleSetup.team_size(m), rng)
 	var r := BattleRequest.from_ids(m, _picked.duplicate(), enemy)
 	r.player_tamer = _tamer.duplicate()
-	if _random_board.button_pressed or BattleExperiment.map_props > 0:
+	if _random_board.button_pressed or BattleExperiment.map_props > 0 or BattleExperiment.map_buttons > 0:
 		r.board_seed = rng.randi_range(1, 1 << 30)
 	if _tamer.has(&"beast_swap"):
 		# Beast Swap needs someone to bring in: one unused species as a test bench

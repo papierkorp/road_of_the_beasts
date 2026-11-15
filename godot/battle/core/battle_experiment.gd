@@ -118,6 +118,9 @@ static var stamina_regen := 1
 static var stamina_ap := true
 ## Board switch: mirrored prop pairs a board starts with (-1 = as the layout or its seed says, 0 = none).
 static var map_props := -1
+## Board switch (user idea, 2026-11-15): mirrored pairs of "button" squares the board starts with: walkable
+## rune props without damage that act on the board when a monster collects them (0 = none).
+static var map_buttons := 0
 
 
 static func reset() -> void:
@@ -161,6 +164,7 @@ static func reset() -> void:
 	stamina_regen = 1
 	stamina_ap = true
 	map_props = -1
+	map_buttons = 0
 
 
 ## The Wellspring squares of a board of this size: evenly spread on the centre row.

@@ -213,7 +213,7 @@ Cleave   Long Whirl   Long Cross
 | Cleave | 4 straight (decided) | `k·d⊥ + d` and `k·d⊥ + 2d` for `k ∈ {−1, 0, 1}` |
 | Long Whirl / Long Cross | symmetric | `c` and `2c` for each of the 4 neighbours / 4 diagonals `c` |
 
-- **Every shape hits allies too.** A 2×2 monster starts the shape at a chosen covered square.
+- **Every shape hits allies too.**
 - **Draft Strikes:** Jab, Thrust, Shove (a Jab without damage) and Thorn Lash (a Jab that leaves Thornbed). Other shape skills are archived; user-authored experiments may still use those shapes (§7/§10), without approving them as defaults.
 - **AP decides when:** AP 2 is the ceiling until Core ([Monsters §2.3](gdd_monsters.md#23-stat-ceilings-per-stage)), so early Strikes are Jabs.
 
@@ -242,7 +242,7 @@ Jab    Thrust    Diag Thrust    Arc      Arc (diagonal)    Cleave
 - **No retreat cell:** Pincer, Whirl, Cross, Storm, Long Whirl and Long Cross (centre is the attacker itself); Cleave is cardinal-only, like Thrust (its diagonal counterpart would be a separate shape): a diagonal Cleave does not exist (user decision 2026-11-11).
 - The Winged Strike (Dive, below) uses this same retreat cell *(user decision 2026-11-11)*.
 
-- **2×2 bodies** *(user decision 2026-11-10; none in the build)*: a 2×2 target is pushed along the mean offset of its struck neighbouring squares if that lies on one of the eight directions, otherwise it is damaged but not pushed.
+- **2×2 bodies** *(out of scope since 2026-11-14; none in the build; kept only until clean-up)*: a 2×2 target is pushed along the mean offset of its struck neighbouring squares if that lies on one of the eight directions, otherwise it is damaged but not pushed.
 
 ### 8.2 Movement Kinds
 
@@ -267,7 +267,7 @@ Jab    Thrust    Diag Thrust    Arc      Arc (diagonal)    Cleave
 - **In the build:** **Immovable** (ignores push and pull); no current kit of the nine equips it (§10).
 - **Candidates from the earlier draft that still fit** *(not approved, no numbers; T11)*: Counterweight (allies orthogonally next to it cannot be pushed or pulled) · Thick Hide (Strike and collision damage it takes −1) · Crashlander (collision damage it takes −1) · Sure-footed (ignores `slow`) · Clear Mind (ignores `drain_init` and `drain_range`) · Heatproof / Thornwalker / Void-touched (ignores Lava / Thornbed / Blight) · Scavenger (heals 1 when a prop within its Reach is destroyed) · Purifier (enemy zones next to it lose 1 round at the end of a round) · Overgrowth (its zones start at level II) · Turret (cannot move, Reach +1).
 - **Dropped with the reshape** (their object is gone): Highlander (Mountain), Skittish, Momentum, Vengeful and Bulwark (Surge damage), Adaptive (rotation is free for everyone), Phasing (a movement kind now).
-- **Still unresolved from before:** passives that lower AP costs (Pack Hunter, First Blood) conflict with “no AP reduction”; Frenzy (+1 shape square at 1–2 HP).
+- **Passives that lower AP costs** (Pack Hunter, First Blood) **are allowed with a limit** *(user decision 2026-11-14; the limit itself is open, T11)*: the “no AP reduction” principle of [§5](#5-value-and-prices)/[§6](#6-slot-levels-development-and-replacement) applies to skill development, not to these passives; [Battle §2.3](gdd_battle.md#23-action-points) keeps every action at 1 AP or more. Still unresolved from before: Frenzy (+1 shape square at 1–2 HP).
 
 
 ## 10. Kits of the Nine Monsters

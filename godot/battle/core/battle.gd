@@ -46,6 +46,10 @@ var winner_side := -1                    # 0 player, 1 enemy, -1 none / Draw
 var draw := false
 ## Side that wins the next cross-side initiative tie (-1 = not decided yet).
 var tie_side := -1
+## Sides that pick the target of a held Dragon Vein themselves when several enemies tie (user decision 2026-11-14); the others take the roster-order fallback. Empty: nobody asks (simulations, tests).
+var choice_sides: Array[int] = []
+var pending_choice := {}                 # {pos, side, options} while the round end waits for a pick
+var choice_picks := {}                   # vein pos -> chosen unit id, for the round end being resolved
 ## Late-round pressure starts at the end of this round (gdd_battle §4.2).
 var voidscar_from := 8
 var voidscar_ground: StringName = &"voidscar"
@@ -302,6 +306,12 @@ func check_over() -> bool:
 func check(a: Dictionary) -> String:
 	if over:
 		return "the battle is over"
+	if not pending_choice.is_empty():            # the round end waits for the owner of a Dragon Vein
+		if a.get("type", &"") == &"choose_target" and pending_choice["options"].has(a.get("unit", &"")):
+			return ""
+		return "choose the Dragon Vein target first"
+	if a.get("type", &"") == &"choose_target":
+		return "no choice is pending"
 	var type: StringName = a.get("type", &"")
 	if type == &"tamer":
 		return BattleTamer.error(self, a)
@@ -390,6 +400,9 @@ func apply(a: Dictionary, trusted := false) -> bool:
 		return false
 	actions.append(a.duplicate(true))
 	var type: StringName = a["type"]
+	if type == &"choose_target":
+		BattleTurn.choose(self, a["unit"])
+		return true
 	if type == &"end_turn":
 		BattleTurn.end_turn(self)
 		return true
@@ -409,7 +422,7 @@ func apply(a: Dictionary, trusted := false) -> bool:
 		BattleTurn.spring_traps(self)
 		check_over()
 	# a monster that fell during its own turn has nothing left to do: the queue moves on
-	if not over and turn_owner != &"" and active() == null:
+	if not over and pending_choice.is_empty() and turn_owner != &"" and active() == null:
 		BattleTurn.end_turn(self)
 	return true
 
@@ -566,6 +579,9 @@ func clone() -> Battle:
 	b.winner_side = winner_side
 	b.draw = draw
 	b.tie_side = tie_side
+	b.choice_sides = choice_sides.duplicate()
+	b.pending_choice = pending_choice.duplicate(true)
+	b.choice_picks = choice_picks.duplicate()
 	b.voidscar_from = voidscar_from
 	b.voidscar_ground = voidscar_ground
 	for s in surges:
@@ -621,7 +637,7 @@ func snapshot() -> Dictionary:
 		qs.append([String(e["id"]), e["init"], e["extra"]])
 	return {"round": round_number, "turn": String(turn_owner), "ap": ap, "idx": queue_idx, "over": over,
 		"winner": winner_side, "draw": draw, "tie": tie_side, "units": us, "cells": cs, "surges": ss,
-		"queue": qs, "tamer_used": [tamer_used[0].keys(), tamer_used[1].keys()]}
+		"queue": qs, "choice": str(pending_choice), "tamer_used": [tamer_used[0].keys(), tamer_used[1].keys()]}
 
 
 func state_hash() -> String:

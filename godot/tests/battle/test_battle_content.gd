@@ -18,7 +18,7 @@ func test_the_shipped_content_loads_without_problems() -> void:
 	assert_array(c.problems).is_empty()
 	assert_array(c.grounds.keys()).contains_exactly_in_any_order([&"plain", &"rubble", &"voidscar", &"dragon_vein", &"snare", &"lava", &"thornbed",
 		&"blight", &"hearth", &"mossbed", &"umbra", &"hallowed"])
-	assert_int(c.props.size()).is_equal(25)      # catalogue plus the simulation-only Reed Screen
+	assert_int(c.props.size()).is_equal(28)      # catalogue, the simulation-only Reed Screen and the three experiment runes (button squares)
 	assert_str(c.prop(&"reed_screen").content_status).is_equal("simulation")
 	assert_int(c.tamer.size()).is_equal(7)       # the confirmed tamer skills of gdd_battle §5.2
 	assert_int(c.fingerprint().length()).is_equal(64)

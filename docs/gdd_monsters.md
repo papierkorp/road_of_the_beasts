@@ -42,7 +42,7 @@ INDIVIDUAL  (one per monster the player owns or meets in the wild)
 ### 1.2 Monster Sheet
 
 ```
-NAME | Size (1x1 / 2x2)
+NAME | Size (1x1; 2x2 removed from the scope)
 ──────────────────────────────────
 Kin           Beast | Winged | Scaled | Swarm | Spirit | Ancient
 Themes        free-form description, not a mechanical type or skill restriction
@@ -70,7 +70,7 @@ The battle only ever sees this finished sheet.
 3. KIN          creature type → Strike effect, stat lean, which skills it may learn
 4. KIT          up to 6 slots (active or passive, ≥ 1 active), chosen by the player from the species' learnable list ([Skills §1](gdd_skills.md#1-the-kit))
 5. PASSIVE      the rule-bender — biggest personality driver
-6. SIZE         1x1 vs 2x2
+6. SIZE         1x1 (2x2 removed from the scope, 2026-11-14)
 ```
 
 **A shared construction kit builds a monster** — not everything is invented from scratch per monster:
@@ -269,14 +269,13 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 |                                  |                       Normal                       |        Rare       |        Epic       |            Legendary            |
 |----------------------------------|----------------------------------------------------|-------------------|-------------------|---------------------------------|
 | Base kit                         | up to 6 slots (active or passive, ≥ 1 active)      | same              | same              | same (+ signature at max stage) |
-| Extra passive slot               | —                                                  | —                 | 1                 | 1                               |
 | Slot-development steps per advancement |                      1                             |         1         |         2         |                2                |
 | Max stage reachable              | Core                                               | Soul              | Immortal          | Sovereign                       |
 
 - "Max stage reachable" is the core axis — the wuxia "noble bloodline" trope, long-term potential over instant power
 - **No stat bonuses from rarity.** Soul+ caps already sit on the absolute scale ([§2.3](#23-stat-ceilings-per-stage)), so rarity buys slots, development steps and ceiling — never numbers
-- **High mechanics are Rare+ territory by design:** 2×2 bodies and TPR 3 need Soul.
-  - A Normal monster (max Core) has no 2×2 or TPR-3 access; TPR 2 is already possible from Foundation (§5.3)
+- **High mechanics are Rare+ territory by design:** TPR 3 needs Soul (2×2 bodies were removed from the scope, user decision 2026-11-14).
+  - A Normal monster (max Core) has no TPR-3 access; TPR 2 is already possible from Foundation (§5.3)
 - Rarity does **not** decide the stat shape: any rarity can roll any shape (weighted by Kin lean, §1.1)
 - Slot development and replacement rules: [Skills §6](gdd_skills.md#6-slot-levels-development-and-replacement). This table supplies only rarity/progression working data, not slot-development prices.
 
@@ -303,7 +302,7 @@ The former Kin × aspect grid is not a roster requirement. These names remain an
 | 7 | Core Formation Lower | 14               | **+2 points** · **slot-development step** · +1 learnable skill · AP 3 · 5v5 special · 2nd tamer slot    | 400                     |
 | 8 | Core Formation Middle | 15              | +1 stat point                                                                                    | 800                     |
 | 9 | Core Formation High | 16                | +1 stat point                                                                                    | 1300 (+ trial)          |
-| 10| Soul Tier Lower   | 18                  | **+2 points** · **slot-development step** · +1 learnable skill · 2x2, TPR 3 · Beast Swap     | 1000                    |
+| 10| Soul Tier Lower   | 18                  | **+2 points** · **slot-development step** · +1 learnable skill · TPR 3 · Beast Swap     | 1000                    |
 | 11| Soul Tier Middle  | 19                  | +1 stat point                                                                                    | 2000                    |
 | 12| Soul Tier High    | 20                  | +1 stat point                                                                                    | 3200 (+ trial)          |
 | 13| Immortal Lower    | 20                  | no points · **slot-development step** · +1 learnable skill · AP 4 · 3rd tamer slot | 2500 |

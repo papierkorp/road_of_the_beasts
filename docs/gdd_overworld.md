@@ -443,11 +443,11 @@ BREAKTHROUGH  High → next stage's Lower
 | Qi Gathering   | full kit (4 slots) · TPR 1 · AP 2                                  | holds 1 monster · **1v1** (5×5)                                                        |
 | Foundation     | slot-development step · TPR 2 possible                                   | holds 3+ monsters · **3v3** (7×7, standard) · **2v2** (6×6) · 1 tamer slot             |
 | Core Formation | slot-development step · AP 3 · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer slot · **5v5** special battles |
-| Soul Tier      | 2x2 size · TPR 3 possible *(air layer access removed with the air layer, 2026-11-13)*            | mid-battle **Beast Swap** access ([§6.4](#64-tamer-skills))                                       |
+| Soul Tier      | TPR 3 possible (2×2 size removed from the scope, 2026-11-14) *(air layer access removed with the air layer, 2026-11-13)*            | mid-battle **Beast Swap** access ([§6.4](#64-tamer-skills))                                       |
 | Immortal       | Dual-aspect unlock removed; no replacement mechanic confirmed (T34 completed)             | 3rd tamer slot                                                                         |
 | Sovereign      | Signature skill access: [Skills §1](gdd_skills.md#1-the-kit) / [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps); content open (T32; Major Surges are gone with Surges) | full spatial arsenal                                                                   |
 
-- Bigger teams, 2x2 and swap **are the rewards**: one mechanic per breakthrough also provides a natural tutorial.
+- Bigger teams and swap **are the rewards**: one mechanic per breakthrough also provides a natural tutorial.
 - **Encounter sets mode**, within fieldable team size: narrow corridor 1v1/2v2, dungeon hall 3v3, tournament 5v5; player needs at least that many monsters.
 
 #### 6.3.1 Breakthrough Trials
@@ -487,7 +487,6 @@ Tamer skills are **learned over the game**, then **slotted before each battle**;
 
 |      Skill      | Stage |                                  Effect                                  |  Kind  |
 |-----------------|-------|--------------------------------------------------------------------------|--------|
-| Spatial Pull    | Foundation | move an own monster to any empty square                            | position |
 | Qi Suppression  | Foundation | an enemy monster −2 initiative next round                          | tempo |
 | Spirit Shield   | Foundation | *open: was “the next Surge damage on one own monster is 0”; Surges are removed (T20)* | defense |
 | Swap Places | Foundation | two own monsters trade squares                             | position |

@@ -436,11 +436,17 @@ static func brief(b: Battle, e: Dictionary) -> String:
 		&"retreat_failed":
 			return "%s cannot retreat" % unit_name(b, e["who"])
 		&"collision":
-			return "%s collides" % unit_name(b, e["who"])
+			return "%s collides" % (unit_name(b, e["who"]) if e.has("who") else _prop_name(b, e["prop"]))
 		&"unmoved":
-			return "%s stays" % unit_name(b, e["who"])
+			return "%s stays" % (unit_name(b, e["who"]) if e.has("who") else _prop_name(b, e["prop"]))
 		&"blanked":
 			return "Mountain blocks"
+		&"prop_moved":
+			return "%s → %s" % [_prop_name(b, e["prop"]), pos(e["to"])]
+		&"choice_needed":
+			return "Dragon Vein: choose the target"
+		&"choice_made":
+			return "Dragon Vein target: %s" % unit_name(b, e["unit"])
 		&"prop_hit":
 			return "%s −%d" % [_prop_name(b, e["prop"]), e["amount"]]
 		&"prop_destroyed":

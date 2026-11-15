@@ -216,7 +216,7 @@ func test_radial_push_variant_moves_adjacent_targets_outward_only() -> void:
 	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(5, 5))   # diagonal, coupled to the hit offset
 	assert_that(H.unit(b, 3).pos).is_equal(Vector2i(1, 3))
 	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp, H.unit(b, 3).hp]).is_equal([5, 5, 5])
-	assert_int(b.board.at(Vector2i(4, 3)).prop.hp).is_equal(1)   # no damage source, the prop is untouched
+	assert_int(b.board.at(Vector2i(5, 3)).prop.hp).is_equal(1)   # no damage source, the prop is untouched, but pushed outward too (2026-11-14)
 
 
 func test_strikes_reach_the_air_layer() -> void:

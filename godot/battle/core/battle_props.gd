@@ -25,6 +25,7 @@ static func is_empty(step: Dictionary) -> bool:
 static func collect(b: Battle, prop: BoardProp, when: String, step: Dictionary) -> void:
 	for a in prop.def.actions(when):
 		var per_unit := {}                    # unit id -> summed offset (once per prop and unit)
+		var per_prop := {}                    # uid of another prop -> summed offset (pushes and pulls move props too)
 		if a.op == "zone":
 			b._next_gid += 1
 		for o in a.offsets():
@@ -43,6 +44,15 @@ static func collect(b: Battle, prop: BoardProp, when: String, step: Dictionary) 
 				_:
 					for u in BattleBoardOps.units_in_reach_of(b, prop.def, q):
 						per_unit[u.id] = per_unit.get(u.id, Vector2i.ZERO) + o
+					if a.op == "push" or a.op == "pull":
+						var other := b.board.prop_at(q, Board.GROUND)
+						if other != null and other != prop and other.hp > 0:
+							per_prop[other.uid] = per_prop.get(other.uid, Vector2i.ZERO) + o
+		for uid in per_prop:
+			var dp := BattlePayload._eight_dir(per_prop[uid])
+			if a.op == "pull":
+				dp = -dp
+			step["pushes"].append({"prop": uid, "dir": dp, "key": 0, "cause": prop.def.display_name})
 		for id in b.roster:
 			if not per_unit.has(id):
 				continue

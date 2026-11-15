@@ -60,15 +60,17 @@ func test_a_solid_wall_blocks_and_the_wall_skill_raises_three_in_a_line() -> voi
 
 func test_a_thorn_idol_answers_every_hit_it_survives() -> void:
 	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 5, "skills": [H.strike()]}], [1, Vector2i(2, 2)], [1, Vector2i(5, 5)]])
-	b.add_prop(&"thorn_idol", Vector2i(3, 3))
+	var idol := b.add_prop(&"thorn_idol", Vector2i(3, 3))
 	b.begin()
-	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})                   # 2 damage to the idol, 1 HP left
-	assert_int(b.board.at(Vector2i(3, 3)).prop.hp).is_equal(1)
-	assert_array([H.unit(b, 0).hp, H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([4, 4, 5])
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})                   # 2 damage to the idol, 1 HP left; the Strike pushes it to (3,2)
+	assert_that(idol.pos).is_equal(Vector2i(3, 2))
+	assert_int(idol.hp).is_equal(1)
+	assert_array([H.unit(b, 0).hp, H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([5, 4, 5])   # the idol was pushed out of the striker's reach before it answered
 	BattleExperiment.once_per_turn = false
+	b.relocate(H.unit(b, 0), Vector2i(3, 3))
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})                   # destroyed: no answer any more
-	assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()
-	assert_array([H.unit(b, 0).hp, H.unit(b, 1).hp]).is_equal([4, 4])
+	assert_object(b.board.at(Vector2i(3, 2)).prop).is_null()
+	assert_array([H.unit(b, 0).hp, H.unit(b, 1).hp]).is_equal([5, 4])
 
 
 func test_a_brazier_burns_its_cardinal_neighbours_at_every_round_end() -> void:
@@ -161,3 +163,112 @@ func test_the_prop_pairs_switch_sets_how_many_props_a_board_starts_with() -> voi
 			props += int(cell.prop != null or cell.air_prop != null)
 			assert_bool(cell.prop != null and cell.ground == GroundDef.WELL).is_false()
 		assert_int(props).is_equal(pairs * 2)
+
+
+# ---- push and pull count for props (user decision 2026-11-14) ----
+
+func test_a_pushed_prop_moves_one_square_and_keeps_its_hp() -> void:
+	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(6, 6)]])
+	var stand := b.add_prop(&"bamboo_stand", Vector2i(3, 3))
+	b.begin()
+	assert_bool(BattleDisplace.shove_prop(b, stand, H.RIGHT, "test")).is_true()
+	assert_that(stand.pos).is_equal(Vector2i(4, 3))
+	assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()
+	assert_bool(b.board.at(Vector2i(4, 3)).prop == stand).is_true()
+	assert_int(stand.hp).is_equal(2)
+
+
+func test_a_heavy_prop_is_not_moved_and_takes_no_damage() -> void:
+	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(6, 6)]])
+	var lion := b.add_prop(&"stone_lion", Vector2i(3, 3))
+	b.begin()
+	assert_bool(BattleDisplace.shove_prop(b, lion, H.RIGHT, "test")).is_false()
+	assert_that(lion.pos).is_equal(Vector2i(3, 3))
+	assert_int(lion.hp).is_equal(3)
+
+
+func test_a_prop_pushed_into_a_monster_collides_and_both_take_one() -> void:
+	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(4, 3)]])
+	var stand := b.add_prop(&"bamboo_stand", Vector2i(3, 3))
+	b.begin()
+	var hp := H.unit(b, 1).hp
+	assert_bool(BattleDisplace.shove_prop(b, stand, H.RIGHT, "test")).is_false()
+	assert_that(stand.pos).is_equal(Vector2i(3, 3))
+	assert_int(stand.hp).is_equal(1)
+	assert_int(H.unit(b, 1).hp).is_equal(hp - 2)  # a spiky prop deals 2 to a monster in the way
+
+
+func test_a_prop_pushed_against_the_board_edge_or_another_prop_takes_one() -> void:
+	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(6, 6)]])
+	var edge := b.add_prop(&"bamboo_stand", Vector2i(6, 3))
+	var a := b.add_prop(&"bamboo_stand", Vector2i(1, 5))
+	var c := b.add_prop(&"bamboo_stand", Vector2i(2, 5))
+	b.begin()
+	assert_bool(BattleDisplace.shove_prop(b, edge, H.RIGHT, "test")).is_false()
+	assert_int(edge.hp).is_equal(1)
+	assert_bool(BattleDisplace.shove_prop(b, a, H.RIGHT, "test")).is_false()
+	assert_int(a.hp).is_equal(1)
+	assert_int(c.hp).is_equal(1)
+
+
+func test_a_strike_pushes_the_prop_it_hits_one_square_away() -> void:
+	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0, "ap": 4, "skills": [H.strike()]}], [1, Vector2i(6, 6)]])
+	var urn := b.add_prop(&"clay_urn", Vector2i(3, 2))
+	urn.hp = 3
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP})).is_true()
+	assert_that(urn.pos).is_equal(Vector2i(3, 1))
+
+
+func test_a_push_zone_moves_a_prop_standing_in_it_at_the_round_end() -> void:
+	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(6, 6)]])
+	var stand := b.add_prop(&"bamboo_stand", Vector2i(3, 3))
+	b.begin()
+	H.zone_on(b, Vector2i(3, 3), b.content.zone(&"gale"), 900, 1, H.RIGHT)
+	BattleTurn._zones_move_props(b)
+	assert_that(stand.pos).is_equal(Vector2i(4, 3))
+
+
+# ---- button squares (board switch `map_buttons`, user idea 2026-11-15) ----
+
+func test_a_moss_rune_is_collected_without_damage_and_lays_mossbed_around_it() -> void:
+	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(6, 0)]])
+	b.add_prop(&"moss_rune", Vector2i(3, 3))
+	b.begin()
+	var hp := H.unit(b, 0).hp
+	assert_int(BattleMoves.options(b, H.unit(b, 0), BattleMoves.step_profile())[Vector2i(3, 3)]["harm"]).is_equal(0)
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()
+	assert_int(H.unit(b, 0).hp).is_equal(hp)
+	assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()              # used up
+	for y in [2, 3, 4]:
+		for x in [2, 3, 4]:
+			assert_str(String(b.board.at(Vector2i(x, y)).ground)).is_equal("mossbed")
+	assert_str(String(b.board.at(Vector2i(3, 5)).ground)).is_not_equal("mossbed")
+
+
+func test_a_wall_rune_raises_walls_on_its_free_cardinal_neighbours() -> void:
+	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(2, 3)]])
+	b.add_prop(&"wall_rune", Vector2i(3, 3))
+	b.begin()
+	b.apply({"type": &"step", "to": Vector2i(3, 3)})
+	var walls := 0
+	for d in Board.CARDINAL:
+		var prop: BoardProp = b.board.at(Vector2i(3, 3) + d).prop
+		walls += int(prop != null and prop.def.id == &"earth_wall")
+	assert_int(walls).is_equal(3)                                          # (2,3) holds a monster; the square it came from is free again
+	assert_object(b.board.at(Vector2i(2, 3)).prop).is_null()              # not on a monster
+
+
+func test_the_button_pairs_switch_places_mirrored_runes_off_veins_and_start_areas() -> void:
+	BattleExperiment.map_buttons = 3
+	var b := Battle.new(Board.new(7), BattleContent.shared())
+	BattleBoards.build(b, &"3v3", 0)
+	var runes := 0
+	for cell in b.board.cells:
+		if cell.prop != null and BattleBoards.BUTTON_PROPS.has(cell.prop.def.id):
+			runes += 1
+			assert_bool(cell.ground == GroundDef.WELL).is_false()
+			assert_bool(BattleBoards.in_start_area(&"3v3", cell.pos, 0) or BattleBoards.in_start_area(&"3v3", cell.pos, 1)).is_false()
+			var twin: BoardProp = b.board.at(b.board.mirrored(cell.pos)).prop
+			assert_bool(twin != null and twin.def.id == cell.prop.def.id).is_true()
+	assert_int(runes).is_equal(6)

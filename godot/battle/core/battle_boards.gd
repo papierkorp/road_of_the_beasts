@@ -10,15 +10,15 @@ extends RefCounted
 ## size, player start squares in slot order (enemy starts are their mirror images), start-area
 ## rows from the player's back edge, contested Mountains, fixed prop pairs (one square each;
 ## the twin is mirrored), draft number of mirrored pairs for seeded boards and the round in
-## which late-round pressure starts. Voidscar start: 1v1 round 6 and 3v3 round 8 are GDD
-## values; the 2v2 and 5v5 values are drafts (the GDD only says it scales with board size).
+## which late-round pressure starts. Voidscar start: 1v1 round 6, 2v2 round 6, 3v3 round 8 and 5v5 round 8 (user decision 2026-11-14; GDD
+## values, working drafts).
 const MODES := {
 	&"1v1": {"size": 5, "starts": [Vector2i(0, 4)], "start_rows": 1, "corner": true,
 		"mountains": [Vector2i(1, 1), Vector2i(3, 3)],
 		"props": {Vector2i(1, 3): &"stone_lion"}, "pairs": [1, 1], "voidscar_from": 6},
 	&"2v2": {"size": 6, "starts": [Vector2i(1, 5), Vector2i(4, 5)], "start_rows": 1, "corner": false,
 		"mountains": [Vector2i(2, 2), Vector2i(3, 3)],
-		"props": {Vector2i(0, 3): &"clay_urn", Vector2i(4, 1): &"stone_lion"}, "pairs": [1, 2], "voidscar_from": 7},
+		"props": {Vector2i(0, 3): &"clay_urn", Vector2i(4, 1): &"stone_lion"}, "pairs": [1, 2], "voidscar_from": 6},
 	&"3v3": {"size": 7, "starts": [Vector2i(1, 5), Vector2i(3, 6), Vector2i(5, 5)], "start_rows": 2, "corner": false,
 		"mountains": [Vector2i(3, 3), Vector2i(1, 3), Vector2i(5, 3)],
 		"props": {Vector2i(2, 2): &"stone_lion", Vector2i(4, 2): &"clay_urn", Vector2i(0, 3): &"peach_tree"},
@@ -27,12 +27,15 @@ const MODES := {
 		"start_rows": 2, "corner": false,
 		"mountains": [Vector2i(4, 4), Vector2i(2, 4), Vector2i(6, 4)],
 		"props": {Vector2i(3, 2): &"stone_lion", Vector2i(5, 2): &"clay_urn", Vector2i(1, 4): &"peach_tree", Vector2i(4, 3): &"bamboo_stand"},
-		"pairs": [3, 4], "voidscar_from": 10},
+		"pairs": [3, 4], "voidscar_from": 8},
 }
 ## Ground-layer catalogue entries a seeded board may pre-place (no child props).
 const SEEDED_PROPS: Array[StringName] = [&"stone_lion", &"clay_urn", &"bamboo_stand", &"paper_lantern",
 	&"peach_tree", &"ancestor_tablet", &"bronze_gong", &"pagoda_column", &"earth_wall", &"thorn_idol", &"ember_brazier",
 	&"vortex_urn", &"storm_drum"]
+## "Button" squares (board switch `map_buttons`, user idea 2026-11-15): walkable rune props without
+## damage that act on the board when a monster collects them.
+const BUTTON_PROPS: Array[StringName] = [&"moss_rune", &"bog_rune", &"wall_rune"]
 
 
 static func has_mode(mode: StringName) -> bool:
@@ -84,21 +87,36 @@ static func build(b: Battle, mode: StringName, seed_value := 0) -> Array[Vector2
 			continue                          # a board never starts with a prop on a Dragon Vein (skills may place one)
 		b.add_prop(props[p], p)
 		b.add_prop(props[p], twin)
+	if BattleExperiment.map_buttons > 0:
+		_seeded_buttons(b, mode, d, starts, seed_value if seed_value != 0 else 1)
 	return starts
 
 
-## Test rule (BattleExperiment.wells): turns the centre-row squares into Wellsprings (no Mountain there).
-static func place_wells(b: Battle) -> void:
-	for p in BattleExperiment.well_squares(b.board.size):
-		var cell := b.board.at(p)
-		cell.ground = GroundDef.WELL
-		cell.level = 1
-		cell.height = 0
-
-
-static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int, fixed_pairs := -1) -> Dictionary:
+## Board switch: `map_buttons` mirrored pairs of button squares on free squares outside the start
+## areas, never on a Dragon Vein or a prop; the rune type and the squares come from the seed.
+static func _seeded_buttons(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = seed_value
+	rng.seed = seed_value * 7919 + 17
+	var squares := _pair_squares(b, mode, d, starts)
+	var free: Array[Vector2i] = squares[0]
+	free.append_array(squares[1])
+	var placed := 0
+	while placed < BattleExperiment.map_buttons and not free.is_empty():
+		var p: Vector2i = free.pop_at(rng.randi_range(0, free.size() - 1))
+		var twin := b.board.mirrored(p)
+		if b.board.at(p).prop != null or b.board.at(twin).prop != null:
+			continue
+		var id := BUTTON_PROPS[rng.randi_range(0, BUTTON_PROPS.size() - 1)]
+		if b.content.prop(id) == null:
+			continue
+		b.add_prop(id, p)
+		b.add_prop(id, twin)
+		placed += 1
+
+
+## One square of every mirrored pair a board may start a prop on: [free, spare]; spare squares
+## lie next to a start square and are used only when the free ones run out.
+static func _pair_squares(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i]) -> Array:
 	var size: int = d["size"]
 	var free: Array[Vector2i] = []
 	var spare: Array[Vector2i] = []
@@ -119,9 +137,27 @@ static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Ar
 			if in_start_area(mode, p, 0) or in_start_area(mode, p, 1):
 				continue
 			if near_start:
-				spare.append(p)           # only the prop pairs switch fills squares next to a start square
+				spare.append(p)
 			else:
 				free.append(p)
+	return [free, spare]
+
+
+## Test rule (BattleExperiment.wells): turns the centre-row squares into Wellsprings (no Mountain there).
+static func place_wells(b: Battle) -> void:
+	for p in BattleExperiment.well_squares(b.board.size):
+		var cell := b.board.at(p)
+		cell.ground = GroundDef.WELL
+		cell.level = 1
+		cell.height = 0
+
+
+static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int, fixed_pairs := -1) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var squares := _pair_squares(b, mode, d, starts)
+	var free: Array[Vector2i] = squares[0]
+	var spare: Array[Vector2i] = squares[1]       # only the prop pairs switch fills squares next to a start square
 	var pairs := rng.randi_range(int(d["pairs"][0]), int(d["pairs"][1]))
 	if fixed_pairs >= 0:
 		pairs = fixed_pairs

@@ -92,7 +92,7 @@ The encounter chooses a mode within the player's available team size; stage avai
 
 | Moment | When | What acts |
 |---|---|---|
-| now | when the skill is used | a Strike; the user's own movement; the creation of ground, a zone or a prop; the first push or pull of a push or pull zone (it moves whoever stands in it when it is cast) |
+| now | when the skill is used | a Strike; the user's own movement; the creation of ground, a zone or a prop (a push or pull zone does not move anyone when it is cast) |
 | on entering | a monster enters the square: by walking, by a push or by a pull | ground with an entry effect (Thornbed, Mossbed); a Dragon Vein changes its owner |
 | on leaving | a monster leaves the square: by walking, by a push or by a pull | ground with a leaving effect (Binding Vines) |
 | while inside | as long as a monster stands on the square | zone stat changes (Movement, initiative, Reach); the aura of a neighbouring prop |
@@ -164,10 +164,10 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 
 - **Dragon Veins:** three squares on the centre row of the 3v3 board (7×7: x = 1, 3, 5) are **Dragon Vein**, a ground type that nothing changes ([§4.7](#47-ground--neutral-hazard-and-blessed)). No prop may stand on one and no ground is laid on it; a zone may lie on it. Count and squares for other modes are open (boards with an even side have no centre row; the build places none there). *(The squares were called Wellspring until 2026-11-13.)*
 - **Ownership by last touch** *(user decision 2026-11-13)*: a Dragon Vein belongs to the side whose monster **touched it last**: walked onto or across it, was pushed or pulled onto it, or stands on it. It stays with that side after the monster has left, until a monster of the other side touches it. At the start nobody owns one.
-- **Dragon Vein damage:** at the end of a round every owned Dragon Vein deals **1 damage to the nearest enemy of its owner** (board distance from the square). Ties: the enemy with more HP, then with more initiative, then **the owner chooses**. (The build takes roster order for the last tie; a choice needs an input step.)
+- **Dragon Vein damage:** at the end of a round every owned Dragon Vein deals **1 damage to the nearest enemy of its owner** (board distance from the square). Ties: the enemy with more HP, then with more initiative, then **the owning side chooses** at the round end *(user decision 2026-11-14; built: a human side picks; the AI and simulations pick the one with the fewest HP, then the highest initiative, then the lowest max HP, then roster order)*.
 - **Surrounding:** at the end of a round a monster with **two or more enemies on its eight neighbour squares** takes 1 damage.
 - **One step:** ground that acts at the end of a round resolves first, each monster for itself; then Dragon Vein and surround damage of a round resolve together as one simultaneous damage step ([§6.1](#61-the-damage-law)), before ground laid in battle fades and before late-round pressure.
-- **Late-round pressure is only a brake:** it runs only at the end of a round **in which nobody owns a Dragon Vein**, and then as before: from a set round (tunable: 1v1 round 6, 3v3 round 8) the square farthest from all living monsters becomes **Voidscar** (permanent, undestroyable). *Reading (user decision 2026-11-10):* each square's distance is measured to its nearest living monster and the largest value wins; all equally far squares convert together, with no tie-break. **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round. In modes without Dragon Veins it runs every round. With ownership by touch a vein is owned from the first rounds on, so on the 3v3 board the brake practically never runs.
+- **Late-round pressure is only a brake:** it runs only at the end of a round **in which nobody owns a Dragon Vein**, and then as before: from a set round (tunable: 1v1 round 6, 2v2 round 6, 3v3 round 8, 5v5 round 8; the 2v2 and 5v5 rounds are user decisions of 2026-11-14, working values) the square farthest from all living monsters becomes **Voidscar** (permanent, undestroyable). *Reading (user decision 2026-11-10):* each square's distance is measured to its nearest living monster and the largest value wins; all equally far squares convert together, with no tie-break. **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round. In modes without Dragon Veins it runs every round. With ownership by touch a vein is owned from the first rounds on, so on the 3v3 board the brake practically never runs.
 
 ### 4.3 The Square: Ground, Zone and Occupant
 
@@ -183,7 +183,7 @@ Battle resolves a finished unit sheet. Monster definitions (sheet, stats, Kins, 
 - **A prop does not shield its square:** ground and zones are laid on a prop square like on any other *(user decision 2026-11-13)*; they act on whoever stands there once the prop is gone.
 - A prop prevents monster occupancy; a monster prevents prop placement.
 - **Squares that act once and then vanish** (the earlier trap) do not exist; the idea is parked ([temp_todo.md](temp_todo.md), Potential Extensions).
-- **2×2 bodies** *(user decision 2026-11-10; no monster of the build has one)*: a 2×2 monster occupies four squares.
+- **2×2 bodies are out of the game's scope** *(user decision 2026-11-14; no monster of the build has one)*. The rules below (user decisions 2026-11-10) stay only until the code and tests for them are cleaned up (T09, T40) and apply to nothing: a 2×2 monster occupies four squares.
   - **Distance/Reach:** measured from the nearest covered square, for attacker and target.
   - **Ground moments** (entering, leaving, end of turn, end of round): fire once per event if any covered square qualifies, never once per square. **Mixed ground:** every ground type present under the body takes effect **once**; several levels of the same hazard: the highest level applies once. Entry effects use only the **newly covered** squares, leaving effects the squares it no longer covers.
   - **Same moment, net:** damage and healing from ground at the same moment resolve simultaneously: HP = min(max HP, HP − damage + healing); the monster is defeated only if HP ≤ 0 afterwards.
@@ -243,8 +243,8 @@ State stores the zone level, not effect values; values follow the effect definit
 | `quicken` | while inside | initiative +value | `drain_init` |
 | `drain_range` | while inside | Reach −value (min 1) | `extend` |
 | `extend` | while inside | Reach +value | `drain_range` |
-| `push` | when cast, and at the end of the occupant's turn | move 1 in the zone's direction | `pull` |
-| `pull` | when cast, and at the end of the occupant's turn | move 1 toward the zone's anchor square | `push` |
+| `push` | at the end of the occupant's turn | move 1 in the zone's direction | `pull` |
+| `pull` | at the end of the occupant's turn | move 1 toward the zone's anchor square | `push` |
 
 - Effects hit **everyone** on the square — allies, enemies and the caster.
 - **Direction of a push zone:** cast alone, the direction is chosen with the cast. Left by a skill that also creates something else, it points where the placement is turned (rotation); left by a Strike, in the Strike's direction; left on the path of a movement, the way the monster went.
@@ -306,7 +306,7 @@ Kept as one reference so that older notes can be placed: **attunement and the as
 - **Always solid:** no monster shares a square with a prop.
 - **Fixed, previewed aftermath:** every prop has its own aftermath, fixed by its type and independent of who or what destroyed it and from which direction. It is shown in the preview. **No chain reactions:** aftermath damage hits monsters only, never props.
 - **Creatable by skill:** a prop type may be created by a skill on an empty square (catalogue flag); board generation may pre-place any type of the game.
-- **What damages a prop:** a Strike hits props in its shape like monsters; a monster pushed or pulled into a prop damages it (§6.3). Ground, zones and movement do not.
+- **What damages a prop:** a Strike hits props in its shape like monsters; a monster pushed or pulled into a prop damages it (§6.3). A prop pushed or pulled into something is damaged by the collision ([§6.4](#64-displacement)). Ground, zones and movement do not.
 - **No indestructible prop** *(user decision 2026-11-11)*.
 - **Spiky props** *(working draft, user direction 2026-11-12)*: a prop with the tag `spiky` deals 2 instead of 1 collision damage to a monster pushed or pulled into it ([§6.3](#63-collision)).
 - **Timing and symmetry:** destruction and aftermath order: [§6.2](#62-payload-resolution); placement symmetry: [§4.1](#41-battlefield-generation).
@@ -451,6 +451,7 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 - **Cardinal, one square per trigger**, with previewed landing. Being pushed or pulled **is movement**: the monster leaves its square and enters the next one, with every ground effect of both (§4.7), and it takes a Dragon Vein it is moved onto (§4.2).
 - **Sources:** every Strike pushes the struck monster 1 square away from the striker *(build rule 2026-11-12)*; a push zone moves in its direction, a pull zone toward its anchor (§4.6); some movement skills push on landing ([Skills §8](gdd_skills.md#8-strikes-and-movement)); a destroyed Bronze Gong or Vortex Urn and the Storm Drum (§4.10).
 - **Pull on an exact diagonal** *(user decision 2026-11-10)*: if the anchor lies exactly diagonally from the target (`|dx| = |dy|`), there is no unique cardinal direction and the pull does not move the target.
+- **Props are displaced too** *(user decision 2026-11-14; working draft values)*: every push or pull that moves a monster also moves a prop on the affected square, one square, by the same sources: a Strike pushes each prop in its shape on a neighbouring square away from the striker, a movement landing pushes the prop ahead or the props on the eight neighbours, a destroyed Bronze Gong or Vortex Urn moves the props on its neighbouring squares, and a push or pull zone moves the props standing in it **once, at the end of the round** (a prop has no turn), before the round-end zones fade and before the props' own round-end operations. Props resolve after all monsters of the same step, in uid order; the furthest along goes first. A `heavy` prop cannot be moved. A blocked prop does not move: it takes 1 damage (board edge, monster or another prop in the way), a monster in the way takes 1 (2 from a `spiky` prop), another prop in the way takes 1 (`heavy` none). Ground and zones do not act on a prop, and moving onto a square triggers nothing.
 - Blocked moves: [§6.3](#63-collision). Passives may make a monster immovable ([Skills §9](gdd_skills.md#9-passives)).
 
 **Why zones move at the end of the turn:** at turn start the target could simply walk away again; at turn end it lands in Lava, through Thornbed, off its Binding Vines or in front of your Strike. Visible counterplay: do not end your turn in a current.
@@ -469,6 +470,8 @@ Battle resolves explicit effects from the human tamer's prepared loadout under g
 - Preview, AI and resolution share the same deterministic rules and show what a skill creates and where every displaced monster lands
 
 **Dragon Vein implementation boundary:** round-end resolution reads actual Dragon Vein ground cells, not a fixed list of generated positions. Normal 3v3 generation still places the three centre-row veins of §4.1; a single central vein is a tested candidate, not an adopted default. Simulation-only skills/props and push/pull-zone AP overrides likewise change no GDD rule or active content.
+
+**Target architecture** of the finished game (layers, folders, contracts, translation, sound, animation): [architecture.md](architecture.md) (confirmed 2026-11-14; the current build is a prototype).
 
 **Implementation status (not a design source):** `godot/battle` implements this document with unvalidated test content; its layout, extension points, test switches and the commands for its automated checks are in [godot/README.md](../godot/README.md). **The code for the removed mechanics** (height, air layer, Surges and traps) is still in the battle core and unused by the game; removing it is part of T40. Readings the code had to choose and its other open points: [Implementation](temp_todo.md#implementation). The implementation approves no draft value.
 

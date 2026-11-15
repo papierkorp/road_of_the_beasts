@@ -200,6 +200,9 @@ static func end_turn(b: Battle) -> void:
 
 static func _end_round(b: Battle) -> void:
 	var ended := b.round_number
+	_zones_move_props(b)                      # push and pull zones move the props standing in them (user decision 2026-11-14), before zones fade
+	if b.check_over():
+		return
 	# zones lose a round; expired zones are removed (no repaint)
 	var faded := 0
 	for cell in b.board.cells:
@@ -228,6 +231,14 @@ static func _end_round(b: Battle) -> void:
 	BattleProps.round_end(b)                  # props that act every round
 	if b.check_over():
 		return
+	b.choice_picks.clear()
+	if _ask_choice(b):
+		return                                    # the round end waits for the owning side's pick
+	_finish_round(b, ended)
+
+
+## The rest of the round end: Dragon Vein and surround damage, fading, pressure, the next round.
+static func _finish_round(b: Battle, ended: int) -> void:
 	var held := _positional(b)
 	if b.check_over():
 		return
@@ -310,26 +321,89 @@ static func _positional(b: Battle) -> int:
 	return held[0] + held[1]
 
 
+## Dragon Vein target choice (user decision 2026-11-14): when the side that owns a vein can pick
+## among several equally near, equally strong enemies, and that side is one of `Battle.choice_sides`,
+## the round end waits for `choose_target`. Sides outside `choice_sides` (the AI, simulations) take
+## the roster-order fallback of `_well_target`. Returns true while a choice is pending.
+static func _ask_choice(b: Battle) -> bool:
+	b.pending_choice = {}
+	if BattleExperiment.wells <= 0 or BattleExperiment.vein_charge or b.choice_sides.is_empty():
+		return false
+	for vein in b.board.cells:
+		if vein.ground != GroundDef.WELL or b.choice_picks.has(vein.pos):
+			continue
+		var holder := b.any_unit_at(vein.pos)
+		var side := holder.side if holder != null else (vein.owner_side if BattleExperiment.vein_touch else -1)
+		if side < 0 or not b.choice_sides.has(side):
+			continue
+		var tied := _well_best(b, vein.pos, side)
+		if tied.size() < 2:
+			continue
+		var ids: Array[StringName] = []
+		for t in tied:
+			ids.append(t.id)
+		b.pending_choice = {"pos": vein.pos, "side": side, "options": ids}
+		b.turn_owner = &""
+		b.emit(&"choice_needed", {"pos": vein.pos, "side": side, "options": ids})
+		return true
+	return false
+
+
+## Applies the pick of the owning side and resumes the round end.
+static func choose(b: Battle, unit: StringName) -> void:
+	var pos: Vector2i = b.pending_choice["pos"]
+	b.choice_picks[pos] = unit
+	b.emit(&"choice_made", {"pos": pos, "unit": unit})
+	if _ask_choice(b):
+		return
+	_finish_round(b, b.round_number)
+
+
+## Every enemy that ties for the target of a held Dragon Vein: nearest, then most HP, then most
+## initiative (gdd_battle §4.2).
+static func _well_best(b: Battle, p: Vector2i, side: int) -> Array[BattleUnit]:
+	var out: Array[BattleUnit] = []
+	for e in b.living(1 - side):
+		if out.is_empty():
+			out.append(e)
+			continue
+		var best := out[0]
+		var de := e.chebyshev_to(p)
+		var db := best.chebyshev_to(p)
+		var ie := BattleStats.initiative(b, e)
+		var ib := BattleStats.initiative(b, best)
+		if de < db or (de == db and (e.hp > best.hp or (e.hp == best.hp and ie > ib))):
+			out = [e] as Array[BattleUnit]
+		elif de == db and e.hp == best.hp and is_equal_approx(ie, ib):
+			out.append(e)
+	return out
+
+
+## The pick of a side that does not choose by hand (the AI, simulations; user decision 2026-11-14):
+## fewest HP, then highest initiative, then lowest max HP, then roster order.
+static func ai_pick(b: Battle, tied: Array[BattleUnit]) -> BattleUnit:
+	var best := tied[0]
+	for t in tied:
+		var it := BattleStats.initiative(b, t)
+		var ib := BattleStats.initiative(b, best)
+		if t.hp < best.hp \
+				or (t.hp == best.hp and it > ib and not is_equal_approx(it, ib)) \
+				or (t.hp == best.hp and is_equal_approx(it, ib) and t.max_hp < best.max_hp):
+			best = t
+	return best
+
+
 ## The enemy a held Wellspring hits: nearest to the square (board distance), then more HP, then
 ## more initiative; a last tie is the holder's choice in the draft (here: roster order).
 static func _well_target(b: Battle, p: Vector2i, side: int) -> BattleUnit:
-	var best: BattleUnit = null
-	for e in b.living(1 - side):
-		if best == null:
-			best = e
-			continue
-		var de := e.chebyshev_to(p)
-		var db := best.chebyshev_to(p)
-		if de != db:
-			if de < db:
-				best = e
-		elif e.hp != best.hp:
-			if e.hp > best.hp:
-				best = e
-		elif BattleStats.initiative(b, e) > BattleStats.initiative(b, best):
-			best = e
-	return best
-
+	var tied := _well_best(b, p, side)
+	if tied.is_empty():
+		return null
+	var pick: StringName = b.choice_picks.get(p, &"")
+	for t in tied:
+		if t.id == pick:
+			return t
+	return ai_pick(b, tied)
 
 ## Test switches (BattleExperiment): ground laid during the battle and unsprung traps end with
 ## the round their clock names. Off by default: both stay until something changes them.
@@ -490,3 +564,26 @@ static func discharge_veins(b: Battle, u: BattleUnit) -> void:
 	if not hits.is_empty():
 		BattleDamage.apply_round(b, hits)
 		BattleDamage.defeat_step(b)
+
+
+## A prop has no turn, so the push and pull zones move the props standing in them once, at the end
+## of the round, after the round-end ground and before the round-end operations of props.
+static func _zones_move_props(b: Battle) -> void:
+	var entries: Array = []
+	for prop in b.board.props():
+		var cell := b.board.at(prop.pos)
+		if prop.hp <= 0 or cell == null or cell.zone == null:
+			continue
+		var z := cell.zone
+		var sum := Vector2i.ZERO
+		if z.def.effect(FieldEffect.PUSH) != null:
+			sum += z.dir
+		if z.def.effect(FieldEffect.PULL) != null:
+			sum += BattleDisplace.pull_dir_cell(prop.pos, z.anchor)
+		var d := Vector2i(signi(sum.x), signi(sum.y))
+		if (d.x == 0) != (d.y == 0):
+			entries.append({"prop": prop.uid, "dir": d, "cause": "zone"})
+	if entries.is_empty():
+		return
+	BattleDisplace.resolve(b, entries)
+	BattlePayload.settle(b)

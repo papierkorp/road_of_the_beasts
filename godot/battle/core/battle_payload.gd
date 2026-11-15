@@ -96,6 +96,12 @@ static func _collect_strike(b: Battle, p: Dictionary) -> void:
 			var prop := b.board.prop_at(cell, layer)
 			if prop != null:
 				p["props"][prop.uid] = prop
+				if layer == Board.GROUND:
+					if not p.has("prop_offsets"):
+						p["prop_offsets"] = {}
+					if not p["prop_offsets"].has(prop.uid):
+						p["prop_offsets"][prop.uid] = []
+					p["prop_offsets"][prop.uid].append(h["o"])
 			var other := b.unit_at(cell, layer)
 			if other != null and other.id != u.id:
 				_strike_struck(p, other)
@@ -207,6 +213,18 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 					var d := _eight_dir(sum)
 					if d != Vector2i.ZERO:
 						entries.append({"unit": id, "dir": d, "cause": p["label"], "multi": true})
+			# props in the shape are pushed like monsters (user decision 2026-11-14)
+			var push_all: bool = skill.radial_push or skill.strike_damage > 0 or bool(kin.get("push", false))
+			for uid in p.get("prop_offsets", {}):
+				var sum_p := Vector2i.ZERO
+				for o: Vector2i in p["prop_offsets"][uid]:
+					if maxi(absi(o.x), absi(o.y)) == 1:
+						sum_p += o
+				var dp := _eight_dir(sum_p)
+				if kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
+					dp = p["push_dir"]
+				if push_all and dp != Vector2i.ZERO:
+					entries.append({"prop": uid, "dir": dp, "cause": p["label"], "multi": true})
 		elif p["kind"] == "surge" and skill.surge_displacement != "none":
 			for id: StringName in p["units"]:
 				var t: BattleUnit = b.units[id]

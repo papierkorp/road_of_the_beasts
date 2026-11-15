@@ -47,7 +47,7 @@ extends SceneTree
 ##                        · balanced / balanced=N (N = 3-6 kit slots: every monster plays a Strike, a movement skill and an even
 ##                        draw of zone, ground, prop and trap skills from the draft pool; win rates per drawn skill and kind)
 ##                        · stamina / stamina=N (Movement is a Stamina pool, 1 per square, +N per round, default 1) · staminafree (with stamina: no AP for movement skills)
-##                        · props=N (N mirrored prop pairs at the start, 0 = none) · veinhold (a vein works only while a monster stands on it)
+##                        · props=N (N mirrored prop pairs at the start, 0 = none) · buttons=N (N mirrored pairs of button squares) · veinhold (a vein works only while a monster stands on it)
 ##   --no-kind-a / -b K   the bot of side 0 / 1 never uses skills of kind K (what is the kind worth)
 ##   --shield-once        test change: every shield zone skill is once per global round
 ##   --pressure N         late-round pressure starts N rounds later (negative: earlier)
@@ -307,6 +307,8 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.stamina_ap = false
 			"props":                                  # props=N: the board starts with N mirrored prop pairs (0 = none)
 				BattleExperiment.map_props = maxi(0, val.to_int())
+			"buttons":                                # buttons=N: N mirrored pairs of button squares (runes) at the start
+				BattleExperiment.map_buttons = maxi(0, val.to_int())
 			"turnfree":                               # no limit of uses per turn (rule before 2026-11-14)
 				BattleExperiment.once_per_turn = false
 			"castpush":                               # push and pull zones also move their occupants at cast (before 2026-11-14)

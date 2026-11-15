@@ -129,8 +129,8 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
       movement point of its route, reaches at most `move_range` squares (3) and never further than the Stamina left, and
       also costs its AP (`stamina_ap` = false: Stamina only); `stamina_regen` (1) comes back at the round end; Step
       stays 1 AP for 1 square without Stamina.
-    - *Board switches:* `wells` (Dragon Veins on the centre row) and `map_props` (mirrored prop pairs at the start,
-      -1 = layout); the draft screen has number fields for both and for the Stamina per round.
+    - *Board switches:* `wells` (Dragon Veins on the centre row), `map_props` (mirrored prop pairs at the start,
+      -1 = layout) and `map_buttons` (mirrored pairs of "button" squares, user idea 2026-11-15: the walkable experiment runes Moss Rune (Mossbed 3×3), Bog Rune (Bog zone around it) and Wall Rune (Earth Walls on its cardinal neighbours) act on the board without damage when a monster collects them, 0 = none); the draft screen has number fields for all three and for the Stamina per round.
   - **Content:** the in-game pool is status-filtered, not a fixed nine-monster catalogue; it includes the user
     experiment `asdf` and user-built skills. Spread authored stats and kits live in `data/`; `vigor`, `sap` and
     `tempo` (AP and turns), Battle Trance and Time Split are experiments. Retired records are `archived`.
@@ -155,7 +155,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   none is a rule): `delay_turn` with `delay_reverse` / `delay_first_round` (postponing a turn), `damage_from_round`
   (a calm first round), `start_back` (back-row starts), `push_steps`, `kin_push`, `no_rotation`, `step_ap` / `jab_ap` /
   `move_ap`, `soft_pressure`, the switches of S025–S030 (`zone_cast_push`, `once_per_turn`, `vein_touch`, `collision_both`,
-  `vein_charge`, `vein_charge_late`, `step_full_move`, `stamina` / `stamina_regen` / `stamina_ap`, `map_props`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
+  `vein_charge`, `vein_charge_late`, `step_full_move`, `stamina` / `stamina_regen` / `stamina_ap`, `map_props`, `map_buttons`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
   `ai_no_kind`. Tests: `tests/battle/test_battle_experiment.gd`.
 - **Not built:** an owner mark for Dragon Veins in the battle view; Dragon Veins on 1v1, 2v2 and 5v5 boards; slot
   development (gdd_skills §6). `MonsterDef.reference_shape` and the overworld `StatShape` still name the six earlier

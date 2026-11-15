@@ -252,11 +252,17 @@ static func impact(b: Battle, u: BattleUnit, s: BattleSkillDef, from: Vector2i, 
 		var t := b.unit_at(to + d, u.layer)
 		if t != null:
 			entries.append({"unit": t.id, "dir": d, "cause": s.display_name, "multi": true})
+		var pa := b.board.prop_at(to + d, Board.GROUND)
+		if pa != null:
+			entries.append({"prop": pa.uid, "dir": d, "cause": s.display_name, "multi": true})
 	else:
 		for d in Board.RING8:
 			var t := b.unit_at(to + d, u.layer)
 			if t != null:
 				entries.append({"unit": t.id, "dir": d, "key": 0, "cause": s.display_name, "multi": true})
+			var pr := b.board.prop_at(to + d, Board.GROUND)
+			if pr != null:
+				entries.append({"prop": pr.uid, "dir": d, "key": 0, "cause": s.display_name, "multi": true})
 	if entries.is_empty():
 		return
 	BattleDisplace.resolve(b, entries)

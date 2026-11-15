@@ -51,6 +51,8 @@ func _ready() -> void:
 	request = GameSession.request if GameSession.request != null else BattleRequest.default()
 	GameSession.request = request
 	battle = BattleSetup.build(request)
+	if not GameSession.autoplay:
+		battle.choice_sides = [PLAYER_SIDE]       # you pick the target of a tied Dragon Vein yourself (2026-11-14)
 	battle.event_emitted.connect(_on_event)
 	_tetrominoes = Shapes.orientations([&"I4", &"O4", &"T4", &"S4", &"L4"])
 	view = BattleView.new()
@@ -97,6 +99,11 @@ func _active() -> BattleUnit:
 func _is_player_turn() -> bool:
 	var u := _active()
 	return u != null and u.side == PLAYER_SIDE and not GameSession.autoplay
+
+
+## The round end waits for you to pick the enemy a Dragon Vein of yours hits.
+func _awaiting_choice() -> bool:
+	return not battle.pending_choice.is_empty() and int(battle.pending_choice["side"]) == PLAYER_SIDE and not GameSession.autoplay
 
 
 func _my_turn() -> bool:
@@ -325,6 +332,13 @@ func _click() -> void:
 	if placing:
 		_placement_click()
 		return
+	if _awaiting_choice():
+		var picked_unit := battle.any_unit_at(hover) if hover != NOWHERE else null
+		if picked_unit != null and battle.pending_choice["options"].has(picked_unit.id):
+			battle.apply({"type": &"choose_target", "unit": picked_unit.id})
+			_refresh()
+			_check_ai()
+		return
 	if not _my_turn():
 		return
 	if mode == &"tamer" and hover != NOWHERE:
@@ -417,10 +431,10 @@ func _can_start_at(u: BattleUnit, origin: Vector2i) -> bool:
 # ---------- AI turns ----------
 
 func _check_ai() -> void:
-	if battle.over or _ai_running or _is_player_turn():
+	if battle.over or _ai_running or _is_player_turn() or _awaiting_choice():
 		return
 	_ai_running = true
-	while not battle.over and not _is_player_turn():
+	while not battle.over and not _is_player_turn() and not _awaiting_choice():
 		var who := battle.turn_owner
 		var entry := battle.queue_idx
 		var round_no := battle.round_number
@@ -469,6 +483,12 @@ func _highlights(arrows: Dictionary) -> Dictionary:
 		if placing_pick != &"":
 			for c in battle.units[placing_pick].cells():
 				out[c] = COL_PICK
+		return out
+	if _awaiting_choice():
+		for id: StringName in battle.pending_choice["options"]:
+			for c in battle.units[id].cells():
+				out[c] = COL_PICK
+		out[battle.pending_choice["pos"]] = COL_AREA
 		return out
 	if not _my_turn():
 		return out
@@ -615,6 +635,8 @@ func _hint_text() -> String:
 		return "Click a monster, then a start square · Space starts" if placing_pick == &"" else "Click a start square or a monster to swap"
 	if battle.over:
 		return ""
+	if _awaiting_choice():
+		return "Dragon Vein: click the enemy it hits (green)"
 	if not _is_player_turn():
 		return "%s…" % _active().display_name() if _active() != null else ""
 	var u := _active()
@@ -696,7 +718,24 @@ func _banner_text() -> String:
 	return "Victory" if battle.winner_side == PLAYER_SIDE else "Defeat"
 
 
+## Preview of the Dragon Vein choice: what each option would look like after the round end,
+## from a dry run on a copy (so surround damage and the like are included).
+func _choice_preview_text() -> String:
+	var over_unit := battle.any_unit_at(hover) if hover != NOWHERE else null
+	var lines: Array[String] = ["Dragon Vein hits one of:"]
+	for id: StringName in battle.pending_choice["options"]:
+		var u: BattleUnit = battle.units[id]
+		var sim := battle.clone()
+		sim.apply({"type": &"choose_target", "unit": id})
+		var after: BattleUnit = sim.units[id]
+		var result := "falls" if not after.is_alive() else "%d → %d HP" % [u.hp, after.hp]
+		lines.append("%s%s: %s" % ["▶ " if over_unit != null and over_unit.id == id else "   ", u.display_name(), result])
+	return "\n".join(lines)
+
+
 func _preview_text() -> String:
+	if _awaiting_choice():
+		return _choice_preview_text()
 	if mode == &"" or not _my_turn():
 		return ""
 	var a := _aimed_action()
