@@ -8,7 +8,7 @@
 script = ExtResource("1_am")
 when = "enter"
 op = "spawn"
-pattern = "cardinal4"
+shape = "whirl"
 amount = 1
 spawn_prop = &"earth_wall"
 [resource]

@@ -61,7 +61,7 @@ static func prop_by_uid(b: Battle, uid: int) -> BoardProp:
 
 
 ## Resolves displacement entries [{unit, dir, key?, cause}] one unit at a time: smallest `key`
-## first (furthest along / nearest the anchor), ties in current initiative-queue order
+## first (furthest along / nearest the anchor), ties in current pace-queue order
 ## (gdd_battle §6.2 step 3 and tie rule).
 static func resolve(b: Battle, entries: Array) -> void:
 	var list: Array = []
@@ -165,7 +165,7 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 				all_lower = false
 		falls = all_lower
 	if u.layer == Board.GROUND:
-		BattleDamage.ground_triggers(b, u, GroundTrigger.ON_LEAVE)      # being moved is movement
+		BattleDamage.ground_triggers(b, u, Moment.LEAVE)      # being moved is movement
 		if not u.is_alive():
 			return true
 	b.relocate(u, to)
@@ -174,7 +174,7 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 		BattleDamage.apply_round(b, [{"unit": u.id, "base": 1, "type": BattleDamage.FALL, "source": "Fall"}])
 		BattleDamage.defeat_step(b)
 	if u.is_alive():
-		BattleDamage.ground_triggers(b, u, GroundTrigger.ON_ENTER, fresh)
+		BattleDamage.ground_triggers(b, u, Moment.ENTER, fresh)
 	return true
 
 

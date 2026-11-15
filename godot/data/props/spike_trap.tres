@@ -8,7 +8,7 @@
 script = ExtResource("1_am")
 when = "enter"
 op = "damage"
-pattern = "self"
+shape = "self"
 amount = 2
 [resource]
 script = ExtResource("3_pd")

@@ -13,8 +13,13 @@ var enemy_team: Array[MonsterInstance] = []
 ## LEGACY: side that attacked from behind on the overworld. The ambush bonus was dropped from
 ## the design (gdd_overworld §2.2); the battle ignores this field.
 var ambush_side := -1
-## Battle-prep pills (gdd_overworld §6.6): player team index -> initiative bonus for this battle.
-var prep_init := {}
+## Battle-prep pills (gdd_overworld §6.6): player team index -> pace bonus for this battle.
+var prep_pace := {}
+## Free shapes arranged before the battle (gdd_skills §2, user decision 2026-11-15): team index ->
+## {kit slot -> Array[Vector2i]} (offsets from the anchor). A skill that creates something at an anchor
+## names only its number of squares; an illegal arrangement is ignored and the default stays.
+var player_shapes := {}
+var enemy_shapes := {}
 ## Board parameter: 0 = the fixed layout of the mode, anything else a seeded layout.
 var board_seed := 0
 ## Pre-battle placement (gdd_battle §2.1): chosen start squares per player slot inside the

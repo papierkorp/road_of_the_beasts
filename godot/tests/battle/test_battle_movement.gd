@@ -1,11 +1,14 @@
 extends GdUnitTestSuite
 ## Movement presets as flag profiles (gdd_skills §3 Movement, §8.2).
+## The path kinds are pinned with the Movement rule from before 2026-11-15 (a movement skill covers the
+## Movement stat), which gives exact distances per test; the Stamina pool has its own tests in test_battle_props.gd.
 
 const H := preload("res://tests/battle/helpers.gd")
 
 
 func before_test() -> void:
 	H.legacy_rules()
+	BattleExperiment.stamina = false
 
 
 func after_test() -> void:
@@ -17,7 +20,7 @@ func _opts(b: Battle, i: int, preset: String) -> Dictionary:
 
 
 func _mover(move := 2, o: Dictionary = {}) -> Array:
-	var sheet := {"init": 9.0, "move": move, "ap": 4, "skills": ["run", "leap", "glide", "burrow", "phase", "blink"]}
+	var sheet := {"pace": 1.9, "move": move, "ap": 4, "skills": ["run", "leap", "glide", "burrow", "phase", "blink"]}
 	sheet.merge(o, true)
 	return [0, Vector2i(3, 3), sheet]
 
@@ -133,7 +136,7 @@ func test_walk_fires_entry_effects_on_every_square_other_paths_only_on_landing()
 
 func test_rooted_passive_forbids_step_and_movement_skills() -> void:
 	var turret := H.passive("t_turret", {"rooted": true, "passive_effects": [FieldEffect.make("extend", 1)] as Array[FieldEffect]})
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0, "reach": 2, "skills": ["run", turret]}], [1, Vector2i(6, 6)]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "reach": 2, "skills": ["run", turret]}], [1, Vector2i(6, 6)]])
 	b.begin()
 	assert_str(b.check({"type": &"step", "to": Vector2i(3, 2)})).contains("cannot move")
 	assert_str(b.check({"type": &"skill", "slot": 0, "to": Vector2i(3, 2)})).contains("cannot move")

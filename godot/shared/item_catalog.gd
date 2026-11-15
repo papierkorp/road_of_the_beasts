@@ -5,7 +5,7 @@ extends RefCounted
 ##   material  "mat:<kin>:<aspect>:<tier>"   beast part, dropped by kin, tier = cultivation stage
 ##   pill      "pill:<tier>"                 cultivation pill (out-of-battle XP, §10.2)
 ##             "pill:heal:<tier>"            healing pill (HP between battles)
-##             "pill:prep:<tier>"            battle-prep pill (+initiative for the next battle)
+##             "pill:prep:<tier>"            battle-prep pill (+pace for the next battle)
 ##   blueprint "bp:<structure>"               the recipe of a structure (kept, §6.4)
 ##   structure "st:<structure>"               a constructed structure waiting in the bag to be placed
 ## Prices are Phase 1 placeholders (tuning, gdd_overworld §12).
@@ -16,7 +16,7 @@ const BASE_VALUE := 8               # spirit stones of a Qi Gathering material
 const PILL_PRICE := 80
 const PILL_XP := 30
 const HEAL_AMOUNT := 3
-const PREP_INIT := 1
+const PREP_PACE := 0.1
 ## Base value per pill type before the tier factor.
 const PILL_VALUE := {&"cultivation": 80, &"healing": 40, &"prep": 60}
 

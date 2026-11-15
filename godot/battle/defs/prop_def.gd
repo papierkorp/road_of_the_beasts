@@ -47,7 +47,7 @@ func actions(when: String) -> Array[PropAftermath]:
 
 
 func is_trap() -> bool:
-	return not solid and not actions(PropAftermath.ENTER).is_empty()
+	return not solid and not actions(Moment.ENTER).is_empty()
 
 
 func on_ground() -> bool:

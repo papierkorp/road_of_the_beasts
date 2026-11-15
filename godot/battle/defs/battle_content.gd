@@ -13,7 +13,7 @@ extends RefCounted
 ## without touching the files.
 
 ## Bump when a definition changes meaning: replays are only valid for the same content.
-const VERSION := "2026-11-13.1"
+const VERSION := "2026-11-15.5"
 const ROOT := "res://data"
 
 var grounds := {}
@@ -154,7 +154,7 @@ func validate() -> void:
 		if not p.solid and not p.on_ground():
 			problems.append("prop '%s': a walkable prop lies on the ground layer" % id)
 		for a in p.aftermath:
-			if a.when == PropAftermath.ENTER and p.solid:
+			if a.when == Moment.ENTER and p.solid:
 				problems.append("prop '%s': only a walkable prop can be entered" % id)
 			if a.op == "ground" and not grounds.has(a.ground):
 				problems.append("prop '%s' lays unknown ground '%s'" % [id, a.ground])
@@ -162,6 +162,16 @@ func validate() -> void:
 				problems.append("prop '%s' creates unknown zone '%s'" % [id, a.zone])
 			if a.op == "spawn" and not props.has(a.spawn_prop):
 				problems.append("prop '%s' spawns unknown prop '%s'" % [id, a.spawn_prop])
+	# the roles of the three kinds (gdd_battle §4.3; BoardSheet / Moment), for everything the game fields
+	for id in grounds:
+		if ContentStatus.in_game(grounds[id]):
+			problems.append_array(BoardSheet.role_problems(BoardSheet.ground(grounds[id])))
+	for id in zones:
+		if ContentStatus.in_game(zones[id]):
+			problems.append_array(BoardSheet.role_problems(BoardSheet.zone(zones[id])))
+	for id in props:
+		if ContentStatus.in_game(props[id]):
+			problems.append_array(BoardSheet.role_problems(BoardSheet.prop(props[id])))
 	for id in zones:
 		var z: BattleZoneDef = zones[id]
 		if z.effects.is_empty():
@@ -197,8 +207,12 @@ func _validate_skill(s: BattleSkillDef) -> void:
 		problems.append(where + " has no display_name")
 	if s.is_active() and s.ap_cost < 1:
 		problems.append(where + ": an active skill costs at least 1 AP")
-	if s.is_placed() and s.anchor_mode != "caster_ring" and s.footprint.is_empty():
+	if s.is_placed() and s.is_free_shape() and s.footprint.is_empty():
 		problems.append(where + " needs an explicit footprint")
+	if not s.is_free_shape() and not BattleShapes.has(s.shape_id()):
+		problems.append(where + " uses unknown shape '%s'" % s.shape)
+	if s.shape_extension < 0 or (s.is_free_shape() and s.shape_extension != 0):
+		problems.append(where + ": only a base shape is extended, by 0 or more")
 	var seen := {}
 	for o in s.footprint:
 		if seen.has(o):
@@ -206,8 +220,8 @@ func _validate_skill(s: BattleSkillDef) -> void:
 		seen[o] = true
 	match s.kind:
 		BattleSkillDef.STRIKE:
-			if not StrikeShapes.has(StringName(s.strike_shape)):
-				problems.append(where + " uses unknown Strike shape '%s'" % s.strike_shape)
+			if s.is_free_shape():
+				problems.append(where + ": a Strike needs a base shape around its user")
 			if s.strike_damage < 0 or s.strike_damage > KinRules.STRIKE_DAMAGE:
 				problems.append(where + ": Strike damage is 0-2 (damage law)")
 		BattleSkillDef.SURGE, BattleSkillDef.TRAP:

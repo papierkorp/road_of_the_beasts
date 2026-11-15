@@ -8,7 +8,7 @@
 script = ExtResource("1_am")
 when = "round_end"
 op = "damage"
-pattern = "cardinal4"
+shape = "whirl"
 amount = 1
 [resource]
 script = ExtResource("3_pd")

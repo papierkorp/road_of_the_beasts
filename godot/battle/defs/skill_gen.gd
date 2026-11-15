@@ -45,11 +45,15 @@ static func draw(content: BattleContent, rng: RandomNumberGenerator, index: int)
 	var stays := "none"
 	match when:
 		"strike":
-			s.strike_shape = _pick(rng, ["jab", "jab", "thrust", "arc"])
+			var drawn: Array = _pick(rng, [["jab", 0], ["jab", 0], ["jab", 1], ["arc", 0]])
+			s.shape = drawn[0]
+			s.shape_extension = drawn[1]
 			s.strike_damage = _pick(rng, [0, 2, 2])
-			s.ap_cost = 2 if s.strike_shape == "jab" else 3
-			parts.append("strike=%s" % s.strike_shape)
+			s.strike_push = s.strike_damage == 0 or _pick(rng, [true, true, false])   # never neither damage nor push
+			s.ap_cost = maxi(1, BattleShapes.draft_ap(s.shape_id(), s.shape_extension))
+			parts.append("strike=%s" % BattleShapes.key(s.shape_id(), s.shape_extension))
 			parts.append("damage=%d" % s.strike_damage)
+			parts.append("push=%s" % ("yes" if s.strike_push else "no"))
 			stays = _pick(rng, ["none", "none", "ground"])
 		"ground":
 			var shape2: String = _pick(rng, SHAPES.keys())
@@ -106,9 +110,18 @@ static func draw(content: BattleContent, rng: RandomNumberGenerator, index: int)
 	return s
 
 
-const ANCHORS := {"reach": "within Reach", "adjacent": "next to the caster", "trail": "line from the caster", "caster_ring": "ring around the caster"}
+const ANCHORS := {"reach": "within Reach", "adjacent": "next to the caster"}
+
+
+## Where a skill creates something: a free shape at its anchor, or a base shape around the user.
+static func place_words(s: BattleSkillDef) -> String:
+	if s.is_free_shape():
+		return "%s · %d sq" % [ANCHORS.get(s.anchor_mode, s.anchor_mode), maxi(1, s.footprint.size())]
+	if s.shape_id() == BattleShapes.JAB:
+		return "line from the user · %d sq" % s.shape_squares()
+	return "%s around the user · %d sq" % [s.shape_label(), s.shape_squares()]
 const PATHS := {"walk": "walks", "line": "straight line", "free": "any path", "teleport": "any free square"}
-const SELF_EFFECTS := {"quicken": "initiative +1", "haste": "Movement +1", "extend": "Reach +1", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)"}
+const SELF_EFFECTS := {"quicken": "Pace +0.1", "haste": "Movement +1", "extend": "Reach +1", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)"}
 const NO := "—"
 
 
@@ -127,13 +140,18 @@ static func card(c: BattleContent, s: BattleSkillDef) -> Dictionary:
 	var props: PackedStringArray = []
 	match s.kind:
 		BattleSkillDef.STRIKE:
-			out["where"] = "neighbour · %s" % s.strike_shape
-			out["strike"] = ("%d dmg, push 1" % s.strike_damage) if s.strike_damage > 0 else "push 1"
+			out["where"] = "neighbour · %s" % s.shape_label()
+			var does: PackedStringArray = []
+			if s.strike_damage > 0:
+				does.append("%d dmg" % s.strike_damage)
+			if s.strike_push:
+				does.append("push 1")
+			out["strike"] = ", ".join(does) if not does.is_empty() else "no damage, no push"
 		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
-			out["where"] = "%s · %d sq" % [ANCHORS.get(s.anchor_mode, s.anchor_mode), s.footprint.size()]
+			out["where"] = place_words(s)
 			out["strike"] = "%d dmg %s (retired kind)" % [s.surge_damage, "after time" if s.kind == BattleSkillDef.SURGE else "on entering"]
 		BattleSkillDef.ZONE, BattleSkillDef.GROUND:
-			out["where"] = "%s · %d sq" % [ANCHORS.get(s.anchor_mode, s.anchor_mode), maxi(1, s.footprint.size())]
+			out["where"] = place_words(s)
 			if s.kind == BattleSkillDef.ZONE and s.zone != null:
 				zones.append("%s · %d rd" % [s.zone.display_name, s.duration])
 		BattleSkillDef.MOVE:
@@ -141,6 +159,8 @@ static func card(c: BattleContent, s: BattleSkillDef) -> Dictionary:
 			var dist := "Movement" if s.fixed_distance <= 0 else str(s.fixed_distance)
 			if s.fixed_distance <= 0 and s.distance_mod != 0:
 				dist += " %+d" % s.distance_mod
+			if BattleExperiment.stamina and s.fixed_distance <= 0:     # the rule: a range on the skill, paid in Stamina
+				dist = "up to %d sq, Stamina per sq" % (s.move_range if s.move_range > 0 else 3)
 			var move: PackedStringArray = ["%s · %s" % [PATHS.get(s.move_path, s.move_path), dist]]
 			if not s.blocked_by_objects or not s.blocked_by_monsters:
 				move.append("over props and monsters")
@@ -192,7 +212,7 @@ static func line(c: BattleContent, s: BattleSkillDef) -> String:
 
 
 ## A skill from chosen parts. `spec`: name, ap, use (repeatable | once_per_round | once_per_battle),
-## strike ("" | jab | thrust | arc) with damage (0–2), path ("" | walk | line | free) with impact
+## strike ("" | a base shape of BattleShapes, extended as "jab+1") with damage (0–2) and push ("yes" | "no"), path ("" | walk | line | free) with impact
 ## (none | ahead | ring), self ("" | quicken | haste | extend | vigor | tempo | immovable), shape (key
 ## of SHAPES), ground / zone / prop (an id or ""). The kind follows from the parts: a Strike, else a
 ## movement, else an effect on the user, else a skill that only creates (a zone alone is a zone
@@ -218,8 +238,11 @@ static func build(c: BattleContent, spec: Dictionary) -> BattleSkillDef:
 	var own := String(spec.get("self", ""))
 	if strike != "":
 		s.kind = BattleSkillDef.STRIKE
-		s.strike_shape = strike
+		var named: Array = BattleShapes.LEGACY.get(strike, strike.split("+"))     # "arc", "jab+1", or an earlier name ("thrust")
+		s.shape = String(named[0])
+		s.shape_extension = int(named[1]) if named.size() > 1 else 0
 		s.strike_damage = clampi(int(spec.get("damage", 2)), 0, 2)
+		s.strike_push = String(spec.get("push", "yes")) != "no"
 		prop = ""                                 # a struck square holds a monster: no prop there
 	elif path != "":
 		s.kind = BattleSkillDef.MOVE

@@ -3,7 +3,7 @@ extends RefCounted
 ## The six stat shapes of an individual monster (gdd_overworld §4.4, gdd_battle §4.5).
 ##
 ## A shape is a reference spread on the Core Formation scale plus a min / max range for the three
-## "price 1" stats (HP, Initiative, Move). Rolling moves single points between those three stats
+## "price 1" stats (HP, Pace, Move). Rolling moves single points between those three stats
 ## inside the ranges, so the point total of a shape never changes — only where the points sit.
 ## TPR and Reach are the identity of a shape and are not rolled.
 ## The rolled Core-scale spread is then snapped to the stage ceilings (`at_stage`).
@@ -14,23 +14,23 @@ extends RefCounted
 enum Id { NONE, GLASS_CANNON, ANVIL, SKIRMISHER, BERSERKER, BALANCED, FRAGILE }
 
 ## Stats that points may be moved between while rolling (all cost the same).
-const POOL := ["hp", "initiative", "move"]
+const POOL := ["hp", "pace", "move"]
 ## How many point transfers a roll attempts.
 const TRANSFERS := 4
 
 const DATA := {
-	Id.GLASS_CANNON: {"name": "Glass cannon", "hp": 2, "initiative": 9, "move": 3, "tpr": 2, "reach": 1,
-		"hp_range": [1, 3], "initiative_range": [8, 9], "move_range": [2, 4]},
-	Id.ANVIL: {"name": "Anvil", "hp": 8, "initiative": 2, "move": 1, "tpr": 1, "reach": 2,
-		"hp_range": [7, 8], "initiative_range": [2, 4], "move_range": [1, 2]},
-	Id.SKIRMISHER: {"name": "Skirmisher", "hp": 4, "initiative": 6, "move": 4, "tpr": 1, "reach": 1,
-		"hp_range": [3, 5], "initiative_range": [5, 7], "move_range": [3, 4]},
-	Id.BERSERKER: {"name": "Berserker", "hp": 5, "initiative": 7, "move": 2, "tpr": 2, "reach": 1,
-		"hp_range": [4, 6], "initiative_range": [6, 8], "move_range": [1, 3]},
-	Id.BALANCED: {"name": "Balanced", "hp": 5, "initiative": 6, "move": 2, "tpr": 1, "reach": 1,
-		"hp_range": [4, 6], "initiative_range": [5, 7], "move_range": [2, 3]},
-	Id.FRAGILE: {"name": "Fragile", "hp": 3, "initiative": 6, "move": 2, "tpr": 2, "reach": 1,
-		"hp_range": [2, 4], "initiative_range": [5, 7], "move_range": [1, 3]},
+	Id.GLASS_CANNON: {"name": "Glass cannon", "hp": 2, "pace": 9, "move": 3, "tpr": 2, "reach": 1,
+		"hp_range": [1, 3], "pace_range": [8, 9], "move_range": [2, 4]},
+	Id.ANVIL: {"name": "Anvil", "hp": 8, "pace": 2, "move": 1, "tpr": 1, "reach": 2,
+		"hp_range": [7, 8], "pace_range": [2, 4], "move_range": [1, 2]},
+	Id.SKIRMISHER: {"name": "Skirmisher", "hp": 4, "pace": 6, "move": 4, "tpr": 1, "reach": 1,
+		"hp_range": [3, 5], "pace_range": [5, 7], "move_range": [3, 4]},
+	Id.BERSERKER: {"name": "Berserker", "hp": 5, "pace": 7, "move": 2, "tpr": 2, "reach": 1,
+		"hp_range": [4, 6], "pace_range": [6, 8], "move_range": [1, 3]},
+	Id.BALANCED: {"name": "Balanced", "hp": 5, "pace": 6, "move": 2, "tpr": 1, "reach": 1,
+		"hp_range": [4, 6], "pace_range": [5, 7], "move_range": [2, 3]},
+	Id.FRAGILE: {"name": "Fragile", "hp": 3, "pace": 6, "move": 2, "tpr": 2, "reach": 1,
+		"hp_range": [2, 4], "pace_range": [5, 7], "move_range": [1, 3]},
 }
 
 ## Kin lean (gdd_battle §6 "stat lean"): relative weights for the shape a new individual rolls.
@@ -72,11 +72,11 @@ static func pick_for_kin(kin: MonsterDef.Kin, rng: RandomNumberGenerator) -> Id:
 	return Id.BALANCED
 
 
-## Rolled stats on the Core Formation scale. The sum hp + initiative + move equals the shape's
+## Rolled stats on the Core Formation scale. The sum hp + pace + move equals the shape's
 ## reference sum; every value stays inside its range.
 static func roll_core(shape: Id, rng: RandomNumberGenerator) -> Dictionary:
 	var d: Dictionary = DATA[shape]
-	var v := {"hp": int(d["hp"]), "initiative": int(d["initiative"]), "move": int(d["move"])}
+	var v := {"hp": int(d["hp"]), "pace": int(d["pace"]), "move": int(d["move"])}
 	for i in TRANSFERS:
 		var from: String = POOL[rng.randi_range(0, POOL.size() - 1)]
 		var to: String = POOL[rng.randi_range(0, POOL.size() - 1)]
@@ -86,15 +86,15 @@ static func roll_core(shape: Id, rng: RandomNumberGenerator) -> Dictionary:
 			continue
 		v[from] -= 1
 		v[to] += 1
-	return {"hp": v["hp"], "initiative": float(v["initiative"]), "move": v["move"],
+	return {"hp": v["hp"], "pace": float(v["pace"]), "move": v["move"],
 		"tpr": int(d["tpr"]), "reach": int(d["reach"])}
 
 
-## How much of the stage budget a sub-tier fills (HP and Initiative). Prototype values, to be tuned.
+## How much of the stage budget a sub-tier fills (HP and Pace). Prototype values, to be tuned.
 const SUB_TIER_FILL := {Stage.SubTier.LOWER: 0.75, Stage.SubTier.MIDDLE: 0.9, Stage.SubTier.HIGH: 1.0}
 
 
-## Snaps a Core-scale spread to a stage: HP and Initiative scale with the cap and the sub-tier, Move / TPR / Reach
+## Snaps a Core-scale spread to a stage: HP and Pace scale with the cap and the sub-tier, Move / TPR / Reach
 ## keep their value but never exceed the cap — and a stat that sat on the Core cap sits on the
 ## cap of the new stage (so a Berserker's TPR 2 becomes TPR 3 at Soul Tier).
 static func at_stage(core: Dictionary, stage: Stage.Type, sub_tier: Stage.SubTier = Stage.SubTier.HIGH) -> Dictionary:
@@ -103,8 +103,7 @@ static func at_stage(core: Dictionary, stage: Stage.Type, sub_tier: Stage.SubTie
 	var fill: float = SUB_TIER_FILL[sub_tier]
 	var out := {}
 	out["hp"] = clampi(roundi(float(core["hp"]) * float(cap["hp"]) / float(core_cap["hp"]) * fill), 1, int(cap["hp"]))
-	out["initiative"] = clampf(snappedf(float(core["initiative"]) * float(cap["initiative"]) / float(core_cap["initiative"]) * fill, 0.1),
-		0.1, float(cap["initiative"]))
+	out["pace"] = pace_from_pool(clampf(float(core["pace"]) * float(cap["pace"]) / float(core_cap["pace"]) * fill, 0.1, float(cap["pace"])))
 	for k in ["move", "tpr", "reach"]:
 		var value := int(core[k])
 		if value >= int(core_cap[k]):
@@ -112,3 +111,10 @@ static func at_stage(core: Dictionary, stage: Stage.Type, sub_tier: Stage.SubTie
 		else:
 			out[k] = clampi(value, 1, int(cap[k]))
 	return out
+
+
+## Pace of an individual from this file's pool value. The shapes and the stage caps here still count
+## Pace on the 1–9 pool scale of the earlier stat draft; since 2026-11-15 a monster's Pace starts at
+## 1.0 and a stat point adds 0.1 (gdd_monsters §2.2), and 2.0 on the pool scale was one point.
+static func pace_from_pool(pool_value: float) -> float:
+	return maxf(0.1, snappedf(1.0 + (pool_value - 1.0) / 20.0, 0.1))

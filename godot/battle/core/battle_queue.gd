@@ -1,14 +1,15 @@
 class_name BattleQueue
 extends RefCounted
-## The initiative queue of one round (gdd_battle §2.2). Recalculated every round; within a
+## The pace queue of one round (gdd_battle §2.2). Recalculated every round; within a
 ## round it only changes through Urgent Order and Beast Swap.
 ##
-## Entry: {id, init, base, side, slot, extra}. Order: effective initiative, then base
-## initiative; still tied → the sides alternate (the first cross-side tie of a battle goes to
-## the side with the lower total initiative, equal totals to the player); units of one side
+## Entry: {id, pace, base, side, slot, extra}. Order: effective pace, then base
+## pace; still tied → the sides alternate (the first cross-side tie of a battle goes to
+## the side with the lower total pace, equal totals to the player); units of one side
 ## in slot order; an extra-turn entry follows its unit's main entry.
 
-const EXTRA_TURN_PENALTY := 3.0
+## An extra-turn entry sits this much lower in the queue: 2 Pace points (working value; 3.0 on the 1-9 scale before 2026-11-15).
+const EXTRA_TURN_PENALTY := 0.2
 const PLAYER := 0
 
 
@@ -19,18 +20,18 @@ static func build(b: Battle) -> Array[Dictionary]:
 		var u: BattleUnit = b.units[id]
 		if not u.is_alive():
 			continue
-		var eff := BattleStats.initiative(b, u)
+		var eff := BattleStats.pace(b, u)
 		totals[u.side] += eff
 		var turns := 1 if b.round_number < BattleExperiment.tpr_from_round else u.sheet.tpr      # test switch
 		for fx in u.effects:                      # experiment: one more turn while the effect lasts
 			if fx["tag"] == FieldEffect.TEMPO:
 				turns += int(fx["value"])
 		for k in turns:
-			entries.append({"id": id, "init": maxf(BattleStats.MIN_INITIATIVE, snappedf(eff - EXTRA_TURN_PENALTY * k, 0.1)),
-				"base": u.sheet.initiative, "side": u.side, "slot": u.slot, "extra": k})
+			entries.append({"id": id, "pace": maxf(BattleStats.MIN_PACE, snappedf(eff - EXTRA_TURN_PENALTY * k, 0.1)),
+				"base": u.sheet.pace, "side": u.side, "slot": u.slot, "extra": k})
 	entries.sort_custom(func(a: Dictionary, c: Dictionary) -> bool:
-		if a["init"] != c["init"]:
-			return a["init"] > c["init"]
+		if a["pace"] != c["pace"]:
+			return a["pace"] > c["pace"]
 		if a["base"] != c["base"]:
 			return a["base"] > c["base"]
 		if a["side"] != c["side"]:
@@ -42,7 +43,7 @@ static func build(b: Battle) -> Array[Dictionary]:
 	var i := 0
 	while i < entries.size():
 		var j := i
-		while j < entries.size() and entries[j]["init"] == entries[i]["init"] and entries[j]["base"] == entries[i]["base"]:
+		while j < entries.size() and entries[j]["pace"] == entries[i]["pace"] and entries[j]["base"] == entries[i]["base"]:
 			j += 1
 		out.append_array(_interleave(b, entries.slice(i, j), totals))
 		i = j

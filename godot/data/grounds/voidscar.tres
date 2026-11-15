@@ -6,7 +6,7 @@
 
 [sub_resource type="Resource" id="Resource_qgmnr"]
 script = ExtResource("3_vhlwm")
-timing = "end_of_turn"
+timing = "turn_end"
 amount = 1
 
 [resource]

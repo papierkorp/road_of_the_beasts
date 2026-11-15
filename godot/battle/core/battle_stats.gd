@@ -8,7 +8,9 @@ extends RefCounted
 ## This is the single place that knows which sources exist, so preview, AI and resolution
 ## read identical numbers.
 
-const MIN_INITIATIVE := 0.1
+const MIN_PACE := 0.1
+## One Pace point: a stat point buys it, and `quicken` / `drain_pace` values count in it (user decision 2026-11-15).
+const PACE_POINT := 0.1
 const MIN_MOVEMENT := 1
 const MIN_REACH := 1
 
@@ -134,9 +136,10 @@ static func total(b: Battle, u: BattleUnit, tag: String) -> int:
 	return sum
 
 
-static func initiative(b: Battle, u: BattleUnit) -> float:
-	var v := u.sheet.initiative + u.sheet.init_bonus + total(b, u, FieldEffect.QUICKEN) - total(b, u, FieldEffect.DRAIN_INIT)
-	return maxf(MIN_INITIATIVE, snappedf(v, 0.1))
+## Effective Pace: the queue position of a monster. `quicken` and `drain_pace` change it in Pace points.
+static func pace(b: Battle, u: BattleUnit) -> float:
+	var v := u.sheet.pace + u.sheet.pace_bonus + PACE_POINT * (total(b, u, FieldEffect.QUICKEN) - total(b, u, FieldEffect.DRAIN_PACE))
+	return maxf(MIN_PACE, snappedf(v, 0.1))
 
 
 static func movement(b: Battle, u: BattleUnit) -> int:
@@ -228,3 +231,12 @@ static func phases(u: BattleUnit) -> bool:
 		if s.phasing:
 			return true
 	return false
+
+
+## Stamina a monster recovers at the end of a round: the whole number of the Pace it has at that moment, at
+## least 1 (user decisions 2026-11-15; the current value counts, not the one on the sheet). A zone or a timed
+## effect on Pace therefore changes the recovery when it carries the monster across a whole number.
+static func recovery(b: Battle, u: BattleUnit) -> int:
+	if BattleExperiment.stamina_regen > 0:
+		return BattleExperiment.stamina_regen
+	return maxi(1, floori(pace(b, u) + 0.0001))

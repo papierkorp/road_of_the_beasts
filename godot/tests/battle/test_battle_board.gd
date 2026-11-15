@@ -54,7 +54,7 @@ func test_opposite_zones_subtract_levels_and_keep_the_survivors_clock() -> void:
 	assert_array([String(z.def.id), z.level, z.duration, z.gid]).is_equal(["slow_pull", 2, 1, 5])
 	# compared by effects, never by name
 	var quick := _zone([FieldEffect.make("quicken", 1), FieldEffect.make("haste", 1)], "a")
-	var drain := _zone([FieldEffect.make("drain_init", 1), FieldEffect.make("slow", 1)], "b")
+	var drain := _zone([FieldEffect.make("drain_pace", 1), FieldEffect.make("slow", 1)], "b")
 	assert_bool(quick.opposes(drain)).is_true()
 	assert_bool(slow_pull.opposes(quick)).is_true()        # slow ↔ haste
 	assert_bool(push.opposes(quick)).is_false()
@@ -72,37 +72,37 @@ func test_zone_values_come_from_base_cap_and_level() -> void:
 
 
 func test_zones_affect_everyone_inside_and_never_touch_ground() -> void:
-	var mire: BattleZoneDef = H.content().zone(&"mire")     # slow 1, drain_init 2 (3), drain_range 1
-	var b := H.battle([[0, Vector2i(2, 2), {"move": 1, "reach": 2, "init": 5.0}], [1, Vector2i(3, 2), {"move": 3, "reach": 3, "init": 5.0}]])
+	var mire: BattleZoneDef = H.content().zone(&"mire")     # slow 1, drain_pace 1 (2) in Pace points, drain_range 1
+	var b := H.battle([[0, Vector2i(2, 2), {"move": 1, "reach": 2, "pace": 1.5}], [1, Vector2i(3, 2), {"move": 3, "reach": 3, "pace": 1.5}]])
 	b.set_ground(Vector2i(2, 2), &"lava", 2)
 	H.zone_on(b, Vector2i(2, 2), mire)
 	H.zone_on(b, Vector2i(3, 2), mire, 901, 2)
 	var mine := H.unit(b, 0)
 	var theirs := H.unit(b, 1)
 	assert_array([BattleStats.movement(b, mine), BattleStats.reach(b, mine)]).is_equal([1, 1])   # floors: min 1
-	assert_float(BattleStats.initiative(b, mine)).is_equal(3.0)
+	assert_float(BattleStats.pace(b, mine)).is_equal_approx(1.4, 0.001)
 	assert_array([BattleStats.movement(b, theirs), BattleStats.reach(b, theirs)]).is_equal([2, 2])
-	assert_float(BattleStats.initiative(b, theirs)).is_equal(2.0)                               # level II: -3
+	assert_float(BattleStats.pace(b, theirs)).is_equal_approx(1.3, 0.001)                               # level II: 2 Pace points
 	assert_array([String(b.board.at(Vector2i(2, 2)).ground), b.board.at(Vector2i(2, 2)).level]).is_equal(["lava", 2])
 
 
 func test_different_sources_add_and_the_same_source_never_adds_twice() -> void:
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 4.0, "reach": 2, "move": 2}], [1, Vector2i(6, 6)]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.4, "reach": 2, "move": 2}], [1, Vector2i(6, 6)]])
 	var u := H.unit(b, 0)
 	b.set_ground(Vector2i(3, 3), &"hearth")                 # quicken 1
 	b.add_prop(&"shrine", Vector2i(3, 2))                   # quicken 1, orthogonally adjacent
 	b.add_prop(&"shrine", Vector2i(2, 3))                   # a second Shrine is another source
 	b.add_prop(&"shrine", Vector2i(4, 4))                   # diagonal: no aura
-	assert_float(BattleStats.initiative(b, u)).is_equal(7.0)
+	assert_float(BattleStats.pace(b, u)).is_equal_approx(1.7, 0.001)
 	b.apply_effect(u, "buff:focus:u0", "quicken", 1, 2)
 	b.apply_effect(u, "buff:focus:u0", "quicken", 1, 2)    # refresh only
-	assert_float(BattleStats.initiative(b, u)).is_equal(8.0)
+	assert_float(BattleStats.pace(b, u)).is_equal_approx(1.8, 0.001)
 	b.add_prop(&"totem", Vector2i(4, 3))                    # extend 1
 	b.board.at(Vector2i(3, 3)).height = 1                   # Mountain: +1 Reach
 	assert_int(BattleStats.reach(b, u)).is_equal(4)
 	b.set_ground(Vector2i(3, 3), &"umbra")
 	assert_int(BattleStats.reach(b, u)).is_equal(5)
-	assert_float(BattleStats.initiative(b, u)).is_equal(7.0)   # Hearth is gone, the rest stays
+	assert_float(BattleStats.pace(b, u)).is_equal_approx(1.7, 0.001)   # Hearth is gone, the rest stays
 
 
 func test_aura_props_work_for_enemies_too_and_end_with_the_prop() -> void:
@@ -135,7 +135,7 @@ func test_ground_same_type_levels_hazards_and_different_type_replaces() -> void:
 
 
 func test_field_skills_lay_ground_under_props_too_and_may_cover_mountains() -> void:
-	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": ["lava_field"]}], [1, Vector2i(6, 6)]])
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": ["lava_field"]}], [1, Vector2i(6, 6)]])
 	b.add_prop(&"clay_urn", Vector2i(2, 4))
 	b.board.at(Vector2i(4, 3)).height = 1
 	b.begin()
@@ -151,7 +151,7 @@ func test_field_skills_lay_ground_under_props_too_and_may_cover_mountains() -> v
 
 
 func test_raise_ground_creates_a_mountain_and_resets_ground_but_not_voidscar() -> void:
-	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": ["raise_ground"]}], [1, Vector2i(6, 6)]])
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": ["raise_ground"]}], [1, Vector2i(6, 6)]])
 	b.set_ground(Vector2i(3, 3), &"lava", 2)
 	b.set_ground(Vector2i(3, 4), &"voidscar")
 	b.begin()
@@ -164,7 +164,7 @@ func test_raise_ground_creates_a_mountain_and_resets_ground_but_not_voidscar() -
 
 
 func _strike_setup(prop: StringName, extra: Array = []) -> Battle:
-	var specs: Array = [[0, Vector2i(3, 4), {"init": 9.0, "ap": 5, "kin": MonsterDef.Kin.SWARM, "skills": [H.strike()]}]]
+	var specs: Array = [[0, Vector2i(3, 4), {"pace": 1.9, "ap": 5, "kin": MonsterDef.Kin.SWARM, "skills": [H.strike()]}]]
 	specs.append_array(extra)
 	var b := H.battle(specs)
 	b.add_prop(prop, Vector2i(3, 3))
@@ -238,7 +238,7 @@ func test_a_prop_at_zero_hp_blocks_until_the_removal_step() -> void:
 	# Arc hits the Bamboo Stand (2 HP → 0) and the target next to it; the Scaled push then
 	# collides with the still-standing prop; only afterwards the Stand is removed and bursts.
 	var b := H.battle([
-		[0, Vector2i(3, 3), {"init": 9.0, "ap": 3, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike("arc")]}],
+		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 3, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike("arc")]}],
 		[1, Vector2i(3, 2), {"hp": 9}],
 	])
 	b.add_prop(&"bamboo_stand", Vector2i(4, 2))
@@ -269,9 +269,9 @@ func test_relocate_contract_moves_one_light_prop_one_orthogonal_square() -> void
 func test_event_passives_react_after_the_payload_once_per_event_in_queue_order() -> void:
 	var scavenger := H.passive("t_scavenger", {"react_event": "prop_destroyed_in_reach", "react_heal": 1})
 	var b := H.battle([
-		[0, Vector2i(3, 4), {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.SWARM, "current_hp": 2, "reach": 2, "skills": [H.strike(), scavenger]}],
-		[1, Vector2i(3, 1), {"init": 5.0, "current_hp": 2, "reach": 2, "skills": [scavenger]}],
-		[1, Vector2i(6, 6), {"init": 4.0, "current_hp": 2, "reach": 2, "skills": [scavenger]}],
+		[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.SWARM, "current_hp": 2, "reach": 2, "skills": [H.strike(), scavenger]}],
+		[1, Vector2i(3, 1), {"pace": 1.5, "current_hp": 2, "reach": 2, "skills": [scavenger]}],
+		[1, Vector2i(6, 6), {"pace": 1.4, "current_hp": 2, "reach": 2, "skills": [scavenger]}],
 	])
 	b.add_prop(&"stone_lion", Vector2i(3, 3))
 	b.begin()
@@ -288,7 +288,7 @@ func test_event_passives_react_after_the_payload_once_per_event_in_queue_order()
 func test_a_vortex_urn_pulls_its_neighbours_in_and_a_storm_drum_pushes_them_away() -> void:
 	# Vortex Urn: destroyed, it pulls the eight neighbours toward its square; the first in the
 	# queue takes it, the other collides with it
-	var b := _strike_setup(&"vortex_urn", [[1, Vector2i(2, 3), {"hp": 9, "init": 6.0}], [1, Vector2i(4, 3), {"hp": 9, "init": 5.0}]])
+	var b := _strike_setup(&"vortex_urn", [[1, Vector2i(2, 3), {"hp": 9, "pace": 1.6}], [1, Vector2i(4, 3), {"hp": 9, "pace": 1.5}]])
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
 	assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()
@@ -297,7 +297,7 @@ func test_a_vortex_urn_pulls_its_neighbours_in_and_a_storm_drum_pushes_them_away
 	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(4, 3))
 	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([8, 8])     # each collides with the one who got there
 	# Storm Drum: at the round end the monsters on its four cardinal neighbours are pushed 1 square away
-	var d := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(6, 0)]])
+	var d := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(6, 0)]])
 	d.add_prop(&"storm_drum", Vector2i(3, 3))
 	d.begin()
 	d.end_turn()
@@ -306,7 +306,7 @@ func test_a_vortex_urn_pulls_its_neighbours_in_and_a_storm_drum_pushes_them_away
 
 
 func test_a_board_skill_places_a_prop_on_a_free_square() -> void:
-	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "skills": ["set_gong", "plant_bamboo"]}], [1, Vector2i(3, 3), {"hp": 9}]])
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "skills": ["set_gong", "plant_bamboo"]}], [1, Vector2i(3, 3), {"hp": 9}]])
 	b.begin()
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})).is_not_empty()   # a monster stands there
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 4)})).is_true()

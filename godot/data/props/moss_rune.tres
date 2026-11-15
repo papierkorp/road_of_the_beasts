@@ -8,7 +8,7 @@
 script = ExtResource("1_am")
 when = "enter"
 op = "ground"
-pattern = "block9"
+shape = "block"
 amount = 1
 ground = &"mossbed"
 [resource]

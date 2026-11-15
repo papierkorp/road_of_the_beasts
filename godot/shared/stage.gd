@@ -15,14 +15,15 @@ const NAMES := {
 	Type.SOVEREIGN: "Sovereign",
 }
 
-const _SOUL_CAPS := {"hp": 10, "initiative": 10.0, "tpr": 3, "move": 4, "reach": 3}
+## `pace` counts on the pool scale of StatShape (1–9; StatShape.pace_from_pool turns it into a monster's Pace).
+const _SOUL_CAPS := {"hp": 10, "pace": 10.0, "tpr": 3, "move": 4, "reach": 3}
 
 ## Hard caps per stage. Soul and everything above share the last column of the GDD table
-## (they already sit on the absolute scale: HP 1-10, Init 0.1-10.0, TPR 1-3, Reach 1-3).
+## (they already sit on the absolute scale: HP 1-10, Pace 0.1-10.0, TPR 1-3, Reach 1-3).
 const CAPS := {
-	Type.QI_GATHERING: {"hp": 4, "initiative": 5.0, "tpr": 1, "move": 3, "reach": 1},
-	Type.FOUNDATION: {"hp": 6, "initiative": 7.0, "tpr": 2, "move": 3, "reach": 2},
-	Type.CORE_FORMATION: {"hp": 8, "initiative": 9.0, "tpr": 2, "move": 4, "reach": 2},
+	Type.QI_GATHERING: {"hp": 4, "pace": 5.0, "tpr": 1, "move": 3, "reach": 1},
+	Type.FOUNDATION: {"hp": 6, "pace": 7.0, "tpr": 2, "move": 3, "reach": 2},
+	Type.CORE_FORMATION: {"hp": 8, "pace": 9.0, "tpr": 2, "move": 4, "reach": 2},
 }
 
 

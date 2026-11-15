@@ -2,12 +2,13 @@
 
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
 [ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
-[ext_resource type="Resource" path="res://data/skills/glide.tres" id="s0"]
-[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
-[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/void_pull.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/glide.tres" id="k1"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="k2"]
+[ext_resource type="Resource" path="res://data/skills/thorn_lash.tres" id="k3"]
+[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="k4"]
+[ext_resource type="Resource" path="res://data/skills/void_pull.tres" id="k5"]
+[ext_resource type="Resource" path="res://data/skills/set_urn.tres" id="k6"]
 
-[ext_resource type="Resource" path="res://data/skills/set_urn.tres" id="9_slot5"]
 [resource]
 script = ExtResource("1")
 id = &"thorn_mites"
@@ -16,11 +17,11 @@ kin = 3
 aspect = 2
 reference_shape = 6
 hp = 6
-initiative = 3.0
+pace = 1.1
 move = 3
 tpr = 2
-reach = 3
+reach = 2
 ap = 2
-skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3"), ExtResource("9_slot5")])
+skills = Array[ExtResource("2")]([ExtResource("k1"), ExtResource("k2"), ExtResource("k3"), ExtResource("k4"), ExtResource("k5"), ExtResource("k6")])
 blurb = "Two turns from round 2: lays slowing thorns and pulls enemies across them."
 notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

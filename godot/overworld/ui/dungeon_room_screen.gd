@@ -4,7 +4,7 @@ extends WalkScreen
 ##  - the hall (nothing to fight): doors to the next nodes, a portal back to the city;
 ##  - a battle room: the node's wild monsters roam visibly — no random encounters. They chase you
 ##    when you come close; touching one starts the battle. Hitting it from behind (or being hit
-##    from behind) gives a small round-1 initiative bonus (Encounter).
+##    from behind) gives a small round-1 pace bonus (Encounter).
 ## The monsters' kin and aspect show in their shape and colour; their full datasheets are shown
 ## before the fight, together with your team pick — no hidden information.
 
@@ -76,7 +76,7 @@ func _after_ready() -> void:
 	elif _ex.finished:
 		_say("The dungeon is over — teleport out to return to the city.", 6.0)
 	elif _in_battle_room:
-		_say("Wild monsters roam here. Touch one to fight — strike from behind for +1 initiative.", 6.0)
+		_say("Wild monsters roam here. Touch one to fight — strike from behind for +0.1 Pace.", 6.0)
 	else:
 		_say("Choose a door.", 4.0)
 
@@ -153,9 +153,9 @@ func _build_encounter_panel() -> void:
 		String(node["mode"]).to_upper(), node["reward"]], UiTheme.ACCENT, 20)
 	match _ambush:
 		0:
-			_text("You struck from behind! +%d initiative for your team in round 1." % int(Battle.AMBUSH_BONUS), UiTheme.TEXT)
+			_text("You struck from behind! +%.1f Pace for your team in round 1." % Battle.AMBUSH_BONUS, UiTheme.TEXT)
 		1:
-			_text("They caught you from behind! +%d initiative for the wild monsters in round 1." % int(Battle.AMBUSH_BONUS), UiTheme.TEXT)
+			_text("They caught you from behind! +%.1f Pace for the wild monsters in round 1." % Battle.AMBUSH_BONUS, UiTheme.TEXT)
 		_:
 			_text("A head-on meeting — nobody gets the first move.", UiTheme.DIM)
 	_text("FULL DATASHEETS — no hidden information", UiTheme.DIM)
@@ -185,8 +185,8 @@ func _build_encounter_panel() -> void:
 			hb.disabled = _game.item_count(heal) < 1
 			hb.pressed.connect(func(): _heal(heal, i))
 			_side_body.add_child(hb)
-	_text("BATTLE-PREP PILLS in your bag: %d  (+%d initiative for the whole battle, used up when the fight starts)"
-		% [_game.item_count(prep), ItemCatalog.PREP_INIT], UiTheme.DIM)
+	_text("BATTLE-PREP PILLS in your bag: %d  (+%.1f Pace for the whole battle, used up when the fight starts)"
+		% [_game.item_count(prep), ItemCatalog.PREP_PACE], UiTheme.DIM)
 	for i in _game.monsters.size():
 		var pc := CheckBox.new()
 		pc.text = "Prep pill for %s" % _game.monsters[i].species().display_name
@@ -241,7 +241,7 @@ func _start_battle() -> void:
 	var prep := ItemCatalog.prep_pill_id(int(_game.stage))
 	for i in _prep_checks.size():
 		if _prep_checks[i].button_pressed and team.has(_game.monsters[i]) and _game.remove_item(prep):
-			request.prep_init[team.find(_game.monsters[i])] = ItemCatalog.PREP_INIT
+			request.prep_pace[team.find(_game.monsters[i])] = ItemCatalog.PREP_PACE
 	var problem := request.problem()
 	if problem != "":
 		_say("Can't fight: " + problem)

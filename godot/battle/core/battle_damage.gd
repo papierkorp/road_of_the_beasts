@@ -152,5 +152,5 @@ static func ground_triggers(b: Battle, u: BattleUnit, timing: String, cells: Arr
 	if not parts["hits"].is_empty() or not heals.is_empty():
 		apply_round(b, parts["hits"], heals)
 		defeat_step(b)
-	if timing == GroundTrigger.ON_ENTER:
+	if timing == Moment.ENTER:
 		BattleProps.enter(b, u, over)         # a trap on the entered squares springs

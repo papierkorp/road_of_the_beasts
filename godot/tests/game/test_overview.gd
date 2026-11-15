@@ -25,18 +25,32 @@ func test_every_monster_record_has_a_row() -> void:
 		assert_str(r["kit"]).is_equal(m.kit_text())
 
 
+## The calculation of gdd_monsters §2.2 (user decision 2026-11-15): every stat starts at 1, a second turn costs 10 + 5 per AP.
+func test_the_points_column_shows_what_a_monsters_stats_cost() -> void:
+	assert_int(MonsterDef.points_of(1, 1.0, 1, 1, 1, 1)).is_equal(0)
+	assert_int(MonsterDef.points_of(4, 1.0, 1, 2, 1, 2)).is_equal(25)             # HP 15 + Reach 5 + AP 5
+	assert_int(MonsterDef.points_of(3, 1.0, 1, 2, 2, 2)).is_equal(40)             # a second turn at AP 2: 20
+	assert_int(MonsterDef.points_of(5, 1.1, 3, 3, 3, 2)).is_equal(100)            # a third turn costs twice the second
+	assert_int(MonsterDef.points_of(6, 1.9, 4, 3, 1, 5)).is_equal(100)            # AP 5: 5 + 10 + 15 + 20
+	var c := BattleContent.shared()
+	for r in Overview.monster_rows(c):
+		if c.monster(StringName(r["id"])).content_status == ContentStatus.DRAFT:
+			assert_int(r["points"]).is_equal(MonsterDef.MULTIPLAYER_POINTS)      # the nine monsters of the multiplayer mode
+		assert_str(r["points_table"][-1][1]).contains(str(r["points"]))
+
+
 func test_a_skill_reads_as_its_card() -> void:
 	var c := BattleContent.shared()
-	assert_dict(SkillGen.card(c, c.skill(&"strike_jab"))).is_equal({"cost": "2 AP", "where": "neighbour · jab", "strike": "2 dmg, push 1",
+	assert_dict(SkillGen.card(c, c.skill(&"strike_jab"))).is_equal({"cost": "2 AP", "where": "neighbour · Jab", "strike": "2 dmg, push 1",
 		"move": "—", "self": "—", "ground": "—", "zone": "—", "prop": "—"})
 	var snare := SkillGen.card(c, c.skill(&"snare"))
 	assert_array([snare["strike"], snare["ground"], snare["zone"], snare["prop"]]).is_equal(["—", "Binding Vines", "—", "—"])
 	var coil := SkillGen.card(c, c.skill(&"coiling_rift"))
 	assert_array([coil["ground"], coil["zone"]]).is_equal(["Blight", "Void Pull · 2 rd"])      # one skill, two things created
 	assert_str(SkillGen.card(c, c.skill(&"plant_bamboo"))["prop"]).is_equal("Bamboo Stand")
-	assert_str(SkillGen.card(c, c.skill(&"run"))["move"]).is_equal("walks · Movement")
+	assert_str(SkillGen.card(c, c.skill(&"run"))["move"]).is_equal("walks · up to 3 sq, Stamina per sq")
 	assert_str(SkillGen.card(c, c.skill(&"battle_trance"))["self"]).contains("AP +1")
-	assert_str(SkillGen.line(c, c.skill(&"thorn_lash"))).is_equal("2 AP · neighbour · jab · strike: 2 dmg, push 1 · creates ground: Thornbed")
+	assert_str(SkillGen.line(c, c.skill(&"thorn_lash"))).is_equal("2 AP · neighbour · Jab · strike: 2 dmg, push 1 · creates ground: Thornbed")
 	# no Surge and no trap is in the game any more: damage at range comes from ground
 	for id in c.skills:
 		if ContentStatus.in_game(c.skill(id)):
@@ -49,7 +63,7 @@ func test_the_skill_builder_builds_skills_from_the_parts() -> void:
 	assert_str(lash.id).is_equal("ember_lash")
 	assert_str(lash.content_status).is_equal(ContentStatus.EXPERIMENT)
 	assert_str(lash.kind).is_equal("strike")
-	assert_str(SkillGen.line(c, lash)).is_equal("2 AP · neighbour · jab · strike: 2 dmg, push 1 · creates ground: Lava")      # no prop under a struck monster
+	assert_str(SkillGen.line(c, lash)).is_equal("2 AP · neighbour · Jab · strike: 2 dmg, push 1 · creates ground: Lava")      # no prop under a struck monster
 	var wall := SkillGen.build(c, {"name": "Wind Wall", "shape": "line2", "zone": "gale"})
 	assert_str(wall.kind).is_equal("zone")                   # a zone alone is a zone skill: it gets its direction
 	assert_object(wall.zone).is_same(c.zone(&"gale"))
@@ -61,7 +75,7 @@ func test_the_skill_builder_builds_skills_from_the_parts() -> void:
 	assert_str(run.impact_push).is_equal("ahead")
 	var buff := SkillGen.build(c, {"name": "Swift Mind", "self": "quicken"})
 	assert_str(buff.kind).is_equal("buff")
-	assert_str(SkillGen.card(c, buff)["self"]).is_equal("initiative +1 · 2 rd")
+	assert_str(SkillGen.card(c, buff)["self"]).is_equal("Pace +0.1 · 2 rd")
 	var rock := SkillGen.build(c, {"name": "Rooted", "self": "immovable"})
 	assert_str(rock.kind).is_equal("passive")
 	assert_bool(rock.immovable).is_true()
@@ -103,7 +117,11 @@ func test_grounds_zones_and_props_have_a_row_per_file() -> void:
 	for r in props:
 		assert_str(r["effect"]).is_not_empty()
 	# every table of the screen has rows for all of its columns
-	var rows := {"skills": Overview.skill_rows(c), "monsters": Overview.monster_rows(c), "grounds": grounds, "zones": zones, "props": props}
+	var sheets := Overview.sheet_rows(c)
+	assert_int(sheets.size()).is_equal(c.grounds.size() + c.zones.size() + c.props.size())      # one sheet format for all three
+	var lava_sheet: Dictionary = sheets.filter(func(r: Dictionary) -> bool: return r["id"] == "lava")[0]
+	assert_array([lava_sheet["kind"], lava_sheet["lines"]]).is_equal(["ground", "at the end of its turn: damage = level"])
+	var rows := {"skills": Overview.skill_rows(c), "monsters": Overview.monster_rows(c), "grounds": grounds, "zones": zones, "sheets": sheets, "props": props}
 	for id: String in Overview.TABLES:
 		for col: Array in Overview.TABLES[id]["columns"]:
 			assert_bool(rows[id][0].has(col[0])).is_true()
@@ -137,17 +155,17 @@ func test_grounds_zones_and_props_have_a_row_per_file() -> void:
 
 func test_the_monster_builder_builds_and_checks_a_monster() -> void:
 	var c := BattleContent.shared().copy()
-	var m := MonsterBuilder.build(c, {"name": "Jade Crane", "kin": MonsterDef.Kin.WINGED, "hp": 4, "initiative": 8.5, "move": 4, "reach": 3,
+	var m := MonsterBuilder.build(c, {"name": "Jade Crane", "kin": MonsterDef.Kin.WINGED, "hp": 4, "pace": 1.8, "move": 4, "reach": 3,
 		"tpr": 2, "ap": 3, "skills": ["glide", "strike_jab", "", "snare"], "blurb": "Pins and strikes."})
 	assert_str(m.id).is_equal("jade_crane")
 	assert_str(m.content_status).is_equal(ContentStatus.EXPERIMENT)
 	assert_array([m.hp, m.move, m.reach, m.tpr, m.ap]).is_equal([4, 4, 3, 2, 3])
-	assert_float(m.initiative).is_equal(8.5)
+	assert_float(m.pace).is_equal_approx(1.8, 0.001)
 	assert_array(m.skills.map(func(s): return s.id)).is_equal([&"glide", &"strike_jab", &"snare"])      # empty slots drop out
 	assert_str(MonsterBuilder.problem(c, m, true)).is_empty()
 	# values outside the ranges are pulled in; a kit needs an active skill; an existing id is refused for a new monster
 	var wild := MonsterBuilder.build(c, {"name": "Too Much", "hp": 99, "ap": 9, "reach": 0, "skills": ["immovable"]})
-	assert_array([wild.hp, wild.ap, wild.reach]).is_equal([10, 5, 2])
+	assert_array([wild.hp, wild.ap, wild.reach]).is_equal([10, 5, 1])        # ranges of gdd_monsters §2.1
 	assert_str(MonsterBuilder.problem(c, wild, true)).contains("active")
 	assert_str(MonsterBuilder.problem(c, MonsterBuilder.build(c, {"name": "Nothing"}), true)).contains("at least one skill")
 	assert_str(MonsterBuilder.problem(c, MonsterBuilder.build(c, {"name": "Blaze Tiger", "skills": ["run"]}), true)).contains("exists")

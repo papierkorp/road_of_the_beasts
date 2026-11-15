@@ -42,7 +42,7 @@ func test_reference_individuals_use_the_gdd_reference_sheet() -> void:
 	var golem := GameData.monster(&"forge_golem")
 	var sheet := UnitSheets.from_instance(MonsterInstance.of_species(golem))
 	assert_array([sheet.hp, sheet.movement, sheet.tpr, sheet.reach, sheet.ap]).is_equal([golem.hp, golem.move, golem.tpr, golem.reach, golem.ap])
-	assert_float(sheet.initiative).is_equal(golem.initiative)
+	assert_float(sheet.pace).is_equal(golem.pace)
 	assert_array(sheet.skills.map(func(s): return s.id)).is_equal(golem.skills.map(func(s): return s.id))
 	assert_bool(sheet.airborne).is_false()
 
@@ -52,7 +52,7 @@ func test_rolled_individuals_keep_their_stats_with_base_ap_and_minimum_reach() -
 	inst.current_hp = 1
 	var sheet := UnitSheets.from_instance(inst)
 	assert_int(sheet.hp).is_equal(inst.max_hp())
-	assert_float(sheet.initiative).is_equal(float(inst.stats["initiative"]))
+	assert_float(sheet.pace).is_equal(float(inst.stats["pace"]))
 	assert_int(sheet.movement).is_equal(int(inst.stats["move"]))
 	assert_int(sheet.tpr).is_equal(int(inst.stats["tpr"]))
 	assert_int(sheet.ap).is_equal(2)             # the overworld model has no AP stat: GDD base value
@@ -68,18 +68,18 @@ func test_winged_individuals_stay_on_the_ground() -> void:
 	assert_bool(UnitSheets.from_instance(_rolled(&"blaze_tiger", Stage.Type.SOUL)).airborne).is_false()
 
 
-func test_prep_pill_is_a_pre_battle_initiative_modifier_and_ambush_is_ignored() -> void:
+func test_prep_pill_is_a_pre_battle_pace_modifier_and_ambush_is_ignored() -> void:
 	var plain := BattleSetup.build(BattleRequest.default())
 	var r := BattleRequest.default()
-	r.prep_init = {0: 2}
+	r.prep_pace = {0: 0.2}
 	r.ambush_side = 1                            # legacy field: the ambush bonus is not part of the design
 	var prepared := BattleSetup.build(r)
 	var a: BattleUnit = plain.units[&"p0_blaze_tiger"]
 	var c: BattleUnit = prepared.units[&"p0_blaze_tiger"]
-	assert_float(BattleStats.initiative(prepared, c)).is_equal(BattleStats.initiative(plain, a) + 2.0)
+	assert_float(BattleStats.pace(prepared, c)).is_equal_approx(BattleStats.pace(plain, a) + 0.2, 0.001)
 	for id in plain.roster:
 		if plain.units[id].side == 1:
-			assert_float(BattleStats.initiative(prepared, prepared.units[id])).is_equal(BattleStats.initiative(plain, plain.units[id]))
+			assert_float(BattleStats.pace(prepared, prepared.units[id])).is_equal(BattleStats.pace(plain, plain.units[id]))
 
 
 func test_chosen_start_squares_must_lie_in_the_start_area() -> void:
@@ -132,3 +132,56 @@ func test_result_reports_facts_and_writes_hp_back() -> void:
 	result.apply_hp(r.player_team, 0)
 	for i in 3:
 		assert_int(r.player_team[i].current_hp).is_equal(result.player[i]["hp_left"])
+
+
+# --- board switches and Dragon Veins at generation (2026-11-15) ---
+
+func test_the_board_switch_plays_a_mode_on_a_larger_board() -> void:
+	BattleExperiment.board_size = 9
+	var b := BattleSetup.build(BattleRequest.default())
+	assert_int(b.board.size).is_equal(9)
+	var veins := []
+	for cell in b.board.cells:
+		if cell.ground == GroundDef.WELL:
+			veins.append(cell.pos)
+	assert_array(veins).contains_exactly_in_any_order([Vector2i(1, 4), Vector2i(4, 4), Vector2i(7, 4)])   # the centre row
+	for id in b.roster:
+		var u: BattleUnit = b.units[id]
+		assert_bool(BattleBoards.in_start_area(&"3v3", u.pos, u.side)).is_true()
+	assert_bool(BattleBoards.in_start_area(&"3v3", Vector2i(4, 7))).is_true()         # the back two rows of 9×9
+	assert_bool(BattleBoards.in_start_area(&"3v3", Vector2i(4, 6))).is_false()
+	BattleExperiment.board_size = 5                                                    # not larger than the mode's 7×7: ignored
+	assert_int(BattleSetup.build(BattleRequest.default()).board.size).is_equal(7)
+	BattleExperiment.reset()
+
+
+func test_an_even_board_has_its_dragon_veins_in_mirrored_pairs_on_the_two_centre_rows() -> void:
+	BattleExperiment.board_size = 8
+	var b := BattleSetup.build(BattleRequest.default())
+	assert_int(b.board.size).is_equal(8)
+	var veins := []
+	for cell in b.board.cells:
+		if cell.ground == GroundDef.WELL:
+			veins.append(cell.pos)
+			assert_that(b.board.at(b.board.mirrored(cell.pos)).ground).is_equal(GroundDef.WELL)
+	assert_array(veins).contains_exactly_in_any_order([Vector2i(1, 4), Vector2i(5, 4), Vector2i(2, 3), Vector2i(6, 3)])   # 3 rounds up to 4
+	BattleExperiment.wells = 2
+	assert_array(BattleExperiment.well_squares(8)).contains_exactly_in_any_order([Vector2i(2, 4), Vector2i(5, 3)])
+	assert_int(BattleExperiment.well_squares(6).size()).is_equal(0)                    # the 2v2 board keeps none
+	BattleExperiment.reset()
+
+
+func test_a_seeded_board_may_start_props_on_dragon_veins_but_never_on_the_centre() -> void:
+	var on_vein := 0
+	for seed_value in range(1, 60):
+		var r := BattleRequest.default()
+		r.board_seed = seed_value
+		var b := BattleSetup.build(r)
+		assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()
+		for cell in b.board.cells:
+			if cell.prop != null:
+				var twin: BoardProp = b.board.at(b.board.mirrored(cell.pos)).prop
+				assert_bool(twin != null and twin.def.id == cell.prop.def.id).is_true()
+				if cell.ground == GroundDef.WELL:
+					on_vein += 1
+	assert_bool(on_vein > 0).is_true()

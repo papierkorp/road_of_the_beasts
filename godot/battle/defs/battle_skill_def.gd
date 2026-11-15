@@ -33,7 +33,8 @@ const PASSIVE := "passive"
 @export var internal_calc_cost: float = -1.0
 
 @export_group("Usage")
-## Battle-AP per use (at least 1; passives ignore it). Strikes take the cost of their shape.
+## Battle-AP per use (at least 1; passives ignore it). Since 2026-11-15 also for Strikes (before, a Strike took
+## the AP of its shape; BattleShapes.DRAFT_AP keeps those draft values).
 @export var ap_cost: int = 1
 ## Per equipped instance (gdd_skills §2 Usage and Repetition). once_per_battle is the Major
 ## Surge profile limit; no multi-round cooldowns exist.
@@ -42,25 +43,33 @@ const PASSIVE := "passive"
 ## upgrade axis of the skill (draft, no price yet). The universal Step is not slotted and has no limit.
 @export var usage_limit: int = 1
 
-@export_group("Placement and area")
-## reach: anchor within effective Reach (Manhattan) · adjacent: anchor next to the caster ·
-## trail: straight line starting next to the caster · caster_ring: the cardinal neighbours.
-@export_enum("reach", "adjacent", "trail", "caster_ring") var anchor_mode: String = "reach"
-## Explicit offsets from the anchor, fixed board orientation (no rotation, no trimming).
-## trail: authored along +x from the anchor and turned into the chosen direction.
+@export_group("Shape and place")
+## The one shape of the skill (BattleShapes, gdd_skills §8.1; user decision 2026-11-15):
+##   jab | pincer | arc | whirl | cross | storm, extended `shape_extension` times: squares around the
+##     user. A Strike hits them; a skill that creates something lays it on them (a line from the user
+##     is a Jab with extensions, the ring around it a Whirl).
+##   free: the squares of `footprint` at an anchor square (`anchor_mode`). The player may arrange them
+##     before the battle (connected, the anchor among them); the authored footprint is the default.
+##   "" = by kind: a Strike is a Jab, everything placed is free.
+@export var shape: String = ""
+## How often the base shape is extended (every square gets one more behind it; BattleShapes).
+@export var shape_extension: int = 0
+## Free shapes: reach = anchor within effective Reach · adjacent = anchor next to the caster.
+@export_enum("reach", "adjacent") var anchor_mode: String = "reach"
+## Free shapes: offsets from the anchor, the default arrangement (its size is the number of squares).
 @export var footprint: Array[Vector2i] = []
 ## Surge only: a line footprint is stopped by the first prop along it, starting at the first offset.
 @export var line_shaped: bool = false
 
 @export_group("Strike")
-@export_enum("jab", "thrust", "diagonal_thrust", "pincer", "arc", "whirl", "cross", "storm", "cleave", "long_whirl", "long_cross")
-var strike_shape: String = "jab"
-## 2 for every Strike; 0 for a movement-only body-relative variant.
+## Damage to every struck monster: 0–2. A Strike may deal none (it then damages no prop either).
 @export var strike_damage: int = 2
+## The Strike pushes each struck monster and prop on a neighbouring square 1 square away from the striker
+## (a property of the single skill since 2026-11-15; before, every Strike with damage pushed). The Scaled Kin
+## effect turns that push into a chosen cardinal direction; a Strike without push moves nothing.
+@export var strike_push: bool = true
 ## Applies the striker's Kin twist (KinRules). Body-relative variants are separate skills.
 @export var kin_effect: bool = true
-## Body-relative variant (Scaled): struck monsters next to the origin are pushed 1 outward.
-@export var radial_push: bool = false
 ## Body-relative variant (Winged): retreat 1 opposite the shape centre after the attack.
 @export var self_retreat: bool = false
 
@@ -105,7 +114,7 @@ var strike_shape: String = "jab"
 @export var distance_mod: int = 0
 ## > 0: a fixed distance that ignores Movement and `slow` (Step: 1).
 @export var fixed_distance: int = 0
-## Test switch `stamina`: the squares this movement covers (0 = 3); haste and slow still change it.
+## The squares this movement covers at most (0 = 3); haste and slow still change it. Every square costs Stamina.
 @export var move_range: int = 0
 ## Movement with displacement (temp_todo T38): after landing, "ahead" pushes the monster on
 ## the next square in the travel direction 1 square on (a headbutt), "ring" pushes every
@@ -116,7 +125,7 @@ var strike_shape: String = "jab"
 ## Continuous stat effects while equipped (condition below).
 @export var passive_effects: Array[FieldEffect] = []
 @export_enum("always", "on_mountain") var passive_condition: String = "always"
-## Effect tags of other sources this monster ignores (e.g. slow, drain_init).
+## Effect tags of other sources this monster ignores (e.g. slow, drain_pace).
 @export var ignores_effects: Array[String] = []
 ## Ground types whose triggers this monster ignores.
 @export var ignores_grounds: Array[StringName] = []
@@ -155,8 +164,8 @@ func is_placed() -> bool:
 
 
 func cost() -> int:
-	if kind == STRIKE:
-		return StrikeShapes.ap(StringName(strike_shape))
+	if kind == STRIKE and shape_id() == BattleShapes.JAB and shape_extension == 0 and strike_damage > 0 and BattleExperiment.jab_ap > 0:
+		return BattleExperiment.jab_ap           # test switch: AP of the plain Jab
 	if kind == MOVE and BattleExperiment.stamina and not BattleExperiment.stamina_ap:
 		return 0                                  # test switch: movement is paid in Stamina only
 	if kind == MOVE and BattleExperiment.move_ap > 0:
@@ -164,7 +173,7 @@ func cost() -> int:
 	return maxi(1, ap_cost)
 
 
-## Test switch `stamina`: does this skill spend Stamina (1 per movement point of the move)?
+## Does this skill spend Stamina (what the squares of its move cost)?
 func uses_stamina() -> bool:
 	return kind == MOVE and BattleExperiment.stamina
 
@@ -177,7 +186,41 @@ func needs_direction() -> bool:
 
 
 func needs_anchor() -> bool:
-	return is_placed() and anchor_mode != "caster_ring"
+	return is_placed() and (is_free_shape() or shape_dirs() != BattleShapes.NO_DIR)
+
+
+## The shape of the skill: its own, or by kind (a Strike is a Jab, everything placed is free).
+func shape_id() -> StringName:
+	if shape != "":
+		return StringName(shape)
+	return BattleShapes.JAB if kind == STRIKE else BattleShapes.FREE
+
+
+## A number of squares at an anchor (true) or a base shape around the user (false).
+func is_free_shape() -> bool:
+	return shape_id() == BattleShapes.FREE
+
+
+## Directions a base shape may be turned to ([ZERO] for the shapes around the whole user and for free shapes).
+func shape_dirs() -> Array[Vector2i]:
+	return BattleShapes.NO_DIR if is_free_shape() else BattleShapes.directions(shape_id(), shape_extension)
+
+
+## Base shape: entries {o, front} from the user's square for direction `d` (BattleShapes.hits).
+func shape_hits(d: Vector2i) -> Array[Dictionary]:
+	return BattleShapes.hits(shape_id(), d, shape_extension)
+
+
+## How many squares the skill covers.
+func shape_squares() -> int:
+	return footprint.size() if is_free_shape() else BattleShapes.count(shape_id(), shape_extension)
+
+
+## "Jab", "Thrust", "Storm +1", or "3 squares" for a free shape.
+func shape_label() -> String:
+	if is_free_shape():
+		return "%d square%s" % [footprint.size(), "" if footprint.size() == 1 else "s"]
+	return BattleShapes.shape_name(shape_id(), shape_extension)
 
 
 func ops_of(op: String) -> Array[BoardOp]:
@@ -207,7 +250,7 @@ static func rotated(offset: Vector2i, quarter_turns: int) -> Vector2i:
 	return o
 
 
-## Authored offsets after `rot` quarter turns (only the Adaptive permission passes rot != 0).
+## The squares of a free shape after `rot` quarter turns.
 func offsets(rot := 0) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for o in footprint:

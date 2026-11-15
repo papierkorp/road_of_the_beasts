@@ -88,11 +88,11 @@ func test_a_new_ground_type_is_only_a_new_definition() -> void:
 	mud.group = "hazard"
 	mud.move_cost = 3
 	mud.max_level = 2
-	mud.triggers = [GroundTrigger.make("on_enter", "damage", 0), GroundTrigger.make("end_of_turn", "heal", 1)] as Array[GroundTrigger]
+	mud.triggers = [GroundTrigger.make(Moment.ENTER, "damage", 0), GroundTrigger.make(Moment.TURN_END, "heal", 1)] as Array[GroundTrigger]
 	mud.effects = [FieldEffect.make("quicken", 2)] as Array[FieldEffect]
 	c.add_ground(mud)
 	var field := H.board_skill([BoardOp.make("ground", &"test_mud", false)])
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 5.0, "move": 3, "ap": 5, "reach": 3, "skills": ["run", field]}], [1, Vector2i(6, 6)]], 7, c)
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.5, "move": 3, "ap": 5, "reach": 3, "skills": ["run", field]}], [1, Vector2i(6, 6)]], 7, c)
 	b.set_ground(Vector2i(3, 2), &"test_mud", 2)
 	b.begin()
 	var opts := BattleMoves.options(b, H.unit(b, 0), BattleMoves.profile_of(H.skill("run")))
@@ -100,7 +100,7 @@ func test_a_new_ground_type_is_only_a_new_definition() -> void:
 	assert_int(opts[Vector2i(3, 2)]["harm"]).is_equal(2)                    # previewed entry harm
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 2)})).is_true()
 	assert_int(H.unit(b, 0).hp).is_equal(3)                                 # level II on entry
-	assert_float(BattleStats.initiative(b, H.unit(b, 0))).is_equal(7.0)     # while-standing effect
+	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(1.7, 0.001)     # while-standing effect: 2 Pace points
 	assert_bool(b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(4, 2)})).is_true()   # laid by a skill
 	assert_str(b.board.at(Vector2i(4, 2)).ground).is_equal("test_mud")
 	assert_bool(b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(4, 2)})).is_true()   # hazards level up
@@ -116,7 +116,7 @@ func test_a_new_prop_and_a_new_skill_are_only_new_definitions() -> void:
 	keg.id = &"test_keg"
 	keg.display_name = "Test Keg"
 	keg.hp = 2
-	keg.aftermath = [PropAftermath.make("damage", "cardinal4", 1), PropAftermath.make("push", "cardinal4", 1)] as Array[PropAftermath]
+	keg.aftermath = [PropAftermath.make("damage", "whirl", 1), PropAftermath.make("push", "whirl", 1)] as Array[PropAftermath]
 	keg.aura = [FieldEffect.make("slow", 1)] as Array[FieldEffect]
 	keg.ground_left = &"thornbed"
 	c.add_prop(keg)
@@ -125,7 +125,7 @@ func test_a_new_prop_and_a_new_skill_are_only_new_definitions() -> void:
 	trap.surge_displacement = "pull"
 	trap.board_ops = [BoardOp.make("create_prop", &"test_keg")] as Array[BoardOp]
 	var b := H.battle([
-		[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 4, "kin": MonsterDef.Kin.SWARM, "skills": [trap, H.strike()]}],
+		[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "ap": 4, "kin": MonsterDef.Kin.SWARM, "skills": [trap, H.strike()]}],
 		[1, Vector2i(5, 3), {"hp": 9, "move": 3}],
 	], 7, c)
 	b.begin()

@@ -15,7 +15,7 @@ var return_scene := ""
 ## Let the AI play both sides (headless smoke tests: --autoplay).
 var autoplay := false
 
-## The running game (null in the plain battle prototype) and its current dungeon run.
+## The running game (null in the plain multiplayer mode) and its current dungeon run.
 var game: GameState = null
 
 ## The walkable district the player is in and where they came from (decides where they appear).

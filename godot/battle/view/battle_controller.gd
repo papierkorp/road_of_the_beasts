@@ -62,6 +62,7 @@ func _ready() -> void:
 	hud = BattleHud.new()
 	add_child(hud)
 	hud.build()
+	view.bottom_room = BattleHud.BAR_ROOM         # the board sits in the middle of the room above the bar
 	hud.set_exit_mode(GameSession.return_scene != "")
 	hud.action_pressed.connect(_on_action)
 	hud.end_turn_pressed.connect(_on_end_turn)
@@ -71,8 +72,8 @@ func _ready() -> void:
 	hud.log_line("%s on %d×%d" % [request.mode, battle.board.size, battle.board.size])
 	for u in battle.living(PLAYER_SIDE):
 		var notes: PackedStringArray = []
-		if u.sheet.init_bonus > 0.0:
-			notes.append("+%d init (prepared)" % int(u.sheet.init_bonus))
+		if u.sheet.pace_bonus > 0.0:
+			notes.append("+%.1f Pace (prepared)" % u.sheet.pace_bonus)
 		notes.append_array(PackedStringArray(u.sheet.notes))
 		if not notes.is_empty():
 			hud.log_line("%s: %s" % [u.display_name(), BattleText.SEP.join(notes)])
@@ -153,7 +154,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				_set_dir(Vector2i(1, 0))
 			KEY_1:
 				_on_action(ACT_STEP)
-			KEY_2, KEY_3, KEY_4, KEY_5, KEY_6:
+			KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7:      # the six kit slots, in the order of the bar's columns
 				_on_action(StringName(SLOT_PREFIX + str(event.keycode - KEY_2)))
 			KEY_SPACE, KEY_ENTER:
 				if placing:
@@ -254,8 +255,11 @@ func _aimed_action() -> Dictionary:
 						return {}
 					return {"type": &"skill", "slot": slot, "dir": aim["dir"], "origin": aim["origin"], "push_dir": aim_dir}
 				_:
-					if s.anchor_mode == "caster_ring":
-						return {"type": &"skill", "slot": slot, "anchor": u.pos, "dir": aim_dir, "rot": rot}
+					if not s.is_free_shape():             # a base shape around the user: aimed like a Strike
+						var around := _strike_aim(u, s)
+						if around.is_empty():
+							return {}
+						return {"type": &"skill", "slot": slot, "anchor": u.pos + around["dir"], "dir": aim_dir, "rot": rot}
 					if hover == NOWHERE:
 						return {}
 					return {"type": &"skill", "slot": slot, "anchor": hover, "dir": aim_dir, "rot": rot}
@@ -264,11 +268,10 @@ func _aimed_action() -> Dictionary:
 	return {}
 
 
-## Strike direction from the hovered square: the eight directions seen from the body square
-## nearest to it. Symmetric shapes need no direction.
+## Direction of a base shape (a Strike, or something created around the user) from the hovered square:
+## the eight directions seen from the body square nearest to it. Shapes around the whole user need none.
 func _strike_aim(u: BattleUnit, s: BattleSkillDef) -> Dictionary:
-	var shape := StringName(s.strike_shape)
-	if StrikeShapes.directions(shape) == StrikeShapes.NO_DIR:
+	if s.shape_dirs() == BattleShapes.NO_DIR:
 		return {"dir": Vector2i.ZERO, "origin": u.pos}
 	if hover == NOWHERE or u.covers(hover):
 		return {}
@@ -283,7 +286,7 @@ func _strike_aim(u: BattleUnit, s: BattleSkillDef) -> Dictionary:
 	if v.x != 0 and v.y != 0 and absi(v.x) != absi(v.y):
 		return {}
 	var dir := Vector2i(signi(v.x), signi(v.y))
-	return {"dir": dir, "origin": origin} if StrikeShapes.is_legal_dir(shape, dir) else {}
+	return {"dir": dir, "origin": origin} if BattleShapes.is_legal_dir(s.shape_id(), dir, s.shape_extension) else {}
 
 
 func _tamer_action() -> Dictionary:
@@ -550,7 +553,7 @@ func _action_highlights(arrows: Dictionary) -> Dictionary:
 					if aim.is_empty():
 						return out
 					var legal := battle.strike_error(u, s, aim["dir"], aim_dir if _needs_push(u, s) else Vector2i(0, -1), aim["origin"]) == ""
-					for h in StrikeShapes.hits(StringName(s.strike_shape), aim["dir"]):
+					for h in s.shape_hits(aim["dir"]):
 						var cell: Vector2i = aim["origin"] + h["o"]
 						if battle.board.in_bounds(cell) and not u.covers(cell):
 							out[cell] = COL_HIT if legal else COL_BAD
@@ -576,12 +579,15 @@ func _move_highlights(opts: Dictionary, out: Dictionary) -> void:
 
 
 func _placement_highlights(u: BattleUnit, s: BattleSkillDef, out: Dictionary, arrows: Dictionary) -> void:
-	if s.anchor_mode == "reach":
+	if s.is_free_shape() and s.anchor_mode == "reach":
 		var reach := BattleStats.reach(battle, u)
 		for cell in battle.board.cells:
 			if u.manhattan_to(cell.pos) <= reach:
 				out[cell.pos] = COL_RANGE
-	var anchor := u.pos if s.anchor_mode == "caster_ring" else hover
+	var anchor := hover
+	if not s.is_free_shape():                     # a base shape around the user: aimed like a Strike
+		var around := _strike_aim(u, s)
+		anchor = NOWHERE if around.is_empty() else u.pos + around["dir"]
 	if anchor == NOWHERE:
 		return
 	var legal := BattleCasting.error(battle, u, s, anchor, aim_dir, rot) == ""
@@ -660,7 +666,7 @@ func _order_text() -> String:
 		if not u.is_alive():
 			continue
 		var mark := "▶ " if i == battle.queue_idx and not battle.over else ("   " if i > battle.queue_idx else " ✓ ")
-		s += "%s%s %s  %.1f  %d/%d\n" % [mark, _side_tag(u), u.display_name(), e["init"], u.hp, u.max_hp]
+		s += "%s%s %s  %.1f  %d/%d\n" % [mark, _side_tag(u), u.display_name(), e["pace"], u.hp, u.max_hp]
 	return s.strip_edges()
 
 
@@ -696,7 +702,7 @@ func _hint_text() -> String:
 					return "Aim and click" + (" · WASD push" if _needs_push(u, s) else "")
 				_:
 					var t := "Click to cast"
-					if BattleStats.can_rotate(u) and s.anchor_mode != "caster_ring" and s.anchor_mode != "trail":
+					if BattleStats.can_rotate(u) and s.is_free_shape():
 						t += " · R rotates"
 					return t + (" · WASD direction" if s.needs_direction() else "")
 		&"tamer":
@@ -711,20 +717,20 @@ func _hint_text() -> String:
 				TamerSkillDef.BEAST_SWAP:
 					return "Click the monster that leaves"
 			return "Click one of your monsters"
-	return "1 Step · 2–5 Skills · Space End turn"
+	return "1 Step · 2–7 Skills · Space End turn"
 
 
 func _actions() -> Array:
 	var out: Array = []
 	if placing:
-		out.append({"id": ACT_START, "text": "Start Battle\nSpace", "enabled": true, "selected": false,
+		out.append({"id": ACT_START, "group": &"step", "text": "Start Battle\nSpace", "enabled": true, "selected": false,
 			"card": {"title": "Start Battle", "rows": []}})
 		return out
 	var u := _active()
 	if u == null or u.side != PLAYER_SIDE:
 		return out
 	var mine := _my_turn()
-	out.append({"id": ACT_STEP, "text": "Step\n%d AP" % BattleMoves.step_ap(),
+	out.append({"id": ACT_STEP, "group": &"step", "text": "Step\n%d AP" % BattleMoves.step_ap(),
 		"enabled": mine and battle.ap >= BattleMoves.step_ap() and not BattleStats.is_rooted(u),
 		"selected": mode == &"step", "card": {"title": "Step", "rows": BattleText.step_rows()}})
 	for i in u.sheet.skills.size():
@@ -740,13 +746,13 @@ func _actions() -> Array:
 			rows.push_front(["", "✗ " + why])
 		var label := s.display_name
 		if s.kind == BattleSkillDef.STRIKE:
-			label = "%s (%s)" % [KinRules.strike_name(u.kin()) if s.kin_effect else s.display_name, StrikeShapes.shape_name(StringName(s.strike_shape))]
-		out.append({"id": StringName(SLOT_PREFIX + str(i)), "text": "%s\n%s" % [label, "passive" if not s.is_active() else (("%d AP + Stamina" % s.cost() if s.cost() > 0 else "Stamina") if s.uses_stamina() else "%d AP" % s.cost())],
+			label = "%s (%s)" % [KinRules.strike_name(u.kin()) if s.kin_effect else s.display_name, s.shape_label()]
+		out.append({"id": StringName(SLOT_PREFIX + str(i)), "group": &"skill", "text": "%s\n%s" % [label, "passive" if not s.is_active() else (("%d AP + Stamina" % s.cost() if s.cost() > 0 else "Stamina") if s.uses_stamina() else "%d AP" % s.cost())],
 			"enabled": mine and s.is_active() and why == "", "selected": mode == &"skill" and slot == i,
 			"card": {"title": label, "rows": rows}})
 	for def: TamerSkillDef in battle.tamer_loadout[PLAYER_SIDE]:
 		var used: bool = battle.tamer_used[PLAYER_SIDE].has(def.id)
-		out.append({"id": StringName(TAMER_PREFIX + String(def.id)), "text": "%s\n%s" % [def.display_name, "used" if used else "tamer"],
+		out.append({"id": StringName(TAMER_PREFIX + String(def.id)), "group": &"tamer", "text": "%s\n%s" % [def.display_name, "used" if used else "tamer"],
 			"enabled": mine and not used, "selected": mode == &"tamer" and tamer_id == def.id,
 			"card": {"title": def.display_name, "rows": [["", def.description], ["", "tamer · 1/battle"]]}})
 	return out

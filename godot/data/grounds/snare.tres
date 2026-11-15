@@ -5,7 +5,7 @@
 
 [sub_resource type="Resource" id="t1"]
 script = ExtResource("2")
-timing = "on_leave"
+timing = "leave"
 amount = 2
 
 [resource]

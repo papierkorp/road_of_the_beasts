@@ -10,7 +10,7 @@ extends Control
 const OVERVIEW_SCENE := "res://game/overview.tscn"
 const USES := [["repeatable", "any number"], ["once_per_round", "once per round"], ["once_per_battle", "once per battle"]]
 ## Fields in the order of the form: key, label.
-const FIELDS := [["ap", "Cost"], ["use", "Use"], ["strike", "Strike (now, neighbour)"], ["damage", "Strike damage"],
+const FIELDS := [["ap", "Cost"], ["use", "Use"], ["strike", "Strike (now, neighbour)"], ["damage", "Strike damage"], ["push", "Strike pushes"],
 	["path", "Movement of its user"], ["impact", "On landing"], ["self", "On itself"], ["shape", "Shape of the place"],
 	["ground", "Creates ground"], ["zone", "Creates zone"], ["prop", "Creates prop"]]
 
@@ -38,15 +38,20 @@ static func choices(c: BattleContent, key: String) -> Array:
 		"use":
 			return USES
 		"strike":
-			return [["", "no"], ["jab", "Jab: 1 square"], ["thrust", "Thrust: 2 in a line"], ["arc", "Arc: 3 in front"]]
+			return [["", "no"], ["jab", "Jab: 1 square"], ["jab+1", "Thrust (Jab +1): 2 in a line"], ["jab+2", "Jab +2: 3 in a line"],
+				["pincer", "Pincer: front and back"], ["pincer+1", "Pincer +1: 2 in front, 2 behind"], ["arc", "Arc: 3 in front"],
+				["arc+1", "Cleave (Arc +1): 2 rows of 3, straight only"], ["whirl", "Whirl: the 4 neighbours"], ["whirl+1", "Long Whirl (Whirl +1)"],
+				["cross", "Cross: the 4 diagonals"], ["cross+1", "Long Cross (Cross +1)"], ["storm", "Storm: all 8 around"], ["storm+1", "Storm +1: 16 squares"]]
 		"damage":
-			return [["2", "2 damage, push 1"], ["1", "1 damage, push 1"], ["0", "push 1 only"]]
+			return [["2", "2 damage"], ["1", "1 damage"], ["0", "no damage"]]
+		"push":
+			return [["yes", "pushes 1 square away"], ["no", "no push"]]
 		"path":
 			return [["", "no"], ["walk", "walks (blocked by props and monsters)"], ["line", "straight line over everything"], ["free", "any path over everything"]]
 		"impact":
 			return [["none", "nothing"], ["ahead", "pushes the monster ahead"], ["ring", "pushes all neighbours"]]
 		"self":
-			return [["", "no"], ["quicken", "initiative +1 for 2 rounds"], ["haste", "Movement +1 for 2 rounds"], ["extend", "Reach +1 for 2 rounds"],
+			return [["", "no"], ["quicken", "Pace +0.1 for 2 rounds"], ["haste", "Movement +1 for 2 rounds"], ["extend", "Reach +1 for 2 rounds"],
 				["vigor", "AP +1 for 2 rounds (experiment)"], ["tempo", "one more turn (experiment)"], ["immovable", "passive: ignores push and pull"]]
 		"shape":
 			return [["one", "1 square"], ["line2", "line of 2"], ["line3", "line of 3"], ["block", "block 2×2"], ["angle", "angle (3)"], ["cross", "cross (5)"]]
@@ -78,7 +83,7 @@ static func choices(c: BattleContent, key: String) -> Array:
 ## shape and no prop, an effect on the user nothing else.
 static func fields_of(spec: Dictionary) -> Array:
 	if String(spec.get("strike", "")) != "":
-		return ["ap", "use", "strike", "damage", "ground", "zone"]
+		return ["ap", "use", "strike", "damage", "push", "ground", "zone"]
 	if String(spec.get("path", "")) != "":
 		return ["ap", "use", "strike", "path", "impact", "ground", "zone"]
 	if String(spec.get("self", "")) == "immovable":

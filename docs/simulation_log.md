@@ -15,7 +15,9 @@ Dated record of Godot battle bot, progression and discovery measurements (`godot
 ```text
 ## S000 · YYYY-MM-DD · short title
 State:        <commit> [dirty] · content version · kit set fingerprint
-Runs:         one block per run, pasted unchanged from the tool
+Runs:         one block per run, pasted unchanged from the tool; every result row states the mean rounds
+              and how many battles ended in under 3 and in over 5 rounds (user instruction 2026-11-15;
+              length target: a mean of 3.0–4.9 rounds)
 Observations: 3–6 bullets, worded as indications; say what is noise
 Follow-up:    task ids the observations concern; never a rule change here
 ```
@@ -94,7 +96,152 @@ Kinds: strike_jab = strike · magma_pounce, cinder_dive, eclipse, gloom_rift, co
 
 **Kit set `789f3d326286`** (content `2026-11-13.1`; S028): the same ten-monster pool; each of the nine named monsters carries a fifth slot with a prop skill (Blaze Tiger Light Brazier, Dusk Moth Lay Vortex, Ember Hawk Lay Spikes, Forge Golem Earth Wall, Gloom Wolf Lay Spikes, Grove Wisp Set Thorn Idol, Hollow Serpent Lay Vortex, Moss Turtle Earth Wall, Thorn Mites Set Clay Urn). New props Earth Wall, Thorn Idol, Ember Brazier, Spike Trap, Vortex Trap; the Storm Drum pushes at the round end; Banner, Shrine, Totem and Wardstone are archived. User records unchanged. Not a content approval.
 
+**Kit set `f564899a2ac8`** (content `2026-11-13.1`; S030): the ten-monster pool and five-skill kits of `789f3d326286` on the rules of 2026-11-15 before the shape merge. The stat Initiative is called Pace and counts 0.1 per point (asdf 1.2 · blaze_tiger 1.3 · dusk_moth 1.3 · ember_hawk 1.4 · forge_golem 1.0 · gloom_wolf 1.4 · grove_wisp 1.4 · hollow_serpent 1.2 · moss_turtle 1.1 · thorn_mites 1.1; every other stat as before), Mire drains 1 Pace point (2 from level II), and Strikes carry `strike_push`. Kit set lines of this and later states read HP/Pace/Stamina/TPR/Reach/AP.
+
+**Kit set `953ee09679e4`** (content `2026-11-15.1`): the same pool, stats and kits after the shape merge of 2026-11-15: one shape per skill (Thrust is a Jab +1 in eight directions, Cinder Dive a Jab +2 around its user), a Strike costs the AP on its card (Shove 1 AP instead of 2), and a free shape can be arranged per monster. Used in S031.
+
 # Entries
+
+## S031 · 2026-11-15 · After the shape merge: the board rows of S030 again, with the battles under 3 and over 5 rounds
+
+**State:** main, base `6573a05` dirty; content `2026-11-15.1`, kit set `953ee09679e4`; Godot 4.7.2, normal CPU settings (processes at nice 10), runs in parallel on a frozen copy of the working tree. Full suite on that state: 355 cases, 0 failures in `tests/battle` and `tests/game`, the two known non-battle failures.
+
+**Rules of the measured state:** as S030, plus the shape merge of 2026-11-15: one shape per skill (Thrust is a Jab +1 and, like Cinder Dive, aimed in eight directions), a Strike costs the AP on its card (Shove 1 AP instead of 2), free shapes in their default arrangements. The Stamina recovery still read the Pace on the sheet; every monster of the kits lies below Pace 2.0 and recovers 1, so the series plays the same under the rule decided later that day (the current Pace counts).
+
+**Runs:** greedy: 8 seeds (1–8) × 40 = 320 battles per row; tactic: 8 seeds × 20 = 160 battles per row on the default board, on 8×8 with four veins and on 9×9 with five. All `--paired` with the seeds of S030 (battle *i* of a seed has the same teams and board draw), **not side-swapped**. Rows are sums over the full blocks of the eight seeds; the blocks themselves are not pasted. **Length target (user, 2026-11-15): a mean of 3.0–4.9 rounds; every row states the battles under 3 and over 5 rounds** (a battle counts the round it ended in).
+
+| Bot · board | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | 3–5 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Defeated before own first turn / battle | Battles that reached pressure | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| greedy · 7×7, 3 veins (default) | 320 | 142 / 173 / 5 / 0 | 4.32 | 27 (8 %) | 240 (75 %) | 53 (17 %) | 14 | 14 | 1.75 | 0.00 | 10 | 7.8 | 2.7 | 5.7 | 1.9 | 6.8 | 0.8 | 25.7 |
+| greedy · 8×8, 4 veins | 320 | 146 / 162 / 12 / 0 | 4.14 | 16 (5 %) | 258 (81 %) | 46 (14 %) | 6 | 9 | 1.85 | 0.00 | 3 | 7.2 | 2.2 | 5.0 | 1.5 | 9.8 | 0.4 | 26.2 |
+| greedy · 8×8, 2 veins | 320 | 160 / 158 / 2 / 0 | 5.38 | 6 (2 %) | 198 (62 %) | 116 (36 %) | 36 | 18 | 1.95 | 0.00 | 27 | 7.5 | 3.4 | 6.1 | 2.0 | 5.7 | 0.5 | 25.1 |
+| greedy · 9×9, 3 veins | 320 | 150 / 160 / 10 / 0 | 4.78 | 2 (1 %) | 245 (77 %) | 73 (23 %) | 20 | 11 | 2.17 | 0.00 | 8 | 7.4 | 2.7 | 4.8 | 1.3 | 9.5 | 0.2 | 26.0 |
+| greedy · 9×9, 5 veins | 320 | 150 / 158 / 12 / 0 | 4.44 | 4 (1 %) | 266 (83 %) | 50 (16 %) | 4 | 10 | 2.14 | 0.00 | 2 | 6.4 | 2.4 | 4.7 | 1.5 | 11.0 | 0.3 | 26.2 |
+| tactic · 7×7, 3 veins (default) | 160 | 68 / 90 / 2 / 0 | 4.70 | 7 (4 %) | 109 (68 %) | 44 (28 %) | 9 | 10 | 1.91 | 0.00 | 3 | 5.9 | 2.5 | 6.0 | 2.3 | 7.6 | 0.6 | 24.9 |
+| tactic · 8×8, 4 veins | 160 | 82 / 75 / 3 / 0 | 4.80 | 4 (2 %) | 115 (72 %) | 41 (26 %) | 12 | 14 | 2.19 | 0.00 | 6 | 5.0 | 2.0 | 5.3 | 2.0 | 11.4 | 0.4 | 26.1 |
+| tactic · 9×9, 5 veins | 160 | 74 / 77 / 9 / 0 | 4.67 | 0 (0 %) | 128 (80 %) | 32 (20 %) | 5 | 10 | 2.38 | 0.00 | 1 | 4.8 | 2.1 | 4.4 | 1.7 | 12.9 | 0.3 | 26.3 |
+
+### The same rows in S030 and S031 (counts from the stored blocks of both series)
+
+| Bot · board | S030: mean rounds · under 3 · over 5 | S031: mean rounds · under 3 · over 5 |
+|---|---|---|
+| greedy · 7×7, 3 veins | 4.51 · 23 of 320 · 69 of 320 | 4.32 · 27 of 320 · 53 of 320 |
+| greedy · 8×8, 4 veins | 4.23 · 18 of 320 · 51 of 320 | 4.14 · 16 of 320 · 46 of 320 |
+| greedy · 8×8, 2 veins | 5.61 · 4 of 320 · 128 of 320 | 5.38 · 6 of 320 · 116 of 320 |
+| greedy · 9×9, 3 veins | 4.89 · 2 of 320 · 78 of 320 | 4.78 · 2 of 320 · 73 of 320 |
+| greedy · 9×9, 5 veins | 4.50 · 2 of 320 · 56 of 320 | 4.44 · 4 of 320 · 50 of 320 |
+| tactic · 7×7, 3 veins | 5.09 · 3 of 160 · 59 of 160 | 4.70 · 7 of 160 · 44 of 160 |
+| tactic · 8×8, 4 veins | 4.92 · 6 of 160 · 43 of 160 | 4.80 · 4 of 160 · 41 of 160 |
+| tactic · 8×8, 2 veins | 6.99 · 1 of 160 · 98 of 160 | not run |
+| tactic · 9×9, 3 veins | 5.50 · 0 of 160 · 70 of 160 | not run |
+| tactic · 9×9, 5 veins | 4.79 · 0 of 160 · 36 of 160 | 4.67 · 0 of 160 · 32 of 160 |
+
+### Team win rate by monster, `tactic` / `greedy`
+
+Wins of the teams that fielded the monster; 86–104 fieldings per cell with `tactic`, 182–211 with `greedy`: about ±10 and ±7 points of noise. Sorted by the first column.
+
+| Monster | 7×7, 3 veins | 8×8, 4 veins | 9×9, 5 veins | 8×8, 2 veins (greedy) | 9×9, 3 veins (greedy) |
+|---|---|---|---|---|---|
+| hollow_serpent | 66 % / 64 % | 60 % / 65 % | 53 % / 55 % | 65 % | 61 % |
+| gloom_wolf | 66 % / 55 % | 56 % / 49 % | 61 % / 58 % | 52 % | 46 % |
+| moss_turtle | 60 % / 52 % | 59 % / 46 % | 57 % / 57 % | 51 % | 46 % |
+| thorn_mites | 58 % / 59 % | 48 % / 56 % | 46 % / 54 % | 55 % | 64 % |
+| forge_golem | 49 % / 57 % | 64 % / 58 % | 48 % / 47 % | 64 % | 54 % |
+| blaze_tiger | 48 % / 49 % | 46 % / 53 % | 52 % / 50 % | 46 % | 49 % |
+| asdf | 46 % / 39 % | 40 % / 47 % | 49 % / 45 % | 39 % | 43 % |
+| grove_wisp | 44 % / 51 % | 55 % / 47 % | 59 % / 47 % | 43 % | 52 % |
+| ember_hawk | 30 % / 37 % | 35 % / 33 % | 24 % / 36 % | 45 % | 44 % |
+| dusk_moth | 29 % / 30 % | 31 % / 28 % | 24 % / 31 % | 37 % | 27 % |
+
+**Observations (indications):**
+
+- **Every row is a little shorter than in S030:** greedy by 0.06–0.23 mean rounds, tactic by 0.12–0.39. The largest change is `tactic` on the default board: 5.09 → 4.70 mean rounds, with 44 instead of 59 of the 160 battles over 5 rounds. Shove at 1 AP and the eight directions of Thrust and Cinder Dive changed together, so the difference is not assigned to one of them.
+- **Against the length target (mean 3.0–4.9):** all three `tactic` rows (4.70 / 4.80 / 4.67) and four of the five greedy rows (4.14–4.78) lie inside; 8×8 with two veins stays outside (5.38, 116 of 320 battles over 5 rounds, 27 battles reached late-round pressure).
+- **The tails:** over 5 rounds end 20–28 % of the `tactic` battles and 14–23 % of the greedy ones on the boards inside the target; under 3 rounds the default board keeps the most (27 of 320 greedy, 7 of 160 tactic) and 9×9 almost none (2–4 of 320, 0 of 160). For a share near 25 % in 160 battles the noise is about ±7 points, so the three boards do not differ in their `tactic` tails.
+- **Draws** are more frequent on the larger boards with three or more veins: 10–12 of 320 (greedy) on 8×8 with four veins and on both 9×9 rows, 9 of 160 (tactic) on 9×9 with five; 2–5 on the default board and 2 on 8×8 with two veins.
+- **Monsters:** the order is the one of S030 (Hollow Serpent high in most rows, Dusk Moth lowest in every row, Ember Hawk next to it in every row played with `tactic`). Gloom Wolf and Moss Turtle, the two kits with Shove, read higher with `tactic` on the default board (66 % and 60 %; S030: 57 % and 49 %), which is a lead inside the noise of ±10 points, not an established effect of the cheaper Shove.
+- No row has a defeat before the victim's own first turn; the first defeat falls in round 1.75–2.17 (greedy) and 1.91–2.38 (tactic).
+
+**Follow-up:** T13 (the target and its tails; what shortened the rows), T39 (board size and number of Dragon Veins; human play), T03 (the stat calculation under discussion; the test stats filled later that day are not measured). No rule, board or value follows from these runs.
+
+## S030 · 2026-11-15 · Rules of 2026-11-15 and 3v3 on 8×8 and 9×9 boards
+
+**State:** main, base `6573a05` dirty; content `2026-11-13.1`, kit set `f564899a2ac8`; Godot 4.7.2, normal CPU settings, runs in parallel on a frozen copy of the working tree. Full suite on that state: 344 cases, 0 failures in `tests/battle` and `tests/game`, the two known non-battle failures.
+
+**Rules of the measured state (user decisions of 2026-11-15, written into the GDDs):** the stat Initiative is called **Pace** and counts 0.1 per point (the monsters of the kits 1.0–1.4, converted by their points, so the turn order is the one of S029); **Stamina is the rule:** a movement skill costs its AP and Stamina for every square (range 3), and every monster recovers the whole number of its Pace at the round end, which is 1 for all monsters of the kits; at the round end everything acts before the clocks tick; a Strike pushes if its record says so (every Strike of the content does); board generation may start a prop pair on Dragon Veins, so the seeded boards differ from those of S029. **Not yet in this state:** the shape merge of the same day. Shove still cost 2 AP here (the AP of its Jab shape; 1 AP on its card afterwards), Thrust and Cinder Dive were aimed in four directions.
+
+**Board switches measured** (`--variant size=N`; switches, not rules): 3v3 on 8×8 and 9×9 with the back two rows as start areas (the lines stand 5 and 6 squares apart instead of 4). 9×9 has its Dragon Veins on the centre row (3: x = 1, 4, 7; 5: x = 0, 2, 4, 6, 8). 8×8 has no centre row: mirrored pairs on the two centre rows (4: (1,4), (5,4), (2,3), (6,3); 2: (2,4), (5,3)). The larger boards draw 3–4 mirrored prop pairs instead of 2–3.
+
+**Runs:** greedy: 8 seeds (1–8) × 40 = 320 battles per row; tactic: 8 seeds × 20 = 160 battles per row; greedy with `balanced,mixstats` on 7×7: 8 seeds × 60 = 480 battles. All `--paired`, **not side-swapped**. Rows are sums over the full blocks of the eight seeds; the blocks themselves are not pasted. Late-round pressure was reached in 11 / 3 / 23 / 10 / 1 of the 320 greedy battles and in 8 / 7 / 36 / 8 / 3 of the 160 tactic battles (rows in the order of the table).
+
+| Bot · content · board | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 | Over 5 | Over 7 | Longest | First defeat (round) | Defeated before own first turn / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| greedy · kits · 7×7, 3 veins (default) | 320 | 144 / 172 / 4 / 0 | 4.51 | 7 % | 22 % | 6 % | 14 | 1.84 | 0.00 | 7.7 | 2.7 | 5.6 | 1.8 | 7.1 | 0.8 | 25.8 |
+| greedy · kits · 8×8, 4 veins | 320 | 151 / 152 / 17 / 0 | 4.23 | 6 % | 16 % | 3 % | 10 | 1.86 | 0.00 | 7.1 | 2.2 | 5.0 | 1.5 | 10.1 | 0.4 | 26.3 |
+| greedy · kits · 8×8, 2 veins | 320 | 163 / 154 / 3 / 0 | 5.61 | 1 % | 40 % | 12 % | 23 | 2.05 | 0.00 | 7.8 | 3.3 | 6.0 | 2.0 | 5.8 | 0.5 | 25.5 |
+| greedy · kits · 9×9, 3 veins | 320 | 153 / 159 / 8 / 0 | 4.89 | 1 % | 24 % | 6 % | 22 | 2.21 | 0.00 | 7.4 | 2.6 | 4.5 | 1.3 | 9.8 | 0.2 | 25.9 |
+| greedy · kits · 9×9, 5 veins | 320 | 160 / 147 / 13 / 0 | 4.50 | 1 % | 18 % | 1 % | 11 | 2.16 | 0.00 | 6.5 | 2.3 | 4.6 | 1.5 | 11.2 | 0.3 | 26.3 |
+| tactic · kits · 7×7, 3 veins (default) | 160 | 75 / 84 / 1 / 0 | 5.09 | 2 % | 37 % | 8 % | 10 | 1.98 | 0.00 | 6.2 | 2.4 | 5.8 | 2.2 | 8.2 | 0.6 | 25.2 |
+| tactic · kits · 8×8, 4 veins | 160 | 88 / 68 / 4 / 0 | 4.92 | 4 % | 27 % | 8 % | 12 | 2.25 | 0.00 | 5.1 | 2.3 | 5.0 | 1.9 | 11.4 | 0.4 | 26.2 |
+| tactic · kits · 8×8, 2 veins | 160 | 71 / 86 / 3 / 0 | 6.99 | 1 % | 61 % | 31 % | 23 | 2.70 | 0.00 | 5.9 | 2.9 | 5.8 | 1.8 | 8.3 | 0.5 | 25.3 |
+| tactic · kits · 9×9, 3 veins | 160 | 80 / 77 / 3 / 0 | 5.50 | 0 % | 44 % | 9 % | 15 | 2.45 | 0.00 | 5.2 | 2.3 | 4.5 | 1.6 | 11.8 | 0.3 | 25.7 |
+| tactic · kits · 9×9, 5 veins | 160 | 72 / 79 / 9 / 0 | 4.79 | 0 % | 22 % | 4 % | 10 | 2.35 | 0.00 | 5.1 | 1.9 | 4.1 | 1.5 | 13.6 | 0.3 | 26.5 |
+| greedy · balanced,mixstats · 7×7, 3 veins | 480 | 229 / 244 / 7 / 0 | 3.74 | 10 % | 8 % | 2 % | 16 | 1.91 | 0.00 | 9.2 | 2.3 | 6.1 | 2.4 | 5.9 | 1.1 | 27.0 |
+
+### Team win rate by monster, `tactic` / `greedy`
+
+Wins of the teams that fielded the monster; 86–104 fieldings per cell with `tactic`, 182–211 with `greedy`: about ±10 and ±7 points of noise. Sorted by the first column.
+
+| Monster | 7×7, 3 veins | 8×8, 4 veins | 8×8, 2 veins | 9×9, 3 veins | 9×9, 5 veins |
+|---|---|---|---|---|---|
+| hollow_serpent | 68 % / 65 % | 62 % / 64 % | 61 % / 65 % | 58 % / 54 % | 54 % / 56 % |
+| thorn_mites | 62 % / 61 % | 52 % / 58 % | 58 % / 62 % | 49 % / 60 % | 56 % / 54 % |
+| forge_golem | 58 % / 52 % | 60 % / 53 % | 55 % / 60 % | 50 % / 54 % | 50 % / 49 % |
+| gloom_wolf | 57 % / 60 % | 47 % / 44 % | 53 % / 55 % | 55 % / 46 % | 63 % / 57 % |
+| moss_turtle | 49 % / 43 % | 58 % / 47 % | 51 % / 46 % | 48 % / 44 % | 54 % / 50 % |
+| blaze_tiger | 47 % / 50 % | 51 % / 50 % | 56 % / 46 % | 59 % / 51 % | 46 % / 54 % |
+| asdf | 46 % / 43 % | 46 % / 44 % | 40 % / 38 % | 42 % / 49 % | 47 % / 42 % |
+| grove_wisp | 42 % / 50 % | 52 % / 45 % | 50 % / 50 % | 57 % / 58 % | 58 % / 49 % |
+| ember_hawk | 40 % / 42 % | 30 % / 35 % | 35 % / 42 % | 41 % / 42 % | 26 % / 40 % |
+| dusk_moth | 29 % / 31 % | 31 % / 32 % | 33 % / 33 % | 32 % / 29 % | 20 % / 28 % |
+
+### Team win rate by fielded stat value, greedy with `balanced,mixstats` (7×7, 480 battles)
+
+Every monster plays random stats (HP 3–8, Pace 1.0–2.9, Stamina pool 1–5, Reach 2–4, TPR 1–2, AP 2–3) and a balanced draw of skills. Team win rates conditional on a fielded stat value, not prices; about ±3 points of noise per Pace, TPR and AP row, ±4 per other row.
+
+| Stat value | Wins / times fielded on a team |
+|---|---|
+| HP 3 | 198/527 = 38 % |
+| HP 4 | 208/491 = 42 % |
+| HP 5 | 217/473 = 46 % |
+| HP 6 | 251/450 = 56 % |
+| HP 7 | 266/457 = 58 % |
+| HP 8 | 279/482 = 58 % |
+| Pace 1.0–1.9 (recovers 1) | 700/1424 = 49 % |
+| Pace 2.0–2.9 (recovers 2) | 719/1456 = 49 % |
+| Stamina pool 1 | 264/578 = 46 % |
+| Stamina pool 2 | 277/581 = 48 % |
+| Stamina pool 3 | 278/580 = 48 % |
+| Stamina pool 4 | 287/553 = 52 % |
+| Stamina pool 5 | 313/588 = 53 % |
+| Reach 2 | 464/941 = 49 % |
+| Reach 3 | 505/980 = 52 % |
+| Reach 4 | 450/959 = 47 % |
+| TPR 1 | 606/1419 = 43 % |
+| TPR 2 | 813/1461 = 56 % |
+| AP 2 | 641/1434 = 45 % |
+| AP 3 | 778/1446 = 54 % |
+
+**Observations (indications):**
+
+- **Larger boards delay the first contact:** the first defeat moves from round 1.84 to 2.05–2.21 (greedy; 8×8 with four veins: 1.86) and from 1.98 to 2.25–2.70 (tactic), and battles under 3 rounds nearly vanish on 9×9 and on 8×8 with two veins (greedy 7 % → 1 %, tactic 2 % → 0–1 %). 8×8 with four veins keeps them (6 % / 4 %).
+- **The number of veins moves the length more than the board does:** 8×8 with two veins is the longest row under both bots (5.61 and 6.99 mean rounds, 40 % and 61 % of the battles over 5 rounds, the longest 23 rounds, late-round pressure reached most often); 8×8 with four and 9×9 with five veins are the shortest. Vein damage per battle rises with the veins (greedy 5.8 / 7.1 / 9.8 / 10.1 / 11.2 for 2 / 3 / 3 / 4 / 5 veins; tactic 8.3 / 8.2 / 11.8 / 11.4 / 13.6) while Strike damage falls.
+- **Draws:** four veins on 8×8 give 17 Draws in 320 greedy battles (4 in 160 with tactic), five veins on 9×9 13 and 9; the other rows 3–8 and 1–3.
+- **Against the length target (3–5 mean rounds):** with `tactic` the default board now reads 5.09 with 37 % of the battles over 5 rounds (S028, tactic with last touch: 4.25); 8×8 with four veins 4.92, 9×9 with five 4.79, 9×9 with three 5.50. Stamina as the rule, the round end with the clocks last and props on veins at generation changed together since S029, so the difference cannot be assigned to one of them. No row has a defeat before the victim's own first turn.
+- **Monsters:** their order is similar on every board (Hollow Serpent and Thorn Mites high, Dusk Moth lowest in every row); most differences between boards lie inside the noise. With `tactic`, Ember Hawk falls on 8×8 with four and 9×9 with five veins and Grove Wisp rises on the larger boards.
+- **Pace shows no slope with its second job:** in the random-stat series a Pace of 2.x (recovering 2 Stamina) wins as often as 1.x (49 % each). HP keeps the steepest slope (38 → 58 %), then TPR (43 → 56 %) and AP (45 → 54 %); the Stamina pool has a small one (46 → 53 %); Reach is flat. The greedy bot does not budget Stamina and these battles last 3.7 rounds, so the series says little about what a human gains from a faster recovery.
+
+**Follow-up:** T39 (board size and number of Dragon Veins; an even number and Draws; human play of 8×8 and 9×9), T13 (the tactic rows against the length target; a series after the shape merge; bots that budget Stamina), T03 (the Pace range and what a recovery of 2 should cost), T41 (Stamina details). No rule, board or value follows from these runs.
 
 ## S029 · 2026-11-14 · Stamina at 1 per square, last touch back as the build default
 

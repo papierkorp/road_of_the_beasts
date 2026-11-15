@@ -43,7 +43,7 @@ func _run() -> void:
 		results[name] = _aggregate()
 	BattleExperiment.reset()
 	var before := _guard()
-	print("# Authored discovery experiment\nAP/TPR/HP/Init/Movement/Reach are authored, full HP, no entry proxy. current-ap=%s is an explicit bilateral ZONE PUSH/PULL candidate (including Bog), NOT normal defaults. All skills use duplicate_deep ALL. Subject A is scored after both side swaps. No prices/budgets asserted." % ap_text)
+	print("# Authored discovery experiment\nAP/TPR/HP/Pace/Movement/Reach are authored, full HP, no entry proxy. current-ap=%s is an explicit bilateral ZONE PUSH/PULL candidate (including Bog), NOT normal defaults. All skills use duplicate_deep ALL. Subject A is scored after both side swaps. No prices/budgets asserted." % ap_text)
 	print("Harness own SHA256=%s; parent SHA256=%s; content=%s; new resource hashes=%s; Godot=%s" % [FileAccess.get_sha256("res://tools/discovery.gd"), _source_hash(), before.content, _pairs(before.resources), Engine.get_version_info().string])
 	print("Maps: base uses canonical RUNNER seeded board. open removes every preplaced prop without aftermath, retains grounds/veins. screens replaces props with exactly two point-mirrored reed_screen pairs. split first relocates veins (1,3),(3,3),(5,3) -> (1,2),(3,3),(5,4), then uses the same screen generator. split_mist/cloud also replace subject movement. Props block movement only; NO ranged cover. No starter grass is added. Map RNG is local, seeded with setup seed; play/setup RNG is untouched by edits.")
 	print("single_vein: remove only the two outer Dragon Veins after canonical setup, retaining the centre (3,3), all props, starts and RNG state. No candidate skills or stats change; maps affect both teams. The standard generator still runs first so prop availability cannot confound the count comparison.")
@@ -117,7 +117,7 @@ func _slot(skills: Array[BattleSkillDef], id: String) -> int:
 		var s := skills[i]
 		if id in ["mist_step", "cloudstep_token"] and s.kind == BattleSkillDef.MOVE:
 			return i
-		if id == "receding_blow" and s.kind == BattleSkillDef.STRIKE and s.strike_damage > 0 and s.strike_shape == "jab" and s.board_ops.is_empty():
+		if id == "receding_blow" and s.kind == BattleSkillDef.STRIKE and s.strike_damage > 0 and s.shape_id() == BattleShapes.JAB and s.shape_extension == 0 and s.board_ops.is_empty():
 			return i
 		if id == "raise_reed_screen" and s.kind == BattleSkillDef.GROUND and not s.board_ops.is_empty():
 			var pure := true
@@ -333,10 +333,10 @@ func _self_test() -> void:
 			for i in ids.size():
 				var s: UnitSheet = sheets[i]
 				var authored := UnitSheets.from_instance(MonsterInstance.of_species(BattleSetup.load_def(ids[i])))
-				for stat in ["hp", "initiative", "movement", "reach", "ap", "tpr"]:
+				for stat in ["hp", "pace", "movement", "reach", "ap", "tpr"]:
 					_check(s.get(stat) == authored.get(stat), "authored " + stat)
 				var expected := _slot(authored.skills, name)
-				_check(s.skills.size() == authored.skills.size() and s.skills.size() <= 4, "no extra slots")
+				_check(s.skills.size() == authored.skills.size() and s.skills.size() <= 6, "no extra slots")
 				var changes := 0
 				for k in s.skills.size():
 					var skill: BattleSkillDef = s.skills[k]
@@ -410,7 +410,7 @@ func _ablation_self_test(ids: Array[StringName]) -> void:
 			for i in ids.size():
 				var c: UnitSheet = control[i]
 				var t: UnitSheet = trail[i]
-				for stat in ["hp", "initiative", "movement", "reach", "ap", "tpr", "current_hp"]:
+				for stat in ["hp", "pace", "movement", "reach", "ap", "tpr", "current_hp"]:
 					_check(c.get(stat) == t.get(stat), "control equal stats " + stat)
 				_check(c.skills.size() == t.skills.size(), "control same slot count")
 				for k in c.skills.size():
@@ -463,11 +463,11 @@ func _single_vein_self_test(ids: Array[StringName]) -> void:
 # Test-only sheets/positions use existing fixtures; candidate definitions always come from data.
 func _fixture(skills: Array, start: Vector2i, enemy: Vector2i, overrides: Dictionary = {}) -> Battle:
 	var h := preload("res://tests/battle/helpers.gd")
-	var options := {"init": 9.0, "skills": [], "hp": 8, "ap": 4}
+	var options := {"pace": 1.9, "skills": [], "hp": 8, "ap": 4}
 	options.merge(overrides, true)
 	for id in skills:
 		options.skills.append(BattleContent.shared().skill(StringName(id)).duplicate_deep(Resource.DEEP_DUPLICATE_ALL))
-	return h.battle([[0, start, options], [1, enemy, {"init": 5.0, "hp": 8, "move": 3}]])
+	return h.battle([[0, start, options], [1, enemy, {"pace": 1.5, "hp": 8, "move": 3}]])
 
 
 func _action_fixtures() -> void:
@@ -492,6 +492,7 @@ func _action_fixtures() -> void:
 		_check(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.UP, "push_dir": Vector2i.UP}), "receding real strike accepted kin=%d" % kin)
 		_check(h.unit(b, 1).hp == 6 and h.unit(b, 1).pos == Vector2i(3, 1), "receding exactly 2 damage and target push kin=%d" % kin)
 		_check(h.unit(b, 0).pos == Vector2i(3, 4) and b.ap == 2, "receding exactly one retreat, Winged not doubled kin=%d" % kin)
+	BattleExperiment.stamina = false              # the Cloudstep candidate of S023 is defined against the Movement stat (the rule before 2026-11-15)
 	b = _fixture(["cloudstep_token"], Vector2i(1, 3), Vector2i(6, 6), {"ap": 1, "move": 2})
 	b.add_prop(&"reed_screen", Vector2i(2, 3))
 	b.begin()
@@ -504,6 +505,7 @@ func _action_fixtures() -> void:
 	_check(b.turn_owner == &"u0" and b.ap == 1 and b.check(repeat).contains("already used this battle"), "cloud second attempt rejected despite refreshed affordable AP")
 	var pos := h.unit(b, 0).pos
 	_check(not b.apply(repeat) and h.unit(b, 0).pos == pos and b.ap == 1, "cloud rejected repeat changes neither position nor AP")
+	BattleExperiment.stamina = true
 	b = _fixture(["raise_reed_screen", "receding_blow"], Vector2i(3, 3), Vector2i(6, 6))
 	var cell := b.board.at(Vector2i(3, 2))
 	b.set_ground(cell.pos, &"rubble", 1)

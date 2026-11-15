@@ -46,7 +46,7 @@ extends SceneTree
 ##                        castpush (push / pull zones also move at cast) · veintouch (build default: a vein belongs to the last side that touched it)
 ##                        · balanced / balanced=N (N = 3-6 kit slots: every monster plays a Strike, a movement skill and an even
 ##                        draw of zone, ground, prop and trap skills from the draft pool; win rates per drawn skill and kind)
-##                        · stamina / stamina=N (Movement is a Stamina pool, 1 per square, +N per round, default 1) · staminafree (with stamina: no AP for movement skills)
+##                        · stamina=N (every monster recovers N Stamina per round instead of the whole number of its Pace; stamina alone = 1) · nostamina (the rule before 2026-11-15: a movement skill covers the Movement stat) · size=N (the mode on an N×N board: 8 or 9 for 3v3; an even board has its Dragon Veins in pairs on the two centre rows) · staminafree (no AP for movement skills)
 ##                        · props=N (N mirrored prop pairs at the start, 0 = none) · buttons=N (N mirrored pairs of button squares) · veinhold (a vein works only while a monster stands on it)
 ##   --no-kind-a / -b K   the bot of side 0 / 1 never uses skills of kind K (what is the kind worth)
 ##   --shield-once        test change: every shield zone skill is once per global round
@@ -278,7 +278,7 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.vein_touch = false
 			"unfairsurge":                            # a due Surge does not wait for the monsters on it (rule before the reshape)
 				BattleExperiment.surge_fair = false
-			"mixstats":                               # every monster plays random stats: HP 3-8, initiative 1-9, Movement 1-5, Reach 2-4, TPR 1-2, AP 2-3
+			"mixstats":                               # every monster plays random stats: HP 3-8, Pace 1.0-2.9 (whole number 1 or 2 = Stamina recovery), Movement 1-5, Reach 2-4, TPR 1-2, AP 2-3
 				_mix_stats = true
 			"calm":                                   # calm=N: no damage in the first N rounds
 				BattleExperiment.damage_from_round = maxi(1, val.to_int()) + 1
@@ -300,9 +300,15 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.soft_pressure = maxi(1, val.to_int())
 			"balanced":                               # balanced or balanced=N (4-6 slots): every monster plays a Strike, a movement skill and an even draw of zone, ground, prop and trap skills
 				_balanced = clampi(val.to_int() if val != "" else 4, 3, 6)
-			"stamina":                                # stamina or stamina=N: Movement is a Stamina pool, +N per round (default 1)
+			"stamina":                                # stamina=N: every monster recovers N Stamina per round instead of the whole number of its Pace (stamina alone = 1, the switch of S029)
 				BattleExperiment.stamina = true
 				BattleExperiment.stamina_regen = val.to_int() if val != "" else 1
+			"nostamina":                              # the rule before 2026-11-15: a movement skill covers the Movement stat, no pool
+				BattleExperiment.stamina = false
+			"size":                                   # size=N: the mode is played on an N×N board (board switch; 8 and 9 for 3v3)
+				if not val.is_valid_int() or val.to_int() < 6 or val.to_int() > 11:
+					return "size needs a board side length from 6 to 11 (got '%s')" % val
+				BattleExperiment.board_size = val.to_int()
 			"staminafree":                            # with stamina: movement skills cost Stamina only, no AP
 				BattleExperiment.stamina_ap = false
 			"props":                                  # props=N: the board starts with N mirrored prop pairs (0 = none)
@@ -355,7 +361,7 @@ func _apply_variant(text: String) -> String:
 				var smd: MonsterDef = BattleContent.shared().monsters.get(StringName(mf[0])) if mf.size() == 2 and sv.size() == 2 else null
 				if smd == null or not (mf[1] in smd):
 					return "stat needs monster.field:value (got '%s')" % val
-				smd.set(mf[1], sv[1].to_float() if mf[1] == "initiative" else sv[1].to_int())
+				smd.set(mf[1], sv[1].to_float() if mf[1] == "pace" else sv[1].to_int())
 			"hpmin", "hpmax":
 				for mid in BattleContent.shared().monsters:
 					var md: MonsterDef = BattleContent.shared().monsters[mid]
@@ -447,7 +453,9 @@ func _series(setup: Dictionary, label: String) -> int:
 	var well_held := [0, 0, 0, 0, 0]     # Wellsprings held at round ends by side 0, side 1; round ends counted; bonus squares taken by side 0, side 1
 	# battles that reached late-round pressure: [HP leader won, HP leader lost, HP level, Draw or timeout after a lead]
 	var lead := [0, 0, 0, 0]
-	var length := [0, 0, 0, 0, 0, 0]       # battles under 3 rounds, over 7, over 10; the longest battle; under 2, over 5 (mean target 3–5)
+	# battles under 3 rounds, over 7, over 10; the longest battle; under 2, over 5. Length target (user, 2026-11-15):
+	# a mean of 3.0–4.9 rounds; every result states how many battles ended under 3 and over 5 rounds.
+	var length := [0, 0, 0, 0, 0, 0]
 	var round_histogram := {}
 	var outliers: Array[String] = []
 	var slots_by_skill := {}
@@ -525,7 +533,7 @@ func _series(setup: Dictionary, label: String) -> int:
 				var mu: BattleUnit = b.units[id]
 				var sh := mu.sheet
 				sh.hp = rng.randi_range(3, 8)
-				sh.initiative = float(rng.randi_range(1, 9))
+				sh.pace = snappedf(1.0 + 0.1 * rng.randi_range(0, 19), 0.1)
 				sh.movement = rng.randi_range(1, 5)
 				sh.reach = rng.randi_range(2, 4)
 				sh.tpr = rng.randi_range(1, 2)
@@ -533,7 +541,7 @@ func _series(setup: Dictionary, label: String) -> int:
 				mu.max_hp = sh.hp
 				mu.hp = sh.hp
 				var tags: Array = kit_of.get(id, [])
-				tags.append_array(["stat:hp=%d" % sh.hp, "stat:init=%d" % int(sh.initiative), "stat:move=%d" % sh.movement,
+				tags.append_array(["stat:hp=%d" % sh.hp, "stat:pace=%d" % int(sh.pace), "stat:move=%d" % sh.movement,
 					"stat:reach=%d" % sh.reach, "stat:tpr=%d" % sh.tpr, "stat:ap=%d" % sh.ap])
 				kit_of[id] = tags
 		board_size = b.board.size
@@ -566,7 +574,7 @@ func _series(setup: Dictionary, label: String) -> int:
 		else:
 			wins[b.winner_side] += 1
 		round_histogram[b.round_number] = int(round_histogram.get(b.round_number, 0)) + 1
-		if not setup["compact"] and (b.round_number < 2 or b.round_number > 5):
+		if not setup["compact"] and (b.round_number < 3 or b.round_number > 5):
 			var teams: Array[PackedStringArray] = [PackedStringArray(), PackedStringArray()]
 			for id in b.roster:
 				var unit: BattleUnit = b.units[id]
@@ -750,19 +758,19 @@ func _series(setup: Dictionary, label: String) -> int:
 		var dmg_table := {"strike": int(damage.get("strike", 0)), "surge": surge_total - trap_damage, "trap": trap_damage, "ground": hazard,
 			"collision": int(damage.get("collision", 0)) + int(damage.get("fall", 0)), "void": void_damage, "arena": int(damage.get("arena", 0))}
 		if setup["compact_head"]:
-			print("| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Rounds under 3 / over 7 / over 10 (%) · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |")
+			print("| Variant | Mode · seed · battles | Side 0 / 1 / Draw / timeout | Mean rounds | Ended before pressure | Last defeat by strike / Surge / trap / hazard ground / collision / Voidscar / arena (%) | All defeats by the same kinds (%) | Damage by the same kinds (%) | Surges and traps cast | detonated on a monster / without one / left at the end | their dmg per cast: enemies / own side | total dmg | Uses per battle: strike / surge / trap / zone / board / move / Step | Kit slots per battle: strike / surge / trap / zone / board / move / passive | Uses per slot and battle: strike / surge / trap / zone / board / move | Most used skill (share of all uses) | Skills never used | Reached pressure: HP leader won / lost / HP level / no winner | Battles under 3 / over 5 / over 7 / over 10 rounds · longest | First defeat in round (mean) | Defeated before own first turn (per battle) | Wellspring / surrounded: last defeat · all defeats · damage (%) · Wellsprings held per round end, side 0 / 1 |")
 			print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
-		print("| %s | %s · %d · %d | %d / %d / %d / %d | %.1f | %d %% | %s | %s | %s | %s | %s / %s / %s | %s / %s | %s | %s | %s | %s | %s | %s | %d / %d / %d / %d | %d / %d / %d · %d | %s | %s | %s |" % ([
+		print("| %s | %s · %d · %d | %d / %d / %d / %d | %.1f | %d %% | %s | %s | %s | %s | %s / %s / %s | %s / %s | %s | %s | %s | %s | %s | %s | %d / %d / %d / %d | %d / %d / %d / %d · %d | %s | %s | %s |" % ([
 			_variant_text(setup), mode, seed_value, n, wins[0], wins[1], draws, timeouts, float(rounds_total) / n,
 			roundi(100.0 * extra["early"] / n), by.call(ended_by, n - timeouts), by.call(defeats_by, counts[&"defeated"]),
 			by.call(dmg_table, total_damage), per.call(declared, n), per.call(extra["fired_hit"], n),
 			per.call(extra["fired"] - extra["fired_hit"], n), per.call(declared - extra["fired"], n),
-			per.call(extra["enemy_dmg"], declared), per.call(extra["own_dmg"], declared), per.call(total_damage, n)] + _usage_columns(content, skills_used, slots_by_kind, n) + lead + [roundi(100.0 * length[0] / n), roundi(100.0 * length[1] / n), roundi(100.0 * length[2] / n), length[3],
+			per.call(extra["enemy_dmg"], declared), per.call(extra["own_dmg"], declared), per.call(total_damage, n)] + _usage_columns(content, skills_used, slots_by_kind, n) + lead + [length[0], length[5], length[1], length[2], length[3],
 			("%.1f" % (float(first_defeat[0]) / first_defeat[1])) if first_defeat[1] > 0 else "—", per.call(unacted, n), _well_column(ended_by, n - timeouts, defeats_by, counts[&"defeated"], damage, total_damage, well_held, n)]))
 		return 0
 
 	if setup["kits"]:
-		print("**Kit set `%s`** (content `%s`; HP/Init/Move/TPR/Reach/AP: slots)" % [fingerprint, BattleContent.VERSION])
+		print("**Kit set `%s`** (content `%s`; HP/Pace/Move/TPR/Reach/AP: slots)" % [fingerprint, BattleContent.VERSION])
 		print("")
 		for line in _kits(content):
 			print("- " + line)
@@ -787,9 +795,13 @@ func _series(setup: Dictionary, label: String) -> int:
 		print("| Experiment | %s (in-memory simulation variants / battle experiment switches) |" % _variant_text(setup))
 	print("| Not covered | 2×2 and air units, tamer skills, human play%s |" % (", Mountains" if builds and setup["board"] == "flat" else ""))
 	print("")
-	print("| Battles | Side 0 / side 1 / Draw / timeout | Mean rounds | Defeats per battle | Props destroyed per battle |")
-	print("|---|---|---|---|---|")
-	print("| %d | %d / %d / %d / %d | %.1f | %s | %s |" % [n, wins[0], wins[1], draws, timeouts, float(rounds_total) / n,
+	# Battle length belongs to every result (user instruction 2026-11-15): the mean and how many battles ended
+	# under 3 and over 5 rounds. A battle counts the round it ended in.
+	var mid_length: int = n - length[0] - length[5]
+	print("| Battles | Side 0 / side 1 / Draw / timeout | Mean rounds | Under 3 rounds | 3–5 rounds | Over 5 rounds | Defeats per battle | Props destroyed per battle |")
+	print("|---|---|---|---|---|---|---|---|")
+	print("| %d | %d / %d / %d / %d | %.2f | %d (%d %%) | %d (%d %%) | %d (%d %%) | %s | %s |" % [n, wins[0], wins[1], draws, timeouts, float(rounds_total) / n,
+		length[0], roundi(100.0 * length[0] / n), mid_length, roundi(100.0 * mid_length / n), length[5], roundi(100.0 * length[5] / n),
 		per.call(counts[&"defeated"], n), per.call(counts[&"prop_destroyed"], n)])
 	print("")
 	var head := "| Damage"
@@ -874,7 +886,8 @@ func _series(setup: Dictionary, label: String) -> int:
 	print("Rounds: under 3 in %d %%, over 7 in %d %%, over 10 in %d %% of the battles, longest %d; first defeat in round %s (mean); monsters defeated before their own first turn: %s per battle" % [
 		roundi(100.0 * length[0] / n), roundi(100.0 * length[1] / n), roundi(100.0 * length[2] / n), length[3],
 		("%.1f" % (float(first_defeat[0]) / first_defeat[1])) if first_defeat[1] > 0 else "—", per.call(unacted, n)])
-	print("Mean target 3-5 rounds; outliers <2 / >5: ended in round 1 in %d %%, after round 5 in %d %% of the battles" % [roundi(100.0 * length[4] / n), roundi(100.0 * length[5] / n)])
+	print("Length target: a mean of 3.0–4.9 rounds. Under 3 rounds: %d of %d battles (%d %%), of them in round 1: %d; over 5 rounds: %d of %d (%d %%)" % [
+		length[0], n, roundi(100.0 * length[0] / n), length[4], length[5], n, roundi(100.0 * length[5] / n)])
 	print("")
 	print("| Exact round count | Battles | Share |")
 	print("|---|---|---|")
@@ -883,7 +896,7 @@ func _series(setup: Dictionary, label: String) -> int:
 	for rounds: int in round_keys:
 		print("| %d | %d | %.2f %% |" % [rounds, round_histogram[rounds], 100.0 * int(round_histogram[rounds]) / n])
 	print("")
-	print("Outliers (<2 or >5 rounds), including Draws and timeouts:")
+	print("Battles under 3 or over 5 rounds, including Draws and timeouts:")
 	print("| Battle (1-based) | Seed | RNG state before setup | Team side 0 | Team side 1 | Winner / result | Rounds |")
 	print("|---|---|---|---|---|---|---|")
 	for line in outliers:
@@ -979,7 +992,7 @@ func _kits(content: BattleContent) -> PackedStringArray:
 		var names: PackedStringArray = []
 		for s in m.skills:
 			names.append(String(s.id))
-		parts.append("%s %d/%.0f/%d/%d/%d/%d: %s" % [id, m.hp, m.initiative, m.move, m.tpr, m.reach, m.ap, ", ".join(names)])
+		parts.append("%s %d/%.1f/%d/%d/%d/%d: %s" % [id, m.hp, m.pace, m.move, m.tpr, m.reach, m.ap, ", ".join(names)])
 	return parts
 
 

@@ -53,7 +53,7 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 				if s.kin_effect and KinRules.strike(u.kin()).get("push", false):
 					pushes = Board.CARDINAL
 				for origin in u.cells():
-					for d in StrikeShapes.directions(StringName(s.strike_shape)):
+					for d in s.shape_dirs():
 						for pd in pushes:
 							var a := {"type": &"skill", "slot": slot, "dir": d, "push_dir": pd, "origin": origin}
 							if b.check(a) == "" and _strike_touches(b, u, s, origin, d):
@@ -62,7 +62,7 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 				var dirs: Array[Vector2i] = [Vector2i.ZERO]
 				if s.needs_direction():
 					dirs = Board.CARDINAL
-				var rots := [0, 1, 2, 3] if BattleStats.can_rotate(u) and s.anchor_mode != "caster_ring" and s.anchor_mode != "trail" else [0]
+				var rots := [0, 1, 2, 3] if BattleStats.can_rotate(u) and s.is_free_shape() else [0]
 				var seen_shapes := {}
 				for rot: int in rots:
 					var shape_key := s.offsets(rot)
@@ -85,7 +85,7 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 
 
 static func _strike_touches(b: Battle, u: BattleUnit, s: BattleSkillDef, origin: Vector2i, d: Vector2i) -> bool:
-	for h in StrikeShapes.hits(StringName(s.strike_shape), d):
+	for h in s.shape_hits(d):
 		var cell: Vector2i = origin + h["o"]
 		var other := b.any_unit_at(cell)
 		if (other != null and other.id != u.id) or b.board.prop_at(cell, Board.GROUND) != null or b.board.prop_at(cell, Board.AIR) != null:
@@ -188,8 +188,8 @@ static func _prop_threat(b: Battle, side: int) -> float:
 		for a in prop.def.aftermath:
 			if a == null or a.op != "damage":
 				continue
-			var weight := PROP_ROUND_END if a.when == PropAftermath.ROUND_END else (PROP_TRAP if a.when == PropAftermath.ENTER else PROP_BURST)
-			var offsets: Array[Vector2i] = PropAftermath.RING8 if a.when == PropAftermath.ENTER else a.offsets()
+			var weight := PROP_ROUND_END if a.when == Moment.ROUND_END else (PROP_TRAP if a.when == Moment.ENTER else PROP_BURST)
+			var offsets: Array[Vector2i] = BattleShapes.ALL8 if a.when == Moment.ENTER else a.offsets()
 			for o in offsets:
 				var t := b.unit_at(prop.pos + o, Board.GROUND)
 				if t != null:
@@ -277,8 +277,8 @@ static func _timed_weight(b: Battle, s: PendingSurge, t: BattleUnit) -> float:
 static func _standing_cost(b: Battle, u: BattleUnit) -> float:
 	var cost := 0.0
 	if u.size != 1 or u.layer != Board.GROUND:
-		var harm := BattleDamage.ground_harm(b, u, GroundTrigger.END_OF_TURN, u.cells()) \
-			+ BattleDamage.ground_harm(b, u, GroundTrigger.START_OF_TURN, u.cells())
+		var harm := BattleDamage.ground_harm(b, u, Moment.TURN_END, u.cells()) \
+			+ BattleDamage.ground_harm(b, u, Moment.TURN_START, u.cells())
 		cost += 3.0 * harm
 		for c in BattleStats.contributions(b, u):
 			cost += _tag_cost(String(c["tag"]), float(c["value"]), u)
@@ -287,9 +287,9 @@ static func _standing_cost(b: Battle, u: BattleUnit) -> float:
 	var g := b.content.ground(cell.ground)
 	if g != null and not BattleStats.ignores_ground(u, cell.ground):
 		for t in g.triggers:
-			if t.timing == GroundTrigger.ON_LEAVE:
+			if t.timing == Moment.LEAVE:
 				cost += 1.5 * t.value_at(cell.level)      # pinned: moving away costs HP
-			elif t.timing != GroundTrigger.ON_ENTER:
+			elif t.timing != Moment.ENTER:
 				cost += (3.0 if t.kind == "damage" else -3.0) * t.value_at(cell.level)
 		for e in g.effects:
 			cost += _tag_cost(e.tag, float(e.value_at(cell.level)), u)
@@ -309,10 +309,14 @@ static func _standing_cost(b: Battle, u: BattleUnit) -> float:
 
 static func _tag_cost(tag: String, value: float, u: BattleUnit) -> float:
 	match tag:
-		"slow", "drain_init", "drain_range":
+		"slow", "drain_range":
 			return 1.5 * value
-		"haste", "quicken", "extend", "shield":
+		"drain_pace":                             # a Pace point weighs double: it was 2.0 on the scale before 2026-11-15
+			return 3.0 * value
+		"haste", "extend", "shield":
 			return (-0.3 if BattleExperiment.ai_aggressive else -1.0) * value
+		"quicken":
+			return (-0.6 if BattleExperiment.ai_aggressive else -2.0) * value
 		"mend":
 			return -2.0 if u.hp < u.max_hp else 0.0
 	return 0.0

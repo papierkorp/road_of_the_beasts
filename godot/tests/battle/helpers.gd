@@ -17,7 +17,7 @@ static func skill(id: String) -> BattleSkillDef:
 	return content().skill(StringName(id))
 
 
-## A sheet with plain defaults (HP 5, Init 5.0, Move 2, Reach 2, TPR 1, AP 3, Beast, no skills).
+## A sheet with plain defaults (HP 5, Pace 1.5, Move 2, Reach 2, TPR 1, AP 3, Beast, no skills).
 ## `skills` may list content ids or BattleSkillDef objects.
 static func sheet(o: Dictionary = {}) -> UnitSheet:
 	var s := UnitSheet.new()
@@ -27,13 +27,13 @@ static func sheet(o: Dictionary = {}) -> UnitSheet:
 	s.size = o.get("size", 1)
 	s.airborne = o.get("airborne", false)
 	s.hp = o.get("hp", 5)
-	s.initiative = o.get("init", 5.0)
+	s.pace = o.get("pace", 1.5)
 	s.movement = o.get("move", 2)
 	s.reach = o.get("reach", 2)
 	s.tpr = o.get("tpr", 1)
 	s.ap = o.get("ap", 3)
 	s.current_hp = o.get("current_hp", -1)
-	s.init_bonus = o.get("init_bonus", 0.0)
+	s.pace_bonus = o.get("pace_bonus", 0.0)
 	for x in o.get("skills", []):
 		s.skills.append(x if x is BattleSkillDef else skill(String(x)))
 	return s
@@ -67,7 +67,10 @@ static func strike(shape := "jab", kin_effect := true) -> BattleSkillDef:
 	s.id = StringName("t_strike_" + shape)
 	s.display_name = "Strike " + shape
 	s.kind = BattleSkillDef.STRIKE
-	s.strike_shape = shape
+	var legacy: Array = BattleShapes.LEGACY.get(shape, [shape, 0])     # "thrust", "cleave" …: names from before 2026-11-15
+	s.shape = legacy[0]
+	s.shape_extension = legacy[1]
+	s.ap_cost = maxi(1, BattleShapes.draft_ap(StringName(s.shape), s.shape_extension))
 	s.kin_effect = kin_effect
 	return s
 

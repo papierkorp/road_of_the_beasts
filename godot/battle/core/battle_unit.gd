@@ -32,7 +32,7 @@ var used_round := {}
 var used_battle := {}
 ## Slots used in the current turn of this monster (test switch `once_per_turn`).
 var used_turn := {}
-## Test switch `stamina`: what is left of the pool (the Movement stat is its size).
+## Stamina left in the pool (the Movement stat of the sheet is its size; BattleExperiment.stamina).
 var stamina: int = 0
 var kills: int = 0
 

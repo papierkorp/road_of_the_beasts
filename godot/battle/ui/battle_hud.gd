@@ -1,6 +1,6 @@
 class_name BattleHud
 extends CanvasLayer
-## Minimal flat HUD: round/turn order (top-left), hint (top), skill bar (bottom),
+## Minimal flat HUD: round/turn order (top-left), hint (top), action bar with the tamer panel beside it (bottom),
 ## fading log (bottom-left), square inspector (only while hovering a square),
 ## cast preview that follows the cursor, end banner and pause menu.
 ## Emits signals only; it knows no rules.
@@ -12,9 +12,20 @@ signal resume_pressed
 signal menu_pressed
 
 const LOG_LINES := 6
+## Action bar (user layout 2026-11-15): Step stands over both rows, then a small gap, then the kit in columns of
+## two buttons; the side's tamer skills have a panel of their own beside the monster's bar.
+const BAR_BUTTON := Vector2(118, 66)       # 66: what a button with its two text lines needs
+const BAR_GAP := 8
+const SKILL_ROWS := 2
+const SKILL_COLUMNS := 3           # six kit slots (gdd_skills §1); a larger kit adds columns
+## Height at the bottom edge that belongs to the bar: log, cards, inspector and cast preview stay above it.
+const BAR_ROOM := 196.0
 
 var _buttons := {}                 # id -> Button
-var _button_row: HBoxContainer
+var _step_box: HBoxContainer
+var _skill_grid: GridContainer
+var _tamer_panel: PanelContainer
+var _tamer_grid: GridContainer
 var _action_ids: Array = []
 var _portrait: Label
 var _order: Label
@@ -89,62 +100,149 @@ func _build_log(root: Control) -> void:
 	_log_box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_log_box.offset_left = 24
 	_log_box.offset_right = 520
-	_log_box.offset_top = -280
-	_log_box.offset_bottom = -116
+	_log_box.offset_top = -(BAR_ROOM + 164.0)
+	_log_box.offset_bottom = -BAR_ROOM
 	_log_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_log_box.alignment = BoxContainer.ALIGNMENT_END
 	_ignore(_log_box)
 	root.add_child(_log_box)
 
 
+## The monster's bar (AP · Step · kit · End Turn) and, apart from it, the panel of the side's tamer skills.
 func _build_bar(root: Control) -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	center.offset_top = -104
+	center.offset_top = -(BAR_ROOM - 12.0)
 	center.offset_bottom = -16
+	center.grow_vertical = Control.GROW_DIRECTION_BEGIN     # a taller bar grows upward, never below the screen edge
 	_ignore(center)
 	root.add_child(center)
+	var bar := HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 24)
+	_ignore(bar)
+	center.add_child(bar)
 	var panel := PanelContainer.new()
-	center.add_child(panel)
+	bar.add_child(panel)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
+	row.add_theme_constant_override("separation", BAR_GAP)
 	panel.add_child(row)
 	_ap = Label.new()
 	_ap.custom_minimum_size = Vector2(80, 0)
 	_ap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_ap.add_theme_color_override("font_color", UiTheme.ACCENT)
 	row.add_child(_ap)
-	_button_row = HBoxContainer.new()
-	_button_row.add_theme_constant_override("separation", 8)
-	row.add_child(_button_row)
+	_step_box = HBoxContainer.new()
+	_step_box.add_theme_constant_override("separation", BAR_GAP)
+	row.add_child(_step_box)
+	row.add_child(_bar_gap())
+	_skill_grid = _bar_grid()
+	row.add_child(_skill_grid)
+	row.add_child(_bar_gap())
 	_end_button = Button.new()
 	_end_button.text = "End Turn"
-	_end_button.custom_minimum_size = Vector2(110, 56)
+	_end_button.custom_minimum_size = Vector2(110, _tall().y)
 	_end_button.pressed.connect(func(): end_turn_pressed.emit())
 	row.add_child(_end_button)
+	_tamer_panel = PanelContainer.new()
+	_tamer_panel.visible = false
+	bar.add_child(_tamer_panel)
+	_tamer_grid = _bar_grid()
+	_tamer_grid.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_tamer_panel.add_child(_tamer_grid)
 
 
-## Rebuilds the action buttons when the set of actions changes (a new monster's turn).
+## A button over all rows of the bar (Step, End Turn).
+func _tall() -> Vector2:
+	return Vector2(BAR_BUTTON.x, BAR_BUTTON.y * SKILL_ROWS + BAR_GAP * (SKILL_ROWS - 1))
+
+
+## The small gap that sets Step and End Turn apart from the kit.
+func _bar_gap() -> Control:
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(6, 0)
+	_ignore(gap)
+	return gap
+
+
+func _bar_grid() -> GridContainer:
+	var grid := GridContainer.new()
+	grid.add_theme_constant_override("h_separation", BAR_GAP)
+	grid.add_theme_constant_override("v_separation", BAR_GAP)
+	return grid
+
+
+## Rebuilds the action buttons when the set of actions changes (a new monster's turn). Every action names its
+## group: "step" (one button over both rows), "tamer" (the panel of its own) or "skill" (the kit; the default).
 func _sync_buttons(actions: Array) -> void:
 	var ids: Array = actions.map(func(a): return a["id"])
 	if ids == _action_ids:
 		return
 	_action_ids = ids
-	for c in _button_row.get_children():
-		c.queue_free()
+	for box: Control in [_step_box, _skill_grid, _tamer_grid]:
+		for c in box.get_children():
+			box.remove_child(c)
+			c.queue_free()
 	_buttons.clear()
+	var steps: Array = []
+	var skills: Array = []
+	var tamer: Array = []
 	for a in actions:
-		var b := Button.new()
-		b.custom_minimum_size = Vector2(118, 56)
-		var id: StringName = a["id"]
-		b.pressed.connect(func(): action_pressed.emit(id))
-		b.mouse_entered.connect(func(): _hover_id = id; _show_card())
-		b.mouse_exited.connect(func():
-			if _hover_id == id:
-				_hover_id = &""
-				_show_card())
-		_button_row.add_child(b)
-		_buttons[id] = b
+		match StringName(a.get("group", &"skill")):
+			&"step":
+				steps.append(a)
+			&"tamer":
+				tamer.append(a)
+			_:
+				skills.append(a)
+	for a in steps:
+		_step_box.add_child(_action_button(a["id"], _tall()))
+	_step_box.visible = not steps.is_empty()
+	_fill_columns(_skill_grid, skills, SKILL_COLUMNS)
+	_fill_columns(_tamer_grid, tamer, 1)
+	_tamer_panel.visible = not tamer.is_empty()
+
+
+## Lays `list` into `grid` in columns of SKILL_ROWS: the first column from top to bottom, then the next. A
+## GridContainer fills row by row, so the cells are added in that order; an empty cell keeps the block's shape.
+func _fill_columns(grid: GridContainer, list: Array, min_columns: int) -> void:
+	grid.visible = not list.is_empty()
+	if list.is_empty():
+		return
+	var columns := maxi(min_columns, ceili(float(list.size()) / SKILL_ROWS))
+	grid.columns = columns
+	for r in SKILL_ROWS:
+		for c in columns:
+			var i := c * SKILL_ROWS + r
+			if i < list.size():
+				grid.add_child(_action_button(list[i]["id"], BAR_BUTTON))
+			else:
+				var empty := Control.new()
+				empty.custom_minimum_size = BAR_BUTTON
+				_ignore(empty)
+				grid.add_child(empty)
+
+
+## Gives every cell of a block the width of its widest button, so the columns line up whatever the names are.
+func _even_widths(grid: GridContainer) -> void:
+	var widest := BAR_BUTTON.x
+	for c in grid.get_children():
+		if c is Button:
+			widest = maxf(widest, (c as Button).get_minimum_size().x)
+	for c in grid.get_children():
+		(c as Control).custom_minimum_size.x = widest
+
+
+func _action_button(id: StringName, min_size: Vector2) -> Button:
+	var b := Button.new()
+	b.custom_minimum_size = min_size
+	b.pressed.connect(func(): action_pressed.emit(id))
+	b.mouse_entered.connect(func(): _hover_id = id; _show_card())
+	b.mouse_exited.connect(func():
+		if _hover_id == id:
+			_hover_id = &""
+			_show_card())
+	_buttons[id] = b
+	return b
 
 
 func _build_inspector(root: Control) -> void:
@@ -235,7 +333,7 @@ func _place_inspector() -> void:
 	var sz := _inspector_panel.get_combined_minimum_size()
 	_inspector_panel.size = sz
 	var top := _portrait.position.y + _portrait.size.y + 12.0
-	var y := clampf((vp.y - sz.y) / 2.0, top, maxf(top, vp.y - 116.0 - sz.y))
+	var y := clampf((vp.y - sz.y) / 2.0, top, maxf(top, vp.y - BAR_ROOM - sz.y))
 	_inspector_panel.position = Vector2(vp.x - sz.x - 20.0, y)
 
 
@@ -245,7 +343,7 @@ func _place_card() -> void:
 	var vp := get_viewport().get_visible_rect().size
 	var sz := _card_panel.get_combined_minimum_size()
 	_card_panel.size = sz
-	_card_panel.position = Vector2(roundf((vp.x - sz.x) / 2.0), maxf(8.0, vp.y - 116.0 - sz.y))
+	_card_panel.position = Vector2(roundf((vp.x - sz.x) / 2.0), maxf(8.0, vp.y - BAR_ROOM - sz.y))
 
 
 func _build_preview(root: Control) -> void:
@@ -330,7 +428,7 @@ func show_pause(on: bool) -> void:
 	_pause.visible = on
 
 
-## One call per refresh. `actions`: [{id, text, enabled, selected, tooltip}].
+## One call per refresh. `actions`: [{id, text, enabled, selected, tooltip, group}] (group: step | skill | tamer).
 ## An empty `inspector` or `preview` hides that panel.
 ## `inspector`: {title, rows, text} — empty dictionary hides it.
 ## Each action may carry "card": {title, rows} shown while the mouse is over its button.
@@ -352,6 +450,8 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 		b.modulate = UiTheme.ACCENT if a.get("selected", false) else Color.WHITE
 		if a.has("card"):
 			_cards[a["id"]] = a["card"]
+	_even_widths(_skill_grid)
+	_even_widths(_tamer_grid)
 	_banner.visible = banner != ""
 	_banner_text.text = banner
 
@@ -370,7 +470,7 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 		var vp := get_viewport().get_visible_rect().size
 		var pos := get_viewport().get_mouse_position() + Vector2(24, 24)
 		pos.x = minf(pos.x, vp.x - _preview_panel.size.x - 8.0)
-		pos.y = minf(pos.y, vp.y - _preview_panel.size.y - 120.0)
+		pos.y = minf(pos.y, vp.y - _preview_panel.size.y - BAR_ROOM - 4.0)
 		_preview_panel.position = pos
 
 

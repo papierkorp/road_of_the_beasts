@@ -22,8 +22,8 @@ func _lava_field() -> BattleSkillDef:
 
 func _two_units(skills: Array) -> Battle:
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"init": 9.0, "reach": 4, "skills": skills}],
-		[1, Vector2i(3, 0), {"init": 5.0}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 4, "skills": skills}],
+		[1, Vector2i(3, 0), {"pace": 1.5}],
 	])
 	b.begin()
 	return b
@@ -122,19 +122,19 @@ func test_wellsprings_lie_on_the_centre_row_and_take_props_but_no_mountain() -> 
 
 func test_a_held_wellspring_damages_the_nearest_enemy_at_the_end_of_the_round() -> void:
 	var b := _well_battle([
-		[0, Vector2i(3, 3), {"init": 9.0}],
-		[1, Vector2i(3, 0), {"init": 5.0, "hp": 5}],
-		[1, Vector2i(6, 6), {"init": 4.0, "hp": 5}],
+		[0, Vector2i(3, 3), {"pace": 1.9}],
+		[1, Vector2i(3, 0), {"pace": 1.5, "hp": 5}],
+		[1, Vector2i(6, 6), {"pace": 1.4, "hp": 5}],
 	])
 	_end_round(b)
 	assert_int(H.unit(b, 1).hp).is_equal(4)        # 3 squares away
-	assert_int(H.unit(b, 2).hp).is_equal(5)        # 3 squares away and the same HP, but less initiative
+	assert_int(H.unit(b, 2).hp).is_equal(5)        # 3 squares away and the same HP, but less pace
 	assert_int(H.unit(b, 0).hp).is_equal(H.unit(b, 0).max_hp)
 
 
 func test_dragon_vein_damage_uses_actual_fields_outside_the_default_row() -> void:
 	for p in [Vector2i(1, 2), Vector2i(5, 4)]:
-		var b := H.battle([[0, p, {"init": 9.0}], [1, Vector2i(3, 0), {"init": 5.0, "hp": 5}]])
+		var b := H.battle([[0, p, {"pace": 1.9}], [1, Vector2i(3, 0), {"pace": 1.5, "hp": 5}]])
 		b.board.at(p).ground = GroundDef.WELL
 		b.begin()
 		_end_round(b)
@@ -145,7 +145,7 @@ func test_dragon_vein_damage_uses_actual_fields_outside_the_default_row() -> voi
 
 func test_disabling_veins_also_disables_damage_from_authored_vein_fields() -> void:
 	BattleExperiment.wells = 0
-	var b := H.battle([[0, Vector2i(1, 2), {"init": 9.0}], [1, Vector2i(3, 0), {"init": 5.0, "hp": 5}]])
+	var b := H.battle([[0, Vector2i(1, 2), {"pace": 1.9}], [1, Vector2i(3, 0), {"pace": 1.5, "hp": 5}]])
 	b.board.at(Vector2i(1, 2)).ground = GroundDef.WELL
 	b.begin()
 	_end_round(b)
@@ -155,9 +155,9 @@ func test_disabling_veins_also_disables_damage_from_authored_vein_fields() -> vo
 
 func test_a_wellspring_tie_goes_to_the_enemy_with_more_hp() -> void:
 	var b := _well_battle([
-		[0, Vector2i(3, 3), {"init": 9.0}],
-		[1, Vector2i(3, 0), {"init": 5.0, "hp": 4}],
-		[1, Vector2i(6, 6), {"init": 4.0, "hp": 6}],
+		[0, Vector2i(3, 3), {"pace": 1.9}],
+		[1, Vector2i(3, 0), {"pace": 1.5, "hp": 4}],
+		[1, Vector2i(6, 6), {"pace": 1.4, "hp": 6}],
 	])
 	_end_round(b)
 	assert_int(H.unit(b, 1).hp).is_equal(4)
@@ -166,9 +166,9 @@ func test_a_wellspring_tie_goes_to_the_enemy_with_more_hp() -> void:
 
 func test_two_enemies_around_a_monster_deal_one_damage_at_the_end_of_the_round() -> void:
 	var b := H.battle([
-		[0, Vector2i(2, 2), {"init": 9.0}],
-		[0, Vector2i(4, 4), {"init": 8.0}],
-		[1, Vector2i(3, 3), {"init": 5.0, "hp": 5}],
+		[0, Vector2i(2, 2), {"pace": 1.9}],
+		[0, Vector2i(4, 4), {"pace": 1.8}],
+		[1, Vector2i(3, 3), {"pace": 1.5, "hp": 5}],
 	])
 	b.begin()
 	_end_round(b)
@@ -177,7 +177,7 @@ func test_two_enemies_around_a_monster_deal_one_damage_at_the_end_of_the_round()
 
 
 func test_turns_per_round_count_from_the_second_round() -> void:
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "tpr": 2}], [1, Vector2i(3, 0), {"init": 5.0}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "tpr": 2}], [1, Vector2i(3, 0), {"pace": 1.5}]])
 	b.begin()
 	assert_int(b.queue.size()).is_equal(2)
 	_end_round(b)
@@ -185,7 +185,7 @@ func test_turns_per_round_count_from_the_second_round() -> void:
 
 
 func test_a_monster_may_postpone_its_turn_once_per_round_before_it_acts() -> void:
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0}], [1, Vector2i(3, 0), {"init": 5.0}], [1, Vector2i(5, 0), {"init": 4.0}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9}], [1, Vector2i(3, 0), {"pace": 1.5}], [1, Vector2i(5, 0), {"pace": 1.4}]])
 	b.begin()
 	assert_str(b.check({"type": &"delay"})).is_not_empty()         # off by default
 	BattleExperiment.delay_turn = true
@@ -203,7 +203,7 @@ func test_with_the_switch_a_surge_waits_for_its_casters_next_turn() -> void:
 	BattleExperiment.surge_at_caster = true
 	var timed := H.surge([Vector2i.ZERO], 3, "timed")
 	timed.surge_turns = 1
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "reach": 4, "skills": [timed]}], [1, Vector2i(3, 1), {"init": 5.0}]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "reach": 4, "skills": [timed]}], [1, Vector2i(3, 1), {"pace": 1.5}]])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 1)})).is_true()
 	b.end_turn()
@@ -220,9 +220,9 @@ func test_with_the_fair_switch_a_due_surge_waits_for_the_turn_of_the_monster_on_
 	var timed := H.surge([Vector2i.ZERO], 3, "timed")
 	timed.surge_turns = 1
 	var b := H.battle([
-		[0, Vector2i(3, 4), {"init": 9.0, "reach": 4, "skills": [timed]}],
-		[0, Vector2i(0, 6), {"init": 8.0}],
-		[1, Vector2i(3, 1), {"init": 5.0}],
+		[0, Vector2i(3, 4), {"pace": 1.9, "reach": 4, "skills": [timed]}],
+		[0, Vector2i(0, 6), {"pace": 1.8}],
+		[1, Vector2i(3, 1), {"pace": 1.5}],
 	])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 1)})).is_true()
@@ -240,7 +240,7 @@ func test_with_the_fair_switch_a_due_surge_waits_for_the_turn_of_the_monster_on_
 func test_with_reverse_order_the_first_monster_that_postponed_acts_last() -> void:
 	BattleExperiment.delay_turn = true
 	BattleExperiment.delay_reverse = true
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0}], [1, Vector2i(3, 0), {"init": 7.0}], [0, Vector2i(5, 6), {"init": 4.0}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9}], [1, Vector2i(3, 0), {"pace": 1.7}], [0, Vector2i(5, 6), {"pace": 1.4}]])
 	b.begin()
 	assert_bool(b.apply({"type": &"delay"})).is_true()             # the fastest waits
 	assert_bool(b.apply({"type": &"delay"})).is_true()             # the second waits too
@@ -255,8 +255,8 @@ func test_with_reverse_order_the_first_monster_that_postponed_acts_last() -> voi
 func test_first_round_postponing_is_for_two_turn_monsters_and_the_fastest() -> void:
 	BattleExperiment.delay_turn = true
 	BattleExperiment.delay_first_round = true
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0}], [1, Vector2i(3, 0), {"init": 7.0}],
-		[0, Vector2i(5, 6), {"init": 5.0, "tpr": 2}], [1, Vector2i(5, 0), {"init": 3.0}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9}], [1, Vector2i(3, 0), {"pace": 1.7}],
+		[0, Vector2i(5, 6), {"pace": 1.5, "tpr": 2}], [1, Vector2i(5, 0), {"pace": 1.3}]])
 	b.begin()
 	assert_str(b.check({"type": &"delay"})).is_empty()             # first of the queue
 	b.end_turn()
@@ -271,7 +271,7 @@ func test_first_round_postponing_is_for_two_turn_monsters_and_the_fastest() -> v
 
 func test_with_a_calm_round_nothing_deals_damage_before_round_two() -> void:
 	BattleExperiment.damage_from_round = 2
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0, "skills": ["strike_jab"]}], [1, Vector2i(3, 2), {"init": 5.0}]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "skills": ["strike_jab"]}], [1, Vector2i(3, 2), {"pace": 1.5}]])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 3)})).is_true()
 	assert_int(H.unit(b, 1).hp).is_equal(H.unit(b, 1).max_hp)
@@ -287,7 +287,7 @@ func test_with_a_calm_round_nothing_deals_damage_before_round_two() -> void:
 func test_a_charging_surge_can_block_its_squares_and_leave_ground() -> void:
 	var timed := H.surge([Vector2i.ZERO], 3, "timed")
 	timed.surge_turns = 2
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "reach": 4, "skills": [timed]}], [1, Vector2i(2, 2), {"init": 5.0}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "reach": 4, "skills": [timed]}], [1, Vector2i(2, 2), {"pace": 1.5}]])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 3)})).is_true()
 	b.end_turn()
@@ -308,7 +308,7 @@ func test_a_charging_surge_can_block_its_squares_and_leave_ground() -> void:
 # --- reshape of 2026-11-13 (temp_todo T40) ---
 
 func test_a_dragon_vein_belongs_to_the_side_that_touched_it_last() -> void:
-	var b := _well_battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 3}], [1, Vector2i(3, 0), {"init": 5.0}]])
+	var b := _well_battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 3}], [1, Vector2i(3, 0), {"pace": 1.5}]])
 	assert_int(b.board.at(Vector2i(3, 3)).owner_side).is_equal(-1)
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 4)})).is_true()      # it walks off again
@@ -322,8 +322,8 @@ func test_a_dragon_vein_belongs_to_the_side_that_touched_it_last() -> void:
 
 
 func test_binding_vines_hurt_on_leaving_also_when_pushed() -> void:
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "skills": ["strike_jab"]}], [1, Vector2i(3, 5), {"init": 5.0, "hp": 8}],
-		[1, Vector2i(0, 0), {"init": 4.0, "hp": 8}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "ap": 3, "skills": ["strike_jab"]}], [1, Vector2i(3, 5), {"pace": 1.5, "hp": 8}],
+		[1, Vector2i(0, 0), {"pace": 1.4, "hp": 8}]])
 	b.set_ground(Vector2i(3, 5), &"snare")
 	b.set_ground(Vector2i(0, 0), &"snare")
 	b.begin()
@@ -337,7 +337,7 @@ func test_binding_vines_hurt_on_leaving_also_when_pushed() -> void:
 
 
 func test_a_movement_skill_can_leave_ground_on_its_path_and_a_strike_on_its_square() -> void:
-	var b := H.battle([[0, Vector2i(1, 6), {"init": 9.0, "ap": 4, "move": 3, "skills": ["fire_trail", "thorn_lash"]}], [1, Vector2i(4, 5), {"init": 5.0, "hp": 8}]])
+	var b := H.battle([[0, Vector2i(1, 6), {"pace": 1.9, "ap": 4, "move": 3, "skills": ["fire_trail", "thorn_lash"]}], [1, Vector2i(4, 5), {"pace": 1.5, "hp": 8}]])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(4, 6)})).is_true()
 	for x in [1, 2, 3]:
@@ -349,7 +349,7 @@ func test_a_movement_skill_can_leave_ground_on_its_path_and_a_strike_on_its_squa
 
 
 func test_experiment_effects_change_ap_and_turns() -> void:
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "skills": ["battle_trance", "time_split"]}], [1, Vector2i(3, 0), {"init": 5.0}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "ap": 3, "skills": ["battle_trance", "time_split"]}], [1, Vector2i(3, 0), {"pace": 1.5}]])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0})).is_true()
 	assert_int(BattleStats.ap(H.unit(b, 0))).is_equal(4)
@@ -367,7 +367,7 @@ func test_experiment_effects_change_ap_and_turns() -> void:
 func test_a_push_zone_left_by_another_skill_points_where_the_placement_is_turned() -> void:
 	var c := BattleContent.shared()
 	var pit := SkillGen.build(c, {"name": "Wind Pit", "shape": "one", "ground": "thornbed", "zone": "gale"})
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 4, "reach": 4, "skills": [pit]}], [1, Vector2i(3, 3), {"init": 5.0, "hp": 8}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "ap": 4, "reach": 4, "skills": [pit]}], [1, Vector2i(3, 3), {"pace": 1.5, "hp": 8}]])
 	b.begin()
 	assert_bool(BattleCasting.pushes_by_rotation(b, pit)).is_true()
 	assert_bool(pit.needs_direction()).is_false()                                 # no direction input of its own
@@ -381,7 +381,7 @@ func test_a_push_zone_left_by_another_skill_points_where_the_placement_is_turned
 	b.end_turn()                                                                  # the occupant's turn ends: the zone pushes it that way
 	assert_that(H.unit(b, 1).pos).is_equal(from + cell.zone.dir)
 	# the AI looks at all four turns of such a skill, also for a shape that covers the same squares
-	var b2 := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 4, "reach": 4, "skills": [pit]}], [1, Vector2i(3, 3), {"init": 5.0, "hp": 8}]])
+	var b2 := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "ap": 4, "reach": 4, "skills": [pit]}], [1, Vector2i(3, 3), {"pace": 1.5, "hp": 8}]])
 	b2.begin()
 	var rots := {}
 	for a in AiBrain.candidates(b2):
@@ -393,7 +393,7 @@ func test_a_push_zone_left_by_another_skill_points_where_the_placement_is_turned
 # ---------- battle-length switches of 2026-11-14 (simulation S025) ----------
 
 func _gale_battle() -> Battle:
-	var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "reach": 4, "skills": ["gale"]}], [1, Vector2i(3, 3), {"init": 5.0, "hp": 8}]])
+	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "ap": 3, "reach": 4, "skills": ["gale"]}], [1, Vector2i(3, 3), {"pace": 1.5, "hp": 8}]])
 	b.begin()
 	return b
 
@@ -428,8 +428,8 @@ func test_with_once_per_turn_a_skill_is_refused_a_second_time_in_the_turn_and_fr
 func test_a_blocking_monster_takes_collision_damage_by_default_and_none_with_the_switch() -> void:
 	for both: bool in [true, false]:
 		BattleExperiment.collision_both = both
-		var b := H.battle([[0, Vector2i(3, 6), {"init": 9.0, "ap": 3, "skills": ["strike_jab"]}], [1, Vector2i(3, 5), {"init": 5.0, "hp": 8}],
-			[1, Vector2i(3, 4), {"init": 4.0, "hp": 8}]])
+		var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "ap": 3, "skills": ["strike_jab"]}], [1, Vector2i(3, 5), {"pace": 1.5, "hp": 8}],
+			[1, Vector2i(3, 4), {"pace": 1.4, "hp": 8}]])
 		b.begin()
 		assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 6)})).is_true()
 		assert_int(H.unit(b, 1).hp).is_equal(5)                                   # 2 from the Jab, 1 for the collision
@@ -440,8 +440,8 @@ func test_a_blocking_monster_takes_collision_damage_by_default_and_none_with_the
 
 func _vein_battle() -> Battle:
 	BattleExperiment.vein_charge = true
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 3, "hp": 8}], [1, Vector2i(3, 0), {"init": 5.0, "hp": 8}],
-		[1, Vector2i(0, 0), {"init": 4.0, "hp": 8}]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 3, "hp": 8}], [1, Vector2i(3, 0), {"pace": 1.5, "hp": 8}],
+		[1, Vector2i(0, 0), {"pace": 1.4, "hp": 8}]])
 	b.board.at(Vector2i(3, 3)).ground = GroundDef.WELL
 	b.begin()
 	return b
@@ -473,7 +473,7 @@ func test_a_monster_standing_on_a_charged_vein_discharges_it_at_the_end_of_its_t
 
 
 func test_with_the_switch_the_step_walks_up_to_the_movement_stat() -> void:
-	var specs := [[0, Vector2i(3, 6), {"init": 9.0, "ap": 2, "move": 3}], [1, Vector2i(3, 0), {"init": 5.0}]]
+	var specs := [[0, Vector2i(3, 6), {"pace": 1.9, "ap": 2, "move": 3}], [1, Vector2i(3, 0), {"pace": 1.5}]]
 	var b := H.battle(specs)
 	b.begin()
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_false()       # the rule: 1 square
@@ -501,3 +501,22 @@ func test_with_late_charged_veins_the_first_touch_wins_the_round_and_the_damage_
 	assert_int(H.unit(b, 1).hp).is_equal(7)                                       # nearest enemy of the winner, at the round end
 	assert_int(H.unit(b, 0).hp).is_equal(8)
 	assert_bool(b.board.at(Vector2i(3, 3)).charged).is_true()
+
+
+# --- decisions of 2026-11-15 ---
+
+func test_at_the_round_end_everything_acts_before_the_clocks_tick() -> void:
+	var b := _well_battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 3}], [1, Vector2i(3, 0), {"pace": 1.5}]])
+	H.zone_on(b, Vector2i(0, 0), H.content().zone(&"mire"), 902, 1, Vector2i.ZERO, Vector2i.ZERO, 1)   # its last round
+	b.apply_effect(H.unit(b, 1), "test:mark", FieldEffect.DRAIN_PACE, 1, 0)                          # ends with this round
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 3)})).is_true()                            # side 0 owns the vein
+	_end_round(b)
+	var types := H.event_types(b)
+	var vein_hit := -1
+	for i in b.events.size():
+		if b.events[i]["type"] == &"damage" and String(b.events[i]["kind"]) == BattleDamage.WELL:
+			vein_hit = i
+	assert_bool(vein_hit >= 0).is_true()
+	assert_bool(types.find(&"zones_faded") > vein_hit).is_true()            # the zone was still there when the vein struck
+	assert_object(b.board.at(Vector2i(0, 0)).zone).is_null()
+	assert_int(H.unit(b, 1).effects.size()).is_equal(0)                      # and the timed effect ended with the same tick

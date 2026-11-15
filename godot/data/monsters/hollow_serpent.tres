@@ -2,12 +2,13 @@
 
 [ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
 [ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
-[ext_resource type="Resource" path="res://data/skills/run.tres" id="s0"]
-[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="s1"]
-[ext_resource type="Resource" path="res://data/skills/coiling_rift.tres" id="s2"]
-[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="s3"]
+[ext_resource type="Resource" path="res://data/skills/run.tres" id="k1"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="k2"]
+[ext_resource type="Resource" path="res://data/skills/shove.tres" id="k3"]
+[ext_resource type="Resource" path="res://data/skills/coiling_rift.tres" id="k4"]
+[ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="k5"]
+[ext_resource type="Resource" path="res://data/skills/lay_vortex.tres" id="k6"]
 
-[ext_resource type="Resource" path="res://data/skills/lay_vortex.tres" id="9_slot5"]
 [resource]
 script = ExtResource("1")
 id = &"hollow_serpent"
@@ -16,11 +17,11 @@ kin = 2
 aspect = 3
 reference_shape = 2
 hp = 6
-initiative = 5.0
-move = 2
+pace = 1.4
+move = 4
 tpr = 1
 reach = 3
 ap = 3
-skills = Array[ExtResource("2")]([ExtResource("s0"), ExtResource("s1"), ExtResource("s2"), ExtResource("s3"), ExtResource("9_slot5")])
+skills = Array[ExtResource("2")]([ExtResource("k1"), ExtResource("k2"), ExtResource("k3"), ExtResource("k4"), ExtResource("k5"), ExtResource("k6")])
 blurb = "Lays Blight that pulls enemies together and slowing thorns around them."
 notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

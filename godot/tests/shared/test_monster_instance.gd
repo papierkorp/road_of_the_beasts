@@ -16,7 +16,7 @@ func test_reference_individual_keeps_the_species_numbers() -> void:
 		var def := BattleSetup.load_def(id)
 		var unit := MonsterInstance.of_species(def).to_battle_unit()
 		assert_int(unit.hp).is_equal(def.hp)
-		assert_float(unit.initiative).is_equal(def.initiative)
+		assert_float(unit.pace).is_equal(def.pace)
 		assert_int(unit.move).is_equal(def.move)
 		assert_int(unit.tpr).is_equal(def.tpr)
 		assert_int(unit.reach).is_equal(def.reach)
@@ -38,13 +38,13 @@ func test_rolled_stats_stay_in_the_ranges_and_keep_the_point_total() -> void:
 	var rng := _rng()
 	for shape in StatShape.rollable():
 		var d: Dictionary = StatShape.DATA[shape]
-		var total: int = int(d["hp"]) + int(d["initiative"]) + int(d["move"])
+		var total: int = int(d["hp"]) + int(d["pace"]) + int(d["move"])
 		for i in 60:
 			var core := StatShape.roll_core(shape, rng)
 			assert_int(core["hp"]).is_between(d["hp_range"][0], d["hp_range"][1])
-			assert_int(int(core["initiative"])).is_between(d["initiative_range"][0], d["initiative_range"][1])
+			assert_int(int(core["pace"])).is_between(d["pace_range"][0], d["pace_range"][1])
 			assert_int(core["move"]).is_between(d["move_range"][0], d["move_range"][1])
-			assert_int(core["hp"] + int(core["initiative"]) + core["move"]).is_equal(total)
+			assert_int(core["hp"] + int(core["pace"]) + core["move"]).is_equal(total)
 			assert_int(core["tpr"]).is_equal(d["tpr"])
 			assert_int(core["reach"]).is_equal(d["reach"])
 
@@ -54,7 +54,7 @@ func test_a_shape_does_not_always_roll_the_same_stats() -> void:
 	var seen := {}
 	for i in 80:
 		var core := StatShape.roll_core(StatShape.Id.BALANCED, rng)
-		seen["%d/%d/%d" % [core["hp"], core["initiative"], core["move"]]] = true
+		seen["%d/%d/%d" % [core["hp"], core["pace"], core["move"]]] = true
 	assert_int(seen.size()).is_greater(1)
 
 
@@ -67,7 +67,7 @@ func test_rolled_stats_never_exceed_the_stage_ceiling() -> void:
 			for i in 20:
 				var m := MonsterInstance.roll(def, rng, shape, stage)
 				assert_int(m.stats["hp"]).is_between(1, cap["hp"])
-				assert_float(m.stats["initiative"]).is_between(0.1, cap["initiative"])
+				assert_float(m.stats["pace"]).is_between(0.1, cap["pace"])
 				assert_int(m.stats["move"]).is_between(1, cap["move"])
 				assert_int(m.stats["tpr"]).is_between(1, cap["tpr"])
 				assert_int(m.stats["reach"]).is_between(1, cap["reach"])
@@ -106,7 +106,7 @@ func test_create_by_ids_still_builds_the_same_battle() -> void:
 	assert_int(b.units.size()).is_equal(6)
 	var tiger: BattleUnit = b.units[&"p0_blaze_tiger"]
 	assert_int(tiger.hp).is_equal(GameData.monster(&"blaze_tiger").hp)
-	assert_float(tiger.sheet.initiative).is_equal(GameData.monster(&"blaze_tiger").initiative)
+	assert_float(tiger.sheet.pace).is_equal(GameData.monster(&"blaze_tiger").pace)
 
 
 func test_dictionary_round_trip() -> void:

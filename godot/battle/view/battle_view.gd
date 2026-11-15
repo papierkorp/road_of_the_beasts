@@ -31,6 +31,8 @@ var _yaw := 45.0
 var _yaw_target := 45.0
 var _zoom := 8.5
 var _zoom_target := 8.5
+## Screen height (in viewport units) the HUD's bar takes at the bottom edge: the board is centred in the room above it.
+var bottom_room := 0.0
 var _time := 0.0
 
 
@@ -179,7 +181,8 @@ func _process(delta: float) -> void:
 	_zoom = lerpf(_zoom, _zoom_target, k)
 	_pivot.rotation_degrees.y = _yaw
 	camera.size = _zoom
-
+	# an orthogonal camera shows `size` world units over the viewport height: lower it by half the bar's share
+	camera.v_offset = -0.5 * _zoom * bottom_room / maxf(1.0, get_viewport().get_visible_rect().size.y)
 	var pulse := 0.6 + 0.25 * sin(_time * 4.0)
 	for p in _tiles:
 		var t: Dictionary = _tiles[p]

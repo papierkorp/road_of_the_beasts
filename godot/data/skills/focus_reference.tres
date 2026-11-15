@@ -7,6 +7,8 @@
 [sub_resource type="Resource" id="Resource_igwuy"]
 script = ExtResource("2_mpfca")
 tag = "quicken"
+base = 2
+cap = 2
 
 [resource]
 script = ExtResource("3_44olw")
@@ -14,7 +16,7 @@ id = &"focus_reference"
 display_name = "Focus"
 content_status = "archived"
 kind = "buff"
-description = "Self: initiative +1 for 2 rounds. Recasting refreshes, it never stacks."
+description = "Self: Pace +0.2 for 2 rounds. Recasting refreshes, it never stacks."
 status = "GDD reference record (Skills §11), draft"
 buff_effects = Array[ExtResource("2_mpfca")]([SubResource("Resource_igwuy")])
 internal_calc_cost = 20.0

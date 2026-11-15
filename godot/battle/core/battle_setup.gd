@@ -55,8 +55,9 @@ static func build(request: BattleRequest) -> Battle:
 		var prefix := "p" if side == 0 else "e"
 		for i in mini(team.size(), size):
 			var sheet := UnitSheets.from_instance(team[i], content)
-			if side == 0 and request.prep_init.has(i):
-				sheet.init_bonus = float(request.prep_init[i])      # battle-prep pill (gdd_overworld §6.6)
+			UnitSheets.arrange(sheet, (request.player_shapes if side == 0 else request.enemy_shapes).get(i, {}))
+			if side == 0 and request.prep_pace.has(i):
+				sheet.pace_bonus = float(request.prep_pace[i])      # battle-prep pill (gdd_overworld §6.6)
 			var pos := starts[i]
 			if side == 0 and i < request.player_starts.size() and _legal_start(b, request, request.player_starts, i):
 				pos = request.player_starts[i]

@@ -15,7 +15,7 @@ func after_test() -> void:
 
 ## u0 (side 0) holds the vein at (3, 3); u1 and u2 (side 1) are equally near, equally strong.
 func _setup() -> Battle:
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0}], [1, Vector2i(1, 3), {"init": 5.0}], [1, Vector2i(5, 3), {"init": 5.0}]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(1, 3), {"pace": 1.5}], [1, Vector2i(5, 3), {"pace": 1.5}]])
 	b.set_ground(Vector2i(3, 3), GroundDef.WELL)
 	b.begin()
 	return b
@@ -52,7 +52,7 @@ func test_without_choice_sides_the_roster_order_decides() -> void:
 
 
 func test_no_choice_is_asked_when_one_enemy_is_clearly_the_target() -> void:
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0}], [1, Vector2i(2, 3), {"init": 5.0}], [1, Vector2i(6, 3), {"init": 5.0}]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(2, 3), {"pace": 1.5}], [1, Vector2i(6, 3), {"pace": 1.5}]])
 	b.set_ground(Vector2i(3, 3), GroundDef.WELL)
 	b.begin()
 	b.choice_sides = [0]
@@ -70,14 +70,14 @@ func test_a_clone_keeps_a_pending_choice() -> void:
 	assert_array(c.choice_sides).is_equal([0])
 
 
-func test_the_fallback_pick_takes_fewest_hp_then_highest_initiative_then_lowest_max_hp() -> void:
-	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(5, 5), {"init": 5.0, "hp": 8}], [1, Vector2i(6, 6), {"init": 7.0, "hp": 8}],
-		[1, Vector2i(5, 6), {"init": 7.0, "hp": 6}]])
+func test_the_fallback_pick_takes_fewest_hp_then_highest_pace_then_lowest_max_hp() -> void:
+	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(5, 5), {"pace": 1.5, "hp": 8}], [1, Vector2i(6, 6), {"pace": 1.7, "hp": 8}],
+		[1, Vector2i(5, 6), {"pace": 1.7, "hp": 6}]])
 	b.begin()
 	var tied: Array[BattleUnit] = [H.unit(b, 1), H.unit(b, 2), H.unit(b, 3)]
 	assert_str(String(BattleTurn.ai_pick(b, tied).id)).is_equal("u3")      # same HP 8/8/6 → fewest HP
 	H.unit(b, 3).hp = 8
-	assert_str(String(BattleTurn.ai_pick(b, tied).id)).is_equal("u3")      # HP 8/8/8: init 7 beats 5; max HP 6 beats 8
+	assert_str(String(BattleTurn.ai_pick(b, tied).id)).is_equal("u3")      # HP 8/8/8: pace 7 beats 5; max HP 6 beats 8
 	H.unit(b, 3).max_hp = 9
 	assert_str(String(BattleTurn.ai_pick(b, tied).id)).is_equal("u2")      # max HP 9 loses to 8
 

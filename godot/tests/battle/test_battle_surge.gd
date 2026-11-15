@@ -28,8 +28,8 @@ func _fire(b: Battle, slot: int, anchor: Vector2i, dir := Vector2i.ZERO) -> void
 
 func test_a_trap_needs_free_squares_and_springs_when_a_monster_steps_in() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"init": 9.0, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
-		[1, Vector2i(3, 3), {"init": 5.0, "hp": 8}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
+		[1, Vector2i(3, 3), {"pace": 1.5, "hp": 8}],
 	])
 	b.begin()
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})).contains("monster-free")
@@ -46,9 +46,9 @@ func test_a_trap_needs_free_squares_and_springs_when_a_monster_steps_in() -> voi
 func test_a_timed_surge_is_cast_on_monsters_and_fires_after_its_turns() -> void:
 	var burst := H.surge([Vector2i.ZERO], 3, "timed")       # 2 turns
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"init": 9.0, "reach": 3, "skills": [burst]}],
-		[1, Vector2i(3, 3), {"init": 5.0, "hp": 8}],
-		[1, Vector2i(6, 0), {"init": 4.0, "hp": 8}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 3, "skills": [burst]}],
+		[1, Vector2i(3, 3), {"pace": 1.5, "hp": 8}],
+		[1, Vector2i(6, 0), {"pace": 1.4, "hp": 8}],
 	])
 	b.begin()
 	assert_bool(_cast(b, 0, Vector2i(3, 3))).is_true()      # under a monster: allowed
@@ -66,8 +66,8 @@ func test_a_surge_replaces_trap_squares_and_a_trap_is_laid_only_on_free_squares(
 	var burst := H.surge([Vector2i.ZERO, Vector2i(1, 0)], 3, "timed")
 	var trap := H.surge([Vector2i.ZERO, Vector2i(1, 0), Vector2i(2, 0)], 2, "trap")
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"init": 9.0, "reach": 4, "ap": 5, "skills": [burst, trap]}],
-		[1, Vector2i(0, 0), {"init": 5.0, "hp": 8}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 4, "ap": 5, "skills": [burst, trap]}],
+		[1, Vector2i(0, 0), {"pace": 1.5, "hp": 8}],
 	])
 	b.begin()
 	assert_bool(_cast(b, 1, Vector2i(2, 4))).is_true()      # trap on (2,4) (3,4) (4,4)
@@ -86,8 +86,8 @@ func test_a_surge_replaces_trap_squares_and_a_trap_is_laid_only_on_free_squares(
 func test_a_timed_surge_can_be_left_before_it_fires() -> void:
 	var burst := H.surge([Vector2i.ZERO], 3, "timed")
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"init": 9.0, "reach": 3, "skills": [burst]}],
-		[1, Vector2i(3, 3), {"init": 5.0, "hp": 8}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 3, "skills": [burst]}],
+		[1, Vector2i(3, 3), {"pace": 1.5, "hp": 8}],
 	])
 	b.begin()
 	_cast(b, 0, Vector2i(3, 3))
@@ -101,9 +101,9 @@ func test_a_timed_surge_can_be_left_before_it_fires() -> void:
 
 func test_a_trap_never_fires_by_itself_and_outlives_its_caster() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 5), {"init": 9.0, "current_hp": 1, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
-		[1, Vector2i(3, 4), {"init": 5.0, "hp": 8, "skills": [H.strike()]}],
-		[0, Vector2i(0, 6), {"init": 1.0}],
+		[0, Vector2i(3, 5), {"pace": 1.9, "current_hp": 1, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
+		[1, Vector2i(3, 4), {"pace": 1.5, "hp": 8, "skills": [H.strike()]}],
+		[0, Vector2i(0, 6), {"pace": 1.1}],
 	])
 	b.begin()
 	_cast(b, 0, Vector2i(3, 3))
@@ -123,7 +123,7 @@ func test_a_trap_never_fires_by_itself_and_outlives_its_caster() -> void:
 
 func test_a_second_trap_skill_is_laid_only_on_free_squares_and_the_same_one_moves() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO, Vector2i(1, 0)]), H.surge([Vector2i.ZERO, Vector2i(1, 0)])]}],
+		[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO, Vector2i(1, 0)]), H.surge([Vector2i.ZERO, Vector2i(1, 0)])]}],
 		[1, Vector2i(6, 0), {"hp": 8}],
 	])
 	b.begin()
@@ -143,8 +143,8 @@ func test_a_pushed_monster_springs_the_trap_and_a_walk_ends_on_it() -> void:
 	var eruption := H.surge([Vector2i.ZERO])
 	eruption.board_ops = [BoardOp.make("ground", &"lava", false)] as Array[BoardOp]
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"init": 9.0, "reach": 4, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [eruption, H.strike()]}],
-		[1, Vector2i(3, 5), {"init": 5.0, "hp": 8, "move": 3, "skills": ["run"]}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 4, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [eruption, H.strike()]}],
+		[1, Vector2i(3, 5), {"pace": 1.5, "hp": 8, "move": 3, "skills": ["run"]}],
 	])
 	b.begin()
 	_cast(b, 0, Vector2i(3, 4))
@@ -165,8 +165,8 @@ func test_a_new_prop_or_mountain_springs_a_trap_unless_only_monsters_do() -> voi
 		eruption.trap_trigger = "monsters" if monsters_only else "any"
 		var wall := H.board_skill([BoardOp.make("create_prop", &"stone_lion")])
 		var b := H.battle([
-			[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "skills": [eruption]}],
-			[1, Vector2i(3, 2), {"init": 5.0, "hp": 8, "skills": [wall]}],
+			[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "skills": [eruption]}],
+			[1, Vector2i(3, 2), {"pace": 1.5, "hp": 8, "skills": [wall]}],
 		])
 		b.begin()
 		_cast(b, 0, Vector2i(3, 3))                  # (3,3) and (4,3)
@@ -186,7 +186,7 @@ func test_a_new_prop_or_mountain_springs_a_trap_unless_only_monsters_do() -> voi
 func test_eruption_hits_a_mountain_but_leaves_no_residue_there() -> void:
 	var eruption := H.surge([Vector2i.ZERO, Vector2i(1, 0)])
 	eruption.board_ops = [BoardOp.make("ground", &"lava", false)] as Array[BoardOp]
-	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "skills": [eruption]}], [1, Vector2i(4, 3), {"hp": 8}]])
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "skills": [eruption]}], [1, Vector2i(4, 3), {"hp": 8}]])
 	b.board.at(Vector2i(4, 3)).height = 1
 	b.begin()
 	_fire(b, 0, Vector2i(3, 3))
@@ -200,7 +200,7 @@ func test_eruption_hits_a_mountain_but_leaves_no_residue_there() -> void:
 func test_flood_cannot_reach_mountains_and_pushes_before_its_residue_lands() -> void:
 	# Tidal Shell: vertical I3, 2 damage, push in the cast direction, Thornbed I
 	var b := H.battle([
-		[0, Vector2i(0, 3), {"init": 9.0, "reach": 3, "skills": ["tidal_shell"]}],
+		[0, Vector2i(0, 3), {"pace": 1.9, "reach": 3, "skills": ["tidal_shell"]}],
 		[1, Vector2i(3, 2), {"hp": 8}], [1, Vector2i(3, 3), {"hp": 8}], [1, Vector2i(3, 4), {"hp": 8}],
 	])
 	b.board.at(Vector2i(3, 3)).height = 1
@@ -223,7 +223,7 @@ func test_displacement_resolves_the_unit_furthest_along_first() -> void:
 	var wave := H.surge([Vector2i.ZERO, Vector2i(1, 0)], 1)
 	wave.surge_displacement = "push"
 	var b := H.battle([
-		[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "skills": [wave]}],
+		[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "skills": [wave]}],
 		[1, Vector2i(3, 3)], [1, Vector2i(4, 3)],
 	])
 	b.begin()
@@ -239,7 +239,7 @@ func test_value_reductions_add_and_a_zero_damage_hit_still_displaces() -> void:
 	wave.surge_displacement = "push"
 	var veil: BattleZoneDef = H.content().zone(&"bark_veil")       # shield 2 (3 at level II+)
 	var b := H.battle([
-		[0, Vector2i(1, 5), {"init": 9.0, "reach": 3, "skills": [wave]}],
+		[0, Vector2i(1, 5), {"pace": 1.9, "reach": 3, "skills": [wave]}],
 		[1, Vector2i(1, 3), {"hp": 8}], [1, Vector2i(2, 3), {"hp": 8}], [1, Vector2i(3, 3), {"hp": 8}], [1, Vector2i(4, 3), {"hp": 8}],
 	])
 	H.zone_on(b, Vector2i(1, 3), veil, 1, 1, Vector2i.ZERO, Vector2i.ZERO, 9)
@@ -263,7 +263,7 @@ func test_lethal_prop_aftermath_and_the_survive_effect() -> void:
 	for thread in [false, true]:
 		var burst := H.surge([Vector2i.ZERO, Vector2i(0, 1)], 2)
 		var b := H.battle([
-			[0, Vector2i(1, 4), {"init": 9.0, "reach": 3, "skills": [burst]}],
+			[0, Vector2i(1, 4), {"pace": 1.9, "reach": 3, "skills": [burst]}],
 			[1, Vector2i(1, 2), {"hp": 3}],          # M on B3
 			[1, Vector2i(2, 2), {"hp": 1}],          # N on C3
 			[1, Vector2i(6, 6), {"hp": 5}],
@@ -287,7 +287,7 @@ func test_lethal_prop_aftermath_and_the_survive_effect() -> void:
 func test_props_intercept_and_a_line_footprint_stops_at_the_first_prop() -> void:
 	# Cinder Dive: straight trail of 3 from the caster, line-shaped
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"init": 9.0, "skills": ["cinder_dive", "delayed_burst_reference"], "reach": 3}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "skills": ["cinder_dive", "delayed_burst_reference"], "reach": 3}],
 		[1, Vector2i(3, 3), {"hp": 8}], [1, Vector2i(5, 5), {"hp": 8}],
 	])
 	var lion := b.add_prop(&"stone_lion", Vector2i(3, 4))
@@ -307,7 +307,7 @@ func test_props_intercept_and_a_line_footprint_stops_at_the_first_prop() -> void
 func test_nullify_overrides_the_next_surge_damage_of_at_least_one() -> void:
 	var veil: BattleZoneDef = H.content().zone(&"bark_veil")
 	var b := H.battle([
-		[0, Vector2i(2, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO, Vector2i(1, 0)])]}],
+		[0, Vector2i(2, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO, Vector2i(1, 0)])]}],
 		[1, Vector2i(2, 3), {"hp": 8}], [1, Vector2i(3, 3), {"hp": 8}],
 	])
 	H.zone_on(b, Vector2i(3, 3), veil, 1, 3, Vector2i.ZERO, Vector2i.ZERO, 9)   # shield 3
@@ -326,7 +326,7 @@ func test_nullify_overrides_the_next_surge_damage_of_at_least_one() -> void:
 func test_mountain_rule_lets_ground_surges_hit_adjacent_flyers_fixed_at_cast() -> void:
 	for on_mountain in [true, false]:
 		var b := H.battle([
-			[0, Vector2i(3, 3), {"init": 9.0, "ap": 3, "skills": [H.surge([Vector2i.ZERO])]}],
+			[0, Vector2i(3, 3), {"pace": 1.9, "ap": 3, "skills": [H.surge([Vector2i.ZERO])]}],
 			[1, Vector2i(3, 2), {"hp": 8, "airborne": true}],
 		])
 		b.board.at(Vector2i(3, 3)).height = 1 if on_mountain else 0

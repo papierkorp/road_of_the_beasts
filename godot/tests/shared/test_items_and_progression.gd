@@ -64,7 +64,7 @@ func test_higher_sub_tiers_never_have_less_than_lower_ones() -> void:
 				var hi := StatShape.at_stage(core, stage, Stage.SubTier.HIGH)
 				assert_int(mid["hp"]).is_greater_equal(lo["hp"])
 				assert_int(hi["hp"]).is_greater_equal(mid["hp"])
-				assert_float(hi["initiative"]).is_greater_equal(lo["initiative"])
+				assert_float(hi["pace"]).is_greater_equal(lo["pace"])
 
 
 func test_reference_individuals_keep_their_fixed_stats() -> void:

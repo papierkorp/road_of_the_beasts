@@ -25,7 +25,7 @@ var xp := 0
 ## The rolled spread on the Core Formation scale; stats are re-snapped from it when the sub-tier
 ## or stage changes. Empty for reference individuals (their stats are fixed).
 var core := {}
-## Resolved stats: hp, initiative, move, tpr, reach.
+## Resolved stats: hp, pace, move, tpr, reach.
 var stats := {}
 ## Persists between battles of an expedition (gdd_overworld §10.2).
 var current_hp := 1
@@ -36,7 +36,7 @@ var current_hp := 1
 static func of_species(def: MonsterDef) -> MonsterInstance:
 	var m := MonsterInstance.new()
 	m.species_id = def.id
-	m.stats = {"hp": def.hp, "initiative": def.initiative, "move": def.move, "tpr": def.tpr, "reach": def.reach}
+	m.stats = {"hp": def.hp, "pace": def.pace, "move": def.move, "tpr": def.tpr, "reach": def.reach}
 	m.current_hp = def.hp
 	return m
 
@@ -127,7 +127,7 @@ func heal_full() -> void:
 func to_battle_unit() -> MonsterDef:
 	var d: MonsterDef = species().duplicate()
 	d.hp = int(stats["hp"])
-	d.initiative = float(stats["initiative"])
+	d.pace = float(stats["pace"])
 	d.move = int(stats["move"])
 	d.tpr = int(stats["tpr"])
 	d.reach = int(stats["reach"])
@@ -140,8 +140,8 @@ func sheet_text(with_kit := true) -> String:
 	var def := species()
 	var head := "%s — %s %s · %s" % [def.display_name, Aspect.NAMES[def.aspect], MonsterDef.kin_name(def.kin),
 		StatShape.shape_name(shape)]
-	var line := "HP %d/%d   Init %.1f   Move %d   TPR %d   Reach %d" % [current_hp, max_hp(),
-		float(stats["initiative"]), int(stats["move"]), int(stats["tpr"]), int(stats["reach"])]
+	var line := "HP %d/%d   Pace %.1f   Move %d   TPR %d   Reach %d" % [current_hp, max_hp(),
+		float(stats["pace"]), int(stats["move"]), int(stats["tpr"]), int(stats["reach"])]
 	if not with_kit:
 		return head + "\n" + line
 	var kit := "Kit: %s · Strike: %s" % [def.kit_text(), def.strike_name()]
@@ -162,11 +162,13 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 	m.sub_tier = int(d["sub_tier"]) as Stage.SubTier
 	m.xp = int(d["xp"])
 	var st: Dictionary = d["stats"]
-	m.stats = {"hp": int(st["hp"]), "initiative": float(st["initiative"]), "move": int(st["move"]),
+	# Saves from before 2026-11-15 hold "initiative" on the earlier 1–9 scale (StatShape.pace_from_pool).
+	var saved_pace: float = float(st["pace"]) if st.has("pace") else StatShape.pace_from_pool(float(st.get("initiative", 5.0)))
+	m.stats = {"hp": int(st["hp"]), "pace": saved_pace, "move": int(st["move"]),
 		"tpr": int(st["tpr"]), "reach": int(st["reach"])}
 	var c: Dictionary = d.get("core", {})
 	if not c.is_empty():
-		m.core = {"hp": int(c["hp"]), "initiative": float(c["initiative"]), "move": int(c["move"]),
+		m.core = {"hp": int(c["hp"]), "pace": float(c.get("pace", c.get("initiative", 5.0))), "move": int(c["move"]),
 			"tpr": int(c["tpr"]), "reach": int(c["reach"])}
 	m.current_hp = int(d["current_hp"])
 	return m

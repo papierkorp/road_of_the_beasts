@@ -12,46 +12,77 @@ func after_test() -> void:
 	BattleExperiment.reset()
 
 
-func _offsets(shape: StringName, d: Vector2i) -> Array:
+func _offsets(shape: StringName, d: Vector2i, extension := 0) -> Array:
 	var out := []
-	for h in StrikeShapes.hits(shape, d):
+	for h in BattleShapes.hits(shape, d, extension):
 		out.append(h["o"])
 	out.sort()
 	return out
 
 
-func test_shape_offsets_follow_the_orientation_table() -> void:
+func test_six_base_shapes_follow_the_orientation_table() -> void:
 	assert_array(_offsets(&"jab", Vector2i(1, -1))).is_equal([Vector2i(1, -1)])
-	assert_array(_offsets(&"thrust", H.UP)).is_equal([Vector2i(0, -2), Vector2i(0, -1)])
 	assert_array(_offsets(&"pincer", H.RIGHT)).is_equal([Vector2i(-1, 0), Vector2i(1, 0)])
 	assert_array(_offsets(&"arc", H.UP)).is_equal([Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, -1)])
 	# diagonal Arc is the wedge (dx,0), (dx,dy), (0,dy)
 	assert_array(_offsets(&"arc", Vector2i(1, -1))).is_equal([Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, 0)])
-	assert_array(_offsets(&"cleave", H.UP)).is_equal([Vector2i(-1, -2), Vector2i(-1, -1), Vector2i(0, -2),
+	assert_array([_offsets(&"whirl", Vector2i.ZERO).size(), _offsets(&"cross", Vector2i.ZERO).size(),
+		_offsets(&"storm", Vector2i.ZERO).size()]).is_equal([4, 4, 8])
+	assert_array([BattleShapes.directions(&"jab").size(), BattleShapes.directions(&"pincer").size(), BattleShapes.directions(&"arc").size(),
+		BattleShapes.directions(&"whirl").size()]).is_equal([8, 8, 8, 1])
+
+
+func test_an_extension_adds_one_square_behind_every_square() -> void:
+	# Jab +1 is the earlier Thrust and Diagonal Thrust in one: 8 directions
+	assert_array(_offsets(&"jab", H.UP, 1)).is_equal([Vector2i(0, -2), Vector2i(0, -1)])
+	assert_array(_offsets(&"jab", Vector2i(1, 1), 1)).is_equal([Vector2i(1, 1), Vector2i(2, 2)])
+	assert_int(BattleShapes.directions(&"jab", 1).size()).is_equal(8)
+	assert_array(_offsets(&"jab", H.RIGHT, 2)).is_equal([Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)])
+	assert_array(_offsets(&"pincer", H.RIGHT, 1)).is_equal([Vector2i(-2, 0), Vector2i(-1, 0), Vector2i(1, 0), Vector2i(2, 0)])
+	# Arc +1 is the earlier Cleave: the whole row moves on in the facing direction, straight only
+	assert_array(_offsets(&"arc", H.UP, 1)).is_equal([Vector2i(-1, -2), Vector2i(-1, -1), Vector2i(0, -2),
 		Vector2i(0, -1), Vector2i(1, -2), Vector2i(1, -1)])
-	assert_int(_offsets(&"storm", Vector2i.ZERO).size()).is_equal(8)
-	assert_int(_offsets(&"long_cross", Vector2i.ZERO).size()).is_equal(8)
-	# legal directions and battle-AP per shape
-	assert_bool(StrikeShapes.is_legal_dir(&"thrust", Vector2i(1, 1))).is_false()
-	assert_bool(StrikeShapes.is_legal_dir(&"diagonal_thrust", Vector2i(1, 1))).is_true()
-	assert_bool(StrikeShapes.is_legal_dir(&"cleave", Vector2i(1, 1))).is_false()   # cardinal only
-	assert_array([StrikeShapes.ap(&"jab"), StrikeShapes.ap(&"arc"), StrikeShapes.ap(&"storm"), StrikeShapes.ap(&"cleave")]).is_equal([2, 3, 4, 5])
+	assert_bool(BattleShapes.is_legal_dir(&"arc", Vector2i(1, 1), 1)).is_false()
+	assert_bool(BattleShapes.is_legal_dir(&"arc", Vector2i(1, 1), 0)).is_true()
+	# Whirl +1 and Cross +1 are the earlier Long Whirl and Long Cross; Storm +1 is the star of 16
+	assert_array(_offsets(&"whirl", Vector2i.ZERO, 1)).contains_exactly_in_any_order([Vector2i(0, -1), Vector2i(0, -2), Vector2i(1, 0), Vector2i(2, 0),
+		Vector2i(0, 1), Vector2i(0, 2), Vector2i(-1, 0), Vector2i(-2, 0)])
+	assert_int(_offsets(&"cross", Vector2i.ZERO, 1).size()).is_equal(8)
+	assert_int(_offsets(&"storm", Vector2i.ZERO, 1).size()).is_equal(16)
+	assert_bool(_offsets(&"storm", Vector2i.ZERO, 1).has(Vector2i(2, 1))).is_false()        # no square off the eight lines
+	# every extended square knows the square in front of it (a solid prop there shields it)
+	for h in BattleShapes.hits(&"storm", Vector2i.ZERO, 2):
+		var o: Vector2i = h["o"]
+		var unit := Vector2i(signi(o.x), signi(o.y))
+		assert_that(h["front"]).is_equal(BattleShapes.NONE if o == unit else o - unit)
+	# names and the draft AP the Strikes of the data were authored with
+	assert_array([BattleShapes.shape_name(&"jab", 1), BattleShapes.shape_name(&"arc", 1), BattleShapes.shape_name(&"storm", 1)]).is_equal(["Thrust", "Cleave", "Storm +1"])
+	assert_array([BattleShapes.draft_ap(&"jab"), BattleShapes.draft_ap(&"arc"), BattleShapes.draft_ap(&"storm"), BattleShapes.draft_ap(&"arc", 1),
+		BattleShapes.draft_ap(&"storm", 1)]).is_equal([2, 3, 4, 5, -1])
+
+
+func test_a_strike_costs_the_ap_on_its_card() -> void:
+	var shove := H.content().skill(&"shove")
+	assert_int(shove.cost()).is_equal(1)                                   # a Jab without damage: 1 AP on its card
+	assert_array([H.content().skill(&"strike_jab").cost(), H.content().skill(&"strike_thrust").cost(), H.content().skill(&"thorn_lash").cost()]).is_equal([2, 3, 2])
+	assert_str(H.content().skill(&"strike_thrust").shape_label()).is_equal("Thrust")
 
 
 func test_retreat_exists_only_for_shapes_with_a_centre_direction() -> void:
-	assert_that(StrikeShapes.retreat_dir(&"jab", H.UP)).is_equal(H.DOWN)
-	assert_that(StrikeShapes.retreat_dir(&"thrust", H.RIGHT)).is_equal(H.LEFT)
-	assert_that(StrikeShapes.retreat_dir(&"arc", Vector2i(1, -1))).is_equal(Vector2i(-1, 1))
-	assert_that(StrikeShapes.retreat_dir(&"cleave", H.UP)).is_equal(H.DOWN)
-	for shape in [&"pincer", &"whirl", &"cross", &"storm", &"long_whirl", &"long_cross"]:
-		assert_that(StrikeShapes.retreat_dir(shape, H.UP if shape == &"pincer" else Vector2i.ZERO)).is_equal(Vector2i.ZERO)
+	assert_that(BattleShapes.retreat_dir(&"jab", H.UP)).is_equal(H.DOWN)
+	assert_that(BattleShapes.retreat_dir(&"jab", H.RIGHT, 1)).is_equal(H.LEFT)
+	assert_that(BattleShapes.retreat_dir(&"arc", Vector2i(1, -1))).is_equal(Vector2i(-1, 1))
+	assert_that(BattleShapes.retreat_dir(&"arc", H.UP, 1)).is_equal(H.DOWN)
+	for shape: StringName in [&"pincer", &"whirl", &"cross", &"storm"]:
+		for extension in [0, 1]:
+			assert_that(BattleShapes.retreat_dir(shape, H.UP if shape == &"pincer" else Vector2i.ZERO, extension)).is_equal(Vector2i.ZERO)
 
 
 func test_jab_deals_two_to_any_monster_in_the_shape_allies_included() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 3), {"init": 9.0, "ap": 4, "skills": [H.strike()]}],
-		[0, Vector2i(3, 2), {"init": 1.0}],
-		[1, Vector2i(4, 4), {"init": 1.0}],
+		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 4, "skills": [H.strike()]}],
+		[0, Vector2i(3, 2), {"pace": 1.1}],
+		[1, Vector2i(4, 4), {"pace": 1.1}],
 	])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP})).is_true()
@@ -63,7 +94,7 @@ func test_jab_deals_two_to_any_monster_in_the_shape_allies_included() -> void:
 
 
 func test_the_whole_shape_must_lie_on_the_board() -> void:
-	var b := H.battle([[0, Vector2i(0, 3), {"init": 9.0, "ap": 5, "skills": [H.strike(), H.strike("whirl")]}], [1, Vector2i(1, 3)]])
+	var b := H.battle([[0, Vector2i(0, 3), {"pace": 1.9, "ap": 5, "skills": [H.strike(), H.strike("whirl")]}], [1, Vector2i(1, 3)]])
 	b.begin()
 	assert_str(b.check({"type": &"skill", "slot": 0, "dir": H.LEFT})).contains("does not fit")
 	assert_str(b.check({"type": &"skill", "slot": 1, "dir": Vector2i.ZERO})).contains("does not fit")
@@ -72,7 +103,7 @@ func test_the_whole_shape_must_lie_on_the_board() -> void:
 
 
 func test_a_solid_prop_takes_the_hit_and_blocks_the_cell_behind_it() -> void:
-	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "skills": [H.strike("thrust")]}], [1, Vector2i(3, 3)]])
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "skills": [H.strike("thrust")]}], [1, Vector2i(3, 3)]])
 	var lion := b.add_prop(&"stone_lion", Vector2i(3, 4))
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP})).is_true()
@@ -82,7 +113,7 @@ func test_a_solid_prop_takes_the_hit_and_blocks_the_cell_behind_it() -> void:
 
 
 func test_winged_dive_retreats_opposite_the_shape_and_fails_quietly() -> void:
-	var winged := {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.WINGED, "skills": [H.strike()]}
+	var winged := {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.WINGED, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(3, 3), winged], [1, Vector2i(3, 2), {"hp": 9}]])
 	b.set_ground(Vector2i(3, 4), &"thornbed", 1)
 	b.begin()
@@ -99,7 +130,7 @@ func test_winged_dive_retreats_opposite_the_shape_and_fails_quietly() -> void:
 
 
 func test_retreat_cannot_climb_and_takes_no_fall_damage() -> void:
-	var winged := {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.WINGED, "skills": [H.strike()]}
+	var winged := {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.WINGED, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(3, 3), winged], [1, Vector2i(6, 6)]])
 	b.board.at(Vector2i(3, 4)).height = 1
 	b.begin()
@@ -116,7 +147,7 @@ func test_retreat_cannot_climb_and_takes_no_fall_damage() -> void:
 
 
 func test_scaled_tail_sweep_pushes_in_the_chosen_direction_with_collision() -> void:
-	var scaled := {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike()]}
+	var scaled := {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(3, 3), scaled], [1, Vector2i(3, 2), {"hp": 9}]])
 	var lion := b.add_prop(&"stone_lion", Vector2i(5, 2))
 	var urn := b.add_prop(&"bamboo_stand", Vector2i(3, 0))
@@ -134,7 +165,7 @@ func test_scaled_tail_sweep_pushes_in_the_chosen_direction_with_collision() -> v
 
 
 func test_collision_with_a_monster_damages_both_and_the_board_edge_the_pushed_one() -> void:
-	var scaled := {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike()]}
+	var scaled := {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(1, 3), scaled], [1, Vector2i(0, 3), {"hp": 9}], [1, Vector2i(0, 2), {"hp": 9}]])
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.LEFT, "push_dir": H.LEFT})
@@ -147,7 +178,7 @@ func test_collision_with_a_monster_damages_both_and_the_board_edge_the_pushed_on
 
 
 func test_swarm_gnaw_deals_four_to_props() -> void:
-	var swarm := {"init": 9.0, "kin": MonsterDef.Kin.SWARM, "skills": [H.strike()]}
+	var swarm := {"pace": 1.9, "kin": MonsterDef.Kin.SWARM, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(3, 3), swarm], [1, Vector2i(6, 6)]])
 	b.add_prop(&"stone_lion", Vector2i(3, 2))
 	b.set_ground(Vector2i(3, 2), &"lava", 1)
@@ -157,16 +188,16 @@ func test_swarm_gnaw_deals_four_to_props() -> void:
 	assert_str(b.board.at(Vector2i(3, 2)).ground).is_equal("rubble")   # the ground it leaves
 
 
-func test_spirit_siphon_costs_the_target_one_initiative_next_round_only() -> void:
-	var spirit := {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.SPIRIT, "skills": [H.strike()]}
-	var b := H.battle([[0, Vector2i(3, 3), spirit], [1, Vector2i(3, 2), {"init": 6.0, "hp": 9}], [1, Vector2i(6, 6), {"init": 5.5}]])
+func test_spirit_siphon_costs_the_target_one_pace_next_round_only() -> void:
+	var spirit := {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.SPIRIT, "skills": [H.strike()]}
+	var b := H.battle([[0, Vector2i(3, 3), spirit], [1, Vector2i(3, 2), {"pace": 1.6, "hp": 9}], [1, Vector2i(6, 6), {"pace": 1.6}]])
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})         # same source: refresh, not -2
 	for i in 3:
 		b.end_turn()
 	assert_int(b.round_number).is_equal(2)
-	assert_array(b.queue.map(func(e): return [e["id"], e["init"]])).is_equal([[&"u0", 9.0], [&"u2", 5.5], [&"u1", 5.0]])
+	assert_array(b.queue.map(func(e): return [e["id"], "%.1f" % e["pace"]])).is_equal([[&"u0", "1.9"], [&"u2", "1.6"], [&"u1", "1.5"]])
 	for i in 3:
 		b.end_turn()
 	assert_int(b.round_number).is_equal(3)
@@ -174,7 +205,7 @@ func test_spirit_siphon_costs_the_target_one_initiative_next_round_only() -> voi
 
 
 func test_ancient_slam_destroys_the_mountain_under_the_target() -> void:
-	var ancient := {"init": 9.0, "kin": MonsterDef.Kin.ANCIENT, "skills": [H.strike()]}
+	var ancient := {"pace": 1.9, "kin": MonsterDef.Kin.ANCIENT, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(3, 3), ancient], [1, Vector2i(3, 2), {"hp": 9}]])
 	b.board.at(Vector2i(3, 2)).height = 1
 	b.set_ground(Vector2i(3, 2), &"lava", 1)
@@ -189,7 +220,7 @@ func test_ancient_slam_destroys_the_mountain_under_the_target() -> void:
 func test_damage_modifiers_sum_in_one_step_and_zero_damage_still_hits() -> void:
 	var hide := H.passive("t_thick_hide", {"reduces_damage": ["strike", "collision"] as Array[String]})
 	var hide2 := H.passive("t_thick_hide_2", {"reduces_damage": ["strike"] as Array[String]})
-	var scaled := {"init": 9.0, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike()]}
+	var scaled := {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike()]}
 	var b := H.battle([[0, Vector2i(3, 3), scaled], [1, Vector2i(3, 2), {"skills": [hide]}], [1, Vector2i(2, 3), {"skills": [hide, hide2]}]])
 	b.add_prop(&"stone_lion", Vector2i(3, 0))
 	b.begin()
@@ -201,12 +232,12 @@ func test_damage_modifiers_sum_in_one_step_and_zero_damage_still_hits() -> void:
 	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(1, 3))   # the push still applies
 
 
-func test_radial_push_variant_moves_adjacent_targets_outward_only() -> void:
+func test_a_strike_without_damage_pushes_adjacent_targets_outward_only() -> void:
 	var shove := H.strike("storm", false)
-	shove.radial_push = true
+	shove.strike_push = true
 	shove.strike_damage = 0                      # movement-only variant: no damage at all
 	var b := H.battle([
-		[0, Vector2i(3, 3), {"init": 9.0, "ap": 4, "skills": [shove]}],
+		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 4, "skills": [shove]}],
 		[1, Vector2i(3, 2)], [1, Vector2i(4, 4)], [1, Vector2i(2, 3)],
 	])
 	b.add_prop(&"clay_urn", Vector2i(4, 3))
@@ -220,7 +251,27 @@ func test_radial_push_variant_moves_adjacent_targets_outward_only() -> void:
 
 
 func test_strikes_reach_the_air_layer() -> void:
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0, "skills": [H.strike()]}], [1, Vector2i(3, 2), {"airborne": true}]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "skills": [H.strike()]}], [1, Vector2i(3, 2), {"airborne": true}]])
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
 	assert_int(H.unit(b, 1).hp).is_equal(3)
+
+
+# --- decision of 2026-11-15: damage and push are both optional parts of a Strike ---
+
+func test_a_strike_without_push_damages_and_moves_nothing() -> void:
+	var blow := H.strike("storm", false)
+	blow.strike_push = false
+	var b := H.battle([
+		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [blow, H.strike()]}],
+		[1, Vector2i(3, 2)], [1, Vector2i(4, 4)],
+	])
+	b.add_prop(&"clay_urn", Vector2i(4, 3))
+	b.add_prop(&"stone_lion", Vector2i(2, 3))
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.ZERO})).is_true()
+	assert_array([H.unit(b, 1).pos, H.unit(b, 2).pos]).is_equal([Vector2i(3, 2), Vector2i(4, 4)])   # nobody moved
+	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([2, 2])                               # 2 from the Strike, 1 from the urn that burst next to them
+	assert_object(b.board.at(Vector2i(4, 3)).prop).is_null()                                        # the urn (1 HP) is destroyed in place
+	assert_int(b.board.at(Vector2i(2, 3)).prop.hp).is_equal(1)                                      # the lion took 2 and stands
+	assert_int(H.events_of(b, &"collision").size()).is_equal(0)

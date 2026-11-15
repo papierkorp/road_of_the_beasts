@@ -13,7 +13,7 @@ const DIR_NAMES := {
 	Vector2i(0, -1): "north", Vector2i(1, -1): "north-east", Vector2i(1, 0): "east", Vector2i(1, 1): "south-east",
 	Vector2i(0, 1): "south", Vector2i(-1, 1): "south-west", Vector2i(-1, 0): "west", Vector2i(-1, -1): "north-west",
 }
-const TIMING := {"start_of_turn": "at turn start", "on_enter": "on entering", "end_of_turn": "at turn end", "end_of_round": "at round end", "on_leave": "on leaving"}
+const TIMING := {Moment.TURN_START: "at turn start", Moment.ENTER: "on entering", Moment.TURN_END: "at turn end", Moment.ROUND_END: "at round end", Moment.LEAVE: "on leaving"}
 const PATHS := {"walk": "walk", "line": "straight line", "free": "any path", "teleport": "teleport"}
 
 
@@ -116,17 +116,22 @@ static func ops_tokens(c: BattleContent, ops: Array, residue := false) -> Packed
 	return parts
 
 
+## Where a skill creates something: "3 sq · within Reach · ■■/■·" (a free shape as arranged) or "3 sq · line from the user" /
+## "4 sq · Whirl around the user" (a base shape).
 static func _area(s: BattleSkillDef) -> String:
-	var n := 4 if s.anchor_mode == "caster_ring" else s.footprint.size()
-	var where := {"reach": "within Reach", "adjacent": "adjacent", "trail": "line from caster", "caster_ring": "around caster"}
-	return "%d sq" % n + (SEP + where[s.anchor_mode] if where.has(s.anchor_mode) else "")
+	if s.is_free_shape():
+		var where := "%d sq" % s.footprint.size() + SEP + ("within Reach" if s.anchor_mode == "reach" else "adjacent")
+		return where if s.footprint.size() < 2 else where + SEP + BattleShapes.arrangement_text(s.footprint)
+	if s.shape_id() == BattleShapes.JAB:
+		return "%d sq" % s.shape_squares() + SEP + "line from the user"
+	return "%d sq" % s.shape_squares() + SEP + s.shape_label() + " around the user"
 
 
 static func _usage(s: BattleSkillDef) -> String:
 	return {"once_per_round": SEP + "1/round", "once_per_battle": SEP + "1/battle"}.get(s.repetition, "")
 
 
-## An effect in plain words: "Movement −1", "initiative +2", "push 1".
+## An effect in plain words: "Movement −1", "Pace +0.2", "push 1".
 static func effect_words(e: FieldEffect, level := 1) -> String:
 	var v := e.value_at(level)
 	match e.tag:
@@ -134,10 +139,10 @@ static func effect_words(e: FieldEffect, level := 1) -> String:
 			return "Movement −%d" % v
 		FieldEffect.HASTE:
 			return "Movement +%d" % v
-		FieldEffect.DRAIN_INIT:
-			return "initiative −%d" % v
+		FieldEffect.DRAIN_PACE:
+			return "Pace −%.1f" % (v * BattleStats.PACE_POINT)
 		FieldEffect.QUICKEN:
-			return "initiative +%d" % v
+			return "Pace +%.1f" % (v * BattleStats.PACE_POINT)
 		FieldEffect.DRAIN_RANGE:
 			return "Reach −%d" % v
 		FieldEffect.EXTEND:
@@ -151,7 +156,7 @@ static func effect_words(e: FieldEffect, level := 1) -> String:
 	return e.text(level)
 
 
-## What a zone does: "while inside: Movement −1, initiative −2 · pulls 1 at cast and turn end".
+## What a zone does: "while inside: Movement −1, Pace −0.2 · pulls 1 at cast and turn end".
 static func zone_brief(z: BattleZoneDef, level := 1) -> String:
 	var inside: PackedStringArray = []
 	var moves: PackedStringArray = []
@@ -226,14 +231,19 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 	var rows: Array = []
 	match s.kind:
 		BattleSkillDef.STRIKE:
-			var shape := StringName(s.strike_shape)
-			var n := StrikeShapes.hits(shape, StrikeShapes.directions(shape)[0]).size()
-			rows.append(["", "%s%s%d sq" % ["%d dmg" % s.strike_damage if s.strike_damage > 0 else "no dmg", SEP, n]])
+			var n := s.shape_squares()
+			var does: PackedStringArray = []
+			if s.strike_damage > 0:
+				does.append("%d dmg" % s.strike_damage)
+			if s.strike_push:
+				does.append("push 1")
+			if does.is_empty():
+				does.append("no dmg, no push")
+			does.append("%d sq" % n)
+			rows.append(["", SEP.join(does)])
 			var extra: PackedStringArray = []
 			if s.kin_effect and kin >= 0 and KinRules.strike(kin).get("text", "") != "":
 				extra.append(KinRules.strike(kin)["text"])
-			if s.radial_push:
-				extra.append("push 1 outward")
 			if s.self_retreat:
 				extra.append("then retreat 1")
 			if not extra.is_empty():
@@ -258,7 +268,7 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 			rows.append_array(created_rows(c, s))
 		BattleSkillDef.MOVE:
 			var parts: PackedStringArray = [PATHS.get(s.move_path, s.move_path),
-				("up to %d sq, 1 Stamina each" % (s.fixed_distance if s.fixed_distance > 0 else (s.move_range if s.move_range > 0 else 3))) if BattleExperiment.stamina else ("Move" + ("" if s.distance_mod == 0 else " %d" % s.distance_mod))]
+				("up to %d sq, Stamina per sq" % (s.fixed_distance if s.fixed_distance > 0 else (s.move_range if s.move_range > 0 else 3))) if BattleExperiment.stamina else ("Move" + ("" if s.distance_mod == 0 else " %d" % s.distance_mod))]
 			if s.blocked_by_height:
 				parts.append("not on Mountain")
 			if s.impact_push == "ahead":
@@ -292,7 +302,7 @@ static func sheet_rows(_c: BattleContent, s: UnitSheet) -> Array:
 	for k in s.skills:
 		kit.append(k.display_name)
 	return [
-		["", "%s%sHP %d%sInit %.1f%s%s %d%sReach %d%sAP %d%s" % [MonsterDef.kin_name(s.kin), SEP, s.hp, SEP, s.initiative, SEP,
+		["", "%s%sHP %d%sPace %.1f%s%s %d%sReach %d%sAP %d%s" % [MonsterDef.kin_name(s.kin), SEP, s.hp, SEP, s.pace, SEP,
 			"Stamina" if BattleExperiment.stamina else "Move", s.movement, SEP, s.reach, SEP, s.ap, "" if s.tpr <= 1 else SEP + "TPR %d" % s.tpr]],
 		["", SEP.join(kit)],
 	]
@@ -300,10 +310,10 @@ static func sheet_rows(_c: BattleContent, s: UnitSheet) -> Array:
 
 # ---------- state ----------
 
-## "Move 3", or under the test switch `stamina` what is left of the pool: "Stamina 2/4".
+## What is left of the Stamina pool and what comes back per round: "Stamina 2/4 (+1)"; "Move 3" with the pool switched off.
 static func move_text(b: Battle, u: BattleUnit) -> String:
 	if BattleExperiment.stamina:
-		return "Stamina %d/%d" % [u.stamina, u.sheet.movement]
+		return "Stamina %d/%d (+%d)" % [u.stamina, u.sheet.movement, BattleStats.recovery(b, u)]
 	return "Move %d" % BattleStats.movement(b, u)
 
 
@@ -314,7 +324,7 @@ static func unit_title(u: BattleUnit) -> String:
 
 ## A monster under the cursor: live stats, what affects it, its kit. No sources, no sentences.
 static func unit_rows(b: Battle, u: BattleUnit) -> Array:
-	var rows: Array = [["", "HP %d/%d%sInit %.1f%s%s%sReach %d%sAP %d%s" % [u.hp, u.max_hp, SEP, BattleStats.initiative(b, u), SEP,
+	var rows: Array = [["", "HP %d/%d%sPace %.1f%s%s%sReach %d%sAP %d%s" % [u.hp, u.max_hp, SEP, BattleStats.pace(b, u), SEP,
 		move_text(b, u), SEP, BattleStats.reach(b, u), SEP, u.sheet.ap, "" if u.sheet.tpr <= 1 else SEP + "TPR %d" % u.sheet.tpr]]]
 	var totals := {}
 	var order: Array = []

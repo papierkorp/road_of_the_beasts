@@ -15,7 +15,7 @@ func after_test() -> void:
 
 
 func test_a_walkable_trap_blocks_nothing_and_springs_on_the_monster_that_enters() -> void:
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(6, 0)]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(6, 0)]])
 	b.add_prop(&"spike_trap", Vector2i(3, 3))
 	b.begin()
 	var opts := BattleMoves.options(b, H.unit(b, 0), BattleMoves.step_profile())
@@ -38,7 +38,7 @@ func test_a_monster_pushed_onto_a_trap_springs_it_without_a_collision() -> void:
 
 
 func test_a_vortex_trap_pulls_the_neighbours_into_the_monster_that_sprang_it() -> void:
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(2, 3)], [1, Vector2i(5, 3)]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(2, 3)], [1, Vector2i(5, 3)]])
 	b.add_prop(&"vortex_trap", Vector2i(3, 3))
 	b.begin()
 	b.apply({"type": &"step", "to": Vector2i(3, 3)})
@@ -48,7 +48,7 @@ func test_a_vortex_trap_pulls_the_neighbours_into_the_monster_that_sprang_it() -
 
 
 func test_a_solid_wall_blocks_and_the_wall_skill_raises_three_in_a_line() -> void:
-	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "skills": ["raise_wall"]}], [1, Vector2i(6, 0)]])
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "skills": ["raise_wall"]}], [1, Vector2i(6, 0)]])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 4)})).is_true()
 	for x in [2, 3, 4]:
@@ -59,7 +59,7 @@ func test_a_solid_wall_blocks_and_the_wall_skill_raises_three_in_a_line() -> voi
 
 
 func test_a_thorn_idol_answers_every_hit_it_survives() -> void:
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 5, "skills": [H.strike()]}], [1, Vector2i(2, 2)], [1, Vector2i(5, 5)]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 5, "skills": [H.strike()]}], [1, Vector2i(2, 2)], [1, Vector2i(5, 5)]])
 	var idol := b.add_prop(&"thorn_idol", Vector2i(3, 3))
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})                   # 2 damage to the idol, 1 HP left; the Strike pushes it to (3,2)
@@ -74,7 +74,7 @@ func test_a_thorn_idol_answers_every_hit_it_survives() -> void:
 
 
 func test_a_brazier_burns_its_cardinal_neighbours_at_every_round_end() -> void:
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(4, 2)], [1, Vector2i(2, 3)]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(4, 2)], [1, Vector2i(2, 3)]])
 	b.add_prop(&"ember_brazier", Vector2i(3, 3))
 	b.begin()
 	for _i in 3:
@@ -87,7 +87,7 @@ func test_a_brazier_burns_its_cardinal_neighbours_at_every_round_end() -> void:
 
 
 func test_a_prop_on_a_dragon_vein_keeps_everyone_from_holding_it() -> void:
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(3, 0)]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(3, 0)]])
 	b.set_ground(Vector2i(3, 3), GroundDef.WELL)
 	assert_object(b.add_prop(&"earth_wall", Vector2i(3, 3))).is_not_null()
 	b.begin()
@@ -100,7 +100,7 @@ func test_a_prop_on_a_dragon_vein_keeps_everyone_from_holding_it() -> void:
 func test_a_skill_can_be_used_as_often_per_turn_as_its_usage_limit_says() -> void:
 	var twice := H.strike()
 	twice.usage_limit = 2
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 9, "skills": [H.strike(), twice]}], [1, Vector2i(3, 3), {"hp": 9}]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 9, "skills": [H.strike(), twice]}], [1, Vector2i(3, 3), {"hp": 9}]])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP})).is_true()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP})).is_false()   # build rule: once per turn
@@ -119,10 +119,44 @@ func test_six_kit_slots_are_valid() -> void:
 	assert_array(s.problems()).contains(["more than 6 slots"])
 
 
+## User decision 2026-11-15: the round end moves first and acts afterwards.
+func _drum_round_end(ground_at_target: StringName, ground_at_start: StringName = &"", brazier := false) -> Battle:
+	# the Storm Drum at (3,3) pushes its neighbour at (3,4) to (3,5) when the round ends
+	var b := H.battle([[0, Vector2i(3, 4), {"hp": 8}], [1, Vector2i(6, 0), {"hp": 8}]])
+	b.add_prop(&"storm_drum", Vector2i(3, 3))
+	if ground_at_target != &"":
+		b.set_ground(Vector2i(3, 5), ground_at_target, 1)
+	if ground_at_start != &"":
+		b.set_ground(Vector2i(3, 4), ground_at_start, 1)
+	if brazier:
+		b.add_prop(&"ember_brazier", Vector2i(3, 6))
+	b.begin()
+	b.end_turn()
+	b.end_turn()
+	assert_int(b.round_number).is_equal(2)
+	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 5))
+	return b
+
+
+func test_at_the_round_end_a_storm_drum_pushes_before_ground_and_props_act() -> void:
+	assert_int(H.unit(_drum_round_end(&"blight"), 0).hp).is_equal(7)             # pushed onto Blight: it acts on the new square
+	assert_int(H.unit(_drum_round_end(&"", &"blight"), 0).hp).is_equal(8)        # pushed off Blight: it no longer stands there
+	assert_int(H.unit(_drum_round_end(&"", &"", true), 0).hp).is_equal(7)        # pushed next to an Ember Brazier: it burns
+	assert_int(H.unit(_drum_round_end(&"thornbed"), 0).hp).is_equal(7)           # ground that acts on entering fires at the push, as always
+
+
+func test_lava_does_not_act_at_the_round_end_but_when_its_occupant_ends_a_turn_on_it() -> void:
+	var b := _drum_round_end(&"lava")
+	var u := H.unit(b, 0)
+	assert_int(u.hp).is_equal(8)                                                 # pushed onto Lava at the round end: nothing yet
+	H.until_turn_of(b, u.id)
+	b.end_turn()
+	assert_int(u.hp).is_equal(7)                                                 # it stayed and ended its own turn there
+
+
 func test_stamina_pays_one_per_square_and_comes_back_at_the_round_end() -> void:
-	BattleExperiment.stamina = true
 	BattleExperiment.once_per_turn = false
-	var b := H.battle([[0, Vector2i(0, 6), {"init": 9.0, "move": 4, "ap": 3, "skills": ["run"]}], [1, Vector2i(6, 0)]])
+	var b := H.battle([[0, Vector2i(0, 6), {"pace": 1.9, "move": 4, "ap": 3, "skills": ["run"]}], [1, Vector2i(6, 0)]])
 	b.begin()
 	var me := H.unit(b, 0)
 	var run := BattleMoves.profile_of(H.skill("run"))
@@ -144,15 +178,6 @@ func test_stamina_pays_one_per_square_and_comes_back_at_the_round_end() -> void:
 	assert_int(H.skill("run").cost()).is_equal(0)                          # Stamina only
 
 
-func test_a_generated_board_never_starts_with_a_prop_on_a_dragon_vein() -> void:
-	for board_seed in range(1, 40):
-		var b := Battle.new()
-		BattleBoards.build(b, &"3v3", board_seed)
-		for cell in b.board.cells:
-			if cell.ground == GroundDef.WELL:
-				assert_object(cell.prop).is_null()
-
-
 func test_the_prop_pairs_switch_sets_how_many_props_a_board_starts_with() -> void:
 	for pairs in [0, 4]:
 		BattleExperiment.map_props = pairs
@@ -161,7 +186,7 @@ func test_the_prop_pairs_switch_sets_how_many_props_a_board_starts_with() -> voi
 		var props := 0
 		for cell in b.board.cells:
 			props += int(cell.prop != null or cell.air_prop != null)
-			assert_bool(cell.prop != null and cell.ground == GroundDef.WELL).is_false()
+		assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()             # the centre never holds one; a Dragon Vein may (2026-11-15)
 		assert_int(props).is_equal(pairs * 2)
 
 
@@ -212,7 +237,7 @@ func test_a_prop_pushed_against_the_board_edge_or_another_prop_takes_one() -> vo
 
 
 func test_a_strike_pushes_the_prop_it_hits_one_square_away() -> void:
-	var b := H.battle([[0, Vector2i(3, 3), {"init": 9.0, "ap": 4, "skills": [H.strike()]}], [1, Vector2i(6, 6)]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "ap": 4, "skills": [H.strike()]}], [1, Vector2i(6, 6)]])
 	var urn := b.add_prop(&"clay_urn", Vector2i(3, 2))
 	urn.hp = 3
 	b.begin()
@@ -232,7 +257,7 @@ func test_a_push_zone_moves_a_prop_standing_in_it_at_the_round_end() -> void:
 # ---- button squares (board switch `map_buttons`, user idea 2026-11-15) ----
 
 func test_a_moss_rune_is_collected_without_damage_and_lays_mossbed_around_it() -> void:
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(6, 0)]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(6, 0)]])
 	b.add_prop(&"moss_rune", Vector2i(3, 3))
 	b.begin()
 	var hp := H.unit(b, 0).hp
@@ -247,7 +272,7 @@ func test_a_moss_rune_is_collected_without_damage_and_lays_mossbed_around_it() -
 
 
 func test_a_wall_rune_raises_walls_on_its_free_cardinal_neighbours() -> void:
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0}], [1, Vector2i(2, 3)]])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(2, 3)]])
 	b.add_prop(&"wall_rune", Vector2i(3, 3))
 	b.begin()
 	b.apply({"type": &"step", "to": Vector2i(3, 3)})
@@ -276,10 +301,60 @@ func test_the_button_pairs_switch_places_mirrored_runes_off_veins_and_start_area
 
 func test_a_runner_that_collects_a_wall_rune_mid_way_stops_before_the_new_wall() -> void:
 	var run := H.skill("run")
-	var b := H.battle([[0, Vector2i(3, 5), {"init": 9.0, "move": 4, "skills": [run]}], [1, Vector2i(6, 0)]])
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "move": 4, "skills": [run]}], [1, Vector2i(6, 0)]])
 	b.add_prop(&"wall_rune", Vector2i(3, 3))
 	b.begin()
-	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 1)})).is_true()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 2)})).is_true()
 	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 3))                # the rune's square; (3,2) is a wall now
 	assert_str(String(b.board.at(Vector2i(3, 2)).prop.def.id)).is_equal("earth_wall")
 	assert_int(H.events_of(b, &"move_blocked").size()).is_equal(1)
+
+
+func test_stamina_recovery_is_the_whole_number_of_pace_and_at_least_one() -> void:
+	var b := H.battle([[0, Vector2i(0, 6), {"pace": 2.3, "move": 5}], [0, Vector2i(2, 6), {"pace": 0.4, "move": 5}],
+		[1, Vector2i(6, 0), {"pace": 1.9, "move": 5}], [1, Vector2i(4, 0), {"pace": 3.0, "move": 2}]])
+	var units: Array[BattleUnit] = [H.unit(b, 0), H.unit(b, 1), H.unit(b, 2), H.unit(b, 3)]
+	var recoveries := func() -> Array: return units.map(func(u: BattleUnit) -> int: return BattleStats.recovery(b, u))
+	assert_array(recoveries.call()).is_equal([2, 1, 1, 3])               # 2.3 → 2 · 0.4 → at least 1 · 1.9 → 1 · 3.0 → 3
+	for u in units:
+		u.stamina = 0
+	b.begin()
+	for i in 4:
+		b.end_turn()
+	assert_int(b.round_number).is_equal(2)
+	assert_array(units.map(func(u: BattleUnit) -> int: return u.stamina)).is_equal([2, 1, 1, 2])   # never above the pool
+	BattleExperiment.stamina_regen = 2                                    # switch: the same for every monster
+	assert_int(BattleStats.recovery(b, units[1])).is_equal(2)
+
+
+## User decision 2026-11-15: the current Pace counts, not the one on the sheet.
+func test_a_zone_on_pace_moves_the_stamina_recovery_across_a_whole_number() -> void:
+	var b := H.battle([[0, Vector2i(0, 6), {"pace": 2.0, "move": 5}], [0, Vector2i(2, 6), {"pace": 2.2, "move": 5}],
+		[1, Vector2i(6, 0), {"pace": 1.9, "move": 5}], [1, Vector2i(4, 0), {"pace": 1.7, "move": 5}]])
+	var units: Array[BattleUnit] = [H.unit(b, 0), H.unit(b, 1), H.unit(b, 2), H.unit(b, 3)]
+	for u in units:
+		u.stamina = 0
+	var drain := H.zone_skill([FieldEffect.make("drain_pace", 1, 1)]).zone
+	var quicken := H.zone_skill([FieldEffect.make("quicken", 1, 1)], [Vector2i.ZERO], 2, "t_quick").zone
+	H.zone_on(b, Vector2i(0, 6), drain, 900, 1, Vector2i.ZERO, Vector2i.ZERO, 1)       # 2.0 → 1.9 in the zone's last round
+	H.zone_on(b, Vector2i(2, 6), drain, 901)                                           # 2.2 → 2.1: no whole number crossed
+	H.zone_on(b, Vector2i(6, 0), quicken, 902)                                         # 1.9 → 2.0
+	H.zone_on(b, Vector2i(4, 0), quicken, 903)                                         # 1.7 → 1.8
+	b.begin()
+	assert_array(units.map(func(u: BattleUnit) -> int: return BattleStats.recovery(b, u))).is_equal([1, 2, 2, 1])
+	assert_str(BattleText.move_text(b, units[0])).is_equal("Stamina 0/5 (+1)")          # the HUD shows what the round end gives
+	for i in 4:
+		b.end_turn()
+	assert_int(b.round_number).is_equal(2)
+	assert_array(units.map(func(u: BattleUnit) -> int: return u.stamina)).is_equal([1, 2, 2, 1])
+	# the zone under the first monster has run out with the clocks, after the recovery: from now on it recovers 2 again
+	assert_object(b.board.at(Vector2i(0, 6)).zone).is_null()
+	assert_int(BattleStats.recovery(b, units[0])).is_equal(2)
+
+
+func test_walking_onto_rubble_costs_two_stamina() -> void:
+	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "move": 4, "skills": ["run"]}], [1, Vector2i(6, 0)]])
+	b.set_ground(Vector2i(3, 4), &"rubble")
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 3)})).is_true()
+	assert_int(H.unit(b, 0).stamina).is_equal(1)                           # Rubble 2 + Plain 1

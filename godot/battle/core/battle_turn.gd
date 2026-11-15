@@ -4,8 +4,10 @@ extends RefCounted
 ##   entry start: start-of-turn ground → AP
 ##   Surges: a trap fires when sprung, a timed Surge after its turns (between two turns)
 ##   entry end:   zone push/pull → end-of-turn ground (on the landing square) → mend
-##   round end:   zones -1 round, timed unit effects expire, late-round Voidscar / arena
-##                collapse, initiative re-sorted.
+##   round end:   push and pull zones move props → round-end ground → props that act every round →
+##                Dragon Veins and surrounding (one step) → all clocks tick (zones, timed unit effects,
+##                ground laid in battle) → late-round Voidscar / arena collapse → Stamina recovery →
+##                the Pace queue of the next round.
 
 
 static func begin(b: Battle) -> void:
@@ -35,7 +37,7 @@ static func _start_entry(b: Battle) -> void:
 		b.ap = 0
 		if u.is_alive():
 			# 1. start-of-turn ground (Voidscar, Blight); its damage cannot move anyone into a trap
-			BattleDamage.ground_triggers(b, u, GroundTrigger.START_OF_TURN)
+			BattleDamage.ground_triggers(b, u, Moment.TURN_START)
 			if b.check_over():
 				return
 		if u.is_alive() and BattleExperiment.surge_at_caster:
@@ -184,9 +186,9 @@ static func end_turn(b: Battle) -> void:
 					mend.append({"unit": u.id, "amount": e.value_at(z.level), "source": z.def.display_name})
 			if u.size > 1:
 				# a 2x2 body nets mend with its same-timing ground triggers (gdd_battle §4.3)
-				BattleDamage.ground_triggers(b, u, GroundTrigger.END_OF_TURN, [], mend)
+				BattleDamage.ground_triggers(b, u, Moment.TURN_END, [], mend)
 			else:
-				BattleDamage.ground_triggers(b, u, GroundTrigger.END_OF_TURN)
+				BattleDamage.ground_triggers(b, u, Moment.TURN_END)
 				if u.is_alive() and not mend.is_empty():
 					BattleDamage.apply_round(b, [], mend)
 		if b.check_over():
@@ -198,37 +200,26 @@ static func end_turn(b: Battle) -> void:
 	_start_entry(b)
 
 
+## The round end moves first, acts afterwards and ticks its clocks last (user decisions 2026-11-15, gdd_battle §2.4).
 static func _end_round(b: Battle) -> void:
 	var ended := b.round_number
-	_zones_move_props(b)                      # push and pull zones move the props standing in them (user decision 2026-11-14), before zones fade
+	# 1. everything that moves: push and pull zones move the props standing in them (user decision 2026-11-14),
+	#    then the props that push or pull (Storm Drum). What reacts to entering or leaving a square fires as always.
+	_zones_move_props(b)
 	if b.check_over():
 		return
-	# zones lose a round; expired zones are removed (no repaint)
-	var faded := 0
-	for cell in b.board.cells:
-		if cell.zone != null:
-			cell.zone.duration -= 1
-			if cell.zone.duration <= 0:
-				cell.zone = null
-				faded += 1
-	if faded > 0:
-		b.emit(&"zones_faded", {"count": faded})
-	# timed unit effects end at the round end of their N-th following round
-	for id in b.roster:
-		var u: BattleUnit = b.units[id]
-		var keep: Array[Dictionary] = []
-		for fx in u.effects:
-			if int(fx["ends_round"]) > ended:
-				keep.append(fx)
-		u.effects = keep
-	# ground that acts at the end of a round (gdd_battle §4.7), then Dragon Veins and surrounding
+	BattleProps.round_end(b, true)
+	if b.check_over():
+		return
+	# 2. everything that acts on where things stand now: ground of the round end (gdd_battle §4.7), the other
+	#    round-end lines of the props (Ember Brazier), then Dragon Veins and surrounding (_finish_round)
 	for id in b.roster:
 		var ru: BattleUnit = b.units[id]
 		if ru.is_alive() and ru.on_field:
-			BattleDamage.ground_triggers(b, ru, GroundTrigger.END_OF_ROUND)
+			BattleDamage.ground_triggers(b, ru, Moment.ROUND_END)
 	if b.check_over():
 		return
-	BattleProps.round_end(b)                  # props that act every round
+	BattleProps.round_end(b, false)
 	if b.check_over():
 		return
 	b.choice_picks.clear()
@@ -237,20 +228,23 @@ static func _end_round(b: Battle) -> void:
 	_finish_round(b, ended)
 
 
-## The rest of the round end: Dragon Vein and surround damage, fading, pressure, the next round.
+## The rest of the round end: Dragon Vein and surround damage, Stamina recovery, the clocks, pressure, the next round.
 static func _finish_round(b: Battle, ended: int) -> void:
 	var held := _positional(b)
 	if b.check_over():
 		return
-	_fade(b, ended)
+	# Every monster recovers Stamina: the whole number of its current Pace. It belongs to what acts at the round
+	# end, so it comes before the clocks tick: a zone or timed effect in its last round still counts once more.
+	if BattleExperiment.stamina:
+		for id in b.roster:
+			var su: BattleUnit = b.units[id]
+			if su.is_alive():
+				su.stamina = mini(su.sheet.movement, su.stamina + BattleStats.recovery(b, su))
+	_tick_clocks(b, ended)
 	if BattleExperiment.pressure_mode == "always" or (BattleExperiment.pressure_mode == "idle" and held == 0):
 		_late_pressure(b, ended)
 	if b.check_over():
 		return
-	if BattleExperiment.stamina:               # test switch: every monster regains Stamina
-		for id in b.roster:
-			var su: BattleUnit = b.units[id]
-			su.stamina = mini(su.sheet.movement, su.stamina + BattleExperiment.stamina_regen)
 	# remember the finished queue: orphaned Surges order their sources by it
 	b.prev_queue = b.queue.duplicate(true)
 	b.round_number += 1
@@ -360,7 +354,7 @@ static func choose(b: Battle, unit: StringName) -> void:
 
 
 ## Every enemy that ties for the target of a held Dragon Vein: nearest, then most HP, then most
-## initiative (gdd_battle §4.2).
+## pace (gdd_battle §4.2).
 static func _well_best(b: Battle, p: Vector2i, side: int) -> Array[BattleUnit]:
 	var out: Array[BattleUnit] = []
 	for e in b.living(1 - side):
@@ -370,8 +364,8 @@ static func _well_best(b: Battle, p: Vector2i, side: int) -> Array[BattleUnit]:
 		var best := out[0]
 		var de := e.chebyshev_to(p)
 		var db := best.chebyshev_to(p)
-		var ie := BattleStats.initiative(b, e)
-		var ib := BattleStats.initiative(b, best)
+		var ie := BattleStats.pace(b, e)
+		var ib := BattleStats.pace(b, best)
 		if de < db or (de == db and (e.hp > best.hp or (e.hp == best.hp and ie > ib))):
 			out = [e] as Array[BattleUnit]
 		elif de == db and e.hp == best.hp and is_equal_approx(ie, ib):
@@ -380,12 +374,12 @@ static func _well_best(b: Battle, p: Vector2i, side: int) -> Array[BattleUnit]:
 
 
 ## The pick of a side that does not choose by hand (the AI, simulations; user decision 2026-11-14):
-## fewest HP, then highest initiative, then lowest max HP, then roster order.
+## fewest HP, then highest pace, then lowest max HP, then roster order.
 static func ai_pick(b: Battle, tied: Array[BattleUnit]) -> BattleUnit:
 	var best := tied[0]
 	for t in tied:
-		var it := BattleStats.initiative(b, t)
-		var ib := BattleStats.initiative(b, best)
+		var it := BattleStats.pace(b, t)
+		var ib := BattleStats.pace(b, best)
 		if t.hp < best.hp \
 				or (t.hp == best.hp and it > ib and not is_equal_approx(it, ib)) \
 				or (t.hp == best.hp and is_equal_approx(it, ib) and t.max_hp < best.max_hp):
@@ -394,7 +388,7 @@ static func ai_pick(b: Battle, tied: Array[BattleUnit]) -> BattleUnit:
 
 
 ## The enemy a held Wellspring hits: nearest to the square (board distance), then more HP, then
-## more initiative; a last tie is the holder's choice in the draft (here: roster order).
+## more pace; a last tie is the holder's choice in the draft (here: roster order).
 static func _well_target(b: Battle, p: Vector2i, side: int) -> BattleUnit:
 	var tied := _well_best(b, p, side)
 	if tied.is_empty():
@@ -405,8 +399,32 @@ static func _well_target(b: Battle, p: Vector2i, side: int) -> BattleUnit:
 			return t
 	return ai_pick(b, tied)
 
-## Test switches (BattleExperiment): ground laid during the battle and unsprung traps end with
-## the round their clock names. Off by default: both stay until something changes them.
+
+## All clocks tick together, after everything of the round end has acted (user decision 2026-11-15): zones
+## lose a round, timed unit effects of this round end, ground laid in battle fades. So a thing that lasts
+## N rounds still counts at its N-th round end.
+static func _tick_clocks(b: Battle, ended: int) -> void:
+	var faded := 0
+	for cell in b.board.cells:
+		if cell.zone != null:
+			cell.zone.duration -= 1
+			if cell.zone.duration <= 0:
+				cell.zone = null
+				faded += 1
+	if faded > 0:
+		b.emit(&"zones_faded", {"count": faded})
+	for id in b.roster:
+		var u: BattleUnit = b.units[id]
+		var keep: Array[Dictionary] = []
+		for fx in u.effects:
+			if int(fx["ends_round"]) > ended:
+				keep.append(fx)
+		u.effects = keep
+	_fade(b, ended)
+
+
+## Ground laid during the battle turns back into Plain at the end of the round its clock names (build rule:
+## 2 rounds, `ground_rounds`); unsprung Surge traps lapse the same way if `trap_rounds` is set.
 static func _fade(b: Battle, ended_round: int) -> void:
 	if BattleExperiment.ground_rounds > 0:
 		for cell in b.board.cells:

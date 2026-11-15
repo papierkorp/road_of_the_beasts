@@ -100,7 +100,7 @@ static func _cells(b: Battle, a: Dictionary) -> Array[Vector2i]:
 	var s := b.skill_in_slot(u, int(a["slot"]))
 	var out: Array[Vector2i] = []
 	if s.kind == BattleSkillDef.STRIKE:
-		for h in StrikeShapes.hits(StringName(s.strike_shape), a.get("dir", Vector2i.ZERO)):
+		for h in s.shape_hits(a.get("dir", Vector2i.ZERO)):
 			out.append(a.get("origin", u.pos) + h["o"])
 	else:
 		out = BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))

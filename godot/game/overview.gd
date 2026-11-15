@@ -4,7 +4,7 @@ extends Control
 ## res://data (read through BattleContent), whatever its content status. Skills are shown as their
 ## card (gdd_skills §2: cost · where · strike · movement · on itself · creates ground / zone / prop,
 ## SkillGen.card); what a ground, zone or prop does stands in its own table. It
-## decides and prices nothing; stat prices are open, so no point totals are shown.
+## decides and prices nothing; the Points column shows what a monster's stats cost by gdd_monsters §2.2 (display only).
 ## Click a column title to sort (again: reverse); the tooltip of a row holds its notes.
 ## "Skill builder" opens game/skill_builder.gd, which writes new skill files.
 
@@ -38,11 +38,12 @@ const TABLES := {
 			["kin", "Kin", 90, false, false],
 			["strike", "Kin Strike", 110, false, false],
 			["hp", "HP", 50, false, true],
-			["initiative", "Init", 60, false, true],
-			["move", "Move", 60, false, true],
-			["tpr", "TPR", 50, false, true],
+			["pace", "Pace", 60, false, true],
+			["move", "Stamina", 80, false, true],
+			["tpr", "Turns", 60, false, true],
 			["reach", "Reach", 65, false, true],
 			["ap", "AP", 50, false, true],
+			["points", "Points", 75, false, true],
 			["kit", "Kit", 420, true, false],
 			["status", "Status", 100, false, false],
 			["id", "Id", 190, false, false],
@@ -68,6 +69,22 @@ const TABLES := {
 			["name", "Zone", 190, false, false],
 			["effect", "Effect (while inside)", 420, true, false],
 			["sources", "Left by", 420, true, false],
+			["status", "Status", 100, false, false],
+			["id", "Id", 160, false, false],
+		],
+	},
+	"sheets": {
+		"title": "Board sheets", "filter": "kind", "filter_all": "Ground, zones and props",
+		"columns": [
+			["kind", "Kind", 80, false, false],
+			["name", "Name", 170, false, false],
+			["lies", "Lies as", 150, false, false],
+			["ends", "Ends", 250, true, false],
+			["move_cost", "Move cost", 90, false, true],
+			["levels", "Levels", 70, false, true],
+			["hp", "HP", 50, false, true],
+			["acts_on", "Acts on", 200, true, false],
+			["lines", "When: what", 520, true, false],
 			["status", "Status", 100, false, false],
 			["id", "Id", 160, false, false],
 		],
@@ -106,8 +123,8 @@ static func skill_rows(c: BattleContent) -> Array[Dictionary]:
 	for id in BattleContent.sorted_ids(c.skills):
 		var s: BattleSkillDef = c.skills[id]
 		var lines: PackedStringArray = []
-		if s.kind == BattleSkillDef.STRIKE and StrikeShapes.has(StringName(s.strike_shape)):
-			lines.append(StrikeShapes.shape_name(StringName(s.strike_shape)))
+		if s.kind == BattleSkillDef.STRIKE and BattleShapes.has(s.shape_id()):
+			lines.append(s.shape_label())
 		for r in BattleText.skill_rows(c, s):
 			lines.append(String(r[1]))
 		var users: PackedStringArray = []
@@ -150,11 +167,15 @@ static func monster_rows(c: BattleContent) -> Array[Dictionary]:
 			"kin": MonsterDef.kin_name(m.kin),
 			"strike": m.strike_name(),
 			"hp": m.hp,
-			"initiative": m.initiative,
+			"pace": m.pace,
 			"move": m.move,
 			"tpr": m.tpr,
 			"reach": m.reach,
 			"ap": m.ap,
+			"points": m.stat_points(),
+			# hovering the Points cell shows the calculation (gdd_monsters §2.2)
+			"points_table": MonsterDef.point_lines(m.hp, m.pace, m.move, m.reach, m.tpr, m.ap).map(func(l: Array) -> Array: return [l[0], str(l[1])])
+				+ [["Total", "%d of %d" % [m.stat_points(), MonsterDef.MULTIPLAYER_POINTS]]],
 			"kit": m.kit_text(),
 			"status": m.content_status,
 			"in_game": ContentStatus.in_game(m),
@@ -262,6 +283,30 @@ static func prop_rows(c: BattleContent) -> Array[Dictionary]:
 	return out
 
 
+## Ground, zones and props on one sheet (BoardSheet): the same head and the same lines "when: what"
+## for all three, grounds first, then zones, then props.
+static func sheet_rows(c: BattleContent) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var sheets: Array = []
+	for id in BattleContent.sorted_ids(c.grounds):
+		sheets.append([BoardSheet.ground(c.grounds[id]), c.grounds[id]])
+	for id in BattleContent.sorted_ids(c.zones):
+		sheets.append([BoardSheet.zone(c.zones[id]), c.zones[id]])
+	for id in BattleContent.sorted_ids(c.props):
+		sheets.append([BoardSheet.prop(c.props[id]), c.props[id]])
+	for pair: Array in sheets:
+		var sheet: Dictionary = pair[0]
+		var lines := BoardSheet.lines_text(c, sheet)
+		out.append({
+			"id": String(sheet["id"]), "kind": sheet["kind"], "name": sheet["name"], "lies": sheet["lies"], "ends": sheet["ends"],
+			"move_cost": sheet["move_cost"] if sheet["kind"] == "ground" else -1, "levels": sheet["levels"] if sheet["kind"] != "prop" else -1,
+			"hp": sheet["hp"] if sheet["kind"] == "prop" else -1, "acts_on": sheet["acts_on"],
+			"lines": lines.replace("\n", " · ") if lines != "" else "—",
+			"status": pair[1].content_status, "in_game": ContentStatus.in_game(pair[1]), "tooltip": lines,
+		})
+	return out
+
+
 static func _notes(parts: Array) -> String:
 	var lines: PackedStringArray = []
 	for p: String in parts:
@@ -275,7 +320,7 @@ func _ready() -> void:
 	theme = UiTheme.create()
 	var content := BattleContent.shared()
 	_data = {"skills": skill_rows(content), "monsters": monster_rows(content), "grounds": ground_rows(content),
-		"zones": zone_rows(content), "props": prop_rows(content)}
+		"zones": zone_rows(content), "sheets": sheet_rows(content), "props": prop_rows(content)}
 
 	var bg := ColorRect.new()
 	bg.color = Color(0.075, 0.082, 0.094)
@@ -311,12 +356,17 @@ func _ready() -> void:
 		tab.pressed.connect(show_table.bind(id))
 		bar.add_child(tab)
 		_tabs[id] = tab
+	# second row: one row was wider than the screen and pushed the right columns of the table out of view
+	bar = HBoxContainer.new()
+	bar.add_theme_constant_override("separation", 16)
+	col.add_child(bar)
 	_filter = OptionButton.new()
 	_filter.custom_minimum_size = Vector2(160, 0)
 	_filter.item_selected.connect(func(_i): _refresh())
 	bar.add_child(_filter)
 	_game_only = CheckButton.new()
-	_game_only.text = "In game only (approved / draft / experiment)"
+	_game_only.text = "In game only"
+	_game_only.tooltip_text = "Shows only what the game fields: status approved, draft or experiment."
 	_game_only.toggled.connect(func(_on): _refresh())
 	bar.add_child(_game_only)
 	var builder := Button.new()
@@ -342,7 +392,7 @@ func _ready() -> void:
 	col.add_child(_tree)
 
 	var hint := Label.new()
-	hint.text = "One row per Resource file under res://data. Click a column title to sort; hover a row for its notes. A skill only delivers: it strikes, moves or acts on its user and creates ground, a zone or a prop; what those do and when stands in their own tables. Monster stats = the species' reference sheet; stat prices are open, so no point totals. Grounds act at a moment, zones while a monster stands inside; props block the way and act when destroyed. Greyed rows are not in the game (status test, simulation or archived)."
+	hint.text = "One row per Resource file under res://data. Click a column title to sort; hover a row for its notes. A skill only delivers: it strikes, moves or acts on its user and creates ground, a zone or a prop; what those do and when stands in their own tables. Monster stats = the species' reference individual; Points = what these stats cost (every stat starts at 1; +0.1 Pace 1, Stamina 2, HP 5, Reach 5, AP steps 5/10/15/20, a second turn 10 + 5 per AP, a third twice that; the multiplayer mode plays with 60): hover the cell for the sum. Grounds act at a moment, zones while a monster stands inside; props block the way and act when destroyed. Greyed rows are not in the game (status test, simulation or archived)."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # without it the long line widens the whole screen
 	hint.add_theme_color_override("font_color", UiTheme.DIM)
 	hint.add_theme_font_size_override("font_size", 14)

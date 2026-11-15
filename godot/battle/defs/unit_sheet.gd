@@ -13,7 +13,7 @@ var size: int = 1
 var airborne: bool = false
 
 var hp: int = 5
-var initiative: float = 5.0
+var pace: float = 1.2
 var movement: int = 2
 var reach: int = 2
 var tpr: int = 1
@@ -22,8 +22,8 @@ var ap: int = 2
 var current_hp: int = -1
 ## Slots in order; passives occupy slots too.
 var skills: Array[BattleSkillDef] = []
-## Pre-battle initiative modifier for this whole battle (battle-prep pill, gdd_overworld §6.6).
-var init_bonus: float = 0.0
+## Pre-battle pace modifier for this whole battle (battle-prep pill, gdd_overworld §6.6).
+var pace_bonus: float = 0.0
 ## Look hint for the view only (never read by the rules).
 var look: MonsterDef = null
 ## What the adapter could not carry over (shown before the battle, never a rule).
@@ -51,8 +51,8 @@ func problems() -> Array[String]:
 	var out: Array[String] = []
 	if hp < 1 or hp > 10:
 		out.append("HP %d outside 1-10" % hp)
-	if initiative < 0.1 or initiative > 10.0:
-		out.append("Initiative %.1f outside 0.1-10.0" % initiative)
+	if pace < 0.1 or pace > 10.0:
+		out.append("Pace %.1f outside 0.1-10.0" % pace)
 	if reach < 2 or reach > 4:
 		out.append("Reach %d outside 2-4" % reach)
 	if tpr < 1 or tpr > 3:

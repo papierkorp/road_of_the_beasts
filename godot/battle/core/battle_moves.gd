@@ -124,9 +124,9 @@ static func _step_cost(b: Battle, u: BattleUnit, from: Vector2i, to: Vector2i, p
 static func _entry_harm(b: Battle, u: BattleUnit, from: Vector2i, to: Vector2i) -> int:
 	if u.layer == Board.AIR:
 		return 0
-	return BattleDamage.ground_harm(b, u, GroundTrigger.ON_ENTER, fresh_cells(u, from, to)) \
+	return BattleDamage.ground_harm(b, u, Moment.ENTER, fresh_cells(u, from, to)) \
 		+ BattleProps.enter_harm(b, u, fresh_cells(u, from, to)) \
-		+ BattleDamage.ground_harm(b, u, GroundTrigger.ON_LEAVE, u.cells_at(from))
+		+ BattleDamage.ground_harm(b, u, Moment.LEAVE, u.cells_at(from))
 
 
 ## Reachable destinations: {origin: {cost, harm, path}}. `path` lists the origins entered in
@@ -236,14 +236,14 @@ static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, la
 			b.emit(&"move_blocked", {"who": u.id, "at": n, "skill": label})
 			break
 		if u.layer == Board.GROUND:
-			BattleDamage.ground_triggers(b, u, GroundTrigger.ON_LEAVE)
+			BattleDamage.ground_triggers(b, u, Moment.LEAVE)
 			if not u.is_alive():
 				break
 		var fresh := fresh_cells(u, u.pos, n)
 		b.relocate(u, n)
 		expected = n
 		if u.layer == Board.GROUND:
-			BattleDamage.ground_triggers(b, u, GroundTrigger.ON_ENTER, fresh)
+			BattleDamage.ground_triggers(b, u, Moment.ENTER, fresh)
 		if not u.is_alive():
 			break
 	return true
@@ -312,5 +312,5 @@ static func retreat(b: Battle, u: BattleUnit, dir: Vector2i) -> bool:
 	b.relocate(u, to)
 	b.emit(&"retreated", {"who": u.id, "from": from, "to": to})
 	if u.layer == Board.GROUND:
-		BattleDamage.ground_triggers(b, u, GroundTrigger.ON_ENTER, fresh)
+		BattleDamage.ground_triggers(b, u, Moment.ENTER, fresh)
 	return true

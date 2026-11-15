@@ -48,7 +48,7 @@ static var no_shield_zones := false
 static var start_back := false
 ## Build rule since 2026-11-13 (user decision, T39; gdd_battle §4.2): that many Wellspring squares lie on
 ## the centre row (odd boards of 7×7 and larger; 0 = none). At the end of a round every Wellspring a monster stands on (either
-## layer) deals 1 damage to the enemy nearest to it; ties: more HP, then more initiative, then the
+## layer) deals 1 damage to the enemy nearest to it; ties: more HP, then more pace, then the
 ## holder chooses (the code takes roster order as a stand-in). No prop or Mountain on a Wellspring.
 static var wells := 3
 ## Build rule: at the end of a round a monster with two or more enemies on its eight neighbour
@@ -106,18 +106,24 @@ static var vein_charge := false
 static var vein_charge_late := false
 ## The universal Step walks up to the monster's Movement for its AP (like Run), instead of 1 square.
 static var step_full_move := false
-## Stamina draft (user idea 2026-11-14, S028/S029; not a rule): the Movement stat is read as Stamina, a
-## pool a monster spends in battle. A slotted movement skill costs 1 Stamina per movement point it
-## uses (a square, or what its ground costs) and reaches at most the range the skill names
-## (`move_range`, 3 unless authored) and never further than the Stamina left. Every monster regains
-## `stamina_regen` at the end of a round, up to its stat. The universal Step stays 1 AP for 1 square
-## and costs no Stamina.
-static var stamina := false
-static var stamina_regen := 1
+## Stamina (rule since 2026-11-15, user decision; S028/S029): the Movement stat is the size of a Stamina
+## pool a monster spends in battle. A slotted movement skill costs Stamina for every square it enters
+## (what the ground costs: Plain 1, Rubble 2; a path over other squares 1 per square of the distance)
+## and reaches at most the range the skill names (`move_range`, 3 unless authored) and never further
+## than the Stamina left. At the end of a round every monster recovers the whole number of its Pace,
+## at least 1, up to its pool. The universal Step stays 1 AP for 1 square and costs no Stamina.
+## false = the rule before: a movement skill covers the Movement stat, no pool (to compare).
+static var stamina := true
+## 0 = the rule (recovery by Pace); N > 0 = every monster recovers N per round (to compare, S029).
+static var stamina_regen := 0
 ## With stamina: a movement skill also costs its AP (false = Stamina only).
 static var stamina_ap := true
 ## Board switch: mirrored prop pairs a board starts with (-1 = as the layout or its seed says, 0 = none).
 static var map_props := -1
+## Board switch (user request 2026-11-15): side length of the board, for every mode (0 = the size of the mode;
+## the draft offers 8 and 9; a size not larger than the mode's is ignored). Start squares, the fixed test
+## layout and the number of seeded prop pairs follow the size (BattleBoards.mode_data).
+static var board_size := 0
 ## Board switch (user idea, 2026-11-15): mirrored pairs of "button" squares the board starts with: walkable
 ## rune props without damage that act on the board when a monster collects them (0 = none).
 static var map_buttons := 0
@@ -160,17 +166,29 @@ static func reset() -> void:
 	vein_charge = false
 	vein_charge_late = false
 	step_full_move = false
-	stamina = false
-	stamina_regen = 1
+	stamina = true
+	stamina_regen = 0
 	stamina_ap = true
 	map_props = -1
 	map_buttons = 0
+	board_size = 0
 
 
-## The Wellspring squares of a board of this size: evenly spread on the centre row.
+## The Dragon Vein squares of a board of this size (`wells` of them; none on boards smaller than 7×7).
+## Odd boards: evenly spread on the centre row. Even boards have no centre row (draft of 2026-11-15, for
+## the 8×8 board switch): mirrored pairs on the two centre rows, so `wells` rounds up to an even number
+## (3 → 4 veins); each side has the same number on the row nearer to it.
 static func well_squares(size: int) -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
-	if wells <= 0 or size % 2 == 0 or size < 7:
+	if wells <= 0 or size < 7:
+		return out
+	if size % 2 == 0:
+		var pairs := (wells + 1) >> 1
+		for i in pairs:
+			var x := (size >> 1) - 2 if pairs == 1 else clampi(roundi((i + 0.5) * size / pairs - 0.5) - 1, 0, size - 1)
+			for q: Vector2i in [Vector2i(x, size >> 1), Vector2i(size - 1 - x, (size >> 1) - 1)]:
+				if not out.has(q):
+					out.append(q)
 		return out
 	for i in wells:
 		var p := Vector2i(clampi(roundi((i + 0.5) * size / wells - 0.5), 0, size - 1), size >> 1)

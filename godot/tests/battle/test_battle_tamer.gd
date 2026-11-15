@@ -26,28 +26,28 @@ func _use(b: Battle, skill: StringName, extra: Dictionary = {}) -> bool:
 
 
 func test_window_own_turn_only_once_per_battle_and_free() -> void:
-	var b := _battle([[0, Vector2i(3, 3), {"init": 9.0, "current_hp": 2}], [1, Vector2i(6, 6), {"init": 5.0}]], [&"second_wind"])
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9, "current_hp": 2}], [1, Vector2i(6, 6), {"pace": 1.5}]], [&"second_wind"])
 	b.begin()
 	assert_bool(_use(b, &"second_wind", {"unit": &"u0"})).is_true()
 	assert_int(H.unit(b, 0).hp).is_equal(3)
 	assert_int(b.ap).is_equal(3)                 # no AP, no turn
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"second_wind", "unit": &"u0"})).contains("already used")
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"life_thread", "unit": &"u0"})).contains("not in the loadout")
-	var c := _battle([[0, Vector2i(3, 3), {"init": 1.0}], [1, Vector2i(6, 6), {"init": 5.0}]], [&"second_wind"])
+	var c := _battle([[0, Vector2i(3, 3), {"pace": 1.1}], [1, Vector2i(6, 6), {"pace": 1.5}]], [&"second_wind"])
 	c.begin()                                    # the enemy acts first
 	assert_str(c.check({"type": &"tamer", "side": 0, "skill": &"second_wind", "unit": &"u0"})).contains("own monsters")
 	assert_array(BattleSetup.make_result(b).used_tamer).is_equal([&"second_wind"])
 
 
 func test_second_wind_never_heals_above_max() -> void:
-	var b := _battle([[0, Vector2i(3, 3), {"init": 9.0}], [1, Vector2i(6, 6)]], [&"second_wind"])
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"second_wind"])
 	b.begin()
 	_use(b, &"second_wind", {"unit": &"u0"})
 	assert_int(H.unit(b, 0).hp).is_equal(5)
 
 
 func test_swap_places_trades_squares_and_counts_as_entering() -> void:
-	var b := _battle([[0, Vector2i(2, 2), {"init": 9.0}], [0, Vector2i(5, 5), {"init": 8.0}], [1, Vector2i(6, 0)]], [&"swap_places"])
+	var b := _battle([[0, Vector2i(2, 2), {"pace": 1.9}], [0, Vector2i(5, 5), {"pace": 1.8}], [1, Vector2i(6, 0)]], [&"swap_places"])
 	b.set_ground(Vector2i(5, 5), &"thornbed", 2)
 	b.set_ground(Vector2i(2, 2), &"mossbed")
 	H.unit(b, 1).hp = 3
@@ -61,7 +61,7 @@ func test_swap_places_trades_squares_and_counts_as_entering() -> void:
 
 
 func test_swap_places_needs_two_small_ground_monsters() -> void:
-	var b := _battle([[0, Vector2i(2, 2), {"init": 9.0}], [0, Vector2i(4, 4), {"size": 2}], [0, Vector2i(0, 6), {"airborne": true}], [1, Vector2i(6, 0)]], [&"swap_places"])
+	var b := _battle([[0, Vector2i(2, 2), {"pace": 1.9}], [0, Vector2i(4, 4), {"size": 2}], [0, Vector2i(0, 6), {"airborne": true}], [1, Vector2i(6, 0)]], [&"swap_places"])
 	b.begin()
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"swap_places", "unit": &"u0", "other": &"u1"})).contains("1x1")
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"swap_places", "unit": &"u0", "other": &"u2"})).contains("ground-layer")
@@ -71,8 +71,8 @@ func test_swap_places_needs_two_small_ground_monsters() -> void:
 func test_urgent_order_moves_a_waiting_monster_directly_after_the_current_turn() -> void:
 	BattleExperiment.tpr_from_round = 1       # extra turns as from round 2 on
 	var b := _battle([
-		[0, Vector2i(0, 6), {"init": 9.0}], [1, Vector2i(6, 0), {"init": 7.0}], [1, Vector2i(5, 0), {"init": 6.0}],
-		[0, Vector2i(1, 6), {"init": 2.0, "tpr": 2}],
+		[0, Vector2i(0, 6), {"pace": 1.9}], [1, Vector2i(6, 0), {"pace": 1.7}], [1, Vector2i(5, 0), {"pace": 1.6}],
+		[0, Vector2i(1, 6), {"pace": 1.2, "tpr": 2}],
 	], [&"urgent_order"])
 	b.begin()
 	assert_array(b.queue.map(func(e): return e["id"])).is_equal([&"u0", &"u1", &"u2", &"u3", &"u3"])
@@ -88,7 +88,7 @@ func test_urgent_order_moves_a_waiting_monster_directly_after_the_current_turn()
 
 
 func test_urgent_order_needs_a_monster_that_has_not_acted() -> void:
-	var b := _battle([[0, Vector2i(0, 6), {"init": 9.0}], [0, Vector2i(1, 6), {"init": 8.0}], [1, Vector2i(6, 0), {"init": 1.0}]], [&"urgent_order"])
+	var b := _battle([[0, Vector2i(0, 6), {"pace": 1.9}], [0, Vector2i(1, 6), {"pace": 1.8}], [1, Vector2i(6, 0), {"pace": 1.1}]], [&"urgent_order"])
 	b.begin()
 	b.end_turn()                                 # u1 is acting now, u0 has acted
 	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"urgent_order", "unit": &"u0"})).contains("already acted")
@@ -96,8 +96,8 @@ func test_urgent_order_needs_a_monster_that_has_not_acted() -> void:
 
 func test_spirit_shield_and_life_thread_protect_one_monster() -> void:
 	var b := _battle([
-		[0, Vector2i(3, 3), {"init": 9.0, "hp": 3}],
-		[1, Vector2i(3, 5), {"init": 5.0, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO]), H.strike()]}],
+		[0, Vector2i(3, 3), {"pace": 1.9, "hp": 3}],
+		[1, Vector2i(3, 5), {"pace": 1.5, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO]), H.strike()]}],
 	], [&"spirit_shield", &"life_thread"])
 	b.begin()
 	assert_bool(_use(b, &"spirit_shield", {"unit": &"u0"})).is_true()
@@ -121,7 +121,7 @@ func test_spirit_shield_and_life_thread_protect_one_monster() -> void:
 
 func test_domain_glimpse_clears_zones_and_ground_on_any_tetromino() -> void:
 	var slow := H.zone_skill([FieldEffect.make("slow", 1, 2)]).zone
-	var b := _battle([[0, Vector2i(0, 6), {"init": 9.0}], [1, Vector2i(3, 3), {"hp": 5}]], [&"domain_glimpse"])
+	var b := _battle([[0, Vector2i(0, 6), {"pace": 1.9}], [1, Vector2i(3, 3), {"hp": 5}]], [&"domain_glimpse"])
 	var cells: Array = [Vector2i(3, 2), Vector2i(3, 3), Vector2i(3, 4), Vector2i(4, 4)]   # an L, far from the tamer's monster
 	for p: Vector2i in cells:
 		H.zone_on(b, p, slow)
@@ -146,11 +146,11 @@ func test_domain_glimpse_clears_zones_and_ground_on_any_tetromino() -> void:
 
 func test_beast_swap_takes_square_and_queue_entry_and_leaves_its_traps_set() -> void:
 	var b := _battle([
-		[0, Vector2i(0, 6), {"init": 9.0}],
-		[0, Vector2i(3, 5), {"init": 6.0, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
-		[1, Vector2i(3, 3), {"init": 8.0, "hp": 8}],
+		[0, Vector2i(0, 6), {"pace": 1.9}],
+		[0, Vector2i(3, 5), {"pace": 1.6, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
+		[1, Vector2i(3, 3), {"pace": 1.8, "hp": 8}],
 	], [&"beast_swap"])
-	var bench := BattleUnit.new(&"bench", H.sheet({"init": 3.0, "hp": 6, "current_hp": 4, "name": "Bench"}), 0, 2, Vector2i.ZERO)
+	var bench := BattleUnit.new(&"bench", H.sheet({"pace": 1.3, "hp": 6, "current_hp": 4, "name": "Bench"}), 0, 2, Vector2i.ZERO)
 	b.add_unit(bench, false)
 	var big := BattleUnit.new(&"big", H.sheet({"size": 2, "name": "Big"}), 0, 3, Vector2i.ZERO)
 	b.add_unit(big, false)

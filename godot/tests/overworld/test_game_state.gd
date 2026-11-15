@@ -56,7 +56,7 @@ func test_state_survives_a_json_round_trip() -> void:
 	assert_int(back.monsters.size()).is_equal(1)
 	assert_int(back.monsters[0].xp).is_equal(20)
 	assert_int(back.monsters[0].stats["hp"]).is_equal(g.monsters[0].stats["hp"])
-	assert_float(back.monsters[0].stats["initiative"]).is_equal(g.monsters[0].stats["initiative"])
+	assert_float(back.monsters[0].stats["pace"]).is_equal(g.monsters[0].stats["pace"])
 
 
 func _win_node(g: GameState, e: Expedition, id: int, hp_left := 3) -> void:

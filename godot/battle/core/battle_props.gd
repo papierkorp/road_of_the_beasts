@@ -4,7 +4,9 @@ extends RefCounted
 ##   destroyed  at the removal step of a payload (the aftermath of gdd_battle §4.10)
 ##   hit        it lost HP and still stands: in the next board step
 ##   enter      a ground monster came onto a walkable prop (a trap): at once, the prop is used up
-##   round_end  every round while it stands: after round-end ground, before the Dragon Veins
+##   round_end  every round while it stands, in two steps (user decision 2026-11-15: the round end moves first and
+##              acts afterwards): its pushes and pulls before round-end ground, everything else after it and
+##              before the Dragon Veins
 ## A prop acts on squares it does not lie on: that is what sets it apart from ground and zones.
 ## Everything one moment collects resolves as one simultaneous step: damage, defeat, new props,
 ## ground, zones, then pushes and pulls.
@@ -21,9 +23,14 @@ static func is_empty(step: Dictionary) -> bool:
 	return true
 
 
-## Adds what `prop` does at `when` to `step`.
-static func collect(b: Battle, prop: BoardProp, when: String, step: Dictionary) -> void:
+## Adds what `prop` does at `when` to `step` and returns how many of its lines that were. `part`: "" = all of
+## them, "move" = only pushes and pulls, "act" = everything but pushes and pulls.
+static func collect(b: Battle, prop: BoardProp, when: String, step: Dictionary, part := "") -> int:
+	var lines := 0
 	for a in prop.def.actions(when):
+		if part != "" and (part == "move") != (a.op == "push" or a.op == "pull"):
+			continue
+		lines += 1
 		var per_unit := {}                    # unit id -> summed offset (once per prop and unit)
 		var per_prop := {}                    # uid of another prop -> summed offset (pushes and pulls move props too)
 		if a.op == "zone":
@@ -62,6 +69,7 @@ static func collect(b: Battle, prop: BoardProp, when: String, step: Dictionary) 
 				step["pushes"].append({"unit": id, "dir": BattlePayload._eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
 			elif a.op == "pull":
 				step["pushes"].append({"unit": id, "dir": -BattlePayload._eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
+	return lines
 
 
 ## Everything of a step after its damage round and defeat step.
@@ -100,7 +108,7 @@ static func resolve_hits(b: Battle) -> void:
 			continue
 		prop.struck = false
 		if prop.hp > 0:
-			collect(b, prop, PropAftermath.HIT, step)
+			collect(b, prop, Moment.HIT, step)
 	if not is_empty(step):
 		run(b, step)
 
@@ -114,7 +122,7 @@ static func enter(b: Battle, u: BattleUnit, cells: Array[Vector2i]) -> void:
 	for c in cells:
 		var prop := b.board.prop_at(c, Board.GROUND)
 		if prop != null and prop.hp > 0 and prop.def.is_trap() and not sprung.has(prop):
-			collect(b, prop, PropAftermath.ENTER, step)
+			collect(b, prop, Moment.ENTER, step)
 			sprung.append(prop)
 	if sprung.is_empty():
 		return
@@ -134,19 +142,20 @@ static func enter_harm(b: Battle, u: BattleUnit, cells: Array[Vector2i]) -> int:
 		var prop := b.board.prop_at(c, Board.GROUND)
 		if prop == null or prop.hp <= 0 or not prop.def.is_trap():
 			continue
-		for a in prop.def.actions(PropAftermath.ENTER):
-			if a.op == "damage" and a.pattern == "self":
+		for a in prop.def.actions(Moment.ENTER):
+			if a.op == "damage" and a.shape == "self":
 				harm += BattleDamage.amount(b, u, a.amount, BattleDamage.AFTERMATH)
 	return harm
 
 
 ## Round end: every standing prop with a round-end operation acts, all in one step.
-static func round_end(b: Battle) -> void:
+## The round-end lines of every standing prop, one simultaneous step per call. `moves` true: their pushes and
+## pulls (Storm Drum); false: everything else (the damage of an Ember Brazier, created props, ground, zones).
+static func round_end(b: Battle, moves: bool) -> void:
 	var step := new_step()
 	var acted := 0
 	for prop in b.board.props():
-		if prop.hp > 0 and not prop.def.actions(PropAftermath.ROUND_END).is_empty():
-			collect(b, prop, PropAftermath.ROUND_END, step)
+		if prop.hp > 0 and collect(b, prop, Moment.ROUND_END, step, "move" if moves else "act") > 0:
 			acted += 1
 	if acted == 0:
 		return

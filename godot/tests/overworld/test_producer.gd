@@ -256,21 +256,21 @@ func test_the_wrong_pill_does_not_heal() -> void:
 	assert_bool(g.use_healing_pill(ItemCatalog.pill_id(0), g.monsters[0])).is_false()
 
 
-func test_a_prep_pill_adds_initiative_for_the_whole_battle() -> void:
+func test_a_prep_pill_adds_pace_for_the_whole_battle() -> void:
 	var plain := BattleSetup.build(BattleRequest.default())
 	plain.begin()
 	var r := BattleRequest.default()
-	r.prep_init = {0: ItemCatalog.PREP_INIT}
+	r.prep_pace = {0: ItemCatalog.PREP_PACE}
 	var prepared := BattleSetup.build(r)
 	prepared.begin()
 	var mon: BattleUnit = prepared.units[&"p0_blaze_tiger"]
-	assert_float(mon.sheet.init_bonus).is_equal(float(ItemCatalog.PREP_INIT))
-	assert_float(BattleStats.initiative(prepared, mon)).is_equal(
-		BattleStats.initiative(plain, plain.units[&"p0_blaze_tiger"]) + float(ItemCatalog.PREP_INIT))
+	assert_float(mon.sheet.pace_bonus).is_equal(float(ItemCatalog.PREP_PACE))
+	assert_float(BattleStats.pace(prepared, mon)).is_equal(
+		BattleStats.pace(plain, plain.units[&"p0_blaze_tiger"]) + float(ItemCatalog.PREP_PACE))
 	var other: BattleUnit = prepared.units[&"p1_moss_turtle"]
-	assert_float(other.sheet.init_bonus).is_equal(0.0)
+	assert_float(other.sheet.pace_bonus).is_equal(0.0)
 	# it does not touch the enemy side
-	assert_float((prepared.units[&"e0_hollow_serpent"] as BattleUnit).sheet.init_bonus).is_equal(0.0)
+	assert_float((prepared.units[&"e0_hollow_serpent"] as BattleUnit).sheet.pace_bonus).is_equal(0.0)
 
 
 func test_the_new_structures_are_production_structures() -> void:

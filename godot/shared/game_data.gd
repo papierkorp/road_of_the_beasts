@@ -78,7 +78,7 @@ static func problems() -> Array[String]:
 	return _problems
 
 
-## Adds or replaces a species at runtime (the monster builder of the battle prototype).
+## Adds or replaces a species at runtime (the monster builder of the multiplayer mode).
 static func register(def: MonsterDef) -> void:
 	_ensure()
 	_monsters[def.id] = def

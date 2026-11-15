@@ -6,7 +6,7 @@
 
 [sub_resource type="Resource" id="Resource_sllox"]
 script = ExtResource("1_4q4fx")
-pattern = "cardinal4"
+shape = "whirl"
 
 [resource]
 script = ExtResource("3_vk6pf")

@@ -5,7 +5,7 @@ extends RefCounted
 ##   retreat           retreat 1 square opposite the shape centre, once per use (Winged Dive)
 ##   push              push each struck monster 1 square in the chosen cardinal direction (Scaled)
 ##   prop_damage       damage against props instead of 2 (Swarm Gnaw: 4)
-##   init_penalty      struck monsters get -N initiative next round (Spirit Siphon)
+##   pace_penalty      struck monsters get -N Pace points (0.1 each) next round (Spirit Siphon)
 ##   destroy_mountain  destroys the Mountain under each struck target (Ancient Slam)
 
 const STRIKE := {
@@ -13,7 +13,7 @@ const STRIKE := {
 	MonsterDef.Kin.WINGED: {"name": "Dive", "retreat": true, "text": "then retreat 1"},
 	MonsterDef.Kin.SCALED: {"name": "Tail Sweep", "push": true, "text": "push 1 (WASD)"},
 	MonsterDef.Kin.SWARM: {"name": "Gnaw", "prop_damage": 4, "text": "props take 4"},
-	MonsterDef.Kin.SPIRIT: {"name": "Siphon", "init_penalty": 1, "text": "-1 init next round"},
+	MonsterDef.Kin.SPIRIT: {"name": "Siphon", "pace_penalty": 1, "text": "−0.1 Pace next round"},
 	MonsterDef.Kin.ANCIENT: {"name": "Slam", "destroy_mountain": true, "text": "breaks Mountain"},
 }
 const STRIKE_DAMAGE := 2

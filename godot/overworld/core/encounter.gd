@@ -1,7 +1,7 @@
 class_name Encounter
 extends RefCounted
 ## Who struck first when the player and a wild monster touch (gdd_overworld §6.2):
-## touching a monster from behind gives your side a small round-1 initiative bonus — and the
+## touching a monster from behind gives your side a small round-1 pace bonus — and the
 ## same goes for a monster that catches you from behind. Pure geometry on the ground plane.
 
 const BEHIND := -0.2

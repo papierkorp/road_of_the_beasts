@@ -24,7 +24,7 @@ signal event_emitted(e: Dictionary)
 
 ## Legacy display constant of the overworld's ambush text. The ambush bonus itself was dropped
 ## from the design (gdd_overworld §2.2) and is not applied by the battle.
-const AMBUSH_BONUS := 1.0
+const AMBUSH_BONUS := 0.1
 const PLAYER := 0
 const ENEMY := 1
 
@@ -44,7 +44,7 @@ var round_number := 1
 var over := false
 var winner_side := -1                    # 0 player, 1 enemy, -1 none / Draw
 var draw := false
-## Side that wins the next cross-side initiative tie (-1 = not decided yet).
+## Side that wins the next cross-side pace tie (-1 = not decided yet).
 var tie_side := -1
 ## Sides that pick the target of a held Dragon Vein themselves when several enemies tie (user decision 2026-11-14); the others take the roster-order fallback. Empty: nobody asks (simulations, tests).
 var choice_sides: Array[int] = []
@@ -379,12 +379,11 @@ func _skill_error(u: BattleUnit, a: Dictionary) -> String:
 ## A Strike is legal whenever its direction fits the shape and the whole shape lies on the
 ## board (gdd_skills §2 area contract); an empty hit pattern is allowed.
 func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, push_dir: Vector2i, origin: Vector2i) -> String:
-	var shape := StringName(s.strike_shape)
-	if not StrikeShapes.is_legal_dir(shape, dir):
-		return "%s cannot be aimed in that direction" % StrikeShapes.shape_name(shape)
+	if not BattleShapes.is_legal_dir(s.shape_id(), dir, s.shape_extension):
+		return "%s cannot be aimed in that direction" % s.shape_label()
 	if not u.covers(origin):
 		return "the shape must start at a square of the striker"
-	for h in StrikeShapes.hits(shape, dir):
+	for h in s.shape_hits(dir):
 		if not board.in_bounds(origin + h["o"]):
 			return "the shape does not fit on the board"
 	if s.kin_effect and KinRules.strike(u.kin()).get("push", false) and not Board.CARDINAL.has(push_dir):
@@ -438,7 +437,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 	match s.kind:
 		BattleSkillDef.MOVE:
 			var started := u.pos
-			var tired := 0                           # test switch stamina: 1 per movement point of the route
+			var tired := 0                           # Stamina: what the route costs (the movement cost of every square, BattleMoves.options)
 			if s.uses_stamina():
 				var reach := BattleMoves.options(self, u, BattleMoves.profile_of(s))
 				tired = int(reach[a["to"]]["cost"]) if reach.has(a["to"]) else 1
@@ -634,7 +633,7 @@ func snapshot() -> Dictionary:
 		ss.append([s.id, String(s.owner), String(s.skill.id), s.cells.duplicate(), s.dir, s.anchor, s.air_cells.duplicate(), s.orphaned])
 	var qs := []
 	for e in queue:
-		qs.append([String(e["id"]), e["init"], e["extra"]])
+		qs.append([String(e["id"]), e["pace"], e["extra"]])
 	return {"round": round_number, "turn": String(turn_owner), "ap": ap, "idx": queue_idx, "over": over,
 		"winner": winner_side, "draw": draw, "tie": tie_side, "units": us, "cells": cs, "surges": ss,
 		"queue": qs, "choice": str(pending_choice), "tamer_used": [tamer_used[0].keys(), tamer_used[1].keys()]}

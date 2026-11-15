@@ -6,7 +6,7 @@
 
 [sub_resource type="Resource" id="Resource_vt44f"]
 script = ExtResource("3_lcrak")
-timing = "end_of_round"
+timing = "round_end"
 
 [resource]
 script = ExtResource("2_tii04")

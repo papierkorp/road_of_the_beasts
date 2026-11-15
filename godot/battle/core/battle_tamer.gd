@@ -86,8 +86,8 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 			b.put(y, px)
 			b.emit(&"swapped", {"a": x.id, "b": y.id})
 			# each counts as entering its new square (gdd_battle §5.2)
-			BattleDamage.ground_triggers(b, x, GroundTrigger.ON_ENTER)
-			BattleDamage.ground_triggers(b, y, GroundTrigger.ON_ENTER)
+			BattleDamage.ground_triggers(b, x, Moment.ENTER)
+			BattleDamage.ground_triggers(b, y, Moment.ENTER)
 		TamerSkillDef.URGENT_ORDER:
 			var i := _pending_main_entry(b, a["unit"])
 			var entry: Dictionary = b.queue[i]
@@ -145,7 +145,7 @@ static func _beast_swap(b: Battle, out_u: BattleUnit, in_u: BattleUnit) -> void:
 	for e in b.queue:
 		if e["id"] == out_u.id:
 			e["id"] = in_u.id
-			e["base"] = in_u.sheet.initiative
+			e["base"] = in_u.sheet.pace
 	b.emit(&"beast_swapped", {"out": out_u.id, "in": in_u.id, "pos": pos})
 
 

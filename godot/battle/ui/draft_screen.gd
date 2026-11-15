@@ -14,6 +14,8 @@ var _start3: Button
 var _start2: Button
 var _start1: Button
 var _tamer: Array[StringName] = []
+## Free shapes the player arranged: monster id -> {kit slot -> Array[Vector2i]} (ShapeEditor).
+var _shapes := {}
 var _tamer_buttons := {}            # id -> Button
 var _random_board: CheckBox
 ## Open test switches (temp_todo T38): label -> CheckBox. They apply to every battle.
@@ -26,18 +28,20 @@ const EXPERIMENTS := [
 	["Collision hurts only the moved monster", "A monster pushed or pulled into another monster takes the damage alone (S025)."],
 	["Charged Dragon Veins", "Every vein is charged at the start of a round. The first monster that touches it, or the one standing on it at the end of its turn, discharges it: 1 damage to the nearest enemy. No ownership, no vein damage at the round end (S026)."],
 	["Charged veins hit at the round end", "With Charged Dragon Veins: the first touch of a round wins the vein for that round, wherever the monster stands afterwards; its 1 damage comes at the end of the round (S027)."],
-	["Stamina instead of Movement", "The Movement stat is a Stamina pool: a movement skill costs 1 Stamina per square (per movement point on slowing ground) and reaches at most the range on the skill (3) and never further than the Stamina left. Everyone regains 'Stamina per round' at the round end. Step stays 1 AP for 1 square without Stamina (S029)."],
+	["Stamina instead of Movement", "Rule since 2026-11-15: the Movement stat is a Stamina pool. A movement skill costs Stamina for every square it enters (Plain 1, Rubble 2) and reaches at most the range on the skill (3) and never further than the Stamina left. At the round end every monster recovers the whole number of its Pace, at least 1. Step stays 1 AP for 1 square without Stamina. Off = the rule before: a movement skill covers the Movement stat."],
 	["Movement skills also cost AP", "With Stamina: a movement skill costs its AP and the Stamina. Off = Stamina only."],
 	["Dragon Veins: last touch owns", "GDD rule: a vein deals its round-end damage for the side that touched it last, whether or not a monster stands on it; the board shows the owner. Off = a monster has to stand on it at the round end (S028)."],
 	["Step walks the full Movement", "The Step of every monster walks up to its Movement for 1 AP, like Run (S026)."],
+	["Board 8×8", "Board switch: the battle is played on an 8×8 board (larger than the mode's own). No centre row: the Dragon Veins lie in mirrored pairs on the two centre rows (the number rounds up to an even one: 3 → 4)."],
+	["Board 9×9", "Board switch: the battle is played on a 9×9 board. Dragon Veins on the centre row as on 7×7. Wins over 'Board 8×8'."],
 ]
 
 ## Board and value switches: label, min, max, unused, tooltip -> SpinBox.
 var _numbers := {}
 const NUMBERS := [
-	["Dragon Veins", 0, 7, 0, "Dragon Vein squares on the centre row (7×7 and larger boards only; 0 = none; the build rule is 3)."],
+	["Dragon Veins", 0, 7, 0, "Dragon Vein squares on the centre row (7×7 and larger boards only; 0 = none; the build rule is 3). An even board (8×8) has them in mirrored pairs on its two centre rows, so the number rounds up to an even one."],
 	["Prop pairs", -1, 8, 0, "Mirrored prop pairs the board starts with: -1 = the fixed test layout (or the random board's own number), 0 = no props, N = that many pairs of random prop types on random squares."],
-	["Stamina per round", 0, 5, 0, "With Stamina instead of Movement: Stamina every monster regains at the end of a round."],
+	["Stamina per round", 0, 5, 0, "0 = the rule: every monster recovers the whole number of its Pace, at least 1. N = every monster recovers N at the end of a round (to compare, S029)."],
 	["Button pairs", 0, 4, 0, "Mirrored pairs of button squares the board starts with: walkable runes without damage that act on the board when a monster collects them (Moss Rune: Mossbed 3×3 · Bog Rune: Bog zone around it · Wall Rune: Earth Walls on its cardinal neighbours). 0 = none."],
 ]
 
@@ -176,6 +180,12 @@ func _ready() -> void:
 	build.tooltip_text = "Create a monster or change one: stats, Kin and the four skills. New skills are made in the skill builder, reachable from there."
 	build.pressed.connect(func(): get_tree().change_scene_to_file("res://game/monster_builder.tscn"))
 	row.add_child(build)
+	var shapes := Button.new()
+	shapes.text = "Arrange shapes"
+	shapes.custom_minimum_size = Vector2(200, 46)
+	shapes.tooltip_text = "Lay out the squares of the picked monsters' skills that create ground, a zone or props at a distance (free shapes). Without it every skill uses its default arrangement."
+	shapes.pressed.connect(_open_shapes)
+	row.add_child(shapes)
 	_start1 = Button.new()
 	_start1.text = "Duel 1v1 (5×5)"
 	_start1.custom_minimum_size = Vector2(200, 46)
@@ -223,6 +233,10 @@ func _experiment_on(label: String) -> bool:
 			return BattleExperiment.stamina
 		"Movement skills also cost AP":
 			return BattleExperiment.stamina_ap
+		"Board 8×8":
+			return BattleExperiment.board_size == 8
+		"Board 9×9":
+			return BattleExperiment.board_size == 9
 	return BattleExperiment.kin_push
 
 
@@ -254,12 +268,25 @@ func _apply_experiments() -> void:
 	BattleExperiment.vein_touch = on.call("Dragon Veins: last touch owns")
 	BattleExperiment.stamina = on.call("Stamina instead of Movement")
 	BattleExperiment.stamina_ap = on.call("Movement skills also cost AP")
+	BattleExperiment.board_size = 9 if on.call("Board 9×9") else (8 if on.call("Board 8×8") else 0)
 	BattleExperiment.wells = int((_numbers["Dragon Veins"] as SpinBox).value)
 	BattleExperiment.map_props = int((_numbers["Prop pairs"] as SpinBox).value)
 	BattleExperiment.stamina_regen = int((_numbers["Stamina per round"] as SpinBox).value)
 	BattleExperiment.map_buttons = int((_numbers["Button pairs"] as SpinBox).value)
 	for id in _cards:
 		(_cards[id] as Button).text = _card_text(BattleSetup.load_def(id))
+	if _start3 != null:
+		_update()                                 # the start buttons name the board size
+
+
+## Opens the editor for the free shapes of the picked monsters (ShapeEditor).
+func _open_shapes() -> void:
+	var editor := ShapeEditor.new()
+	add_child(editor)
+	editor.setup(_picked, _shapes)
+	editor.confirmed.connect(editor.queue_free)
+	editor.canceled.connect(editor.queue_free)
+	editor.popup_centered()
 
 
 func _toggle(id: StringName, on: bool) -> void:
@@ -286,6 +313,9 @@ func _toggle_tamer(id: StringName, on: bool) -> void:
 func _update() -> void:
 	_status.text = "Picked %d / 3: %s   ·   1 = duel, 2 = 2v2, 3 = 3v3   ·   test kits" % [
 		_picked.size(), ", ".join(PackedStringArray(_picked.map(func(i): return BattleSetup.load_def(i).display_name))) if not _picked.is_empty() else "—"]
+	for pair: Array in [[_start1, &"1v1", "Duel 1v1"], [_start2, &"2v2", "Battle 2v2"], [_start3, &"3v3", "Battle 3v3"]]:
+		var side_length := int(BattleBoards.mode_data(pair[1])["size"])
+		(pair[0] as Button).text = "%s (%d×%d)" % [pair[2], side_length, side_length]
 	_start3.disabled = _picked.size() != 3
 	_start2.disabled = _picked.size() != 2
 	_start1.disabled = _picked.size() != 1
@@ -298,6 +328,9 @@ func _start(m: StringName) -> void:
 	var enemy := BattleSetup.random_enemy(_picked, BattleSetup.team_size(m), rng)
 	var r := BattleRequest.from_ids(m, _picked.duplicate(), enemy)
 	r.player_tamer = _tamer.duplicate()
+	for i in _picked.size():
+		if _shapes.has(_picked[i]):
+			r.player_shapes[i] = (_shapes[_picked[i]] as Dictionary).duplicate(true)
 	if _random_board.button_pressed or BattleExperiment.map_props > 0 or BattleExperiment.map_buttons > 0:
 		r.board_seed = rng.randi_range(1, 1 << 30)
 	if _tamer.has(&"beast_swap"):

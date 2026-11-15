@@ -43,7 +43,31 @@ static func has_mode(mode: StringName) -> bool:
 
 
 static func mode_data(mode: StringName) -> Dictionary:
-	return MODES.get(mode, MODES[&"3v3"])
+	var d: Dictionary = MODES.get(mode, MODES[&"3v3"])
+	if BattleExperiment.board_size > int(d["size"]):
+		return _resized(d, BattleExperiment.board_size)
+	return d
+
+
+## A mode on a larger board (board switch `board_size`): the start squares keep their distance from the
+## back edge and spread over the wider rows, the fixed test layout moves with the centre, and a seeded
+## board draws one more prop pair per two extra squares of side length.
+static func _resized(d: Dictionary, size: int) -> Dictionary:
+	var from: int = d["size"]
+	var out := d.duplicate(true)
+	out["size"] = size
+	var starts: Array = []
+	for s: Vector2i in d["starts"]:
+		starts.append(Vector2i(roundi(float(s.x) * (size - 1) / (from - 1)), s.y + size - from))
+	out["starts"] = starts
+	var shift := (size - from) >> 1
+	var props := {}
+	for p: Vector2i in d["props"]:
+		props[p + Vector2i(shift, shift)] = d["props"][p]
+	out["props"] = props
+	var more := (size - from + 1) >> 1
+	out["pairs"] = [int(d["pairs"][0]) + more, int(d["pairs"][1]) + more]
+	return out
 
 
 static func team_size(mode: StringName) -> int:
@@ -82,10 +106,8 @@ static func build(b: Battle, mode: StringName, seed_value := 0) -> Array[Vector2
 	for p: Vector2i in squares:
 		var twin := b.board.mirrored(p)
 		if p == twin:
-			continue                          # the centre never holds a prop
-		if b.board.at(p).ground == GroundDef.WELL or b.board.at(twin).ground == GroundDef.WELL:
-			continue                          # a board never starts with a prop on a Dragon Vein (skills may place one)
-		b.add_prop(props[p], p)
+			continue                          # the centre never holds a prop (props come in mirrored pairs)
+		b.add_prop(props[p], p)               # also on a Dragon Vein: it is ordinary ground that nothing changes (user decision 2026-11-15)
 		b.add_prop(props[p], twin)
 	if BattleExperiment.map_buttons > 0:
 		_seeded_buttons(b, mode, d, starts, seed_value if seed_value != 0 else 1)
@@ -97,7 +119,7 @@ static func build(b: Battle, mode: StringName, seed_value := 0) -> Array[Vector2
 static func _seeded_buttons(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value * 7919 + 17
-	var squares := _pair_squares(b, mode, d, starts)
+	var squares := _pair_squares(b, mode, d, starts, false)
 	var free: Array[Vector2i] = squares[0]
 	free.append_array(squares[1])
 	var placed := 0
@@ -115,8 +137,9 @@ static func _seeded_buttons(b: Battle, mode: StringName, d: Dictionary, starts: 
 
 
 ## One square of every mirrored pair a board may start a prop on: [free, spare]; spare squares
-## lie next to a start square and are used only when the free ones run out.
-static func _pair_squares(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i]) -> Array:
+## lie next to a start square and are used only when the free ones run out. `veins` = false leaves
+## out the pairs with a Dragon Vein (button squares).
+static func _pair_squares(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], veins := true) -> Array:
 	var size: int = d["size"]
 	var free: Array[Vector2i] = []
 	var spare: Array[Vector2i] = []
@@ -128,8 +151,8 @@ static func _pair_squares(b: Battle, mode: StringName, d: Dictionary, starts: Ar
 				continue                      # one square of every mirrored pair
 			if b.board.at(p).is_mountain() or b.board.at(twin).is_mountain():
 				continue
-			if b.board.at(p).ground == GroundDef.WELL or b.board.at(twin).ground == GroundDef.WELL:
-				continue                  # a board never starts with a prop on a Dragon Vein
+			if not veins and (b.board.at(p).ground == GroundDef.WELL or b.board.at(twin).ground == GroundDef.WELL):
+				continue
 			var near_start := false
 			for s in starts:
 				if Board.chebyshev(s, p) <= 1 or Board.chebyshev(s, twin) <= 1:
@@ -143,7 +166,7 @@ static func _pair_squares(b: Battle, mode: StringName, d: Dictionary, starts: Ar
 	return [free, spare]
 
 
-## Test rule (BattleExperiment.wells): turns the centre-row squares into Wellsprings (no Mountain there).
+## Turns the Dragon Vein squares of the board size into Dragon Veins (BattleExperiment.well_squares).
 static func place_wells(b: Battle) -> void:
 	for p in BattleExperiment.well_squares(b.board.size):
 		var cell := b.board.at(p)

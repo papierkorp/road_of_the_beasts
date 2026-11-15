@@ -487,7 +487,7 @@ Tamer skills are **learned over the game**, then **slotted before each battle**;
 
 |      Skill      | Stage |                                  Effect                                  |  Kind  |
 |-----------------|-------|--------------------------------------------------------------------------|--------|
-| Qi Suppression  | Foundation | an enemy monster −2 initiative next round                          | tempo |
+| Qi Suppression  | Foundation | an enemy monster −1 Pace point (−0.1) next round *(converted 2026-11-15 from −2 initiative; [Battle §2.2](gdd_battle.md#22-pace-and-the-queue))* | tempo |
 | Spirit Shield   | Foundation | *open: was “the next Surge damage on one own monster is 0”; Surges are removed (T20)* | defense |
 | Swap Places | Foundation | two own monsters trade squares                             | position |
 | Domain Glimpse  | Core | clear a tetromino of zones and reset its ground to Plain         | terrain |
@@ -537,7 +537,7 @@ Pills link progression, expedition supply and Producer economy. [§7.5](#75-mate
 | **Monster**        | 1 (2nd at Epic+ rarity) | extra passive OR +1 to one stat, **never above stage caps**                                                                                    |
 | **Player (tamer)** | 2–3                     | tamer skill range / numeric-effect mods up to +1 (see below), +1 day AP once/day, +spatial capacity, dungeon utility |
 
-- **Tamer skill mods:** e.g. range of the own-monster repositioning skill, enemy initiative penalty −3 instead of −2; source skills in [§6.4](#64-tamer-skills), not blanket permission for other skills or effects; never extra uses.
+- **Tamer skill mods:** e.g. range of the own-monster repositioning skill, enemy Pace penalty of 2 points instead of 1 *(converted 2026-11-15 from −3 instead of −2 initiative)*; source skills in [§6.4](#64-tamer-skills), not blanket permission for other skills or effects; never extra uses.
 - **Slot access unresolved (T17):** table requires Epic+ for second monster artifact slot; §6.3 also places it at Core. Tamer count/unlock timing undecided; neither draft supersedes the other. Stat/damage limits: [§6.9](#69-hard-caps).
 - **Intent, not validated:** monster artifacts deepen battle choices; tamer artifacts aid management/expeditions. Equipment/tactics should let a Normal beast rival an Epic.
 
@@ -721,7 +721,7 @@ Furnace, Array Workshop and the Forge are the same code with different stations 
 | Cultivation           | XP per tier: [Monsters §5.3](gdd_monsters.md#53-monster-progression-the-18-steps) | 3 herbs of tier T                                 |
 | Healing               | restore 2 HP between battles             | 2 herbs of tier T                                             |
 | Revival               | injury recovery: [§5.2](#52-defeat-and-injury) | 2 herbs + 1 beast part |
-| Swift (battle prep)   | +1 initiative in the next battle         | 2 herbs + 1 ore                                               |
+| Swift (battle prep)   | +1 Pace point (+0.1) in the next battle *(converted 2026-11-15 from +1 initiative)* | 2 herbs + 1 ore                                               |
 | Ward (battle prep)    | first-hit immunity in the next battle    | 2 herbs + 1 beast part                                        |
 | Breakthrough          | removes the trial penalty (§6.3.1)       | 1 Rare herb of tier T+1 + 2 ore                               |
 | Bloodline             | rarity ascension ([Monsters §5.2](gdd_monsters.md#52-rarity-ascension))                  | 1 Rare+ beast part of the Kin + 1 herb of tier T+1 + Upper stones |
@@ -820,7 +820,7 @@ Earlier reported builds, excluded from active design tables:
   - Favor with the Family, the Merchants' Guild and the City Watch: requests, discounts, licenses, recruits.
 - **Phase 3:** Dojo/faction staff, consigning at the Guild's auction hall, monster hall, internal world growth stages, clan storyline.
 
-- **Historical prototype values, not current progression/economy:** skill evolution at Evolution Pillar 1 AP each; HP/Initiative 75% / 90% / 100% by sub-tier; cultivation pill +30 XP for 80 stones; dungeon win +10 XP. Reversal/breakthrough quantities remain explicitly prototype in [§2.6](#26-action-catalog), never slot-development prices.
+- **Historical prototype values, not current progression/economy:** skill evolution at Evolution Pillar 1 AP each; HP/Pace (then Initiative) 75% / 90% / 100% by sub-tier; cultivation pill +30 XP for 80 stones; dungeon win +10 XP. Reversal/breakthrough quantities remain explicitly prototype in [§2.6](#26-action-catalog), never slot-development prices.
 
 **Historical design/code comparison (v0.10; not reverified):**
 - The Pill Stall still stands in the Inner World; the Herb Plot plants materials instead of seeds.

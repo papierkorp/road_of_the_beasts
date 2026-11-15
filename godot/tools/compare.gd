@@ -88,7 +88,7 @@ func _run() -> int:
 				seeds.append(seed_value)
 		schedule.append(seeds)
 	var rows: Array = [["Monster A", "Monster B", "Size", "Stat points A/B", "Games", "Wins A/B/draws", "Score A", "Seed SD",
-		"Seed range", "Rounds mean", "Timeouts"]]
+		"Seed range", "Rounds mean", "Games under 3 / over 5 rounds", "Timeouts"]]
 	for pair: Array in pairs:
 		for size in sizes:
 			var row := _row(pair, builds, size, schedule, bot, board)
@@ -119,6 +119,8 @@ func _row(pair: Array, builds: Dictionary, size: int, schedule: Array, bot: Stri
 	var wins_b := 0
 	var draws := 0
 	var rounds := 0
+	var short_games := 0                      # under 3 rounds
+	var long_games := 0                       # over 5 rounds
 	var timeouts := 0
 	var block_means: Array[float] = []
 	for seeds: Array[int] in schedule:
@@ -136,6 +138,8 @@ func _row(pair: Array, builds: Dictionary, size: int, schedule: Array, bot: Stri
 				var b: Battle = made["battle"]
 				var result := Runner.play(b, bots, rng)
 				rounds += int(result["rounds"])
+				short_games += int(int(result["rounds"]) < 3)
+				long_games += int(int(result["rounds"]) > 5)
 				if result["timeout"]:
 					timeouts += 1
 				if int(result["winner"]) < 0:
@@ -151,14 +155,13 @@ func _row(pair: Array, builds: Dictionary, size: int, schedule: Array, bot: Stri
 	return [pair[0], pair[1], str(size), "%d/%d" % [builds[pair[0]]["points"], builds[pair[1]]["points"]], str(games),
 		"%d/%d/%d" % [wins_a, wins_b, draws], "%.3f" % ((wins_a + 0.5 * draws) / games),
 		"%.3f" % _sample_sd(block_means) if block_means.size() > 1 else "n/a",
-		"%.3f..%.3f" % [block_means.min(), block_means.max()], "%.2f" % (float(rounds) / games), str(timeouts)]
+		"%.3f..%.3f" % [block_means.min(), block_means.max()], "%.2f" % (float(rounds) / games),
+		"%d / %d" % [short_games, long_games], str(timeouts)]
 
 
-## Stat points of a sheet at the gdd_monsters §2.2 prices (information only).
+## Stat points of a sheet by the prices of gdd_monsters §2.2 (information only).
 func _stat_points(s: UnitSheet) -> int:
-	var tpr_cost: int = [0, 3, 8, 15][clampi(s.tpr, 1, 3)]
-	var ap_cost: int = {2: 6, 3: 9, 4: 14, 5: 21}.get(s.ap, 6)
-	return s.hp + int(s.initiative) + s.movement + (s.reach - 1) * 3 + tpr_cost + ap_cost
+	return MonsterDef.points_of(s.hp, s.pace, s.movement, s.reach, s.tpr, s.ap)
 
 
 func _sample_sd(values: Array[float]) -> float:

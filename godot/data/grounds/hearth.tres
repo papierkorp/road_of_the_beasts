@@ -16,5 +16,5 @@ content_status = "archived"
 group = "blessed"
 effects = Array[ExtResource("1_u8u1s")]([SubResource("Resource_vd1bn")])
 color = Color(0.92, 0.72, 0.36, 1)
-description = "Initiative +1 while you stand on it (quicken 1)."
+description = "Pace +1 while you stand on it (quicken 1)."
 internal_calc_cost = 4.0

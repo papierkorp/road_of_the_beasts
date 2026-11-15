@@ -34,7 +34,8 @@ const WELL := &"dragon_vein"
 @export_multiline var description: String = ""
 
 
-## A square that takes no prop and no Mountain.
+## A square that takes no Mountain (height is unused since 2026-11-13). A prop may stand on a Dragon Vein:
+## it is ordinary ground that nothing changes (user decision 2026-11-15).
 static func is_reserved(ground: StringName) -> bool:
 	return ground == WELL
 

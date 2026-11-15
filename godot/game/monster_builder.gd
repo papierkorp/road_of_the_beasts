@@ -1,6 +1,6 @@
 class_name MonsterBuilder
 extends Control
-## Monster builder of the battle prototype: create a monster or change an existing one — name, Kin,
+## Monster builder of the multiplayer mode: create a monster or change an existing one — name, Kin,
 ## the six stats and the six kit slots — and write it as a Resource file to res://data/monsters
 ## (a new monster gets the content status `experiment`). The skills come from res://data/skills;
 ## "New skill" opens the skill builder and returns here. Nothing checks a price or a budget: stat
@@ -11,8 +11,8 @@ const SCENE := "res://game/monster_builder.tscn"
 const DRAFT_SCENE := "res://battle/draft.tscn"
 const SKILL_BUILDER_SCENE := "res://game/skill_builder.tscn"
 ## Stat fields: key, label, min, max, step (the lifetime ranges of gdd_monsters §2.1; lowest HP 3).
-const STATS := [["hp", "HP", 3, 10, 1], ["initiative", "Initiative", 1, 10, 0.5], ["move", "Movement", 1, 5, 1],
-	["reach", "Reach", 2, 4, 1], ["tpr", "Turns per round", 1, 3, 1], ["ap", "AP", 2, 5, 1]]
+const STATS := [["hp", "HP", 1, 10, 1], ["pace", "Pace", 1.0, 10.0, 0.1], ["move", "Stamina", 1, 10, 1],
+	["reach", "Reach", 1, 10, 1], ["tpr", "Turns per round", 1, 3, 1], ["ap", "AP", 1, 5, 1]]
 const NEW := "— new monster —"
 const EMPTY := "— empty —"
 
@@ -33,7 +33,7 @@ var _message: Label
 var _loading := false
 
 
-## A monster from chosen values. `spec`: name, kin (0–5), hp, initiative, move, reach, tpr, ap,
+## A monster from chosen values. `spec`: name, kin (0–5), hp, pace, move, reach, tpr, ap,
 ## skills (ids, "" = empty slot), blurb. `base` is the monster being changed (its id, status,
 ## look and notes stay) or null for a new one.
 static func build(c: BattleContent, spec: Dictionary, base: MonsterDef = null) -> MonsterDef:
@@ -45,14 +45,14 @@ static func build(c: BattleContent, spec: Dictionary, base: MonsterDef = null) -
 	if base == null:
 		m.id = StringName(label.to_snake_case().replace(" ", "_").validate_filename())
 		m.content_status = ContentStatus.EXPERIMENT
-		m.notes = "Built in the monster builder of the battle prototype; no price or budget was checked."
+		m.notes = "Built in the monster builder of the multiplayer mode; no price or budget was checked."
 	m.kin = clampi(int(spec.get("kin", 0)), 0, MonsterDef.Kin.size() - 1) as MonsterDef.Kin
-	m.hp = clampi(int(spec.get("hp", 5)), 3, 10)
-	m.initiative = clampf(float(spec.get("initiative", 5.0)), 0.1, 10.0)
-	m.move = clampi(int(spec.get("move", 2)), 1, 5)
-	m.reach = clampi(int(spec.get("reach", 2)), 2, 4)
+	m.hp = clampi(int(spec.get("hp", 5)), 1, 10)
+	m.pace = clampf(snappedf(float(spec.get("pace", 1.2)), 0.1), 1.0, 10.0)
+	m.move = clampi(int(spec.get("move", 2)), 1, 10)
+	m.reach = clampi(int(spec.get("reach", 2)), 1, 10)
 	m.tpr = clampi(int(spec.get("tpr", 1)), 1, 3)
-	m.ap = clampi(int(spec.get("ap", 2)), 2, 5)
+	m.ap = clampi(int(spec.get("ap", 2)), 1, 5)
 	m.blurb = String(spec.get("blurb", m.blurb))
 	var kit: Array[BattleSkillDef] = []
 	for sid in spec.get("skills", []):
@@ -192,7 +192,7 @@ func _ready() -> void:
 	body.add_child(_preview)
 
 	var hint := Label.new()
-	hint.text = "Pick a monster in the list to change it, or build a new one. A kit has up to four skills, at least one of them active; Step is always there. Saved monsters appear in the team choice of the battle prototype and in the overview (new ones with the status experiment). Stat and skill prices are open: nothing is checked against a budget."
+	hint.text = "Pick a monster in the list to change it, or build a new one. A kit has up to six skills, at least one of them active; Step is always there. Saved monsters appear in the team choice of the multiplayer mode and in the overview (new ones with the status experiment). The points show what the stats cost; nothing is checked against a budget, and skill prices are open."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", UiTheme.DIM)
 	hint.add_theme_font_size_override("font_size", 14)
@@ -255,9 +255,9 @@ func _load_picked() -> void:
 	_name.text = m.display_name if m != null else "New Monster"
 	_name.editable = m == null                      # the name of an existing monster is its file name
 	_kin.select(m.kin if m != null else 0)
-	var values := {"hp": 5, "initiative": 5.0, "move": 3, "reach": 3, "tpr": 1, "ap": 3}
+	var values := {"hp": 5, "pace": 1.2, "move": 3, "reach": 3, "tpr": 1, "ap": 3}
 	if m != null:
-		values = {"hp": m.hp, "initiative": m.initiative, "move": m.move, "reach": m.reach, "tpr": m.tpr, "ap": m.ap}
+		values = {"hp": m.hp, "pace": m.pace, "move": m.move, "reach": m.reach, "tpr": m.tpr, "ap": m.ap}
 	for key: String in _spins:
 		(_spins[key] as SpinBox).value = values[key]
 	for i in 6:
@@ -288,8 +288,17 @@ func _refresh() -> void:
 	var draft := build(_content, spec())             # a throw-away copy: the stored monster changes on save only
 	var lines: PackedStringArray = ["[b]%s[/b]   (%s%s)" % [draft.display_name, MonsterDef.kin_name(draft.kin),
 		", new" if editing == &"" else ", id %s" % editing], ""]
-	lines.append("HP %d · initiative %s · Movement %d · Reach %d · %d turn%s · AP %d" % [draft.hp, String.num(draft.initiative, 1), draft.move,
+	lines.append("HP %d · Pace %s · Stamina %d · Reach %d · %d turn%s · AP %d" % [draft.hp, String.num(draft.pace, 1), draft.move,
 		draft.reach, draft.tpr, "" if draft.tpr == 1 else "s (from round 2)", draft.ap])
+	# what these stats cost (gdd_monsters §2.2); shown, never enforced
+	var points := draft.stat_points()
+	var parts: PackedStringArray = []
+	for l: Array in MonsterDef.point_lines(draft.hp, draft.pace, draft.move, draft.reach, draft.tpr, draft.ap):
+		parts.append("%s = %d" % [l[0], l[1]])
+	var left := MonsterDef.MULTIPLAYER_POINTS - points
+	lines.append("[b]%d points[/b] of %d in the multiplayer mode (%s)" % [points, MonsterDef.MULTIPLAYER_POINTS,
+		"%d left" % left if left > 0 else ("exactly spent" if left == 0 else "[color=#d9a04a]%d over[/color]" % -left)])
+	lines.append("[color=#8a93a3]%s[/color]" % " · ".join(parts))
 	lines.append("[color=#8a93a3]Strike effect of the Kin:[/color] %s" % _kin_effect(draft.kin))
 	lines.append("")
 	lines.append("[color=#8a93a3]Step[/color]   1 AP · 1 square")

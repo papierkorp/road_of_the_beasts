@@ -8,7 +8,6 @@
 script = ExtResource("1_am")
 when = "hit"
 op = "damage"
-pattern = "ring8"
 amount = 1
 [resource]
 script = ExtResource("3_pd")

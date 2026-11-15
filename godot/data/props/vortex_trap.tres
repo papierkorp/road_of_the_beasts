@@ -8,7 +8,6 @@
 script = ExtResource("1_am")
 when = "enter"
 op = "pull"
-pattern = "ring8"
 amount = 1
 [resource]
 script = ExtResource("3_pd")

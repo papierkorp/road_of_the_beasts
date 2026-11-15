@@ -83,11 +83,11 @@ static func _collect_strike(b: Battle, p: Dictionary) -> void:
 	var u: BattleUnit = b.units[p["owner"]]
 	var skill: BattleSkillDef = p["skill"]
 	var origin: Vector2i = p["origin"]
-	for h: Dictionary in StrikeShapes.hits(StringName(skill.strike_shape), p["dir"]):
+	for h: Dictionary in skill.shape_hits(p["dir"]):
 		var cell: Vector2i = origin + h["o"]
 		if not b.board.in_bounds(cell) or u.covers(cell):
 			continue
-		if h["front"] != StrikeShapes.NONE:
+		if h["front"] != BattleShapes.NONE:
 			var front := b.board.at(origin + h["front"])
 			if front != null and front.prop != null and front.prop.def.solid:
 				continue                      # a solid prop takes the hit and blocks the cell behind it
@@ -196,15 +196,15 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 				var t: BattleUnit = b.units[id]
 				if not t.is_alive():
 					continue
-				if int(kin.get("init_penalty", 0)) > 0:
+				if int(kin.get("pace_penalty", 0)) > 0:
 					b.apply_effect(t, "kin:%s:%s" % [KinRules.strike_name(owner.kin()), owner.id],
-						FieldEffect.DRAIN_INIT, int(kin["init_penalty"]), 1)
-				if kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
+						FieldEffect.DRAIN_PACE, int(kin["pace_penalty"]), 1)
+				if skill.strike_push and kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
 					entries.append({"unit": id, "dir": p["push_dir"], "cause": p["label"], "multi": true})
 				if BattleExperiment.kin_push and skill.kin_effect and owner.kin() == MonsterDef.Kin.SPIRIT:
 					swaps.append([owner.id, id])
-				if skill.radial_push or (BattleExperiment.kin_push and skill.kin_effect and owner.kin() == MonsterDef.Kin.BEAST) \
-						or (skill.strike_damage > 0 and not kin.get("push", false)):   # every Strike pushes 1 away (T38)
+				if (BattleExperiment.kin_push and skill.kin_effect and owner.kin() == MonsterDef.Kin.BEAST) \
+						or (skill.strike_push and not kin.get("push", false)):   # a Strike that pushes: 1 away from the striker
 					# only hit cells next to the origin push, each along its own offset (gdd_skills §3)
 					var sum := Vector2i.ZERO
 					for o: Vector2i in p["offsets"].get(id, []):
@@ -214,7 +214,7 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 					if d != Vector2i.ZERO:
 						entries.append({"unit": id, "dir": d, "cause": p["label"], "multi": true})
 			# props in the shape are pushed like monsters (user decision 2026-11-14)
-			var push_all: bool = skill.radial_push or skill.strike_damage > 0 or bool(kin.get("push", false))
+			var push_all: bool = skill.strike_push
 			for uid in p.get("prop_offsets", {}):
 				var sum_p := Vector2i.ZERO
 				for o: Vector2i in p["prop_offsets"][uid]:
@@ -257,7 +257,7 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 		for w: BattleUnit in [t, a]:
 			if w.is_alive() and w.layer == Board.GROUND:
 				var entered: Array[Vector2i] = [w.pos]
-				BattleDamage.ground_triggers(b, w, GroundTrigger.ON_ENTER, entered)
+				BattleDamage.ground_triggers(b, w, Moment.ENTER, entered)
 		BattleDamage.defeat_step(b)
 
 
@@ -356,7 +356,7 @@ static func _removal_round(b: Battle, mountains: Dictionary, removed: Array[Boar
 		return
 	var step := BattleProps.new_step()
 	for prop in dead:
-		BattleProps.collect(b, prop, PropAftermath.DESTROYED, step)
+		BattleProps.collect(b, prop, Moment.DESTROYED, step)
 	var hits: Array = step["hits"]
 	var collapsed := {}
 	var cells := mountains.keys()
@@ -389,14 +389,14 @@ static func _phase_retreat(b: Battle, payloads: Array) -> void:
 		var kin := KinRules.strike(u.kin()) if skill.kin_effect else {}
 		if not u.is_alive() or not (skill.self_retreat or kin.get("retreat", false)):
 			continue
-		var rd := StrikeShapes.retreat_dir(StringName(skill.strike_shape), p["dir"])
+		var rd := BattleShapes.retreat_dir(skill.shape_id(), p["dir"], skill.shape_extension)
 		if rd != Vector2i.ZERO:
 			BattleMoves.retreat(b, u, rd)
 
 
 # ---------- event-driven passive reactions (gdd_battle §2.4) ----------
 
-## Reactions collected during the payload resolve now, one at a time in the initiative-queue
+## Reactions collected during the payload resolve now, one at a time in the pace-queue
 ## order of the reacting units, on the board as it stands; each passive reacts at most once
 ## per triggering event and consequences trigger no further reactions.
 static func reactions(b: Battle) -> void:

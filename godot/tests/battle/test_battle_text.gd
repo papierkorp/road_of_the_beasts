@@ -32,35 +32,35 @@ func test_skill_cards_are_a_few_short_lines() -> void:
 func test_skill_cards_say_what_matters() -> void:
 	var c := H.content()
 	# a skill that creates something: where, what it creates, and below it what that thing does
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"lava_field")))).is_equal(["4 sq · within Reach", "creates ground: Lava · 2 rd",
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"lava_field")))).is_equal(["4 sq · within Reach · ■■/■■", "creates ground: Lava · 2 rd",
 		"  Lava: 1 dmg at turn end (II: 2)"])
 	# a stat zone only comes along with something else (user decision 2026-11-13)
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"thornbed")))).is_equal(["3 sq · within Reach", "creates ground: Thornbed · 2 rd",
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"thornbed")))).is_equal(["3 sq · within Reach · ■■/■·", "creates ground: Thornbed · 2 rd",
 		"  Thornbed: 1 dmg on entering (II: 2)", "creates zone: Slowing Zone · 2 rd", "  Slowing Zone: while inside: Movement −1"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"snare")))).is_equal(["1 sq · within Reach", "creates ground: Binding Vines · 2 rd",
 		"  Binding Vines: 2 dmg on leaving"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"bog")))).is_equal(["3 sq · within Reach", "creates zone: Bog · 2 rd",
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"bog")))).is_equal(["3 sq · within Reach · ■■/■·", "creates zone: Bog · 2 rd",
 		"  Bog: while inside: Movement −1 · pulls 1 at cast and turn end"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"plant_bamboo")))).is_equal(["1 sq · within Reach", "creates prop: Bamboo Stand",
 		"  Bamboo Stand: 2 HP · spiky · burst 1"])
 	# two things at once
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"coiling_rift")))).is_equal(["4 sq · within Reach", "creates ground: Blight · 2 rd",
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"coiling_rift")))).is_equal(["4 sq · within Reach · ■■■/■··", "creates ground: Blight · 2 rd",
 		"  Blight: 1 dmg at round end (II: 2)", "creates zone: Void Pull · 2 rd", "  Void Pull: pulls 1 at cast and turn end"])
 	# a Strike and a movement that leave something
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"thorn_lash")))).is_equal(["2 dmg · 1 sq", "creates ground: Thornbed · 2 rd",
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"thorn_lash")))).is_equal(["2 dmg · push 1 · 1 sq", "creates ground: Thornbed · 2 rd",
 		"  Thornbed: 1 dmg on entering (II: 2)"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"fire_trail")))).is_equal(["straight line · Move", "leaves on its path: ground: Lava · 2 rd",
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"fire_trail")))).is_equal(["straight line · up to 3 sq, Stamina per sq", "leaves on its path: ground: Lava · 2 rd",
 		"  Lava: 1 dmg at turn end (II: 2)"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"leap")))).is_equal(["straight line · Move"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"headbutt")))).is_equal(["straight line · Move · pushes the monster ahead"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"leap")))).is_equal(["straight line · up to 3 sq, Stamina per sq"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"headbutt")))).is_equal(["straight line · up to 3 sq, Stamina per sq · pushes the monster ahead"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"battle_trance")))).is_equal(["self: AP +1 · 2 rd · 1/battle"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"immovable")))).is_equal(["Ignores push and pull."])
 	# the Kin twist is one extra line, and only if the Kin has one
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.BEAST))).is_equal(["2 dmg · 1 sq"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.SCALED))).is_equal(["2 dmg · 1 sq", "push 1 (WASD)"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.BEAST))).is_equal(["2 dmg · push 1 · 1 sq"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.SCALED))).is_equal(["2 dmg · push 1 · 1 sq", "push 1 (WASD)"])
 	var limited: BattleSkillDef = c.skill(&"lava_field").duplicate()
 	limited.repetition = "once_per_round"
-	assert_str(_values(BattleText.skill_rows(c, limited))[0]).is_equal("4 sq · within Reach · 1/round")
+	assert_str(_values(BattleText.skill_rows(c, limited))[0]).is_equal("4 sq · within Reach · ■■/■■ · 1/round")
 
 
 func test_ground_and_prop_lines_come_from_the_data() -> void:
@@ -82,7 +82,7 @@ func test_ground_and_prop_lines_come_from_the_data() -> void:
 func test_the_inspector_shows_only_what_is_notable() -> void:
 	var slow := H.zone_skill([FieldEffect.make("slow", 1, 2)], [Vector2i.ZERO], 2, "Slowing").zone
 	var b := H.battle([
-		[0, Vector2i(3, 3), {"name": "Tiger", "init": 7.0, "move": 4, "reach": 2, "ap": 3, "skills": ["leap", "strike_jab"]}],
+		[0, Vector2i(3, 3), {"name": "Tiger", "pace": 1.7, "move": 4, "reach": 2, "ap": 3, "skills": ["leap", "strike_jab"]}],
 		[1, Vector2i(6, 6), {"name": "Wolf", "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
 	])
 	assert_array(BattleText.cell_rows(b, Vector2i(0, 0))).is_empty()          # an empty Plain square: nothing
@@ -101,7 +101,7 @@ func test_the_inspector_shows_only_what_is_notable() -> void:
 	tiger.nullify = true
 	assert_str(BattleText.unit_title(tiger)).is_equal("Tiger · Beast")
 	assert_array(_values(BattleText.unit_rows(b, tiger))).is_equal([
-		"HP 4/5 · Init 7.0 · Move 2 · Reach 3 · AP 3",
+		"HP 4/5 · Pace 1.7 · Stamina 4/4 (+1) · Reach 3 · AP 3",
 		"slow 2, extend 1, Nullify",
 		"Leap · Jab",
 	])
@@ -113,7 +113,7 @@ func test_the_inspector_shows_only_what_is_notable() -> void:
 
 func test_the_cast_preview_is_a_few_merged_lines() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 5), {"name": "Tiger", "init": 9.0, "reach": 3, "ap": 4, "kin": MonsterDef.Kin.SCALED,
+		[0, Vector2i(3, 5), {"name": "Tiger", "pace": 1.9, "reach": 3, "ap": 4, "kin": MonsterDef.Kin.SCALED,
 			"skills": ["lava_field", "gloom_rift", H.strike(), "slowing_zone_example"]}],
 		[1, Vector2i(3, 4), {"name": "Wolf", "hp": 3}],
 	])

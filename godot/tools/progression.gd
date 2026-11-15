@@ -4,9 +4,11 @@ extends SceneTree
 const Runner := preload("res://tools/lib/sim_runner.gd")
 const Bots := preload("res://tools/lib/sim_bots.gd")
 const Cli := preload("res://tools/lib/cli.gd")
-const DEFAULT_SCENARIOS := "base,hp,initiative,movement,reach,ap,tpr,strike_ground,hp_ap,hp_tpr,ap_tpr,ap_tpr_ground,both_ap_tpr,both_ap_tpr_ground"
+const DEFAULT_SCENARIOS := "base,hp,pace,movement,reach,ap,tpr,strike_ground,hp_ap,hp_tpr,ap_tpr,ap_tpr_ground,both_ap_tpr,both_ap_tpr_ground"
 const SCENARIOS := DEFAULT_SCENARIOS + ",both_hp,both_ap,both_tpr,both_strike_ground,both_hp_ap,both_hp_tpr,both_hp_ap_tpr,both_hp_ap_tpr_ground"
-const CAPS := {"hp": 10, "initiative": 10, "movement": 5, "reach": 4, "ap": 5, "tpr": 3}
+const CAPS := {"hp": 10, "pace": 10, "movement": 5, "reach": 4, "ap": 5, "tpr": 3}
+## What one upgrade adds: 1, or one Pace point (gdd_monsters §2.2: a stat point buys 0.1 Pace).
+const STEPS := {"pace": 0.1}
 
 
 func _initialize() -> void:
@@ -63,16 +65,16 @@ func _run() -> void:
 	print("# Progression intervention experiment")
 	print("\nCommand: `godot --headless --path godot -s res://tools/progression.gd -- --seeds %s --pairs %s --bot %s --current-ap %s --scenarios %s`" % [seed_text, pair_text, bot, current_text, scenario_text])
 	print("\nHarness SHA-256 (current progression.gd only; not a full engine/source fingerprint): `%s`; content `%s`; Godot `%s`." % [_source_hash(), source_fingerprint, Engine.get_version_info().string])
-	print("\n**Entry action-economy proxy, not approved starting monster/frame/budget/stage.** Every fresh reference sheet: AP=2, TPR=1, authored HP/Initiative/Movement/Reach/kit, full HP. GameData's in-game pool includes user content (including asdf if in-game); no curated exclusions. Prices remain working values; no stat-price or budget assertions.")
-	print("Uniform teamwide interventions, not single-monster odds or equal-cost allocations. Unilateral scenarios upgrade all three subject A members; both_* upgrades all six and is bilateral escalation, NOT unilateral value. Stat increments +1 capped at HP/Init 10, Movement/AP 5, Reach 4, TPR 3; never lower an already over-cap authored value. strike_ground: proposed content variant, NOT an approved slot choice; append existing Thornbed only to damaging STRIKE slots with NO ground BoardOp, preserving existing ground, AP, damage, shape and all other fields. current-ap matches sim.gd currentap: any in-game ZONE with PUSH or PULL, including mixed-effect zones such as Bog, on both teams using local deep copies.")
+	print("\n**Entry action-economy proxy, not approved starting monster/frame/budget/stage.** Every fresh reference sheet: AP=2, TPR=1, authored HP/Pace/Movement/Reach/kit, full HP. GameData's in-game pool includes user content; no curated exclusions. Prices remain working values; no stat-price or budget assertions.")
+	print("Uniform teamwide interventions, not single-monster odds or equal-cost allocations. Unilateral scenarios upgrade all three subject A members; both_* upgrades all six and is bilateral escalation, NOT unilateral value. Stat increments +1 capped at HP/Pace 10, Movement/AP 5, Reach 4, TPR 3; never lower an already over-cap authored value. strike_ground: proposed content variant, NOT an approved slot choice; append existing Thornbed only to damaging STRIKE slots with NO ground BoardOp, preserving existing ground, AP, damage, shape and all other fields. current-ap matches sim.gd currentap: any in-game ZONE with PUSH or PULL, including mixed-effect zones such as Bog, on both teams using local deep copies.")
 	print("\n3v3 seeded boards, mirrored placement, two full-team side swaps per seed/pair, same bot both sides. Each seed owns a draw RNG: draw A, then B excluding A, then setup seed; reset a fresh run RNG to that setup seed for EVERY scenario/swap. Play RNG continues after identical setup draws; divergent actions need not consume identical random draws. Guard: %d bot turns." % Runner.MAX_TURNS)
-	print("\n## Source roster (authored stats; before proxy)\n\n| ID | HP/Init/Move/Reach/AP/TPR | Kit ID:effective cost |\n|---|---|---|")
+	print("\n## Source roster (authored stats; before proxy)\n\n| ID | HP/Pace/Move/Reach/AP/TPR | Kit ID:effective cost |\n|---|---|---|")
 	for id in GameData.monster_ids():
 		var sheet := UnitSheets.from_instance(MonsterInstance.of_species(BattleSetup.load_def(id)))
 		var kit: PackedStringArray = []
 		for skill in sheet.skills:
 			kit.append("%s:%d" % [skill.id, skill.cost()])
-		print("| %s | %s/%s/%s/%s/%s/%s | %s |" % [id, sheet.hp, sheet.initiative, sheet.movement, sheet.reach, sheet.ap, sheet.tpr, ", ".join(kit)])
+		print("| %s | %s/%s/%s/%s/%s/%s | %s |" % [id, sheet.hp, sheet.pace, sheet.movement, sheet.reach, sheet.ap, sheet.tpr, ", ".join(kit)])
 	print("\n## Canonical draw schedule\n\n| Seed | Pair | Subject A | Opponent B | Setup seed |\n|---|---|---|---|---|")
 	for seed_value in seeds:
 		var draw_rng := RandomNumberGenerator.new()
@@ -182,7 +184,7 @@ func _record(agg: Dictionary, battle: Battle, outcome: Dictionary, subject_side:
 		agg.losses += 1
 	var rounds := int(outcome.rounds)
 	agg.rounds += rounds
-	agg.short += int(rounds < 2)
+	agg.short += int(rounds < 3)
 	agg.long += int(rounds > 5)
 	agg.longest = maxi(agg.longest, rounds)
 	agg.hist[rounds] = int(agg.hist.get(rounds, 0)) + 1
@@ -245,7 +247,7 @@ func _mean(total: float, count: int) -> String:
 
 func _report(scenarios: Array[String], results: Dictionary) -> void:
 	print("\n## Aggregate\n\nScore=(wins+0.5×true draws)/(games−timeouts); timeouts separate. Rounds include timeout partial rounds; histograms allow exact weighted means. Defeat/damage/activation metrics cover BOTH teams; first-defeat turns count turn_started events through the first defeat, omitting games with none. Collision is collision HP damage (not collision events). Repeat=second/later activation of same actor+skill within one turn, including slotted movement, excluding Step; event fallback matches sim.gd, not distinct slot identity.")
-	print("\n| Scenario | Class | Games | A W/L/D/timeout | Score | Mean rounds | <2/>5/max | Pre-first-turn defeats/games | Turns to first defeat (n) | Collision/total damage | Repeats/activations | Round histogram |\n|---|---|---|---|---|---|---|---|---|---|---|---|")
+	print("\n| Scenario | Class | Games | A W/L/D/timeout | Score | Mean rounds | Games <3 / >5 rounds / longest | Pre-first-turn defeats/games | Turns to first defeat (n) | Collision/total damage | Repeats/activations | Round histogram |\n|---|---|---|---|---|---|---|---|---|---|---|---|")
 	for name in scenarios:
 		var a: Dictionary = results[name]
 		print("| %s | %s | %d | %d/%d/%d/%d | %s | %s | %d/%d/%d | %d/%d | %s (%d) | %d/%d | %d/%d (%s) | %s |" % [name, "bilateral" if name.begins_with("both_") else "control" if name == "base" else "unilateral", a.games, a.wins, a.losses, a.draws, a.timeouts, _mean(a.wins + 0.5 * a.draws, a.games - a.timeouts), _mean(a.rounds, a.games), a.short, a.long, a.longest, a.unacted, a.unacted_games, _mean(a.first_turns, a.first_n), a.first_n, a.collision, a.damage, a.repeats, a.activations, _mean(a.repeats, a.activations), _pairs(a.hist)])
@@ -271,7 +273,8 @@ func _source_hash() -> String:
 # Shared intervention primitives keep the self-test on the actual _team code path.
 func _increment(sheet: UnitSheet, stat: String, agg: Dictionary) -> void:
 	var before := float(sheet.get(stat))
-	var delta := maxf(0.0, minf(1.0, float(CAPS[stat]) - before))
+	var step: float = STEPS.get(stat, 1.0)
+	var delta := maxf(0.0, minf(step, float(CAPS[stat]) - before))
 	sheet.set(stat, before + delta)
 	if not agg.deltas.has(stat):
 		agg.deltas[stat] = [0, 0.0, 0, 0]
@@ -279,7 +282,7 @@ func _increment(sheet: UnitSheet, stat: String, agg: Dictionary) -> void:
 	tally[0] += 1
 	tally[1] += delta
 	tally[2] += int(delta > 0)
-	tally[3] += int(delta < 1)
+	tally[3] += int(delta < step)
 
 
 func _strike_ground(skill: BattleSkillDef, agg: Dictionary) -> void:
@@ -343,13 +346,13 @@ func _self_test() -> void:
 			var sheet: UnitSheet = base[i]
 			_check(sheet.ap == 2 and sheet.tpr == 1 and sheet.current_hp == -1, "%s baseline AP/TPR/HP" % ids[i])
 			var authored := UnitSheets.from_instance(MonsterInstance.of_species(BattleSetup.load_def(ids[i])))
-			_check(sheet.hp == authored.hp and sheet.initiative == authored.initiative and sheet.movement == authored.movement and sheet.reach == authored.reach, "%s baseline authored stats" % ids[i])
+			_check(sheet.hp == authored.hp and sheet.pace == authored.pace and sheet.movement == authored.movement and sheet.reach == authored.reach, "%s baseline authored stats" % ids[i])
 			for stat: String in CAPS:
 				var upgraded: UnitSheet = _team([ids[i]], stat, true, current_ap, _aggregate())[0]
 				for field: String in CAPS:
 					var expected := float(sheet.get(field))
 					if field == stat:
-						expected = maxf(expected, minf(expected + 1, CAPS[field]))
+						expected = maxf(expected, minf(expected + float(STEPS.get(field, 1.0)), CAPS[field]))
 					_check(is_equal_approx(float(upgraded.get(field)), expected), "%s %s changes only %s" % [ids[i], stat, field])
 			for slot in sheet.skills.size():
 				var original: BattleSkillDef = BattleSetup.load_def(ids[i]).skills[slot]
@@ -375,13 +378,14 @@ func _self_test() -> void:
 					skill.zone.effects[0].base += 7
 				_check(_snapshot(original) == original_state and _snapshot(other) == peer_state, "%s nested copy isolation" % original.id)
 	for stat: String in CAPS:
+		var step: float = STEPS.get(stat, 1.0)                # one upgrade: 1, or one Pace point
 		for initial in [float(CAPS[stat]) - 1, float(CAPS[stat]), float(CAPS[stat]) + 1]:
 			var sheet := UnitSheet.new()
 			sheet.set(stat, initial)
 			var agg := _aggregate()
 			_increment(sheet, stat, agg)
 			var delta := 1 if initial < CAPS[stat] else 0
-			_check(float(sheet.get(stat)) == initial + delta and agg.deltas[stat] == [1, float(delta), delta, 1 - delta], "%s cap and exact counters at %s" % [stat, initial])
+			_check(is_equal_approx(float(sheet.get(stat)), initial + delta * step) and agg.deltas[stat] == [1, float(delta) * step, delta, 1 - delta], "%s cap and exact counters at %s" % [stat, initial])
 	var family_probe := BattleSkillDef.new()
 	family_probe.kind = BattleSkillDef.ZONE
 	family_probe.content_status = "experiment"

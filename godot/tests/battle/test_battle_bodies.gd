@@ -13,7 +13,7 @@ func after_test() -> void:
 
 
 func _big(pos: Vector2i, side := 0, o: Dictionary = {}) -> Array:
-	var sheet := {"size": 2, "hp": 9, "init": 9.0 if side == 0 else 5.0}
+	var sheet := {"size": 2, "hp": 9, "pace": 1.9 if side == 0 else 1.5}
 	sheet.merge(o, true)
 	return [side, pos, sheet]
 
@@ -83,7 +83,7 @@ func test_pushing_a_2x2_is_one_collision_and_each_blocker_takes_one() -> void:
 	var wave := H.surge([Vector2i.ZERO], 1)
 	wave.surge_displacement = "push"
 	var b := H.battle([
-		[0, Vector2i(0, 4), {"init": 9.0, "reach": 4, "skills": [wave]}],
+		[0, Vector2i(0, 4), {"pace": 1.9, "reach": 4, "skills": [wave]}],
 		_big(Vector2i(2, 2), 1), [1, Vector2i(4, 2), {"hp": 5}],
 	])
 	var urn := b.add_prop(&"bamboo_stand", Vector2i(4, 3))
@@ -141,7 +141,7 @@ func test_zone_pushes_under_a_2x2_cancel_or_combine_to_one_cardinal_step() -> vo
 
 func test_one_hit_per_monster_per_payload_and_separate_payloads_add() -> void:
 	var b := H.battle([
-		[0, Vector2i(1, 3), {"init": 9.0, "reach": 4, "ap": 5, "skills": [H.strike("arc"), H.surge([Vector2i.ZERO, Vector2i(0, 1)])]}],
+		[0, Vector2i(1, 3), {"pace": 1.9, "reach": 4, "ap": 5, "skills": [H.strike("arc"), H.surge([Vector2i.ZERO, Vector2i(0, 1)])]}],
 		_big(Vector2i(2, 2), 1, {"hp": 10}),
 	])
 	b.set_ground(Vector2i(3, 3), &"hallowed")
@@ -165,28 +165,28 @@ func test_a_2x2_striker_picks_its_origin_square_and_never_hits_itself() -> void:
 	assert_int(H.unit(b, 0).hp).is_equal(9)
 
 
-func test_radial_push_of_a_2x2_target_uses_the_mean_of_its_adjacent_hit_squares() -> void:
+func test_the_push_of_a_2x2_target_uses_the_mean_of_its_adjacent_hit_squares() -> void:
 	var shove := H.strike("storm", false)
-	shove.radial_push = true
+	shove.strike_push = true
 	shove.strike_damage = 0
-	var b := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 4, "skills": [shove]}], _big(Vector2i(3, 2), 1), _big(Vector2i(1, 4), 1)])
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "skills": [shove]}], _big(Vector2i(3, 2), 1), _big(Vector2i(1, 4), 1)])
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.ZERO})
 	# covered hit squares (3,3) and (4,3): offsets (0,-1) + (1,-1) → not on one of the 8 directions
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 2))
 	# covered hit squares (2,4) and (2,5): offsets (-1,0) + (-1,1) → no push either
 	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(1, 4))
-	var c := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 4, "skills": [shove]}], _big(Vector2i(2, 2), 1)])
+	var c := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "skills": [shove]}], _big(Vector2i(2, 2), 1)])
 	c.begin()
 	c.apply({"type": &"skill", "slot": 0, "dir": Vector2i.ZERO})
 	# covered hit squares (2,3) and (3,3): offsets (-1,-1) + (0,-1) → off the 8 directions too;
 	# a body centred on the origin's column is pushed straight
 	assert_that(H.unit(c, 1).pos).is_equal(Vector2i(2, 2))
-	var d := H.battle([[0, Vector2i(3, 4), {"init": 9.0, "ap": 4, "skills": [shove]}], _big(Vector2i(2, 2), 1), [0, Vector2i(6, 6)]])
+	var d := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "skills": [shove]}], _big(Vector2i(2, 2), 1), [0, Vector2i(6, 6)]])
 	H.unit(d, 1).pos = Vector2i(2, 2)
 	d.begin()
 	var shove_arc := H.strike("jab", false)
-	shove_arc.radial_push = true
+	shove_arc.strike_push = true
 	shove_arc.strike_damage = 0
 	H.unit(d, 0).sheet.skills[0] = shove_arc
 	d.apply({"type": &"skill", "slot": 0, "dir": H.UP})      # only (3,3) is hit: offset (0,-1)
@@ -197,7 +197,7 @@ func test_radial_push_of_a_2x2_target_uses_the_mean_of_its_adjacent_hit_squares(
 
 func test_flyers_ignore_ground_and_fly_over_ground_obstacles() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 3), {"init": 9.0, "airborne": true, "move": 3, "ap": 4, "reach": 2, "skills": ["run"]}],
+		[0, Vector2i(3, 3), {"pace": 1.9, "airborne": true, "move": 3, "ap": 4, "reach": 2, "skills": ["run"]}],
 		[1, Vector2i(3, 2)], [1, Vector2i(6, 6)],
 	])
 	var u := H.unit(b, 0)
@@ -229,7 +229,7 @@ func test_surges_and_zone_effects_reach_the_air_only_when_authored() -> void:
 	var slow_ground := H.zone_skill([FieldEffect.make("slow", 1, 2)]).zone
 	var slow_air := H.zone_skill([FieldEffect.make("slow", 1, 2, true)], [Vector2i.ZERO], 2, "slow_air").zone
 	var b := H.battle([
-		[0, Vector2i(3, 5), {"init": 9.0, "reach": 3, "ap": 3, "skills": [ground_surge, air_surge]}],
+		[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": [ground_surge, air_surge]}],
 		[1, Vector2i(3, 3), {"airborne": true, "hp": 8, "move": 3}], [1, Vector2i(4, 3), {"airborne": true, "hp": 8, "move": 3}],
 		[1, Vector2i(3, 3), {"hp": 8}],
 	])
@@ -248,15 +248,15 @@ func test_surges_and_zone_effects_reach_the_air_only_when_authored() -> void:
 
 func test_air_props_live_on_the_air_layer_only() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 4), {"init": 9.0, "ap": 4, "skills": [H.strike()]}],
-		[1, Vector2i(2, 2), {"airborne": true, "init": 5.0}], [1, Vector2i(4, 2), {"init": 5.0}], [1, Vector2i(3, 2), {"init": 5.0}],
+		[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "skills": [H.strike()]}],
+		[1, Vector2i(2, 2), {"airborne": true, "pace": 1.5}], [1, Vector2i(4, 2), {"pace": 1.5}], [1, Vector2i(3, 2), {"pace": 1.5}],
 	])
 	b.add_prop(&"thunder_cloud", Vector2i(3, 3))
 	b.add_prop(&"gale_banner", Vector2i(2, 1))
 	assert_object(b.board.at(Vector2i(3, 3)).prop).is_null()
-	assert_float(BattleStats.initiative(b, H.unit(b, 1))).is_equal(6.0)   # Gale Banner: air neighbours only
+	assert_float(BattleStats.pace(b, H.unit(b, 1))).is_equal_approx(1.6, 0.001)   # Gale Banner: air neighbours only
 	b.add_prop(&"gale_banner", Vector2i(4, 1))
-	assert_float(BattleStats.initiative(b, H.unit(b, 2))).is_equal(5.0)
+	assert_float(BattleStats.pace(b, H.unit(b, 2))).is_equal_approx(1.5, 0.001)
 	b.begin()
 	assert_str(b.check({"type": &"step", "to": Vector2i(3, 3)})).is_empty()   # a ground monster may walk below it
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})      # Strikes hit air props
