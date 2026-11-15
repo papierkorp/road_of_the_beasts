@@ -17,7 +17,7 @@ Simulations run on the battle core itself (`battle/core`), on the same content f
 | `lib/sim_runner.gd`, `lib/cli.gd` | Boards and start squares for fixed-team runs, the game loop, argument parsing. |
 | `../data/monsters/*.tres` | One file per monster, including user experiments; normal draws use the in-game status filter, not a fixed nine-monster list. Explicit tool teams may select simulation-only records. |
 
-**Calculation costs:** there is no price folder or price calculator. `internal_calc_cost` in skill, zone, ground and prop Resources is an authoring note: older values come from the retired calculation schema; −1 means not calculated. It is not a current authoritative price, and no rule or tool uses it to check budgets; it is excluded from the content fingerprint. Prices belong to [Skills §5](../../docs/gdd_skills.md#5-value-and-prices), stat drafts to [Monsters §2.2](../../docs/gdd_monsters.md#22-frame-budget-level-ups). The progression/discovery tools include focused `--self-test` checks; those checks validate the harness and action fixtures, not gameplay balance.
+**Calculation costs:** there is no price folder or price calculator. `internal_calc_cost` in skill, zone, ground and prop Resources is an authoring note: older values come from the retired calculation schema; −1 means not calculated. It is not a current authoritative price, and no rule or tool uses it to check budgets; it is excluded from the content fingerprint. Prices belong to [skills.md §7](../../docs/skills.md#7-value-and-prices), stat drafts to [monsters.md §2.2](../../docs/monsters.md#22-prices-and-points). The progression/discovery tools include focused `--self-test` checks; those checks validate the harness and action fixtures, not gameplay balance.
 
 ## One data folder, one status scale
 
@@ -40,7 +40,7 @@ Skills (`BattleSkillDef`), monsters (`MonsterDef`), grounds, zones and props (si
 
 ## Commands
 
-**Since the reshape of 2026-11-13** the game has no Surges, traps, Mountains or flyers ([gdd_battle §1.2](../../docs/gdd_battle.md#12-battle-design-pillars)). The variants below that act on them (`alltraps`, `alltimed`, `turns=N`, `trapcap`, `trapfade`, `castersurge`, `fairsurge`, `unfairsurge`, `surgewall`, `surgeground`, `surgedmg`, `noshield`, `shield=N`, `shieldap`, `--shield-once`) still parse but change nothing in a run on the game's content; they go with the code clean-up (temp_todo I57). The variants to work with now: `mixstats`, `mixskills`, `mixkits`, `genskills=N`, `calm=N`, `veinhold`, `wells=N`, `noflank`, `delay`, `delay=reverse`, `delay=first`, `startback`, `stat=…`, `swap=old>new`, `freeap=N`, `freemod=N`, `strikedmg=N`, `groundfade=N`, `tpr1`.
+**Since the reshape of 2026-11-13** the game has no Surges, traps, Mountains or flyers ([battle.md §1](../../docs/battle.md#1-goals-and-pillars)). The variants below that act on them (`alltraps`, `alltimed`, `turns=N`, `trapcap`, `trapfade`, `castersurge`, `fairsurge`, `unfairsurge`, `surgewall`, `surgeground`, `surgedmg`, `noshield`, `shield=N`, `shieldap`, `--shield-once`) still parse but change nothing in a run on the game's content; they go with the code clean-up (temp_todo I57). The variants to work with now: `mixstats`, `mixskills`, `mixkits`, `genskills=N`, `calm=N`, `veinhold`, `wells=N`, `noflank`, `delay`, `delay=reverse`, `delay=first`, `startback`, `stat=…`, `swap=old>new`, `freeap=N`, `freemod=N`, `strikedmg=N`, `groundfade=N`, `tpr1`.
 
 Run from the repository root; everything after `--` belongs to the tool. Replace `<state>` with a literal code-state label (include dirty-tree context); a content fingerprint alone does not identify all source changes.
 
@@ -136,7 +136,7 @@ godot --headless --path godot -s res://tools/discovery.gd -- --seeds 501,502,503
 ## What a run covers
 
 - **Active content resolved by the battle core:** Strikes, movement, grounds, zones, props, extra turns (TPR), board-edge legality/damage, Dragon Veins, surrounding, late-round pressure and Draws. Surges/traps, Mountains/height and flyers/air remain dead game paths exercised only by legacy/custom test fixtures, not active content or normal-run coverage.
-- **Board of a fixed-team run:** `flat` is an empty board of the mode's size without Mountains; start squares are drawn by the seed from side 0's start area ([Battle §4.1](../../docs/gdd_battle.md#41-battlefield-generation)) and mirrored for side 1. On 1v1 the start area is the corner square, so seeds differ only through the bots' tie-breaks.
+- **Board of a fixed-team run:** `flat` is an empty board of the mode's size without Mountains; start squares are drawn by the seed from side 0's start area ([battle.md §4.1](../../docs/battle.md#41-board-generation)) and mirrored for side 1. On 1v1 the start area is the corner square, so seeds differ only through the bots' tie-breaks.
 - **Not covered:** tamer skills, 2×2 and air units (no monster fields them), human play.
 
 ## Bots
@@ -147,7 +147,7 @@ Rough speed on one core: `rush` about 40 ms per 1v1 battle; `greedy` about 0.1�
 
 ## Validation boundaries
 
-The goal is playable monsters from the start and meaningful alternative upgrades, not a predetermined AP/TPR start. AP affordability, one affordable active skill, budget fit and an entry proxy do not prove viability. Validate stat and skill growth jointly at action thresholds, meaningful decisions and battle length; rules/prices remain in [Monsters §2.2](../../docs/gdd_monsters.md#22-frame-budget-level-ups) and [Skills §5](../../docs/gdd_skills.md#5-value-and-prices)/[§6](../../docs/gdd_skills.md#6-slot-levels-development-and-replacement). Open validation belongs to T02/T03/T05/T13 in [temp_todo.md](../../docs/temp_todo.md).
+The goal is playable monsters from the start and meaningful alternative upgrades, not a predetermined AP/TPR start. AP affordability, one affordable active skill, budget fit and an entry proxy do not prove viability. Validate stat and skill growth jointly at action thresholds, meaningful decisions and battle length; rules/prices remain in [monsters.md §2.2](../../docs/monsters.md#22-prices-and-points) and [skills.md §7](../../docs/skills.md#7-value-and-prices)/[skills.md §8](../../docs/skills.md#8-slot-development). Open validation belongs to T02/T03/T05/T13 in [temp_todo.md](../../docs/temp_todo.md).
 
 Recorded evidence, not tests rerun by reading this README: [S023](../../docs/simulation_log.md#s023--2026-11-14--authored-gameplay-discovery-and-mist-step-ablation) records 158 battle regression cases, zero errors/failures, after correcting positional damage to read actual board veins. [S024](../../docs/simulation_log.md#s024--2026-11-14--one-dragon-vein-count-control) records the expanded discovery self-test (6930 passed, zero failed), including map invariants and a central-vein real-action fixture; the 158-case suite was not rerun there. Harness self-tests and completion guards check measurement integrity, not fun, fairness, balance or game acceptance. Full-project tests, UI inspection and human candidate play remain pending.
 

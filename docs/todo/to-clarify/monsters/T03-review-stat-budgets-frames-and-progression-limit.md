@@ -1,0 +1,19 @@
+# T03 · Stat Calculation: Open Points
+
+**Status:** to clarify. The system is decided and written in [monsters.md §2](../../../monsters.md#2-stats); every number is an untested starting value.
+
+**Open points:**
+
+- **How a stat shape splits the points at the roll** (Bulwark, Skirmisher, Swift, Caster). The earlier min–max frames went with the stage ceilings.
+- **Third turn and AP beyond 3:** the prices exist; nothing has been played with them.
+- **Pace and Reach prices are set, not measured:** the bots could not value either. Check in play whether fast monsters feel worth their Pace.
+- **Two turns stay a little cheaper per action than many AP in one turn.** The first place to look for an overpowered build.
+- **Sturdy monsters reach HP 10 at Soul** and have only Pace, Stamina and turns to buy afterwards.
+- **The end at 110 points:** +10 at the last two breakthroughs (120 at the end) is a noted option.
+- **Normal monsters** end at Core with two slot-development steps in total; whether that is enough is unchecked.
+- **Learnable skills per species:** the old count (4 defaults, +1 per breakthrough, 8 in total) predates the six kit slots.
+- **The overworld code** still rolls individuals with six earlier stat shapes and stage caps.
+
+**Evidence so far** (bot runs with random stats, indications only, [simulation_log.md](../../../simulation_log.md)): an HP was worth about 4 more team wins in 100 battles, a second turn about 11, AP 3 instead of 2 about 9, a Stamina point about 2; Reach and Pace showed nothing measurable.
+
+**Done when:** the shape split is defined, and the prices have been checked in play at the start, at Core and at a high stage.

@@ -1,97 +1,63 @@
 # Project
 
 - **Road of the Beasts:** deterministische, rundenbasierte Monsterkämpfe mit Management und Kultivierung.
-- **Designziel:** „Easy to learn, hard to master“: wenige, einheitliche und gut lesbare Regeln; Tiefe entsteht aus Kombinationen und Entscheidungen, nicht aus Sonderregeln. Bei Designvorschlägen und Mechanik-Abwägungen als Maßstab nutzen (Ausnahmen und Sonderfälle begründen).
-- **Battle-Ziele (Nutzervorgabe 2026-11-12, ausformuliert in `docs/gdd_battle.md` §1.2):** Spielerentscheidungen haben Einfluss und Folgen; deterministisch; kurze Kämpfe (rund 15 Runden sind schon sehr lang; Arbeitsziel 2026-11-15 für 3v3: im Mittel 3.x bis 4.x Runden); taktisch statt Skill-Spam; jeder Skill je nach Situation sinnvoll; Niederlagen fühlen sich wie eigene Fehler an, nicht unfair; einfach zu lernen, keine versteckten Fähigkeiten. Regel-, Inhalts- und Preisvorschläge daran messen.
-- **Fokus (Nutzervorgabe, bekräftigt 2026-11-12):** Das Battle ist der Kern des Spiels und wird zuerst fertig. Die Overworld ist bis dahin nachrangig: nicht daran arbeiten, sie nicht als Grund für Battle-Entscheidungen heranziehen und beim Battle-Umbau nicht schonen. Sie wird erst an das Battle angepasst, wenn es steht und der Nutzer damit zufrieden ist, oder wenn er ausdrücklich etwas anderes sagt. Offene Overworld-Aufgaben bleiben in `docs/temp_todo.md` erhalten, werden aber nicht vorgezogen.
-- **Begriffe (Nutzervorgabe 2026-11-15):** Der bisherige „Battle-Prototyp“ (Draft-Sandbox im Godot-Build: Teams wählen, kämpfen) heißt künftig **Multiplayer-Modus**; „das Spiel“ meint das Spiel mit Overworld und Fortschritt. Beides auseinanderhalten: Stat-Spannen und Preise gelten für das ganze Spiel, der Multiplayer-Modus spielt mit einem festen Punktebudget.
-- **Auftrag:** GDDs überarbeiten, vervollständigen und konsistent halten; Spielimplementierung nur im Rahmen einer ausdrücklichen Nutzerfreigabe (siehe Safety).
+- **Designziel:** „Easy to learn, hard to master“: wenige, einheitliche und gut lesbare Regeln; Tiefe entsteht aus Kombinationen und Entscheidungen, nicht aus Sonderregeln. Vorschläge daran messen, Ausnahmen begründen.
+- **Battle-Ziele:** stehen in [docs/battle.md §1](docs/battle.md#1-goals-and-pillars); Regel-, Inhalts- und Preisvorschläge daran messen.
+- **Fokus:** Das Battle ist der Kern und wird zuerst fertig. Die Overworld ist bis dahin nachrangig: nicht daran arbeiten, sie nicht als Grund für Battle-Entscheidungen heranziehen und beim Battle-Umbau nicht schonen.
+- **Begriffe:** „Multiplayer-Modus“ ist die Draft-Sandbox im Godot-Build (Teams wählen, kämpfen); „das Spiel“ meint das Spiel mit Overworld und Fortschritt.
 
 ## Safety
 
-- **Branch:** `main` für GDD-Arbeit (Nutzerfreigabe 2026-11-12; der frühere Branch `docs/update_gdd` wird nicht mehr verlangt) und für den Battle-Implementierungsauftrag (Nutzerfreigabe 2026-11-11). Vor Änderungen Branch/Git-Status prüfen; bei anderem Branch anhalten und nachfragen, nicht selbst wechseln.
-- **Schreibbereich:** `docs/`, die Pflege dieser `CLAUDE.md` und der gesamte Ordner `godot/` (Nutzerfreigabe 2026-11-12: das ganze Godot-Spiel ist ein Experiment, Battle wie Overworld dürfen umgebaut werden, Altes muss nicht erhalten bleiben). Keine Änderungen an `tools/html_prototype/` oder anderen Pfaden.
-- **Git/Nutzerarbeit:** keine Commits, Branchwechsel, Pulls, Resets oder sonstigen eingreifenden Git-Aktionen ohne ausdrücklichen Auftrag. Nutzeränderungen erhalten; nichts automatisch synchronisieren.
-- **Validierung:** Prototypen bestätigen nicht das aktuelle Design; Dokumentationsprüfung und Rechenproben sind keine Gameplay-/Balancevalidierung.
-- **Godot-Stand vs. GDD:** Der Godot-Build darf den GDDs vorauslaufen, wenn der Nutzer eine Variante dort ausprobieren will; solche Abweichungen stehen in `godot/README.md` und als Aufgabe in `docs/temp_todo.md`. Eine GDD-Regel wird daraus erst durch ausdrücklichen Beschluss. **Stand seit dem Umbau vom 2026-11-13 (Nutzerentscheidungen, Aufgabe T40):** keine Höhe, keine Luftebene, keine Surges; ein Feld ist Boden + Zone + Besetzer (Boden wirkt zu einem Zeitpunkt, eine Zone solange man drinsteht); ein Skill überbringt nur (Schlag, Bewegung, Selbstwirkung, erschafft Boden/Zone/Prop), Wann und Was stehen bei Boden, Zone und Prop; Dragon Veins (früher Wellsprings) gehören der Seite, die sie zuletzt berührt hat. Die Battle-GDDs beschreiben das, der Build spielt es. **Nutzerentscheidungen vom 2026-11-15 (in GDDs und Build):** der Stat heißt überall **Pace** statt Initiative (1 Stat-Punkt = 0,1; die ganze Zahl der **aktuellen** Pace, mindestens 1, ist die Stamina-Erholung pro Runde – Zonen und Buffs auf Pace zählen mit); **Stamina** ist Regel (Bewegungs-Skills zahlen je Feld dessen Bewegungskosten; der frühere Movement-Stat ist der Vorrat); am Rundenende wird erst alles verschoben (Zonen schieben Props, schiebende Props wie die Storm Drum), dann wirkt alles auf die neuen Positionen, dann ticken alle Uhren gemeinsam; ein solides Prop deckt das Strike-Feld dahinter; **Fallen gibt es wieder, als begehbare Props**; Props und Zonen dürfen auf Dragon Veins stehen; Schaden und Push eines Strikes sind beide optional und stehen am einzelnen Skill; AP-senkende Passives nie unter 1 AP; **eine Form je Skill** (sechs Grundformen mit Verlängerung um den Anwender, oder eine freie Form aus N Feldern, die der Spieler vor dem Kampf anordnet); Boden, Zone und Prop als **ein Datenblatt** „wann · was · wie viel · wo“ mit fester Rollentabelle ([Battle §4.12](docs/gdd_battle.md#412-one-sheet-for-ground-zones-and-props)). **Monster-Kalkulation (Nutzerentscheidung 2026-11-15, [Monsters §2](docs/gdd_monsters.md#2-stats); alle Zahlen ungetestete Startwerte):** eine feste Spanne je Stat für das ganze Spiel (HP 1–10, Pace 1.0–10.0, Stamina 1–10, Reach 1–10, Züge 1–3, AP 1–5), jeder Stat startet beim niedrigsten Wert, keine Stat-Obergrenzen und keine Freischaltungen je Stufe; Preisliste (0,1 Pace 1 · Stamina 2 · HP 5 · Reach 5 · AP-Schritte 5/10/15/20 · zweiter Zug 10 + 5 je AP, dritter das Doppelte); 25 Punkte am Start, +5 je Schritt, 110 am Ende; „niedrigste HP 3“ war nie eine Regel. Als Nächstes werden Skills und ihre Kalkulation überarbeitet. **Arbeitswerte, nicht bestätigt:** höchster Einzeltreffer 2, die Skill-Liste, die Kits, die Test-Stats, alle Boden- und Zonenwerte. **Entwürfe und Schalter im Build (README, `docs/temp_todo.md` Current State, S028–S031):** die Vein-Regel bleibt „letzte Berührung“ (Nutzerentscheidung nach S028; „Vein halten“ nur noch als Schalter `vein_touch` = false); der Prop-Katalog des Umbaus vom 2026-11-14 (Auslöser bei Zerstörung, Treffer, Betreten, Rundenende; Aura-Props archiviert; sieben Prop-Skills in den Kits) steht als Arbeitsentwurf in Battle §4.10, seine Inhalte sind nicht bestätigt (T41); Brettschalter 8×8/9×9 und Button-Felder sind Testschalter, keine Regeln. Beschlossen und in den GDDs: jeder Skill einmal pro Zug (`usage_limit`), bis zu 6 Kit-Slots (im Multiplayer-Modus alle offen und seit 2026-11-15 bei allen neun Monstern belegt, im Spiel einzelne Slots als Upgrades), Zonen schieben nicht beim Wirken. **Noch im Code, aber vom Spiel ungenutzt:** die Logik für Höhe, Luftebene, Surges und deren Marker-Fallen samt zugehöriger Testschalter sowie die frühere Movement-Regel als Vergleichsschalter `stamina` = false (Aufräumen: T40, I56/I57). Testschalter in `godot/battle/core/battle_experiment.gd`.
-- **CPU-Nutzung (Nutzerfreigabe 2026-11-14):** Full-CPU ist erlaubt; die frühere Low-CPU-Ausführung ist nicht verpflichtend. Godot darf direkt mit normalen Prozess-/CPU-Einstellungen aufgerufen werden; dafür ist keine Codeänderung nötig. `godot/tools/run_low_priority.ps1` bleibt ein optionaler, absichtlich drosselnder Launcher. Die Freigabe verspricht weder automatische Parallelisierung noch 100 % Auslastung aller CPUs bei jedem Lauf.
-- **Simulationsläufe nur auf ausdrücklichen Auftrag (Nutzervorgabe 2026-11-15):** keine Bot-, Progression-, Discovery- oder Vergleichsserien aus eigenem Antrieb starten, auch nicht „zur Absicherung“ nach einer Regel- oder Werteänderung und nicht als stiller Teil einer Rückfrage-Option. Der Nutzer will Änderungen in der Regel schnell umgesetzt haben; abgesichert wird mit den Regeltests (gdUnit) und kurzen gezielten Prüfungen. Hält der Agent eine Serie für sinnvoll, schlägt er sie im Bericht vor und wartet auf den Auftrag.
-- **Werkzeuge und Simulationen:** [godot/tools/README.md](godot/tools/README.md) ist der Wegweiser für Bot-Läufe (`sim.gd`), Monster-Vergleiche (`compare.gd`), Entry-/Upgrade-Proxys (`progression.gd`) und Discovery mit Autorenwerten (`discovery.gd`). Progression/Discovery nutzen gepaarte Teams mit vollständigem Seitenwechsel und Quellen-/Abschlussprüfungen; diese Guards prüfen die Messung, nicht die Spielqualität. Statusfilter und Versuchsszenarien sind keine Regel- oder Inhaltsfreigabe. **Zweck (Nutzervorgabe 2026-11-12):** ausprobieren, ob das Gameplay Spaß macht und sinnvoll ist, und herausfinden, welche Skill-Preise nötig sind. Die Skill-Kalkulation ist nicht fest: Simulationen ignorieren Preise und prüfen Monster nicht gegen Budgets. Dasselbe gilt für die Stat-Kalkulation (Nutzervorgabe 2026-11-13): Stat-Preise, Budgets und Rahmen in `docs/gdd_monsters.md` §2.2 sind ungetestete Anfangswerte, nichts davon ist fixiert; sie werden zusammen mit Regeln und Skills über das Gameplay gefunden, ebenso welche Skills es überhaupt gibt und wie sie auszubalancieren sind. Läufe liefern Indizien, keine Balance-/Preisfreigabe und keine Regelquelle. **Daten:** genau ein Datenordner `godot/data/` mit einem Unterordner je Art (`monsters/`, `skills/`, `zones/`, `grounds/`, `props/`, `tamer/`; Nutzeraufträge 2026-11-12: keine zweiten Skill-, Zonen-, Kit-, Build- oder Preis-Sätze). `internal_calc_cost` steht direkt in der jeweiligen Ressource (Autorennotiz mit Altwerten des verworfenen Kalkulationsschemas oder −1, keine aktuelle Preisregel); es gibt keinen Preisordner und keinen Preisrechner. Skills, Monster, Böden, Zonen und Props tragen `content_status` = `approved`/`draft`/`experiment`/`test`/`simulation`/`archived`; der Filter sitzt in `ContentStatus.in_game` (aufgerufen von `GameData` und `BattleContent`), das Spiel verwendet nur `approved`, `draft` und `experiment` (Nutzerentscheidung 2026-11-13: Mechaniken zum Ausprobieren im Spiel, z. B. seltene, teure AP-/TPR-Skills; in der Übersicht sichtbar, keine GDD-Regel). Nicht mehr Gebrauchtes löschen (Git ist die Historie) oder auf `archived` setzen. Keine Python- oder JSON-Dateien im Projekt; die Werkzeuge bleiben schlank. Bot-, Progression- und Discovery-Messberichte gemäß [Werkzeugdokumentation](godot/tools/README.md#recording-results) in [docs/simulation_log.md](docs/simulation_log.md), Monster-Vergleichstabellen und Folgerungen in [docs/temp_todo.md](docs/temp_todo.md) (T13) festhalten; offene Regeln nicht erfinden. **Ergebnisdarstellung (Nutzervorgabe 2026-11-15):** bei jedem Simulationsergebnis – im Chat, im Log und in `temp_todo.md` – neben den mittleren Runden immer angeben, wie viele Kämpfe unter 3 und wie viele über 5 Runden dauerten (die Werkzeuge drucken beide Zahlen in jede Ergebnistabelle). Arbeitsziel des Nutzers für 3v3: im Mittel 3.x bis 4.x Runden ([Battle §1.2](docs/gdd_battle.md#12-battle-design-pillars)).
-- **Progressionsziel und Validierung:** Von Beginn an spielbare Monster und sinnvolle alternative Verbesserungen sind das Ziel, kein beschlossener numerischer Start. AP-Bezahlbarkeit, ein nutzbarer aktiver Skill, Budget-Fit oder ein Entry-Proxy belegen das nicht. Stat- und Skillentwicklung gemeinsam an Handlungsschwellen, Entscheidungen und Kampflänge prüfen; Regeln/Preise nicht hier kopieren. Zuständig: [Monsters §2.2](docs/gdd_monsters.md#22-frame-budget-level-ups), [Skills §5](docs/gdd_skills.md#5-value-and-prices)/[§6](docs/gdd_skills.md#6-slot-levels-development-and-replacement), Validierung und offene Entscheidungen: [T02/T03/T05/T13](docs/temp_todo.md).
+- **Branch:** `main`. Vor Änderungen Branch und Git-Status prüfen; bei anderem Branch anhalten und nachfragen, nicht selbst wechseln.
+- **Schreibbereich:** `docs/`, diese `CLAUDE.md` und der Ordner `godot/`. Keine Änderungen an `tools/html_prototype/` oder anderen Pfaden.
+- **Git:** keine Commits, Branchwechsel, Pulls oder Resets ohne ausdrücklichen Auftrag. Nutzeränderungen erhalten.
+- **Simulationsläufe nur auf ausdrücklichen Auftrag:** keine Bot-, Progression-, Discovery- oder Vergleichsserien aus eigenem Antrieb, auch nicht zur Absicherung und nicht als stiller Teil einer Rückfrage-Option. Abgesichert wird mit den Regeltests (gdUnit) und kurzen gezielten Prüfungen; eine Serie höchstens vorschlagen.
+- **Ergebnisse von Läufen:** immer mittlere Runden und die Zahl der Kämpfe unter 3 und über 5 Runden nennen. Läufe liefern Indizien, keine Freigabe von Regeln, Preisen oder Balance.
+- **Validierung:** Dokumentprüfung, Rechenproben, Tests und Bot-Läufe sind keine Gameplay-Validierung.
+- **Daten:** genau ein Datenordner `godot/data/` mit einem Unterordner je Art; keine zweiten Skill-, Kit- oder Preis-Sätze; keine Python- oder JSON-Dateien im Projekt. Nicht mehr Gebrauchtes löschen oder auf `archived` setzen.
+- **CPU:** volle Auslastung ist erlaubt.
+- **Werkzeuge:** [godot/tools/README.md](godot/tools/README.md); Build und Schalter: [godot/README.md](godot/README.md).
+
+## Dokumente
+
+| Datei | Zuständig für | Richtwert (Zeichen) |
+|---|---|---|
+| [`docs/battle.md`](docs/battle.md) | Regeln des Kampfs: Ablauf, Zeitpunkte, Brett, Rollen von Boden/Zone/Prop, Schaden, Verschiebung | 30 000 |
+| [`docs/skills.md`](docs/skills.md) | Regeln der Skills: Kit, Skill-Karte, Formen, Bewegungsarten, Passives, Slots | 20 000 |
+| [`docs/monsters.md`](docs/monsters.md) | Regeln der Monster: Stats, Kalkulation, Kins, Seltenheit, Wachstum | 15 000 |
+| [`docs/content.md`](docs/content.md) | Alle Inhaltsentwürfe: Böden, Zonen, Props, Skills, Kits, Monster | 20 000 |
+| [`docs/overworld.md`](docs/overworld.md) | Welt, Expeditionen, Wirtschaft, Fortschritt, Tamer-Skills | 60 000 |
+| [`docs/architecture.md`](docs/architecture.md) | Technische Zielstruktur | 10 000 |
+| [`docs/decisions.md`](docs/decisions.md) | Entscheidungsprotokoll: Entscheidung, Verworfenes, Grund | wächst nur zeilenweise |
+| [`docs/temp_todo.md`](docs/temp_todo.md) | Übersicht: Stand, offene Fragen, Aufgabentabelle | 10 000 |
+| [`docs/todo/`](docs/todo/) | Eine Datei je Aufgabe, in Ordnern nach Status und Epic | 6 000 je Aufgabe |
+| [`docs/prompts.md`](docs/prompts.md) | Wiederverwendbare Arbeitsaufträge (deutsch) | — |
+| [`docs/simulation_log.md`](docs/simulation_log.md) | Messreihen, nur anhängen | — |
+
+## Regeln für die Dokumente
+
+1. **Nur der aktuelle Stand:** Regel- und Inhaltsdateien enthalten keine Datumsangaben, keine Entscheidungsgeschichte, kein „früher/jetzt“ und keine verworfenen Varianten.
+2. **Ersetzen statt ergänzen:** Eine neue Entscheidung ersetzt den alten Text.
+3. **Nach jeder Nutzerentscheidung:** den zuständigen Abschnitt ersetzen und eine Zeile in `docs/decisions.md` anhängen. Daten und Entscheidungsgeschichte stehen ausschließlich dort.
+4. **Vor einem Vorschlag,** der eine Regel ändert oder ein beschlossenes Thema neu öffnet: `docs/decisions.md` prüfen. Verworfenes nur bei neuem Anlass wieder vorschlagen.
+5. **Jede Regel steht genau einmal;** anderswo wird verlinkt. Regeln stehen in den Regeldateien, konkrete Werte und Namen in `content.md`.
+6. **Offene Fragen, Alternativen und Übergaben** stehen ausschließlich in der Aufgabenverwaltung (`docs/temp_todo.md`, `docs/todo/`). Regeldateien nennen eine Lücke höchstens als „not defined“.
+7. **Status einmal je Abschnitt oder Tabelle** kennzeichnen (beschlossen, working value), nicht an jeder Aussage.
+8. **Testschalter, Messhinweise und ungenutzter Code** gehören nicht in die Regeldateien, sondern in die Godot-READMEs oder als Aufgabe in `docs/todo/`.
+9. **Umfang:** Überschreitet eine Datei ihren Richtwert, wird zuerst gekürzt oder geteilt, dann erst ergänzt.
+10. **Aufgaben:** eine Datei je Aufgabe; ein Statuswechsel verschiebt die Datei in den passenden Ordner und aktualisiert die Tabelle in `docs/temp_todo.md`. Erledigtes wandert nach `done/`, später nach `archive/`.
+11. **Diese `CLAUDE.md`** enthält nur dauerhafte Arbeitsregeln: keine Spielregeln, Zahlen oder Zwischenstände.
+12. **`docs/simulation_log.md`** wird nur angehängt; bestehende Einträge werden nicht geändert.
 
 ## Working style
 
-### Einstieg und Zusammenarbeit
-
-- **Sprache:** Chat Deutsch, knapp und verständlich; Dokumentation unter `docs/` Englisch, einschließlich `temp_todo.md`; Ausnahme: wiederverwendbare Chat-Prompts samt Unterüberschriften unter `AI Prompts` Deutsch. Englische GDD-Terminologie/Bezeichner konsistent halten; deutsche Bestandsabschnitte bei Überarbeitung übersetzen, ohne Regeln oder Entscheidungsstatus zu ändern.
-- **Wiedereinstieg:** in `docs/temp_todo.md` Verwendung, aktuelle Übergabe und betroffene Aufgabe lesen; danach gezielt zuständige GDD-Abschnitte.
-- **Priorität:** aktuelle Nutzeranweisung vor älterer Übergabe; veraltete Arbeitsanweisungen korrigieren.
-- **Entscheidungen:** grundlegendes Gameplay mit dem Nutzer klären; beschlossene Prinzipien nur bei neuem Anlass erneut öffnen.
-- **Rückfragen:** Wo eine Nutzerentscheidung nötig ist, das AskUserQuestion-Tool verwenden (Optionen mit Empfehlung zuerst, Entscheidungen gebündelt), nicht als Fließtextfrage im Chat. Nicht nach dem nächsten Arbeitsschritt fragen: diesen selbst aus Übergabe und Aufgabenliste vorgeben.
-- **Entwürfe:** zusammengehörige Kosten/Rechenbeispiele gesammelt ausarbeiten. Neue Zahlen/Empfehlungen als Entwurf kennzeichnen; keine Freigabe neuer Mechaniken oder grundlegender Gameplayänderungen daraus ableiten.
-- **Lücken:** fehlende Regeln/Widersprüche benennen, keine Standardannahmen erfinden. Budget-Fit ist keine Content-/Balancefreigabe.
-
-### Gemeinsame Darstellung für Menschen und AI-Agents
-
-- **Eine Quelle:** gemeinsame Markdown-Spezifikation nach Themen, nicht getrennt nach Menschen/AI.
-- **Aufbau:** kurzer Überblick, präzise Regeln, kompakte Vergleichs-/Referenztabellen. Längeren Fließtext durch thematische Stichpunkte ersetzen, wenn dieselbe Information schneller erfassbar wird.
-- **Kompaktheit:** zusammengehörige Aussagen bündeln, nicht jeden Satz einzeln aufzählen. Unterlisten/Zwischenlabels nur für echte Unterstruktur; kurze Überblicks-/Begründungssätze dürfen Fließtext bleiben, Abläufe bei Bedarf nummerieren.
-- **Informationserhalt:** Bedingungen, Ausnahmen, Negationen, Einheiten und Entscheidungsstatus vollständig bewahren. Tatsächlichen Zeichenumfang prüfen: mehr Zeilen sind keine Kürzung; keine Regeln zugunsten knapper Stichworte streichen.
-- **Darstellungswahl:** Tabellen für Vergleiche/Referenzwerte, nicht für jeden Text. Beispiele/strukturierte Daten nur für besseres Verständnis oder Vollständigkeitsprüfung; sie folgen den zentralen Regeln und bilden keine unabhängige Regelversion.
-- **Präzision:** Bedingungen, Kosten, Grenzen und Auflösungsreihenfolge eindeutig; Battle-AP, Tages-AP, Konstruktionspunkte, Schaden und EP trennen.
-- **Status:** beschlossen, Arbeitsentwurf und noch nicht validiert sichtbar unterscheiden. Abschnitts-/Tabellenstatus statt wiederholter Warnungen an jeder Aussage.
-- **Zuständigkeit:** jede Regel, Formel, Preisliste und Datenstruktur hat genau einen zuständigen Abschnitt. Anderswo verlinken und nur die eigene Schnittstelle beschreiben, keine Regelkopien.
-- **Skills:** allgemeine Regeln/Kosten über präzise Effekt-/Skillklassen statt Namenslisten beschreiben. Konkrete Skills samt Ausnahmen einmal zentral in `docs/gdd_skills.md` definieren; Namen sonst nur für nötige Inhaltsreferenzen, abgegrenzte Referenzrechnungen oder konkrete offene Aufgaben. Skill-Ausnahmen nie auf ganze Klassen übertragen.
-- **Navigation:** stabile, aussagekräftige Überschriften und relative Markdown-Links; nach Verschiebungen Links/Abschnittsverweise aktualisieren.
-
-### Überarbeitung und Abschluss
-
-- **Bereinigung:** eindeutig verworfene/ersetzte Ideen dürfen entfallen; bei unklarem Status erst klären. Keine unnötigen Archive oder parallelen Alternativkataloge.
-- **Historie:** Git statt Changelogs/laufender Änderungshistorien in GDDs oder `temp_todo.md`. Einzige Ausnahme: `docs/simulation_log.md` ist eine datierte Messreihe (nur anhängen, Einträge nicht nachträglich ändern). Vor Entfernen historischer Einträge ausschließlich dort vorhandene, weiterhin gültige Informationen in zuständige GDD-Abschnitte übernehmen.
-- **Prototyp/Versionen:** historische Abweichungen nur zur nötigen Abgrenzung vom aktuellen Design behalten, nie als aktive Spezifikation. Keine manuellen GDD-Versions-/Synchronisierungsversprechen ohne definierten Releaseprozess.
-- **Arbeitsstand:** offene Fragen, Alternativen, Prüfaufträge und jeweils aktuelle Übergabe nur in `docs/temp_todo.md`. GDDs enthalten aktuelles Design samt gekennzeichneten Inhaltsentwürfen, kein Gesprächsprotokoll; `Context Handoff` nach jeder Session auf den aktuellen Stand bringen: Fokus, offene Entscheidungen/Blocker, nächster Schritt, Git-/Validierungsstand; keine vollständigen Preislisten/Regelkopien oder laufende Historie. Wiederverwendbare Arbeitsaufträge unter `AI Prompts` pflegen.
-- **Nach Entscheidungen:** zuständiges GDD aktualisieren, betroffene Schnittstellen/Verweise prüfen und Aufgaben-/Übergabestand anpassen.
-- **Abschluss:** Aufgaben erst bei erfüllten Abschlussbedingungen abhaken; Validierungsaufgaben brauchen passende Tests und dokumentierte Ergebnisse.
-- **Prüfung:** fokussierter Diff, Verweise, gegebenenfalls Rechensummen und `git diff --check`; tatsächlich Geprüftes und offene Fragen berichten.
-
-## Architecture
-
-### Dokumentzuständigkeiten
-
-| Datei | Zuständigkeit | Abgrenzung |
-|---|---|---|
-| [`docs/gdd_battle.md`](docs/gdd_battle.md) | Kampfablauf, Pace und Zugfolge, Battle-AP- und Stamina-Laufzeit, Spielfeld, **was Böden, Zonen und Props tun und wann** (ein Datenblatt, §4.12), allgemeine Schadens-/Verschiebungsauflösung | Keine zweite Monster-Skill-, Kosten- oder Upgrade-Spezifikation |
-| [`docs/gdd_monsters.md`](docs/gdd_monsters.md) | Monsteridentität, Stats, Kins, Roster, Monsterentwicklung | Keine Skill-Regeln oder -Inhalte (siehe `gdd_skills.md`); generische Kampfauflösung in Battle |
-| [`docs/gdd_skills.md`](docs/gdd_skills.md) | Alles zu Monster-Skills: Kit, Skill-Karte, was ein Skill selbst tut und was er erschafft, Preise/AP, Slotentwicklung, Daten/Validierung, Formen und Bewegungsarten, Passives, Kits, Skill-Liste | Monsteridentität/Stats/Roster in `gdd_monsters.md`; Kampfauflösung in Battle; Meta-Integration in Overworld |
-| [`docs/gdd_overworld.md`](docs/gdd_overworld.md) | Welt, Expeditionen, Monstererwerb/-unterbringung, Wirtschaft, Meta-Fortschritt, Tamer-Skills, Ausrüstung, Battle-Loadout | Nur Meta-Integration der Monster-Skills, nicht deren Konstruktion/Kampfauflösung |
-| [`docs/architecture.md`](docs/architecture.md) | Technische Zielarchitektur für den Neuaufbau: Schichten, Ordnerstruktur, Verträge, Übersetzung, Sound, Animation | Keine Spielregeln; Regeln in den GDDs, Aufgabe T42 in `temp_todo.md` |
-| [`docs/temp_todo.md`](docs/temp_todo.md) | Offene Entscheidungen, Abhängigkeiten, Validierungsaufträge, aktuelle Übergabe | Arbeitsorganisation, keine zusätzliche verbindliche Regelsammlung |
-| [`docs/simulation_log.md`](docs/simulation_log.md) | Datierte Ergebnisse der Godot-Bot-, Progression- und Discovery-Messungen im festen Eintragsformat samt Code-/Inhaltsstand | Nur Messwerte und Indizien; keine Regeln, Preise oder Freigaben; Folgerungen als Aufgabe in `temp_todo.md` |
-| [`godot/tools/`](godot/tools/README.md) | Werkzeuge zum Ausprobieren (Bot-Läufe, Monster-Vergleich, Entry-/Upgrade-Proxys, Discovery); sie nutzen die Inhalte unter `godot/data/` | Indizien, keine Regel- oder Preisquelle |
-| `CLAUDE.md` | Dauerhafte Arbeitsregeln und Agent-Wegweiser | Keine Balancewerte, detaillierten Spielregeln oder Übergabekopie |
-
-### Zentrale Monster-Skill-Spezifikation
-
-`docs/gdd_skills.md`:
-
-| Abschnitt | Thema |
-|---|---|
-| §1 | Kit und Zugang |
-| §2 | Die Skill-Karte (Kosten, Form, Schlag, Bewegung, Selbstwirkung, erschafft Boden/Zone/Prop), Nutzung, fest/gewählt/abgeleitet, Ort und Form |
-| §3 | Was ein Skill selbst tut: Schlag, Bewegung, Wirkung auf den Nutzer |
-| §4 | Was ein Skill erschafft: Boden, Zone, Prop und ihre Kombinationen |
-| §5 | Wert und Preise (offen) |
-| §6 | Slotentwicklung und Ersatz |
-| §7 | Daten, Validierung, Übersicht, Skill-Baukasten und Generator |
-| §8 | Formen (sechs Grundformen mit Verlängerung), Kin-Effekte und Bewegungsarten |
-| §9 | Passives |
-| §10 | Kits der neun Monster (Arbeitsentwurf) |
-| §11 | Skill-Liste (Arbeitsentwurf) |
-
-- Wegweiser, keine zusätzliche Mechanikdefinition; bei Umstrukturierung Übersicht und betroffene Verweise mitführen.
-
-### Umgang mit Widersprüchen
-
-- **Zuständigkeit bestimmt Pflegeort**, bestätigt aber nicht automatisch vorhandene Entwürfe.
-- **Status/Entscheidung prüfen:** aktueller Nutzerauftrag, Übergabe und zuständiger GDD-Abschnitt; nicht die bequemere Variante wählen.
-- **Bestätigte Entscheidung:** in zuständige Quelle übernehmen, widersprechende aktive Angaben korrigieren. Bei Unklarheit Konflikt zur Klärung vorlegen.
+- **Sprache:** Chat Deutsch, knapp und verständlich; Dokumente unter `docs/` Englisch (Ausnahme: `docs/prompts.md`).
+- **Wiedereinstieg:** `docs/temp_todo.md` lesen, dann gezielt die zuständigen Abschnitte. `docs/decisions.md` ist keine Pflichtlektüre beim Einstieg (siehe Regel 4).
+- **Priorität:** aktuelle Nutzeranweisung vor älterer Übergabe.
+- **Entscheidungen:** grundlegendes Gameplay mit dem Nutzer klären; Beschlossenes nur bei neuem Anlass erneut öffnen.
+- **Rückfragen:** für Nutzerentscheidungen das AskUserQuestion-Tool verwenden (Empfehlung zuerst, gebündelt). Nicht nach dem nächsten Arbeitsschritt fragen, sondern ihn aus der Aufgabenliste vorgeben.
+- **Tempo:** Der Nutzer will Änderungen in der Regel schnell umgesetzt haben; keine ungefragten Nebenarbeiten.
+- **Entwürfe:** neue Zahlen und Empfehlungen als Entwurf kennzeichnen; daraus keine Freigabe ableiten.
+- **Lücken:** fehlende Regeln und Widersprüche benennen und gebündelt vorlegen, keine Standardannahmen erfinden.
+- **Darstellung:** kurzer Überblick, präzise Regeln, Tabellen für Vergleiche und Referenzwerte; Bedingungen, Ausnahmen, Einheiten und Status vollständig erhalten; Battle-AP, Tages-AP, Statpunkte, Schaden und XP trennen.
+- **Abschluss:** Aufgaben erst bei erfüllter Abschlussbedingung nach `done/` verschieben. Vor dem Bericht Links, `git diff --check` und betroffene Tests prüfen und berichten, was tatsächlich geprüft wurde.

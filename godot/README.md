@@ -5,7 +5,7 @@ shared/      data schemas and the cultivation model, used by every part
              MonsterDef (species, reference stats and kit in one file), Shapes, Aspect (look and materials only),
              Stage, StatShape, MonsterInstance (the individual monster), ItemCatalog,
              BattleRequest / BattleResult (the contract between battle and overworld), GameData (registry), UiTheme
-battle/      the deterministic grid battle (docs/gdd_battle.md, gdd_skills.md, gdd_monsters.md)
+battle/      the deterministic grid battle (docs/battle.md, skills.md, monsters.md)
   defs/      DEFINITIONS — pure data Resources and tables, no rules
              FieldEffect, GroundDef + GroundTrigger, PropDef + PropAftermath, BattleZoneDef, BattleSkillDef + BoardOp,
              TamerSkillDef, UnitSheet, KinRules, ContentStatus,
@@ -24,7 +24,7 @@ battle/      the deterministic grid battle (docs/gdd_battle.md, gdd_skills.md, g
   view/      PRESENTATION — 3D board (BattleView) and the input controller
   ui/        battle HUD, BattleText (datasheets, log, previews), the draft sandbox and ShapeEditor (free shapes before a battle)
   battle.tscn, draft.tscn
-overworld/   days, AP, night phase, economy, internal world (gdd_overworld.md)
+overworld/   days, AP, night phase, economy, internal world (overworld.md)
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession), Overview (debug tables
              of content with an optional in-game-only filter, reached from the main menu)
 data/        ALL content as Resource files, one folder per kind (a new file = new content)
@@ -44,7 +44,7 @@ tools/       headless tools (tools/README.md): sim.gd (AI-vs-AI runs), compare.g
 
 `shared` ← `battle` ← `game`, and `shared` ← `overworld` ← `game`.
 Battle and overworld **never import each other**: the overworld builds a `BattleRequest`, the battle
-returns a `BattleResult` (gdd_overworld §8) — both classes live in `shared/`. `game/` is the only place
+returns a `BattleResult` (overworld.md) — both classes live in `shared/`. `game/` is the only place
 that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends on `battle/core`.
 
 ## Battle architecture
@@ -67,7 +67,7 @@ that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends
   legacy/test-only code, not an active game mechanic.
 - **Fixed resolution order:** `BattlePayload` resolves Strikes and board skills as
   damage → defeat → displacement → board operations (removals, props, ground, zones) → self retreat → passive
-  reactions (gdd_battle §6.2). Skills only supply data to these phases.
+  reactions (battle.md). Skills only supply data to these phases.
 - **Shared effect vocabulary:** zones, blessed ground, aura props, timed unit effects and passives all contribute
   `FieldEffect` entries (`slow`, `quicken`, `shield`, …); `BattleStats` is the one place that collects them.
 - **Shared shapes and moments (2026-11-15):** `BattleShapes` is the one shape vocabulary (six base shapes with
@@ -102,7 +102,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   grounds, zones and props carry `content_status` (`approved` / `draft` / `experiment` / `test` / `simulation` /
   `archived`); the game fields `approved`, `draft` and `experiment` (filter `ContentStatus.in_game`, called by
   `BattleContent` and `GameData`). Details: [tools/README.md](tools/README.md).
-- **The build plays the reshape of 2026-11-13** (user decisions; docs/gdd_battle.md §1.2, §4, §6 and docs/gdd_skills.md
+- **The build plays the reshape of 2026-11-13** (user decisions; docs/battle.md §1.2, §4, §6 and docs/skills.md
   §2–§4; every choice made while building it: docs/temp_todo.md T40):
   - **A square is ground + zone + occupant.** Ground acts at a moment (on entering, on leaving, at the end of the
     occupant's turn, at the end of the round; `GroundTrigger`), a zone while a monster stands inside (stat changes,
@@ -116,7 +116,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     `Battle.touch_veins`; the board tints an owned vein in its side colour and labels it yours / enemy / unclaimed;
     `vein_touch` = false: only while a monster stands on it at the round end). A vein takes props like any other ground. A monster with two enemies on its eight neighbour squares
     takes 1 (`flank`). Late-round pressure runs only when nobody owns a vein (`pressure_mode` = `idle`).
-  - **Working values:** highest hit 2 (HP runs from 1 to 10; the monster builder offers the ranges of gdd_monsters §2.1); ground laid in battle lasts 2 rounds (`ground_rounds`); a
+  - **Working values:** highest hit 2 (HP runs from 1 to 10; the monster builder offers the ranges of monsters.md); ground laid in battle lasts 2 rounds (`ground_rounds`); a
     Strike pushes 1 if its record says so (`strike_push`, on by default); the board edge deals 1 and a spiky prop 2 to a monster moved into it; Step 1 AP, Run 1 AP; authored movement costs vary (including user experiments), with the reference
     non-Run movement skills at 2 AP (plus Stamina, below); extra turns count from round 2 (`tpr_from_round`); push and
     pull zones move only at the end of their occupant's turn, not at cast (build default since 2026-11-14, S025; `zone_cast_push`); everyone may rotate a placed shape; a push zone left by a skill that also creates
@@ -161,15 +161,15 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     - *Test stats (user approval of 2026-11-15, content `2026-11-15.2`):* seven monsters filled so that a Pace of
       2.x occurs: Blaze Tiger, Ember Hawk and Grove Wisp 2.2, Gloom Wolf and Dusk Moth 2.1 (they recover 2 Stamina);
       Gloom Wolf, Grove Wisp and Dusk Moth +1 HP; Moss Turtle Stamina 3; Hollow Serpent Pace 1.4, Stamina 4. Test
-      values, not defaults ([Monsters §4.1](../docs/gdd_monsters.md#41-first-roster-draft--9-monsters)); the price
+      values, not defaults ([content.md §5](../docs/content.md#5-the-nine-monsters)); the price
       scale behind them is not decided.
-    - *Stat points (display only):* `MonsterDef.point_lines` / `points_of` hold the prices of gdd_monsters §2.2; the
+    - *Stat points (display only):* `MonsterDef.point_lines` / `points_of` hold the prices of monsters.md; the
       overview's monster table shows them in a Points column (hover for the calculation). Nothing checks a budget.
     - *Tools:* every result table states the mean rounds and the battles under 3 and over 5 rounds (`sim.gd`,
       `compare.gd`, `progression.gd`, `discovery.gd`); length target: a mean of 3.0–4.9 rounds.
   - **Build since 2026-11-14 (user decisions and drafts of that day; S028/S029; docs/temp_todo.md T40):**
     - *Decided:* every slotted skill at most `usage_limit` times per turn of its monster (1 unless the record says
-      more; `once_per_turn` = false switches the limit off) and up to 6 kit slots (the nine kits hold 6 since 2026-11-15: gdd_skills §10).
+      more; `once_per_turn` = false switches the limit off) and up to 6 kit slots (the nine kits hold 6 since 2026-11-15: skills.md).
     - *Prop rework (working draft, written into GDD §4.9–§4.12 on 2026-11-15):* `PropDef.solid` (false = a walkable prop: blocks no movement,
       push or Strike line, still has HP); every `PropAftermath` names its moment `when`: `destroyed`, `hit` (lost HP
       and still stands), `enter` (a monster came onto a walkable prop: a trap, used up) or `round_end`; operations
@@ -178,7 +178,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
       Totem, Wardstone) are `archived`; the Storm Drum pushes at the round end instead of at turn ends. New: Earth
       Wall, Thorn Idol, Ember Brazier, Spike Trap, Vortex Trap and seven skills that place props (`raise_wall`,
       `set_idol`, `light_brazier`, `set_drum`, `set_urn`, `lay_spikes`, `lay_vortex`). Each of the nine kits carries one
-      of them as a fifth slot (gdd_skills §10). A multi-square prop is a skill that places several one-square props.
+      of them as a fifth slot (skills.md). A multi-square prop is a skill that places several one-square props.
     - *Stamina:* measured as a switch in S029; the rule since 2026-11-15 (above).
     - *Board switches:* `wells` (Dragon Veins on the centre row), `map_props` (mirrored prop pairs at the start,
       -1 = layout) and `map_buttons` (mirrored pairs of "button" squares, user idea 2026-11-15: the walkable experiment runes Moss Rune (Mossbed 3×3), Bog Rune (Bog zone around it) and Wall Rune (Earth Walls on its cardinal neighbours) act on the board without damage when a monster collects them, 0 = none); the draft screen has number fields for all three and for the Stamina per round.
@@ -208,7 +208,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   `move_ap`, `soft_pressure`, the switches of S025–S030 (`zone_cast_push`, `once_per_turn`, `vein_touch`, `collision_both`,
   `vein_charge`, `vein_charge_late`, `step_full_move`, `stamina` / `stamina_regen` / `stamina_ap`, `map_props`, `map_buttons`, `board_size`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
   `ai_no_kind`. Tests: `tests/battle/test_battle_experiment.gd`.
-- **Not built:** Dragon Veins on the 1v1 and 2v2 boards; slot development (gdd_skills §6); one line class for
+- **Not built:** Dragon Veins on the 1v1 and 2v2 boards; slot development (skills.md); one line class for
   ground, zone and prop records (they are read as one sheet, stored as three); the rename of the stat fields
   `movement` / `move` to Stamina; an editor for the opponent's free shapes (the AI plays the defaults). `MonsterDef.reference_shape` and the overworld `StatShape` still name the six earlier
   stat shapes.
@@ -223,8 +223,8 @@ deliberately restricts CPU availability. Permission does not imply automatic par
 `progression.gd` tests an entry action-economy proxy; `discovery.gd` retains authored stats, AP and TPR. Both use
 matched teams with complete side swaps and source/completion guards. These are harness safeguards, not approval
 of starts, upgrades, content, prices or fun. A usable active skill or budget fit does not establish viable starting
-monsters or meaningful upgrade alternatives; owners are [Monsters §2.2](../docs/gdd_monsters.md#22-frame-budget-level-ups)
-and [Skills §5](../docs/gdd_skills.md#5-value-and-prices)/[§6](../docs/gdd_skills.md#6-slot-levels-development-and-replacement), with validation under [T13](../docs/temp_todo.md).
+monsters or meaningful upgrade alternatives; owners are [monsters.md §2.2](../docs/monsters.md#22-prices-and-points)
+and [skills.md §7](../docs/skills.md#7-value-and-prices)/[skills.md §8](../docs/skills.md#8-slot-development), with validation under [T13](../docs/temp_todo.md).
 
 Latest executed checks (2026-11-15, normal CPU settings, on a copy of the working tree): the full suite ran
 **355 cases**, including all **210 passing Battle cases** and the 7 of `tests/game`. Two known non-Battle cases
