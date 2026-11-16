@@ -59,8 +59,9 @@ Monster = Step (always, no slot)
 
 **Place and shape:**
 
-- **Base shape around the user:** a Strike hits its squares; a skill that creates lays its ground, zone or props on them. The player aims it; shapes without a direction need no aim. All squares must lie on the board.
+- **Base shape around the user:** a Strike hits its squares; a skill that creates lays its ground, zone or props on them. The player aims it; shapes without a direction need no aim.
 - **Free shape:** the card names **a number of squares** and where the anchor may lie: **within Reach** or **next to the user**. **The player arranges the squares before the battle:** connected over their edges, the anchor square among them. The arrangement authored with the skill is the default. In battle the arrangement is fixed; the player may still turn it in quarter turns. The opponent sees it on the skill card. A skill that creates props uses a free shape like any other.
+- **Over the edge:** squares of a shape that lie off the board are dropped; the skill acts on the rest. At least one square must lie on the board, and the anchor of a free shape must.
 - **Reach** counts orthogonal steps from the user to the anchor. It applies to every free shape placed at a distance; a base shape uses none.
 - **No sight rule:** nothing blocks choosing a square. A square that cannot take what the skill creates stays as it is.
 - **Never free:** the squares a Strike struck and the squares a movement left.

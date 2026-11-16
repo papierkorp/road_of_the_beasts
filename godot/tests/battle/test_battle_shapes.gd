@@ -85,10 +85,17 @@ func test_a_base_shape_around_the_user_creates_what_the_skill_names() -> void:
 	var dive := H.skill("cinder_dive")
 	assert_array([dive.is_free_shape(), dive.shape_squares(), dive.shape_label()]).is_equal([false, 3, "Jab +2"])
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 5)})).contains("start next to")      # not a neighbour
-	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(0, 5)})).contains("does not fit")       # runs off the board
+	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(0, 5)})).is_empty()                    # runs off the board: acts on the rest
+	assert_int(BattleCasting.anchors(b, H.unit(b, 0), dive, Vector2i.ZERO).size()).is_equal(8)                 # every direction keeps a square on the board
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 4)})).is_true()                    # diagonally up-right
 	assert_array(_ground_at(b, [Vector2i(2, 4), Vector2i(3, 3), Vector2i(4, 2), Vector2i(1, 5)])).is_equal(["lava", "lava", "lava", "plain"])
-	assert_int(BattleCasting.anchors(b, H.unit(b, 0), dive, Vector2i.ZERO).size()).is_equal(3)                 # up, up-right, right fit on the board
+
+
+func test_a_shape_over_the_edge_acts_on_the_squares_on_the_board() -> void:
+	var b := H.battle([[0, Vector2i(1, 5), {"pace": 1.9, "ap": 4, "skills": ["cinder_dive"]}], [1, Vector2i(6, 0)]])
+	b.begin()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(0, 5)})).is_true()
+	assert_array(_ground_at(b, [Vector2i(0, 5), Vector2i(1, 5)])).is_equal(["lava", "plain"])
 
 
 func test_a_shape_around_the_whole_user_needs_no_aim() -> void:

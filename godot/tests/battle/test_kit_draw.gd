@@ -122,12 +122,51 @@ func test_the_ai_prefers_a_skill_it_has_not_used() -> void:
 	b.begin()
 	var u := H.unit(b, 0)
 	var use := {"type": &"skill", "slot": 0}
+	assert_bool(BattleExperiment.ai_try_all).is_true()            # on by default
+	BattleExperiment.ai_try_all = false
 	assert_float(AiBrain.try_bonus(u, use)).is_equal(0.0)
 	BattleExperiment.ai_try_all = true
 	assert_float(AiBrain.try_bonus(u, use)).is_equal(AiBrain.TRY_BONUS)
 	assert_float(AiBrain.try_bonus(u, {"type": &"step"})).is_equal(0.0)
 	u.used_battle[0] = true
 	assert_float(AiBrain.try_bonus(u, use)).is_equal(0.0)
+
+
+## ai_veins: an owned vein counts, a solid prop on it locks it, a wall that lengthens the enemy's way to it
+## counts, and the side that does not own a vein wants a monster near it.
+func test_the_ai_values_owned_locked_and_guarded_veins() -> void:
+	var veins := BattleExperiment.well_squares(7)
+	var vein: Vector2i = veins[0]
+	var b := H.battle([[0, Vector2i(3, 6), {}], [1, vein + Vector2i(0, -2), {}]])
+	b.begin()
+	for p in veins:
+		b.board.at(p).owner_side = -1
+	var none := AiBrain._vein_score(b, 0)
+	b.board.at(vein).owner_side = 0
+	var owned := AiBrain._vein_score(b, 0)
+	assert_float(owned).is_greater(none + AiBrain.VEIN_OWNED - 0.01)
+	var wall := b.content.prop(&"earth_wall")
+	assert_bool(wall.solid).is_true()
+	b.board.put_prop(BoardProp.new(b.next_prop_uid(), wall, vein + Vector2i(0, -1)))   # in the enemy's way
+	var walled := AiBrain._vein_score(b, 0)
+	assert_float(walled).is_greater(owned)
+	b.board.put_prop(BoardProp.new(b.next_prop_uid(), wall, vein))
+	assert_float(AiBrain._vein_score(b, 0)).is_greater(walled)
+	assert_float(AiBrain._vein_score(b, 1)).is_less(0.0)
+
+
+## In the game the AI steps off its own vein and locks it with a prop in the same turn.
+func test_the_game_ai_locks_its_vein_with_a_prop() -> void:
+	var vein: Vector2i = BattleExperiment.well_squares(7)[1]
+	var b := H.battle([[0, vein, {"skills": ["plant_bamboo"], "ap": 3, "pace": 2.9}], [1, Vector2i(3, 0), {"pace": 1.0}]])
+	b.begin()
+	assert_str(String(b.turn_owner)).is_equal("u0")
+	b.board.at(vein).owner_side = 0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	AiBrain.play_turn(b, b.turn_owner, rng, true)
+	var prop := b.board.solid_at(vein, Board.GROUND)
+	assert_object(prop).is_not_null()
 
 
 func test_the_calculation_reads_the_parts_of_a_skill() -> void:

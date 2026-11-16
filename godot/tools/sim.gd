@@ -12,7 +12,7 @@ extends SceneTree
 ##   --team-a / --team-b  fixed teams: monster ids of data/monsters, also simulation-only ones
 ##                        (comma lists; --team-b defaults to --team-a), on an empty board with
 ##                        seeded, mirrored start squares
-##   --bot-a / --bot-b    greedy (AiBrain, default; hunt = same) | wait | chase | plan | tactic | rush | kite | random
+##   --bot-a / --bot-b    game (AiBrain as the game plays it) | greedy (AiBrain, default; hunt = same) | wait | chase | plan | tactic | rush | kite | random
 ##                        (tools/lib/sim_bots.gd)
 ##   --board              kit runs: seeded (default) | layout    build runs: flat (default) | layout | seeded
 ##   --props a,b          build runs: one mirrored pair per prop id
@@ -274,6 +274,10 @@ func _apply_variant(text: String) -> String:
 			"genskills":                              # genskills=N: mixskills draws from N generated skills (tools/lib/skill_gen.gd)
 				_gen_skills = maxi(8, val.to_int())
 				_mix_skills = true
+			"noveins":                                # the AI without the Dragon Vein fight of 2026-11-16 (and without lookahead for bot `game`)
+				BattleExperiment.ai_veins = false
+			"notry":                                  # the AI without the try bonus (ai_try_all off)
+				BattleExperiment.ai_try_all = false
 			"veinhold":                               # a Dragon Vein only works while a monster stands on it (rule before the reshape)
 				BattleExperiment.vein_touch = false
 			"unfairsurge":                            # a due Surge does not wait for the monsters on it (rule before the reshape)

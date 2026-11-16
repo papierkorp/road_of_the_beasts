@@ -54,6 +54,29 @@ Kit sets of the entries below (S019 and later). Entries S001–S018 measured rul
 
 # Entries
 
+## S033 · 2026-11-16 · The opponent AI fights for the Dragon Veins
+
+**State:** main, base `a93e6f7` dirty (the AI of 2026-11-16: `ai_veins`, `ai_try_all` on by default); Godot 4.7.2; the in-game kits of the ten-monster pool (fingerprint not printed by `--compact-head`). Battle suites green; the full suite has its two known non-battle failures.
+
+**Runs:** `sim.gd -- 20 3v3 <seed> --paired --compact-head --bot-a game --bot-b game [--variant …]`, seeds 1–8 = 160 battles per row, default board 7×7 with 3 Dragon Veins, **not side-swapped**. Rows A and B partly on two cores at idle priority, row C in parallel; the speed does not change a result. Bot `game` is AiBrain as the game's opponent plays it; with `noveins` it has no lookahead, so row B is the AI before this entry.
+
+| Row | AI | Mean rounds (mean of the 8 seeds) | Under 3 rounds | Over 5 rounds | Longest | First defeat (round) | Veins owned per round end, both sides | Vein damage share |
+|---|---|---|---|---|---|---|---|---|
+| A | veins + tries every skill (the new default) | 3.54 | 25 of 160 | 5 of 160 | 7 | 1.36 | 2.01 of 3 | 20–23 % |
+| B | `noveins,notry` (the AI before) | 3.96 | 19 of 160 | 18 of 160 | 11 | 1.60 | 1.78 of 3 | 19–24 % |
+| C | veins, `notry` | 3.46 | 34 of 160 | 11 of 160 | 9 | 1.35 | 2.07 of 3 | 17–25 % |
+
+Per-seed mean rounds: A 4.0 / 3.5 / 3.0 / 3.5 / 3.9 / 3.4 / 3.4 / 3.6; B 4.4 / 4.0 / 3.4 / 3.5 / 4.0 / 4.7 / 4.2 / 3.5; C 3.9 / 3.5 / 3.2 / 3.2 / 3.5 / 3.3 / 3.6 / 3.5.
+
+**Observations** (indications; bots on both sides):
+
+- *The vein fight shortens the battles by about 0.4–0.5 rounds* (B 3.96 → A 3.54, C 3.46) and takes most of the long tail (over 5 rounds: 18 → 5 and 11 of 160; longest 11 → 7 and 9). The seeds of B are longer than those of A in 6 of 8 pairs.
+- *More veins are owned at the round end* (1.78 → 2.0 of 3), and the first defeat comes earlier (round 1.6 → 1.35); the share of vein damage stays near a fifth, while Strikes take a smaller share of the damage.
+- *Trying every skill changes the length little* (A 3.54 against C 3.46); with it fewer battles end under 3 rounds (25 against 34).
+- Both AI rows lie in the user's "perfect" band of 3.5–4.5 or just below it (C). A human who fights the AI differently is not measured.
+
+**Follow-up:** T13 (battle length; why the earlier series were longer), T39 (Dragon Veins). No rule was changed by this entry.
+
 ## S032 · 2026-11-16 · What the parts of a skill are worth: random kits of generated skills, a first price list and its check
 
 **State:** main, base `f81f250` dirty; Godot 4.7.2; runs in parallel on a frozen copy of the working tree. Content fingerprint `f206e96918c5` (series 1) and `3c1b2fd9e587` (series 2, with the experiment content of T43 and the fitted price list). Full suite on the final state: 373 cases, the two known non-battle failures.

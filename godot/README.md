@@ -215,7 +215,13 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   battle** (`fresh_skills`) builds those kits from skills generated for the battle (`SkillGen.draw_kind`), in memory
   only; their AP come from the draft skill calculation. `kit_seed` is drawn anew for every start from the draft, so
   “Fight Again” repeats the kits. The arranged free shapes of the draft are not used with a kit switch. **AI tries
-  every skill** (`ai_try_all`): the opponent prefers a skill it has not used yet in the battle (`AiBrain.TRY_BONUS`).
+  every skill** (`ai_try_all`, on by default): the opponent prefers a skill it has not used yet in the battle (`AiBrain.TRY_BONUS`).
+- **AI fights for Dragon Veins** (`ai_veins`, draft check box, on by default; user, 2026-11-16): `AiBrain._vein_score`
+  values an owned vein (`VEIN_OWNED`), a solid prop on an owned vein (`VEIN_LOCK`), every square the nearest enemy
+  needs to reach an owned vein (`VEIN_GUARD`, walls and bodies count) and pulls its nearest monster to veins it does
+  not own (`VEIN_PULL`); placements on and next to veins are candidates. In the game (`AiBrain.decide` with
+  `lookahead`, bot `game` of `tools/sim.gd`) the best first actions are judged with the best second action of the
+  turn (step off a vein, then lock it). `sim.gd --variant noveins` / `notry` switch the two off.
 - **Ideas of 2026-11-16, built to try and to measure (no rules; [T43](../docs/todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)):**
     - *Stamina base cost* (`stamina_base`, draft number field): a movement skill costs that much Stamina per use on top
       of the squares.

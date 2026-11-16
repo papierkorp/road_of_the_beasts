@@ -376,16 +376,21 @@ func _skill_error(u: BattleUnit, a: Dictionary) -> String:
 	return ""
 
 
-## A Strike is legal whenever its direction fits the shape and the whole shape lies on the
-## board (gdd_skills §2 area contract); an empty hit pattern is allowed.
+## A Strike is legal whenever its direction fits the shape and at least one square of it lies on the
+## board; squares over the edge are dropped (user decision 2026-11-17). An empty hit pattern is allowed.
 func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, push_dir: Vector2i, origin: Vector2i) -> String:
 	if not BattleShapes.is_legal_dir(s.shape_id(), dir, s.shape_extension):
 		return "%s cannot be aimed in that direction" % s.shape_label()
 	if not u.covers(origin):
 		return "the shape must start at a square of the striker"
+	var any_on_board := false
 	for h in s.shape_hits(dir):
-		if not board.in_bounds(origin + h["o"]):
-			return "the shape does not fit on the board"
+		var c: Vector2i = origin + h["o"]
+		if board.in_bounds(c) and not u.covers(c):
+			any_on_board = true
+			break
+	if not any_on_board:
+		return "no square of the shape lies on the board"
 	if s.kin_effect and KinRules.strike(u.kin()).get("push", false) and not Board.CARDINAL.has(push_dir):
 		return "choose the push direction"
 	return ""
@@ -474,7 +479,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
 			_declare_surge(u, s, a)
 		BattleSkillDef.ZONE:
-			var cells := BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
+			var cells := BattleCasting.on_board(self, u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 			_next_gid += 1
 			emit(&"cast", {"who": u.id, "skill": s.id, "cells": cells.duplicate()})
 			for c in cells:
@@ -492,7 +497,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 				BattleDisplace.resolve(self, moved)
 				BattlePayload.settle(self)
 		BattleSkillDef.GROUND:
-			var cells := BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
+			var cells := BattleCasting.on_board(self, u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 			emit(&"cast", {"who": u.id, "skill": s.id, "cells": cells.duplicate()})
 			var placed := BattlePayload.board(self, u, s, cells)
 			placed["anchor"] = a.get("anchor", u.pos)   # a zone the skill leaves pulls toward it
@@ -510,7 +515,7 @@ func _declare_surge(u: BattleUnit, s: BattleSkillDef, a: Dictionary) -> void:
 	ps.id = _next_surge
 	ps.owner = u.id
 	ps.skill = s
-	ps.cells = BattleCasting.cells(u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
+	ps.cells = BattleCasting.on_board(self, u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 	if s.kind == BattleSkillDef.TRAP:
 		if BattleExperiment.trap_cap > 0:                     # test switch: the oldest trap of this skill gives way
 			var own: Array[PendingSurge] = []

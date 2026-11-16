@@ -60,6 +60,8 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-15 | Reach | Counts orthogonal steps | board distance for Reach | — | [skills.md §2](skills.md#2-the-skill-card) |
 | 2026-11-16 | Placement | The sides place alternately and openly, one monster at a time | simultaneous hidden placement; one side placing everything first | no hidden information | [battle.md §2.2](battle.md#22-core-loop) |
 | 2026-11-16 | Conceding | A side may concede in every battle; the result reports it as a fact | conceding only in the multiplayer mode; no conceding | — | [battle.md §2.2](battle.md#22-core-loop) |
+| 2026-11-17 | Shapes at the edge | Squares of a shape off the board are dropped; the skill acts on the rest (every shape, Strikes included) | the whole shape must lie on the board | a placement at the edge should still work | [skills.md §2](skills.md#2-the-skill-card) |
+| 2026-11-16 | Opponent AI | The AI fights for the Dragon Veins and keeps the player from them by all means (a prop on an owned vein, walls in the way); it tries every skill of its kit; both on by default as switches | — | play against it is better | [godot/README.md](../godot/README.md) |
 
 ## Monsters
 

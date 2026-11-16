@@ -143,8 +143,12 @@ static var fresh_skills := false
 ## Seed of the kit draw; the draft screen draws a new one for every battle.
 static var kit_seed := 0
 ## The opponent's AI prefers a skill it has not used in this battle, as long as the use costs it nothing
-## (AiBrain.TRY_BONUS), so every skill of a kit gets played.
-static var ai_try_all := false
+## (AiBrain.TRY_BONUS), so every skill of a kit gets played. On by default (user, 2026-11-16).
+static var ai_try_all := true
+## The opponent fights for the Dragon Veins (user, 2026-11-16): it walks to veins it does not own, keeps
+## enemies away from its own (walls, a solid prop on the vein) and breaks what keeps it from an enemy vein
+## (AiBrain._vein_score). In the game it also looks one action further (AiBrain.decide). Off = the AI before.
+static var ai_veins := true
 
 
 static func reset() -> void:
@@ -195,7 +199,8 @@ static func reset() -> void:
 	random_kits = false
 	fresh_skills = false
 	kit_seed = 0
-	ai_try_all = false
+	ai_try_all = true
+	ai_veins = true
 
 
 ## The Dragon Vein squares of a board of this size (`wells` of them; none on boards smaller than 7×7).

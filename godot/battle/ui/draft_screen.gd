@@ -36,6 +36,7 @@ const EXPERIMENTS := [
 	["Random kits", "Kit switch: every monster of the battle, yours too, plays a random kit instead of its own. Each monster draws a kit template (Balanced, Bruiser, Skirmisher, Controller, Trapper, Shaper) that only says how many Strikes, movement, zone, ground and prop skills it holds; the skills are drawn from the game's own. A new draw for every battle; 'Fight Again' repeats the same kits."],
 	["New skills every battle", "Kit switch: the random kits are made of skills generated for this battle instead of the game's own. Their AP follow the draft price list (SkillCalc). Nothing is saved."],
 	["AI tries every skill", "The opponent prefers a skill it has not used yet in this battle, as long as the use costs it nothing."],
+	["AI fights for Dragon Veins", "The opponent walks to the veins it does not own, keeps you away from its own (walls, a solid prop on an owned vein) and breaks what locks one of yours. It looks one action further within a turn."],
 	["Board 8×8", "Board switch: the battle is played on an 8×8 board (larger than the mode's own). No centre row: the Dragon Veins lie in mirrored pairs on the two centre rows (the number rounds up to an even one: 3 → 4)."],
 	["Board 9×9", "Board switch: the battle is played on a 9×9 board. Dragon Veins on the centre row as on 7×7. Wins over 'Board 8×8'."],
 ]
@@ -246,6 +247,8 @@ func _experiment_on(label: String) -> bool:
 			return BattleExperiment.fresh_skills
 		"AI tries every skill":
 			return BattleExperiment.ai_try_all
+		"AI fights for Dragon Veins":
+			return BattleExperiment.ai_veins
 		"Board 8×8":
 			return BattleExperiment.board_size == 8
 		"Board 9×9":
@@ -289,6 +292,7 @@ func _apply_experiments() -> void:
 	BattleExperiment.random_kits = on.call("Random kits")
 	BattleExperiment.fresh_skills = on.call("New skills every battle")
 	BattleExperiment.ai_try_all = on.call("AI tries every skill")
+	BattleExperiment.ai_veins = on.call("AI fights for Dragon Veins")
 	BattleExperiment.wells = int((_numbers["Dragon Veins"] as SpinBox).value)
 	BattleExperiment.map_props = int((_numbers["Prop pairs"] as SpinBox).value)
 	BattleExperiment.stamina_regen = int((_numbers["Stamina per round"] as SpinBox).value)

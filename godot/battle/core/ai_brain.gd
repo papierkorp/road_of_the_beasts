@@ -28,6 +28,18 @@ const DANGER_ENEMY := 0.25
 ## ai_try_all: score points a skill gets as long as its monster has not used it in this battle (a point of
 ## damage counts 10). Enough to play a skill whose use the evaluation cannot see, too little to give up a hit.
 const TRY_BONUS := 2.5
+## ai_veins (a draft of the AI, not a rule; a point of damage counts 10): a Dragon Vein the side owns, a
+## solid prop on an owned vein (nobody can walk or be pushed onto it), each square the nearest enemy needs
+## to reach an owned vein (up to VEIN_GUARD_CAP), and per square the nearest own monster is away from a
+## vein the side does not own.
+const VEIN_OWNED := 12.0
+const VEIN_LOCK := 8.0
+const VEIN_GUARD := 2.0
+const VEIN_GUARD_CAP := 4
+const VEIN_PULL := 1.2
+const VEIN_FAR := 8
+## decide with lookahead: how many first actions are judged together with the best second action of the turn.
+const LOOKAHEAD := 5
 
 
 ## Every legal action of the active unit except ending the turn.
@@ -78,7 +90,8 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 					# a Surge is only worth casting on an enemy, a trap next to one
 					var whom := 1 - u.side if s.is_marker() else -1
 					for anchor in BattleCasting.anchors(b, u, s, dirs[0], rot):
-						if not _near_someone(b, BattleCasting.cells(u, s, anchor, rot), radius, whom):
+						var cells := BattleCasting.on_board(b, u, s, anchor, rot)
+						if not _near_someone(b, cells, radius, whom) and not _near_vein(b, cells):
 							continue
 						for d in dirs:
 							out.append({"type": &"skill", "slot": slot, "anchor": anchor, "dir": d, "rot": rot})
@@ -93,6 +106,17 @@ static func _strike_touches(b: Battle, u: BattleUnit, s: BattleSkillDef, origin:
 		var other := b.any_unit_at(cell)
 		if (other != null and other.id != u.id) or b.board.prop_at(cell, Board.GROUND) != null or b.board.prop_at(cell, Board.AIR) != null:
 			return true
+	return false
+
+
+## ai_veins: a placement on or next to a Dragon Vein is worth a look (a prop that locks it, a wall).
+static func _near_vein(b: Battle, cells: Array[Vector2i]) -> bool:
+	if not BattleExperiment.ai_veins:
+		return false
+	for p in BattleExperiment.well_squares(b.board.size):
+		for c in cells:
+			if maxi(absi(c.x - p.x), absi(c.y - p.y)) <= 1:
+				return true
 	return false
 
 
@@ -154,7 +178,10 @@ static func evaluate(b: Battle, side: int) -> float:
 				continue
 			var cost := DANGER_LETHAL * (14.0 + 10.0 * u.hp) if threat >= u.hp else DANGER_HIT * threat
 			score += -cost if u.side == side else cost * DANGER_ENEMY
-	for p in (BattleExperiment.well_squares(b.board.size) if not BattleExperiment.vein_charge or BattleExperiment.vein_charge_late else []):
+	var vein_fight := BattleExperiment.ai_veins and BattleExperiment.vein_touch and not BattleExperiment.vein_charge
+	if vein_fight:
+		score += _vein_score(b, side)
+	for p in (BattleExperiment.well_squares(b.board.size) if not vein_fight and (not BattleExperiment.vein_charge or BattleExperiment.vein_charge_late) else []):
 		var vein_side := b.board.at(p).owner_side if BattleExperiment.vein_touch else -1
 		var holder := b.any_unit_at(p)
 		if BattleExperiment.vein_charge:              # won by the first touch of the round, whoever stands there now
@@ -173,6 +200,62 @@ static func evaluate(b: Battle, side: int) -> float:
 			if around >= 2:
 				score += -FLANK_VALUE if u.side == side else FLANK_VALUE
 	return score
+
+
+## ai_veins: the Dragon Veins seen by `side` (last touch owns). An owned vein counts VEIN_OWNED; under a
+## solid prop it is locked (VEIN_LOCK and the full guard), else every square the nearest enemy needs to
+## enter it counts VEIN_GUARD (walls and bodies in the way raise it). A vein a side does not own pulls its
+## nearest monster (VEIN_PULL per square). Both sides are counted, so blocking the enemy's way scores too.
+static func _vein_score(b: Battle, side: int) -> float:
+	var veins := BattleExperiment.well_squares(b.board.size)
+	if veins.is_empty():
+		return 0.0
+	var reach: Array[Dictionary] = [_walk_map(b, 0), _walk_map(b, 1)]
+	var total := 0.0
+	for p in veins:
+		var cell := b.board.at(p)
+		if cell == null:
+			continue
+		for s in 2:
+			var sgn := 1.0 if s == side else -1.0
+			if cell.owner_side == s:
+				var v := VEIN_OWNED
+				if b.board.solid_at(p, Board.GROUND) != null:
+					v += VEIN_LOCK + VEIN_GUARD * VEIN_GUARD_CAP
+				else:
+					var foe := int(reach[1 - s].get(p, VEIN_GUARD_CAP + 1))
+					v += VEIN_GUARD * clampi(foe - 1, 0, VEIN_GUARD_CAP)
+				total += sgn * v
+			else:
+				total -= sgn * VEIN_PULL * mini(int(reach[s].get(p, VEIN_FAR)), VEIN_FAR)
+	return total
+
+
+## Squares → walking distance of the nearest living monster of `side` (0 on its own square). A solid prop
+## stops the walk; a square with a monster on it is reached but not crossed. Ground costs are ignored.
+static func _walk_map(b: Battle, side: int) -> Dictionary:
+	var dist := {}
+	var frontier: Array[Vector2i] = []
+	for u in b.living(side):
+		if u.layer != Board.GROUND:
+			continue
+		for c in u.cells():
+			dist[c] = 0
+			frontier.append(c)
+	var i := 0
+	while i < frontier.size():
+		var c := frontier[i]
+		i += 1
+		var d := int(dist[c])
+		if d >= VEIN_FAR:
+			continue
+		for n in b.board.neighbors(c):
+			if dist.has(n) or b.board.solid_at(n, Board.GROUND) != null:
+				continue
+			dist[n] = d + 1
+			if b.board.unit_id_at(n, Board.GROUND) == &"":
+				frontier.append(n)
+	return dist
 
 
 ## What the standing props promise (prop rework 2026-11-14): damage a prop deals at the round end to
@@ -326,18 +409,27 @@ static func _tag_cost(tag: String, value: float, u: BattleUnit) -> float:
 
 
 ## The best action for the active unit ({type: &"end_turn"} if nothing helps).
-static func decide(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
+## With `lookahead` (the game's opponent) the best LOOKAHEAD first actions, and the moves off a Dragon Vein
+## the unit stands on, are judged together with the best second action of the same turn (step off a
+## vein, then lock it with a prop; set something up, then use it).
+static func decide(b: Battle, rng: RandomNumberGenerator, lookahead := false) -> Dictionary:
 	var u := b.active()
 	if u == null:
 		return {"type": &"end_turn"}
 	var base := evaluate(b, u.side)
-	var best: Array[Dictionary] = []
-	var best_gain := MIN_GAIN
+	var scored: Array = []                    # [gain, action, battle after it]
 	for a in candidates(b):
 		var sim := b.clone()
 		if not sim.apply(a, true):
 			continue
-		var gain := evaluate(sim, u.side) - base + try_bonus(u, a)
+		scored.append([evaluate(sim, u.side) - base + try_bonus(u, a), a, sim])
+	if lookahead:
+		_add_follow_ups(b, u, base, scored)
+	var best: Array[Dictionary] = []
+	var best_gain := MIN_GAIN
+	for entry: Array in scored:
+		var gain: float = entry[0]
+		var a: Dictionary = entry[1]
 		if gain > best_gain + 0.001:
 			best_gain = gain
 			best = [a]
@@ -350,6 +442,34 @@ static func decide(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 	if best.is_empty():
 		return {"type": &"end_turn"}
 	return best[rng.randi_range(0, best.size() - 1)]
+
+
+## Adds to the gain of the most promising first actions what the best second action of the same turn adds
+## on top of them (never less than nothing: the turn may end after the first).
+static func _add_follow_ups(b: Battle, u: BattleUnit, base: float, scored: Array) -> void:
+	var order := range(scored.size())
+	order.sort_custom(func(x: int, y: int) -> bool: return scored[x][0] > scored[y][0])
+	var looked: Array = order.slice(0, LOOKAHEAD)
+	if BattleExperiment.well_squares(b.board.size).has(u.pos):
+		var off := 0
+		for i: int in order:
+			if off >= LOOKAHEAD:
+				break
+			if scored[i][1].has("to") and not looked.has(i):
+				looked.append(i)
+				off += 1
+	for i: int in looked:
+		var after: Battle = scored[i][2]
+		if after.over or after.turn_owner != b.turn_owner or after.queue_idx != b.queue_idx or after.round_number != b.round_number:
+			continue
+		var me: BattleUnit = after.units[u.id]
+		var here := evaluate(after, u.side)
+		var follow := 0.0
+		for a2 in candidates(after):
+			var sim2 := after.clone()
+			if sim2.apply(a2, true):
+				follow = maxf(follow, evaluate(sim2, u.side) - here + try_bonus(me, a2))
+		scored[i][0] = float(scored[i][0]) + follow
 
 
 ## Test switch `ai_try_all`: what using a slotted skill for the first time in this battle is worth.
@@ -450,14 +570,14 @@ static func execute(b: Battle, _who: StringName, action: Dictionary) -> bool:
 
 
 ## Plays the whole turn of the active unit (`who` is kept for callers that pass the owner).
-static func play_turn(b: Battle, _who: StringName, rng: RandomNumberGenerator) -> void:
+static func play_turn(b: Battle, _who: StringName, rng: RandomNumberGenerator, lookahead := false) -> void:
 	var owner := b.turn_owner
 	var entry := b.queue_idx
 	var round_no := b.round_number
 	var guard := 0
 	while not b.over and b.turn_owner == owner and b.queue_idx == entry and b.round_number == round_no and guard < MAX_ACTIONS_PER_TURN:
 		guard += 1
-		var a := decide(b, rng)
+		var a := decide(b, rng, lookahead)
 		if a["type"] == &"end_turn":
 			break
 		b.apply(a)

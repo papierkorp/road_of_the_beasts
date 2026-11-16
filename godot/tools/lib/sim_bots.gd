@@ -3,7 +3,9 @@ extends RefCounted
 ## actions from `AiBrain.candidates` (all legal) and apply them through `Battle.apply`.
 ## Use it through `const Bots := preload("res://tools/lib/sim_bots.gd")`.
 ##
-##   greedy  AiBrain itself, as the game plays it: one-step lookahead on a copy of the battle;
+##   game    AiBrain exactly as the game's opponent plays it: greedy with the lookahead of the
+##           switch `ai_veins` (the best first actions judged with the best second one of the turn)
+##   greedy  AiBrain with one-step lookahead on a copy of the battle;
 ##           with AP left and nothing better to do it walks toward the nearest enemy
 ##           (`hunt` is the same bot under its name in simulation S011)
 ##   wait    AiBrain as it was up to S011: ends the turn instead of walking up
@@ -25,7 +27,7 @@ extends RefCounted
 ## All four are crude: none plans ahead, refreshes timed effects on purpose, targets props or
 ## uses tamer skills. Their results are flow indications, never balance evidence.
 
-const NAMES: Array[String] = ["greedy", "hunt", "careful", "wait", "chase", "plan", "tactic", "rush", "kite", "random"]
+const NAMES: Array[String] = ["game", "greedy", "hunt", "careful", "wait", "chase", "plan", "tactic", "rush", "kite", "random"]
 ## plan: how many first actions are looked at one action further.
 const PLAN_BEAM := 6
 ## tactic: lines kept per action by plain evaluation / by the threat-aware one, the same for the end
@@ -47,6 +49,9 @@ static func play_turn(bot: String, b: Battle, rng: RandomNumberGenerator) -> voi
 	BattleExperiment.ai_careful = bot == "careful"
 	if bot == "tactic":
 		_tactic_turn(b, rng)
+		return
+	if bot == "game":
+		AiBrain.play_turn(b, b.turn_owner, rng, BattleExperiment.ai_veins)
 		return
 	if bot == "greedy" or bot == "hunt" or bot == "careful" or bot == "wait" or bot == "chase":
 		AiBrain.play_turn(b, b.turn_owner, rng)

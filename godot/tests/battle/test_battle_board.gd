@@ -140,7 +140,7 @@ func test_field_skills_lay_ground_under_props_too_and_may_cover_mountains() -> v
 	b.board.at(Vector2i(4, 3)).height = 1
 	b.begin()
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 4)})).is_empty()      # a prop in the shape does not forbid the cast
-	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(6, 5)})).contains("does not fit")
+	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(6, 5)})).is_empty()      # over the edge: acts on the rest
 	assert_str(b.check({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 1)})).contains("out of Reach")
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})).is_true()   # O4: (3,3) (4,3) (3,4) (4,4)
 	for p in [Vector2i(3, 3), Vector2i(4, 3), Vector2i(3, 4), Vector2i(4, 4)]:

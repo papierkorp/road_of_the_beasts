@@ -447,7 +447,7 @@ func _check_ai() -> void:
 		while not battle.over and battle.turn_owner == who and battle.queue_idx == entry and battle.round_number == round_no \
 				and guard < AiBrain.MAX_ACTIONS_PER_TURN:
 			guard += 1
-			var a := AiBrain.decide(battle, rng)
+			var a := AiBrain.decide(battle, rng, BattleExperiment.ai_veins)
 			if a["type"] == &"end_turn" or not battle.apply(a):
 				break
 			_refresh()

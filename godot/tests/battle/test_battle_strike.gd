@@ -93,11 +93,11 @@ func test_jab_deals_two_to_any_monster_in_the_shape_allies_included() -> void:
 	assert_int(H.unit(b, 0).hp).is_equal(5)      # the striker is never hit
 
 
-func test_the_whole_shape_must_lie_on_the_board() -> void:
+func test_a_strike_needs_one_square_on_the_board_and_drops_the_rest() -> void:
 	var b := H.battle([[0, Vector2i(0, 3), {"pace": 1.9, "ap": 5, "skills": [H.strike(), H.strike("whirl")]}], [1, Vector2i(1, 3)]])
 	b.begin()
-	assert_str(b.check({"type": &"skill", "slot": 0, "dir": H.LEFT})).contains("does not fit")
-	assert_str(b.check({"type": &"skill", "slot": 1, "dir": Vector2i.ZERO})).contains("does not fit")
+	assert_str(b.check({"type": &"skill", "slot": 0, "dir": H.LEFT})).contains("no square of the shape")
+	assert_str(b.check({"type": &"skill", "slot": 1, "dir": Vector2i.ZERO})).is_empty()          # half of the Whirl lies on the board
 	assert_str(b.check({"type": &"skill", "slot": 0, "dir": H.RIGHT})).is_empty()
 	assert_str(b.check({"type": &"skill", "slot": 0, "dir": Vector2i(2, 0)})).contains("cannot be aimed")
 

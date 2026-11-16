@@ -58,6 +58,16 @@ static func cells(u: BattleUnit, s: BattleSkillDef, anchor: Vector2i, rot := 0) 
 	return out
 
 
+## The squares of a cast that lie on the board: a shape that reaches over the edge acts on the rest
+## (user decision 2026-11-17).
+static func on_board(b: Battle, u: BattleUnit, s: BattleSkillDef, anchor: Vector2i, rot := 0) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for c in cells(u, s, anchor, rot):
+		if b.board.in_bounds(c):
+			out.append(c)
+	return out
+
+
 ## Why this placement is illegal ("" = legal).
 static func error(b: Battle, u: BattleUnit, s: BattleSkillDef, anchor: Vector2i, dir: Vector2i, rot := 0) -> String:
 	if not s.is_free_shape():
@@ -75,12 +85,13 @@ static func error(b: Battle, u: BattleUnit, s: BattleSkillDef, anchor: Vector2i,
 	elif s.anchor_mode == "adjacent":
 		if u.manhattan_to(anchor) != 1:
 			return "the anchor must be next to %s" % u.display_name()
-	var list := cells(u, s, anchor, rot)
-	if list.is_empty():
+		if not b.board.in_bounds(anchor):
+			return "the anchor is off the board"
+	if cells(u, s, anchor, rot).is_empty():
 		return "this skill has no footprint"
-	for c in list:
-		if not b.board.in_bounds(c):
-			return "the shape does not fit on the board"
+	var list := on_board(b, u, s, anchor, rot)
+	if list.is_empty():
+		return "no square of the shape lies on the board"
 	if s.needs_direction() and not Board.CARDINAL.has(dir):
 		return "choose a push direction"
 	if s.kind == BattleSkillDef.TRAP and free_cells(b, list).is_empty():
