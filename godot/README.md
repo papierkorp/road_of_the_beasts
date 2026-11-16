@@ -232,7 +232,7 @@ still fail: reference individual stats and roamer movement (I46 in [temp_todo.md
 is not green. Focused harness self-tests: `progression.gd` **1262 passed / 0 failed**, `discovery.gd`
 **7296 passed / 0 failed**, including 37 real-action fixtures. `tools/smoke_ui.gd` played 3v3 through the real UI on
 7×7, 8×8 and 9×9 without a refused click; the overview, draft and builder scenes load headless without errors.
-No human has played this state; these checks are not gameplay acceptance. Historical simulation reports retain
+The user plays every iteration by hand; the checks above are not gameplay acceptance. Historical simulation reports retain
 their original execution settings and results.
 
 ## Running the checks

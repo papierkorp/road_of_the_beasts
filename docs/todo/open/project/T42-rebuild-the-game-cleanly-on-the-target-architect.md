@@ -1,10 +1,19 @@
 # T42 · Rebuild the Game Cleanly on the Target Architecture
 
-**Status:** Partly decided — **user plan 2026-11-14:** the current Godot build stays a prototype; the game is rebuilt from scratch, with translation, a sound manager, graphics and animation. The user confirmed [architecture.md](../../../architecture.md) on 2026-11-14 (CSV translation, German and English from the start, a mid-strength opponent AI between the one-step evaluator and `tactic`). Open: the implementation plan and its time budget for the AI.
-**Prerequisites:** the Battle rules are decided (T41, T05, T40/T39 and the first-play decisions), so no rules are rebuilt that may still change; the user has confirmed [architecture.md](../../../architecture.md). Overworld work stays behind the Battle gate; only the shared structure is fixed now.
-**Sources:** [architecture.md](../../../architecture.md); [battle.md §7](../../../battle.md#7-technical-requirements); [godot/README.md](../../../../godot/README.md); [godot/tools/README.md](../../../../godot/tools/README.md); I56/I57.
-- **Decide (still open):** the exact contract/event list; which prototype tests become the specification; the mid-strength AI (design and time budget per turn, I42). Decided: architecture, CSV, German and English, mid-strength AI.
-- **Plan (to write once confirmed):** order of steps (tests and simulations first, then core, then view, then services), what is ported and what is dropped (removed mechanics), and when the prototype is retired.
-- **Added to the target on 2026-11-15** ([architecture.md](../../../architecture.md) §3/§4): shared vocabularies for shapes, moments and effects; ground, zones and props as one sheet with **one line type** in the rebuild (the prototype reads three line classes through one reader, I74); what a player configures for one monster lives on that unit's sheet (free shapes in the battle request). Port the vocabularies and the role check, not the three classes.
-- **Order to confirm:** the prerequisites above and [architecture.md](../../../architecture.md) §1 start the rebuild once the Battle rules are decided; the work order (B6) and the dependency diagram place it after the Battle gate. The gate asks for tests on “a build implementing the agreed combat scope”: say whether that build is the prototype or the rebuild, and with it where T42 sits.
-- **Done when:** an implementation plan with this order is recorded here, and the rebuilt battle passes the ported rule tests and a comparable bot run. Equal results are a regression check, not gameplay validation.
+**Status:** Open — the target is [architecture.md](../../../architecture.md); the order of the rebuild is its [§10](../../../architecture.md#10-the-rebuild). Everything is written anew, the rules too.
+**Prerequisite:** the user says they are satisfied with the battle in manual play (the gate is the prototype, not the rebuild). Before the start every entry of [implementation.md](../../implementation.md) is a rule or dropped, put to the user in bundles. From the start the battle rules rest until the rebuilt battle can be played by hand. Overworld work stays behind the battle.
+**Sources:** [architecture.md](../../../architecture.md); [battle.md §7](../../../battle.md#7-technical-requirements); [godot/README.md](../../../../godot/README.md); [godot/tools/README.md](../../../../godot/tools/README.md); I56/I57, I74.
+
+**Open points:**
+
+- **Contract (step 1):** the draft is [contract.md](../../../contract.md); the user has not accepted it. Not defined: which side places first ([battle.md §2.2](../../../battle.md#22-core-loop)); how the AI places; whether the player picks the route of a walk or only its destination (T04); what conceding costs in the overworld. To settle in the one revision: the map generator belongs into the content fingerprint; `options()` as a full list can grow very large with free paths and shapes.
+- **Comparison (step 4):** the converter from prototype recordings to contract actions (placement phase, unit and prop IDs).
+- **Tests (step 3):** which prototype tests become the specification; the test switches of `BattleExperiment` that are no rule are not rebuilt.
+- **AI:** design of the mid-strength opponent and its budget in evaluated states (I42).
+- **Multiplayer mode:** how creating monsters, skills and maps becomes part of its play (user idea: the players build in turns); the map generator.
+- **Online play:** a plan only; built on the user's explicit go. Transport and matchmaking are not defined.
+- **Loadout items:** the record form of what a medicine or an array does in battle (T18, T19).
+- **Dialogue and story:** [architecture.md §5–§6](../../../architecture.md#5-dialogue) are a sketch; fix them with a branching trial piece before the first real dialogue. Not defined: which dialogue a person offers at a given moment.
+- **Player-made content:** its plain-data form and the place of its migrations.
+
+**Done when:** the rebuilt battle passes the rewritten rule tests and the comparison with recorded prototype battles. Equal results are a regression check, not gameplay validation.

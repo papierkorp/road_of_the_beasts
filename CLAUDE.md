@@ -27,7 +27,8 @@
 | [`docs/monsters.md`](docs/monsters.md) | Regeln der Monster: Stats, Kalkulation, Kins, Seltenheit, Wachstum | 15 000 |
 | [`docs/content.md`](docs/content.md) | Alle Inhaltsentwürfe: Böden, Zonen, Props, Skills, Kits, Monster | 20 000 |
 | [`docs/overworld.md`](docs/overworld.md) | Welt, Expeditionen, Wirtschaft, Fortschritt, Tamer-Skills | 60 000 |
-| [`docs/architecture.md`](docs/architecture.md) | Technische Zielstruktur | 10 000 |
+| [`docs/architecture.md`](docs/architecture.md) | Technische Zielstruktur | — |
+| [`docs/contract.md`](docs/contract.md) | Vertrag des neu gebauten Kampfs: Formate, Aktionen, Events, lesbarer Zustand | eingefrorener Entwurf |
 | [`docs/decisions.md`](docs/decisions.md) | Entscheidungsprotokoll: Entscheidung, Verworfenes, Grund | wächst nur zeilenweise |
 | [`docs/temp_todo.md`](docs/temp_todo.md) | Übersicht: Stand, offene Fragen, Aufgabentabelle | 10 000 |
 | [`docs/todo/`](docs/todo/) | Eine Datei je Aufgabe, in Ordnern nach Status und Epic | 6 000 je Aufgabe |
@@ -48,6 +49,7 @@
 10. **Aufgaben:** eine Datei je Aufgabe; ein Statuswechsel verschiebt die Datei in den passenden Ordner und aktualisiert die Tabelle in `docs/temp_todo.md`. Erledigtes wandert nach `done/`, später nach `archive/`.
 11. **Diese `CLAUDE.md`** enthält nur dauerhafte Arbeitsregeln: keine Spielregeln, Zahlen oder Zwischenstände.
 12. **`docs/simulation_log.md`** wird nur angehängt; bestehende Einträge werden nicht geändert.
+13. **`docs/contract.md`** ist ein eingefrorener Entwurf: bei Regeländerungen nicht mitpflegen. Beim Start des Neubaus wird er einmal gegen die fertigen Regeln überarbeitet und dem Nutzer zur Abnahme vorgelegt.
 
 ## Working style
 

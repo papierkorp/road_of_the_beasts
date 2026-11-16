@@ -4,7 +4,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 - **This file owns** the rules of a battle: flow, timing, the board, what ground, zones and props are, damage and displacement.
 - **Elsewhere:** what a skill is ([skills.md](skills.md)), what a monster is ([monsters.md](monsters.md)), every concrete ground, zone, prop, skill, kit and monster ([content.md](content.md)), meta progression and tamer skills ([overworld.md](overworld.md)).
-- **Status:** rules are decided unless a section says “working value”. Working values are untested numbers. Nothing here is validated by systematic play.
+- **Status:** rules are decided unless a section says “working value”. Working values are untested numbers. The user plays every iteration by hand; no number is settled by it.
 
 ## 1. Goals and Pillars
 
@@ -49,11 +49,11 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 ### 2.2 Core Loop
 
 1. The battlefield is generated ([§4.1](#41-board-generation)).
-2. Pre-battle: choose monsters and place them in the start area. Monsters start at their **current HP**.
+2. Pre-battle: choose monsters and place them in the start area. The sides place alternately and openly, one monster at a time; which side places first is not defined. Monsters start at their **current HP**.
 3. **Each round:** one queue for all monsters of both sides ([§2.3](#23-pace-and-the-queue)).
 4. **A monster's turn:** it spends AP and Stamina on legal actions ([§2.4](#24-action-points-and-stamina)), then its end-of-turn effects resolve ([§3](#3-timing)).
 5. The round ends with the round-end events ([§3](#3-timing)).
-6. **End of battle:** checked after a payload has fully resolved, including its defeats. The battle then ends at once and anything still pending lapses. If both sides have no monsters left after the same resolution, the result is a **Draw**.
+6. **End of battle:** a side may concede during a turn of one of its own monsters, which ends the battle at once as its defeat. Otherwise the end is checked after a payload has fully resolved, including its defeats. The battle then ends at once and anything still pending lapses. If both sides have no monsters left after the same resolution, the result is a **Draw**.
 
 ### 2.3 Pace and the Queue
 
@@ -370,7 +370,5 @@ Battle resolves the effects of the tamer's prepared loadout deterministically an
 ## 7. Technical Requirements
 
 - Godot 4, **3D square grid, orthogonal camera at about 45°**, never hex.
-- Content is data: one Resource file per monster, skill, ground, zone and prop.
-- Battle logic stays headless and engine-independent. Preview, AI and resolution share the same deterministic rules.
 - Round-end resolution reads the Dragon Vein squares actually on the board, not a fixed list.
 - Target architecture: [architecture.md](architecture.md). The current build and its tools: [godot/README.md](../godot/README.md).

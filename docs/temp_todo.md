@@ -26,7 +26,7 @@ docs/todo/
 - **Decided and built:** Pace and Stamina, the round end (moves, acts, ticks), cover, traps as walkable props, one shape per skill with free shapes, one sheet for ground, zones and props, the monster calculation (ranges from 1, price list, 25 points +5 per step).
 - **Content:** nine monsters at 60 points with six-skill kits; all of it working drafts.
 - **Next:** the skills and their calculation are reworked now that the monsters stand ([T02](todo/open/skills/T02-find-skill-prices.md), [T10](todo/open/skills/T10-the-skill-list.md)).
-- **Not validated:** no human has played the present state systematically; the filled stats and the new kits are not measured.
+- **Played by hand:** the user plays every iteration manually; the rebuild starts when the user is satisfied with the battle ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). The filled stats and the new kits are not measured by a run.
 - **Build and rules differ** in the places listed in [todo/implementation.md](todo/implementation.md).
 
 ## Open Questions for the User

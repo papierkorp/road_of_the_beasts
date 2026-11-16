@@ -139,3 +139,60 @@ Prüfung und Antwort:
 - Aktualisiere Context Handoff in docs/temp_todo.md auf den tatsächlichen Stand (Fokus, Blocker, nächster Schritt, Git-Stand, erfolgte Prüfungen).
 - Berichte auf Deutsch: geprüfter Umfang, zusammengeführte Duplikate (mit zuständigem Abschnitt), umgewandelte Fließtexte, gefundene Widersprüche und neue Aufgaben, durchgeführte Prüfungen, offene Punkte. Keine vollständige Prüfung behaupten, wenn etwas fehlt.
 ```
+
+## Architektur prüfen (Projektplaner mit technischer Erfahrung)
+
+```text
+Du prüfst die technische Zielarchitektur eines Spielprojekts, bevor danach gebaut wird.
+Arbeite als erfahrener Projektplaner mit technischem Hintergrund: Dich interessiert,
+ob sich nach diesem Plan tatsächlich bauen lässt, wo er später teuer wird und was fehlt.
+
+## Das Projekt
+„Road of the Beasts“ ist ein Spiel in Godot 4 mit zwei Teilen: einem deterministischen,
+rundenbasierten Monster-Kampf auf einem Raster (Battle) und einer Management- und
+Story-Ebene in einer Xianxia-Welt (Overworld). Der Kampf ist der Kern und wird zuerst
+fertig. Der heutige Code unter godot/ ist ein Prototyp; das Spiel soll danach sauber
+neu aufgebaut werden. Entwickelt wird von einer Person mit AI-Agents, nicht von einem Team.
+
+## Was du prüfst
+docs/architecture.md beschreibt den Neuaufbau. Nichts davon ist gebaut. Die wichtigste
+Entscheidung darin: Battle und Overworld sind zwei getrennte Spiele, die einander nicht
+kennen und sich nur über ein gemeinsames Datenformat treffen.
+
+Lies dazu:
+- docs/architecture.md vollständig (das ist der Prüfgegenstand)
+- docs/battle.md, docs/skills.md, docs/monsters.md für die Regeln, die die Architektur tragen muss
+- docs/overworld.md für das, was die Overworld leisten soll
+- docs/decisions.md, bevor du etwas vorschlägst: dort steht, was bereits entschieden und
+  was verworfen wurde. Verworfenes schlägst du nur mit einem neuen Grund wieder vor.
+- godot/README.md und die Ordner unter godot/, um zu sehen, was der Prototyp heute tut
+  und was beim Umzug in die neue Struktur wohin müsste
+
+## Die Fragen, auf die ich Antworten brauche
+1. Trägt die Trennung in zwei Spiele? Wo müssen Battle und Overworld doch voneinander
+   wissen (Skill-Karten anzeigen, Kampfvorschau, Tamer-Skills, Spielstand, Übersetzung),
+   und reicht das gemeinsame Datenformat dafür aus?
+2. Liegt die Grenze von shared/ richtig? Was gehört hinein, was nicht, und was passiert,
+   wenn sich das Datenformat ändert, während Spielstände existieren?
+3. Dialog- und Story-System: Reichen die beschriebenen Felder für eine verzweigende
+   Geschichte mit vielen Dialogen? Welche Fälle sind nicht abgedeckt?
+4. Was fehlt ganz? Zum Beispiel Spielstände und ihre Versionierung, Fehlerbehandlung,
+   Build und Export, Leistung, Tests über die Grenze der beiden Spiele, Werkzeuge für Inhalte.
+5. Reihenfolge und Aufwand: In welchen Schritten würdest du vom Prototyp zur Zielstruktur
+   kommen, was ist das größte Risiko, und was lässt sich weglassen, ohne später zu bereuen?
+6. Ist etwas überplant für ein Ein-Personen-Projekt?
+
+## Grenzen
+- Du änderst nichts: keine Dateien, keine Commits. Das Ergebnis ist ein Bericht.
+- Die Spielregeln stehen nicht zur Prüfung. Wenn eine Regel die Architektur schwierig
+  macht, nenne es, aber schlage keine Regeländerung als Lösung vor.
+- Trenne, was du im Dokument oder im Code nachgelesen hast, von dem, was du annimmst.
+  Wo das Dokument eine Frage offen lässt, sag das, statt eine Antwort zu erfinden.
+
+## Was du zurückgibst
+Zuerst dein Urteil in zwei, drei Sätzen: tragfähig, tragfähig mit Änderungen oder nicht.
+Danach die Befunde nach Schwere geordnet, die wichtigsten zuerst. Je Befund: was das
+Problem ist, woran du es festmachst (Abschnitt oder Datei), was es kostet, wenn es bleibt,
+und was du stattdessen vorschlägst. Zum Schluss die Fragen, die nur der Projektinhaber
+beantworten kann. Lieber wenige belastbare Befunde als eine lange Liste von Kleinigkeiten.
+```
