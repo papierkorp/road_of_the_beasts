@@ -259,7 +259,7 @@ static func _plan(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 	for a in AiBrain.candidates(b):
 		var sim := b.clone()
 		if sim.apply(a, true):
-			firsts.append([AiBrain.evaluate(sim, side) - base, a, sim])
+			firsts.append([AiBrain.evaluate(sim, side) - base + AiBrain.try_bonus(u, a), a, sim])
 	if firsts.is_empty():
 		return {"type": &"end_turn"}
 	firsts.sort_custom(func(x: Array, y: Array) -> bool: return x[0] > y[0])
@@ -281,10 +281,12 @@ static func _plan(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 		var after: Battle = firsts[i][2]
 		if not after.over and after.turn_owner == b.turn_owner and after.queue_idx == b.queue_idx and after.round_number == b.round_number:
 			var follow := 0.0
+			var me: BattleUnit = after.units[u.id]
+			var plain: float = total - AiBrain.try_bonus(u, firsts[i][1])      # the position after the first action
 			for a2 in AiBrain.candidates(after):
 				var sim2 := after.clone()
 				if sim2.apply(a2, true):
-					follow = maxf(follow, AiBrain.evaluate(sim2, side) - base - total)
+					follow = maxf(follow, AiBrain.evaluate(sim2, side) - base - plain + AiBrain.try_bonus(me, a2))
 			total += follow
 		if total > best_total + 0.001:
 			best_total = total

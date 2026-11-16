@@ -132,6 +132,8 @@ static func ground_effects(b: Battle, u: BattleUnit, timing: String, cells: Arra
 			continue
 		for t in g.triggers_at(timing):
 			var v := t.value_at(grounds[gid])
+			if t.kind == "stamina":
+				continue                              # no HP: ground_triggers gives it
 			if t.kind == "heal":
 				heals.append({"unit": u.id, "amount": v, "source": g.display_name})
 			else:
@@ -152,5 +154,16 @@ static func ground_triggers(b: Battle, u: BattleUnit, timing: String, cells: Arr
 	if not parts["hits"].is_empty() or not heals.is_empty():
 		apply_round(b, parts["hits"], heals)
 		defeat_step(b)
+	if u.is_alive():                              # experiment: ground that gives Stamina back
+		var under := BattleStats.grounds_under(b, u, over)
+		for gid: StringName in under:
+			var g := b.content.ground(gid)
+			if g == null or BattleStats.ignores_ground(u, gid):
+				continue
+			for t in g.triggers_at(timing):
+				if t.kind == "stamina" and u.stamina < u.sheet.movement:
+					var gain := mini(u.sheet.movement - u.stamina, t.value_at(under[gid]))
+					u.stamina += gain
+					b.emit(&"stamina_recovered", {"who": u.id, "amount": gain, "source": g.display_name})
 	if timing == Moment.ENTER:
 		BattleProps.enter(b, u, over)         # a trap on the entered squares springs

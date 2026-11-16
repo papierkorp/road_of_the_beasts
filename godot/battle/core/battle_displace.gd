@@ -195,6 +195,9 @@ static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String)
 	if b.board.in_bounds(to):
 		blocker_unit = b.unit_at(to, Board.GROUND)
 		blocker_prop = b.board.prop_at(to, Board.GROUND)
+	if blocker_prop != null and blocker_unit == null and BattleBoardOps.defuses(prop.def, blocker_prop):
+		BattleBoardOps.defuse_at(b, prop.def, to)     # test switch: the prop rolls over the trap
+		blocker_prop = null
 	var blocked := not b.board.in_bounds(to) or blocker_unit != null or blocker_prop != null
 	if blocked:
 		b.emit(&"collision", {"prop": prop.def.id, "pos": prop.pos, "cause": cause,
@@ -212,4 +215,7 @@ static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String)
 	prop.pos = to
 	b.board.put_prop(prop)
 	b.emit(&"prop_moved", {"from": from, "to": to, "prop": prop.def.id, "cause": cause})
+	var under := b.content.ground(b.board.at(to).ground)
+	if under != null and under.no_props:
+		BattleBoardOps.damage_prop(b, prop, prop.hp)  # experiment: this ground takes no prop
 	return true

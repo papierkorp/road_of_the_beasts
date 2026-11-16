@@ -50,12 +50,14 @@ static func build(request: BattleRequest) -> Battle:
 	var b := Battle.new(null, content)
 	var starts := BattleBoards.build(b, request.mode, request.board_seed)
 	var size := mini(request.team_size(), starts.size())
+	var kits := BattleExperiment.random_kits or BattleExperiment.fresh_skills      # test switches: no kit of its own
 	for side in 2:
 		var team: Array[MonsterInstance] = request.player_team if side == 0 else request.enemy_team
 		var prefix := "p" if side == 0 else "e"
 		for i in mini(team.size(), size):
 			var sheet := UnitSheets.from_instance(team[i], content)
-			UnitSheets.arrange(sheet, (request.player_shapes if side == 0 else request.enemy_shapes).get(i, {}))
+			if not kits:
+				UnitSheets.arrange(sheet, (request.player_shapes if side == 0 else request.enemy_shapes).get(i, {}))
 			if side == 0 and request.prep_pace.has(i):
 				sheet.pace_bonus = float(request.prep_pace[i])      # battle-prep pill (gdd_overworld §6.6)
 			var pos := starts[i]
@@ -78,6 +80,8 @@ static func build(request: BattleRequest) -> Battle:
 			var def := content.tamer_skill(id)
 			if def != null and not b.tamer_loadout[side].has(def):
 				b.tamer_loadout[side].append(def)
+	if kits:
+		KitDraw.deal(b, BattleExperiment.kit_seed, BattleExperiment.fresh_skills)
 	return b
 
 

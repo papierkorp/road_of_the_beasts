@@ -19,6 +19,7 @@ const TABLES := {
 			["name", "Skill", 190, false, false],
 			["kind", "Kind", 100, false, false],
 			["cost", "Cost", 110, false, false],
+			["points", "Points", 70, false, true],
 			["where", "Where", 200, false, false],
 			["strike", "Strike", 130, false, false],
 			["move", "Movement", 200, true, false],
@@ -147,6 +148,9 @@ static func skill_rows(c: BattleContent) -> Array[Dictionary]:
 			"prop": parts["prop"],
 			"effect": BattleText.SEP.join(lines),
 			"calc": s.internal_calc_cost,
+			# hovering the Points cell shows the calculation (SkillCalc, a draft; -1 = not priced)
+			"points": roundi(SkillCalc.points(c, s)) if KitDraw.kind_of(c, s) != "" else -1,
+			"points_table": SkillCalc.table(c, s),
 			"status": s.content_status,
 			"in_game": ContentStatus.in_game(s),
 			"monsters": ", ".join(users),
@@ -392,7 +396,7 @@ func _ready() -> void:
 	col.add_child(_tree)
 
 	var hint := Label.new()
-	hint.text = "One row per Resource file under res://data. Click a column title to sort; hover a row for its notes. A skill only delivers: it strikes, moves or acts on its user and creates ground, a zone or a prop; what those do and when stands in their own tables. Monster stats = the species' reference individual; Points = what these stats cost (every stat starts at 1; +0.1 Pace 1, Stamina 2, HP 5, Reach 5, AP steps 5/10/15/20, a second turn 10 + 5 per AP, a third twice that; the multiplayer mode plays with 60): hover the cell for the sum. Grounds act at a moment, zones while a monster stands inside; props block the way and act when destroyed. Greyed rows are not in the game (status test, simulation or archived)."
+	hint.text = "One row per Resource file under res://data. Click a column title to sort; hover a row for its notes. A skill only delivers: it strikes, moves or acts on its user and creates ground, a zone or a prop; what those do and when stands in their own tables. Monster stats = the species' reference individual; Points = what these stats cost (every stat starts at 1; +0.1 Pace 1, Stamina 2, HP 5, Reach 5, AP steps 5/10/15/20, a second turn 10 + 5 per AP, a third twice that; the multiplayer mode plays with 60): hover the cell for the sum. Grounds act at a moment, zones while a monster stands inside; props block the way and act when destroyed. Skill Points = the draft skill calculation (every part of the card has a price, 10 points pay for 1 AP; fitted to bot runs, nothing approved): hover the cell for the sum. Greyed rows are not in the game (status test, simulation or archived)."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # without it the long line widens the whole screen
 	hint.add_theme_color_override("font_color", UiTheme.DIM)
 	hint.add_theme_font_size_override("font_size", 14)

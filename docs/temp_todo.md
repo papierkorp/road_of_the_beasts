@@ -26,6 +26,7 @@ docs/todo/
 - **Decided and built:** Pace and Stamina, the round end (moves, acts, ticks), cover, traps as walkable props, one shape per skill with free shapes, one sheet for ground, zones and props, the monster calculation (ranges from 1, price list, 25 points +5 per step).
 - **Content:** nine monsters at 60 points with six-skill kits; all of it working drafts.
 - **Next:** the skills and their calculation are reworked now that the monsters stand ([T02](todo/open/skills/T02-find-skill-prices.md), [T10](todo/open/skills/T10-the-skill-list.md)).
+- **Skill calculation (draft):** a first price list from bot runs stands in the build ([S032](simulation_log.md), T02); test switches deal random kits by template and generated skills. Six ideas of 2026-11-16 are built as switches and experiment content ([T43](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)).
 - **Played by hand:** the user plays every iteration manually; the rebuild starts when the user is satisfied with the battle ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). The filled stats and the new kits are not measured by a run.
 - **Build and rules differ** in the places listed in [todo/implementation.md](todo/implementation.md).
 
@@ -43,6 +44,8 @@ docs/todo/
 | 8 | The Thorn Idol passes a Strike on to its neighbours in the same turn, against “fair damage at range”: keep, change or drop? | T41 |
 | 9 | May effects on AP or turns per round ever reach other monsters? | T07 |
 | 10 | Does the stat-zone rule and the kit rule of the nine monsters also bind kits a player composes? | T11 |
+| 11 | Skill prices: is “10 points = 1 AP, a Jab with 2 damage and a push = 20 points” the form? What happens to ground, zone and prop skills, which all come out below 1 AP: stronger, a second cost, or the floor? | T02 |
+| 12 | Which of the six ideas of 2026-11-16 (Stamina base cost, Erosion, Shifting Sand, props bury traps, Stamina recovery from ground, zone and buff, the new battle log) stay? | T43 |
 
 ## Tasks
 
@@ -51,6 +54,7 @@ docs/todo/
 | T04 | [Make Resolution Rules and Edge Cases Consistent](todo/to-clarify/battle/T04-make-resolution-rules-and-edge-cases-consistent.md) | to clarify | battle |
 | T39 | [Dragon Veins: Square Control as the Way to Win by Defeat](todo/to-clarify/battle/T39-dragon-veins-square-control-as-the-way-to-win-by.md) | to clarify | battle |
 | T41 | [Bring the Props, Slots and Stamina of the Build into the GDDs, or Drop Them](todo/to-clarify/battle/T41-bring-the-props-slots-and-stamina-of-the-build-i.md) | to clarify | battle |
+| T43 | [Try the Ideas of 2026-11-16](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md) | to clarify | battle |
 | T03 | [Review Stat Budgets, Frames and Progression Limits](todo/to-clarify/monsters/T03-review-stat-budgets-frames-and-progression-limit.md) | to clarify | monsters |
 | T26 | [Draft Staff Traits and Numbers](todo/to-clarify/overworld/T26-draft-staff-traits-and-numbers.md) | to clarify | overworld |
 | T05 | [Complete Skill Improvements](todo/to-clarify/skills/T05-complete-skill-improvements.md) | to clarify | skills |

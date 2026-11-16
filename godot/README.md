@@ -208,6 +208,31 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   `move_ap`, `soft_pressure`, the switches of S025–S030 (`zone_cast_push`, `once_per_turn`, `vein_touch`, `collision_both`,
   `vein_charge`, `vein_charge_late`, `step_full_move`, `stamina` / `stamina_regen` / `stamina_ap`, `map_props`, `map_buttons`, `board_size`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
   `ai_no_kind`. Tests: `tests/battle/test_battle_experiment.gd`.
+- **Kit switches** (draft check boxes; `tests/battle/test_kit_draw.gd`): **Random kits** (`random_kits`) gives every
+  monster of a battle a random kit instead of its own. Each monster draws a kit template (`KitDraw.TEMPLATES`:
+  Balanced, Bruiser, Skirmisher, Controller, Trapper, Shaper) that names no skill, only how many Strikes, movement,
+  zone, ground and prop skills the six slots hold; the skills are drawn from the game's own. **New skills every
+  battle** (`fresh_skills`) builds those kits from skills generated for the battle (`SkillGen.draw_kind`), in memory
+  only; their AP come from the draft skill calculation. `kit_seed` is drawn anew for every start from the draft, so
+  “Fight Again” repeats the kits. The arranged free shapes of the draft are not used with a kit switch. **AI tries
+  every skill** (`ai_try_all`): the opponent prefers a skill it has not used yet in the battle (`AiBrain.TRY_BONUS`).
+- **Ideas of 2026-11-16, built to try and to measure (no rules; [T43](../docs/todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)):**
+    - *Stamina base cost* (`stamina_base`, draft number field): a movement skill costs that much Stamina per use on top
+      of the squares.
+    - *Props bury traps* (`trap_defuse`, draft check box): a solid prop created on or pushed onto a trap removes it
+      unsprung (event `trap_defused`).
+    - *Experiment content* (status `experiment`, in no kit; the skill builder and the generated skills can use it):
+      ground **Shifting Sand** (`GroundDef.no_props`: no prop can be on it; one standing there or pushed onto it breaks),
+      ground **Springwater** (ground trigger kind `stamina`: +1 Stamina on entering), zone **Erosion**
+      (`FieldEffect.ERODE`: props in it take 1 at the round end, with the other things that act), zone **Updraft** and
+      the self buff **Deep Breath** (`FieldEffect.REFRESH`: more Stamina recovered at the round end).
+- **Battle log:** every damage line names its source (“Jab by Gloom Wolf −2”, “Lava (ground) −1”); the line of a defeat
+  names the hit that did it and what else the monster took in that round (`BattleText.defeat_line`). A fallen monster
+  gets a button above the log that opens everything that changed its HP (`BattleText.hp_history`, `BattleHud.add_fallen`).
+- **Skill calculation (draft)** (`battle/defs/skill_calc.gd`, [skills.md §7](../docs/skills.md#7-value-and-prices)):
+  every part of a skill card has a price in points, 10 points pay for 1 AP. No rule reads it; the skill builder and
+  the Points column of the overview show it, and generated skills take their AP from it. The prices are fitted to
+  bot runs of `tools/skill_impact.gd` and are not approved.
 - **Not built:** Dragon Veins on the 1v1 and 2v2 boards; slot development (skills.md); one line class for
   ground, zone and prop records (they are read as one sheet, stored as three); the rename of the stat fields
   `movement` / `move` to Stamina; an editor for the opponent's free shapes (the AI plays the defaults). `MonsterDef.reference_shape` and the overworld `StatShape` still name the six earlier

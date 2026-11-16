@@ -26,10 +26,11 @@ const MOMENTS := {
 	"prop": [INSIDE, ENTER, ROUND_END, HIT, DESTROYED],
 }
 ## What each kind may do (effect words of BoardSheet). `experiment` effects (AP, turns per round on
-## others) are in the vocabulary but in no content of the game.
+## others) are in the vocabulary but in no content of the game. `stamina`, `refresh` and `erode` are the ideas of
+## 2026-11-16 (Stamina recovery; a zone that wears props down): experiment content only.
 const EFFECTS := {
-	"ground": ["damage", "heal"],
-	"zone": ["slow", "haste", "drain_pace", "quicken", "drain_range", "extend", "push", "pull", "sap", "vigor", "tempo"],
+	"ground": ["damage", "heal", "stamina", "refresh"],
+	"zone": ["slow", "haste", "drain_pace", "quicken", "drain_range", "extend", "push", "pull", "sap", "vigor", "tempo", "refresh", "erode"],
 	"prop": ["damage", "push", "pull", "ground", "zone", "prop", "slow", "haste", "drain_pace", "quicken", "drain_range", "extend"],
 }
 

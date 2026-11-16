@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"shifting_sand"
+display_name = "Shifting Sand"
+content_status = "experiment"
+no_props = true
+color = Color(0.78, 0.7, 0.48, 1)
+description = "EXPERIMENT · No prop can be here: none can be created on it, a prop standing where it is laid breaks, a prop pushed onto it breaks. It does nothing to monsters."

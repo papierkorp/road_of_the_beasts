@@ -5,7 +5,7 @@ extends Resource
 ## When it acts: a moment of the shared list (Moment): enter, leave, turn_end, round_end. Leaving counts by
 ## the monster's own movement and by being pushed or pulled; standing still costs nothing.
 @export_enum("enter", "leave", "turn_end", "round_end", "turn_start") var timing: String = Moment.ENTER
-@export_enum("damage", "heal") var kind: String = "damage"
+@export_enum("damage", "heal", "stamina") var kind: String = "damage"
 ## 0 = the ground's level (hazard grounds); otherwise a fixed amount.
 @export var amount: int = 0
 

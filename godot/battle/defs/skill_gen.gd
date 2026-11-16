@@ -5,10 +5,12 @@ extends RefCounted
 ## do and when is written once, in the ground, zone and prop definitions. No Surges, no traps.
 ##   card      the parts of any skill definition as text (overview, skill builder)
 ##   build     a skill from chosen parts (the in-game skill builder, game/skill_builder.gd)
-##   draw      a random legal skill for `sim.gd --variant genskills=N`; its parts are kept as meta
-##             "parts", so a run reports win rates per part
+##   draw_kind a random legal skill of one kind (strike, move, zone, ground, prop) for the random kits
+##             (KitDraw) and the measuring runs; its parts are kept as meta "parts", so a run reports
+##             results per part. `draw` takes the kinds in turn.
 ## A built or drawn skill is content only once it is saved under res://data/skills; none has a price.
 
+## Free shapes the skill builder offers by name.
 const SHAPES := {
 	"one": [Vector2i(0, 0)],
 	"line2": [Vector2i(0, 0), Vector2i(0, 1)],
@@ -17,16 +19,32 @@ const SHAPES := {
 	"angle": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)],
 	"cross": [Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)],
 }
-const GROUNDS: Array[StringName] = [&"lava", &"thornbed", &"blight", &"snare", &"mossbed"]
-const ZONES: Array[StringName] = [&"gale", &"void_pull", &"mire", &"bog", &"tailwind", &"slowing"]
-const WHEN: Array[String] = ["strike", "ground", "zone", "move"]
 
 
 static func _pick(rng: RandomNumberGenerator, list: Array) -> Variant:
 	return list[rng.randi_range(0, list.size() - 1)]
 
 
-## One random legal skill: a Strike, a movement, or a skill that creates ground, a zone or a prop.
+## The five kinds a kit template counts (KitDraw): what a skill is for.
+const KINDS: Array[String] = ["strike", "move", "zone", "ground", "prop"]
+## Strike shapes a draw may take: [base shape, extensions].
+const STRIKE_SHAPES := [["jab", 0], ["jab", 1], ["jab", 2], ["pincer", 0], ["arc", 0], ["arc", 1], ["whirl", 0], ["cross", 0], ["storm", 0]]
+## Base shapes around the user for a skill that creates: [base shape, extensions].
+const AROUND_SHAPES := [["jab", 1], ["jab", 2], ["arc", 0], ["whirl", 0], ["cross", 0], ["storm", 0]]
+## Free shapes by number of squares (default arrangements; the anchor (0, 0) is one of the squares).
+const FREE_SHAPES := {
+	1: [[Vector2i(0, 0)]],
+	2: [[Vector2i(0, 0), Vector2i(0, 1)]],
+	3: [[Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1)], [Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)]],
+	4: [[Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)], [Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)]],
+	5: [[Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]],
+}
+## Timed effects on the user a generated self buff may give (the experiments on AP and turns are left out).
+const SELF_TAGS: Array[String] = ["quicken", "haste", "extend", "refresh"]
+const MOVE_NAMES := {"walk": "Run", "line": "Leap", "free": "Glide"}
+
+
+## One random legal skill for `sim.gd --variant genskills=N` and the skill builder: the kinds in turn.
 static func draw_named(content: BattleContent, rng: RandomNumberGenerator, index: int) -> BattleSkillDef:
 	var s := draw(content, rng, index)
 	s.content_status = ContentStatus.EXPERIMENT
@@ -34,80 +52,185 @@ static func draw_named(content: BattleContent, rng: RandomNumberGenerator, index
 
 
 static func draw(content: BattleContent, rng: RandomNumberGenerator, index: int) -> BattleSkillDef:
+	return draw_kind(content, rng, KINDS[index % KINDS.size()], index)
+
+
+## Zones a skill may create: [those that move a monster or wear props down, those that only change stats]. A zone that only
+## changes stats is never a skill of its own (gdd_skills §2); it comes with ground, a Strike or a movement.
+static func zone_ids(content: BattleContent) -> Array:
+	var moving: Array[StringName] = []
+	var stats: Array[StringName] = []
+	for id: StringName in BattleContent.sorted_ids(content.zones):
+		var z: BattleZoneDef = content.zones[id]
+		if not ContentStatus.in_game(z):
+			continue
+		if z.has_tag(FieldEffect.PUSH) or z.has_tag(FieldEffect.PULL) or z.has_tag(FieldEffect.ERODE):
+			moving.append(id)
+		else:
+			stats.append(id)
+	return [moving, stats]
+
+
+## Grounds a skill may lay: hazard and blessed grounds of the game.
+static func ground_ids(content: BattleContent) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id: StringName in BattleContent.sorted_ids(content.grounds):
+		var g: GroundDef = content.grounds[id]
+		if ContentStatus.in_game(g) and (g.group != "neutral" or g.no_props) and not g.immutable and not GroundDef.is_reserved(id):
+			out.append(id)
+	return out
+
+
+## Props a skill may create.
+static func prop_ids(content: BattleContent) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id: StringName in BattleContent.sorted_ids(content.props):
+		var p: PropDef = content.props[id]
+		if ContentStatus.in_game(p) and p.creatable_by_skill and p.content_status != ContentStatus.EXPERIMENT:
+			out.append(id)
+	return out
+
+
+## One random legal skill of a kind (KINDS). Its parts (SkillCalc.part_names) are kept as meta "parts",
+## so a run can report results per part. `ap` > 0 fixes the AP cost; 0 draws 1–3
+## whatever the skill does (a measuring run wants cost and strength independent); -1 takes the AP the
+## draft price list gives it (SkillCalc), as the game switch "New skills every battle" does.
+## The skill lives in memory only (status `simulation` unless the caller sets another).
+static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: String, index: int, ap := 0) -> BattleSkillDef:
 	var s := BattleSkillDef.new()
-	var parts: Array[String] = []
-	var when: String = WHEN[index % WHEN.size()]                 # every kind equally often
-	s.id = StringName("gen_%02d_%s" % [index, when])
-	s.display_name = "Gen %d %s" % [index, when]
+	s.id = StringName("gen_%03d_%s" % [index, kind])
 	s.content_status = ContentStatus.SIMULATION
-	s.kind = when
-	parts.append("kind=%s" % when)
-	var stays := "none"
-	match when:
+	s.status = "generated (SkillGen.draw_kind); lives in memory only"
+	var zones: Array = zone_ids(content)
+	var any_zone: Array[StringName] = []
+	any_zone.append_array(zones[0])
+	any_zone.append_array(zones[1])
+	var label := ""
+	var ground := &""
+	var zone := &""
+	match kind:
 		"strike":
-			var drawn: Array = _pick(rng, [["jab", 0], ["jab", 0], ["jab", 1], ["arc", 0]])
+			s.kind = BattleSkillDef.STRIKE
+			var drawn: Array = _pick(rng, STRIKE_SHAPES)
 			s.shape = drawn[0]
 			s.shape_extension = drawn[1]
-			s.strike_damage = _pick(rng, [0, 2, 2])
-			s.strike_push = s.strike_damage == 0 or _pick(rng, [true, true, false])   # never neither damage nor push
-			s.ap_cost = maxi(1, BattleShapes.draft_ap(s.shape_id(), s.shape_extension))
-			parts.append("strike=%s" % BattleShapes.key(s.shape_id(), s.shape_extension))
-			parts.append("damage=%d" % s.strike_damage)
-			parts.append("push=%s" % ("yes" if s.strike_push else "no"))
-			stays = _pick(rng, ["none", "none", "ground"])
-		"ground":
-			var shape2: String = _pick(rng, SHAPES.keys())
-			var fp2: Array[Vector2i] = []
-			fp2.assign(SHAPES[shape2])
-			s.footprint = fp2
-			s.ap_cost = _pick(rng, [1, 2])
-			parts.append("shape=%s" % shape2)
-			stays = _pick(rng, ["ground", "ground", "prop"])
-		"zone":
-			var shape3: String = _pick(rng, ["one", "line2", "line3", "block", "angle"])
-			var fp3: Array[Vector2i] = []
-			fp3.assign(SHAPES[shape3])
-			s.footprint = fp3
-			s.ap_cost = _pick(rng, [1, 2])
-			var zid: StringName = _pick(rng, ZONES)
-			s.zone = content.zone(zid)
-			s.duration = 2
-			parts.append("shape=%s" % shape3)
-			parts.append("stays=zone:%s" % zid)
+			s.strike_damage = _pick(rng, [0, 1, 1, 2, 2, 2])
+			s.strike_push = _pick(rng, [true, true, false])
+			var leaves: String = _pick(rng, ["none", "none", "none", "ground", "zone"])
+			if s.strike_damage == 0 and not s.strike_push and leaves == "none":
+				s.strike_push = true                  # a Strike does something
+			if leaves == "ground":
+				ground = _pick(rng, ground_ids(content))
+			elif leaves == "zone":
+				zone = _pick(rng, any_zone)
+			label = BattleShapes.shape_name(s.shape_id(), s.shape_extension)
+			if s.strike_damage == 0:
+				label += " Shove" if s.strike_push else " Touch"
+			elif s.strike_damage == 1:
+				label = "Light " + label
 		"move":
-			s.move_path = _pick(rng, ["walk", "line", "free"])
+			s.kind = BattleSkillDef.MOVE
+			s.move_path = _pick(rng, ["walk", "walk", "line", "line", "free"])
 			if s.move_path != "walk":
 				s.blocked_by_objects = false
 				s.blocked_by_monsters = false
 				s.blocked_by_surges = false
 				s.ground_costs = false
-			s.ap_cost = 1 if s.move_path == "walk" else 2
+			s.move_range = _pick(rng, [2, 3, 3, 4, 5])
 			s.impact_push = _pick(rng, ["none", "none", "ahead", "ring"]) if s.move_path == "line" else "none"
-			parts.append("path=%s" % s.move_path)
-			parts.append("impact=%s" % s.impact_push)
-			stays = _pick(rng, ["none", "none", "ground"])
-	if stays == "ground":
-		var g: StringName = _pick(rng, GROUNDS)
-		s.board_ops.append(BoardOp.make(BoardOp.GROUND, g))
-		parts.append("stays=ground:%s" % g)
-	elif stays == "zone":
-		var z: StringName = _pick(rng, ZONES)
+			var left: String = _pick(rng, ["none", "none", "none", "ground", "zone"])
+			if left == "ground":
+				ground = _pick(rng, ground_ids(content))
+			elif left == "zone":
+				zone = _pick(rng, any_zone)            # a push zone left behind pushes the way the monster went
+			label = "%s %d" % ["Headbutt" if s.impact_push == "ahead" else ("Quake Leap" if s.impact_push == "ring" else MOVE_NAMES[s.move_path]), s.move_range]
+		"zone":
+			s.kind = BattleSkillDef.GROUND
+			zone = _pick(rng, zones[0])
+			if rng.randf() < 0.25:
+				ground = _pick(rng, ground_ids(content))
+			label = _draw_shape(rng, s, 5, false)   # a free shape: the player turns it, and with it the push
+		"ground":
+			s.kind = BattleSkillDef.GROUND
+			ground = _pick(rng, ground_ids(content))
+			if rng.randf() < 0.3:
+				zone = _pick(rng, zones[1])
+			label = _draw_shape(rng, s, 5)
+		"self":
+			s.kind = BattleSkillDef.BUFF
+			var fx := FieldEffect.new()
+			fx.tag = _pick(rng, SELF_TAGS)
+			fx.base = _pick(rng, [1, 1, 2])
+			fx.cap = fx.base
+			s.buff_effects.append(fx)
+			s.duration = _pick(rng, [1, 2, 2, 3])
+			label = "%s %d" % [String(fx.tag).capitalize(), fx.base]
+		"prop":
+			s.kind = BattleSkillDef.GROUND
+			var pid: StringName = _pick(rng, prop_ids(content))
+			var count: int = _pick(rng, [1, 1, 1, 2, 3])
+			var fp: Array[Vector2i] = []
+			fp.assign(FREE_SHAPES[count][0])
+			s.footprint = fp
+			s.board_ops.append(BoardOp.make(BoardOp.CREATE_PROP, pid))
+			label = content.prop(pid).display_name + ("" if count == 1 else " ×%d" % count)
+	var rounds: int = _pick(rng, [1, 2, 2, 3])
+	if zone != &"" and kind == "zone" and ground == &"":
+		s.kind = BattleSkillDef.ZONE                 # a zone skill proper: a push zone gets its direction from the player
+		s.zone = content.zone(zone)
+		s.duration = rounds
+	elif zone != &"":
 		var op := BoardOp.new()
 		op.op = BoardOp.CREATE_ZONE
-		op.zone = z
+		op.zone = zone
+		op.zone_rounds = rounds
 		s.board_ops.append(op)
-		parts.append("stays=zone:%s" % z)
-	elif stays == "prop":
-		var pr: StringName = _pick(rng, [&"bamboo_stand", &"bronze_gong"])
-		s.board_ops.append(BoardOp.make(BoardOp.CREATE_PROP, pr))
-		s.footprint = [Vector2i(0, 0)] as Array[Vector2i]
-		parts.append("stays=prop:%s" % pr)
-	elif when != "zone":
-		parts.append("stays=none")
-	parts.append("ap=%d" % s.ap_cost)
-	s.description = " · ".join(parts)
-	s.set_meta("parts", parts)
+	if ground != &"":
+		s.board_ops.append(BoardOp.make(BoardOp.GROUND, ground))
+	var made: PackedStringArray = []
+	if ground != &"":
+		made.append(content.ground(ground).display_name)
+	if zone != &"":
+		made.append(content.zone(zone).display_name)
+	if kind == "strike" or kind == "move":
+		label = (" ".join(made) + " " + label).strip_edges()
+	elif kind != "prop" and kind != "self":
+		label = "%s %s" % [" + ".join(made), label]
+	# use: most skills once per turn; some twice, some once per round or battle
+	var use: String = _pick(rng, ["turn", "turn", "turn", "turn", "turn", "turn", "twice", "round", "battle"])
+	match use:
+		"twice":
+			s.usage_limit = 2
+		"round":
+			s.repetition = "once_per_round"
+		"battle":
+			s.repetition = "once_per_battle"
+	if ap > 0:
+		s.ap_cost = ap
+	elif ap == 0:
+		s.ap_cost = rng.randi_range(1, 3)
+	else:
+		s.ap_cost = SkillCalc.fair_ap(content, s)
+	s.set_meta("parts", SkillCalc.part_names(content, s))
+	s.display_name = label
+	s.description = line(content, s)
 	return s
+
+
+## Draws where a skill creates: a free shape of 1 to `most` squares at an anchor (within Reach or next to the
+## user) or a base shape around the user. Returns the words for its name.
+static func _draw_shape(rng: RandomNumberGenerator, s: BattleSkillDef, most: int, around := true) -> String:
+	if around and rng.randf() < 0.3:
+		var drawn: Array = _pick(rng, AROUND_SHAPES)
+		s.shape = drawn[0]
+		s.shape_extension = drawn[1]
+		return BattleShapes.shape_name(s.shape_id(), s.shape_extension)
+	var count := rng.randi_range(1, most)
+	var fp: Array[Vector2i] = []
+	fp.assign(_pick(rng, FREE_SHAPES[count]))
+	s.footprint = fp
+	s.anchor_mode = _pick(rng, ["reach", "reach", "reach", "adjacent"])
+	return "%d%s" % [count, " near" if s.anchor_mode == "adjacent" else ""]
 
 
 const ANCHORS := {"reach": "within Reach", "adjacent": "next to the caster"}
@@ -121,7 +244,7 @@ static func place_words(s: BattleSkillDef) -> String:
 		return "line from the user · %d sq" % s.shape_squares()
 	return "%s around the user · %d sq" % [s.shape_label(), s.shape_squares()]
 const PATHS := {"walk": "walks", "line": "straight line", "free": "any path", "teleport": "any free square"}
-const SELF_EFFECTS := {"quicken": "Pace +0.1", "haste": "Movement +1", "extend": "Reach +1", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)"}
+const SELF_EFFECTS := {"quicken": "Pace +0.1", "haste": "Movement +1", "extend": "Reach +1", "refresh": "Stamina +1 at the round end", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)"}
 const NO := "—"
 
 

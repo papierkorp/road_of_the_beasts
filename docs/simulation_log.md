@@ -54,6 +54,74 @@ Kit sets of the entries below (S019 and later). Entries S001–S018 measured rul
 
 # Entries
 
+## S032 · 2026-11-16 · What the parts of a skill are worth: random kits of generated skills, a first price list and its check
+
+**State:** main, base `f81f250` dirty; Godot 4.7.2; runs in parallel on a frozen copy of the working tree. Content fingerprint `f206e96918c5` (series 1) and `3c1b2fd9e587` (series 2, with the experiment content of T43 and the fitted price list). Full suite on the final state: 373 cases, the two known non-battle failures.
+
+**Tool:** `godot/tools/skill_impact.gd` ([tools/README.md](../godot/tools/README.md)). 3v3 on the default board, bot `plan` on both sides with the try bonus (`ai_try_all`). Both teams field the same three species; every monster draws a kit template (so many Strikes, movements, zones, grounds, props) and gets skills generated for the battle; a kit loses 0–2 of its six skills. **Every pairing is played twice with the kits swapped between the sides.** A least-squares fit over all parts at once (ridge 1.0) reads what one unit of a part adds to the win rate; a Jab, walking and “a placed skill” are the baseline the others are read against.
+
+| Series | AP of a skill | Extra | Battles | Side 0 won | Mean rounds | Under 3 rounds | Over 5 rounds |
+|---|---|---|---|---|---|---|---|
+| 1 | random 1–3 | — | 60 000 | 48.6 % | 4.40 | 5 146 (9 %) | 10 845 (18 %) |
+| 2a | from the price list of series 1 | self buffs, experiment content | 15 000 | 48.4 % | 4.19 | 1 677 (11 %) | 2 269 (15 %) |
+| 2b | random 1–3 | self buffs, experiment content, `stamina_base=1`, `trap_defuse=1` | 15 000 | 48.9 % | 4.94 | 533 (4 %) | 4 186 (28 %) |
+
+**Series 1, win rate per unit of a part (points; ± one standard error):**
+
+| Part | Win rate | ± | Used at least once | Note |
+|---|---|---|---|---|
+| 1 AP of cost | −2.10 | 0.04 | — | AP 1: used in 81 % of fieldings, AP 2: 61 %, AP 3: 31 % |
+| 1 damage of a Strike | +3.60 | 0.16 | — | |
+| push of a Strike | +2.00 | 0.22 | — | |
+| a further square of a Strike, ground, zone or prop skill | −0.12 to +0.10 | 0.04–0.09 | — | no measurable value for the bots |
+| a Strike at all (against a placed skill) | +1.40 | 0.38 | 56 % | |
+| a movement at all | +6.19 | 0.23 | 79 % | |
+| landing: pushes all neighbours | +6.23 | 0.28 | 86 % | 0.92 damage per use |
+| landing: pushes the monster ahead | +1.64 | 0.28 | 83 % | |
+| range above 2, per square | +0.40 | 0.07 | — | |
+| path: line / free (against walking) | +0.13 / −1.00 | 0.31 | 83 % / 78 % | |
+| shape: Jab +2 / Arc +1 / Jab +1 (against a Jab) | +5.32 / +4.40 / +3.27 | 0.3–0.5 | 67–72 % | |
+| shape: Arc / Storm / Pincer / Whirl / Cross | +1.31 / +1.07 / −0.79 / −1.12 / −2.71 | 0.3–0.7 | 33–60 % | Cross used in 33 % |
+| ground: Mossbed, Snare / Blight / Lava / Thornbed | +3.5 / +2.6 / +2.0 / +1.5 | 0.2 | 55–58 % | |
+| zone: Bog, Void Pull, Gale, Shockwave / Tailwind / Slowing / Mire | +2.4 to +2.6 / +1.6 / +1.4 / +1.0 | 0.2–0.4 | 51–62 % | |
+| prop: Clay Urn / Thorn Idol / Ember Brazier / Bamboo Stand | +5.3 / +4.9 / +4.7 / +4.5 | 0.34 | 55–65 % | |
+| prop: the other eleven | +2.5 to +3.8 | 0.34 (traps 0.65) | 45–58 % | |
+| a ground or zone left by a Strike / by a movement | −2.65 / −2.54 | 0.16 | — | worth less than the same thing placed by a skill of its own |
+| use: twice a turn / once a round / once a battle (against once a turn) | +0.43 / +0.24 / −1.31 | 0.11 | — | |
+| zone rounds above 1, per round | +0.18 | 0.09 | — | |
+
+**Combinations in one kit** (points of the price list, 10 = 1 AP; on top of the parts): movement with a landing push together with a hazard +6.7 ± 1.6, with a solid prop +6.6 ± 1.4, with a pushing Strike +4.0 ± 1.9; push with a hazard +3.6 ± 1.7; hazard with a trap +3.5 ± 2.4. Below zero: push with an area Strike −4.7 ± 1.8, hazard with a solid prop −4.5 ± 1.5, hazard with an area Strike −3.2 ± 1.6, hazard with slow −3.1 ± 1.7. The other 19 pairs lie within ±2.6.
+
+**Price list (draft, `godot/battle/defs/skill_calc.gd`):** points = 10 × win rate of the part ÷ win rate one AP takes; zero point: a Jab with 2 damage and a push is 20 points (its 2 AP). Grounds, zones, props and shapes are pulled toward the mean of their group by the share of noise in their spread. On that scale one placed square is worth 7–24 points before the offset of its kind (−30.5), so **every ground, zone and prop skill comes out below the price of 1 AP** and gets the floor of 1 AP.
+
+**Series 2a, the check (what is left over when the skills cost the AP of the list; 0 would be a fair list):** Jab +2 −7.5 ± 0.7, landing push on all neighbours −5.9 ± 0.6, Arc +1 −4.6 ± 1.1, Jab +1 −4.1 ± 0.6, Cross −3.8 ± 0.8 (the list priced them too high: at 3–4 AP the bots use them in 35–53 % of fieldings); 1 damage still +1.1 ± 0.35; a Strike +6.8 and a movement +6.0 against a placed skill (all three at the 1 AP floor or above; the placed skills cannot go lower). Grounds −0.5 to +2.0, zones −0.8 to +0.9, props −4.4 (Vortex Trap) to +4.1 (Clay Urn). With the price list the placed skills are used more often (68–75 % against 47–51 %).
+**Fine-tuning after 2a:** half of the left-over taken off Jab +1, Jab +2, Arc +1, Cross and the landing push on all neighbours, half added to damage, zero point restored. Not measured again.
+
+**Series 2b, experiment content and switches** (same reading as series 1; 1 AP takes 1.96 ± 0.08):
+
+| Part | Win rate | ± | Note |
+|---|---|---|---|
+| ground Shifting Sand | +2.93 | 0.44 | level with Mossbed (+2.96) |
+| ground Springwater | +1.51 | 0.43 | level with Blight and Lava (+1.6, +1.4) |
+| zone Erosion | +2.15 | 0.49 | level with Void Pull and Bog |
+| zone Updraft | +1.30 | 0.54 | |
+| a self buff at all | +3.98 | 0.74 | used in 64 % of fieldings |
+| per point of quicken / haste / extend / refresh | −0.88 / −0.36 / −0.88 / −0.10 | 0.53 | no value of the effect itself for the bots |
+| path: line / free (against walking), with a Stamina base cost of 1 | −1.24 / −2.67 | 0.66 | series 1: +0.13 / −1.00 |
+| a movement at all, with the base cost | +6.14 | 0.45 | series 1: +6.19; used in 71 % against 79 % |
+
+Battles of 2b are longer than those of series 1 (4.94 against 4.40 rounds; 4 % under 3 against 9 %); the series switches four things at once, so the share of the Stamina base cost is not separated. Trap burying: a kit with a trap and a solid prop reads +12.9 ± 4.9 points against +1.3 ± 2.2 in series 1; one series, wide error.
+
+**Observations** (indications; bots only):
+
+- *Damage and tempo decide for the bots:* a point of Strike damage, a movement skill and the landing push are worth more than any placed thing; a further square of any shape is worth nothing measurable. The bots do not aim an area, do not plan around ground and do not budget Stamina, so the low value of placed skills and of extra squares is as much a statement about the bots as about the skills.
+- *A linear AP price does not hold above 2 AP:* a skill at 3 AP is used in 31 % of fieldings; the check series shows the expensive shapes overpriced.
+- *The experiment content plays like its neighbours;* none of the four board ideas stands out, and the Stamina effects of Springwater, Updraft and Deep Breath show no value of their own.
+
+**Follow-up:** T02 (price form, the floor of 1 AP for placed skills, AP above 2), T10, T43. No rule and no content value was changed by this entry; the price list is a draft in the build.
+
+About 90 000 battles in 60 runs.
+
 ## S031 · 2026-11-15 · After the shape merge: the board rows of S030 again, with the battles under 3 and over 5 rounds
 
 **State:** main, base `6573a05` dirty; content `2026-11-15.1`, kit set `953ee09679e4`; Godot 4.7.2, normal CPU settings (processes at nice 10), runs in parallel on a frozen copy of the working tree. Full suite on that state: 355 cases, 0 failures in `tests/battle` and `tests/game`, the two known non-battle failures.

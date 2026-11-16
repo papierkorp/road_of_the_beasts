@@ -73,6 +73,9 @@ static func lay_ground(b: Battle, cell: BoardCell, ground: StringName, source :=
 	if out != &"kept" and out != &"immutable":
 		b.emit(&"ground_changed", {"pos": cell.pos, "ground": cell.ground, "level": cell.level,
 			"result": out, "source": source})
+		var now := b.content.ground(cell.ground)
+		if now != null and now.no_props and cell.prop != null and cell.prop.hp > 0:
+			damage_prop(b, cell.prop, cell.prop.hp)       # experiment: this ground takes no prop; the caller's removal step clears it
 	return out
 
 
@@ -115,17 +118,35 @@ static func destroy_mountain(b: Battle, cell: BoardCell, keep_ground: bool) -> b
 static func can_place_prop(b: Battle, def: PropDef, p: Vector2i) -> bool:
 	if def == null or not b.board.in_bounds(p):
 		return false
+	var ground := b.content.ground(b.board.at(p).ground)
+	if ground != null and ground.no_props:
+		return false
 	for layer in [Board.GROUND, Board.AIR]:
 		if not def.occupies(layer):
 			continue
-		if b.board.prop_at(p, layer) != null or b.board.unit_id_at(p, layer) != &"":
+		var there := b.board.prop_at(p, layer)
+		if (there != null and not defuses(def, there)) or b.board.unit_id_at(p, layer) != &"":
 			return false
 	return true
+
+
+## Test switch `trap_defuse`: a solid prop takes the square of a trap and removes it unsprung.
+static func defuses(def: PropDef, there: BoardProp) -> bool:
+	return BattleExperiment.trap_defuse and def.solid and there != null and there.hp > 0 and there.def.is_trap()
+
+
+## Removes the trap a solid prop comes onto (`trap_defuse`); it does not act.
+static func defuse_at(b: Battle, def: PropDef, p: Vector2i) -> void:
+	var there := b.board.prop_at(p, Board.GROUND)
+	if defuses(def, there):
+		b.board.remove_prop(there)
+		b.emit(&"trap_defused", {"pos": p, "prop": there.def.id, "by": def.id})
 
 
 static func place_prop(b: Battle, def: PropDef, p: Vector2i) -> BoardProp:
 	if not can_place_prop(b, def, p):
 		return null
+	defuse_at(b, def, p)
 	var prop := BoardProp.new(b.next_prop_uid(), def, p)
 	b.board.put_prop(prop)
 	b.emit(&"prop_placed", {"pos": p, "prop": def.id})

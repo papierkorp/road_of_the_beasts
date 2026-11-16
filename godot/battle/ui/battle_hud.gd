@@ -11,7 +11,7 @@ signal restart_pressed
 signal resume_pressed
 signal menu_pressed
 
-const LOG_LINES := 6
+const LOG_LINES := 8
 ## Action bar (user layout 2026-11-15): Step stands over both rows, then a small gap, then the kit in columns of
 ## two buttons; the side's tamer skills have a panel of their own beside the monster's bar.
 const BAR_BUTTON := Vector2(118, 66)       # 66: what a button with its two text lines needs
@@ -44,6 +44,7 @@ var _hover_id: StringName = &""
 var _preview_panel: PanelContainer
 var _preview: Label
 var _log_box: VBoxContainer
+var _fallen_box: HFlowContainer
 var _banner: Control
 var _banner_text: Label
 var _banner_restart: Button
@@ -100,12 +101,21 @@ func _build_log(root: Control) -> void:
 	_log_box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	_log_box.offset_left = 24
 	_log_box.offset_right = 520
-	_log_box.offset_top = -(BAR_ROOM + 164.0)
+	_log_box.offset_top = -(BAR_ROOM + 200.0)
 	_log_box.offset_bottom = -BAR_ROOM
 	_log_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
 	_log_box.alignment = BoxContainer.ALIGNMENT_END
 	_ignore(_log_box)
 	root.add_child(_log_box)
+	_fallen_box = HFlowContainer.new()            # fallen monsters, each a button to its HP history
+	_fallen_box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_fallen_box.offset_left = 24
+	_fallen_box.offset_right = 520
+	_fallen_box.offset_top = -(BAR_ROOM + 244.0)
+	_fallen_box.offset_bottom = -(BAR_ROOM + 208.0)
+	_fallen_box.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	_fallen_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_fallen_box)
 
 
 ## The monster's bar (AP · Step · kit · End Turn) and, apart from it, the panel of the side's tamer skills.
@@ -472,6 +482,25 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 		pos.x = minf(pos.x, vp.x - _preview_panel.size.x - 8.0)
 		pos.y = minf(pos.y, vp.y - _preview_panel.size.y - BAR_ROOM - 4.0)
 		_preview_panel.position = pos
+
+
+## Adds a fallen monster to the row above the log: a button that opens everything that changed its HP.
+func add_fallen(title: String, lines: PackedStringArray) -> void:
+	var button := Button.new()
+	button.text = "✝ " + title
+	button.tooltip_text = "Why did %s fall? Click for everything that changed its HP." % title
+	button.add_theme_font_size_override("font_size", 13)
+	button.focus_mode = Control.FOCUS_NONE
+	button.pressed.connect(func() -> void:
+		var dialog := AcceptDialog.new()
+		dialog.title = "%s: what happened" % title
+		dialog.dialog_text = "\n".join(lines)
+		dialog.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(dialog)
+		dialog.confirmed.connect(dialog.queue_free)
+		dialog.canceled.connect(dialog.queue_free)
+		dialog.popup_centered())
+	_fallen_box.add_child(button)
 
 
 func log_line(text: String) -> void:

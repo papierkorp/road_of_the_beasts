@@ -239,4 +239,4 @@ static func phases(u: BattleUnit) -> bool:
 static func recovery(b: Battle, u: BattleUnit) -> int:
 	if BattleExperiment.stamina_regen > 0:
 		return BattleExperiment.stamina_regen
-	return maxi(1, floori(pace(b, u) + 0.0001))
+	return maxi(1, floori(pace(b, u) + 0.0001)) + total(b, u, FieldEffect.REFRESH)

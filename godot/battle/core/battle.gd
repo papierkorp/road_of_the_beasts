@@ -190,7 +190,7 @@ func usage_error(u: BattleUnit, slot: int) -> String:
 		return "%s is switched off (test switch: no shield zones)" % s.display_name
 	if BattleExperiment.once_per_turn and s.usage_limit > 0 and int(u.used_turn.get(slot, 0)) >= s.usage_limit:
 		return ("%s was already used this turn" if s.usage_limit == 1 else "%s has no uses left this turn") % s.display_name
-	if s.uses_stamina() and u.stamina <= 0:
+	if s.uses_stamina() and u.stamina <= BattleExperiment.stamina_base:
 		return "%s needs Stamina, none left" % s.display_name
 	match s.repetition:
 		"once_per_round":
@@ -440,7 +440,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 			var tired := 0                           # Stamina: what the route costs (the movement cost of every square, BattleMoves.options)
 			if s.uses_stamina():
 				var reach := BattleMoves.options(self, u, BattleMoves.profile_of(s))
-				tired = int(reach[a["to"]]["cost"]) if reach.has(a["to"]) else 1
+				tired = (int(reach[a["to"]]["cost"]) if reach.has(a["to"]) else 1) + BattleExperiment.stamina_base
 			var trail: Array[Vector2i] = []
 			if not s.board_ops.is_empty():            # a movement that leaves something on its path
 				var route: Array = a.get("path", [])

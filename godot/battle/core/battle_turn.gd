@@ -219,6 +219,7 @@ static func _end_round(b: Battle) -> void:
 			BattleDamage.ground_triggers(b, ru, Moment.ROUND_END)
 	if b.check_over():
 		return
+	_zones_wear_props(b)
 	BattleProps.round_end(b, false)
 	if b.check_over():
 		return
@@ -586,6 +587,21 @@ static func discharge_veins(b: Battle, u: BattleUnit) -> void:
 
 ## A prop has no turn, so the push and pull zones move the props standing in them once, at the end
 ## of the round, after the round-end ground and before the round-end operations of props.
+## Experiment (FieldEffect.ERODE): a zone that wears props down deals its damage to every prop standing in it.
+static func _zones_wear_props(b: Battle) -> void:
+	var worn := false
+	for prop in b.board.props():
+		var cell := b.board.at(prop.pos)
+		if prop.hp <= 0 or cell == null or cell.zone == null:
+			continue
+		var e := cell.zone.def.effect(FieldEffect.ERODE)
+		if e != null:
+			BattleBoardOps.damage_prop(b, prop, e.value_at(cell.zone.level))
+			worn = true
+	if worn:
+		BattlePayload.settle(b)
+
+
 static func _zones_move_props(b: Battle) -> void:
 	var entries: Array = []
 	for prop in b.board.props():

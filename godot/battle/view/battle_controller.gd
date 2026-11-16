@@ -831,6 +831,8 @@ func _on_event(e: Dictionary) -> void:
 		&"healed":
 			var t2: BattleUnit = battle.units[e["target"]]
 			view.floating_text(t2.pos, "+%d" % e["amount"], Color(0.5, 0.95, 0.6))
+		&"defeated":
+			hud.add_fallen(BattleText.unit_name(battle, e["who"]), BattleText.hp_history_lines(battle, e["who"]))
 		&"battle_over":
 			GameSession.last_result = BattleSetup.make_result(battle)
 	if e["type"] in [&"turn_started", &"turn_ended", &"zone_changed", &"effect_refreshed", &"queue_changed", &"swapped", &"protected"]:

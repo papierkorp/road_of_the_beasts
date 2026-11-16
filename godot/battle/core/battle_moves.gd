@@ -38,7 +38,7 @@ static func distance(b: Battle, u: BattleUnit, prof: Dictionary) -> int:
 	if BattleExperiment.stamina and prof.has("range"):      # the range stands on the skill; haste and slow still count
 		var base: int = int(prof["range"]) if int(prof["range"]) > 0 else 3
 		var reach: int = int(prof["fixed"]) if int(prof["fixed"]) > 0 else maxi(1, base + BattleStats.movement(b, u) - u.sheet.movement + int(prof["distance_mod"]))
-		return mini(reach, u.stamina)                      # every movement point costs 1 Stamina
+		return mini(reach, u.stamina - BattleExperiment.stamina_base)   # every movement point costs 1 Stamina (test switch: plus a base cost per use)
 	if int(prof["fixed"]) > 0:
 		return int(prof["fixed"])
 	return maxi(1, BattleStats.movement(b, u) + int(prof["distance_mod"]))

@@ -53,9 +53,16 @@ static func ground_brief(g: GroundDef, level := 1) -> String:
 	if g.move_cost > 1:
 		parts.append("move cost %d" % g.move_cost)
 	for t in g.triggers:
-		parts.append("%s %s" % ["heal %d" % t.value_at(level) if t.kind == "heal" else "%d dmg" % t.value_at(level), TIMING.get(t.timing, t.timing)])
+		var does := "%d dmg" % t.value_at(level)
+		if t.kind == "heal":
+			does = "heal %d" % t.value_at(level)
+		elif t.kind == "stamina":
+			does = "Stamina +%d" % t.value_at(level)
+		parts.append("%s %s" % [does, TIMING.get(t.timing, t.timing)])
 	if not g.effects.is_empty():
 		parts.append(effects_text(g.effects, level))
+	if g.no_props:
+		parts.append("takes no prop")
 	return SEP.join(parts)
 
 
@@ -153,6 +160,10 @@ static func effect_words(e: FieldEffect, level := 1) -> String:
 			return "AP −%d" % v
 		FieldEffect.TEMPO:
 			return "+%d turn next round" % v
+		FieldEffect.REFRESH:
+			return "Stamina +%d at the round end" % v
+		FieldEffect.ERODE:
+			return "props take %d at the round end" % v
 	return e.text(level)
 
 
@@ -384,9 +395,98 @@ static func cell_rows(b: Battle, p: Vector2i) -> Array:
 
 # ---------- log ----------
 
+## What kind of damage it was, where the source does not say it.
+const DAMAGE_KIND := {"ground": "ground", "collision": "collision", "aftermath": "prop", "arena": "late-round pressure",
+	"well": "Dragon Vein", "flank": "surrounded", "fall": "fall", "collapse": "collapse", "surge": "Surge"}
+
+
+## One damage event in words: "Jab by Gloom Wolf −2", "Lava (ground) −1", "Collision −1".
+static func damage_words(b: Battle, e: Dictionary) -> String:
+	var source := String(e.get("source", ""))
+	var kind: String = DAMAGE_KIND.get(String(e.get("kind", "")), "")
+	var text := source if source != "" else kind.capitalize()
+	if kind != "" and source != "" and source.to_lower() != kind and not (kind == "collision" or kind == "well" or kind == "flank" or kind == "fall"):
+		text += " (%s)" % kind
+	var by: StringName = e.get("by", &"")
+	if by != &"" and by != e["target"]:
+		text += " by %s" % unit_name(b, by)
+	return "%s %s" % [text, "blocked" if int(e["amount"]) == 0 else "−%d" % int(e["amount"])]
+
+
+## Everything that changed the HP of a monster, in order: rows [round, whose turn it was, what happened, HP after].
+## `upto` = only the first so many events of the battle (-1 = all).
+static func hp_history(b: Battle, id: StringName, upto := -1) -> Array:
+	var out: Array = []
+	var u: BattleUnit = b.units.get(id)
+	if u == null:
+		return out
+	var hp := u.max_hp if u.sheet.current_hp < 0 else u.sheet.current_hp
+	var round_no := 1
+	var turn := ""
+	var n := b.events.size() if upto < 0 else mini(upto, b.events.size())
+	for i in n:
+		var e: Dictionary = b.events[i]
+		match e["type"]:
+			&"round_started":
+				round_no = int(e["round"])
+				turn = "round start"
+			&"turn_started":
+				turn = "%s's turn" % unit_name(b, e["who"])
+			&"turn_ended":
+				turn = "end of %s's turn" % unit_name(b, e["who"])
+			&"props_acted", &"wells_held":
+				turn = "round end"
+			&"damage":
+				if e["target"] == id:
+					hp -= int(e["amount"])
+					out.append([round_no, turn, damage_words(b, e), hp])
+			&"healed":
+				if e["target"] == id and int(e["amount"]) > 0:
+					hp = mini(u.max_hp, hp + int(e["amount"]))
+					out.append([round_no, turn, "%s +%d" % [e.get("source", "healed"), int(e["amount"])], hp])
+			&"survived":
+				if e["target"] == id:
+					hp = 1
+					out.append([round_no, turn, "Life Thread: survives", hp])
+			&"defeated":
+				if e["who"] == id:
+					out.append([round_no, turn, "defeated", 0])
+	return out
+
+
+## The history as text lines: "Round 3 · Gloom Wolf's turn · Jab by Gloom Wolf −2 · 1 HP".
+static func hp_history_lines(b: Battle, id: StringName) -> PackedStringArray:
+	var out: PackedStringArray = []
+	for row: Array in hp_history(b, id):
+		out.append("Round %d%s%s%s%s%s" % [row[0], SEP, row[1], SEP, row[2], "" if row[2] == "defeated" else "%s%d HP" % [SEP, maxi(0, row[3])]])
+	return out
+
+
+## Why a monster fell: the hit that did it and what else it took in that round.
+## "Blaze Tiger falls: Lava (ground) −1. Earlier this round: Jab by Gloom Wolf −2, Collision −1."
+static func defeat_line(b: Battle, id: StringName) -> String:
+	var rows := hp_history(b, id).filter(func(r: Array) -> bool: return r[2] != "defeated")
+	var name := unit_name(b, id)
+	if rows.is_empty():
+		return "%s falls" % name
+	var last: Array = rows[rows.size() - 1]
+	var earlier: PackedStringArray = []
+	for i in rows.size() - 1:
+		if rows[i][0] == last[0] and String(rows[i][2]).contains("−"):
+			earlier.append(rows[i][2])
+	var text := "%s falls: %s (%s)" % [name, last[2], last[1]]
+	if not earlier.is_empty():
+		text += ". Earlier this round: " + ", ".join(earlier)
+	return text
+
+
 ## One log line for an event, or "" if the event is not worth a line.
 static func event_line(b: Battle, e: Dictionary) -> String:
 	match e["type"]:
+		&"defeated":
+			return defeat_line(b, e["who"])
+		&"damage":
+			return "%s: %s" % [unit_name(b, e["target"]), damage_words(b, e)]
 		&"round_started":
 			var first: String = unit_name(b, e["queue"][0]) if not (e["queue"] as Array).is_empty() else "nobody"
 			return "Round %d — %s first" % [e["round"], first]
@@ -467,6 +567,10 @@ static func brief(b: Battle, e: Dictionary) -> String:
 			return "%s takes a Dragon Vein" % unit_name(b, e["who"])
 		&"trap_sprung":
 			return "%s springs %s" % [unit_name(b, e["who"]), _prop_name(b, e["prop"])]
+		&"trap_defused":
+			return "%s buried under %s" % [_prop_name(b, e["prop"]), _prop_name(b, e["by"])]
+		&"stamina_recovered":
+			return "%s Stamina +%d" % [unit_name(b, e["who"]), e["amount"]]
 		&"prop_placed":
 			return "+ %s" % _prop_name(b, e["prop"])
 		&"mountain_raised":

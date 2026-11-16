@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3"]
+
+[sub_resource type="Resource" id="f1"]
+script = ExtResource("2")
+tag = "refresh"
+base = 2
+cap = 2
+
+[resource]
+script = ExtResource("3")
+id = &"deep_breath"
+display_name = "Deep Breath"
+kind = "buff"
+description = "EXPERIMENT · 1 AP · self · recovers 2 more Stamina at the end of this round and the next."
+content_status = "experiment"
+status = "user idea 2026-11-16 (Stamina recovery as a self buff); experiment, not priced"
+duration = 2
+buff_effects = Array[ExtResource("2")]([SubResource("f1")])

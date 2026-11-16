@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="2"]
+
+[sub_resource type="Resource" id="t1"]
+script = ExtResource("2")
+kind = "stamina"
+amount = 1
+
+[resource]
+script = ExtResource("1")
+id = &"springwater"
+display_name = "Springwater"
+content_status = "experiment"
+group = "blessed"
+triggers = Array[ExtResource("2")]([SubResource("t1")])
+color = Color(0.45, 0.7, 0.85, 1)
+description = "EXPERIMENT · Gives 1 Stamina back when you enter the square, never above the pool. No re-entry limit."

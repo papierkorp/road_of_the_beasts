@@ -208,7 +208,7 @@ A movement may leave ground or a zone on the squares it left. Concrete movement 
 
 ## 7. Value and Prices
 
-**No skill, ground, zone or prop has a price,** and nothing checks a monster against a skill budget. Skill and stat calculation are found through play, together with the rules. The skills of [content.md](content.md) are examples; their AP costs are not settled.
+**Status: draft.** A skill calculation in the manner of the monster calculation ([monsters.md §2](monsters.md#2-stats)) is being worked out, so that skills come out about equally strong: every part of a skill card has a price in points, the sum is what the skill is worth, and a fixed number of points is what 1 AP pays for. No price is settled, and nothing checks a monster against a skill budget. The skills of [content.md](content.md) are examples; their AP costs are not settled.
 
 Principles:
 

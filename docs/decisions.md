@@ -98,6 +98,8 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-15 | Kit requirement | “A skill that pushes or pulls” holds for the kits the bots play | — | — | [content.md §5](content.md#5-the-nine-monsters) |
 | 2026-11-15 | Skill costs | The present skills and their AP costs are examples; a Jab need not cost 2 AP | — | — | [skills.md §7](skills.md#7-value-and-prices) |
 | 2026-11-15 | Kits | Six skills and a balanced kit for each of the nine monsters | — | — | [content.md §5](content.md#5-the-nine-monsters) |
+| 2026-11-16 | Kit templates as a test switch | The multiplayer mode gets random kits by a template that names no skill, only how many skills of each kind a kit holds; the kinds are Strike, movement, zone, ground and prop; every monster draws a template of its own. A second switch builds the kits from skills generated for the battle | prop skills left out of the templates; one template for all monsters of a battle | props get measured and priced too; more different kits per battle | [godot/README.md](../godot/README.md) |
+| 2026-11-16 | How skill prices are found | A skill calculation in the manner of the monster calculation, so that skills come out about equally strong. Its first prices come from bot runs with random kits of generated skills; what a part is worth is read from the win rate with swapped sides together with what a use does at once (damage, displacement, uses). Fine-tuning follows by play | the win rate alone | the win rate alone is too noisy in 3v3 | [skills.md §7](skills.md#7-value-and-prices) |
 
 ## Overworld
 

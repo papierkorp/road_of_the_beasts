@@ -25,6 +25,9 @@ const DELAY_GAIN := 3.0
 const DANGER_LETHAL := 0.6
 const DANGER_HIT := 3.5
 const DANGER_ENEMY := 0.25
+## ai_try_all: score points a skill gets as long as its monster has not used it in this battle (a point of
+## damage counts 10). Enough to play a skill whose use the evaluation cannot see, too little to give up a hit.
+const TRY_BONUS := 2.5
 
 
 ## Every legal action of the active unit except ending the turn.
@@ -313,7 +316,7 @@ static func _tag_cost(tag: String, value: float, u: BattleUnit) -> float:
 			return 1.5 * value
 		"drain_pace":                             # a Pace point weighs double: it was 2.0 on the scale before 2026-11-15
 			return 3.0 * value
-		"haste", "extend", "shield":
+		"haste", "extend", "shield", "refresh":
 			return (-0.3 if BattleExperiment.ai_aggressive else -1.0) * value
 		"quicken":
 			return (-0.6 if BattleExperiment.ai_aggressive else -2.0) * value
@@ -334,7 +337,7 @@ static func decide(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 		var sim := b.clone()
 		if not sim.apply(a, true):
 			continue
-		var gain := evaluate(sim, u.side) - base
+		var gain := evaluate(sim, u.side) - base + try_bonus(u, a)
 		if gain > best_gain + 0.001:
 			best_gain = gain
 			best = [a]
@@ -347,6 +350,13 @@ static func decide(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 	if best.is_empty():
 		return {"type": &"end_turn"}
 	return best[rng.randi_range(0, best.size() - 1)]
+
+
+## Test switch `ai_try_all`: what using a slotted skill for the first time in this battle is worth.
+static func try_bonus(u: BattleUnit, a: Dictionary) -> float:
+	if not BattleExperiment.ai_try_all or a.get("type") != &"skill":
+		return 0.0
+	return 0.0 if u.used_battle.has(int(a["slot"])) else TRY_BONUS
 
 
 ## Test switch `ai_hunt`: the movement actions that bring the active unit closest to an enemy

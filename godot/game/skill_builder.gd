@@ -240,6 +240,12 @@ func _show(s: BattleSkillDef) -> void:
 	if s.zone != null:
 		lines.append("")
 		lines.append("[color=#8a93a3]Zone %s[/color]   %s" % [s.zone.display_name, BattleText.effects_text(s.zone.effects)])
+	var calc := SkillCalc.table(_content, s)
+	if not calc.is_empty():                       # the draft calculation: what the parts are worth
+		lines.append("")
+		lines.append("[color=#8a93a3]Calculation (draft)[/color]")
+		for row: Array in calc:
+			lines.append("  %s   %s" % [row[0], row[1]])
 	lines.append("")
 	lines.append("[color=#8a93a3]Card text in battle[/color]")
 	for r in BattleText.skill_rows(_content, s):
@@ -252,7 +258,7 @@ func _show(s: BattleSkillDef) -> void:
 
 func _on_random() -> void:
 	_random_count += 1
-	_built = SkillGen.draw_named(_content, _rng, _rng.randi_range(0, 3))
+	_built = SkillGen.draw_named(_content, _rng, _rng.randi_range(0, SkillGen.KINDS.size() - 1))
 	_built.display_name = "Random %d" % _random_count
 	_built.id = StringName("random_%d_%d" % [_random_count, _rng.randi_range(100, 999)])
 	_built.status = "drawn in the skill builder (gdd_skills §2 sentence); experiment, not priced"

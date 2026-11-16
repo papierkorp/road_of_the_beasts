@@ -27,6 +27,9 @@ const WELL := &"dragon_vein"
 @export var max_level: int = 1
 ## Nothing changes this ground (Voidscar).
 @export var immutable: bool = false
+## Experiment of 2026-11-16 (user idea, no rule): no prop can be on this ground. None can be created on it, a
+## prop standing where it is laid breaks, and a prop pushed onto it breaks.
+@export var no_props: bool = false
 @export var triggers: Array[GroundTrigger] = []
 ## Effects for whoever stands on it (Hearth: quicken 1, Umbra: extend 1, Hallowed: shield 1).
 @export var effects: Array[FieldEffect] = []

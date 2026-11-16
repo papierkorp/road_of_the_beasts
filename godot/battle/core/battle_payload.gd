@@ -158,7 +158,7 @@ static func _phase_damage(b: Battle, payloads: Array) -> void:
 				b.emit(&"strike", {"who": p["owner"], "skill": skill.id, "cells": p["cells"].duplicate(), "dir": p["dir"]})
 				if skill.strike_damage > 0:
 					for id: StringName in p["units"]:
-						hits.append({"unit": id, "base": skill.strike_damage, "type": BattleDamage.STRIKE, "source": p["label"]})
+						hits.append({"unit": id, "base": skill.strike_damage, "type": BattleDamage.STRIKE, "source": p["label"], "by": p["owner"]})
 					for uid in p["props"]:
 						prop_hits.append([p["props"][uid], int(kin.get("prop_damage", KinRules.STRIKE_PROP_DAMAGE))])
 			"surge":
@@ -335,6 +335,8 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 				var c := b.board.at(cell)
 				if c.prop == null and not c.is_mountain() and not p["destroyed"].has(cell) and not BattleExperiment.well_squares(b.board.size).has(cell):
 					BattleBoardOps.lay_ground(b, c, BattleExperiment.surge_ground, p["label"])
+	if _has_dead_props(b):                        # experiment: ground that takes no prop broke the props standing on it
+		_phase_board(b, [])
 
 
 static func _has_dead_props(b: Battle) -> bool:

@@ -127,6 +127,24 @@ static var board_size := 0
 ## Board switch (user idea, 2026-11-15): mirrored pairs of "button" squares the board starts with: walkable
 ## rune props without damage that act on the board when a monster collects them (0 = none).
 static var map_buttons := 0
+## Idea of 2026-11-16 (to try and to measure, no rule): a movement skill costs this much Stamina for its use,
+## on top of the Stamina for every square. 0 = the rule: squares only.
+static var stamina_base := 0
+## Idea of 2026-11-16 (no rule): a solid prop that is created on or pushed onto a trap removes the trap
+## without springing it and takes its square. false = the build rule: a trap square takes no other prop.
+static var trap_defuse := false
+## Kit switch of the multiplayer mode (user request 2026-11-16): every monster of a battle plays a random
+## kit by a kit template (KitDraw: so many Strikes, movement, zone, ground and prop skills), drawn from the
+## skills of the game. Its own kit is not used.
+static var random_kits := false
+## Kit switch: the random kits are made of skills generated for this battle (SkillGen.draw_kind) instead
+## of the game's own. Implies random kits.
+static var fresh_skills := false
+## Seed of the kit draw; the draft screen draws a new one for every battle.
+static var kit_seed := 0
+## The opponent's AI prefers a skill it has not used in this battle, as long as the use costs it nothing
+## (AiBrain.TRY_BONUS), so every skill of a kit gets played.
+static var ai_try_all := false
 
 
 static func reset() -> void:
@@ -172,6 +190,12 @@ static func reset() -> void:
 	map_props = -1
 	map_buttons = 0
 	board_size = 0
+	stamina_base = 0
+	trap_defuse = false
+	random_kits = false
+	fresh_skills = false
+	kit_seed = 0
+	ai_try_all = false
 
 
 ## The Dragon Vein squares of a board of this size (`wells` of them; none on boards smaller than 7×7).
