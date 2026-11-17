@@ -42,6 +42,9 @@ const PASSIVE := "passive"
 ## Uses per turn of its monster (build rule since 2026-11-14: 1; 0 = no limit). A higher value is an
 ## upgrade axis of the skill (draft, no price yet). The universal Step is not slotted and has no limit.
 @export var usage_limit: int = 1
+## Test switch `skill_stamina`: the Stamina a Strike costs beside its AP. -1 = by its shape: 2 for an
+## extended shape and for a Cross, 1 for every other. Only Strikes pay it.
+@export var stamina_cost: int = -1
 
 @export_group("Shape and place")
 ## The one shape of the skill (BattleShapes, gdd_skills §8.1; user decision 2026-11-15):
@@ -152,6 +155,27 @@ const PASSIVE := "passive"
 
 func is_active() -> bool:
 	return kind != PASSIVE
+
+
+## Test switch `strike_push_only` (user idea 2026-11-17): Strikes deal no damage to monsters and only push.
+## The Basic Jab is the exception: it keeps its damage.
+func push_only() -> bool:
+	return BattleExperiment.strike_push_only and kind == STRIKE and id != &"basic_jab"
+
+
+## The damage a Strike deals to a monster (props always take the Strike as its card says).
+func monster_damage() -> int:
+	return 0 if push_only() else strike_damage
+
+
+## Test switch `skill_stamina`: the Stamina one use of a Strike costs; 0 without the switch and for every
+## other kind (a movement skill pays its squares, what is placed on the board and a buff cost AP only).
+func stamina_price() -> int:
+	if not BattleExperiment.skill_stamina or not BattleExperiment.stamina or kind != STRIKE:
+		return 0
+	if stamina_cost >= 0:
+		return stamina_cost
+	return 2 if shape_extension > 0 or shape_id() == BattleShapes.CROSS else 1
 
 
 ## Surge or trap: the two kinds that put a marker on the board and detonate.

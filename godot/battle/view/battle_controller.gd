@@ -733,9 +733,20 @@ func _actions() -> Array:
 	out.append({"id": ACT_STEP, "group": &"step", "text": "Step\n%d AP" % BattleMoves.step_ap(),
 		"enabled": mine and battle.ap >= BattleMoves.step_ap() and not BattleStats.is_rooted(u),
 		"selected": mode == &"step", "card": {"title": "Step", "rows": BattleText.step_rows()}})
+	var basic := battle.skill_in_slot(u, Battle.BASIC_SLOT)
+	if basic != null:                             # test switch: the Basic Jab stands beside Step, not in the kit
+		var no := "" if not mine else ("needs %d AP, %d left" % [basic.cost(), battle.ap] if battle.ap < basic.cost() else battle.usage_error(u, Battle.BASIC_SLOT))
+		var basic_rows := BattleText.skill_rows(battle.content, basic, u.kin())
+		if no != "":
+			basic_rows.push_front(["", "✗ " + no])
+		out.append({"id": StringName(SLOT_PREFIX + str(Battle.BASIC_SLOT)), "group": &"step", "text": "%s\n%d AP" % [basic.display_name, basic.cost()],
+			"enabled": mine and no == "", "selected": mode == &"skill" and slot == Battle.BASIC_SLOT,
+			"card": {"title": basic.display_name, "rows": basic_rows}})
 	for i in u.sheet.skills.size():
 		var s := u.sheet.skills[i]
 		var rows := BattleText.skill_rows(battle.content, s, u.kin())
+		if s.stamina_price() > 0:
+			rows.append(["", "costs %d Stamina (test switch)" % s.stamina_price()])
 		var why := ""
 		if s.is_active() and mine:
 			if battle.ap < s.cost():
@@ -747,7 +758,7 @@ func _actions() -> Array:
 		var label := s.display_name
 		if s.kind == BattleSkillDef.STRIKE:
 			label = "%s (%s)" % [KinRules.strike_name(u.kin()) if s.kin_effect else s.display_name, s.shape_label()]
-		out.append({"id": StringName(SLOT_PREFIX + str(i)), "group": &"skill", "text": "%s\n%s" % [label, "passive" if not s.is_active() else (("%d AP + Stamina" % s.cost() if s.cost() > 0 else "Stamina") if s.uses_stamina() else "%d AP" % s.cost())],
+		out.append({"id": StringName(SLOT_PREFIX + str(i)), "group": &"skill", "text": "%s\n%s" % [label, "passive" if not s.is_active() else (("%d AP + Stamina" % s.cost() if s.cost() > 0 else "Stamina") if s.uses_stamina() else ("%d AP + %d Sta" % [s.cost(), s.stamina_price()] if s.stamina_price() > 0 else "%d AP" % s.cost()))],
 			"enabled": mine and s.is_active() and why == "", "selected": mode == &"skill" and slot == i,
 			"card": {"title": label, "rows": rows}})
 	for def: TamerSkillDef in battle.tamer_loadout[PLAYER_SIDE]:

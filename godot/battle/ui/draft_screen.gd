@@ -32,7 +32,10 @@ const EXPERIMENTS := [
 	["Movement skills also cost AP", "With Stamina: a movement skill costs its AP and the Stamina. Off = Stamina only."],
 	["Dragon Veins: last touch owns", "GDD rule: a vein deals its round-end damage for the side that touched it last, whether or not a monster stands on it; the board shows the owner. Off = a monster has to stand on it at the round end (S028)."],
 	["Step walks the full Movement", "The Step of every monster walks up to its Movement for 1 AP, like Run (S026)."],
+	["Strikes only push", "Idea to try: a Strike deals no damage to monsters (props still take it); its shape and its push stay. Damage comes from ground, collisions, Dragon Veins and props. Every monster has a Basic Jab (1 AP, 1 damage, once a turn) beside Step."],
+	["Strikes cost Stamina", "Idea to try: a Strike costs Stamina beside its AP (1; 2 for an extended shape and a Cross). Movement skills pay their squares as before; ground, zone, prop and buff skills cost AP only. Every monster has a Basic Jab (1 AP, 1 damage, no Stamina, once a turn) beside Step. Needs Stamina instead of Movement."],
 	["Props bury traps", "Idea to try: a solid prop that is created on or pushed onto a trap removes the trap without springing it and takes its square. Off = a trap square takes no other prop."],
+	["Random monsters", "Monster switch: every monster of the battle, yours too, gets random stats and a random Kin, bought with the monster calculation for 60 points. The monster you pick is only the look. Each also plays a random kit (see Random kits)."],
 	["Random kits", "Kit switch: every monster of the battle, yours too, plays a random kit instead of its own. Each monster draws a kit template (Balanced, Bruiser, Skirmisher, Controller, Trapper, Shaper) that only says how many Strikes, movement, zone, ground and prop skills it holds; the skills are drawn from the game's own. A new draw for every battle; 'Fight Again' repeats the same kits."],
 	["New skills every battle", "Kit switch: the random kits are made of skills generated for this battle instead of the game's own. Their AP follow the draft price list (SkillCalc). Nothing is saved."],
 	["AI tries every skill", "The opponent prefers a skill it has not used yet in this battle, as long as the use costs it nothing."],
@@ -241,8 +244,14 @@ func _experiment_on(label: String) -> bool:
 			return BattleExperiment.stamina_ap
 		"Props bury traps":
 			return BattleExperiment.trap_defuse
+		"Strikes cost Stamina":
+			return BattleExperiment.skill_stamina
+		"Strikes only push":
+			return BattleExperiment.strike_push_only
 		"Random kits":
 			return BattleExperiment.random_kits
+		"Random monsters":
+			return BattleExperiment.random_monsters
 		"New skills every battle":
 			return BattleExperiment.fresh_skills
 		"AI tries every skill":
@@ -288,8 +297,11 @@ func _apply_experiments() -> void:
 	BattleExperiment.stamina_ap = on.call("Movement skills also cost AP")
 	BattleExperiment.board_size = 9 if on.call("Board 9×9") else (8 if on.call("Board 8×8") else 0)
 	BattleExperiment.trap_defuse = on.call("Props bury traps")
+	BattleExperiment.skill_stamina = on.call("Strikes cost Stamina")
+	BattleExperiment.strike_push_only = on.call("Strikes only push")
 	BattleExperiment.stamina_base = int((_numbers["Stamina base cost"] as SpinBox).value)
 	BattleExperiment.random_kits = on.call("Random kits")
+	BattleExperiment.random_monsters = on.call("Random monsters")
 	BattleExperiment.fresh_skills = on.call("New skills every battle")
 	BattleExperiment.ai_try_all = on.call("AI tries every skill")
 	BattleExperiment.ai_veins = on.call("AI fights for Dragon Veins")
@@ -337,7 +349,7 @@ func _toggle_tamer(id: StringName, on: bool) -> void:
 func _update() -> void:
 	_status.text = "Picked %d / 3: %s   ·   1 = duel, 2 = 2v2, 3 = 3v3   ·   %s" % [
 		_picked.size(), ", ".join(PackedStringArray(_picked.map(func(i): return BattleSetup.load_def(i).display_name))) if not _picked.is_empty() else "—",
-		"random kits: the kits on the cards are not used" if BattleExperiment.random_kits or BattleExperiment.fresh_skills else "test kits"]
+		"random kits: the kits on the cards are not used" if BattleExperiment.random_kits or BattleExperiment.fresh_skills or BattleExperiment.random_monsters else "test kits"]
 	for pair: Array in [[_start1, &"1v1", "Duel 1v1"], [_start2, &"2v2", "Battle 2v2"], [_start3, &"3v3", "Battle 3v3"]]:
 		var side_length := int(BattleBoards.mode_data(pair[1])["size"])
 		(pair[0] as Button).text = "%s (%d×%d)" % [pair[2], side_length, side_length]

@@ -211,21 +211,24 @@ func test_a_stamina_base_cost_is_paid_on_top_of_the_squares() -> void:
 	assert_str(b.check({"type": &"skill", "slot": 0, "to": Vector2i(3, 4)})).is_not_empty()
 
 
-func test_shifting_sand_takes_no_prop() -> void:
+func test_no_prop_can_be_placed_on_shifting_sand() -> void:
 	var sand := H.board_skill([_op(BoardOp.GROUND, &"shifting_sand")], [Vector2i.ZERO], "t_sand")
 	var wall := H.board_skill([_op(BoardOp.CREATE_PROP, &"earth_wall")], [Vector2i.ZERO], "t_wall")
 	var b := H.battle([[0, Vector2i(3, 6), {"skills": [sand, wall], "reach": 4, "ap": 5}], [1, Vector2i(3, 0), {}]])
 	b.add_prop(&"earth_wall", Vector2i(3, 4))
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 4)})).is_true()
-	assert_object(b.board.prop_at(Vector2i(3, 4), Board.GROUND)).is_null()         # the wall standing there breaks
-	b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 4)})
-	assert_object(b.board.prop_at(Vector2i(3, 4), Board.GROUND)).is_null()         # and none can be created on it
-	var gong := b.add_prop(&"bronze_gong", Vector2i(3, 3))
+	assert_object(b.board.prop_at(Vector2i(3, 4), Board.GROUND)).is_not_null()     # the wall standing there stays
+	H.unit(b, 0).used_turn.clear()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 5)})).is_true()
+	b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 5)})
+	assert_object(b.board.prop_at(Vector2i(3, 5), Board.GROUND)).is_null()         # none can be placed on the sand
+	H.unit(b, 0).used_turn.clear()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(2, 4)})).is_true()
+	var gong := b.add_prop(&"bronze_gong", Vector2i(2, 3))
 	BattleDisplace.shove_prop(b, gong, Vector2i(0, 1), "test")
 	BattlePayload.settle(b)
-	assert_object(b.board.prop_at(Vector2i(3, 4), Board.GROUND)).is_null()         # a prop pushed onto it breaks
-	assert_object(b.board.prop_at(Vector2i(3, 3), Board.GROUND)).is_null()
+	assert_object(b.board.prop_at(Vector2i(2, 4), Board.GROUND)).is_not_null()     # a prop pushed onto it stays
 
 
 func test_a_solid_prop_buries_a_trap_with_the_switch() -> void:
@@ -294,3 +297,77 @@ func test_the_log_says_why_a_monster_fell() -> void:
 	assert_str(line).contains("falls: Lava")
 	assert_str(line).contains("Earlier this round: Jab by")
 	assert_bool(BattleText.hp_history_lines(b, target.id).size() >= 3).is_true()
+
+
+func test_strikes_cost_stamina_with_the_switch_and_the_basic_jab_is_free() -> void:
+	BattleExperiment.skill_stamina = true
+	var b := H.battle([[0, Vector2i(3, 6), {"skills": [H.skill("strike_jab")], "ap": 5}], [1, Vector2i(3, 0), {}]])
+	b.begin()
+	var u := H.unit(b, 0)
+	assert_int(u.sheet.skills.size()).is_equal(1)                              # the Basic Jab is no slot of the kit
+	var offered := false
+	for c in AiBrain.candidates(b):
+		offered = offered or (c["type"] == &"skill" and int(c["slot"]) == Battle.BASIC_SLOT)
+	assert_bool(offered).is_false()                                            # nobody in front: the AI aims no Strike at air
+	var pool := u.stamina
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i(0, -1)})).is_true()
+	assert_int(u.stamina).is_equal(pool - 1)                                   # a skill costs 1 Stamina beside its AP
+	u.stamina = 0
+	u.used_turn.clear()
+	assert_str(b.check({"type": &"skill", "slot": 0, "dir": Vector2i(0, -1)})).contains("Stamina")
+	var jab := {"type": &"skill", "slot": Battle.BASIC_SLOT, "dir": Vector2i(0, -1)}
+	assert_str(b.check(jab)).is_empty()                                        # the Basic Jab needs none
+	var ap := b.ap
+	assert_bool(b.apply(jab)).is_true()
+	assert_int(b.ap).is_equal(ap - 1)
+	assert_str(b.check(jab)).is_not_empty()                                    # once a turn
+	assert_int(H.skill("strike_thrust").stamina_price()).is_equal(2)           # an extended shape costs 2
+	assert_int(H.skill("strike_cross").stamina_price()).is_equal(2)
+	assert_int(H.skill("gale").stamina_price()).is_equal(0)                    # what is placed costs AP only
+	assert_int(H.skill("run").stamina_price()).is_equal(0)                     # a movement pays its squares
+	BattleExperiment.skill_stamina = false
+	assert_str(b.check(jab)).is_not_empty()                                    # without the switch there is no Basic Jab
+	u.used_turn.clear()
+	assert_str(b.check({"type": &"skill", "slot": 0, "dir": Vector2i(0, -1)})).is_empty()   # without the switch: no cost
+
+
+func test_strikes_only_push_with_the_switch() -> void:
+	BattleExperiment.strike_push_only = true
+	var b := H.battle([[0, Vector2i(3, 6), {"skills": [H.skill("strike_jab")], "ap": 6}], [1, Vector2i(3, 5), {}], [1, Vector2i(0, 0), {}]])
+	b.begin()
+	var foe := H.unit(b, 1)
+	var hp := foe.hp
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i(0, -1)})).is_true()
+	assert_int(foe.hp).is_equal(hp)                                            # a Strike deals no damage
+	assert_that(foe.pos).is_equal(Vector2i(3, 4))                              # it still pushes 1
+	assert_str(b.check({"type": &"skill", "slot": 0, "dir": Vector2i(0, -1)})).is_not_empty()   # once a turn, as before
+	var b2 := H.battle([[0, Vector2i(3, 6), {}], [1, Vector2i(3, 5), {}], [1, Vector2i(0, 0), {}]])
+	b2.begin()
+	assert_bool(b2.apply({"type": &"skill", "slot": Battle.BASIC_SLOT, "dir": Vector2i(0, -1)})).is_true()
+	assert_int(H.unit(b2, 1).hp).is_equal(hp - 1)                              # the Basic Jab keeps its damage
+	assert_that(H.unit(b2, 1).pos).is_equal(Vector2i(3, 5))                    # and does not push
+	BattleExperiment.strike_push_only = false
+	assert_int(H.skill("strike_jab").monster_damage()).is_equal(2)
+
+
+func test_random_monsters_spend_the_points_of_the_calculation() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var seen := {}
+	for i in 200:
+		var s := MonsterDraw.stats(rng)
+		assert_int(MonsterDraw.cost(s)).is_less_equal(MonsterDef.MULTIPLAYER_POINTS)
+		assert_int(MonsterDraw.cost(s)).is_greater_equal(MonsterDef.MULTIPLAYER_POINTS - 1)    # the points are spent
+		var sheet := H.sheet({"hp": s["hp"], "pace": s["pace"], "move": s["stamina"], "reach": s["reach"], "tpr": s["tpr"], "ap": s["ap"]})
+		assert_array(sheet.problems()).is_empty()
+		seen["%d/%d/%d" % [s["hp"], s["ap"], s["tpr"]]] = true
+	assert_int(seen.size()).is_greater(8)                                      # the draws differ
+	var b := H.battle([[0, Vector2i(3, 6), {"skills": ["strike_jab"]}], [1, Vector2i(3, 0), {"skills": ["strike_jab"]}]])
+	MonsterDraw.deal(b, 11)
+	var u := H.unit(b, 0)
+	assert_int(u.hp).is_equal(u.sheet.hp)
+	assert_int(u.stamina).is_equal(u.sheet.movement)
+	var c := H.battle([[0, Vector2i(3, 6), {"skills": ["strike_jab"]}], [1, Vector2i(3, 0), {"skills": ["strike_jab"]}]])
+	MonsterDraw.deal(c, 11)
+	assert_int(H.unit(c, 0).sheet.hp).is_equal(u.sheet.hp)                     # the same seed draws the same monsters
+	assert_float(H.unit(c, 1).sheet.pace).is_equal(H.unit(b, 1).sheet.pace)

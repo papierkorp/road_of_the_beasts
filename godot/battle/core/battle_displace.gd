@@ -215,7 +215,4 @@ static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String)
 	prop.pos = to
 	b.board.put_prop(prop)
 	b.emit(&"prop_moved", {"from": from, "to": to, "prop": prop.def.id, "cause": cause})
-	var under := b.content.ground(b.board.at(to).ground)
-	if under != null and under.no_props:
-		BattleBoardOps.damage_prop(b, prop, prop.hp)  # experiment: this ground takes no prop
 	return true

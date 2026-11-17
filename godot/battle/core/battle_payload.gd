@@ -157,8 +157,9 @@ static func _phase_damage(b: Battle, payloads: Array) -> void:
 				var kin := KinRules.strike(owner.kin()) if skill.kin_effect else {}
 				b.emit(&"strike", {"who": p["owner"], "skill": skill.id, "cells": p["cells"].duplicate(), "dir": p["dir"]})
 				if skill.strike_damage > 0:
-					for id: StringName in p["units"]:
-						hits.append({"unit": id, "base": skill.strike_damage, "type": BattleDamage.STRIKE, "source": p["label"], "by": p["owner"]})
+					if skill.monster_damage() > 0:
+						for id: StringName in p["units"]:
+							hits.append({"unit": id, "base": skill.monster_damage(), "type": BattleDamage.STRIKE, "source": p["label"], "by": p["owner"]})
 					for uid in p["props"]:
 						prop_hits.append([p["props"][uid], int(kin.get("prop_damage", KinRules.STRIKE_PROP_DAMAGE))])
 			"surge":

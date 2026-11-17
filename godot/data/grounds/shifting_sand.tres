@@ -9,4 +9,4 @@ display_name = "Shifting Sand"
 content_status = "experiment"
 no_props = true
 color = Color(0.78, 0.7, 0.48, 1)
-description = "EXPERIMENT · No prop can be here: none can be created on it, a prop standing where it is laid breaks, a prop pushed onto it breaks. It does nothing to monsters."
+description = "EXPERIMENT · No prop can be placed here. A prop that already stands where it is laid, or is pushed onto it, stays. It does nothing to monsters."

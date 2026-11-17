@@ -214,7 +214,11 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   zone, ground and prop skills the six slots hold; the skills are drawn from the game's own. **New skills every
   battle** (`fresh_skills`) builds those kits from skills generated for the battle (`SkillGen.draw_kind`), in memory
   only; their AP come from the draft skill calculation. `kit_seed` is drawn anew for every start from the draft, so
-  “Fight Again” repeats the kits. The arranged free shapes of the draft are not used with a kit switch. **AI tries
+  “Fight Again” repeats the kits. The arranged free shapes of the draft are not used with a kit switch. **Random monsters** (`random_monsters`, `battle/defs/monster_draw.gd`):
+  every monster of the battle gets random stats and a random Kin, bought with the monster calculation
+  (`MonsterDef.points_of`) for the 60 points of the multiplayer mode: at least HP 3, Stamina 2, Reach 2 and AP 2, at
+  most HP 10, Pace 4.0, Stamina 8, Reach 4, AP 4 and two turns; the species picked is only the look, the name becomes
+  “Random <Kin>”. It implies random kits and is drawn by `kit_seed`, so “Fight Again” repeats the monsters. **AI tries
   every skill** (`ai_try_all`, on by default): the opponent prefers a skill it has not used yet in the battle (`AiBrain.TRY_BONUS`).
 - **AI fights for Dragon Veins** (`ai_veins`, draft check box, on by default; user, 2026-11-16): `AiBrain._vein_score`
   values an owned vein (`VEIN_OWNED`), a solid prop on an owned vein (`VEIN_LOCK`), every square the nearest enemy
@@ -225,10 +229,23 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
 - **Ideas of 2026-11-16, built to try and to measure (no rules; [T43](../docs/todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)):**
     - *Stamina base cost* (`stamina_base`, draft number field): a movement skill costs that much Stamina per use on top
       of the squares.
+    - *Strikes only push* (`strike_push_only`, draft check box; user idea of 2026-11-17): a Strike deals no damage
+      to monsters (`BattleSkillDef.monster_damage()`; props take it as before); its shape and its push stay as the
+      card says. Every monster has the Basic Jab beside Step, as below. Reach 3 and pulling Strikes were tried
+      with it (S035) and dropped by the user.
+    - *Strikes cost Stamina* (`skill_stamina`, draft check box; user idea of 2026-11-17): Stamina pays for what
+      the body does. A Strike costs Stamina beside its AP (`BattleSkillDef.stamina_price()`: 1, or 2 for an
+      extended shape and a Cross; `stamina_cost` on a card overrides it), a movement skill pays its squares as
+      before, ground, zone, prop and buff skills cost AP only. Every monster has the experiment skill **Basic Jab** (1 AP, 1 damage, no push,
+      no Kin effect, no Stamina, once a turn) as an action beside Step, not as a kit slot: the action
+      `{type: &"skill", slot: Battle.BASIC_SLOT, dir}`, a button of its own next to Step. Use limits stay as they
+      are. With the switch the opponent AI values Stamina left in the pool (`AiBrain.STAMINA_KEPT`, more for the
+      last points), so it walks with Step more and keeps skills for when they pay; the whole-turn bots of the
+      tools read the same evaluation.
     - *Props bury traps* (`trap_defuse`, draft check box): a solid prop created on or pushed onto a trap removes it
       unsprung (event `trap_defused`).
     - *Experiment content* (status `experiment`, in no kit; the skill builder and the generated skills can use it):
-      ground **Shifting Sand** (`GroundDef.no_props`: no prop can be on it; one standing there or pushed onto it breaks),
+      ground **Shifting Sand** (`GroundDef.no_props`: no prop can be placed on it; a prop that stands there or is pushed onto it stays),
       ground **Springwater** (ground trigger kind `stamina`: +1 Stamina on entering), zone **Erosion**
       (`FieldEffect.ERODE`: props in it take 1 at the round end, with the other things that act), zone **Updraft** and
       the self buff **Deep Breath** (`FieldEffect.REFRESH`: more Stamina recovered at the round end).

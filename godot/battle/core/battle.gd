@@ -175,7 +175,14 @@ func surges_of(owner: StringName) -> Array[PendingSurge]:
 	return out
 
 
+## Test switch `skill_stamina`: the slot number of the Basic Jab every monster has beside its kit, like Step
+## (an action {type: &"skill", slot: BASIC_SLOT, dir}); it is no slot of the sheet.
+const BASIC_SLOT := 99
+
+
 func skill_in_slot(u: BattleUnit, slot: int) -> BattleSkillDef:
+	if slot == BASIC_SLOT:
+		return content.skill(&"basic_jab") if u != null and BattleExperiment.has_basic_jab() else null
 	if u == null or slot < 0 or slot >= u.sheet.skills.size():
 		return null
 	return u.sheet.skills[slot]
@@ -192,6 +199,8 @@ func usage_error(u: BattleUnit, slot: int) -> String:
 		return ("%s was already used this turn" if s.usage_limit == 1 else "%s has no uses left this turn") % s.display_name
 	if s.uses_stamina() and u.stamina <= BattleExperiment.stamina_base:
 		return "%s needs Stamina, none left" % s.display_name
+	if s.stamina_price() > u.stamina:
+		return "%s needs %d Stamina, %d left" % [s.display_name, s.stamina_price(), u.stamina]
 	match s.repetition:
 		"once_per_round":
 			if int(u.used_round.get(slot, 0)) == round_number:
@@ -436,6 +445,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 	var s := skill_in_slot(u, slot)
 	# a valid activation spends its AP and one use at activation, whatever happens later
 	ap -= s.cost()
+	u.stamina = maxi(0, u.stamina - s.stamina_price())
 	u.used_round[slot] = round_number
 	u.used_battle[slot] = true
 	u.used_turn[slot] = int(u.used_turn.get(slot, 0)) + 1

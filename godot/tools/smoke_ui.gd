@@ -115,7 +115,7 @@ func _play_one(c) -> void:
 			c._on_action(c.ACT_STEP)
 			c.hover = a["to"]
 		&"skill":
-			var s: BattleSkillDef = u.sheet.skills[a["slot"]]
+			var s: BattleSkillDef = b.skill_in_slot(u, a["slot"])
 			c._on_action(StringName(c.SLOT_PREFIX + str(a["slot"])))
 			match s.kind:
 				BattleSkillDef.MOVE:

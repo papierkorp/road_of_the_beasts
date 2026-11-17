@@ -62,7 +62,7 @@ static func ground_brief(g: GroundDef, level := 1) -> String:
 	if not g.effects.is_empty():
 		parts.append(effects_text(g.effects, level))
 	if g.no_props:
-		parts.append("takes no prop")
+		parts.append("no prop can be placed here")
 	return SEP.join(parts)
 
 
@@ -244,7 +244,9 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 		BattleSkillDef.STRIKE:
 			var n := s.shape_squares()
 			var does: PackedStringArray = []
-			if s.strike_damage > 0:
+			if s.push_only():
+				does.append("no dmg to monsters")
+			elif s.strike_damage > 0:
 				does.append("%d dmg" % s.strike_damage)
 			if s.strike_push:
 				does.append("push 1")

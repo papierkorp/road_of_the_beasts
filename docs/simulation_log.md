@@ -77,6 +77,117 @@ Per-seed mean rounds: A 4.0 / 3.5 / 3.0 / 3.5 / 3.9 / 3.4 / 3.4 / 3.6; B 4.4 / 4
 
 **Follow-up:** T13 (battle length; why the earlier series were longer), T39 (Dragon Veins). No rule was changed by this entry.
 
+## S035 · 2026-11-17 · Strikes only push or pull: no Strike damage to monsters, reach 3, with the Basic Jab
+
+**State:** main, base `9488b24` dirty; content `2026-11-15.5`, kit set `4b3fac55c5bd`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Battle tests on that state: 232 cases, 0 failures.
+
+**Switch measured** (test switch, no rule; [T43](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)): `pushonly`: a Strike deals no damage to monsters (props take it as before), a Jab-shaped Strike reaches 3 squares in a line and everything it hits is pushed 1 away from the striker; Thrust and Thorn Lash pull 1 toward the striker instead (a monster next to the striker stays). Every monster has the Basic Jab (1 AP, 1 damage, one square, once a turn) beside Step. `skillstamina` as in S034.
+
+**Runs:** as S033/S034: `sim.gd -- 40 3v3 <seed> --paired [--variant …]`, seeds 1–8, 320 battles per row, bot greedy on both sides, not side-swapped. The row without a switch reproduces S033 exactly.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | Defeats / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| no switch | 320 | 165 / 146 / 9 / 0 | 3.87 | 38 (12 %) | 34 (11 %) | 8 | 4.24 | 9.5 | 2.6 | 5.7 | 1.8 | 6.6 | 0.7 | 26.8 | 3.5 | — |
+| `pushonly` | 320 | 155 / 160 / 5 / 0 | 3.78 | 14 (4 %) | 13 (4 %) | 9 | 4.10 | 3.7 | 3.1 | 7.9 | 3.1 | 7.3 | 1.2 | 26.4 | 3.0 | 4.1 |
+| `pushonly,skillstamina` | 320 | 152 / 161 / 7 / 0 | 4.17 | 7 (2 %) | 40 (13 %) | 9 | 4.20 | 4.0 | 3.3 | 7.2 | 3.1 | 8.1 | 0.9 | 26.6 | 5.3 | 4.9 |
+
+**Activations over the 320 battles** (no switch → `pushonly` → with `skillstamina`): Jab 1 324 → 1 655 → 1 631; Shove 556 → 895 → 886; Thrust (pull) 447 → 223 → 21; Thorn Lash (pull) 356 → 266 → 273; Quake Leap 323 → 406 → 405; Headbutt 206 → 245 → 237; Run 1 734 → 1 523 → 1 101; Gloom Rift 766 → 865 → 984; Thornbed 651 → 436 → 710; Lava Field 490 → 404 → 511; Void Pull 288 → 153 → 277; Gale 214 → 190 → 301; Bog 149 → 76 → 137; Raise Wall 303 → 271 → 395.
+
+**Observations** (indications; one bot):
+
+- *The battles do not get longer:* 3.78 rounds against 3.87, and the length is far more even: 4 % under 3 rounds against 12 %, 4 % over 5 against 11 %. Total damage per battle is the same (26.4 against 26.8).
+- *The damage moves to the board:* Strike damage falls from 9.5 to 3.7 (the Basic Jab), collisions rise from 5.7 to 7.9, props from 1.8 to 3.1, ground from 2.6 to 3.1, Dragon Veins from 6.6 to 7.3, surrounding from 0.7 to 1.2. Collisions become the largest source.
+- *Pushing Strikes are used more* (Jab +25 %, Shove +61 %), the pulling ones less (Thrust −50 %, Thorn Lash −25 %): the bot gets less out of a pull, which moves a monster toward the striker and into no collision. Thrust still costs 3 AP for what the Jab does for 2 in the other direction.
+- *Zones that move are used less* (Void Pull, Bog about −50 %): a Strike with reach 3 does their job at once.
+- *With Stamina on Strikes as well:* 4.17 rounds, 2 % under 3, 13 % over 5; the board skills return to the level without a switch or above, and Thrust (3 AP and 2 Stamina) drops out of play.
+
+**Follow-up:** T43 (keep, change or drop; what a pull is for; Thrust; Kin effects on a Strike without damage), T02 (the price list of S032 values Strike damage most and does not hold under this switch). No rule and no content value was changed by this entry.
+
+960 battles in 24 runs.
+
+## S034 · 2026-11-17 · Only Strikes cost Stamina (1, large shapes 2), with the Basic Jab
+
+**State:** main, base `9488b24` dirty; content `2026-11-15.5`, kit set `4b3fac55c5bd`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 377 cases, the two known non-battle failures.
+
+**Switch measured** (test switch, no rule; [T43](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)): `skillstamina` as changed after S033: a Strike costs Stamina beside its AP (1; 2 for an extended shape and a Cross; in the kits only Thrust costs 2), a movement skill pays its squares as before, ground, zone, prop and buff skills cost AP only. Basic Jab and the AI's value for Stamina left as in S033.
+
+**Runs:** as S033: `sim.gd -- 40 3v3 <seed> --paired [--variant skillstamina]`, seeds 1–8, 320 battles per row, bot greedy on both sides, not side-swapped. The row without a switch reproduces the one of S033 exactly; the row “every skill 1” is copied from S033.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Defeats / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| no switch | 320 | 165 / 146 / 9 / 0 | 3.87 | 38 (12 %) | 34 (11 %) | 4.24 | 9.5 | 2.6 | 5.7 | 1.8 | 6.6 | 0.7 | 26.8 | 3.5 | — |
+| only Strikes cost Stamina | 320 | 156 / 159 / 5 / 0 | 4.24 | 16 (5 %) | 40 (13 %) | 4.21 | 8.4 | 2.6 | 5.7 | 2.2 | 7.3 | 0.7 | 26.8 | 6.7 | 3.4 |
+| every skill 1 (S033) | 320 | 177 / 138 / 5 / 0 | 4.10 | 29 (9 %) | 47 (15 %) | 4.18 | 10.3 | 2.1 | 4.6 | 1.9 | 7.2 | 0.7 | 26.7 | 10.7 | 3.9 |
+
+**Activations over the 320 battles:**
+
+| Skill | no switch | only Strikes | every skill 1 (S033) |
+|---|---|---|---|
+| Jab | 1 324 | 1 077 | 968 |
+| Basic Jab | — | 1 082 | 1 256 |
+| Thrust (2 Stamina, 3 AP) | 447 | 93 | 402 |
+| Thorn Lash / Shove | 356 / 556 | 241 / 533 | 245 / 357 |
+| Run / Glide | 1 734 / 692 | 1 259 / 601 | 1 028 / 561 |
+| Void Pull / Gale / Bog | 288 / 214 / 149 | 330 / 355 / 201 | 173 / 104 / 87 |
+| Gloom Rift / Thornbed / Lava Field | 766 / 651 / 490 | 1 012 / 822 / 603 | 857 / 474 / 295 |
+| Raise Wall | 303 | 429 | 248 |
+| Quake Leap / Headbutt | 323 / 206 | 349 / 204 | 326 / 217 |
+
+**Observations** (indications; one bot):
+
+- *Length:* 4.24 rounds against 3.87; the battles under 3 rounds halve (16 against 38), those over 5 hardly rise (40 against 34). Total damage per battle unchanged.
+- *The board skills gain instead of losing:* zones +15 to +65 %, grounds +23 to +32 %, Raise Wall +42 %; with one price for every skill (S033) they had lost most.
+- *A Stamina cost of 2 on top of 3 AP removes Thrust from play* (93 uses against 447). Strike damage falls from 9.5 to 8.4, the Basic Jab makes up for part of it.
+- *Movement is saved less* than in S033 (Step 6.7 per battle against 10.7; Run −27 % against −40 %).
+
+**Follow-up:** T43 (the cost of large shapes: 2 Stamina only together with fewer AP; pools and the monster calculation), T02. No rule and no content value was changed by this entry.
+
+640 battles in 16 runs.
+
+## S033 · 2026-11-17 · Skills cost Stamina, with a Basic Jab beside Step; the Stamina base cost of movement alone
+
+**State:** main, base `9488b24` dirty; content `2026-11-15.5`, kit set `4b3fac55c5bd` (the nine monsters with their own six-skill kits); Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 377 cases, the two known non-battle failures.
+
+**Switches measured** (test switches, no rules; [T43](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)): `skillstamina`: every active skill costs 1 Stamina beside its AP, a movement skill pays its squares as before, and every monster has the Basic Jab (1 AP, 1 damage, no push, no Kin effect, no Stamina, once a turn) as an action beside Step; with it the AI values Stamina left in the pool (`AiBrain.STAMINA_KEPT`). `staminabase=1`: a movement skill costs 1 Stamina per use on top of its squares; the AI does not budget for it.
+
+**Runs:** `sim.gd -- 40 3v3 <seed> --paired [--variant …]`, seeds 1–8, 320 battles per row, bot greedy (`AiBrain`, one-step evaluation) on both sides, 7×7 with three Dragon Veins, random teams. Paired: battle *i* of a seed has the same teams and board in every row; **not side-swapped**. Rows are sums over the full blocks of the eight seeds; the blocks are not pasted.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Defeats / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| no switch | 320 | 165 / 146 / 9 / 0 | 3.87 | 38 (12 %) | 34 (11 %) | 4.24 | 9.5 | 2.6 | 5.7 | 1.8 | 6.6 | 0.7 | 26.8 | 3.5 | — |
+| `skillstamina` | 320 | 177 / 138 / 5 / 0 | 4.10 | 29 (9 %) | 47 (15 %) | 4.18 | 10.3 | 2.1 | 4.6 | 1.9 | 7.2 | 0.7 | 26.7 | 10.7 | 3.9 |
+| `skillstamina,staminabase=1` | 320 | 173 / 144 / 3 / 0 | 4.51 | 10 (3 %) | 66 (21 %) | 4.17 | 9.4 | 2.4 | 4.4 | 1.9 | 8.2 | 0.4 | 26.7 | 14.9 | 3.8 |
+| `staminabase=1` | 320 | 159 / 155 / 6 / 0 | 4.44 | 15 (5 %) | 73 (23 %) | 4.25 | 7.8 | 2.8 | 5.8 | 2.1 | 7.9 | 0.5 | 26.9 | 6.0 | — |
+
+**Activations over the 320 battles** (no switch → `skillstamina` → with base cost → base cost alone):
+
+| Skill | no switch | `skillstamina` | + `staminabase=1` | `staminabase=1` |
+|---|---|---|---|---|
+| Run | 1 734 | 1 028 | 525 | 1 604 |
+| Glide | 692 | 561 | 398 | 645 |
+| Jab | 1 324 | 968 | 1 043 | 1 384 |
+| Basic Jab | — | 1 256 | 1 214 | — |
+| Shove | 556 | 357 | 516 | 786 |
+| Thorn Lash | 356 | 245 | 262 | 373 |
+| Thrust | 447 | 402 | 418 | 420 |
+| Void Pull / Gale / Bog | 288 / 214 / 149 | 173 / 104 / 87 | 294 / 157 / 148 | 389 / 280 / 216 |
+| Gloom Rift | 766 | 857 | 1 040 | 1 069 |
+| Thornbed / Lava Field | 651 / 490 | 474 / 295 | 648 / 302 | 877 / 567 |
+| Raise Wall | 303 | 248 | 333 | 410 |
+| Quake Leap / Headbutt | 323 / 206 | 326 / 217 | 329 / 196 | 354 / 222 |
+
+**Observations** (indications; one bot, about ±4 points on a share of 320 battles):
+
+- *Skills for Stamina lengthen the battles only a little:* 4.10 against 3.87 rounds, 9 % against 12 % under 3, 15 % against 11 % over 5; the total damage per battle is the same (26.7 against 26.8).
+- *The saving falls on movement:* the bot walks with Step three times as often (10.7 against 3.5 per battle) and uses Run 40 % less; the Basic Jab is used 3.9 times per battle and replaces a quarter of the Jabs. Strike damage does not fall (10.3 against 9.5), collision damage does (4.6 against 5.7).
+- *Cheap zone skills lose most* (Void Pull, Gale, Bog −40 to −50 %), Thrust and the movement skills with a landing push hardly at all: with one price for every skill the weak ones are cut first.
+- *The base cost of movement alone lengthens more than the skill cost* (4.44 rounds, 23 % over 5) although this bot does not save Stamina for it: movement runs dry sooner, Strike damage falls from 9.5 to 7.8, and the board skills are used more.
+- *Both together:* 4.51 rounds, 3 % under 3, 21 % over 5; Run is used a third as often as without a switch.
+
+**Follow-up:** T43 (which of the two stay; pools and the monster calculation if skills cost Stamina; shorter battles afterwards), T02 (Stamina as a price part). No rule and no content value was changed by this entry.
+
+1 280 battles in 32 runs.
+
 ## S032 · 2026-11-16 · What the parts of a skill are worth: random kits of generated skills, a first price list and its check
 
 **State:** main, base `f81f250` dirty; Godot 4.7.2; runs in parallel on a frozen copy of the working tree. Content fingerprint `f206e96918c5` (series 1) and `3c1b2fd9e587` (series 2, with the experiment content of T43 and the fitted price list). Full suite on the final state: 373 cases, the two known non-battle failures.

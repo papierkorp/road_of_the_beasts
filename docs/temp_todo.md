@@ -26,7 +26,8 @@ docs/todo/
 - **Decided and built:** Pace and Stamina, the round end (moves, acts, ticks), cover, traps as walkable props, one shape per skill with free shapes, one sheet for ground, zones and props, the monster calculation (ranges from 1, price list, 25 points +5 per step).
 - **Content:** nine monsters at 60 points with six-skill kits; all of it working drafts.
 - **Next:** the skills and their calculation are reworked now that the monsters stand ([T02](todo/open/skills/T02-find-skill-prices.md), [T10](todo/open/skills/T10-the-skill-list.md)).
-- **Skill calculation (draft):** a first price list from bot runs stands in the build ([S032](simulation_log.md), T02); test switches deal random kits by template and generated skills. Six ideas of 2026-11-16 are built as switches and experiment content ([T43](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)).
+- **Skill calculation (draft):** a first price list from bot runs stands in the build ([S032](simulation_log.md), T02); test switches deal random kits, generated skills and random monsters (60 points).
+- **Being tried by hand (T43, S033–S035):** Strikes that only push (damage from ground, collisions, Dragon Veins, props and a free Basic Jab beside Step), Stamina as a cost of Strikes, and the ideas of 2026-11-16. Reach 3 and pulling Strikes are dropped. If Strikes lose their damage, the price list of S032 no longer holds.
 - **Played by hand:** the user plays every iteration manually; the rebuild starts when the user is satisfied with the battle ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). The filled stats and the new kits are not measured by a run.
 - **Build and rules differ** in the places listed in [todo/implementation.md](todo/implementation.md).
 
@@ -45,7 +46,7 @@ docs/todo/
 | 9 | May effects on AP or turns per round ever reach other monsters? | T07 |
 | 10 | Does the stat-zone rule and the kit rule of the nine monsters also bind kits a player composes? | T11 |
 | 11 | Skill prices: is “10 points = 1 AP, a Jab with 2 damage and a push = 20 points” the form? What happens to ground, zone and prop skills, which all come out below 1 AP: stronger, a second cost, or the floor? | T02 |
-| 12 | Which of the six ideas of 2026-11-16 (Stamina base cost, Erosion, Shifting Sand, props bury traps, Stamina recovery from ground, zone and buff, the new battle log) stay? | T43 |
+| 12 | Which of the six ideas of 2026-11-16 (Stamina base cost, Erosion, Shifting Sand, props bury traps, Stamina recovery from ground, zone and buff, the new battle log) stay? Should Strikes only push and deal no damage (switch built 2026-11-17)? Should a Strike cost Stamina beside its AP, with a free Basic Jab for every monster (switch built 2026-11-17)? | T43 |
 
 ## Tasks
 

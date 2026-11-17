@@ -73,9 +73,6 @@ static func lay_ground(b: Battle, cell: BoardCell, ground: StringName, source :=
 	if out != &"kept" and out != &"immutable":
 		b.emit(&"ground_changed", {"pos": cell.pos, "ground": cell.ground, "level": cell.level,
 			"result": out, "source": source})
-		var now := b.content.ground(cell.ground)
-		if now != null and now.no_props and cell.prop != null and cell.prop.hp > 0:
-			damage_prop(b, cell.prop, cell.prop.hp)       # experiment: this ground takes no prop; the caller's removal step clears it
 	return out
 
 

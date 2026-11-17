@@ -133,6 +133,19 @@ static var stamina_base := 0
 ## Idea of 2026-11-16 (no rule): a solid prop that is created on or pushed onto a trap removes the trap
 ## without springing it and takes its square. false = the build rule: a trap square takes no other prop.
 static var trap_defuse := false
+## Idea to try (user, 2026-11-17; no rule): Stamina pays for what the body does. A movement skill pays the
+## squares it enters as before, a Strike pays Stamina beside its AP (BattleSkillDef.stamina_price: 1, or 2
+## for an extended shape and a Cross); skills that place something and buffs cost AP only. Every monster
+## has the Basic Jab (1 AP, 1 damage, no Stamina) as an action beside Step (Battle.BASIC_SLOT).
+static var skill_stamina := false
+## Idea to try (user, 2026-11-17; no rule): Strikes deal no damage to monsters (props still take it); shape
+## and push stay as the card says. Damage comes from ground, collisions, Dragon Veins, props and the Basic
+## Jab, which every monster has with this switch too. (Reach 3 and pulling Strikes were tried and dropped.)
+static var strike_push_only := false
+
+
+static func has_basic_jab() -> bool:
+	return skill_stamina or strike_push_only
 ## Kit switch of the multiplayer mode (user request 2026-11-16): every monster of a battle plays a random
 ## kit by a kit template (KitDraw: so many Strikes, movement, zone, ground and prop skills), drawn from the
 ## skills of the game. Its own kit is not used.
@@ -140,6 +153,10 @@ static var random_kits := false
 ## Kit switch: the random kits are made of skills generated for this battle (SkillGen.draw_kind) instead
 ## of the game's own. Implies random kits.
 static var fresh_skills := false
+## Monster switch (user request 2026-11-17): every monster of a battle has random stats and a random Kin,
+## bought with the monster calculation for the points of the multiplayer mode (MonsterDraw). The species
+## is only the look. Implies random kits. Drawn by `kit_seed`.
+static var random_monsters := false
 ## Seed of the kit draw; the draft screen draws a new one for every battle.
 static var kit_seed := 0
 ## The opponent's AI prefers a skill it has not used in this battle, as long as the use costs it nothing
@@ -196,8 +213,11 @@ static func reset() -> void:
 	board_size = 0
 	stamina_base = 0
 	trap_defuse = false
+	skill_stamina = false
+	strike_push_only = false
 	random_kits = false
 	fresh_skills = false
+	random_monsters = false
 	kit_seed = 0
 	ai_try_all = true
 	ai_veins = true

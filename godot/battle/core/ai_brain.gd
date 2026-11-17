@@ -28,6 +28,9 @@ const DANGER_ENEMY := 0.25
 ## ai_try_all: score points a skill gets as long as its monster has not used it in this battle (a point of
 ## damage counts 10). Enough to play a skill whose use the evaluation cannot see, too little to give up a hit.
 const TRY_BONUS := 2.5
+## Test switch `skill_stamina`: what Stamina left in the pool is worth (times the square root of the pool,
+## so spending from a full pool costs little and the last point about a third of an HP).
+const STAMINA_KEPT := 3.0
 ## ai_veins (a draft of the AI, not a rule; a point of damage counts 10): a Dragon Vein the side owns, a
 ## solid prop on an owned vein (nobody can walk or be pushed onto it), each square the nearest enemy needs
 ## to reach an owned vein (up to VEIN_GUARD_CAP), and per square the nearest own monster is away from a
@@ -52,9 +55,12 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 		var steps := BattleMoves.options(b, u, BattleMoves.step_profile())
 		for to: Vector2i in steps:
 			out.append({"type": &"step", "to": to, "path": steps[to]["path"]})
-	for slot in u.sheet.skills.size():
-		var s := u.sheet.skills[slot]
-		if not s.is_active() or b.ap < s.cost() or b.usage_error(u, slot) != "":
+	var slots: Array = range(u.sheet.skills.size())
+	if BattleExperiment.has_basic_jab():
+		slots.append(Battle.BASIC_SLOT)             # the Basic Jab every monster has beside its kit
+	for slot: int in slots:
+		var s := b.skill_in_slot(u, slot)
+		if s == null or not s.is_active() or b.ap < s.cost() or b.usage_error(u, slot) != "":
 			continue
 		if s.kind == BattleExperiment.ai_no_kind[u.side]:
 			continue                              # test switch: this side plays without the kind
@@ -139,6 +145,8 @@ static func evaluate(b: Battle, side: int) -> float:
 	var theirs := b.living(1 - side)
 	for u in mine:
 		score += 14.0 + 10.0 * u.hp
+		if BattleExperiment.skill_stamina:
+			score += STAMINA_KEPT * sqrt(float(u.stamina))   # the last points of the pool are worth most
 	for u in theirs:
 		score -= 14.0 + 10.0 * u.hp
 	# timed Surges threaten whoever stands in them; traps whoever stands next to them
@@ -476,7 +484,7 @@ static func _add_follow_ups(b: Battle, u: BattleUnit, base: float, scored: Array
 static func try_bonus(u: BattleUnit, a: Dictionary) -> float:
 	if not BattleExperiment.ai_try_all or a.get("type") != &"skill":
 		return 0.0
-	return 0.0 if u.used_battle.has(int(a["slot"])) else TRY_BONUS
+	return 0.0 if u.used_battle.has(int(a["slot"])) or int(a["slot"]) == Battle.BASIC_SLOT else TRY_BONUS
 
 
 ## Test switch `ai_hunt`: the movement actions that bring the active unit closest to an enemy

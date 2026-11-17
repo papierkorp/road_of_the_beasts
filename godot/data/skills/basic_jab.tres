@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3_vb3hv"]
+
+[resource]
+script = ExtResource("3_vb3hv")
+id = &"basic_jab"
+display_name = "Basic Jab"
+kind = "strike"
+description = "EXPERIMENT · 1 damage to the monster or prop in front. No push, no Kin effect, no Stamina. Every monster has it beside its kit, like Step, while the test switch “Skills cost Stamina” is on."
+status = "user idea 2026-11-17 (test switch skill_stamina)"
+content_status = "experiment"
+ap_cost = 1
+stamina_cost = 0
+strike_damage = 1
+strike_push = false
+kin_effect = false

@@ -46,6 +46,7 @@ extends SceneTree
 ##                        castpush (push / pull zones also move at cast) · veintouch (build default: a vein belongs to the last side that touched it)
 ##                        · balanced / balanced=N (N = 3-6 kit slots: every monster plays a Strike, a movement skill and an even
 ##                        draw of zone, ground, prop and trap skills from the draft pool; win rates per drawn skill and kind)
+##                        · skillstamina (a Strike costs Stamina beside its AP, every monster has the Basic Jab) · pushonly (Strikes deal no damage to monsters; Basic Jab) · staminabase=N · trapdefuse
 ##                        · stamina=N (every monster recovers N Stamina per round instead of the whole number of its Pace; stamina alone = 1) · nostamina (the rule before 2026-11-15: a movement skill covers the Movement stat) · size=N (the mode on an N×N board: 8 or 9 for 3v3; an even board has its Dragon Veins in pairs on the two centre rows) · staminafree (no AP for movement skills)
 ##                        · props=N (N mirrored prop pairs at the start, 0 = none) · buttons=N (N mirrored pairs of button squares) · veinhold (a vein works only while a monster stands on it)
 ##   --no-kind-a / -b K   the bot of side 0 / 1 never uses skills of kind K (what is the kind worth)
@@ -340,6 +341,14 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.collision_both = false
 			"noshield":
 				BattleExperiment.no_shield_zones = true
+			"skillstamina":                           # idea of 2026-11-17: a Strike costs Stamina beside its AP; every monster has the Basic Jab
+				BattleExperiment.skill_stamina = true
+			"pushonly":                               # idea of 2026-11-17: Strikes deal no damage to monsters and only push
+				BattleExperiment.strike_push_only = true
+			"staminabase":                            # staminabase=N: a movement skill costs N Stamina per use on top of its squares
+				BattleExperiment.stamina_base = val.to_int() if val != "" else 1
+			"trapdefuse":                             # a solid prop on a trap removes it unsprung
+				BattleExperiment.trap_defuse = true
 			"hp":
 				for mid in BattleContent.shared().monsters:
 					var md: MonsterDef = BattleContent.shared().monsters[mid]
