@@ -20,6 +20,7 @@ tag = "drain_range"
 script = ExtResource("2_i34fe")
 id = &"mire"
 display_name = "Mire"
+content_status = "archived"
 internal_calc_cost = 7.5
 effects = Array[ExtResource("1_fbkp5")]([SubResource("Resource_8bakh"), SubResource("Resource_8dsdi"), SubResource("Resource_pf8a2")])
 color = Color(0.46, 0.36, 0.6, 1)

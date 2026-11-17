@@ -40,6 +40,8 @@ var ap := 0
 ## Test switch delay_turn: the running entry has acted already · unit id -> round it postponed a turn in.
 var entry_acted := false
 var delayed := {}
+## unit id -> turns it has postponed in this battle.
+var waits := {}
 var round_number := 1
 var over := false
 var winner_side := -1                    # 0 player, 1 enemy, -1 none / Draw
@@ -175,14 +177,14 @@ func surges_of(owner: StringName) -> Array[PendingSurge]:
 	return out
 
 
-## Test switch `skill_stamina`: the slot number of the Basic Jab every monster has beside its kit, like Step
+## The slot number of the Basic Jab every monster has beside its kit, like Step
 ## (an action {type: &"skill", slot: BASIC_SLOT, dir}); it is no slot of the sheet.
 const BASIC_SLOT := 99
 
 
 func skill_in_slot(u: BattleUnit, slot: int) -> BattleSkillDef:
 	if slot == BASIC_SLOT:
-		return content.skill(&"basic_jab") if u != null and BattleExperiment.has_basic_jab() else null
+		return content.skill(&"basic_jab") if u != null else null
 	if u == null or slot < 0 or slot >= u.sheet.skills.size():
 		return null
 	return u.sheet.skills[slot]
@@ -193,14 +195,10 @@ func usage_error(u: BattleUnit, slot: int) -> String:
 	var s := skill_in_slot(u, slot)
 	if s == null:
 		return "no such skill slot"
-	if BattleExperiment.no_shield_zones and s.kind == BattleSkillDef.ZONE and s.zone != null and s.zone.has_tag(FieldEffect.SHIELD):
-		return "%s is switched off (test switch: no shield zones)" % s.display_name
 	if BattleExperiment.once_per_turn and s.usage_limit > 0 and int(u.used_turn.get(slot, 0)) >= s.usage_limit:
 		return ("%s was already used this turn" if s.usage_limit == 1 else "%s has no uses left this turn") % s.display_name
-	if s.uses_stamina() and u.stamina <= BattleExperiment.stamina_base:
+	if s.uses_stamina() and u.stamina - BattleMoves.use_cost(self, u) < 1:
 		return "%s needs Stamina, none left" % s.display_name
-	if s.stamina_price() > u.stamina:
-		return "%s needs %d Stamina, %d left" % [s.display_name, s.stamina_price(), u.stamina]
 	match s.repetition:
 		"once_per_round":
 			if int(u.used_round.get(slot, 0)) == round_number:
@@ -237,14 +235,21 @@ func relocate(u: BattleUnit, to: Vector2i) -> void:
 
 
 ## A Dragon Vein belongs to the side whose monster touched it last (walked, was pushed or set onto it).
+## Wait is bought with Pace: the Waits the current Pace of `u` gives per battle, and how many are left.
+func waits_total(u: BattleUnit) -> int:
+	return maxi(0, int(floor(BattleStats.pace(self, u) + 0.0001)) - 1)
+
+
+func waits_left(u: BattleUnit) -> int:
+	return maxi(0, waits_total(u) - int(waits.get(u.id, 0)))
+
+
 func touch_veins(u: BattleUnit) -> void:
-	if BattleExperiment.vein_charge:
-		BattleTurn.discharge_veins(self, u)
-		return
 	for c in u.cells():
 		var cell := board.at(c)
 		if cell != null and cell.ground == GroundDef.WELL and cell.owner_side != u.side:
 			cell.owner_side = u.side
+			cell.owner_unit = u.id
 			emit(&"vein_taken", {"pos": c, "side": u.side, "who": u.id})
 
 
@@ -332,19 +337,16 @@ func check(a: Dictionary) -> String:
 	if a.has("unit") and a["unit"] != u.id:
 		return "it is not this monster's turn"
 	if type == &"delay":
-		if not BattleExperiment.delay_turn:
-			return "turns cannot be postponed"
 		if entry_acted:
 			return "%s has already acted this turn" % u.display_name()
 		if int(delayed.get(u.id, 0)) == round_number:
 			return "%s has already postponed a turn this round" % u.display_name()
+		if waits_left(u) <= 0:
+			if waits_total(u) <= 0:
+				return "%s is too slow to wait (Pace 2.0 gives one Wait per battle)" % u.display_name()
+			return "%s has no Wait left in this battle" % u.display_name()
 		if queue_idx >= queue.size() - 1 or queue[queue_idx + 1].get("waited", false):
 			return "nobody acts after %s this round" % u.display_name()
-		if BattleExperiment.delay_first_round:
-			if round_number != 1:
-				return "turns can only be postponed in round 1"
-			if u.sheet.tpr < 2 and (queue_idx != 0 or queue[0].get("waited", false)):
-				return "only the first monster of the queue and monsters with two turns may postpone"
 		return ""
 	match type:
 		&"step":
@@ -400,7 +402,7 @@ func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, push_dir: Vec
 			break
 	if not any_on_board:
 		return "no square of the shape lies on the board"
-	if s.kin_effect and KinRules.strike(u.kin()).get("push", false) and not Board.CARDINAL.has(push_dir):
+	if KinRules.of(s, u.kin()).get("push", false) and not Board.CARDINAL.has(push_dir):
 		return "choose the push direction"
 	return ""
 
@@ -445,7 +447,6 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 	var s := skill_in_slot(u, slot)
 	# a valid activation spends its AP and one use at activation, whatever happens later
 	ap -= s.cost()
-	u.stamina = maxi(0, u.stamina - s.stamina_price())
 	u.used_round[slot] = round_number
 	u.used_battle[slot] = true
 	u.used_turn[slot] = int(u.used_turn.get(slot, 0)) + 1
@@ -455,7 +456,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 			var tired := 0                           # Stamina: what the route costs (the movement cost of every square, BattleMoves.options)
 			if s.uses_stamina():
 				var reach := BattleMoves.options(self, u, BattleMoves.profile_of(s))
-				tired = (int(reach[a["to"]]["cost"]) if reach.has(a["to"]) else 1) + BattleExperiment.stamina_base
+				tired = maxi(0, (int(reach[a["to"]]["cost"]) if reach.has(a["to"]) else 1) + BattleMoves.use_cost(self, u))
 			var trail: Array[Vector2i] = []
 			if not s.board_ops.is_empty():            # a movement that leaves something on its path
 				var route: Array = a.get("path", [])
@@ -495,17 +496,6 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 			for c in cells:
 				BattleBoardOps.land_zone(self, board.at(c), s.zone, _next_gid, u.id, s.duration,
 					a.get("dir", Vector2i.ZERO), a.get("anchor", u.pos))
-			if BattleExperiment.zone_cast_push and (s.zone.has_tag(FieldEffect.PUSH) or s.zone.has_tag(FieldEffect.PULL)):
-				# a current also moves whoever stands in it at the moment it is cast (T38)
-				var moved: Array = []
-				for c in cells:
-					var t := unit_at(c, Board.GROUND)
-					if t == null:
-						continue
-					var d: Vector2i = a.get("dir", Vector2i.ZERO) if s.zone.has_tag(FieldEffect.PUSH) else BattleDisplace.pull_dir(t, a.get("anchor", u.pos))
-					moved.append({"unit": t.id, "dir": d, "cause": s.display_name})
-				BattleDisplace.resolve(self, moved)
-				BattlePayload.settle(self)
 		BattleSkillDef.GROUND:
 			var cells := BattleCasting.on_board(self, u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 			emit(&"cast", {"who": u.id, "skill": s.id, "cells": cells.duplicate()})
@@ -527,15 +517,14 @@ func _declare_surge(u: BattleUnit, s: BattleSkillDef, a: Dictionary) -> void:
 	ps.skill = s
 	ps.cells = BattleCasting.on_board(self, u, s, a.get("anchor", u.pos), int(a.get("rot", 0)))
 	if s.kind == BattleSkillDef.TRAP:
-		if BattleExperiment.trap_cap > 0:                     # test switch: the oldest trap of this skill gives way
-			var own: Array[PendingSurge] = []
-			for old_trap in surges:
-				if old_trap.owner == u.id and old_trap.turns_left < 0 and old_trap.slot == int(a.get("slot", -1)):
-					own.append(old_trap)
-			while own.size() >= BattleExperiment.trap_cap:
-				var gone: PendingSurge = own.pop_front()
-				remove_surge(gone)
-				emit(&"surge_lapsed", {"surge": gone.id})
+		var own: Array[PendingSurge] = []                     # one trap per trap skill: the oldest gives way
+		for old_trap in surges:
+			if old_trap.owner == u.id and old_trap.turns_left < 0 and old_trap.slot == int(a.get("slot", -1)):
+				own.append(old_trap)
+		while own.size() >= 1:
+			var gone: PendingSurge = own.pop_front()
+			remove_surge(gone)
+			emit(&"surge_lapsed", {"surge": gone.id})
 		ps.cells = BattleCasting.free_cells(self, ps.cells)   # laid only where no marker lies
 	else:
 		for c in ps.cells:                                    # a Surge replaces a trap square by square
@@ -588,6 +577,7 @@ func clone() -> Battle:
 	b.ap = ap
 	b.entry_acted = entry_acted
 	b.delayed = delayed.duplicate()
+	b.waits = waits.duplicate()
 	b.round_number = round_number
 	b.over = over
 	b.winner_side = winner_side
@@ -642,7 +632,7 @@ func snapshot() -> Dictionary:
 			z = [String(c.zone.def.id), c.zone.gid, String(c.zone.owner), c.zone.level, c.zone.duration, c.zone.dir, c.zone.anchor]
 		var p := [] if c.prop == null else [String(c.prop.def.id), c.prop.hp, c.prop.uid]
 		var air := [] if c.air_prop == null else [String(c.air_prop.def.id), c.air_prop.hp, c.air_prop.uid]
-		cs.append([String(c.ground), c.level, c.height, p, air, z, c.surge, c.ground_until, c.charged])
+		cs.append([String(c.ground), c.level, c.height, p, air, z, c.surge, c.ground_until])
 	var ss := []
 	for s in surges:
 		ss.append([s.id, String(s.owner), String(s.skill.id), s.cells.duplicate(), s.dir, s.anchor, s.air_cells.duplicate(), s.orphaned])

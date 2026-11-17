@@ -218,13 +218,13 @@ func test_arena_collapse_damages_everyone_once_no_free_square_is_left() -> void:
 
 func test_battle_ends_when_a_side_has_no_monsters_and_pending_surges_lapse() -> void:
 	var b := H.battle([
-		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 3, "skills": [H.strike(), H.surge([Vector2i.ZERO])]}],
-		[1, Vector2i(3, 2), {"hp": 2}],
+		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 5, "skills": [H.strike(), H.surge([Vector2i.ZERO])]}],
+		[1, Vector2i(3, 2), {"hp": 1}],
 	])
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(3, 4)})).is_true()
 	assert_int(b.surges.size()).is_equal(1)
-	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP})).is_true()
+	assert_bool(b.apply({"type": &"skill", "slot": Battle.BASIC_SLOT, "dir": H.UP})).is_true()   # the Basic Jab: 1 damage
 	assert_bool(b.over).is_true()
 	assert_int(b.winner_side).is_equal(0)
 	assert_bool(b.draw).is_false()

@@ -20,7 +20,7 @@ func _land(b: Battle, p: Vector2i, def: BattleZoneDef, gid: int, duration := 2) 
 	return BattleBoardOps.land_zone(b, b.board.at(p), def, gid, &"u0", duration, Vector2i.ZERO, Vector2i.ZERO)
 
 
-func test_zone_landing_new_level_up_replace() -> void:
+func test_zone_landing_new_refresh_replace() -> void:
 	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(6, 6)]])
 	var slow := _zone([FieldEffect.make("slow", 1, 2)], "slow")
 	var veil := _zone([FieldEffect.make("shield", 2, 3)], "veil")
@@ -28,30 +28,21 @@ func test_zone_landing_new_level_up_replace() -> void:
 	assert_str(_land(b, p, slow, 1)).is_equal("new")
 	assert_int(b.board.at(p).zone.level).is_equal(1)
 	b.board.at(p).zone.duration = 1
-	assert_str(_land(b, p, slow, 2)).is_equal("level")
-	assert_array([b.board.at(p).zone.level, b.board.at(p).zone.duration, b.board.at(p).zone.gid]).is_equal([2, 2, 2])
-	_land(b, p, slow, 3)
-	_land(b, p, slow, 4)
-	assert_int(b.board.at(p).zone.level).is_equal(3)       # max III
+	assert_str(_land(b, p, slow, 2)).is_equal("level")     # the same zone again: one level, it only refreshes
+	assert_array([b.board.at(p).zone.level, b.board.at(p).zone.duration, b.board.at(p).zone.gid]).is_equal([1, 2, 2])
 	# a different definition without an opposite effect replaces at level I
 	assert_str(_land(b, p, veil, 5)).is_equal("replace")
 	assert_array([String(b.board.at(p).zone.def.id), b.board.at(p).zone.level]).is_equal(["veil", 1])
 
 
-func test_opposite_zones_subtract_levels_and_keep_the_survivors_clock() -> void:
+func test_opposite_zones_cancel() -> void:
 	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(6, 6)]])
 	var slow_pull := _zone([FieldEffect.make("slow", 1, 2), FieldEffect.make("pull", 1)], "slow_pull")
 	var push := _zone([FieldEffect.make("push", 1)], "push")
 	var p := Vector2i(3, 3)
 	_land(b, p, slow_pull, 1)
-	assert_str(_land(b, p, push, 2)).is_equal("cancel")    # equal levels cancel: the square is empty
+	assert_str(_land(b, p, push, 2)).is_equal("cancel")    # opposites cancel: the square is empty
 	assert_object(b.board.at(p).zone).is_null()
-	for g in [3, 4, 5]:
-		_land(b, p, slow_pull, g)                           # level III
-	b.board.at(p).zone.duration = 1
-	assert_str(_land(b, p, push, 6)).is_equal("weaken")
-	var z := b.board.at(p).zone
-	assert_array([String(z.def.id), z.level, z.duration, z.gid]).is_equal(["slow_pull", 2, 1, 5])
 	# compared by effects, never by name
 	var quick := _zone([FieldEffect.make("quicken", 1), FieldEffect.make("haste", 1)], "a")
 	var drain := _zone([FieldEffect.make("drain_pace", 1), FieldEffect.make("slow", 1)], "b")
@@ -71,18 +62,18 @@ func test_zone_values_come_from_base_cap_and_level() -> void:
 	assert_array([mend.value_at(1), mend.value_at(2), mend.value_at(3)]).is_equal([1, 2, 2])
 
 
-func test_zones_affect_everyone_inside_and_never_touch_ground() -> void:
-	var mire: BattleZoneDef = H.content().zone(&"mire")     # slow 1, drain_pace 1 (2) in Pace points, drain_range 1
+func test_zones_change_no_stat_and_never_touch_ground() -> void:
+	var mire: BattleZoneDef = _zone([FieldEffect.make("slow", 1, 2), FieldEffect.make("drain_pace", 1, 2), FieldEffect.make("drain_range", 1)], "t_mire")
 	var b := H.battle([[0, Vector2i(2, 2), {"move": 1, "reach": 2, "pace": 1.5}], [1, Vector2i(3, 2), {"move": 3, "reach": 3, "pace": 1.5}]])
 	b.set_ground(Vector2i(2, 2), &"lava", 2)
 	H.zone_on(b, Vector2i(2, 2), mire)
 	H.zone_on(b, Vector2i(3, 2), mire, 901, 2)
 	var mine := H.unit(b, 0)
 	var theirs := H.unit(b, 1)
-	assert_array([BattleStats.movement(b, mine), BattleStats.reach(b, mine)]).is_equal([1, 1])   # floors: min 1
-	assert_float(BattleStats.pace(b, mine)).is_equal_approx(1.4, 0.001)
-	assert_array([BattleStats.movement(b, theirs), BattleStats.reach(b, theirs)]).is_equal([2, 2])
-	assert_float(BattleStats.pace(b, theirs)).is_equal_approx(1.3, 0.001)                               # level II: 2 Pace points
+	assert_array([BattleStats.movement(b, mine), BattleStats.reach(b, mine)]).is_equal([1, 2])   # a zone only pushes or pulls
+	assert_float(BattleStats.pace(b, mine)).is_equal_approx(1.5, 0.001)
+	assert_array([BattleStats.movement(b, theirs), BattleStats.reach(b, theirs)]).is_equal([3, 3])
+	assert_float(BattleStats.pace(b, theirs)).is_equal_approx(1.5, 0.001)
 	assert_array([String(b.board.at(Vector2i(2, 2)).ground), b.board.at(Vector2i(2, 2)).level]).is_equal(["lava", 2])
 
 
@@ -117,17 +108,16 @@ func test_aura_props_work_for_enemies_too_and_end_with_the_prop() -> void:
 	assert_int(BattleStats.movement(b, H.unit(b, 0))).is_equal(2)
 
 
-func test_ground_same_type_levels_hazards_and_different_type_replaces() -> void:
+func test_ground_laid_again_restarts_its_clock_and_a_different_type_replaces() -> void:
 	var b := H.battle([[0, Vector2i(0, 0)], [1, Vector2i(6, 6)]])
 	var c := b.board.at(Vector2i(3, 3))
 	assert_str(BattleBoardOps.lay_ground(b, c, &"lava")).is_equal("new")
-	assert_str(BattleBoardOps.lay_ground(b, c, &"lava")).is_equal("level")
-	assert_str(BattleBoardOps.lay_ground(b, c, &"lava")).is_equal("kept")        # max II
-	assert_array([String(c.ground), c.level]).is_equal(["lava", 2])
+	assert_str(BattleBoardOps.lay_ground(b, c, &"lava")).is_equal("refresh")     # one level: the clock restarts
+	assert_array([String(c.ground), c.level]).is_equal(["lava", 1])
 	assert_str(BattleBoardOps.lay_ground(b, c, &"thornbed")).is_equal("replace")
 	assert_array([String(c.ground), c.level]).is_equal(["thornbed", 1])
 	BattleBoardOps.lay_ground(b, c, &"hearth")
-	assert_str(BattleBoardOps.lay_ground(b, c, &"hearth")).is_equal("kept")      # blessed ground has no levels
+	assert_str(BattleBoardOps.lay_ground(b, c, &"hearth")).is_equal("refresh")
 	assert_array([String(c.ground), c.level]).is_equal(["hearth", 1])
 	c.ground = &"voidscar"
 	assert_str(BattleBoardOps.lay_ground(b, c, &"lava")).is_equal("immutable")   # nothing changes Voidscar
@@ -147,7 +137,7 @@ func test_field_skills_lay_ground_under_props_too_and_may_cover_mountains() -> v
 		assert_array([String(b.board.at(p).ground), b.board.at(p).level]).is_equal(["lava", 1])
 	assert_bool(b.board.at(Vector2i(4, 3)).is_mountain()).is_true()
 	b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 3)})
-	assert_int(b.board.at(Vector2i(3, 3)).level).is_equal(2)
+	assert_int(b.board.at(Vector2i(3, 3)).level).is_equal(1)             # ground has one level
 
 
 func test_raise_ground_creates_a_mountain_and_resets_ground_but_not_voidscar() -> void:
@@ -164,10 +154,11 @@ func test_raise_ground_creates_a_mountain_and_resets_ground_but_not_voidscar() -
 
 
 func _strike_setup(prop: StringName, extra: Array = []) -> Battle:
-	var specs: Array = [[0, Vector2i(3, 4), {"pace": 1.9, "ap": 5, "kin": MonsterDef.Kin.SWARM, "skills": [H.strike()]}]]
+	var specs: Array = [[0, Vector2i(3, 4), {"pace": 1.9, "ap": 5, "skills": [H.strike()]}]]
 	specs.append_array(extra)
 	var b := H.battle(specs)
-	b.add_prop(prop, Vector2i(3, 3))
+	var made := b.add_prop(prop, Vector2i(3, 3))
+	made.hp = mini(made.hp, 2)                              # a Strike deals 2 to a prop: one use destroys it
 	return b
 
 
@@ -225,7 +216,7 @@ func test_pagoda_column_spawns_beams_only_on_free_cardinal_neighbours() -> void:
 	var b := _strike_setup(&"pagoda_column", [[1, Vector2i(2, 3)]])
 	b.add_prop(&"clay_urn", Vector2i(4, 3))
 	b.begin()
-	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})     # Gnaw: 4 damage, the Column has 3 HP
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
 	assert_str(b.board.at(Vector2i(3, 2)).prop.def.id).is_equal("beam")
 	assert_object(b.board.at(Vector2i(2, 3)).prop).is_null()            # a monster stands there
 	assert_str(b.board.at(Vector2i(4, 3)).prop.def.id).is_equal("clay_urn")   # a prop stands there
@@ -235,18 +226,18 @@ func test_pagoda_column_spawns_beams_only_on_free_cardinal_neighbours() -> void:
 
 
 func test_a_prop_at_zero_hp_blocks_until_the_removal_step() -> void:
-	# Arc hits the Bamboo Stand (2 HP → 0) and the target next to it; the Scaled push then
+	# A Strike of two squares hits the target and the Bamboo Stand behind it (2 HP → 0); the push then
 	# collides with the still-standing prop; only afterwards the Stand is removed and bursts.
 	var b := H.battle([
-		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 3, "kin": MonsterDef.Kin.SCALED, "skills": [H.strike("arc")]}],
+		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 3, "skills": [H.strike("thrust")]}],
 		[1, Vector2i(3, 2), {"hp": 9}],
 	])
-	b.add_prop(&"bamboo_stand", Vector2i(4, 2))
+	b.add_prop(&"bamboo_stand", Vector2i(3, 1))
 	b.begin()
-	b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": H.RIGHT})
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 2))
-	assert_int(H.unit(b, 1).hp).is_equal(4)                 # 2 Strike + 2 collision (spiky Bamboo) + 1 aftermath
-	assert_object(b.board.at(Vector2i(4, 2)).prop).is_null()
+	assert_int(H.unit(b, 1).hp).is_equal(6)                 # 2 collision (spiky Bamboo) + 1 aftermath; the Strike deals none
+	assert_object(b.board.at(Vector2i(3, 1)).prop).is_null()
 	var order := H.event_types(b)
 	assert_bool(order.find(&"collision") < order.find(&"prop_destroyed")).is_true()
 
@@ -269,11 +260,11 @@ func test_relocate_contract_moves_one_light_prop_one_orthogonal_square() -> void
 func test_event_passives_react_after_the_payload_once_per_event_in_queue_order() -> void:
 	var scavenger := H.passive("t_scavenger", {"react_event": "prop_destroyed_in_reach", "react_heal": 1})
 	var b := H.battle([
-		[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "kin": MonsterDef.Kin.SWARM, "current_hp": 2, "reach": 2, "skills": [H.strike(), scavenger]}],
+		[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "current_hp": 2, "reach": 2, "skills": [H.strike(), scavenger]}],
 		[1, Vector2i(3, 1), {"pace": 1.5, "current_hp": 2, "reach": 2, "skills": [scavenger]}],
 		[1, Vector2i(6, 6), {"pace": 1.4, "current_hp": 2, "reach": 2, "skills": [scavenger]}],
 	])
-	b.add_prop(&"stone_lion", Vector2i(3, 3))
+	b.add_prop(&"stone_lion", Vector2i(3, 3)).hp = 2        # one Strike destroys it
 	b.begin()
 	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
 	assert_int(H.unit(b, 0).hp).is_equal(3)                 # 1 away

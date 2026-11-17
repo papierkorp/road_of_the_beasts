@@ -25,7 +25,8 @@ func test_a_free_arrangement_needs_its_squares_the_anchor_and_a_connection() -> 
 	assert_str(BattleShapes.arrangement_error(line, 3)).is_equal("")
 	assert_str(BattleShapes.arrangement_error(line, 4)).contains("4 squares")
 	assert_str(BattleShapes.arrangement_error([Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)], 3)).contains("anchor")
-	assert_str(BattleShapes.arrangement_error([Vector2i(0, 0), Vector2i(1, 1), Vector2i(2, 2)], 3)).contains("connected")   # corners do not connect
+	assert_str(BattleShapes.arrangement_error([Vector2i(0, 0), Vector2i(1, 1), Vector2i(2, 2)], 3)).is_equal("")          # corners connect too (2026-11-17)
+	assert_str(BattleShapes.arrangement_error([Vector2i(0, 0), Vector2i(2, 0), Vector2i(2, 1)], 3)).contains("touch")     # a gap does not
 	assert_str(BattleShapes.arrangement_error([Vector2i(0, 0), Vector2i(1, 0), Vector2i(1, 0)], 3)).contains("twice")
 	assert_str(BattleShapes.arrangement_text([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)])).is_equal("■■/■·")
 
@@ -41,7 +42,7 @@ func test_a_sheet_plays_its_own_arrangement_and_the_species_keeps_the_default() 
 	b.begin()
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "anchor": Vector2i(3, 2)})).is_true()
 	assert_array(_ground_at(b, [Vector2i(2, 2), Vector2i(3, 2), Vector2i(4, 2), Vector2i(3, 3)])).is_equal(["thornbed", "thornbed", "thornbed", "plain"])
-	UnitSheets.arrange(me.sheet, {0: [Vector2i(0, 0), Vector2i(2, 0), Vector2i(1, 1)]})           # not connected: ignored
+	UnitSheets.arrange(me.sheet, {0: [Vector2i(0, 0), Vector2i(2, 0), Vector2i(3, 0)]})           # not connected: ignored
 	assert_array(me.sheet.skills[0].footprint).is_equal([Vector2i(0, 0), Vector2i(-1, 0), Vector2i(1, 0)])
 	assert_str(BattleText.rows_to_text(BattleText.skill_rows(b.content, me.sheet.skills[0]))).contains("■■■")   # the card shows it
 
@@ -117,12 +118,12 @@ func test_a_shape_around_the_whole_user_needs_no_aim() -> void:
 func test_ground_zones_and_props_read_as_the_same_sheet() -> void:
 	var c := H.content()
 	var lava := BoardSheet.ground(c.ground(&"lava"))
-	assert_array([lava["kind"], lava["lies"], lava["move_cost"], lava["levels"]]).is_equal(["ground", "ground layer", 1, 2])
-	assert_str(BoardSheet.lines_text(c, lava)).is_equal("at the end of its turn: damage = level")
+	assert_array([lava["kind"], lava["lies"], lava["move_cost"], lava["levels"]]).is_equal(["ground", "ground layer", 1, 1])
+	assert_str(BoardSheet.lines_text(c, lava)).is_equal("at the end of its turn: 1 damage")
 	assert_str(BoardSheet.lines_text(c, BoardSheet.ground(c.ground(&"snare")))).is_equal("on leaving: 2 damage")
 	assert_str(BoardSheet.lines_text(c, BoardSheet.ground(c.ground(&"mossbed")))).is_equal("on entering: heals 1")
 	var bog := BoardSheet.zone(c.zone(&"bog"))
-	assert_str(BoardSheet.lines_text(c, bog)).is_equal("while inside: Movement −1\nat the end of its turn: pull 1")
+	assert_str(BoardSheet.lines_text(c, bog)).is_equal("while inside: movement skills +1 Stamina\nat the end of its turn: pull 1")
 	assert_str(BoardSheet.lines_text(c, BoardSheet.zone(c.zone(&"mire")))).contains("while inside: Pace −0.1")
 	var urn := BoardSheet.prop(c.prop(&"clay_urn"))
 	assert_array([urn["kind"], urn["lies"], urn["hp"]]).is_equal(["prop", "occupant, solid", 1])

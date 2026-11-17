@@ -154,12 +154,12 @@ static func _phase_damage(b: Battle, payloads: Array) -> void:
 			"strike":
 				_collect_strike(b, p)
 				var owner: BattleUnit = b.units[p["owner"]]
-				var kin := KinRules.strike(owner.kin()) if skill.kin_effect else {}
+				var kin := KinRules.of(skill, owner.kin())
 				b.emit(&"strike", {"who": p["owner"], "skill": skill.id, "cells": p["cells"].duplicate(), "dir": p["dir"]})
-				if skill.strike_damage > 0:
-					if skill.monster_damage() > 0:
-						for id: StringName in p["units"]:
-							hits.append({"unit": id, "base": skill.monster_damage(), "type": BattleDamage.STRIKE, "source": p["label"], "by": p["owner"]})
+				if skill.monster_damage() > 0:
+					for id: StringName in p["units"]:
+						hits.append({"unit": id, "base": skill.monster_damage(), "type": BattleDamage.STRIKE, "source": p["label"], "by": p["owner"]})
+				if skill.hits_props():
 					for uid in p["props"]:
 						prop_hits.append([p["props"][uid], int(kin.get("prop_damage", KinRules.STRIKE_PROP_DAMAGE))])
 			"surge":
@@ -185,14 +185,25 @@ static func _eight_dir(sum: Vector2i) -> Vector2i:
 	return Vector2i(signi(sum.x), signi(sum.y))
 
 
+## Where a Strike pushes what stood on these offsets of its shape: along the summed offset. Every struck square
+## counts; a square on no line (the outer corners of an extended Arc) is pushed in the facing of the shape.
+static func _push_dir(offsets: Array, facing: Vector2i) -> Vector2i:
+	var sum := Vector2i.ZERO
+	for o: Vector2i in offsets:
+		sum += o
+	var d := _eight_dir(sum)
+	if d == Vector2i.ZERO and sum != Vector2i.ZERO:
+		d = Vector2i(signi(facing.x), signi(facing.y))
+	return d
+
+
 static func _phase_displacement(b: Battle, payloads: Array) -> void:
 	var entries: Array = []
-	var swaps: Array = []
 	for p: Dictionary in payloads:
 		var skill: BattleSkillDef = p["skill"]
 		if p["kind"] == "strike":
 			var owner: BattleUnit = b.units[p["owner"]]
-			var kin := KinRules.strike(owner.kin()) if skill.kin_effect else {}
+			var kin := KinRules.of(skill, owner.kin())
 			for id: StringName in p["units"]:
 				var t: BattleUnit = b.units[id]
 				if not t.is_alive():
@@ -202,26 +213,15 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 						FieldEffect.DRAIN_PACE, int(kin["pace_penalty"]), 1)
 				if skill.strike_push and kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
 					entries.append({"unit": id, "dir": p["push_dir"], "cause": p["label"], "multi": true})
-				if BattleExperiment.kin_push and skill.kin_effect and owner.kin() == MonsterDef.Kin.SPIRIT:
-					swaps.append([owner.id, id])
-				if (BattleExperiment.kin_push and skill.kin_effect and owner.kin() == MonsterDef.Kin.BEAST) \
-						or (skill.strike_push and not kin.get("push", false)):   # a Strike that pushes: 1 away from the striker
+				if skill.strike_push and not kin.get("push", false):   # a Strike that pushes: 1 away from the striker
 					# only hit cells next to the origin push, each along its own offset (gdd_skills §3)
-					var sum := Vector2i.ZERO
-					for o: Vector2i in p["offsets"].get(id, []):
-						if maxi(absi(o.x), absi(o.y)) == 1:
-							sum += o
-					var d := _eight_dir(sum)
+					var d := _push_dir(p["offsets"].get(id, []), p["dir"])
 					if d != Vector2i.ZERO:
 						entries.append({"unit": id, "dir": d, "cause": p["label"], "multi": true})
 			# props in the shape are pushed like monsters (user decision 2026-11-14)
 			var push_all: bool = skill.strike_push
 			for uid in p.get("prop_offsets", {}):
-				var sum_p := Vector2i.ZERO
-				for o: Vector2i in p["prop_offsets"][uid]:
-					if maxi(absi(o.x), absi(o.y)) == 1:
-						sum_p += o
-				var dp := _eight_dir(sum_p)
+				var dp := _push_dir(p["prop_offsets"][uid], p["dir"])
 				if kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
 					dp = p["push_dir"]
 				if push_all and dp != Vector2i.ZERO:
@@ -237,29 +237,6 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 					entries.append({"unit": id, "dir": BattleDisplace.pull_dir(t, p["anchor"]),
 						"key": t.chebyshev_to(p["anchor"]), "cause": p["label"]})   # nearest the anchor first
 	BattleDisplace.resolve(b, entries)
-	# experiment (kin_push): a Spirit Strike trades squares with one struck 1x1 monster
-	var swapped := {}
-	for pair: Array in swaps:
-		var a: BattleUnit = b.units[pair[0]]
-		var t: BattleUnit = b.units[pair[1]]
-		if swapped.has(a.id) or not a.is_alive() or not t.is_alive() or a.size != 1 or t.size != 1 or a.layer != t.layer:
-			continue
-		if BattleStats.is_immovable(b, t) or a.chebyshev_to(t.pos) != 1:
-			continue
-		swapped[a.id] = true
-		var pa := a.pos
-		var pt := t.pos
-		b.lift(a)
-		b.lift(t)
-		b.put(a, pt)
-		b.put(t, pa)
-		b.emit(&"displaced", {"who": t.id, "from": pt, "to": pa, "cause": "swap"})
-		b.emit(&"displaced", {"who": a.id, "from": pa, "to": pt, "cause": "swap"})
-		for w: BattleUnit in [t, a]:
-			if w.is_alive() and w.layer == Board.GROUND:
-				var entered: Array[Vector2i] = [w.pos]
-				BattleDamage.ground_triggers(b, w, Moment.ENTER, entered)
-		BattleDamage.defeat_step(b)
 
 
 # ---------- 4: board operations ----------
@@ -272,13 +249,6 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 		var targets: Array[Vector2i] = []
 		if skill.has_op(BoardOp.DESTROY_MOUNTAIN):
 			targets.assign(p["cells"])
-		if p["kind"] == "strike" and skill.kin_effect:
-			var owner: BattleUnit = b.units[p["owner"]]
-			if KinRules.strike(owner.kin()).get("destroy_mountain", false):
-				# "the Mountain under the target": the squares on which monsters were struck, and struck props
-				targets.append_array(p.get("struck_at", []))
-				for uid in p["props"]:
-					targets.append(p["props"][uid].pos)
 		for cell in targets:
 			var c := b.board.at(cell)
 			if c != null and c.is_mountain():
@@ -302,7 +272,9 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 	for p: Dictionary in payloads:
 		for op in p["skill"].ops_of(BoardOp.CREATE_PROP):
 			for cell: Vector2i in p["cells"]:
-				BattleBoardOps.place_prop(b, b.content.prop(op.prop), cell)
+				var made := BattleBoardOps.place_prop(b, b.content.prop(op.prop), cell)
+				if made != null:                  # a prop a skill creates lasts like ground laid in battle
+					made.until = b.round_number + BoardProp.CREATED_ROUNDS - 1
 	# (e) ground: what destroyed props leave behind, then authored ground / residue
 	for prop in removed:
 		if prop.def.ground_left == &"" or prop.def.ground_left == GroundDef.PLAIN:
@@ -329,13 +301,6 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 				var zc := b.board.at(cell)
 				if zc != null:
 					BattleBoardOps.land_zone(b, zc, zdef, b._next_gid, p["owner"], op.zone_rounds, p.get("dir", Vector2i.ZERO), p.get("anchor", cell))
-		# test switch surge_ground: a timed Surge without ground of its own leaves one
-		var sk: BattleSkillDef = p["skill"]
-		if BattleExperiment.surge_ground != &"" and p["kind"] == "surge" and sk.kind == BattleSkillDef.SURGE and sk.ops_of(BoardOp.GROUND).is_empty():
-			for cell: Vector2i in p["cells"]:
-				var c := b.board.at(cell)
-				if c.prop == null and not c.is_mountain() and not p["destroyed"].has(cell) and not BattleExperiment.well_squares(b.board.size).has(cell):
-					BattleBoardOps.lay_ground(b, c, BattleExperiment.surge_ground, p["label"])
 	if _has_dead_props(b):                        # experiment: ground that takes no prop broke the props standing on it
 		_phase_board(b, [])
 
@@ -389,7 +354,7 @@ static func _phase_retreat(b: Battle, payloads: Array) -> void:
 			continue
 		var u: BattleUnit = b.units[p["owner"]]
 		var skill: BattleSkillDef = p["skill"]
-		var kin := KinRules.strike(u.kin()) if skill.kin_effect else {}
+		var kin := KinRules.of(skill, u.kin())
 		if not u.is_alive() or not (skill.self_retreat or kin.get("retreat", false)):
 			continue
 		var rd := BattleShapes.retreat_dir(skill.shape_id(), p["dir"], skill.shape_extension)

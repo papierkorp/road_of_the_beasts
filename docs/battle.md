@@ -12,7 +12,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 - **Influence and consequence:** the player's decisions shape the board and have visible consequences.
 - **Deterministic:** no dice, no hidden information.
-- **Short:** about 15 rounds is already very long. Target for 3v3: a **mean between 3.0 and 4.9 rounds**; a battle counts the round it ends in. Battles end by fighting, not by late-round pressure. Even short battles offer meaningful decisions through AP, turns and positioning. Where possible no monster is defeated in round 1.
+- **Short:** about 15 rounds is already very long. Target for 3v3: a **mean between 3.5 and 4.5 rounds**; a battle counts the round it ends in. Battles end by fighting, not by late-round pressure. Even short battles offer meaningful decisions through AP, turns and positioning. Where possible no monster is defeated in round 1.
 - **Tactical:** repeating one skill must not win a battle; position and combination decide.
 - **Every skill has its situation:** each skill is the right choice in some situations and none in all.
 - **Fair defeats:** a loss reads as the player's own mistake; no monster is defeated without its player having had a chance to act.
@@ -57,14 +57,14 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 ### 2.3 Pace and the Queue
 
-**Pace** orders the round, and the whole number of a monster's current Pace is the Stamina it recovers at the round end ([§2.4](#24-action-points-and-stamina)).
+**Pace** orders the round. The whole number of a monster's current Pace is the Stamina it recovers at the round end ([§2.4](#24-action-points-and-stamina)) and, above 1, its number of Waits; the Pace of the monster that took a Dragon Vein orders the veins ([§4.2](#42-dragon-veins-surrounding-and-late-round-pressure)).
 
 - **One queue for both sides**, strictly by effective Pace, **recalculated every round**. A side may act several times in a row.
 - **Pace points:** Pace counts in points of 0.1. An effect names points (`drain_pace 1` lowers Pace by 0.1). Effective Pace never falls below 0.1.
 - **Ties:** higher base Pace first; still tied, the sides alternate (the first tie of a battle goes to the side with the lower total Pace; if the totals are equal, to the player's side). Tied units of one side act in their start slot order (slot 1 first). An extra-turn entry follows its unit's main entry. Meta state never breaks ties.
 - **Extra turns:** a monster with more turns per round gets one extra queue entry per extra turn, each 2 Pace points (0.2) lower than the entry before, minimum 0.1 *(working value)*. **Extra turns count from round 2:** in round 1 every monster has exactly one entry.
+- **Wait:** a monster may postpone its turn to the end of the round, before it has done anything and at most once per round. It has as many Waits per battle as the whole number of its current Pace lies above 1 (2.x: one, 3.x: two). Monsters that waited act in reverse order: the first to wait acts last.
 - **Effects bound to a unit** (buffs, marks) end at once when that unit is defeated or removed. Zones, ground and props stay when their creator is defeated.
-- A Pace drain can flip the order and give a monster two turns back to back across the round boundary. A drain of one point only ties a monster with one whose base Pace is 0.1 lower, and the tie goes to the higher base.
 
 ### 2.4 Action Points and Stamina
 
@@ -72,8 +72,8 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 - An action costs the AP on its card, at least 1.
 - **Step** (every monster): 1 AP, 1 square, no Stamina.
+- **Basic Jab** (every monster): 2 AP, 1 damage to the monster or prop on a neighbouring square, no push, once per turn. It is the only direct damage to a monster.
 - **Repetition:** each equipped skill may be used once per turn of its monster unless its card names more uses, once per round or once per battle ([skills.md §2](skills.md#2-the-skill-card)). There is no cooldown system.
-- A zone may be cast again to level it up, ground laid again to level a hazard.
 
 | Stamina | Rule |
 |---|---|
@@ -81,7 +81,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 | Cost | A movement skill costs its AP **and** Stamina for every square it enters: the movement cost of that square's ground. A path that passes over squares (straight line, any path) costs 1 per square of its distance |
 | Range | A movement skill reaches at most the range on its card (3 squares unless it names another) and never further than the Stamina left |
 | Free | Step, and being pushed or pulled |
-| Recovery | At the round end every monster recovers the **whole number of its current Pace, at least 1**, never above its pool. The current value counts: a zone or timed effect on Pace changes the recovery when it carries the monster across a whole number (Pace 2.0 with a drain of 1 recovers 1; Pace 1.9 with `quicken` 1 recovers 2) |
+| Recovery | At the round end every monster recovers the **whole number of its current Pace, at least 1**, never above its pool. The current value counts: a timed effect on Pace changes the recovery when it carries the monster across a whole number (Pace 2.0 with a drain of 1 recovers 1; Pace 1.9 with `quicken` 1 recovers 2) |
 
 *Working values:* the range of 3 and every cost.
 
@@ -94,8 +94,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 | now | when the skill is used | a Strike; the user's own movement; the creation of ground, a zone or a prop (a push or pull zone moves nobody when it is cast) |
 | on entering | a monster enters the square by walking, a push or a pull | ground with an entry effect; a walkable prop on the square; a Dragon Vein changes its owner |
 | on leaving | a monster leaves the square by walking, a push or a pull | ground with a leaving effect |
-| while inside | as long as a monster stands on the square | zone stat changes |
-| end of the occupant's turn | when the monster's turn ends | 1. zone push or pull → 2. end-of-turn ground on the square it now stands on |
+| end of the occupant's turn | when the monster's turn ends | 1. zone push or pull → 2. end-of-turn ground on the square it now stands on → 3. the damage of a prop in whose shape it now stands |
 | end of the round | after the last turn of the round | see below |
 | on an event | when it happens | collision damage; a prop that is hit and still stands; a prop that is destroyed |
 
@@ -103,15 +102,13 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 1. Push and pull zones move the props standing in them.
 2. Props that push or pull at the round end act, in one step. What reacts to entering or leaving fires at the move.
-3. End-of-round ground acts, each monster for itself.
-4. The other round-end lines of the props act (their damage), in one step.
-5. Dragon Vein and surround damage, in one simultaneous step ([§4.2](#42-dragon-veins-surrounding-and-late-round-pressure)).
-6. Stamina recovery by the current Pace.
-7. All clocks: zones lose a round, timed effects on monsters expire, ground laid in battle fades ([§4.4](#44-lifetimes)).
-8. Late-round pressure, if it runs.
-9. The queue is built anew.
+3. Surround damage in one step, then the Dragon Veins one after another ([§4.2](#42-dragon-veins-surrounding-and-late-round-pressure)).
+4. Stamina recovery by the current Pace.
+5. All clocks: zones lose a round, timed effects on monsters expire, ground laid in battle fades, props a skill created lapse ([§4.4](#44-lifetimes)).
+6. Late-round pressure, if it runs.
+7. The queue is built anew.
 
-- **Moves first:** whatever is pushed at the round end is judged where it lands. **Ground of another moment keeps its moment:** a monster pushed onto end-of-turn ground at the round end takes nothing then and can still leave in its next turn.
+- **Nothing but Dragon Veins and surrounding deals damage at the round end:** no ground and no prop does. A monster pushed onto end-of-turn ground or next to a damaging prop at the round end takes nothing then and can still leave in its next turn; ground that acts on entering fires at the push.
 - **Clocks last:** a thing that lasts N rounds still counts at its N-th round end. An effect in its last round still counts for the Stamina recovery.
 - **Inside a turn:** every action resolves completely, including the pushes, entries and departures it causes ([§6.2](#62-payload-resolution)); then the end effects.
 - **Placing ground under a monster is not entering:** it acts at its next moment, not at once.
@@ -142,7 +139,8 @@ On 7×7 the start rows lie 4 squares apart; the first round is for position.
 - **Dragon Vein:** a ground type that nothing changes. Otherwise it is ordinary ground: a prop may stand on it and a zone may lie on it; only no ground is laid on it.
 - **Ownership by last touch:** a Dragon Vein belongs to the side whose monster touched it last (walked onto or across it, was pushed or pulled onto it, or stands on it). It stays with that side until a monster of the other side touches it. At the start nobody owns one. A prop touches nothing: a solid prop on a vein blocks the square, and the vein keeps working for its owner.
 - **Dragon Vein damage:** at the round end every owned Dragon Vein deals **1 damage to the nearest enemy of its owner** (board distance). Ties: the enemy with more HP, then with more Pace, then **the owning side chooses**.
-- **Surrounding:** at the round end a monster with **two or more enemies on its eight neighbour squares** takes 1 damage.
+- **The veins act one after another,** the vein of the faster taker first: the taker is the monster that took the vein for its side (a later touch by an ally does not change it); its current Pace counts, then the queue order. A vein whose taker has fallen acts last. Each vein picks its target on the board as it then stands, defeats are resolved after each, and the battle ends as soon as one side is gone.
+- **Surrounding:** at the round end a monster with **two or more enemies on its eight neighbour squares** takes 1 damage, all in one step before the veins.
 - No source reduces Dragon Vein or surround damage.
 - **Late-round pressure is only a brake.** It runs only at the end of a round in which nobody owns a Dragon Vein (in a mode without Dragon Veins: every round), from a set round (1v1: 6, 2v2: 6, 3v3: 8, 5v5: 8): the square farthest from all living monsters becomes **Voidscar**. Each square's distance is measured to its nearest living monster; the largest value wins, and all equally far squares convert together. **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round.
 
@@ -150,7 +148,7 @@ On 7×7 the start rows lie 4 squares apart; the first round is for position.
 
 ```
 [ OCCUPANT ]  one monster | one solid prop | a walkable prop, alone or under a monster | empty
-[ ZONE     ]  ONE timed zone | empty — acts while a monster stands inside
+[ ZONE     ]  ONE timed zone | empty — pushes or pulls who ends a turn inside
 [ GROUND   ]  ONE ground type — acts at a moment
 ```
 
@@ -164,54 +162,47 @@ On 7×7 the start rows lie 4 squares apart; the first round is for position.
 
 | Thing | Clock |
 |---|---|
-| **Zone** | the rounds its creating skill names; loses one at each round end. Cast again on the same squares it levels up and refreshes |
-| **Ground laid in battle** | **2 rounds** (the round it is laid in and the next one), then Plain again. The clock restarts whenever it is laid or levelled again. It acts at every one of its moments as long as it lies |
+| **Zone** | the rounds its creating skill names; loses one at each round end. Cast again on the same squares it refreshes |
+| **Ground laid in battle** | **2 rounds** (the round it is laid in and the next one), then Plain again. The clock restarts whenever it is laid again. It acts at every one of its moments as long as it lies |
 | **Ground of the starting board, Voidscar, Dragon Vein** | none; Voidscar and Dragon Vein are never changed by anything |
-| **Prop** | none; it stays until its HP are gone. A trap is used up by the monster that enters it |
+| **Prop a skill created** | **2 rounds**, like ground, then it lapses without acting; earlier when its HP are gone. A trap is used up by the monster that enters it |
+| **Prop of the board** | none; it stays until its HP are gone |
 | **Timed effect on a monster** | N rounds: until the end of the N-th following round; it ends earlier with its bearer |
 
-What a skill lays on the board is temporary: permanent hazard ground fills the board and makes waiting pay.
+What a skill lays is temporary: permanent hazards fill the board and make waiting pay.
 
 ### 4.5 Ground
 
-**Ground acts at a moment:** it damages, heals or costs Stamina when a monster enters it, leaves it, ends its turn on it, or stands on it at the round end. It changes no stat.
+**Ground acts at a moment:** it damages, heals or costs Stamina when a monster enters it, leaves it or ends its turn on it. It changes no stat and has one level.
 
 - **Made by:** a skill, on its squares (a placed shape, the square a Strike hit, the squares a movement left; also under a prop), or a destroyed prop that leaves ground. Never on Voidscar or a Dragon Vein.
-- **Same type on the square:** a hazard gains a level (max II) and its clock restarts. **Different type:** the new ground replaces the old one.
+- **Same type on the square:** its clock restarts. **Different type:** the new ground replaces the old one.
 - Ground works for **everyone** on it.
 - Ground types: [content.md §1](content.md#1-ground).
 
 ### 4.6 Zones
 
-**A zone acts while a monster stands in it:** it changes stats, and it pushes or pulls at the end of the occupant's turn. A zone never deals damage and never heals.
+**A zone pushes or pulls:** a monster that ends its turn inside is moved 1 square. A zone changes no stat, never deals damage, never heals and has one level.
 
 | Effect | When | Action | Opposite |
 |---|---|---|---|
-| `slow` | while inside | range of movement skills −value (never below 1; Step unaffected) | `haste` |
-| `haste` | while inside | range of movement skills +value | `slow` |
-| `drain_pace` | while inside | Pace −value points | `quicken` |
-| `quicken` | while inside | Pace +value points | `drain_pace` |
-| `drain_range` | while inside | Reach −value (min 1) | `extend` |
-| `extend` | while inside | Reach +value | `drain_range` |
 | `push` | end of the occupant's turn | move 1 in the zone's direction | `pull` |
 | `pull` | end of the occupant's turn | move 1 toward the zone's anchor square | `push` |
 
-- Effects hit **everyone** on the square: allies, enemies and the caster.
-- **A zone that only changes stats is never cast alone:** it comes along with ground, a push or a pull, or a Strike.
+- A zone moves **everyone** on the square: allies, enemies and the caster.
 - **Direction of a push zone:** cast alone, the direction is chosen with the cast. Left by a skill that also creates something else, it points where the placement is turned; left by a Strike, in the Strike's direction; left on the path of a movement, the way the monster went.
-- **Level to value:** `min(cap, base + level − 1)`, at least 1 (slow is capped at 2; push and pull are always 1).
-- **Why zones move at the end of the turn:** at turn start the target could simply walk away; at turn end it lands on a hazard or in front of a Strike. Counterplay: do not end your turn in a current.
+- **Counterplay:** do not end your turn in a current.
 
 **A zone lands on a square that already holds one:**
 
 | Existing zone | Result |
 |---|---|
 | none | new |
-| the same zone | levels up (max III) and refreshes to its full duration |
-| an opposite (any effect of one is the opposite of any effect of the other) | levels subtract: equal levels cancel and the square is empty; otherwise the higher zone stays with the difference, its clock unchanged |
-| anything else | replaced (level I) |
+| the same zone | refreshes to its full duration |
+| an opposite | both cancel and the square is empty |
+| anything else | replaced |
 
-No merging: a square always shows exactly one zone. Zone types: [content.md §2](content.md#2-zones).
+A square always shows exactly one zone. Zone types: [content.md §2](content.md#2-zones).
 
 ### 4.7 Props
 
@@ -224,13 +215,13 @@ No merging: a square always shows exactly one zone. Zone types: [content.md §2]
 | Strike | takes the hit and **shields the square behind it** | can be struck; shields nothing |
 
 - **Cover:** a solid prop takes a Strike and the square behind it is not struck. “Behind” is exact: in an extended shape every square has one square in front of it ([skills.md §4](skills.md#4-shapes)). Walkable props and monsters give no cover. Cover exists for Strikes only: nothing blocks choosing a square for ground, a zone or a prop.
-- **Trap:** a walkable prop with an entry effect. It acts when a monster enters its square (walking, push or pull) and is then used up; the monster continues as its move allows. Traps are open information: the movement preview shows the harm.
-- **Moments of a prop:** when destroyed, when hit (it lost HP and still stands), when entered (walkable props), at the round end.
+- **Trap:** a walkable prop with an entry effect. It acts when a monster enters its square (walking, push or pull) and is then used up; the monster continues as its move allows. Traps are open information: the movement preview shows the harm. **A solid prop springs a trap:** created on or pushed onto a trap, it sets the trap off and takes its square.
+- **Moments of a prop:** when destroyed, when hit (it lost HP and still stands), when entered (walkable props), at the end of the turn of a monster in its shape (damage), at the round end (push or pull).
 - **Fixed, previewed effects:** what a prop does is fixed by its type, independent of who or what set it off and from which direction. **No chain reactions:** prop damage hits monsters only, never props.
 - **No indestructible prop.**
-- **What damages a prop:** a Strike that deals damage hits props in its shape like monsters (2; a Swarm Strike 4); a collision deals 1. A Strike without damage moves a prop but does not damage it. Ground, zones and movement do not damage props.
+- **What damages a prop:** a Strike whose card names damage deals 2 to every prop in its shape, the Basic Jab 1, a collision 1. A Strike without damage moves a prop but does not damage it. Ground, zones and movement do not damage props.
 - **Tags:** `heavy` (cannot be displaced and takes no collision damage) and `spiky` (deals 2 instead of 1 collision damage to a monster displaced into it) *(working values)*.
-- **Zones and props:** the stat effects of a zone do not apply to a prop; a push or pull zone moves a prop standing in it at the round end.
+- **Zones and props:** a push or pull zone moves a prop standing in it at the round end.
 - **Created by a skill:** on a square that can take it. A created prop needs a square free of props and monsters. Board generation may pre-place any prop type.
 
 **Resolution:**
@@ -250,15 +241,15 @@ Every ground, zone and prop reads as a head plus lines of **when · what · how 
 | Head | Ground | Zone | Prop |
 |---|---|---|---|
 | Lies as | ground layer | zone layer | occupant: solid, or walkable under a monster |
-| Ends by | 2 rounds when laid in battle; other ground replaces it | the rounds its skill names; an opposite zone | 0 HP; a trap when it is entered |
+| Ends by | 2 rounds when laid in battle; other ground replaces it | the rounds its skill names; an opposite zone | 0 HP; 2 rounds when a skill created it; a trap when it is entered |
 | Acts on | who stands on the square | who stands on the square | the squares of its shape; a trap: who entered it |
-| Numbers | movement cost 1–2, level I–II | level I–III | HP 1–3 |
+| Numbers | movement cost 1–2 | — | HP 1–3 |
 
 | Line part | Vocabulary |
 |---|---|
 | When | the moments of [§3](#3-timing) |
 | What | damage · healing · range of movement skills ± · Pace ± · Reach ± · push · pull · creates ground, a zone or a prop |
-| How much | damage 1–2 (a hazard: its level); a stat change by its level; push and pull 1 square |
+| How much | damage 1–2; a stat change by its value; push and pull 1 square |
 | Where | the square itself, or a shape around a prop: the 4 neighbours, the 4 diagonals, the 8 around, each with extensions, or the full block 3×3 / 5×5. A prop has no direction |
 
 **Roles** (which kind may use which moment and effect):
@@ -267,31 +258,31 @@ Every ground, zone and prop reads as a head plus lines of **when · what · how 
 |---|---|---|---|
 | on entering | yes | — | walkable props only |
 | on leaving | yes | — | — |
-| while inside | — | stat changes | on its shape |
-| end of the occupant's turn | yes | push, pull | — |
-| end of the round | yes | — | yes |
+| while inside | — | — | on its shape |
+| end of the occupant's turn | yes | push, pull | damage |
+| end of the round | — | — | push, pull |
 | when hit, when destroyed | — | — | yes |
 | damage | yes | **never** | yes |
 | healing | yes | **never** | — |
-| stat changes | **never** | yes | yes |
+| stat changes | **never** | **never** | yes |
 | push, pull | — | yes | yes |
 | creates ground, a zone or a prop | — | — | yes |
 
-Three kinds stay because one ground, one zone and one occupant per square keeps combinations readable; a single kind would lose levelling, replacing and opposites.
+Three kinds stay: a hazard and a current can lie on the same square.
 
 ## 5. Monsters and Tamer in Battle
 
 ### 5.1 Effective Stats
 
-Effective stats combine the sheet with every modifier: zones, props that work while they stand, and effects on the monster itself. Ground changes no stat.
+Effective stats combine the sheet with every modifier: props that work while they stand and effects on the monster itself. Ground and zones change no stat.
 
 - **Stacking:** the same source (same effect of the same owner) only refreshes its duration and never adds. Different sources add without a cap; only the floors apply (range of a movement skill and Reach min 1, Pace min 0.1).
 
 | Stat | Changed in battle by |
 |---|---|
-| Pace | `drain_pace` / `quicken`; the Stamina recovery reads the same current value |
-| Stamina | the pool changes only by moving and by recovery; `slow` / `haste` change the range of movement skills, never Step |
-| Reach | `drain_range` / `extend` |
+| Pace | `quicken` / `drain_pace`: Pace ± value points; the Stamina recovery reads the same current value |
+| Stamina | the pool changes only by moving and by recovery; `haste` / `slow`: a movement skill costs value less or more Stamina per use, never Step |
+| Reach | `extend` / `drain_range`: Reach ± value (min 1) |
 
 Identity comes from species, Kin, stats, skills and passives. Themes impose no matchup triangle and no combat modifier.
 
@@ -312,20 +303,21 @@ Battle resolves the effects of the tamer's prepared loadout deterministically an
 
 **The highest single hit is 2** *(working value)*.
 
-- **Strike:** at most 2 against monsters, now, on the squares of its shape; a Strike may also deal none.
-- **Ground:** a hazard's level (at most 2), each at its moment.
+- **Strike:** none against monsters: a Strike only pushes. What its card names as damage (2) hits the props in its shape.
+- **Basic Jab:** 1, now, to the monster or prop on a neighbouring square.
+- **Ground:** 1–2, each at its moment.
 - **Collision:** 1; 2 for the moved monster at a `spiky` prop.
 - **Prop:** 1–2 at its moment.
 - **Dragon Vein and surrounding:** 1 each at the round end.
-- **Zones never deal damage.** Nothing but a Strike deals damage the instant it is used.
+- **Zones never deal damage.** Nothing but the Basic Jab damages a monster the instant it is used.
 - **Damage never scales by stage.**
 
-**Fair damage at range:** damage from a distance never hits a monster that has had no turn of its own since the cast. At range a skill can only create ground or a prop; ground acts when a monster enters or leaves it, at the end of that monster's own turn, or at the round end.
+**Fair damage at range:** damage from a distance never hits a monster that has had no turn of its own since the cast. At range a skill can only create ground or a prop; ground acts when a monster enters or leaves it or at the end of that monster's own turn.
 
 **Calculation:**
 
 - **One step:** damage = base + all increases − all reductions, then floored at 0. Order-independent. Each source modifies only the damage kinds it names. The maxima above limit the base; no source of increases exists.
-- **Zero damage still hits:** a Strike reduced to 0 damage still applies its push and what it creates.
+- **Zero damage still hits:** a hit reduced to 0 damage is still a hit.
 - **Same moment, net:** damage and healing from ground at the same moment resolve together: HP = min(max HP, HP − damage + healing).
 - No defense stat exists; damage is reduced only by passives that say so. All damage is exact and previewed.
 
@@ -333,11 +325,10 @@ Battle resolves the effects of the tamer's prepared loadout deterministically an
 
 **A payload** is what one use of a skill does at once. Its steps always resolve in this order:
 
-1. **Damage** to all struck monsters and props simultaneously. A solid prop takes the hit for the square behind it.
+1. **Damage** to all struck props, and to the monster the Basic Jab struck, simultaneously. A solid prop takes the hit for the square behind it.
 2. **Defeat:** units at 0 HP are removed before anything else resolves.
 3. **Displacement** of the survivors, one unit at a time, **the unit furthest along the movement direction first** (for a pull: nearest the anchor first). Collision, leaving and entry effects fire at each move.
 4. **Board changes**, in fixed order: (a) **removals:** every prop at 0 HP is removed with what it does when destroyed; monsters reduced to 0 HP by it are then defeated; (b) **prop placement**; (c) **ground:** what destroyed props leave, then what the skill creates; (d) **zones** the skill creates.
-5. **Self retreat** of a Strike that has one, on the resulting board.
 
 - What a payload creates lands after its displacement: a monster pushed by a Strike does not end in the ground that Strike leaves unless it stands there afterwards.
 - **Legality at execution:** each square is checked on the board as it stands at that step. A square that is not legal does nothing; everything else resolves. No retargeting and no refund of AP.
@@ -358,7 +349,7 @@ Battle resolves the effects of the tamer's prepared loadout deterministically an
 
 | Source | Direction |
 |---|---|
-| a Strike that pushes | 1 square away from the striker along the struck square's own offset: **eight directions**; only squares next to the striker are pushed |
+| a Strike that pushes | every struck monster and prop moves 1 square away from the striker along the line of its square: **eight directions**; a square on no line (the outer corners of an extended Arc) in the facing of the shape |
 | a movement that pushes on landing | the monster ahead: the direction of travel; all neighbours: outward, eight directions |
 | a prop that pushes or pulls | away from the prop, or toward its square, along the offset: eight directions |
 | a push zone | its direction: **cardinal** |
@@ -369,6 +360,6 @@ Battle resolves the effects of the tamer's prepared loadout deterministically an
 
 ## 7. Technical Requirements
 
-- Godot 4, **3D square grid, orthogonal camera at about 45°**, never hex.
+- Godot 4, **3D square grid, orthogonal camera**, never hex. The camera angle is not defined.
 - Round-end resolution reads the Dragon Vein squares actually on the board, not a fixed list.
 - Target architecture: [architecture.md](architecture.md). The current build and its tools: [godot/README.md](../godot/README.md).

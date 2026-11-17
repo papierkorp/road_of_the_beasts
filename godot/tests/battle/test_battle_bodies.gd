@@ -30,28 +30,27 @@ func test_a_2x2_covers_four_squares_and_measures_from_the_nearest_one() -> void:
 	assert_bool(u.orth_adjacent_to(Vector2i(4, 4))).is_false()
 
 
-func test_mixed_ground_every_type_once_and_the_highest_hazard_level() -> void:
+func test_mixed_ground_acts_once_per_type() -> void:
 	var b := H.battle([_big(Vector2i(2, 2)), [1, Vector2i(6, 6)]])
 	b.set_ground(Vector2i(2, 2), &"lava", 1)
-	b.set_ground(Vector2i(3, 2), &"lava", 2)
-	b.set_ground(Vector2i(2, 3), &"blight", 1)
+	b.set_ground(Vector2i(3, 2), &"lava", 1)
 	b.begin()
-	assert_int(H.unit(b, 0).hp).is_equal(9)      # nothing at the start of the turn (Blight acts at the end of the round)
+	assert_int(H.unit(b, 0).hp).is_equal(9)      # nothing at the start of the turn
 	b.end_turn()
-	assert_int(H.unit(b, 0).hp).is_equal(7)      # Lava once, at its highest level II
+	assert_int(H.unit(b, 0).hp).is_equal(8)      # Lava once, under two of its squares
 
 
 func test_entry_triggers_use_only_newly_covered_squares_and_net_with_healing() -> void:
 	var b := H.battle([_big(Vector2i(2, 2), 0, {"ap": 4, "current_hp": 5}), [1, Vector2i(6, 6)]])
-	b.set_ground(Vector2i(3, 2), &"thornbed", 2)  # already covered: leaving or keeping it triggers nothing
+	b.set_ground(Vector2i(3, 2), &"thornbed", 1)  # already covered: leaving or keeping it triggers nothing
 	b.set_ground(Vector2i(4, 2), &"thornbed", 1)
 	b.set_ground(Vector2i(4, 3), &"mossbed")
-	b.set_ground(Vector2i(5, 2), &"thornbed", 2)
+	b.set_ground(Vector2i(5, 2), &"thornbed", 1)
 	b.begin()
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 2)})).is_true()
-	assert_int(H.unit(b, 0).hp).is_equal(5)      # Thornbed I and Mossbed net to 0
+	assert_int(H.unit(b, 0).hp).is_equal(5)      # Thornbed and Mossbed net to 0
 	assert_bool(b.apply({"type": &"step", "to": Vector2i(4, 2)})).is_true()
-	assert_int(H.unit(b, 0).hp).is_equal(3)      # only the new column: Thornbed II
+	assert_int(H.unit(b, 0).hp).is_equal(4)      # only the new column: Thornbed
 
 
 func test_mountain_bonus_needs_all_four_squares_and_any_climb_costs_two() -> void:
@@ -110,18 +109,6 @@ func test_2x2_falls_only_if_all_four_squares_land_lower_and_cannot_be_pushed_uph
 	assert_that(u.pos).is_equal(Vector2i(3, 2))
 
 
-func test_each_distinct_zone_applies_once_and_different_zones_add() -> void:
-	var slow_a := H.zone_skill([FieldEffect.make("slow", 1, 2)], [Vector2i.ZERO], 2, "slow_a").zone
-	var slow_b := H.zone_skill([FieldEffect.make("slow", 1, 2)], [Vector2i.ZERO], 2, "slow_b").zone
-	var b := H.battle([_big(Vector2i(2, 2), 0, {"move": 4}), [1, Vector2i(6, 6)]])
-	var u := H.unit(b, 0)
-	for p in u.cells():
-		H.zone_on(b, p, slow_a, 10)              # one cast covering all four squares
-	assert_int(BattleStats.movement(b, u)).is_equal(3)
-	H.zone_on(b, Vector2i(3, 3), slow_b, 11)     # a second zone on one square adds as another source
-	assert_int(BattleStats.movement(b, u)).is_equal(2)
-
-
 func test_zone_pushes_under_a_2x2_cancel_or_combine_to_one_cardinal_step() -> void:
 	var push := H.zone_skill([FieldEffect.make("push", 1)]).zone
 	var b := H.battle([_big(Vector2i(2, 2)), [1, Vector2i(6, 6)]])
@@ -141,19 +128,17 @@ func test_zone_pushes_under_a_2x2_cancel_or_combine_to_one_cardinal_step() -> vo
 
 func test_one_hit_per_monster_per_payload_and_separate_payloads_add() -> void:
 	var b := H.battle([
-		[0, Vector2i(1, 3), {"pace": 1.9, "reach": 4, "ap": 5, "skills": [H.strike("arc"), H.surge([Vector2i.ZERO, Vector2i(0, 1)])]}],
+		[0, Vector2i(0, 3), {"pace": 1.9, "reach": 6, "ap": 5, "skills": [H.strike("arc"), H.surge([Vector2i.ZERO, Vector2i(0, 1)])]}],
 		_big(Vector2i(2, 2), 1, {"hp": 10}),
 	])
 	b.set_ground(Vector2i(3, 3), &"hallowed")
 	b.begin()
-	b.apply({"type": &"skill", "slot": 0, "dir": H.RIGHT})   # Arc covers (2,2) (2,3) (2,4): two body squares
-	assert_int(H.unit(b, 1).hp).is_equal(8)                  # struck once
 	b._declare_surge(b.active(), b.active().sheet.skills[1], {"slot": 1, "anchor": Vector2i(3, 2), "dir": Vector2i.ZERO})
-	BattleTurn.detonate(b, b.surges.duplicate())               # (3,2) (3,3)
+	BattleTurn.detonate(b, b.surges.duplicate())               # (3,2) (3,3): two body squares, one hit
 	b._declare_surge(b.active(), b.active().sheet.skills[1], {"slot": 1, "anchor": Vector2i(2, 2), "dir": Vector2i.ZERO})
 	BattleTurn.detonate(b, b.surges.duplicate())               # (2,2) (2,3)
 	# two Surges, each once: (3 - 1 Hallowed under any covered square) twice
-	assert_int(H.unit(b, 1).hp).is_equal(4)
+	assert_int(H.unit(b, 1).hp).is_equal(6)
 
 
 func test_a_2x2_striker_picks_its_origin_square_and_never_hits_itself() -> void:
@@ -161,7 +146,8 @@ func test_a_2x2_striker_picks_its_origin_square_and_never_hits_itself() -> void:
 	b.begin()
 	assert_str(b.check({"type": &"skill", "slot": 0, "dir": H.RIGHT, "origin": Vector2i(4, 4)})).contains("square of the striker")
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.RIGHT, "origin": Vector2i(3, 3)})).is_true()   # (4,3) (5,3)
-	assert_int(H.unit(b, 1).hp).is_equal(3)
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(6, 3))   # struck on the far square and pushed along its line
+	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(2, 2))
 	assert_int(H.unit(b, 0).hp).is_equal(9)
 
 
@@ -222,21 +208,15 @@ func test_flyers_ignore_ground_and_fly_over_ground_obstacles() -> void:
 	assert_int(u.hp).is_equal(5)                             # and ends its turn above Lava
 
 
-func test_surges_and_zone_effects_reach_the_air_only_when_authored() -> void:
+func test_surges_reach_the_air_only_when_authored() -> void:
 	var ground_surge := H.surge([Vector2i.ZERO])
 	var air_surge := H.surge([Vector2i.ZERO])
 	air_surge.surge_hits_air = true
-	var slow_ground := H.zone_skill([FieldEffect.make("slow", 1, 2)]).zone
-	var slow_air := H.zone_skill([FieldEffect.make("slow", 1, 2, true)], [Vector2i.ZERO], 2, "slow_air").zone
 	var b := H.battle([
 		[0, Vector2i(3, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": [ground_surge, air_surge]}],
 		[1, Vector2i(3, 3), {"airborne": true, "hp": 8, "move": 3}], [1, Vector2i(4, 3), {"airborne": true, "hp": 8, "move": 3}],
 		[1, Vector2i(3, 3), {"hp": 8}],
 	])
-	H.zone_on(b, Vector2i(3, 3), slow_ground)
-	H.zone_on(b, Vector2i(4, 3), slow_air, 901)
-	assert_int(BattleStats.movement(b, H.unit(b, 1))).is_equal(3)
-	assert_int(BattleStats.movement(b, H.unit(b, 2))).is_equal(2)
 	b.begin()
 	b._declare_surge(b.active(), b.active().sheet.skills[0], {"slot": 0, "anchor": Vector2i(3, 3), "dir": Vector2i.ZERO})
 	b._declare_surge(b.active(), b.active().sheet.skills[1], {"slot": 1, "anchor": Vector2i(4, 3), "dir": Vector2i.ZERO})

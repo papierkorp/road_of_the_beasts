@@ -11,6 +11,7 @@ tag = "push"
 script = ExtResource("2_r3bym")
 id = &"shockwave"
 display_name = "Shockwave"
+content_status = "archived"
 internal_calc_cost = 2.0
 effects = Array[ExtResource("1_e5gus")]([SubResource("Resource_q13as")])
 color = Color(0.92, 0.62, 0.4, 1)

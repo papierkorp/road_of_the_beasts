@@ -90,7 +90,7 @@ static func contributions(b: Battle, u: BattleUnit) -> Array[Dictionary]:
 	var raw: Array[Dictionary] = []
 	for z in zones_under(b, u):
 		for e in z.def.effects:
-			if e.affects_layer(u.layer):
+			if e.affects_layer(u.layer) and (e.tag == FieldEffect.PUSH or e.tag == FieldEffect.PULL):     # a zone changes no stat
 				raw.append({"key": "zone:%d" % z.gid, "tag": e.tag, "value": e.value_at(z.level)})
 	var grounds := grounds_under(b, u)
 	for gid: StringName in grounds:

@@ -11,6 +11,7 @@ cap = 2
 script = ExtResource("2_rnl5o")
 id = &"slowing"
 display_name = "Slowing Zone"
+content_status = "archived"
 internal_calc_cost = 1.5
 effects = Array[ExtResource("1_312lf")]([SubResource("Resource_b17wv")])
 color = Color(0.5, 0.62, 0.86, 1)

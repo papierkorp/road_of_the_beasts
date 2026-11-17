@@ -54,6 +54,99 @@ Kit sets of the entries below (S019 and later). Entries S001–S018 measured rul
 
 # Entries
 
+## S039 · 2026-11-17 · The review pack: a calm round 1, stronger veins late, Wait, once per round and the smaller switches
+
+**State:** main, base `5ca023c` dirty; content `2026-11-15.5`, kit set `0521d83d4da4`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 395 cases, the two known non-battle failures.
+
+**Switches measured** (test switches, no rules; [T44](todo/to-clarify/battle/T44-review-pack-of-2026-11-17.md), [godot/README.md](../godot/README.md)). “The pack” is everything on, as the build stood during the runs: `strike_push_all`, no `kin_effects`, no `zone_stats`, `flat_ground`, no `round_end_hazards`, `usage_per_round`, `vein_late_round` 5 with `vein_late_damage` 2, `prop_rounds` 2, `delay_turn` with `delay_reverse`, `damage_from_round` 2, `pressure_mode` none; on top of the build defaults of S038 (Strikes only push, Step 1 AP, Basic Jab 2 AP, props bury traps). After the runs the build default of `vein_late_round` was set to 3.
+
+**Runs:** `sim.gd -- 40 3v3 <seed> --paired [--variant …]`, seeds 1–8, 320 battles per row, bot greedy on both sides; `tactic` on both sides with 20 battles per seed, 160 per row; 7×7 with three Dragon Veins unless the row says otherwise; not side-swapped. Rows are sums over the full blocks; the blocks are not pasted. The rows “the rules” and “before the pack” reproduce S037 and S038 exactly. No battle of any row ended in round 1 and none timed out.
+
+| Row | Variant | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| the rules of battle.md | `nopack,strikedamage,notrapdefuse` | 320 | 156 / 154 / 10 / 0 | 3.75 | 37 (12 %) | 23 (7 %) | 8 | 1.45 | 9.4 | 2.5 | 5.5 | 2.1 | 6.8 | 0.7 | 27.0 | 4.0 | 0.0 |
+| the build before the pack (S038, Step 1 AP and Basic Jab 2 AP) | `nopack` | 320 | 165 / 148 / 7 / 0 | 4.18 | 14 (4 %) | 38 (12 %) | 8 | 1.89 | 2.0 | 3.7 | 8.5 | 3.0 | 8.2 | 1.4 | 26.8 | 4.6 | 2.1 |
+| **the pack** (veins 2 from round 5) | none at the time of the run | 320 | 159 / 144 / 17 / 0 | 4.47 | 1 (0 %) | 34 (11 %) | 9 | 2.39 | 3.2 | 3.5 | 8.2 | 3.2 | 8.5 | 1.1 | 27.8 | 5.0 | 3.3 |
+| pack, veins 2 from round 4 | `x.vein_late_round=4` | 320 | 156 / 140 / 24 / 0 | 4.26 | 1 (0 %) | 17 (5 %) | 9 | 2.39 | 3.1 | 3.4 | 8.1 | 3.1 | 9.6 | 1.1 | 28.3 | 4.8 | 3.2 |
+| **pack, veins 2 from round 3 (the build default after this entry)** | `x.vein_late_round=3` | 320 | 156 / 153 / 11 / 0 | 4.04 | 1 (0 %) | 13 (4 %) | 9 | 2.38 | 2.8 | 3.3 | 7.8 | 3.0 | 10.5 | 1.1 | 28.5 | 4.5 | 2.9 |
+| tactic · the build before the pack | `nopack` | 160 | 83 / 73 / 4 / 0 | 4.42 | 5 (3 %) | 27 (17 %) | 8 | 2.05 | 1.4 | 3.2 | 8.0 | 3.4 | 9.0 | 1.3 | 26.3 | 11.4 | 1.5 |
+| tactic · the pack (veins 2 from round 5) | none at the time of the run | 160 | 81 / 72 / 7 / 0 | 4.88 | 0 (0 %) | 33 (21 %) | 7 | 2.73 | 2.2 | 2.9 | 7.4 | 3.6 | 10.5 | 1.1 | 27.7 | 13.7 | 2.2 |
+
+**The two length levers, apart and together:**
+
+| Row | Variant | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| pack without the calm round 1 | `x.damage_from_round=1` | 320 | 160 / 149 / 11 / 0 | 4.12 | 10 (3 %) | 14 (4 %) | 8 | 2.01 | 2.9 | 3.0 | 8.2 | 3.0 | 8.8 | 1.7 | 27.4 | 4.5 | 3.0 |
+| pack without stronger veins | `x.vein_late_round=0` | 320 | 163 / 151 / 6 / 0 | 4.62 | 1 (0 %) | 60 (19 %) | 12 | 2.39 | 3.3 | 3.6 | 8.3 | 3.2 | 7.7 | 1.1 | 27.2 | 5.2 | 3.4 |
+| pack without both | `x.damage_from_round=1,x.vein_late_round=0` | 320 | 160 / 150 / 10 / 0 | 4.20 | 10 (3 %) | 34 (11 %) | 8 | 2.01 | 2.9 | 3.0 | 8.2 | 3.0 | 8.4 | 1.7 | 27.1 | 4.6 | 3.0 |
+| pack without the calm round, veins 2 from round 4 | `x.damage_from_round=1,x.vein_late_round=4` | 320 | 161 / 147 / 12 / 0 | 3.94 | 10 (3 %) | 13 (4 %) | 8 | 2.01 | 2.8 | 2.9 | 8.0 | 2.9 | 9.6 | 1.7 | 27.9 | 4.4 | 2.9 |
+| before + calm round 1 | `nopack,x.damage_from_round=2` | 320 | 150 / 159 / 11 / 0 | 4.57 | 4 (1 %) | 58 (18 %) | 9 | 2.39 | 2.3 | 4.1 | 8.8 | 3.2 | 7.5 | 0.9 | 26.9 | 5.3 | 2.5 |
+| before + veins 2 from round 5 | `nopack,x.vein_late_round=5` | 320 | 161 / 148 / 11 / 0 | 4.10 | 14 (4 %) | 25 (8 %) | 7 | 1.89 | 1.9 | 3.7 | 8.4 | 3.0 | 8.6 | 1.4 | 27.1 | 4.6 | 2.1 |
+
+**One switch taken out of the pack, or added to the build before it:**
+
+| Row | Variant | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| pack, Strikes push only the squares next to the striker | `x.strike_push_all=false` | 320 | 158 / 148 / 14 / 0 | 4.46 | 1 (0 %) | 36 (11 %) | 7 | 2.40 | 3.2 | 3.6 | 8.2 | 3.1 | 8.3 | 1.1 | 27.5 | 5.2 | 3.3 |
+| pack with Kin effects | `x.kin_effects=true` | 320 | 148 / 162 / 10 / 0 | 4.49 | 1 (0 %) | 36 (11 %) | 10 | 2.39 | 2.7 | 3.6 | 8.4 | 3.3 | 8.4 | 1.0 | 27.5 | 4.8 | 2.9 |
+| pack with zone stats and levels | `x.zone_stats=true` | 320 | 150 / 155 / 15 / 0 | 4.53 | 4 (1 %) | 33 (10 %) | 7 | 2.45 | 3.0 | 3.7 | 8.1 | 3.1 | 9.0 | 1.1 | 28.0 | 5.5 | 3.1 |
+| pack with ground levels | `x.flat_ground=false` | 320 | 159 / 148 / 13 / 0 | 4.40 | 1 (0 %) | 26 (8 %) | 9 | 2.42 | 3.0 | 3.9 | 8.2 | 3.1 | 7.9 | 1.1 | 27.2 | 4.9 | 3.2 |
+| pack with round-end ground and props | `x.round_end_hazards=true` | 320 | 157 / 150 / 13 / 0 | 4.44 | 2 (1 %) | 31 (10 %) | 9 | 2.39 | 3.2 | 3.8 | 8.3 | 3.0 | 8.3 | 1.1 | 27.6 | 4.9 | 3.3 |
+| pack with once per turn | `x.usage_per_round=false` | 320 | 160 / 140 / 20 / 0 | 4.45 | 1 (0 %) | 33 (10 %) | 9 | 2.40 | 3.1 | 3.5 | 8.3 | 3.2 | 8.5 | 1.1 | 27.8 | 5.0 | 3.2 |
+| pack with lasting props | `x.prop_rounds=0` | 320 | 154 / 146 / 20 / 0 | 4.48 | 1 (0 %) | 32 (10 %) | 9 | 2.40 | 3.2 | 3.5 | 8.5 | 3.3 | 8.4 | 1.0 | 27.9 | 5.0 | 3.3 |
+| pack without Wait | `x.delay_turn=false` | 320 | 152 / 153 / 15 / 0 | 4.50 | 1 (0 %) | 37 (12 %) | 7 | 2.42 | 3.2 | 3.6 | 8.3 | 3.2 | 8.5 | 1.1 | 27.8 | 5.1 | 3.3 |
+| before + Wait | `nopack,x.delay_turn=true,x.delay_reverse=true` | 320 | 167 / 148 / 5 / 0 | 4.17 | 13 (4 %) | 38 (12 %) | 9 | 1.89 | 2.0 | 3.8 | 8.5 | 3.0 | 8.2 | 1.5 | 26.9 | 4.7 | 2.1 |
+| before + closed round end | `nopack,x.round_end_hazards=false` | 320 | 166 / 151 / 3 / 0 | 4.21 | 12 (4 %) | 39 (12 %) | 10 | 1.95 | 2.0 | 3.4 | 8.5 | 3.1 | 8.3 | 1.5 | 26.7 | 4.6 | 2.2 |
+| before + once per round | `nopack,x.usage_per_round=true` | 320 | 161 / 152 / 7 / 0 | 4.13 | 14 (4 %) | 33 (10 %) | 8 | 1.88 | 2.0 | 3.7 | 8.5 | 3.0 | 8.1 | 1.5 | 26.7 | 4.6 | 2.1 |
+
+**Other variants:**
+
+| Row | Variant | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| pack, Strikes spare props | `x.strike_prop_damage=false` | 320 | 177 / 133 / 10 / 0 | 4.42 | 1 (0 %) | 27 (8 %) | 10 | 2.39 | 3.1 | 3.5 | 8.8 | 3.3 | 8.3 | 1.0 | 27.9 | 4.8 | 3.8 |
+| pack with Strike damage to monsters | `strikedamage` | 320 | 149 / 159 / 12 / 0 | 4.03 | 7 (2 %) | 16 (5 %) | 7 | 2.09 | 11.2 | 2.7 | 5.8 | 1.7 | 6.5 | 0.2 | 28.0 | 4.5 | 0.0 |
+| pack, Basic Jab 1 AP | `basicjab=1` | 320 | 150 / 160 / 10 / 0 | 4.34 | 1 (0 %) | 21 (7 %) | 7 | 2.34 | 5.0 | 3.0 | 8.1 | 2.9 | 7.8 | 0.9 | 27.6 | 4.8 | 5.4 |
+| pack on 9×9 with five veins | `size=9,wells=5` | 320 | 150 / 137 / 33 / 0 | 4.43 | 0 (0 %) | 13 (4 %) | 7 | 2.67 | 2.8 | 3.0 | 6.9 | 2.5 | 14.3 | 0.6 | 30.0 | 8.6 | 2.9 |
+| before, on 9×9 with five veins | `nopack,size=9,wells=5` | 320 | 168 / 137 / 15 / 0 | 4.17 | 2 (1 %) | 21 (7 %) | 8 | 2.29 | 1.9 | 2.9 | 6.8 | 2.4 | 12.6 | 0.5 | 27.2 | 7.8 | 2.0 |
+
+**Activations over the 320 battles:**
+
+| Skill | the rules | before the pack | the pack | pack, veins from round 3 | pack with Strike damage |
+|---|---|---|---|---|---|
+| run | 1603 | 1686 | 1955 | 1840 | 1829 |
+| glide | 692 | 749 | 882 | 856 | 774 |
+| quake_leap | 314 | 421 | 508 | 487 | 397 |
+| headbutt | 252 | 273 | 313 | 300 | 255 |
+| strike_jab | 1304 | 1200 | 1104 | 1027 | 1576 |
+| shove | 555 | 813 | 908 | 838 | 645 |
+| strike_thrust | 424 | 246 | 364 | 340 | 499 |
+| thorn_lash | 363 | 268 | 263 | 238 | 393 |
+| basic_jab | 0 | 680 | 1058 | 937 | 0 |
+| lava_field | 414 | 656 | 690 | 643 | 452 |
+| thornbed | 624 | 788 | 862 | 822 | 730 |
+| gloom_rift | 740 | 970 | 1051 | 1003 | 861 |
+| gale | 218 | 291 | 302 | 280 | 248 |
+| void_pull | 291 | 315 | 311 | 300 | 290 |
+| bog | 148 | 146 | 178 | 173 | 155 |
+| raise_wall | 282 | 346 | 384 | 330 | 354 |
+| set_idol | 214 | 279 | 305 | 290 | 269 |
+| light_brazier | 54 | 93 | 107 | 97 | 51 |
+| lay_spikes | 164 | 243 | 299 | 277 | 178 |
+
+**Observations** (indications; bots on both sides, about ±4 points on a share of 320 battles):
+
+- *The calm round 1 removes the short battles and costs length:* the pack has 1 battle under 3 rounds against 14 before it and 37 with the rules, and the first defeat moves from round 1.89 to 2.39 (tactic: 5 to 0 of 160, 2.05 to 2.73). Alone it adds about 0.4 rounds and long battles (4.57 rounds, 58 over 5 against 38).
+- *Stronger veins pay that back:* from round 5 they bring the pack to 4.47 rounds with 34 over 5 (without them 4.62 and 60), from round 4 to 4.26 and 17, from round 3 to 4.04 and 13, each with 1 battle under 3 rounds. Draws rise with them (7 before the pack, 17, 24 and 11 of 320). Alone on the build before, from round 5: 4.10 rounds, 25 over 5 against 38.
+- *With `tactic` the pack as measured is too long:* 4.88 rounds and 33 of 160 over 5 against 4.42 and 27 before it; veins from round 3 were not run with `tactic`.
+- *The smaller switches move nothing these bots can show:* pushing every struck square, Kin effects, zone stats and levels, ground levels, the closed round end, once per round, lasting props and Wait all leave the pack within 4.40–4.53 rounds, 0–4 battles under 3 and 26–37 over 5. The bots cast for the moment, hold no zone or ground level in mind and do not plan a turn order, so this says little about a human; Thrust is used more with the farther push (364 against 246 before the pack).
+- *Strike damage on top of the pack:* 4.03 rounds, 7 under 3 and 16 over 5, first defeat 2.09; Strikes then deal 11.2 of 28.0 damage per battle and collisions fall from 8.2 to 5.8.
+- *Strikes that spare props* change the length little (4.42 rounds, 27 over 5); side 0 wins 177 to 133, which no other row shows and one series does not explain.
+- *9×9 with five veins:* the pack gives 4.43 rounds, 0 under 3 and 13 over 5, with 33 Draws; before the pack 4.17, 2 and 21 with 15 Draws. Veins deal 14.3 and 12.6 of the damage per battle there.
+
+**Follow-up:** T44 (each switch after play; the round from which veins deal 2, and the Draws), T43, T39 (board and veins), T13 (`tactic` with veins from round 3). No rule and no content value was changed by this entry; the build default of `vein_late_round` went from 5 to 3.
+
+8 960 battles in 232 runs.
+
 ## S033 · 2026-11-16 · The opponent AI fights for the Dragon Veins
 
 **State:** main, base `a93e6f7` dirty (the AI of 2026-11-16: `ai_veins`, `ai_try_all` on by default); Godot 4.7.2; the in-game kits of the ten-monster pool (fingerprint not printed by `--compact-head`). Battle suites green; the full suite has its two known non-battle failures.
@@ -76,6 +169,89 @@ Per-seed mean rounds: A 4.0 / 3.5 / 3.0 / 3.5 / 3.9 / 3.4 / 3.4 / 3.6; B 4.4 / 4
 - Both AI rows lie in the user's "perfect" band of 3.5–4.5 or just below it (C). A human who fights the AI differently is not measured.
 
 **Follow-up:** T13 (battle length; why the earlier series were longer), T39 (Dragon Veins). No rule was changed by this entry.
+
+## S038 · 2026-11-17 · Step and Basic Jab: which of the two carries the 2 AP
+
+**State:** as S037 (main, base `5ca023c` dirty; content `2026-11-15.5`, kit set `4b3fac55c5bd`; the same frozen copy).
+
+**Runs:** as S037: `sim.gd -- 40 3v3 <seed> --paired [--variant …]`, seeds 1–8, 320 battles per row, bot greedy on both sides, not side-swapped. The rows “build defaults” and “both at 1 AP” are copied from S037.
+
+| Row | Switches changed from the build default | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | First defeat (round) | Defeats / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Step 2 AP, Basic Jab 2 AP (build defaults, S037) | none | 320 | 157 / 157 / 6 / 0 | 4.39 | 11 (3 %) | 66 (21 %) | 10 | 1.95 | 4.21 | 1.7 | 4.0 | 8.5 | 3.3 | 8.4 | 1.2 | 27.0 | 1.9 | 1.9 |
+| Step 2 AP, Basic Jab 1 AP | `basic_jab_ap=1` | 320 | 153 / 158 / 9 / 0 | 4.20 | 15 (5 %) | 43 (13 %) | 8 | 1.82 | 4.24 | 4.0 | 3.3 | 7.9 | 3.0 | 8.0 | 1.1 | 27.2 | 2.0 | 4.6 |
+| Step 1 AP, Basic Jab 2 AP | `step_ap=1` | 320 | 165 / 148 / 7 / 0 | 4.18 | 14 (4 %) | 38 (12 %) | 8 | 1.89 | 4.16 | 2.0 | 3.7 | 8.5 | 3.0 | 8.2 | 1.4 | 26.8 | 4.6 | 2.1 |
+| Step 1 AP, Basic Jab 1 AP (S037) | `step_ap=1, basic_jab_ap=1` | 320 | 151 / 156 / 13 / 0 | 4.05 | 17 (5 %) | 29 (9 %) | 9 | 1.75 | 4.25 | 4.1 | 3.2 | 7.6 | 2.8 | 8.1 | 1.3 | 27.2 | 4.5 | 4.6 |
+
+**Observations** (indications; one bot):
+
+- *Each of the two at 1 AP shortens the battles about equally:* 4.20 and 4.18 rounds against 4.39, 43 and 38 battles over 5 rounds against 66; the longest battle is 8 rounds against 10.
+- *They do it in different ways:* a Basic Jab at 1 AP is used 4.6 times per battle and brings direct damage back to 4.0 per battle; a Step at 1 AP is used 4.6 times and leaves direct damage at 2.0, the damage staying on the board (collisions 8.5, ground 3.7).
+- *The first defeat stays late in both* (round 1.82 and 1.89 against 1.75 with both at 1 AP and 1.45 with the rules, S037).
+- *Lava Field:* 706 uses with the cheap Basic Jab, 656 with the cheap Step, 987 with both at 2 AP.
+
+**Follow-up:** T43. No rule and no content value was changed by this entry.
+
+640 battles in 16 runs.
+
+## S037 · 2026-11-17 · The build defaults of 2026-11-17: Strikes only push, Step and Basic Jab at 2 AP, props bury traps
+
+**State:** main, base `5ca023c` dirty; content `2026-11-15.5`, kit set `4b3fac55c5bd`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 383 cases, the two known non-battle failures.
+
+**Rules of the measured state** (new against S036, in every row): straight-line movement has four directions, `slow` and `haste` change the Stamina a movement skill costs per use instead of its range, the squares of a free shape may touch over a corner. **Build defaults** (test switches, no rules): `strike_push_only`, `trap_defuse`, `step_ap` 2 and `basic_jab_ap` 2.
+
+**Runs:** `sim.gd -- 40 3v3 <seed> --paired [--variant …]`, seeds 1–8, 320 battles per row, bot greedy on both sides, 7×7 with three Dragon Veins, not side-swapped. Every block now lists the switches that differ from the build default and all switches.
+
+| Row | Switches changed from the build default | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | First defeat (round) | Defeats / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| build defaults | none | 320 | 157 / 157 / 6 / 0 | 4.39 | 11 (3 %) | 66 (21 %) | 10 | 1.95 | 4.21 | 1.7 | 4.0 | 8.5 | 3.3 | 8.4 | 1.2 | 27.0 | 1.9 | 1.9 |
+| Step and Basic Jab at 1 AP | `step_ap=1, basic_jab_ap=1` | 320 | 151 / 156 / 13 / 0 | 4.05 | 17 (5 %) | 29 (9 %) | 9 | 1.75 | 4.25 | 4.1 | 3.2 | 7.6 | 2.8 | 8.1 | 1.3 | 27.2 | 4.5 | 4.6 |
+| the rules of battle.md | `step_ap=1, basic_jab_ap=1, trap_defuse=false, strike_push_only=false` | 320 | 156 / 154 / 10 / 0 | 3.75 | 37 (12 %) | 23 (7 %) | 8 | 1.45 | 4.26 | 9.4 | 2.5 | 5.5 | 2.1 | 6.8 | 0.7 | 27.0 | 4.0 | — |
+
+**Activations over the 320 battles** (build defaults / Step and Basic Jab at 1 AP / the rules): Run 1 866 / 1 625 / 1 603; Glide 730 / 715 / 692; Quake Leap 435 / 403 / 314; Headbutt 310 / 273 / 252; Jab 1 199 / 1 142 / 1 304; Shove 832 / 756 / 555; Thrust 267 / 237 / 424; Thorn Lash 240 / 261 / 363; Basic Jab 603 / 1 483 / —; Lava Field 987 / 480 / 414; Thornbed 912 / 709 / 624; Gloom Rift 972 / 980 / 740; Gale 345 / 259 / 218; Void Pull 324 / 271 / 291; Bog 163 / 135 / 148; Raise Wall 376 / 352 / 282; Set Idol 384 / 233 / 214.
+
+**Observations** (indications; one bot):
+
+- *The build defaults stay inside the length target:* 4.39 rounds (target 3.0–4.9); 3 % of the battles end under 3 rounds against 12 % with the rules, but 21 % last over 5 rounds against 7 %. The first defeat moves from round 1.45 to 1.95. Total damage per battle is unchanged (27.0).
+- *Direct damage nearly disappears:* 1.7 of 27.0 damage per battle come from the Basic Jab (1.9 uses per battle); collisions (8.5) and Dragon Veins (8.4) carry the battle, ground 4.0 and props 3.3.
+- *Step at 2 AP is used half as often* (1.9 against 4.5 per battle) and the movement skills more (Run +15 %); the 2 AP on Step and Basic Jab account for the longer battles (4.39 against 4.05 rounds, 66 against 29 battles over 5 rounds).
+- *Skills that lay damaging ground gain most:* Lava Field 987 uses against 480 with the 1-AP Step and 414 with the rules; Thornbed +29 % and +46 %.
+- *Against S036* the row with the rules reads 3.75 rounds against 3.87 and 37 against 38 battles under 3 rounds: the rule changes of the day (orthogonal lines, slow and haste as Stamina cost) move little for this bot.
+
+**Follow-up:** T43 (the battles over 5 rounds; whether 2 AP for Step and Basic Jab becomes the rule), T02. No rule and no content value was changed by this entry.
+
+960 battles in 24 runs.
+
+## S036 · 2026-11-17 · A movement skill or a Strike in a turn, against Stamina on Strikes; Strikes that only push without reach 3 and pulls
+
+**State:** main, base `5ca023c` dirty; content `2026-11-15.5`, kit set `4b3fac55c5bd`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 380 cases, the two known non-battle failures.
+
+**Switches measured** (test switches, no rules; [T43](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)): `moveorstrike`: in one turn a monster uses movement skills or Strikes, not both; Step and the Basic Jab are free of it, a movement skill that pushes on landing counts as movement. `skillstamina` as in S034. `pushonly` as changed after S035: a Strike deals no damage to monsters and keeps its shape and its push (no reach 3, no pulls). Every switch gives every monster the Basic Jab beside Step.
+
+**Runs:** as S033–S035: `sim.gd -- 40 3v3 <seed> --paired [--variant …]`, seeds 1–8, 320 battles per row, bot greedy on both sides, not side-swapped. The row without a switch reproduces S033 exactly, the row `skillstamina` reproduces S034.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Longest | Defeats / battle | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| no switch | 320 | 165 / 146 / 9 / 0 | 3.87 | 38 (12 %) | 34 (11 %) | 8 | 4.24 | 9.5 | 2.6 | 5.7 | 1.8 | 6.6 | 0.7 | 26.8 | 3.5 | — |
+| `moveorstrike` | 320 | 159 / 155 / 6 / 0 | 3.98 | 22 (7 %) | 32 (10 %) | 10 | 4.28 | 9.7 | 2.7 | 5.0 | 1.8 | 6.9 | 1.1 | 27.3 | 4.1 | 3.0 |
+| `skillstamina` | 320 | 156 / 159 / 5 / 0 | 4.24 | 16 (5 %) | 40 (13 %) | 9 | 4.21 | 8.4 | 2.6 | 5.7 | 2.2 | 7.3 | 0.7 | 26.8 | 6.7 | 3.4 |
+| `pushonly` | 320 | 165 / 150 / 5 / 0 | 4.08 | 22 (7 %) | 32 (10 %) | 9 | 4.19 | 4.0 | 3.1 | 7.7 | 3.0 | 7.6 | 1.4 | 26.9 | 3.8 | 4.5 |
+| `pushonly,moveorstrike` | 320 | 168 / 148 / 4 / 0 | 4.17 | 10 (3 %) | 42 (13 %) | 9 | 4.21 | 4.7 | 3.3 | 7.1 | 2.7 | 7.6 | 1.5 | 26.9 | 4.7 | 5.5 |
+| `pushonly,skillstamina` | 320 | 159 / 150 / 11 / 0 | 4.26 | 10 (3 %) | 41 (13 %) | 11 | 4.25 | 4.5 | 3.2 | 7.0 | 3.0 | 7.9 | 1.1 | 26.8 | 7.0 | 5.8 |
+
+**Activations over the 320 battles** (no switch / `moveorstrike` / `skillstamina` / `pushonly` / `pushonly,moveorstrike` / `pushonly,skillstamina`): Jab 1 324 / 1 035 / 1 077 / 1 132 / 993 / 833; Shove 556 / 462 / 533 / 742 / 553 / 643; Thrust 447 / 489 / 93 / 235 / 239 / 22; Thorn Lash 356 / 263 / 241 / 237 / 219 / 184; Run 1 734 / 1 449 / 1 259 / 1 747 / 1 510 / 1 308; Glide 692 / 699 / 601 / 744 / 770 / 616; Quake Leap 323 / 329 / 349 / 433 / 432 / 448; Headbutt 206 / 195 / 204 / 239 / 242 / 246; Gloom Rift 766 / 966 / 1 012 / 990 / 1 087 / 1 125; Thornbed 651 / 747 / 822 / 705 / 853 / 925; Lava Field 490 / 399 / 603 / 521 / 545 / 636; Gale 214 / 225 / 355 / 289 / 271 / 395; Void Pull 288 / 255 / 330 / 234 / 263 / 320; Raise Wall 303 / 326 / 429 / 358 / 377 / 425.
+
+**Observations** (indications; one bot):
+
+- *“Movement or Strike” changes little for this bot:* 3.98 rounds against 3.87, Strike damage unchanged (9.7 against 9.5), fewer battles under 3 rounds (22 against 38). The Basic Jab fills the gap (3.0 uses per battle): a monster runs up and jabs for 1, or steps and strikes. Jab −22 %, Run −16 %; the Strike with the longer shape gains (Thrust +9 %).
+- *Stamina on Strikes bites harder than the ban:* 4.24 rounds, Strike damage 8.4, Step 6.7 per battle against 4.1, and the board skills are used more (Gale +66 % against +5 %).
+- *Strikes that only push, without reach 3 and pulls:* 4.08 rounds against 3.87, 7 % under 3 and 10 % over 5 rounds (S035 with reach 3: 3.78 rounds, 4 % and 4 %). The damage moves to the board as in S035: collisions 7.7 (5.7), props 3.0 (1.8), ground 3.1 (2.6), Dragon Veins 7.6 (6.6); Strike damage 4.0 is the Basic Jab. Shove, Quake Leap and the board skills are used more, the Jab less.
+- *On top of push-only Strikes the two restrictions give nearly the same battles:* 4.17 and 4.26 rounds, 3 % under 3 rounds and 13 % over 5 in both; with Stamina the bot walks with Step more (7.0 against 4.7) and Thrust drops out (22 uses).
+- *Total damage per battle is 26.8–27.3 in every row.*
+
+**Follow-up:** T43 (which of the two restrictions, if any; the Basic Jab softens both). No rule and no content value was changed by this entry.
+
+1 920 battles in 48 runs.
 
 ## S035 · 2026-11-17 · Strikes only push or pull: no Strike damage to monsters, reach 3, with the Basic Jab
 

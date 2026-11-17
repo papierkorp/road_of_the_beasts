@@ -21,40 +21,42 @@ var _random_board: CheckBox
 ## Open test switches (temp_todo T38): label -> CheckBox. They apply to every battle.
 var _experiments := {}
 const EXPERIMENTS := [
-	["Beast pushes, Spirit swaps", "Beast Strikes push the target 1 square away; a Spirit Strike trades squares with it."],
-	["Push 2 squares", "Strike and Surge pushes and pulls move up to 2 squares."],
-	["No push when a zone is cast", "A push or pull zone moves its occupants only at the end of their turn, not when it is cast (S025)."],
-	["Each skill once per turn", "Every slotted skill at most once per turn of its monster; Step stays free (S025)."],
-	["Collision hurts only the moved monster", "A monster pushed or pulled into another monster takes the damage alone (S025)."],
-	["Charged Dragon Veins", "Every vein is charged at the start of a round. The first monster that touches it, or the one standing on it at the end of its turn, discharges it: 1 damage to the nearest enemy. No ownership, no vein damage at the round end (S026)."],
-	["Charged veins hit at the round end", "With Charged Dragon Veins: the first touch of a round wins the vein for that round, wherever the monster stands afterwards; its 1 damage comes at the end of the round (S027)."],
-	["Stamina instead of Movement", "Rule since 2026-11-15: the Movement stat is a Stamina pool. A movement skill costs Stamina for every square it enters (Plain 1, Rubble 2) and reaches at most the range on the skill (3) and never further than the Stamina left. At the round end every monster recovers the whole number of its Pace, at least 1. Step stays 1 AP for 1 square without Stamina. Off = the rule before: a movement skill covers the Movement stat."],
-	["Movement skills also cost AP", "With Stamina: a movement skill costs its AP and the Stamina. Off = Stamina only."],
 	["Dragon Veins: last touch owns", "GDD rule: a vein deals its round-end damage for the side that touched it last, whether or not a monster stands on it; the board shows the owner. Off = a monster has to stand on it at the round end (S028)."],
-	["Step walks the full Movement", "The Step of every monster walks up to its Movement for 1 AP, like Run (S026)."],
-	["Strikes only push", "Idea to try: a Strike deals no damage to monsters (props still take it); its shape and its push stay. Damage comes from ground, collisions, Dragon Veins and props. Every monster has a Basic Jab (1 AP, 1 damage, once a turn) beside Step."],
-	["Strikes cost Stamina", "Idea to try: a Strike costs Stamina beside its AP (1; 2 for an extended shape and a Cross). Movement skills pay their squares as before; ground, zone, prop and buff skills cost AP only. Every monster has a Basic Jab (1 AP, 1 damage, no Stamina, once a turn) beside Step. Needs Stamina instead of Movement."],
-	["Props bury traps", "Idea to try: a solid prop that is created on or pushed onto a trap removes the trap without springing it and takes its square. Off = a trap square takes no other prop."],
+	["Free camera", "View switch, to compare: dragging with the middle mouse button also tilts the camera up and down (left and right turns it, as before). Off = the fixed tilt."],
 	["Random monsters", "Monster switch: every monster of the battle, yours too, gets random stats and a random Kin, bought with the monster calculation for 60 points. The monster you pick is only the look. Each also plays a random kit (see Random kits)."],
 	["Random kits", "Kit switch: every monster of the battle, yours too, plays a random kit instead of its own. Each monster draws a kit template (Balanced, Bruiser, Skirmisher, Controller, Trapper, Shaper) that only says how many Strikes, movement, zone, ground and prop skills it holds; the skills are drawn from the game's own. A new draw for every battle; 'Fight Again' repeats the same kits."],
 	["New skills every battle", "Kit switch: the random kits are made of skills generated for this battle instead of the game's own. Their AP follow the draft price list (SkillCalc). Nothing is saved."],
-	["AI tries every skill", "The opponent prefers a skill it has not used yet in this battle, as long as the use costs it nothing."],
-	["AI fights for Dragon Veins", "The opponent walks to the veins it does not own, keeps you away from its own (walls, a solid prop on an owned vein) and breaks what locks one of yours. It looks one action further within a turn."],
-	["Board 8×8", "Board switch: the battle is played on an 8×8 board (larger than the mode's own). No centre row: the Dragon Veins lie in mirrored pairs on the two centre rows (the number rounds up to an even one: 3 → 4)."],
-	["Board 9×9", "Board switch: the battle is played on a 9×9 board. Dragon Veins on the centre row as on 7×7. Wins over 'Board 8×8'."],
+]
+
+## The review pack of 2026-11-17 (docs/todo T44): label, tooltip, switch of BattleExperiment, value when the box is
+## on, value when it is off. All on by default; none is a rule. They get their check boxes after EXPERIMENTS.
+const PACK := [
+	["Pack: no damage in round 1", "Round 1 is for position: nothing deals damage before round 2. Off = damage from round 1 (the rule).", "damage_from_round", 2, 1],
+	["Pack: no late-round pressure", "No Voidscar spreads. Off = late-round pressure runs while nobody owns a Dragon Vein (the rule).", "pressure_mode", "none", "idle"],
 ]
 
 ## Board and value switches: label, min, max, unused, tooltip -> SpinBox.
 var _numbers := {}
 const NUMBERS := [
+	["Board size", 7, 9, 0, "Side length of the board: 7 = the board of the mode, 8 = 8×8 (no centre row: the Dragon Veins lie in mirrored pairs on the two centre rows), 9 = 9×9 (Dragon Veins on the centre row as on 7×7)."],
 	["Dragon Veins", 0, 7, 0, "Dragon Vein squares on the centre row (7×7 and larger boards only; 0 = none; the build rule is 3). An even board (8×8) has them in mirrored pairs on its two centre rows, so the number rounds up to an even one."],
+	["Veins deal 2 from round", 0, 9, 0, "From this round on an owned Dragon Vein deals 2 instead of 1 (build default 3; S039 measured 5, 4 and 3). 0 = never: always 1 (the rule)."],
 	["Prop pairs", -1, 8, 0, "Mirrored prop pairs the board starts with: -1 = the fixed test layout (or the random board's own number), 0 = no props, N = that many pairs of random prop types on random squares."],
 	["Stamina per round", 0, 5, 0, "0 = the rule: every monster recovers the whole number of its Pace, at least 1. N = every monster recovers N at the end of a round (to compare, S029)."],
-	["Stamina base cost", 0, 3, 0, "Idea to try: a movement skill costs this much Stamina for its use, on top of the Stamina for every square. 0 = the rule: squares only."],
 	["Button pairs", 0, 4, 0, "Mirrored pairs of button squares the board starts with: walkable runes without damage that act on the board when a monster collects them (Moss Rune: Mossbed 3×3 · Bog Rune: Bog zone around it · Wall Rune: Earth Walls on its cardinal neighbours). 0 = none."],
 ]
 
+## The first time the draft opens it checks the three random switches (user, 2026-11-17: the multiplayer mode
+## plays random monsters with generated kits by default); afterwards the boxes keep what the user set.
+static var _opened := false
+
+
 func _ready() -> void:
+	if not _opened:
+		_opened = true
+		BattleExperiment.random_monsters = true
+		BattleExperiment.random_kits = true
+		BattleExperiment.fresh_skills = true
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = UiTheme.create()
 
@@ -148,6 +150,16 @@ func _ready() -> void:
 		cb.toggled.connect(func(_on: bool): _apply_experiments())
 		lab.add_child(cb)
 		_experiments[item[0]] = cb
+	var switches: Script = BattleExperiment
+	for item: Array in PACK:
+		var cb := CheckBox.new()
+		cb.text = item[0]
+		cb.tooltip_text = item[1]
+		cb.add_theme_font_size_override("font_size", 13)
+		cb.button_pressed = switches.get(item[2]) == item[3]
+		cb.toggled.connect(func(_on: bool): _apply_experiments())
+		lab.add_child(cb)
+		_experiments[item[0]] = cb
 
 	var nums := HFlowContainer.new()
 	nums.add_theme_constant_override("h_separation", 8)
@@ -222,60 +234,32 @@ func _card_text(d: MonsterDef) -> String:
 ## Whether the switch behind a check box is on at the moment.
 func _experiment_on(label: String) -> bool:
 	match label:
-		"Push 2 squares":
-			return BattleExperiment.push_steps > 1
-		"No push when a zone is cast":
-			return not BattleExperiment.zone_cast_push
-		"Each skill once per turn":
-			return BattleExperiment.once_per_turn
-		"Collision hurts only the moved monster":
-			return not BattleExperiment.collision_both
-		"Charged Dragon Veins":
-			return BattleExperiment.vein_charge
-		"Charged veins hit at the round end":
-			return BattleExperiment.vein_charge_late
-		"Step walks the full Movement":
-			return BattleExperiment.step_full_move
 		"Dragon Veins: last touch owns":
 			return BattleExperiment.vein_touch
-		"Stamina instead of Movement":
-			return BattleExperiment.stamina
-		"Movement skills also cost AP":
-			return BattleExperiment.stamina_ap
-		"Props bury traps":
-			return BattleExperiment.trap_defuse
-		"Strikes cost Stamina":
-			return BattleExperiment.skill_stamina
-		"Strikes only push":
-			return BattleExperiment.strike_push_only
+		"Free camera":
+			return BattleExperiment.free_camera
 		"Random kits":
 			return BattleExperiment.random_kits
 		"Random monsters":
 			return BattleExperiment.random_monsters
 		"New skills every battle":
 			return BattleExperiment.fresh_skills
-		"AI tries every skill":
-			return BattleExperiment.ai_try_all
-		"AI fights for Dragon Veins":
-			return BattleExperiment.ai_veins
-		"Board 8×8":
-			return BattleExperiment.board_size == 8
-		"Board 9×9":
-			return BattleExperiment.board_size == 9
-	return BattleExperiment.kin_push
+	return false
 
 
 ## The value a number switch has at the moment.
 func _number_now(label: String) -> int:
 	match label:
+		"Board size":
+			return BattleExperiment.board_size if BattleExperiment.board_size >= 8 else 7
 		"Dragon Veins":
 			return BattleExperiment.wells
+		"Veins deal 2 from round":
+			return BattleExperiment.vein_late_round
 		"Prop pairs":
 			return BattleExperiment.map_props
 		"Button pairs":
 			return BattleExperiment.map_buttons
-		"Stamina base cost":
-			return BattleExperiment.stamina_base
 	return BattleExperiment.stamina_regen
 
 
@@ -283,29 +267,18 @@ func _number_now(label: String) -> int:
 func _apply_experiments() -> void:
 	var on := func(label: String) -> bool: return (_experiments[label] as CheckBox).button_pressed
 	BattleExperiment.reset()
-	BattleExperiment.kin_push = on.call("Beast pushes, Spirit swaps")
-	BattleExperiment.push_steps = 2 if on.call("Push 2 squares") else 1
-	BattleExperiment.zone_cast_push = not on.call("No push when a zone is cast")
-	BattleExperiment.once_per_turn = on.call("Each skill once per turn")
-	BattleExperiment.collision_both = not on.call("Collision hurts only the moved monster")
-	BattleExperiment.vein_charge = on.call("Charged Dragon Veins")
-	BattleExperiment.vein_charge_late = on.call("Charged veins hit at the round end")
-	BattleExperiment.vein_charge = BattleExperiment.vein_charge or BattleExperiment.vein_charge_late
-	BattleExperiment.step_full_move = on.call("Step walks the full Movement")
+	var switches: Script = BattleExperiment
+	for item: Array in PACK:
+		switches.set(item[2], item[3] if on.call(item[0]) else item[4])
 	BattleExperiment.vein_touch = on.call("Dragon Veins: last touch owns")
-	BattleExperiment.stamina = on.call("Stamina instead of Movement")
-	BattleExperiment.stamina_ap = on.call("Movement skills also cost AP")
-	BattleExperiment.board_size = 9 if on.call("Board 9×9") else (8 if on.call("Board 8×8") else 0)
-	BattleExperiment.trap_defuse = on.call("Props bury traps")
-	BattleExperiment.skill_stamina = on.call("Strikes cost Stamina")
-	BattleExperiment.strike_push_only = on.call("Strikes only push")
-	BattleExperiment.stamina_base = int((_numbers["Stamina base cost"] as SpinBox).value)
+	BattleExperiment.free_camera = on.call("Free camera")
 	BattleExperiment.random_kits = on.call("Random kits")
 	BattleExperiment.random_monsters = on.call("Random monsters")
 	BattleExperiment.fresh_skills = on.call("New skills every battle")
-	BattleExperiment.ai_try_all = on.call("AI tries every skill")
-	BattleExperiment.ai_veins = on.call("AI fights for Dragon Veins")
+	var side := int((_numbers["Board size"] as SpinBox).value)
+	BattleExperiment.board_size = side if side >= 8 else 0
 	BattleExperiment.wells = int((_numbers["Dragon Veins"] as SpinBox).value)
+	BattleExperiment.vein_late_round = int((_numbers["Veins deal 2 from round"] as SpinBox).value)
 	BattleExperiment.map_props = int((_numbers["Prop pairs"] as SpinBox).value)
 	BattleExperiment.stamina_regen = int((_numbers["Stamina per round"] as SpinBox).value)
 	BattleExperiment.map_buttons = int((_numbers["Button pairs"] as SpinBox).value)

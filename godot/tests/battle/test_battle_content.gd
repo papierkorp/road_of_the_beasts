@@ -44,7 +44,7 @@ func test_the_catalogue_matches_the_gdd_table() -> void:
 	assert_array([c.prop(&"shrine").aura[0].tag, c.prop(&"totem").aura[0].tag, c.prop(&"banner").aura[0].tag,
 		c.prop(&"wardstone").aura[0].tag]).is_equal(["quicken", "extend", "haste", "shield"])
 	# damage law values of the hazard grounds
-	assert_array([c.ground(&"lava").max_level, c.ground(&"thornbed").max_level, c.ground(&"blight").max_level]).is_equal([2, 2, 2])
+	assert_array([c.ground(&"lava").max_level, c.ground(&"thornbed").max_level]).is_equal([1, 1])     # ground has one level
 	assert_bool(c.ground(&"voidscar").immutable).is_true()
 	assert_int(c.ground(&"rubble").move_cost).is_equal(2)
 
@@ -103,8 +103,8 @@ func test_a_new_ground_type_is_only_a_new_definition() -> void:
 	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(1.7, 0.001)     # while-standing effect: 2 Pace points
 	assert_bool(b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(4, 2)})).is_true()   # laid by a skill
 	assert_str(b.board.at(Vector2i(4, 2)).ground).is_equal("test_mud")
-	assert_bool(b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(4, 2)})).is_true()   # hazards level up
-	assert_int(b.board.at(Vector2i(4, 2)).level).is_equal(2)
+	assert_bool(b.apply({"type": &"skill", "slot": 1, "anchor": Vector2i(4, 2)})).is_true()   # laid again: one level, the clock restarts
+	assert_int(b.board.at(Vector2i(4, 2)).level).is_equal(1)
 	b.end_turn()
 	assert_int(H.unit(b, 0).hp).is_equal(4)                                 # its end-of-turn trigger
 	assert_object(BattleContent.shared().ground(&"test_mud")).is_null()     # the shared registry is untouched

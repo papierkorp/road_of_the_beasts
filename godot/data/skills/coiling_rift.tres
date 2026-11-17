@@ -6,7 +6,7 @@
 
 [sub_resource type="Resource" id="o1"]
 script = ExtResource("1")
-ground = &"blight"
+ground = &"lava"
 
 [sub_resource type="Resource" id="o2"]
 script = ExtResource("1")
@@ -19,7 +19,7 @@ script = ExtResource("3")
 id = &"coiling_rift"
 display_name = "Coiling Rift"
 kind = "ground"
-description = "2 AP · 4 squares within Reach · creates ground: Blight · creates zone: Void Pull."
+description = "2 AP · 4 squares within Reach · creates ground: Lava · creates zone: Void Pull."
 status = "reshape 2026-11-13 (skill card, Skills §2); working draft, not priced"
 ap_cost = 2
 footprint = Array[Vector2i]([Vector2i(-1, 0), Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 1)])

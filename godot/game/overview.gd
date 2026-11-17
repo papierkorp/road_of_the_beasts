@@ -13,6 +13,15 @@ const BUILDER_SCENE := "res://game/skill_builder.tscn"
 ## Per table: title, the row key the dropdown filters on with its label, and the columns as
 ## [row key, title, minimum width, expands, numeric].
 const TABLES := {
+	"generator": {
+		"title": "Generator", "filter": "kind", "filter_all": "Everything the generator builds from",
+		"columns": [
+			["nr", "#", 44, false, true],
+			["kind", "Part of", 150, false, false],
+			["part", "Part", 230, false, false],
+			["options", "What it can be", 900, true, false],
+		],
+	},
 	"skills": {
 		"title": "Skills", "filter": "kind", "filter_all": "All kinds",
 		"columns": [
@@ -107,7 +116,7 @@ const TABLES := {
 }
 
 var _data := {}                 # table id → Array[Dictionary]
-var _table := "skills"
+var _table := "generator"
 var _tabs := {}                 # table id → Button
 var _tree: Tree
 var _count: Label
@@ -124,10 +133,9 @@ static func skill_rows(c: BattleContent) -> Array[Dictionary]:
 	for id in BattleContent.sorted_ids(c.skills):
 		var s: BattleSkillDef = c.skills[id]
 		var lines: PackedStringArray = []
-		if s.kind == BattleSkillDef.STRIKE and BattleShapes.has(s.shape_id()):
-			lines.append(s.shape_label())
 		for r in BattleText.skill_rows(c, s):
-			lines.append(String(r[1]))
+			if r[0] != "Cost":                    # AP has its own column
+				lines.append(("%s: %s" % [r[0], r[1]]) if r[0] != "" else "    %s" % r[1])
 		var users: PackedStringArray = []
 		for mid in BattleContent.sorted_ids(c.monsters):
 			var m: MonsterDef = c.monsters[mid]
@@ -225,6 +233,160 @@ static func _note(table: Dictionary, key: StringName, label: String) -> void:
 
 
 ## One Dictionary per ground file, alphabetical by id.
+## How a random skill is built (SkillGen.draw_kind): every part of a skill with what it can be, then what the
+## grounds, zones and props it draws from can do, in general terms and without names. Read from the lists of the
+## generator and from the records it draws from, so the table follows both.
+static func generator_rows(c: BattleContent) -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var add := func(kind: String, part: String, options: String) -> void:
+		out.append({"nr": out.size() + 1, "id": "%03d" % out.size(), "kind": kind, "part": part, "options": options,
+			"in_game": true, "tooltip": ""})
+	var uniq := func(list: Array) -> Array:
+		var seen: Array = []
+		for v in list:
+			if not seen.has(v):
+				seen.append(v)
+		return seen
+	var nums := func(list: Array) -> String:
+		return ", ".join(uniq.call(list).map(func(v) -> String: return str(v)))
+	var shapes := func(list: Array) -> String:
+		return ", ".join(list.map(func(sh: Array) -> String: return BattleShapes.shape_name(StringName(sh[0]), sh[1])))
+	var yes_no := func(list: Array) -> String:
+		return "yes or no" if list.has(true) and list.has(false) else ("yes" if list.has(true) else "no")
+	var left := "nothing, a ground or a zone (any, for %s rounds)" % nums.call(SkillGen.ZONE_ROUNDS)
+	var anchors := "within Reach or next to the user"
+	var free := "free shape of 1–%d squares, %s" % [SkillGen.FREE_SQUARES_MAX, anchors]
+
+	add.call("Every skill", "AP", "1–%d: what the draft price list gives it (a measuring run draws 1–3)" % SkillCalc.MAX_AP)
+	add.call("Every skill", "Uses", "once per turn (most), twice per turn, once per round, once per battle")
+
+	add.call("Strike", "Shape", shapes.call(SkillGen.STRIKE_SHAPES))
+	add.call("Strike", "Damage to monsters", "none: a Strike only pushes; what its card names as damage hits props")
+	add.call("Strike", "Push 1", yes_no.call(SkillGen.STRIKE_PUSH))
+	add.call("Strike", "Damages props", yes_no.call(SkillGen.STRIKE_PROPS) + " (%d damage)" % KinRules.STRIKE_PROP_DAMAGE)
+	add.call("Strike", "Leaves on the struck squares", left)
+
+	var paths: PackedStringArray = []
+	for path: String in uniq.call(SkillGen.MOVE_PATHS):
+		paths.append({"walk": "walks (every square counts, nothing is passed)", "line": "straight line (only the landing square counts, passes props and monsters)",
+			"free": "any path (only the landing square counts, passes props and monsters)"}.get(path, path))
+	add.call("Move", "Path", "; ".join(paths))
+	add.call("Move", "Range", nums.call(SkillGen.MOVE_RANGES) + " squares, 1 Stamina per square")
+	add.call("Move", "Diagonal", "a straight line: yes or no (one in %d)" % SkillGen.MOVE_DIAGONAL_ONE_IN)
+	add.call("Move", "On landing", "a straight line: nothing, pushes the monster ahead 1, or pushes all eight neighbours 1")
+	add.call("Move", "Leaves on the squares it left", left)
+
+	add.call("Self buff", "Effect", "one of: Pace +, movement skills cost less Stamina, Reach +, Stamina recovery +")
+	add.call("Self buff", "Value and rounds", "%s for %s rounds" % [nums.call(SkillGen.SELF_VALUES), nums.call(SkillGen.SELF_ROUNDS)])
+	add.call("Self buff", "In random kits", "no: no kit template counts self buffs; only the measuring runs draw them")
+
+	add.call("Zone skill", "Zone", "one that pushes, pulls or wears props down, for %s rounds" % nums.call(SkillGen.ZONE_ROUNDS))
+	add.call("Zone skill", "Where", free)
+	add.call("Zone skill", "Also lays ground", "yes or no (about one in %d)" % roundi(1.0 / SkillGen.ZONE_WITH_GROUND))
+
+	add.call("Ground skill", "Ground", "one of the grounds below")
+	add.call("Ground skill", "Where", "%s; or a base shape around the user: %s" % [free, shapes.call(SkillGen.AROUND_SHAPES)])
+	add.call("Ground skill", "Also leaves a zone", "yes or no (about one in three): a zone that only changes stats")
+
+	add.call("Prop skill", "Prop", "one of the props below")
+	add.call("Prop skill", "How many", "%s in a line, within Reach, on free squares" % nums.call(SkillGen.PROP_COUNTS))
+
+	# what the grounds of the pool do: one row per effect, with every moment it occurs at
+	var by_effect := {}
+	var order: Array = []
+	var other: Array = []
+	for id: StringName in SkillGen.ground_ids(c):
+		var g := c.ground(id)
+		for t in g.triggers:
+			var does := "%d damage" % t.value_at(1)
+			if t.kind == "heal":
+				does = "heals %d" % t.value_at(1)
+			elif t.kind == "stamina":
+				does = "Stamina +%d" % t.value_at(1)
+			if not by_effect.has(does):
+				by_effect[does] = []
+				order.append(does)
+			var when: String = BattleText.TIMING.get(t.timing, t.timing)
+			if not by_effect[does].has(when):
+				by_effect[does].append(when)
+		if g.no_props and not other.has("no prop can be placed on it"):
+			other.append("no prop can be placed on it")
+		if g.move_cost > 1 and not other.has("movement cost %d" % g.move_cost):
+			other.append("movement cost %d" % g.move_cost)
+	for does: String in order:
+		add.call("Grounds", does, ", ".join(by_effect[does]))
+	for line: String in other:
+		add.call("Grounds", "Other", line)
+	add.call("Grounds", "Lasts", "%d rounds; laid again: %s" % [BattleExperiment.ground_rounds, "the clock restarts"])
+
+	# what the zones of the pool do: every effect once
+	var zone_pools: Array = SkillGen.zone_ids(c)
+	for pool in 2:
+		var effects: Array = []
+		for id: StringName in zone_pools[pool]:
+			for e: FieldEffect in c.zone(id).effects:
+				var words := "pushes 1 in its direction at the end of the occupant's turn" if e.tag == FieldEffect.PUSH else (
+					"pulls 1 toward its centre at the end of the occupant's turn" if e.tag == FieldEffect.PULL else BattleText.effect_words(e, 1))
+				if not effects.has(words):
+					effects.append(words)
+		var off := "" if pool == 0 else "  (not in use: a zone changes no stat)"
+		add.call("Zones", "Moves or wears down" if pool == 0 else "Changes stats while inside", "; ".join(effects) + off)
+	add.call("Zones", "Combined", "a zone carries one to three of these effects")
+
+	# what the props of the pool are and do
+	var traits: Array = []
+	var hp: Array = []
+	var acts: Array = []
+	var leaves: Array = []
+	for id: StringName in SkillGen.prop_ids(c):
+		var d := c.prop(id)
+		for word: String in ["trap (walkable, used up when entered)" if d.is_trap() else ("solid" if d.solid else "walkable"), "heavy" if d.heavy else "", "spiky" if d.spiky else ""]:
+			if word != "" and not traits.has(word):
+				traits.append(word)
+		if not hp.has(d.hp):
+			hp.append(d.hp)
+		for a in d.aftermath:
+			if a == null:
+				continue
+			var where: String = BattleText.PROP_WHERE.get(a.shape, a.shape)
+			var when: String = BattleText.PROP_WHEN.get(a.when, a.when)
+			if a.when == Moment.ROUND_END and a.op == "damage":
+				when = "turn end"
+			var what := ""
+			match a.op:
+				"damage":
+					what = "%d damage %s" % [a.amount, where]
+				"push":
+					what = "pushes 1 away, %s" % where
+				"pull":
+					what = "pulls 1 toward it, %s" % where
+				"spawn":
+					what = "creates a blocking prop on every free square %s" % where
+				"ground":
+					what = "lays ground %s" % where
+				"zone":
+					what = "creates a zone %s" % where
+			var line := "%s: %s" % [when, what]
+			if not acts.has(line):
+				acts.append(line)
+		if d.ground_left != &"" and d.ground_left != GroundDef.PLAIN:
+			var gl := c.ground(d.ground_left)
+			var brief := BattleText.ground_brief(gl) if gl != null else String(d.ground_left)
+			if not leaves.has(brief):
+				leaves.append(brief)
+	hp.sort()
+	acts.sort()
+	add.call("Props", "Traits", ", ".join(traits))
+	add.call("Props", "HP", nums.call(hp))
+	add.call("Props", "Does nothing", "possible: it only blocks")
+	for line: String in acts:
+		add.call("Props", "When " + line.get_slice(": ", 0), line.get_slice(": ", 1))
+	if not leaves.is_empty():
+		add.call("Props", "When destroyed, leaves", "ground: " + "; ".join(leaves))
+	add.call("Props", "Lasts", "%d rounds when a skill created it; a prop of the board until destroyed" % BoardProp.CREATED_ROUNDS)
+	return out
+
+
 static func ground_rows(c: BattleContent) -> Array[Dictionary]:
 	var makers: Dictionary = _makers(c)["ground"]
 	var out: Array[Dictionary] = []
@@ -323,7 +485,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = UiTheme.create()
 	var content := BattleContent.shared()
-	_data = {"skills": skill_rows(content), "monsters": monster_rows(content), "grounds": ground_rows(content),
+	_data = {"generator": generator_rows(content), "skills": skill_rows(content), "monsters": monster_rows(content), "grounds": ground_rows(content),
 		"zones": zone_rows(content), "sheets": sheet_rows(content), "props": prop_rows(content)}
 
 	var bg := ColorRect.new()
@@ -396,7 +558,7 @@ func _ready() -> void:
 	col.add_child(_tree)
 
 	var hint := Label.new()
-	hint.text = "One row per Resource file under res://data. Click a column title to sort; hover a row for its notes. A skill only delivers: it strikes, moves or acts on its user and creates ground, a zone or a prop; what those do and when stands in their own tables. Monster stats = the species' reference individual; Points = what these stats cost (every stat starts at 1; +0.1 Pace 1, Stamina 2, HP 5, Reach 5, AP steps 5/10/15/20, a second turn 10 + 5 per AP, a third twice that; the multiplayer mode plays with 60): hover the cell for the sum. Grounds act at a moment, zones while a monster stands inside; props block the way and act when destroyed. Skill Points = the draft skill calculation (every part of the card has a price, 10 points pay for 1 AP; fitted to bot runs, nothing approved): hover the cell for the sum. Greyed rows are not in the game (status test, simulation or archived)."
+	hint.text = "Generator: how a random skill is built, every part with what it can be, and what the grounds, zones and props it draws from can do, without names. The other tabs: one row per Resource file under res://data. Click a column title to sort; hover a row for its notes. A skill only delivers: it strikes, moves or acts on its user and creates ground, a zone or a prop; what those do and when stands in their own tables. Monster stats = the species' reference individual; Points = what these stats cost (every stat starts at 1; +0.1 Pace 1, Stamina 2, HP 5, Reach 5, AP steps 5/10/15/20, a second turn 10 + 5 per AP, a third twice that; the multiplayer mode plays with 60): hover the cell for the sum. Grounds act at a moment, zones while a monster stands inside; props block the way and act when destroyed. Skill Points = the draft skill calculation (every part of the card has a price, 10 points pay for 1 AP; fitted to bot runs, nothing approved): hover the cell for the sum. Greyed rows are not in the game (status test, simulation or archived)."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART     # without it the long line widens the whole screen
 	hint.add_theme_color_override("font_color", UiTheme.DIM)
 	hint.add_theme_font_size_override("font_size", 14)

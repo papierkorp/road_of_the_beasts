@@ -13,7 +13,6 @@ extends RefCounted
 static func begin(b: Battle) -> void:
 	b.queue = BattleQueue.build(b)
 	b.queue_idx = 0
-	_charge_veins(b)
 	b.emit(&"round_started", {"round": b.round_number, "queue": _queue_ids(b)})
 	_start_entry(b)
 
@@ -40,17 +39,6 @@ static func _start_entry(b: Battle) -> void:
 			BattleDamage.ground_triggers(b, u, Moment.TURN_START)
 			if b.check_over():
 				return
-		if u.is_alive() and BattleExperiment.surge_at_caster:
-			# test switch: the Surges this monster cast earlier detonate before it acts
-			var due: Array[PendingSurge] = []
-			for s in b.surges:
-				if s.turns_left >= 0 and not s.fresh and s.owner == u.id:
-					due.append(s)
-			if not due.is_empty():
-				detonate(b, due)
-				spring_traps(b)
-				if b.check_over():
-					return
 		if u.is_alive():
 			# 2. AP
 			b.ap = BattleStats.ap(u)
@@ -68,13 +56,14 @@ static func delay(b: Battle) -> void:
 	var entry: Dictionary = b.queue.pop_at(b.queue_idx)
 	entry["waited"] = true
 	var at := b.queue.size()
-	if BattleExperiment.delay_reverse or BattleExperiment.delay_first_round:
+	if true:                                      # monsters that waited act in reverse order: the first to wait acts last
 		for i in range(b.queue_idx, b.queue.size()):
 			if b.queue[i].get("waited", false):
 				at = i                            # before the monsters that postponed earlier
 				break
 	b.queue.insert(at, entry)
 	b.delayed[entry["id"]] = b.round_number
+	b.waits[entry["id"]] = int(b.waits.get(entry["id"], 0)) + 1
 	b.ap = 0
 	b.emit(&"turn_delayed", {"who": entry["id"]})
 	_start_entry(b)
@@ -112,11 +101,9 @@ static func tick_timers(b: Battle) -> void:
 		if s.fresh:
 			s.fresh = false
 			continue
-		if BattleExperiment.surge_at_caster:
-			continue                          # test switch: it waits for its caster's next turn
 		s.acted[b.turn_owner] = true
 		s.turns_left = maxi(0, s.turns_left - 1)
-		if s.turns_left <= 0 and (not BattleExperiment.surge_fair or _all_acted(b, s)):
+		if s.turns_left <= 0 and _all_acted(b, s):
 			due.append(s)
 	if not due.is_empty():
 		detonate(b, due)
@@ -173,10 +160,6 @@ static func end_turn(b: Battle) -> void:
 			spring_traps(b)
 			if b.over:
 				return
-		if u.is_alive() and BattleExperiment.vein_charge:      # a monster that stayed on a charged vein discharges it now
-			discharge_veins(b, u)
-			if b.check_over():
-				return
 		# 2. end-of-turn ground on the squares covered now, 3. mend
 		if u.is_alive():
 			var mend: Array = []
@@ -191,6 +174,11 @@ static func end_turn(b: Battle) -> void:
 				BattleDamage.ground_triggers(b, u, Moment.TURN_END)
 				if u.is_alive() and not mend.is_empty():
 					BattleDamage.apply_round(b, [], mend)
+		if u.is_alive():
+			var prop_hits := BattleProps.turn_end_hits(b, u)
+			if not prop_hits.is_empty():
+				BattleDamage.apply_round(b, prop_hits)
+				BattleDamage.defeat_step(b)
 		if b.check_over():
 			return
 	tick_timers(b)
@@ -198,6 +186,27 @@ static func end_turn(b: Battle) -> void:
 		return
 	b.queue_idx += 1
 	_start_entry(b)
+
+
+## What the round end would do if the round ended on the board as it stands (a dry run on a copy; the turns still
+## to come can change it): {"hits": [{unit, amount, source}], "falls": [unit ids]}. Open information for the HUD.
+static func round_end_forecast(b: Battle) -> Dictionary:
+	var out := {"hits": [], "falls": []}
+	if b.over or b.board == null:
+		return out
+	var sim := b.clone()
+	sim.choice_sides.clear()                      # the copy takes the fixed pick at a Dragon Vein tie
+	sim.pending_choice = {}
+	sim.events.clear()
+	_end_round(sim)
+	for e: Dictionary in sim.events:
+		if e["type"] == &"round_started":
+			break
+		if e["type"] == &"damage" and int(e.get("amount", 0)) > 0:
+			out["hits"].append({"unit": e["target"], "amount": int(e["amount"]), "source": String(e.get("source", ""))})
+		elif e["type"] == &"defeated":
+			out["falls"].append(e["who"])
+	return out
 
 
 ## The round end moves first, acts afterwards and ticks its clocks last (user decisions 2026-11-15, gdd_battle §2.4).
@@ -252,19 +261,7 @@ static func _finish_round(b: Battle, ended: int) -> void:
 	b.queue = BattleQueue.build(b)
 	b.queue_idx = 0
 	b.turn_owner = &""
-	_charge_veins(b)
 	b.emit(&"round_started", {"round": b.round_number, "queue": _queue_ids(b)})
-	if BattleExperiment.surge_at_caster:        # Surges of a caster that is gone detonate at the round start
-		var orphans: Array[PendingSurge] = []
-		for s in b.surges:
-			var owner: BattleUnit = b.units.get(s.owner)
-			if s.turns_left >= 0 and (owner == null or not owner.is_alive()):
-				orphans.append(s)
-		if not orphans.is_empty():
-			detonate(b, orphans)
-			spring_traps(b)
-			if b.check_over():
-				return
 	_start_entry(b)
 
 
@@ -275,31 +272,20 @@ static func _finish_round(b: Battle, ended: int) -> void:
 static func _positional(b: Battle) -> int:
 	var hits: Array = []
 	var held := [0, 0]
+	var ordered: Array = []                       # the veins that act, one after another
 	for vein in b.board.cells:
 		if BattleExperiment.wells <= 0 or vein.ground != GroundDef.WELL:
 			continue
-		if BattleExperiment.vein_charge:              # discharged during the round: no damage here, count who took it
-			if not vein.charged and vein.owner_side >= 0:
-				held[vein.owner_side] += 1
-				if BattleExperiment.vein_charge_late:
-					var won := _well_target(b, vein.pos, vein.owner_side)
-					if won != null:
-						hits.append({"unit": won.id, "base": 1, "type": BattleDamage.WELL, "source": "Dragon Vein"})
-			continue
 		var p: Vector2i = vein.pos
 		var holder := b.any_unit_at(p)
-		if holder != null:
+		if holder != null and vein.owner_side != holder.side:
 			vein.owner_side = holder.side         # whoever stands on it has touched it
+			vein.owner_unit = holder.id
 		var side := vein.owner_side if BattleExperiment.vein_touch else (holder.side if holder != null else -1)
 		if side < 0:
 			continue
 		held[side] += 1
-		var target := _well_target(b, p, side)
-		if target != null:
-			var hit := {"unit": target.id, "base": 1, "type": BattleDamage.WELL, "source": "Dragon Vein"}
-			if holder != null and holder.side == side:
-				hit["by"] = holder.id
-			hits.append(hit)
+		ordered.append({"pos": p, "side": side, "holder": holder.id if holder != null and holder.side == side else &""})
 	if BattleExperiment.flank:
 		for u in b.living():
 			var around := 0
@@ -313,7 +299,38 @@ static func _positional(b: Battle) -> int:
 	if not hits.is_empty():
 		BattleDamage.apply_round(b, hits)
 		BattleDamage.defeat_step(b)
+	_veins_in_order(b, ordered)
 	return held[0] + held[1]
+
+
+## The owned veins act one at a time, the vein of the faster taker first (current
+## Pace, then the queue, then the square); a vein whose taker has fallen comes last. Each picks its target on
+## the board as it then stands, and the battle ends as soon as one side is gone.
+static func _veins_in_order(b: Battle, veins: Array) -> void:
+	for v: Dictionary in veins:
+		var taker: BattleUnit = b.units.get(b.board.at(v["pos"]).owner_unit)
+		var alive: bool = taker != null and taker.is_alive() and taker.side == int(v["side"])
+		v["pace"] = BattleStats.pace(b, taker) if alive else 0.0
+		v["rank"] = b.queue_rank(taker.id) if alive else 1000000
+	veins.sort_custom(func(a: Dictionary, c: Dictionary) -> bool:
+		if not is_equal_approx(a["pace"], c["pace"]):
+			return a["pace"] > c["pace"]
+		if a["rank"] != c["rank"]:
+			return a["rank"] < c["rank"]
+		var pa: Vector2i = a["pos"]
+		var pc: Vector2i = c["pos"]
+		return pa.y < pc.y or (pa.y == pc.y and pa.x < pc.x))
+	for v: Dictionary in veins:
+		if b.check_over():
+			return
+		var target := _well_target(b, v["pos"], v["side"])
+		if target == null:
+			continue
+		var hit := {"unit": target.id, "base": BattleExperiment.vein_damage(b.round_number), "type": BattleDamage.WELL, "source": "Dragon Vein"}
+		if v["holder"] != &"":
+			hit["by"] = v["holder"]
+		BattleDamage.apply_round(b, [hit])
+		BattleDamage.defeat_step(b)
 
 
 ## Dragon Vein target choice (user decision 2026-11-14): when the side that owns a vein can pick
@@ -322,7 +339,7 @@ static func _positional(b: Battle) -> int:
 ## the roster-order fallback of `_well_target`. Returns true while a choice is pending.
 static func _ask_choice(b: Battle) -> bool:
 	b.pending_choice = {}
-	if BattleExperiment.wells <= 0 or BattleExperiment.vein_charge or b.choice_sides.is_empty():
+	if BattleExperiment.wells <= 0 or b.choice_sides.is_empty():
 		return false
 	for vein in b.board.cells:
 		if vein.ground != GroundDef.WELL or b.choice_picks.has(vein.pos):
@@ -422,10 +439,14 @@ static func _tick_clocks(b: Battle, ended: int) -> void:
 				keep.append(fx)
 		u.effects = keep
 	_fade(b, ended)
+	for prop in b.board.props():                  # a prop a skill created lapses without effect
+		if prop.until > 0 and ended >= prop.until and prop.hp > 0:
+			b.board.remove_prop(prop)
+			b.emit(&"prop_lapsed", {"pos": prop.pos, "prop": prop.def.id})
 
 
 ## Ground laid during the battle turns back into Plain at the end of the round its clock names (build rule:
-## 2 rounds, `ground_rounds`); unsprung Surge traps lapse the same way if `trap_rounds` is set.
+## 2 rounds, `ground_rounds`).
 static func _fade(b: Battle, ended_round: int) -> void:
 	if BattleExperiment.ground_rounds > 0:
 		for cell in b.board.cells:
@@ -434,11 +455,6 @@ static func _fade(b: Battle, ended_round: int) -> void:
 				cell.level = 1
 				cell.ground_until = 0
 				b.emit(&"ground_changed", {"pos": cell.pos, "ground": cell.ground, "level": 1, "result": &"faded", "source": "end of round"})
-	if BattleExperiment.trap_rounds > 0:
-		for s: PendingSurge in b.surges.duplicate():
-			if s.turns_left < 0 and ended_round >= s.cast_round + BattleExperiment.trap_rounds - 1:
-				b.remove_surge(s)
-				b.emit(&"surge_lapsed", {"surge": s.id})
 
 
 ## Anti-stalling (gdd_battle §4.2): from the set round on, the free square farthest from all
@@ -550,39 +566,6 @@ static func _soft_pressure(b: Battle, ended_round: int) -> void:
 		b.emit(&"displaced", {"who": u.id, "from": from, "to": best, "cause": "Arena shrinks"})
 	b.emit(&"arena_shrunk", {"margin": board.margin})
 	spring_traps(b)
-
-
-## Test switch `vein_charge`: every Dragon Vein is charged again at the start of a round.
-static func _charge_veins(b: Battle) -> void:
-	if not BattleExperiment.vein_charge or BattleExperiment.wells <= 0:
-		return
-	for cell in b.board.cells:
-		if cell.ground == GroundDef.WELL:
-			cell.charged = true
-			cell.owner_side = -1
-
-
-## Test switch `vein_charge`: `u` discharges every charged Dragon Vein under its body: 1 damage
-## each to the enemy nearest to that square (ties as for the round-end rule).
-static func discharge_veins(b: Battle, u: BattleUnit) -> void:
-	if not u.is_alive() or b.round_number < BattleExperiment.damage_from_round:
-		return
-	var hits: Array = []
-	for c in u.cells():
-		var cell := b.board.at(c)
-		if cell == null or cell.ground != GroundDef.WELL or not cell.charged:
-			continue
-		cell.charged = false
-		cell.owner_side = u.side
-		b.emit(&"vein_taken", {"pos": c, "side": u.side, "who": u.id})
-		if BattleExperiment.vein_charge_late:          # won for this round: the damage follows at the round end
-			continue
-		var target := _well_target(b, c, u.side)
-		if target != null:
-			hits.append({"unit": target.id, "base": 1, "type": BattleDamage.WELL, "source": "Dragon Vein", "by": u.id})
-	if not hits.is_empty():
-		BattleDamage.apply_round(b, hits)
-		BattleDamage.defeat_step(b)
 
 
 ## A prop has no turn, so the push and pull zones move the props standing in them once, at the end

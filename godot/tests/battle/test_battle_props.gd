@@ -138,10 +138,10 @@ func _drum_round_end(ground_at_target: StringName, ground_at_start: StringName =
 	return b
 
 
-func test_at_the_round_end_a_storm_drum_pushes_before_ground_and_props_act() -> void:
-	assert_int(H.unit(_drum_round_end(&"blight"), 0).hp).is_equal(7)             # pushed onto Blight: it acts on the new square
-	assert_int(H.unit(_drum_round_end(&"", &"blight"), 0).hp).is_equal(8)        # pushed off Blight: it no longer stands there
-	assert_int(H.unit(_drum_round_end(&"", &"", true), 0).hp).is_equal(7)        # pushed next to an Ember Brazier: it burns
+func test_at_the_round_end_a_storm_drum_pushes_and_only_entry_ground_fires() -> void:
+	assert_int(H.unit(_drum_round_end(&"blight"), 0).hp).is_equal(8)             # pushed onto turn-end ground: nothing at the round end
+	assert_int(H.unit(_drum_round_end(&"", &"blight"), 0).hp).is_equal(7)        # it ended its turn on that ground before the push
+	assert_int(H.unit(_drum_round_end(&"", &"", true), 0).hp).is_equal(8)        # pushed next to an Ember Brazier: nothing at the round end
 	assert_int(H.unit(_drum_round_end(&"thornbed"), 0).hp).is_equal(7)           # ground that acts on entering fires at the push, as always
 
 
@@ -174,8 +174,6 @@ func test_stamina_pays_one_per_square_and_comes_back_at_the_round_end() -> void:
 	b.end_turn()
 	b.end_turn()
 	assert_int(me.stamina).is_equal(1)                                    # +1 at the round end
-	BattleExperiment.stamina_ap = false
-	assert_int(H.skill("run").cost()).is_equal(0)                          # Stamina only
 
 
 func test_the_prop_pairs_switch_sets_how_many_props_a_board_starts_with() -> void:
@@ -328,18 +326,16 @@ func test_stamina_recovery_is_the_whole_number_of_pace_and_at_least_one() -> voi
 
 
 ## User decision 2026-11-15: the current Pace counts, not the one on the sheet.
-func test_a_zone_on_pace_moves_the_stamina_recovery_across_a_whole_number() -> void:
+func test_a_timed_effect_on_pace_moves_the_stamina_recovery_across_a_whole_number() -> void:
 	var b := H.battle([[0, Vector2i(0, 6), {"pace": 2.0, "move": 5}], [0, Vector2i(2, 6), {"pace": 2.2, "move": 5}],
 		[1, Vector2i(6, 0), {"pace": 1.9, "move": 5}], [1, Vector2i(4, 0), {"pace": 1.7, "move": 5}]])
 	var units: Array[BattleUnit] = [H.unit(b, 0), H.unit(b, 1), H.unit(b, 2), H.unit(b, 3)]
 	for u in units:
 		u.stamina = 0
-	var drain := H.zone_skill([FieldEffect.make("drain_pace", 1, 1)]).zone
-	var quicken := H.zone_skill([FieldEffect.make("quicken", 1, 1)], [Vector2i.ZERO], 2, "t_quick").zone
-	H.zone_on(b, Vector2i(0, 6), drain, 900, 1, Vector2i.ZERO, Vector2i.ZERO, 1)       # 2.0 → 1.9 in the zone's last round
-	H.zone_on(b, Vector2i(2, 6), drain, 901)                                           # 2.2 → 2.1: no whole number crossed
-	H.zone_on(b, Vector2i(6, 0), quicken, 902)                                         # 1.9 → 2.0
-	H.zone_on(b, Vector2i(4, 0), quicken, 903)                                         # 1.7 → 1.8
+	units[0].effects.append({"key": "t:a", "tag": "drain_pace", "value": 1, "ends_round": 1})   # 2.0 → 1.9 in the effect's last round
+	units[1].effects.append({"key": "t:b", "tag": "drain_pace", "value": 1, "ends_round": 9})   # 2.2 → 2.1: no whole number crossed
+	units[2].effects.append({"key": "t:c", "tag": "quicken", "value": 1, "ends_round": 9})      # 1.9 → 2.0
+	units[3].effects.append({"key": "t:d", "tag": "quicken", "value": 1, "ends_round": 9})      # 1.7 → 1.8
 	b.begin()
 	assert_array(units.map(func(u: BattleUnit) -> int: return BattleStats.recovery(b, u))).is_equal([1, 2, 2, 1])
 	assert_str(BattleText.move_text(b, units[0])).is_equal("Stamina 0/5 (+1)")          # the HUD shows what the round end gives
@@ -347,8 +343,7 @@ func test_a_zone_on_pace_moves_the_stamina_recovery_across_a_whole_number() -> v
 		b.end_turn()
 	assert_int(b.round_number).is_equal(2)
 	assert_array(units.map(func(u: BattleUnit) -> int: return u.stamina)).is_equal([1, 2, 2, 1])
-	# the zone under the first monster has run out with the clocks, after the recovery: from now on it recovers 2 again
-	assert_object(b.board.at(Vector2i(0, 6)).zone).is_null()
+	# the effect on the first monster has run out with the clocks, after the recovery: from now on it recovers 2 again
 	assert_int(BattleStats.recovery(b, units[0])).is_equal(2)
 
 

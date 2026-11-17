@@ -40,3 +40,18 @@ static func create() -> Theme:
 	t.set_color("font_hover_color", "CheckButton", Color.WHITE)
 	t.set_stylebox("focus", "CheckButton", StyleBoxEmpty.new())
 	return t
+
+
+## The first key or button bound to an input action, as text for a hint or a button ("Space", "G"). Keys are
+## never written into code or texts: they live in the Input Map (Project Settings) and are read from there.
+static func key_text(action: StringName) -> String:
+	if not InputMap.has_action(action):
+		return "?"
+	for e in InputMap.action_get_events(action):
+		if e is InputEventKey:
+			var code: Key = e.physical_keycode if e.physical_keycode != KEY_NONE else e.keycode
+			return OS.get_keycode_string(code)        # the key of the US layout for a physical key: the same on every display server
+		if e is InputEventMouseButton:
+			return {MOUSE_BUTTON_LEFT: "Left click", MOUSE_BUTTON_RIGHT: "Right click", MOUSE_BUTTON_MIDDLE: "Middle button",
+				MOUSE_BUTTON_WHEEL_UP: "Wheel up", MOUSE_BUTTON_WHEEL_DOWN: "Wheel down"}.get(e.button_index, "Mouse %d" % e.button_index)
+	return "?"

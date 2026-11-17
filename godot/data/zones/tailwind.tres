@@ -13,5 +13,6 @@ cap = 2
 script = ExtResource("2")
 id = &"tailwind"
 display_name = "Tailwind"
+content_status = "archived"
 effects = Array[ExtResource("1")]([SubResource("e1")])
 color = Color(0.75, 0.9, 0.6, 1)

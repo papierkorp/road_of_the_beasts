@@ -2,7 +2,7 @@ class_name ShapeEditor
 extends AcceptDialog
 ## Arranging free shapes before the battle (gdd_skills §2, user decision 2026-11-15): a skill that creates
 ## ground, a zone or props at an anchor names only how many squares. Here the player lays them out:
-## connected over their edges, the anchor square (marked) among them. In battle the shape is fixed and
+## touching over an edge or a corner, the anchor square (marked) among them. In battle the shape is fixed and
 ## still turns in quarter turns; the opponent sees it on the skill card.
 ##
 ## Arrangements live in a dictionary {monster id: {kit slot: Array[Vector2i]}} the caller owns. Only a
@@ -60,7 +60,7 @@ func setup(ids: Array[StringName], store: Dictionary) -> void:
 	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(col)
 	var hint := Label.new()
-	hint.text = "A skill that creates ground, a zone or props at a distance names only its number of squares. Lay them out here: connected over their edges, the marked anchor square among them. In battle the shape is fixed (R still turns it) and the opponent sees it on the skill card."
+	hint.text = "A skill that creates ground, a zone or props at a distance names only its number of squares. Lay them out here: every square touches another over an edge or a corner, the marked anchor square among them. In battle the shape is fixed (R still turns it) and the opponent sees it on the skill card."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size = Vector2(720, 0)
 	col.add_child(hint)

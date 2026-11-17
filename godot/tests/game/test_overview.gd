@@ -46,7 +46,7 @@ func test_a_skill_reads_as_its_card() -> void:
 	var snare := SkillGen.card(c, c.skill(&"snare"))
 	assert_array([snare["strike"], snare["ground"], snare["zone"], snare["prop"]]).is_equal(["—", "Binding Vines", "—", "—"])
 	var coil := SkillGen.card(c, c.skill(&"coiling_rift"))
-	assert_array([coil["ground"], coil["zone"]]).is_equal(["Blight", "Void Pull · 2 rd"])      # one skill, two things created
+	assert_array([coil["ground"], coil["zone"]]).is_equal(["Lava", "Void Pull · 2 rd"])      # one skill, two things created
 	assert_str(SkillGen.card(c, c.skill(&"plant_bamboo"))["prop"]).is_equal("Bamboo Stand")
 	assert_str(SkillGen.card(c, c.skill(&"run"))["move"]).is_equal("walks · up to 3 sq, Stamina per sq")
 	assert_str(SkillGen.card(c, c.skill(&"battle_trance"))["self"]).contains("AP +1")
@@ -67,9 +67,9 @@ func test_the_skill_builder_builds_skills_from_the_parts() -> void:
 	var wall := SkillGen.build(c, {"name": "Wind Wall", "shape": "line2", "zone": "gale"})
 	assert_str(wall.kind).is_equal("zone")                   # a zone alone is a zone skill: it gets its direction
 	assert_object(wall.zone).is_same(c.zone(&"gale"))
-	var both := SkillGen.build(c, {"name": "Rot Pit", "shape": "block", "ground": "blight", "zone": "void_pull"})
+	var both := SkillGen.build(c, {"name": "Rot Pit", "shape": "block", "ground": "lava", "zone": "void_pull"})
 	assert_str(both.kind).is_equal("ground")
-	assert_array([SkillGen.card(c, both)["ground"], SkillGen.card(c, both)["zone"]]).is_equal(["Blight", "Void Pull · 2 rd"])
+	assert_array([SkillGen.card(c, both)["ground"], SkillGen.card(c, both)["zone"]]).is_equal(["Lava", "Void Pull · 2 rd"])
 	var run := SkillGen.build(c, {"name": "Thorn Run", "path": "line", "impact": "ahead", "ground": "thornbed"})
 	assert_str(run.kind).is_equal("move")
 	assert_str(run.impact_push).is_equal("ahead")
@@ -120,8 +120,8 @@ func test_grounds_zones_and_props_have_a_row_per_file() -> void:
 	var sheets := Overview.sheet_rows(c)
 	assert_int(sheets.size()).is_equal(c.grounds.size() + c.zones.size() + c.props.size())      # one sheet format for all three
 	var lava_sheet: Dictionary = sheets.filter(func(r: Dictionary) -> bool: return r["id"] == "lava")[0]
-	assert_array([lava_sheet["kind"], lava_sheet["lines"]]).is_equal(["ground", "at the end of its turn: damage = level"])
-	var rows := {"skills": Overview.skill_rows(c), "monsters": Overview.monster_rows(c), "grounds": grounds, "zones": zones, "sheets": sheets, "props": props}
+	assert_array([lava_sheet["kind"], lava_sheet["lines"]]).is_equal(["ground", "at the end of its turn: 1 damage"])
+	var rows := {"generator": Overview.generator_rows(c), "skills": Overview.skill_rows(c), "monsters": Overview.monster_rows(c), "grounds": grounds, "zones": zones, "sheets": sheets, "props": props}
 	for id: String in Overview.TABLES:
 		for col: Array in Overview.TABLES[id]["columns"]:
 			assert_bool(rows[id][0].has(col[0])).is_true()
@@ -175,3 +175,19 @@ func test_the_monster_builder_builds_and_checks_a_monster() -> void:
 	assert_str(changed.id).is_equal("blaze_tiger")
 	assert_str(changed.content_status).is_equal(c.monster(&"blaze_tiger").content_status)
 	assert_int(changed.hp).is_equal(6)
+
+
+func test_the_generator_table_lists_the_parts_of_a_random_skill_without_names() -> void:
+	var c := BattleContent.shared()
+	var rows := Overview.generator_rows(c)
+	var kinds := {}
+	for r in rows:
+		kinds[r["kind"]] = true
+		assert_str(r["options"]).is_not_empty()
+	assert_array(kinds.keys()).contains(["Every skill", "Strike", "Move", "Self buff", "Zone skill", "Ground skill", "Prop skill", "Grounds", "Zones", "Props"])
+	var text := "\n".join(rows.map(func(r: Dictionary) -> String: return "%s %s" % [r["part"], r["options"]]))
+	assert_str(text).contains("Damages props")
+	for id: StringName in c.props:                       # generic: no prop, ground or zone is named
+		assert_bool(text.contains(c.prop(id).display_name)).is_false()
+	for id: StringName in SkillGen.ground_ids(c):
+		assert_bool(text.contains(c.ground(id).display_name)).is_false()

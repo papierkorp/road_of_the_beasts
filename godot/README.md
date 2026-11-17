@@ -119,7 +119,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   - **Working values:** highest hit 2 (HP runs from 1 to 10; the monster builder offers the ranges of monsters.md); ground laid in battle lasts 2 rounds (`ground_rounds`); a
     Strike pushes 1 if its record says so (`strike_push`, on by default); the board edge deals 1 and a spiky prop 2 to a monster moved into it; Step 1 AP, Run 1 AP; authored movement costs vary (including user experiments), with the reference
     non-Run movement skills at 2 AP (plus Stamina, below); extra turns count from round 2 (`tpr_from_round`); push and
-    pull zones move only at the end of their occupant's turn, not at cast (build default since 2026-11-14, S025; `zone_cast_push`); everyone may rotate a placed shape; a push zone left by a skill that also creates
+    pull zones move only at the end of their occupant's turn, not at cast (rule since 2026-11-14, S025); everyone may rotate a placed shape; a push zone left by a skill that also creates
     something else points where the placement is turned (`BattleCasting.rot_dir`).
   - **Build since 2026-11-15 (user decisions of that day; S030; docs/temp_todo.md handoff and T41):**
     - *Pace:* the stat Initiative is called Pace everywhere (`pace`, `drain_pace`, `pace_bonus`). Scale: base 1.0, a
@@ -148,7 +148,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
       `UnitSheets.arrange` gives the unit its own copy of the skill. The skill card shows the arrangement.
     - *Props on Dragon Veins:* also at board generation (seeded boards changed with it); only the centre stays free.
       Button squares still keep off veins.
-    - *Board switches:* `board_size` (draft check boxes **Board 8×8** / **Board 9×9**; `sim.gd --variant size=N`):
+    - *Board switches:* `board_size` (draft number field **Board size** beside the other board values: 7 = the board of the mode, 8 or 9; `sim.gd --variant size=N`):
       any mode on a larger board; start squares, the fixed layout and the seeded prop pairs follow the size. An even
       board has its Dragon Veins in mirrored pairs on the two centre rows (`wells` rounds up to an even number).
     - *Sheets and roles:* Overview → **Board sheets**; `BattleContent.validate` checks the roles of every ground, zone
@@ -166,10 +166,10 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     - *Stat points (display only):* `MonsterDef.point_lines` / `points_of` hold the prices of monsters.md; the
       overview's monster table shows them in a Points column (hover for the calculation). Nothing checks a budget.
     - *Tools:* every result table states the mean rounds and the battles under 3 and over 5 rounds (`sim.gd`,
-      `compare.gd`, `progression.gd`, `discovery.gd`); length target: a mean of 3.0–4.9 rounds.
+      `compare.gd`, `progression.gd`, `discovery.gd`); length target: a mean of 3.5–4.5 rounds.
   - **Build since 2026-11-14 (user decisions and drafts of that day; S028/S029; docs/temp_todo.md T40):**
     - *Decided:* every slotted skill at most `usage_limit` times per turn of its monster (1 unless the record says
-      more; `once_per_turn` = false switches the limit off) and up to 6 kit slots (the nine kits hold 6 since 2026-11-15: skills.md).
+      more; no switch since 2026-11-17, only older rule tests turn `once_per_turn` off) and up to 6 kit slots (the nine kits hold 6 since 2026-11-15: skills.md).
     - *Prop rework (working draft, written into GDD §4.9–§4.12 on 2026-11-15):* `PropDef.solid` (false = a walkable prop: blocks no movement,
       push or Strike line, still has HP); every `PropAftermath` names its moment `when`: `destroyed`, `hit` (lost HP
       and still stands), `enter` (a monster came onto a walkable prop: a trap, used up) or `round_end`; operations
@@ -189,9 +189,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     currently cost 1 AP. The tools' 2-AP candidate and discovery's `single_vein` map are not adopted game defaults;
     normal 7×7 remains three veins. These switches do not set monster AP. See [tools](tools/README.md#commands).
 - **Still in the code, unused by the game** (to be removed, temp_todo I56/I57): height and Mountains, the air layer,
-  Surges and their marker traps (`PendingSurge`, the Surge fields of `BattleSkillDef`), the `shield` / `mend` / `expose` effects,
-  and the switches that belong to them (`surge_fair`, `surge_at_caster`, `surge_wall`, `surge_ground`, `trap_cap`,
-  `trap_rounds`, `no_shield_zones`). Tests that build these by hand still run.
+  Surges and their marker traps (`PendingSurge`, the Surge fields of `BattleSkillDef`), the `shield` / `mend` / `expose` effects. Tests that build these by hand still run.
 - **Overview and skill builder:** `game/overview.gd` has six tables (skills as cards, monsters, grounds, zones,
   board sheets, props) with one row per Resource under `data/`. **In game only** excludes `test`, `simulation` and `archived`; the checkbox is initially off, so these records can still appear in the unfiltered debug overview. Its button **Skill builder** (`game/skill_builder.gd`) builds a
   skill from the parts of the card or draws a random one, saves it to `data/skills/<id>.tres` with the status
@@ -203,10 +201,8 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   once. “New skill” opens the skill builder, which returns to the caller (`SkillBuilder.return_scene`). No price, budget
   or Kin access is checked. Changing an existing monster rewrites its file: Git is the way back.
 - **Test switches** (`battle/core/battle_experiment.gd`, set by `sim.gd --variant` and partly in the draft screen;
-  none is a rule): `delay_turn` with `delay_reverse` / `delay_first_round` (postponing a turn), `damage_from_round`
-  (a calm first round), `start_back` (back-row starts), `push_steps`, `kin_push`, `no_rotation`, `step_ap` / `jab_ap` /
-  `move_ap`, `soft_pressure`, the switches of S025–S030 (`zone_cast_push`, `once_per_turn`, `vein_touch`, `collision_both`,
-  `vein_charge`, `vein_charge_late`, `step_full_move`, `stamina` / `stamina_regen` / `stamina_ap`, `map_props`, `map_buttons`, `board_size`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
+  none is a rule): `damage_from_round`
+  (a calm first round), `start_back` (back-row starts), `no_rotation`, `soft_pressure`, the switches of S025–S030 (`vein_touch`, `stamina_regen`, `map_props`, `map_buttons`, `board_size`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
   `ai_no_kind`. Tests: `tests/battle/test_battle_experiment.gd`.
 - **Kit switches** (draft check boxes; `tests/battle/test_kit_draw.gd`): **Random kits** (`random_kits`) gives every
   monster of a battle a random kit instead of its own. Each monster draws a kit template (`KitDraw.TEMPLATES`:
@@ -218,37 +214,103 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   every monster of the battle gets random stats and a random Kin, bought with the monster calculation
   (`MonsterDef.points_of`) for the 60 points of the multiplayer mode: at least HP 3, Stamina 2, Reach 2 and AP 2, at
   most HP 10, Pace 4.0, Stamina 8, Reach 4, AP 4 and two turns; the species picked is only the look, the name becomes
-  “Random <Kin>”. It implies random kits and is drawn by `kit_seed`, so “Fight Again” repeats the monsters. **AI tries
-  every skill** (`ai_try_all`, on by default): the opponent prefers a skill it has not used yet in the battle (`AiBrain.TRY_BONUS`).
-- **AI fights for Dragon Veins** (`ai_veins`, draft check box, on by default; user, 2026-11-16): `AiBrain._vein_score`
+  “Random <Kin>”. It implies random kits and is drawn by `kit_seed`, so “Fight Again” repeats the monsters. The draft checks
+  the three random switches the first time it opens (`DraftScreen._opened`; user, 2026-11-17); a battle started elsewhere, the
+  tests and the tools play the monsters as they are. **The AI tries every skill** (no switch): the opponent prefers a skill it has not used yet in the battle (`AiBrain.TRY_BONUS`).
+- **The AI fights for Dragon Veins** (no switch since 2026-11-17; user, 2026-11-16): `AiBrain._vein_score`
   values an owned vein (`VEIN_OWNED`), a solid prop on an owned vein (`VEIN_LOCK`), every square the nearest enemy
   needs to reach an owned vein (`VEIN_GUARD`, walls and bodies count) and pulls its nearest monster to veins it does
   not own (`VEIN_PULL`); placements on and next to veins are candidates. In the game (`AiBrain.decide` with
   `lookahead`, bot `game` of `tools/sim.gd`) the best first actions are judged with the best second action of the
-  turn (step off a vein, then lock it). `sim.gd --variant noveins` / `notry` switch the two off.
-- **Ideas of 2026-11-16, built to try and to measure (no rules; [T43](../docs/todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)):**
-    - *Stamina base cost* (`stamina_base`, draft number field): a movement skill costs that much Stamina per use on top
-      of the squares.
-    - *Strikes only push* (`strike_push_only`, draft check box; user idea of 2026-11-17): a Strike deals no damage
-      to monsters (`BattleSkillDef.monster_damage()`; props take it as before); its shape and its push stay as the
-      card says. Every monster has the Basic Jab beside Step, as below. Reach 3 and pulling Strikes were tried
-      with it (S035) and dropped by the user.
-    - *Strikes cost Stamina* (`skill_stamina`, draft check box; user idea of 2026-11-17): Stamina pays for what
-      the body does. A Strike costs Stamina beside its AP (`BattleSkillDef.stamina_price()`: 1, or 2 for an
-      extended shape and a Cross; `stamina_cost` on a card overrides it), a movement skill pays its squares as
-      before, ground, zone, prop and buff skills cost AP only. Every monster has the experiment skill **Basic Jab** (1 AP, 1 damage, no push,
-      no Kin effect, no Stamina, once a turn) as an action beside Step, not as a kit slot: the action
-      `{type: &"skill", slot: Battle.BASIC_SLOT, dir}`, a button of its own next to Step. Use limits stay as they
-      are. With the switch the opponent AI values Stamina left in the pool (`AiBrain.STAMINA_KEPT`, more for the
-      last points), so it walks with Step more and keeps skills for when they pay; the whole-turn bots of the
-      tools read the same evaluation.
-    - *Props bury traps* (`trap_defuse`, draft check box): a solid prop created on or pushed onto a trap removes it
-      unsprung (event `trap_defused`).
+  turn (step off a vein, then lock it).
+- **Rules since 2026-11-17 (user decisions; written into battle.md, skills.md and monsters.md; no switch any more):**
+    - *Strikes:* a Strike of the kit deals no damage to monsters (`BattleSkillDef.monster_damage()`, `push_only()`);
+      it pushes, and what its card names as damage hits props (`hits_props()`, 2 per prop). Every monster has the
+      **Basic Jab** (2 AP, 1 damage, no push, once a turn) as an action beside Step, not as a kit slot: the action
+      `{type: &"skill", slot: Battle.BASIC_SLOT, dir}`, a button of its own next to Step. Step costs 1 AP.
+    - *Strike push:* every monster and prop a Strike struck is pushed, also on the farther squares of an extended
+      shape, along the line of its square (`BattlePayload._push_dir`).
+    - *Kin:* the Kin of the striker adds nothing to a Strike (`KinRules.of` returns nothing; the table of the
+      former effects still lies in `kin_rules.gd`).
+    - *Zones:* a zone only pushes or pulls and has one level (`BattleStats.contributions`,
+      `BattleBoardOps.zone_outcome`). The zones Mire, Slowing, Tailwind, Updraft, Bog and Shockwave are `archived`.
+    - *Ground:* one level; laying it again restarts its clock (result `refresh`). Blight is `archived`; Gloom Rift
+      and Coiling Rift lay Lava instead.
+    - *Round end:* nothing but Dragon Veins and surrounding deals damage there. The damage line of a prop (Ember
+      Brazier) hits a monster that ends its turn inside the prop's shape (`BattleProps.turn_end_hits`); pushes of
+      round-end props (Storm Drum) stay at the round end.
+    - *Created props:* a prop a skill creates lapses without effect after two rounds (`BoardProp.CREATED_ROUNDS`,
+      `BoardProp.until`, event `prop_lapsed`); props of the board stay.
+    - *Removed with their switches:* a kit slot once per round, “a movement skill or a Strike in a turn”, Stamina on
+      Strikes, the Stamina base cost of movement, charged Dragon Veins, zone push at cast, Wait in round 1 only, a Wait
+      once a round for everyone, collision damage for the moved monster only, a Step that walks the full movement and
+      the switches of Surges and Surge traps (`surge_fair` is always on, one trap per trap skill). The Surge code
+      itself, the levels in `BoardCell.level` and the price entries of archived records in `skill_calc.gd` are
+      still there, unused.
+    - *Pace:* Wait is bought with Pace: a monster may postpone its turn as often per battle as the whole number of
+      its current Pace lies above 1 (`Battle.waits_total`, `waits_left`; button **Wait** beside End Turn, which shows
+      what is left); those that waited act in reverse order. The Dragon Veins act one after another
+      (`BattleTurn._veins_in_order`), the vein of the faster taker first (`BoardCell.owner_unit`: the monster that
+      took it; a fallen taker's vein last), defeats after each; surrounding acts before them. The board names the
+      taker and its Pace under an owned vein.
+    - *Traps:* a solid prop created on or pushed onto a trap springs it and takes its square
+      (`BattleBoardOps.spring_at`, event `trap_sprung` with `by`); what the trap does runs once the prop stands there.
+- **Test switches of 2026-11-17 that are left (no rules; [T44](../docs/todo/to-clarify/battle/T44-review-pack-of-2026-11-17.md)):**
+  `BattleExperiment.pack(false)` switches the first three off (`tests/battle/helpers.gd rule_strikes`,
+  `sim.gd --variant nopack`); `--variant x.<switch>=<value>` sets any switch by its name. Tests:
+  `tests/battle/test_review_pack.gd`. `tools/discovery.gd` and `tools/progression.gd` were not run against the new rules.
+    - `vein_late_round` 3, `vein_late_damage` 2: an owned Dragon Vein deals 2 from that round on (S039 measured 5, 4
+      and 3). The round is a board value of the draft (**Veins deal 2 from round**, 0 = never).
+    - `damage_from_round` 2 (**Pack: no damage in round 1**) and `pressure_mode` “none” (**Pack: no late-round
+      pressure**).
+    - `free_camera` (**Free camera**, on; a view switch, to compare): a middle-mouse drag also tilts the camera up
+      and down, between 15° and 88° (`BattleView._pitch_target`); off = the fixed tilt of 40°.
+    - **Round-end forecast** (no switch): under the queue the HUD always shows what the round end would do on the
+      board as it stands, who is hit by what and who falls (`BattleTurn.round_end_forecast`, a dry run on a copy).
     - *Experiment content* (status `experiment`, in no kit; the skill builder and the generated skills can use it):
-      ground **Shifting Sand** (`GroundDef.no_props`: no prop can be placed on it; a prop that stands there or is pushed onto it stays),
-      ground **Springwater** (ground trigger kind `stamina`: +1 Stamina on entering), zone **Erosion**
-      (`FieldEffect.ERODE`: props in it take 1 at the round end, with the other things that act), zone **Updraft** and
-      the self buff **Deep Breath** (`FieldEffect.REFRESH`: more Stamina recovered at the round end).
+      ground **Shifting Sand** (`GroundDef.no_props`), ground **Springwater** (+1 Stamina on entering), zone
+      **Erosion** (`FieldEffect.ERODE`: props in it take 1 at the round end) and the self buff **Deep Breath**
+      (`FieldEffect.REFRESH`: more Stamina recovered at the round end).
+- **Rules of this battle** (pause menu of the battle screen, `BattleHud._show_rules`): a window with every switch
+  of `BattleExperiment`, first what differs from the build default, then the defaults in use
+  (`BattleExperiment.settings_lines`); the text can be copied. `sim.gd` prints the same two lists with every run block.
+- **Changes of 2026-11-17 (user decisions, written into the rule files):** `slow` and `haste` change the Stamina a
+  movement skill costs per use (`BattleMoves.use_cost`), no longer its range; straight-line movement has four
+  directions unless its card allows diagonals; the squares of a free shape touch over an edge or a corner; generated Strikes reach 1 or 2 squares.
+  A movement skill may allow
+  diagonal lines on its card (`BattleSkillDef.move_diagonal`; the generator gives it to one line in four, the draft
+  price list holds an unmeasured price for it).
+  The Ancient Kin text “breaks Mountain” is gone from the card (Mountains were removed on 2026-11-13).
+- **Skill card** (`BattleText.skill_rows`, user request 2026-11-17): every skill is shown as the same small table,
+  rows in a fixed order and left out when empty: **Cost** (AP, Stamina, uses), **Where** (shape or path and range),
+  **Does** (damage, push, Kin effect, effect on the user), **Creates** (one row per ground, zone or prop and below
+  it what that thing does; **Leaves** for a movement). Step and the Basic Jab use the same table; the overview and
+  the builders print the same rows.
+- **Input Map (user rule 2026-11-17):** every key and mouse button is an action in `project.godot` (`battle_select`,
+  `battle_rotate`, `battle_aim_north/south/west/east`, `battle_step`, `battle_skill_1`–`6`, `battle_confirm`,
+  `battle_cancel`, `battle_glossary`, `camera_turn_left/right`, `camera_zoom_in/out`, `camera_drag`,
+  `toggle_fullscreen`, `toggle_cheats`, `walk_up/down/left/right`, `interact`, `build_toggle`, `build_rotate`,
+  `build_place`, `build_pick_up`). No code asks for a key; hints and buttons read the key name from the map
+  (`UiTheme.key_text`).
+- **Compass (user request 2026-11-17):** N, E, S and W stand beside the middle of each board edge
+  (`BattleView._make_compass`; north = y − 1, east = x + 1, as `BattleText.DIR_NAMES`). Hovering a square of a push
+  or pull zone names where it moves a monster there (“here: push north”, “here: pull east (to centre)”,
+  `BattleText.zone_way`), and the log names the direction of every push and pull (“Wolf west → [2,4]”).
+- **Generator table (user request 2026-11-17):** the overview opens on the tab **Generator**
+  (`Overview.generator_rows`): how a random skill is built, every part with what it can be, then what the grounds,
+  zones and props of the pool can do, in general terms and without names. It reads the lists of `SkillGen`
+  (`STRIKE_DAMAGE`, `MOVE_PATHS`, …, the same lists `draw_kind` draws from) and the records of the pool, and marks
+  what a test switch turns off. New Strike part: **damages props** yes or no (`BattleSkillDef.strike_props`: -1 =
+  as the rule, follows the damage; 0 = spares props; 1 = damages them also without damage to monsters); the
+  generator draws it, the card shows it.
+- **Kinds, terms and glossary (user requests 2026-11-17):** every action button carries the kind of its skill as a
+  word and a coloured stripe (`BattleText.KINDS`: Strike, Move, Ground, Zone, Prop, Self, Passive;
+  `BattleHud._kind_stripe`) and the card starts with a **Kind** row. Cards and the square inspector use terms only
+  (a prop: `solid · heavy · spiky`, then one line per thing it does, then when it lapses; `BattleText.prop_lines`);
+  every term is explained once in the **Glossary** (pause menu or key G; `BattleText.GLOSSARY`). A movement card
+  has a row **Passes**: what the movement passes over and whether every square on the way counts or only the
+  landing square. Why a skill cannot be used now stands in red over the whole width of the card. The centre square
+  of a pull zone is labelled on the board. Layout to try: Step over the Basic Jab, End Turn over Wait.
 - **Battle log:** every damage line names its source (“Jab by Gloom Wolf −2”, “Lava (ground) −1”); the line of a defeat
   names the hit that did it and what else the monster took in that round (`BattleText.defeat_line`). A fallen monster
   gets a button above the log that opens everything that changed its HP (`BattleText.hp_history`, `BattleHud.add_fallen`).

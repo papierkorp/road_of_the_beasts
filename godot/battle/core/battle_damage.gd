@@ -119,6 +119,17 @@ static func ground_harm(b: Battle, u: BattleUnit, timing: String, cells: Array[V
 	return harm
 
 
+## The triggers of a ground at `timing`. No ground acts at the round end; a record that still names that moment
+## acts at the end of its occupant's turn.
+static func _triggers(g: GroundDef, timing: String) -> Array[GroundTrigger]:
+	if timing == Moment.ROUND_END:
+		return [] as Array[GroundTrigger]
+	var out := g.triggers_at(timing)
+	if timing == Moment.TURN_END:
+		out.append_array(g.triggers_at(Moment.ROUND_END))
+	return out
+
+
 ## Damage and healing entries of the ground under `cells` at `timing`, each type once.
 static func ground_effects(b: Battle, u: BattleUnit, timing: String, cells: Array[Vector2i]) -> Dictionary:
 	var hits: Array = []
@@ -130,7 +141,7 @@ static func ground_effects(b: Battle, u: BattleUnit, timing: String, cells: Arra
 		var g := b.content.ground(gid)
 		if g == null or BattleStats.ignores_ground(u, gid):
 			continue
-		for t in g.triggers_at(timing):
+		for t in _triggers(g, timing):
 			var v := t.value_at(grounds[gid])
 			if t.kind == "stamina":
 				continue                              # no HP: ground_triggers gives it
@@ -160,7 +171,7 @@ static func ground_triggers(b: Battle, u: BattleUnit, timing: String, cells: Arr
 			var g := b.content.ground(gid)
 			if g == null or BattleStats.ignores_ground(u, gid):
 				continue
-			for t in g.triggers_at(timing):
+			for t in _triggers(g, timing):
 				if t.kind == "stamina" and u.stamina < u.sheet.movement:
 					var gain := mini(u.sheet.movement - u.stamina, t.value_at(under[gid]))
 					u.stamina += gain

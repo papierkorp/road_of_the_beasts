@@ -15,6 +15,7 @@ tag = "pull"
 script = ExtResource("2_y55y4")
 id = &"bog"
 display_name = "Bog"
+content_status = "archived"
 internal_calc_cost = 3.5
 effects = Array[ExtResource("1_ntfga")]([SubResource("Resource_vwoue"), SubResource("Resource_ubbtt")])
 color = Color(0.4, 0.5, 0.36, 1)

@@ -51,7 +51,7 @@ static func choices(c: BattleContent, key: String) -> Array:
 		"impact":
 			return [["none", "nothing"], ["ahead", "pushes the monster ahead"], ["ring", "pushes all neighbours"]]
 		"self":
-			return [["", "no"], ["quicken", "Pace +0.1 for 2 rounds"], ["haste", "Movement +1 for 2 rounds"], ["extend", "Reach +1 for 2 rounds"],
+			return [["", "no"], ["quicken", "Pace +0.1 for 2 rounds"], ["haste", "movement skills −1 Stamina for 2 rounds"], ["extend", "Reach +1 for 2 rounds"],
 				["vigor", "AP +1 for 2 rounds (experiment)"], ["tempo", "one more turn (experiment)"], ["immovable", "passive: ignores push and pull"]]
 		"shape":
 			return [["one", "1 square"], ["line2", "line of 2"], ["line3", "line of 3"], ["block", "block 2×2"], ["angle", "angle (3)"], ["cross", "cross (5)"]]
@@ -249,7 +249,7 @@ func _show(s: BattleSkillDef) -> void:
 	lines.append("")
 	lines.append("[color=#8a93a3]Card text in battle[/color]")
 	for r in BattleText.skill_rows(_content, s):
-		lines.append("  %s" % String(r[1]))
+		lines.append("  %-8s %s" % [r[0], r[1]])
 	if _content.skills.has(s.id) and _content.skills[s.id] != s:
 		lines.append("")
 		lines.append("[color=#d9a04a]A skill with this id exists: saving replaces its file.[/color]")

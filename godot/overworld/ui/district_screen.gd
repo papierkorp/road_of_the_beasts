@@ -63,7 +63,7 @@ func _after_ready() -> void:
 	else:
 		GameSession.build_mode = false
 	if GameSession.arrive_from == &"start":
-		_say("WASD to walk, E to use things.", 5.0)
+		_say("%s%s%s%s to walk, %s to use things." % [UiTheme.key_text(&"walk_up"), UiTheme.key_text(&"walk_left"), UiTheme.key_text(&"walk_down"), UiTheme.key_text(&"walk_right"), UiTheme.key_text(&"interact")], 5.0)
 
 
 func _top_buttons() -> Array[Button]:
@@ -203,21 +203,19 @@ func _save_and_menu() -> void:
 func _extra_input(event: InputEvent) -> bool:
 	if _map.id != &"inner":
 		return false
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_B:
-			_toggle_build()
-			return true
-		if GameSession.build_mode and event.physical_keycode == KEY_R:
-			GameSession.build_rot = not GameSession.build_rot
-			_show_build_panel()
-			return true
-	if GameSession.build_mode and event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			_build_click()
-			return true
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			_build_pick_up()
-			return true
+	if event.is_action_pressed(&"build_toggle"):
+		_toggle_build()
+		return true
+	if GameSession.build_mode and event.is_action_pressed(&"build_rotate"):
+		GameSession.build_rot = not GameSession.build_rot
+		_show_build_panel()
+		return true
+	if GameSession.build_mode and event.is_action_pressed(&"build_place"):
+		_build_click()
+		return true
+	if GameSession.build_mode and event.is_action_pressed(&"build_pick_up"):
+		_build_pick_up()
+		return true
 	return false
 
 

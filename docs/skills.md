@@ -7,11 +7,11 @@
 ## 1. The Kit
 
 ```
-Monster = Step (always, no slot)
+Monster = Step and Basic Jab (always, no slot)
         + up to 6 slots, each an active skill or a passive, at least one active
 ```
 
-- **Step** (1 square, 1 AP, no slot) is the weakest movement.
+- **Step** (1 square, 1 AP, no slot) is the weakest movement. The **Basic Jab** (2 AP, 1 damage, no push, once per turn, no slot) is the only direct damage to a monster ([battle.md §2.4](battle.md#24-action-points-and-stamina)).
 - No skill is mandatory, not even a Strike or a movement. The same skill may sit in two slots, each copy with its own usage count.
 - **Slots:** the multiplayer mode plays with all six open; in the game single slots are upgrades.
 - **The player shapes the kit** within the species' learnable list ([monsters.md §3](monsters.md#3-kins)).
@@ -25,7 +25,7 @@ Monster = Step (always, no slot)
 |---|---|
 | **Cost** | AP · use (once per turn unless the card names more; once per round; once per battle) · a movement also Stamina per square; a passive has none |
 | **Shape** | one shape per skill ([§4](#4-shapes)): a base shape around the user, or a free shape of N squares at an anchor |
-| **Strike** | no · or damage (0–2), a push of 1, or both, now, on the squares of its base shape |
+| **Strike** | no · or a push of 1, damage to props, or both, now, on the squares of its base shape |
 | **Movement** | no · or the path kind, what it passes over, its range and a push on landing |
 | **On itself** | no · or a timed effect on the user (self buff) · or a lasting one (passive) |
 | **Creates ground** | no · or which ground |
@@ -34,7 +34,6 @@ Monster = Step (always, no slot)
 
 - **Every effect hits everyone on its squares,** friend and foe.
 - **Guideline:** a kit skill does one thing itself or creates one thing, at most two.
-- **A zone that only changes stats is never a skill of its own** ([battle.md §4.6](battle.md#46-zones)).
 - Effects on AP or turns per round are rare and expensive and carry the content status `experiment`.
 
 **Fixed, chosen and derived:**
@@ -42,7 +41,7 @@ Monster = Step (always, no slot)
 | Part | Fixed on the card | Chosen by the player | Follows from stats and board |
 |---|---|---|---|
 | Cost | AP; use | — | Stamina per square of a movement |
-| Strike | base shape and extensions; damage 0–2; push yes or no | direction | who stands in the shape; cover; the Kin effect |
+| Strike | base shape and extensions; damage to props yes or no; push yes or no | direction | who stands in the shape; cover |
 | Movement | path kind; what it passes over; range; push on landing | path and landing square | Stamina left; movement cost of the squares |
 | On itself | effect and rounds, or lasting | — | — |
 | Creates | which thing; the shape; the anchor rule; rounds of a zone | **before the battle:** the arrangement of a free shape · **in the turn:** direction or anchor square, quarter turn, direction of a push zone | Reach; which squares can take it |
@@ -60,7 +59,7 @@ Monster = Step (always, no slot)
 **Place and shape:**
 
 - **Base shape around the user:** a Strike hits its squares; a skill that creates lays its ground, zone or props on them. The player aims it; shapes without a direction need no aim.
-- **Free shape:** the card names **a number of squares** and where the anchor may lie: **within Reach** or **next to the user**. **The player arranges the squares before the battle:** connected over their edges, the anchor square among them. The arrangement authored with the skill is the default. In battle the arrangement is fixed; the player may still turn it in quarter turns. The opponent sees it on the skill card. A skill that creates props uses a free shape like any other.
+- **Free shape:** the card names **a number of squares** and where the anchor may lie: **within Reach** or **next to the user**. **The player arranges the squares before the battle:** every square touches another over an edge or a corner, the anchor square among them. The arrangement authored with the skill is the default. In battle the arrangement is fixed; the player may still turn it in quarter turns. The opponent sees it on the skill card. A skill that creates props uses a free shape like any other.
 - **Over the edge:** squares of a shape that lie off the board are dropped; the skill acts on the rest. At least one square must lie on the board, and the anchor of a free shape must.
 - **Reach** counts orthogonal steps from the user to the anchor. It applies to every free shape placed at a distance; a base shape uses none.
 - **No sight rule:** nothing blocks choosing a square. A square that cannot take what the skill creates stays as it is.
@@ -71,12 +70,12 @@ Monster = Step (always, no slot)
 
 ### Strike
 
-- **Now, around the user:** a Strike hits every monster and prop on the squares of its base shape. It is the only immediate damage in the game.
-- **Damage and push are both optional:** 0–2 damage per struck monster, and the card says whether it pushes. A Strike that does neither only delivers what it creates.
-- **Push:** each struck monster and prop on a neighbouring square moves 1 square away from the striker ([battle.md §6.4](battle.md#64-displacement)); farther squares of the shape are damaged but not moved.
+- **Now, around the user:** a Strike acts on every monster and prop on the squares of its base shape.
+- **A Strike deals no damage to monsters.** It pushes, it damages props, or both; one that does neither only delivers what it creates.
+- **Push:** every struck monster and prop moves 1 square away from the striker ([battle.md §6.4](battle.md#64-displacement)), also on the farther squares of an extended shape.
+- **Damage to props:** 2 to every prop in the shape, if the card says so.
 - **Cover:** a solid prop takes the hit and the square behind it is not struck.
 - **One hit per monster** per use, however many squares of the shape it covers.
-- The striker's Kin adds its effect ([§4](#4-shapes)).
 - A Strike may create ground or a zone on the squares it struck; it creates no prop.
 
 ### Movement
@@ -99,18 +98,18 @@ Monster = Step (always, no slot)
 |---|---|---|---|
 | **Ground** | 2 rounds | a placed shape · a Strike, on the struck squares · a movement, on the squares it left | on Voidscar or a Dragon Vein |
 | **Zone** | the rounds the skill names | a placed shape · a Strike · a movement | — |
-| **Prop** | until destroyed; a trap until it is entered | a placed shape: one prop per square | on a square that cannot take it; by a Strike or a movement |
+| **Prop** | 2 rounds or until destroyed; a trap until it is entered | a placed shape: one prop per square | on a square that cannot take it; by a Strike or a movement |
 
 - **Two at once:** a skill that neither strikes nor moves may create two things together.
 - **Order:** what a skill creates lands after its damage and displacement: props, then ground, then zones ([battle.md §6.2](battle.md#62-payload-resolution)).
 - **Ground under a monster** is not entering; it acts at its next moment.
-- **Levels:** the same hazard laid again gains a level (max II); the same zone cast again gains a level (max III) and refreshes.
+- **Laid again:** the same ground or zone on the same square only restarts its clock.
 - **A trap is a prop:** a skill creates a walkable prop that acts when a monster enters it.
 - Own ground and zones bind the caster too. No zone damages or heals.
 
 ## 4. Shapes
 
-**One shape vocabulary** for Strikes, for what a skill creates next to its user, and for what a prop does around itself: six **base shapes** around a centre `M`, each **extended** any number of times. A bigger shape costs more AP.
+**One shape vocabulary** for Strikes, for what a skill creates next to its user, and for what a prop does around itself: six **base shapes** around a centre `M`, each **extended** any number of times; **a Strike is extended at most once** (it reaches 2 squares). A bigger shape costs more AP.
 
 | Base shape | Squares | Directions | The squares |
 |---|---|---|---|
@@ -164,34 +163,12 @@ Jab +1   Pincer +1   Arc +1    Whirl +1      Cross +1      Storm +1
 - **Own square and block:** two more forms for things that include their own square: the own square, and the block around and including it (3×3, extended 5×5). Props that act on entry use them.
 - **A prop has no direction:** it uses Whirl, Cross, Storm, its own square or the block.
 
-**Kin effects** (on top of damage and push):
-
-| Kin | Strike | Effect |
-|---|---|---|
-| Beast | Bite | none: the baseline |
-| Winged | Dive | the striker then retreats 1 square for free, opposite the centre of the hit shape |
-| Scaled | Tail Sweep | pushes the target 1 square in a **chosen** cardinal direction instead of straight away |
-| Swarm | Gnaw | props take double (4) |
-| Spirit | Siphon | target −1 Pace point next round |
-| Ancient | Slam | not defined |
-
-**Self retreat** (Winged): one square opposite the centre of the hit shape. It exists only for shapes whose centre lies on one of the eight directions (Jab and Arc, also extended). It happens once per valid use, whether or not anything was hit, after the Strike has resolved; if the square is not free, the striker stays. Pincer, Whirl, Cross and Storm have no retreat square.
-
-```
-       x               x                                   x x x
-x      x             x          x x x      x x             x x x
-M      M           M              M        M x               M
-R      R         R                R      R                   R
-
-Jab    Jab +1    Jab +1 (diag)  Arc      Arc (diagonal)    Arc +1
-```
-
 ## 5. Movement Kinds
 
 | Path kind | Rule |
 |---|---|
 | **Walks** | cardinal steps; props and monsters block; pays the movement cost of every square |
-| **Straight line** | one of 8 directions; the card says what it passes over; only the landing square counts |
+| **Straight line** | one of the 4 orthogonal directions; a card may allow the 4 diagonals too, which the calculation prices; the card says what it passes over; only the landing square counts |
 | **Any path** | free path; the card says what it passes over |
 
 | On landing | Rule |
@@ -209,7 +186,7 @@ A movement may leave ground or a zone on the squares it left. Concrete movement 
 
 ## 7. Value and Prices
 
-**Status: draft.** A skill calculation in the manner of the monster calculation ([monsters.md §2](monsters.md#2-stats)) is being worked out, so that skills come out about equally strong: every part of a skill card has a price in points, the sum is what the skill is worth, and a fixed number of points is what 1 AP pays for. No price is settled, and nothing checks a monster against a skill budget. The skills of [content.md](content.md) are examples; their AP costs are not settled.
+**Status: draft.** A skill calculation in the manner of the monster calculation ([monsters.md §2](monsters.md#2-stats)) is being worked out, so that skills come out about equally strong: every part of a skill card has a price in points, the sum is what the skill is worth, and each of the three AP levels has a range of points a skill of that level may lie in (less is always allowed). No price and no range is settled, and nothing checks a monster against a skill budget. The skills of [content.md](content.md) are examples; their AP costs are not settled.
 
 Principles:
 

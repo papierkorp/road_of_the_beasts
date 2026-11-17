@@ -88,12 +88,11 @@ func test_ties_between_the_sides_keep_alternating_across_rounds() -> void:
 
 
 func test_queue_is_recalculated_every_round_from_effective_pace() -> void:
-	var drain := H.zone_skill([FieldEffect.make("drain_pace", 2, 3)])
 	var b := H.battle([
 		[0, Vector2i(0, 6), {"pace": 1.6}],
 		[1, Vector2i(6, 0), {"pace": 1.5}],
 	])
-	H.zone_on(b, Vector2i(0, 6), drain.zone, 1, 1, Vector2i.ZERO, Vector2i.ZERO, 5)
+	b.apply_effect(H.unit(b, 0), "t:drain", "drain_pace", 2, 5)     # a timed effect on the monster (a zone changes no stat)
 	b.begin()
 	# 1.6 - 2 points = 1.4 < 1.5: the drained monster acts second
 	assert_array(_ids(b)).is_equal([[&"u1", "1.5"], [&"u0", "1.4"]])
@@ -101,9 +100,8 @@ func test_queue_is_recalculated_every_round_from_effective_pace() -> void:
 
 
 func test_pace_floor_is_point_one() -> void:
-	var drain := H.zone_skill([FieldEffect.make("drain_pace", 3, 3)])
 	var b := H.battle([[0, Vector2i(0, 6), {"pace": 0.2}], [1, Vector2i(6, 0), {"pace": 1.5}]])
-	H.zone_on(b, Vector2i(0, 6), drain.zone)
+	b.apply_effect(H.unit(b, 0), "t:drain", "drain_pace", 3, 5)
 	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(0.1, 0.001)
 
 

@@ -11,6 +11,8 @@ extends RefCounted
 ## behind another one, the square in front of it (a solid prop there takes a Strike and shields it).
 
 const STRAIGHT: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 1), Vector2i(-1, 0)]
+## The eight neighbours: the squares of a free shape touch over an edge or a corner (user decision 2026-11-17).
+const AROUND: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, 0), Vector2i(1, 1), Vector2i(0, 1), Vector2i(-1, 1), Vector2i(-1, 0), Vector2i(-1, -1)]
 const DIAGONAL: Array[Vector2i] = [Vector2i(1, -1), Vector2i(1, 1), Vector2i(-1, 1), Vector2i(-1, -1)]
 const ALL8: Array[Vector2i] = [Vector2i(0, -1), Vector2i(1, -1), Vector2i(1, 0), Vector2i(1, 1),
 	Vector2i(0, 1), Vector2i(-1, 1), Vector2i(-1, 0), Vector2i(-1, -1)]
@@ -172,7 +174,7 @@ static func retreat_dir(shape: StringName, d: Vector2i, extension := 0) -> Vecto
 
 
 ## Why `cells` is no legal arrangement of a free shape of `squares` squares ("" = legal): exactly that
-## many different squares, the anchor (0, 0) among them, all connected over their edges.
+## many different squares, the anchor (0, 0) among them, all touching over an edge or a corner.
 static func arrangement_error(cells: Array, squares: int) -> String:
 	if cells.size() != squares:
 		return "the shape has %d square%s, not %d" % [squares, "" if squares == 1 else "s", cells.size()]
@@ -187,11 +189,11 @@ static func arrangement_error(cells: Array, squares: int) -> String:
 	var reached := {Vector2i.ZERO: true}
 	while not open.is_empty():
 		var c: Vector2i = open.pop_back()
-		for d in STRAIGHT:
+		for d in AROUND:
 			if seen.has(c + d) and not reached.has(c + d):
 				reached[c + d] = true
 				open.append(c + d)
-	return "" if reached.size() == squares else "the squares must be connected over their edges"
+	return "" if reached.size() == squares else "the squares must touch each other, over an edge or a corner"
 
 
 ## A free shape as text, row by row from the top: "■■/■·" (the anchor is one of the squares).

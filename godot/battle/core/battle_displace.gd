@@ -93,8 +93,7 @@ static func resolve(b: Battle, entries: Array) -> void:
 			return int(a.get("prop", -1)) < int(c.get("prop", -1))
 		return b.roster.find(a["unit"]) < b.roster.find(c["unit"]))
 	for item: Dictionary in list:
-		# experiment: a push or pull may move several squares and stops at the first blocker
-		for _i in maxi(1, BattleExperiment.push_steps if item.get("multi", false) else 1):
+		for _i in 1:
 			if item.has("prop"):
 				var pr := prop_by_uid(b, int(item["prop"]))
 				if pr == null or not shove_prop(b, pr, item["dir"], item.get("cause", "push")):
@@ -140,7 +139,7 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 				own = SPIKY_DAMAGE
 		var hits: Array = [{"unit": u.id, "base": own, "type": BattleDamage.COLLISION, "source": "Collision", "pushed": true}]
 		for id in b.roster:
-			if block_units.has(id) and BattleExperiment.collision_both:
+			if block_units.has(id):
 				hits.append({"unit": id, "base": 1, "type": BattleDamage.COLLISION, "source": "Collision"})
 		b.emit(&"collision", {"who": u.id, "units": block_units.keys(), "props": block_props.keys(), "cause": cause})
 		BattleDamage.apply_round(b, hits)
@@ -181,7 +180,7 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 ## Moves a prop one square by force (user decision 2026-11-14: push and pull count for props).
 ## A `heavy` prop cannot be moved. A blocked move (board edge, monster, other prop) is no move and
 ## is one collision: the prop takes 1, a monster in the way takes 1 (2 from a `spiky` prop; with
-## `collision_both`), another prop in the way takes 1 (heavy none). Ground and zones never act on a
+## another prop in the way takes 1 (heavy none). Ground and zones never act on a
 ## prop and nothing triggers when it is entered. Returns true if it moved.
 static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String) -> bool:
 	if prop == null or prop.hp <= 0 or dir == Vector2i.ZERO:
@@ -195,15 +194,16 @@ static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String)
 	if b.board.in_bounds(to):
 		blocker_unit = b.unit_at(to, Board.GROUND)
 		blocker_prop = b.board.prop_at(to, Board.GROUND)
-	if blocker_prop != null and blocker_unit == null and BattleBoardOps.defuses(prop.def, blocker_prop):
-		BattleBoardOps.defuse_at(b, prop.def, to)     # test switch: the prop rolls over the trap
+	var sprung := BattleProps.new_step()
+	if blocker_prop != null and blocker_unit == null and BattleBoardOps.springs(prop.def, blocker_prop):
+		sprung = BattleBoardOps.spring_at(b, prop.def, to)     # the prop rolls onto the trap and springs it
 		blocker_prop = null
 	var blocked := not b.board.in_bounds(to) or blocker_unit != null or blocker_prop != null
 	if blocked:
 		b.emit(&"collision", {"prop": prop.def.id, "pos": prop.pos, "cause": cause,
 			"units": [blocker_unit.id] if blocker_unit != null else [], "props": []})
 		BattleBoardOps.damage_prop(b, prop, 1)
-		if blocker_unit != null and BattleExperiment.collision_both:
+		if blocker_unit != null:
 			BattleDamage.apply_round(b, [{"unit": blocker_unit.id, "base": SPIKY_DAMAGE if prop.def.spiky else 1,
 				"type": BattleDamage.COLLISION, "source": "Collision"}])
 		if blocker_prop != null and not blocker_prop.def.heavy:
@@ -215,4 +215,6 @@ static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String)
 	prop.pos = to
 	b.board.put_prop(prop)
 	b.emit(&"prop_moved", {"from": from, "to": to, "prop": prop.def.id, "cause": cause})
+	if not BattleProps.is_empty(sprung):
+		BattleProps.run(b, sprung)
 	return true

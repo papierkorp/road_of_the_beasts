@@ -14,16 +14,13 @@ extends RefCounted
 const STEP_AP := 1
 
 
-## Step cost in play (a test switch may lower it).
+## Step cost in play.
 static func step_ap() -> int:
-	return BattleExperiment.step_ap if BattleExperiment.step_ap > 0 else STEP_AP
+	return STEP_AP
 const WALK_DIRS: Array[Vector2i] = Board.CARDINAL
 
 
 static func step_profile() -> Dictionary:
-	if BattleExperiment.step_full_move:
-		return {"path": "walk", "objects": true, "monsters": true, "surges": true, "height": false,
-			"ground_costs": true, "distance_mod": 0, "fixed": 0}
 	return {"path": "walk", "objects": true, "monsters": true, "surges": true, "height": false,
 		"ground_costs": false, "distance_mod": 0, "fixed": 1}
 
@@ -31,14 +28,21 @@ static func step_profile() -> Dictionary:
 static func profile_of(s: BattleSkillDef) -> Dictionary:
 	return {"path": s.move_path, "objects": s.blocked_by_objects, "monsters": s.blocked_by_monsters,
 		"surges": s.blocked_by_surges, "height": s.blocked_by_height, "ground_costs": s.ground_costs,
-		"distance_mod": s.distance_mod, "fixed": s.fixed_distance, "range": s.move_range}
+		"distance_mod": s.distance_mod, "fixed": s.fixed_distance, "range": s.move_range, "diagonal": s.move_diagonal}
+
+
+## Stamina one use of a movement skill costs on top of its squares: `slow` on the monster adds its value,
+## `haste` takes it off (user decision 2026-11-17; a negative sum makes that many squares free). Step pays no
+## Stamina and is not touched.
+static func use_cost(b: Battle, u: BattleUnit) -> int:
+	return BattleStats.total(b, u, FieldEffect.SLOW) - BattleStats.total(b, u, FieldEffect.HASTE)
 
 
 static func distance(b: Battle, u: BattleUnit, prof: Dictionary) -> int:
-	if BattleExperiment.stamina and prof.has("range"):      # the range stands on the skill; haste and slow still count
+	if BattleExperiment.stamina and prof.has("range"):      # the range stands on the skill
 		var base: int = int(prof["range"]) if int(prof["range"]) > 0 else 3
-		var reach: int = int(prof["fixed"]) if int(prof["fixed"]) > 0 else maxi(1, base + BattleStats.movement(b, u) - u.sheet.movement + int(prof["distance_mod"]))
-		return mini(reach, u.stamina - BattleExperiment.stamina_base)   # every movement point costs 1 Stamina (test switch: plus a base cost per use)
+		var reach: int = int(prof["fixed"]) if int(prof["fixed"]) > 0 else maxi(1, base + int(prof["distance_mod"]))
+		return mini(reach, u.stamina - use_cost(b, u))      # every movement point costs 1 Stamina, plus what the use costs
 	if int(prof["fixed"]) > 0:
 		return int(prof["fixed"])
 	return maxi(1, BattleStats.movement(b, u) + int(prof["distance_mod"]))
@@ -66,8 +70,6 @@ static func _passable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 	var through_props: bool = not prof["objects"] or (not flying and BattleStats.phases(u))
 	for c in u.cells_at(origin):
 		var cell := b.board.at(c)
-		if _walled(b, cell):
-			return false
 		if not through_props or flying:
 			if b.board.solid_at(c, u.layer) != null:
 				return false
@@ -77,14 +79,6 @@ static func _passable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 	return true
 
 
-## Test switch surge_wall: a square of a charging timed Surge lets no movement in.
-static func _walled(b: Battle, cell: BoardCell) -> bool:
-	if not BattleExperiment.surge_wall or cell == null or cell.surge < 0:
-		return false
-	var s := b.surge_by_id(cell.surge)
-	return s != null and s.turns_left >= 0
-
-
 ## May the body stop on `origin`? Ignoring path blockers never permits an occupied landing.
 static func _landable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictionary) -> bool:
 	if not _in_bounds(b, u, origin):
@@ -92,8 +86,6 @@ static func _landable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 	var flying := u.layer == Board.AIR
 	for c in u.cells_at(origin):
 		var cell := b.board.at(c)
-		if _walled(b, cell):
-			return false
 		if b.board.solid_at(c, u.layer) != null:
 			return false
 		var other := b.board.unit_id_at(c, u.layer)
@@ -146,7 +138,7 @@ static func options(b: Battle, u: BattleUnit, prof: Dictionary) -> Dictionary:
 		"walk":
 			_walk(b, u, prof, dist, out)
 		"line":
-			for d in Board.RING8:
+			for d in (Board.RING8 if prof.get("diagonal", false) else Board.CARDINAL):   # orthogonal unless the card says diagonal too (2026-11-17)
 				for k in range(1, dist + 1):
 					var n: Vector2i = u.pos + d * k
 					if not _passable_line(b, u, n, prof):

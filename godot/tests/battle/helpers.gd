@@ -41,7 +41,15 @@ static func sheet(o: Dictionary = {}) -> UnitSheet:
 
 ## specs: [[side, pos, sheet overrides], ...] → units u0, u1, ... in that order (slot = the
 ## count of earlier units on the same side). Late-round pressure is off unless a test sets it.
+## The rule tests play traps that take no other prop and switch off what is left of the review pack (calm
+## round 1, stronger veins, Wait, veins in Pace order); a test of those switches sets them after building its
+## battle.
+static func rule_strikes() -> void:
+	BattleExperiment.pack(false)                 # what is left of the review pack are test switches too
+
+
 static func battle(specs: Array, size: int = 7, p_content: BattleContent = null) -> Battle:
+	rule_strikes()
 	var b := Battle.new(Board.new(size), p_content)
 	b.voidscar_from = 999
 	var slots := [0, 0]
@@ -169,11 +177,10 @@ static func events_of(b: Battle, type: StringName) -> Array:
 	return out
 
 
-## The switches most rule tests were written with: no limit of uses per turn, a push or pull zone
-## also moves at cast, a Dragon Vein belongs to the last side that touched it. Tests of the build
+## The switches most rule tests were written with: no limit of uses per turn, a Dragon Vein belongs to the
+## last side that touched it. Tests of the build
 ## defaults of 2026-11-14 set what they need themselves.
 static func legacy_rules() -> void:
 	BattleExperiment.reset()
 	BattleExperiment.once_per_turn = false
-	BattleExperiment.zone_cast_push = true
 	BattleExperiment.vein_touch = true

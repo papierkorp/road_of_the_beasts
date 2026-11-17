@@ -196,3 +196,136 @@ Problem ist, woran du es festmachst (Abschnitt oder Datei), was es kostet, wenn 
 und was du stattdessen vorschlägst. Zum Schluss die Fragen, die nur der Projektinhaber
 beantworten kann. Lieber wenige belastbare Befunde als eine lange Liste von Kleinigkeiten.
 ```
+
+## Battle-System gegen die Ziele prüfen (neutrale Zweitmeinung)
+
+Stand des Prompts: nach der ersten Prüfung und dem Review-Paket vom 2026-11-17 (T44, S039). Vor dem nächsten Einsatz die genannten Messeinträge und Aufgaben an den Stand anpassen.
+
+```text
+Du prüfst das Kampfsystem eines Spiels, das sich noch im Entwurf befindet. Du bist an
+keiner bisherigen Entscheidung beteiligt und sollst unvoreingenommen urteilen: Was trägt
+die Ziele, was arbeitet gegen sie, was fehlt und was kann weg. Es gab bereits eine erste
+Prüfung; ihre Vorschläge sind als Testschalter gebaut und gemessen. Du sollst sie nicht
+wiederholen, sondern prüfen, ob sie stimmen, und dort weiterdenken, wo sie nicht weiterkam.
+
+## Das Projekt
+„Road of the Beasts“ ist ein deterministischer, rundenbasierter Monster-Kampf auf einem
+Raster (meist 3 gegen 3 auf 7×7), gebaut in Godot 4. Der Kampf ist der Kern des Spiels und
+wird zuerst fertig. Der Code unter godot/ ist ein Prototyp zum Ausprobieren von Regeln;
+entwickelt wird von einer Person mit AI-Agents.
+
+Wichtig für deine Prüfung: Alle vorhandenen Monster und Skills sind Wegwerf-Inhalte. Sie
+dienten nur zum Ausprobieren der Regeln und dürfen alle gelöscht werden. Beurteile die
+Regeln und Systeme, nicht einzelne Monster oder Skills. Als Nächstes soll ein Kalkulator
+für Skills entstehen (wie es ihn für Monster-Stats schon gibt), mit dem Spieler und
+Generator Skills bauen.
+
+Es gibt drei Stände, die du auseinanderhalten musst:
+- die Regeln, wie sie in docs/battle.md, skills.md und monsters.md stehen;
+- den Build davor: Strikes schieben nur, dazu ein Basic Jab für 2 AP (T43);
+- den Build jetzt: zusätzlich das Review-Paket (T44), als Testschalter und standardmäßig an.
+Build-Defaults sind Versuche, keine beschlossenen Regeln.
+
+## Die Ziele, an denen du alles misst
+1. Deterministisch: kein Würfeln, keine verdeckten Informationen.
+2. Easy to learn, hard to master: wenige, einheitliche Regeln; Tiefe aus Kombinationen
+   und Entscheidungen, nicht aus Sonderregeln.
+3. Kein frustrierender Tod: Kein Monster fällt, ohne dass sein Spieler etwas dagegen tun
+   konnte. Möglichst kein Monster fällt in Runde 1; jedes soll mindestens einen Zug haben.
+4. Entscheidungen haben sichtbaren Einfluss auf das Brett und den Verlauf.
+5. Taktik und Strategie gewinnen, nicht das Wiederholen eines einzelnen Skills.
+   Skillvielfalt ist ausdrücklich wichtig: Jeder Skill soll seine Situation haben.
+6. Der Kampf endet, wenn alle Monster einer Seite 0 HP haben.
+7. Verschiedene Monster bieten verschiedene Spielweisen. Dafür gibt es die Stat-Kalkulation:
+   Jeder Stat soll spürbar sein, Monster sollen sich nicht ähneln.
+8. Der Kampf dauert nicht ewig: im Mittel 3,5 bis 4,5 Runden.
+9. Grundziel ist Square Control: Wer Felder kontrolliert, gewinnt. Das Brett ist die Waffe.
+
+Die Ziele stehen auch in docs/battle.md §1, dort ist Square Control ein Mittel (Säule),
+kein Ziel. Wo diese Liste davon abweicht, nenne die Abweichung, statt eine der beiden
+Fassungen stillschweigend zu nehmen.
+
+## Was die erste Prüfung ergeben hat (prüfe es, übernimm es nicht)
+Gemessen mit einfachen Bots (S039); mittlere Runden · Kämpfe unter 3 · über 5 Runden von 320:
+- Regeln 3,75 · 37 · 23; Build davor 4,18 · 14 · 38; Build jetzt 4,04 · 1 · 13.
+- Belegt: Eine Runde 1 ohne Schaden nimmt die frühen Enden weg, kostet aber Länge; stärkere
+  Dragon Veins (2 Schaden ab Runde 3) holen die Länge zurück.
+- Nicht belegt: dass das Rundenende den begünstigt, der zuletzt zieht, und Pace deshalb
+  verkehrt herum wirkt; dass Züge pro Runde „einmal pro Zug“ aushebeln. Die Schalter dazu
+  (geschlossenes Rundenende, Abwarten, Nutzung je Runde) bewegen bei den Bots nichts.
+- Ohne messbare Wirkung, also nur ein Argument über Lernaufwand: Zonen ohne Stat-Effekte,
+  keine Kin-Effekte, Boden ohne Stufen, Schub auf jedem getroffenen Feld, Props mit Uhr.
+- Neue Nebenwirkungen: Dragon Veins machen jetzt über ein Drittel des Schadens, und es gibt
+  mehr Unentschieden. Mit dem planenden Bot war das Paket (Adern ab Runde 5) zu lang:
+  4,88 · 0 · 33 von 160; Adern ab Runde 3 sind mit ihm nicht gemessen.
+- Mit ruhiger Runde 1 ist direkter Strike-Schaden für Ziel 3 kaum noch ein Problem
+  (4,03 · 7 · 16); offen bleibt, ob er Ziel 9 schadet.
+
+## Was du liest
+- docs/battle.md vollständig: Ziele und Säulen (§1), Ablauf, Zeitpunkte, Brett, Schaden,
+  Verschiebung
+- docs/skills.md: Skill-Karte, Formen, Bewegungsarten, Wert und Preise
+- docs/monsters.md: Stats, Kalkulation, Kins
+- docs/content.md nur als Beispielmaterial (Wegwerf-Inhalte, siehe oben)
+- docs/decisions.md, bevor du etwas vorschlägst: dort steht, was entschieden und was
+  verworfen wurde. Verworfenes schlägst du nur mit einem neuen Grund wieder vor.
+- docs/temp_todo.md, docs/todo/to-clarify/battle/T43-*.md und T44-*.md: was gerade
+  ausprobiert wird, mit den Lesarten, die beim Bauen gewählt wurden
+- godot/README.md: welche Testschalter es gibt und welche als Build-Default gesetzt sind
+- docs/simulation_log.md, die Einträge S032 bis S039. Das sind Indizien von einfachen Bots,
+  keine Belege dafür, wie Menschen spielen. Die Bots zielen keine Flächen, planen nicht um
+  Boden herum, haushalten nicht mit Stamina und planen keine Zugreihenfolge. Ein Schalter
+  ohne messbare Wirkung ist damit nicht widerlegt.
+
+## Die Fragen, auf die ich Antworten brauche
+1. Die erste Prüfung: Wo hat sie recht, wo irrt sie, was hat sie übersehen? Nenne mindestens
+   einen Befund, dem du widersprichst, oder begründe, warum du keinem widersprichst.
+2. Square Control: Der Kampf hängt an drei Feldern und einer Uhr. Ist das Square Control im
+   Sinn von Ziel 9, oder ein Wettlauf um drei Berührungen? Was hieße „kontrollieren“
+   (zuletzt berührt, gehalten, Mehrheit), und wie bekämen mehr Felder einen Wert, ohne eine
+   neue Mechanik und ohne längere Kämpfe?
+3. Dragon Veins als Längenhebel: Ist doppelter Schaden ab einer Runde der richtige Weg, oder
+   besser Zahl und Lage der Adern oder die Brettgröße? Was tun gegen die Unentschieden?
+4. Runde 1: Schutz per Regel (kein Schaden), per Abstand (größeres Brett) oder gar nicht?
+   Was kostet jede Variante an Regeln und an Kampflänge?
+5. Direkter Schaden, jetzt als reine Frage von Ziel 9 und Ziel 5: Sollen Strikes Schaden
+   machen, nur schieben, oder soll Schaden ein teurer Teil der Skill-Karte sein? Braucht es
+   den Basic Jab als dritte Grundaktion neben Step?
+6. Pace und Reach: Beide zeigen bei den Bots nichts. Haben sie nach den Regeln eine eigene,
+   spürbare Aufgabe? Wenn nein: was gäbe ihnen eine, mit möglichst wenig Regel, oder soll
+   einer der beiden weg? Bewerte „Abwarten“ ausdrücklich.
+7. Was Bots nicht zeigen können: Welche der kleinen Schalter (Zonen, Kin, Bodenstufen,
+   Rundenende, Nutzung je Runde, Props mit Uhr) würdest du allein aus der Regelsicht
+   behalten oder verwerfen, und woran sollte der Projektinhaber es beim Spielen von Hand
+   erkennen? Gib je Schalter eine Beobachtung an, auf die er achten kann.
+8. Skill-Kalkulator: Welche festen Verhältnisse muss er vorgeben, bevor Preise gemessen
+   werden (Schaden mit und ohne Position, Heilung, AP-Stufen, Nutzungsgrenzen in einem
+   Kampf von vier Runden)? Was gehört auf die Karte, was in eine Prüfung des ganzen Kits?
+9. Neue Ideen: höchstens drei, jede an einem Ziel begründet, jede so einfach wie möglich.
+   Lieber eine bestehende Regel verallgemeinern als eine neue hinzufügen.
+
+## Grenzen
+- Du änderst nichts: keine Dateien, keine Commits, keine Simulationsläufe. Das Ergebnis
+  ist ein Bericht.
+- Die Overworld (Management, Fortschritt, Geschichte) steht nicht zur Prüfung und ist kein
+  Argument für oder gegen eine Kampfregel.
+- Trenne, was du in den Dokumenten oder im Code nachgelesen hast, von dem, was du annimmst
+  oder aus Erfahrung mit anderen Spielen schließt. Wo die Dokumente eine Frage offen
+  lassen, sag das, statt eine Antwort zu erfinden.
+- Nenne bei jedem Messwert, den du zitierst, mittlere Runden und die Kämpfe unter 3 und
+  über 5 Runden, und aus welchem der drei Stände er stammt.
+- Schone nichts, weil es schon gebaut ist, und lobe nichts, um höflich zu sein. Das gilt
+  auch für die erste Prüfung.
+
+## Was du zurückgibst
+Zuerst dein Urteil in drei, vier Sätzen: Trägt der Build jetzt die Ziele besser als die
+Regeln, und was ist das größte verbleibende Problem. Danach:
+- Zur ersten Prüfung: bestätigt, widersprochen, übersehen (je mit Beleg)
+- Regel werden lassen: welche Schalter aus T43 und T44 du übernehmen würdest
+- Verwerfen: welche nicht, und warum
+- Von Hand prüfen: je Schalter die Beobachtung, auf die es ankommt
+- Neue Ideen: höchstens drei
+Dann die Antworten auf die Fragen 2 bis 8, je in wenigen Sätzen, und zum Schluss die
+Fragen, die nur der Projektinhaber beantworten kann. Lieber wenige belastbare Befunde als
+eine lange Liste von Kleinigkeiten.
+```

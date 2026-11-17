@@ -10,11 +10,12 @@
 | Neutral | **Rubble** | on entering | movement cost 2; left by several destroyed props |
 | Neutral | **Voidscar** | end of the occupant's turn | 1 damage; permanent, spreads with late-round pressure |
 | Neutral | **Dragon Vein** | end of the round | nothing to whoever stands on it; 1 damage to the nearest enemy of its owner; permanent |
-| Hazard | **Lava** I–II | end of the occupant's turn | damage = level: punishes staying |
-| Hazard | **Thornbed** I–II | on entering | damage = level: punishes moving in |
-| Hazard | **Binding Vines** | on leaving | 2 damage; no levels: stay or pay; may be laid under a monster |
-| Hazard | **Blight** I–II | end of the round | damage = level: punishes being there when the round ends |
-| Blessed | **Mossbed** | on entering | heals 1, never above max HP; no levels, no re-entry limit |
+| Hazard | **Lava** | end of the occupant's turn | 1 damage: punishes staying |
+| Hazard | **Thornbed** | on entering | 1 damage: punishes moving in |
+| Hazard | **Binding Vines** | on leaving | 2 damage: stay or pay; may be laid under a monster |
+| Blessed | **Mossbed** | on entering | heals 1, never above max HP; no re-entry limit |
+| Blessed | **Springwater** *(experiment)* | on entering | +1 Stamina, never above the pool |
+| Neutral | **Shifting Sand** *(experiment)* | — | no prop can be placed on it |
 
 ## 2. Zones
 
@@ -22,9 +23,6 @@
 |---|---|---|
 | **Gale** | `push` | its own skill |
 | **Void Pull** | `pull` | its own skill; Coiling Rift |
-| **Bog** | `slow` 1, `pull` | its own skill |
-| **Mire** | `slow` 1, `drain_pace` 1 (2 from level II), `drain_range` 1 | Gloom Rift |
-| **Slowing** | `slow` 1 | Thornbed (the skill) |
 
 Every zone a skill creates lasts 2 rounds.
 
@@ -37,7 +35,7 @@ Every zone a skill creates lasts 2 rounds.
 | Clay Urn | 1 | — | destroyed | 1 damage | the 8 squares around it |
 | Bamboo Stand | 2 | `spiky` | destroyed | 1 damage | the 4 neighbours |
 | Thorn Idol | 3 | — | hit | 1 damage | the 8 squares around it |
-| Ember Brazier | 2 | — | end of the round | 1 damage | the 4 neighbours |
+| Ember Brazier | 2 | — | end of the turn of a monster in its shape | 1 damage to that monster | the 4 neighbours |
 | Storm Drum | 2 | — | end of the round · destroyed | pushes 1 square away from it · leaves Rubble | the 4 neighbours · own square |
 | Bronze Gong | 2 | — | destroyed | pushes 1 square away from it | the 8 squares around it |
 | Vortex Urn | 1 | — | destroyed | pulls 1 square toward its square | the 8 squares around it |
@@ -49,7 +47,7 @@ Every zone a skill creates lasts 2 rounds.
 | **Spike Trap** | 1 | walkable | entered | 2 damage to the monster that entered | own square |
 | **Vortex Trap** | 1 | walkable | entered | pulls 1 square toward its square; who is pulled into the monster on it collides | the 8 squares around it |
 | Moss Rune | 1 | walkable, board only | entered | lays Mossbed | the 3×3 block around and under it |
-| Bog Rune | 1 | walkable, board only | entered | creates the zone Bog | the 8 squares around it |
+| Bog Rune | 1 | walkable, board only | entered | creates the zone Void Pull | the 8 squares around it |
 | Wall Rune | 1 | walkable, board only | entered | creates an Earth Wall on every free square | the 4 neighbours |
 
 - **Created by skills:** Bamboo Stand, Bronze Gong, Earth Wall, Thorn Idol, Ember Brazier, Storm Drum, Clay Urn, Spike Trap, Vortex Trap.
@@ -62,25 +60,25 @@ Every zone a skill creates lasts 2 rounds.
 | Skill | Cost | Where | Strike | Movement | On itself | Ground | Zone | Prop |
 |---|---|---|---|---|---|---|---|---|
 | Step *(every monster)* | 1 AP | neighbouring square | — | 1 square, cardinal, no Stamina | — | — | — | — |
+| Basic Jab *(every monster)* | 2 AP, once per turn | Jab | 1 damage to a monster or prop, no push | — | — | — | — | — |
 | Run | 1 AP + Stamina | path, range 3 | — | walks | — | — | — | — |
 | Leap | 2 AP + Stamina | path, range 3 | — | straight line over everything | — | — | — | — |
 | Glide | 2 AP + Stamina | path, range 3 | — | any path over props and monsters | — | — | — | — |
 | Headbutt | 2 AP + Stamina | path, range 3 | — | straight line over everything; pushes the monster ahead | — | — | — | — |
 | Quake Leap | 2 AP + Stamina | path, range 3 | — | straight line over everything; pushes all eight neighbours on landing | — | — | — | — |
 | Fire Trail | 2 AP + Stamina | path, range 3 | — | straight line over monsters | — | Lava on the squares left | — | — |
-| Jab | 2 AP | Jab | 2 damage, push 1 | — | — | — | — | — |
-| Thrust | 3 AP | Jab +1 | 2 damage, push 1 | — | — | — | — | — |
-| Shove | 1 AP | Jab | push 1, no damage | — | — | — | — | — |
-| Thorn Lash | 2 AP | Jab | 2 damage, push 1 | — | — | Thornbed | — | — |
+| Jab | 2 AP | Jab | push 1, damages props | — | — | — | — | — |
+| Thrust | 3 AP | Jab +1 | push 1, damages props | — | — | — | — | — |
+| Shove | 1 AP | Jab | push 1 | — | — | — | — | — |
+| Thorn Lash | 2 AP | Jab | push 1, damages props | — | — | Thornbed | — | — |
 | Snare | 2 AP | Reach, 1 square, also under a monster | — | — | — | Binding Vines | — | — |
 | Lava Field | 1 AP | Reach, 4 squares (default: block 2×2) | — | — | — | Lava | — | — |
-| Thornbed | 1 AP | Reach, 3 squares (default: angle) | — | — | — | Thornbed | Slowing | — |
-| Gloom Rift | 1 AP | Reach, 3 squares (default: line) | — | — | — | Blight | Mire | — |
+| Thornbed | 1 AP | Reach, 3 squares (default: angle) | — | — | — | Thornbed | — | — |
+| Gloom Rift | 1 AP | Reach, 3 squares (default: line) | — | — | — | Lava | — | — |
 | Cinder Dive | 1 AP | Jab +2 (line of 3 from the user) | — | — | — | Lava | — | — |
-| Coiling Rift | 2 AP | Reach, 4 squares | — | — | — | Blight | Void Pull | — |
+| Coiling Rift | 2 AP | Reach, 4 squares | — | — | — | Lava | Void Pull | — |
 | Gale | 1 AP | Reach, 3 squares (default: line) | — | — | — | — | Gale | — |
 | Void Pull | 1 AP | Reach, 4 squares | — | — | — | — | Void Pull | — |
-| Bog | 1 AP | Reach, 3 squares (default: angle) | — | — | — | — | Bog | — |
 | Plant Bamboo | 1 AP | Reach, 1 free square | — | — | — | — | — | Bamboo Stand |
 | Set Gong | 1 AP | Reach, 1 free square | — | — | — | — | — | Bronze Gong |
 | Earth Wall | 2 AP | Reach, 3 squares (default: line) | — | — | — | — | — | an Earth Wall on each |
@@ -94,7 +92,7 @@ Every zone a skill creates lasts 2 rounds.
 | Battle Trance *(experiment)* | 1 AP, once per battle | self | — | — | AP +1 for 2 rounds | — | — | — |
 | Time Split *(experiment)* | 3 AP, once per battle | self | — | — | one more turn in the next round | — | — | — |
 
-**AP of a Strike with 2 damage and push, by shape** (shapes without a value have none yet):
+**AP of a Strike that pushes and damages props, by shape** (shapes without a value have none yet):
 
 | Shape | AP | | Shape | AP |
 |---|---|---|---|---|
@@ -104,7 +102,7 @@ Every zone a skill creates lasts 2 rounds.
 | Arc | 3 | | Cross +1 | 5 |
 | Arc +1 | 5 | | Storm | 4 |
 
-**Passive candidates** (no numbers, not in the game): Counterweight (allies orthogonally next to it cannot be pushed or pulled) · Thick Hide (Strike and collision damage it takes −1) · Crashlander (collision damage it takes −1) · Sure-footed (ignores `slow`) · Clear Mind (ignores `drain_pace` and `drain_range`) · Heatproof / Thornwalker / Void-touched (ignores Lava / Thornbed / Blight) · Scavenger (heals 1 when a prop within its Reach is destroyed) · Purifier (enemy zones next to it lose 1 round at the round end) · Overgrowth (its zones start at level II) · Turret (cannot move, Reach +1) · Pack Hunter and First Blood (lower AP costs) · Frenzy (+1 shape square at 1–2 HP).
+**Passive candidates** (no numbers, not in the game): Counterweight (allies orthogonally next to it cannot be pushed or pulled) · Thick Hide and Crashlander (collision damage it takes −1) · Heatproof / Thornwalker (ignores Lava / Thornbed) · Scavenger (heals 1 when a prop within its Reach is destroyed) · Purifier (enemy zones next to it lose 1 round at the round end) · Turret (cannot move, Reach +1) · Pack Hunter and First Blood (lower AP costs) · Frenzy (+1 shape square at 1–2 HP).
 
 **Candidates for what a slot development may change:** one more extension of a base shape or one more square of a free shape, a longer zone, a longer range or a movement that passes over more, a second thing created, one more use per turn.
 
@@ -121,10 +119,10 @@ Stats read HP / Pace / Stamina / turns / Reach / AP. Every monster costs exactly
 | **Gloom Wolf** | Beast | gloom, pack hunting | 5 / 2.1 / 3 / 1 / 3 / 3 | Run · Thorn Lash · Shove · Gloom Rift · Plant Bamboo · Lay Spikes |
 | **Grove Wisp** | Spirit | grove, wandering light | 4 / 2.2 / 5 / 1 / 3 / 3 | Quake Leap · Jab · Gale · Thornbed · Snare · Set Thorn Idol |
 | **Hollow Serpent** | Scaled | hollow, coils | 6 / 1.4 / 4 / 1 / 3 / 3 | Run · Jab · Shove · Coiling Rift · Thornbed · Lay Vortex |
-| **Moss Turtle** | Scaled | moss, shell | 7 / 1.1 / 3 / 1 / 3 / 3 | Run · Jab · Shove · Bog · Thornbed · Earth Wall |
+| **Moss Turtle** | Scaled | moss, shell | 7 / 1.1 / 3 / 1 / 3 / 3 | Run · Jab · Shove · Void Pull · Thornbed · Earth Wall |
 | **Thorn Mites** | Swarm | thorns, infestation | 6 / 1.1 / 3 / 2 / 2 / 2 | Glide · Jab · Thorn Lash · Thornbed · Void Pull · Set Clay Urn |
 
-- **Kit rule for these nine:** every kit holds a damaging Strike, a skill that moves others, one that creates ground and one that creates a prop; every monster but the Forge Golem has a movement skill.
+- **Kit rule for these nine:** every kit holds a Strike, a skill that moves others, one that creates ground and one that creates a prop; every monster but the Forge Golem has a movement skill.
 - **The kits ignore Kin access;** learnable lists do not exist yet.
 
 **Ideas for further species:** Vine Panther (Beast) · Gale Crane (Winged) · Magma Drake (Scaled) · Cinder Wasps, Grave Rats (Swarm) · War Echo, Wailing Shade (Spirit) · Elder Treant, Bone Colossus (Ancient).

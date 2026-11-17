@@ -102,13 +102,13 @@ func test_a_timed_surge_can_be_left_before_it_fires() -> void:
 func test_a_trap_never_fires_by_itself_and_outlives_its_caster() -> void:
 	var b := H.battle([
 		[0, Vector2i(3, 5), {"pace": 1.9, "current_hp": 1, "reach": 3, "skills": [H.surge([Vector2i.ZERO])]}],
-		[1, Vector2i(3, 4), {"pace": 1.5, "hp": 8, "skills": [H.strike()]}],
+		[1, Vector2i(3, 4), {"pace": 1.5, "hp": 8, "ap": 3}],
 		[0, Vector2i(0, 6), {"pace": 1.1}],
 	])
 	b.begin()
 	_cast(b, 0, Vector2i(3, 3))
 	b.end_turn()
-	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.DOWN})).is_true()
+	assert_bool(b.apply({"type": &"skill", "slot": Battle.BASIC_SLOT, "dir": H.DOWN})).is_true()   # the Basic Jab: 1 damage
 	assert_bool(H.unit(b, 0).defeated).is_true()
 	assert_bool(b.surges[0].orphaned).is_true()  # the caster is gone, the trap stays
 	for i in 9:
@@ -143,7 +143,7 @@ func test_a_pushed_monster_springs_the_trap_and_a_walk_ends_on_it() -> void:
 	var eruption := H.surge([Vector2i.ZERO])
 	eruption.board_ops = [BoardOp.make("ground", &"lava", false)] as Array[BoardOp]
 	var b := H.battle([
-		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 4, "ap": 4, "kin": MonsterDef.Kin.SCALED, "skills": [eruption, H.strike()]}],
+		[0, Vector2i(3, 6), {"pace": 1.9, "reach": 4, "ap": 4, "skills": [eruption, H.strike()]}],
 		[1, Vector2i(3, 5), {"pace": 1.5, "hp": 8, "move": 3, "skills": ["run"]}],
 	])
 	b.begin()
@@ -151,10 +151,10 @@ func test_a_pushed_monster_springs_the_trap_and_a_walk_ends_on_it() -> void:
 	var opts := BattleMoves.options(b, H.unit(b, 1), BattleMoves.profile_of(H.skill("run")))
 	assert_bool(opts.has(Vector2i(3, 4))).is_true()     # a walk may end on the trap
 	assert_bool(opts.has(Vector2i(3, 3))).is_false()    # but not pass through it (around is too far)
-	# Tail Sweep pushes the enemy onto the trap: Strike 2, then the trap's 3
-	assert_bool(b.apply({"type": &"skill", "slot": 1, "dir": H.UP, "push_dir": H.UP})).is_true()
+	# the Strike pushes the enemy onto the trap: the trap's 3
+	assert_bool(b.apply({"type": &"skill", "slot": 1, "dir": H.UP})).is_true()
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 4))
-	assert_int(H.unit(b, 1).hp).is_equal(3)
+	assert_int(H.unit(b, 1).hp).is_equal(5)
 	assert_str(b.board.at(Vector2i(3, 4)).ground).is_equal("lava")   # its residue lands after the detonation
 
 
@@ -234,26 +234,24 @@ func test_displacement_resolves_the_unit_furthest_along_first() -> void:
 	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp]).is_equal([4, 4])
 
 
-func test_value_reductions_add_and_a_zero_damage_hit_still_displaces() -> void:
+func test_value_reductions_of_ground_and_props_add() -> void:
 	var wave := H.surge([Vector2i.ZERO, Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)])
 	wave.surge_displacement = "push"
-	var veil: BattleZoneDef = H.content().zone(&"bark_veil")       # shield 2 (3 at level II+)
 	var b := H.battle([
 		[0, Vector2i(1, 5), {"pace": 1.9, "reach": 3, "skills": [wave]}],
 		[1, Vector2i(1, 3), {"hp": 8}], [1, Vector2i(2, 3), {"hp": 8}], [1, Vector2i(3, 3), {"hp": 8}], [1, Vector2i(4, 3), {"hp": 8}],
 	])
-	H.zone_on(b, Vector2i(1, 3), veil, 1, 1, Vector2i.ZERO, Vector2i.ZERO, 9)
 	b.set_ground(Vector2i(2, 3), &"hallowed")
-	H.zone_on(b, Vector2i(3, 3), veil, 2, 1, Vector2i.ZERO, Vector2i.ZERO, 9)
 	b.set_ground(Vector2i(3, 3), &"hallowed")
 	b.add_prop(&"wardstone", Vector2i(4, 2))
+	b.add_prop(&"wardstone", Vector2i(3, 2))
 	b.begin()
 	_fire(b, 0, Vector2i(1, 3), H.DOWN)
-	assert_int(H.unit(b, 1).hp).is_equal(7)      # 3 - 2 zone shield
+	assert_int(H.unit(b, 1).hp).is_equal(5)      # 3
 	assert_int(H.unit(b, 2).hp).is_equal(6)      # 3 - 1 Hallowed
-	assert_int(H.unit(b, 3).hp).is_equal(8)      # 3 - 2 - 1 = 0
+	assert_int(H.unit(b, 3).hp).is_equal(7)      # 3 - 1 Hallowed - 1 Wardstone aura
 	assert_int(H.unit(b, 4).hp).is_equal(6)      # 3 - 1 Wardstone aura
-	assert_that(H.unit(b, 3).pos).is_equal(Vector2i(3, 4))      # a hit of 0 still pushes
+	assert_that(H.unit(b, 3).pos).is_equal(Vector2i(3, 4))      # and it is pushed
 	assert_str(b.board.at(Vector2i(2, 3)).ground).is_equal("hallowed")   # nothing consumed
 
 
@@ -305,20 +303,15 @@ func test_props_intercept_and_a_line_footprint_stops_at_the_first_prop() -> void
 
 
 func test_nullify_overrides_the_next_surge_damage_of_at_least_one() -> void:
-	var veil: BattleZoneDef = H.content().zone(&"bark_veil")
 	var b := H.battle([
-		[0, Vector2i(2, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO, Vector2i(1, 0)])]}],
-		[1, Vector2i(2, 3), {"hp": 8}], [1, Vector2i(3, 3), {"hp": 8}],
+		[0, Vector2i(2, 5), {"pace": 1.9, "reach": 3, "ap": 3, "skills": [H.surge([Vector2i.ZERO])]}],
+		[1, Vector2i(2, 3), {"hp": 8}],
 	])
-	H.zone_on(b, Vector2i(3, 3), veil, 1, 3, Vector2i.ZERO, Vector2i.ZERO, 9)   # shield 3
 	H.unit(b, 1).nullify = true
-	H.unit(b, 2).nullify = true
 	b.begin()
 	_fire(b, 0, Vector2i(2, 3))
 	assert_int(H.unit(b, 1).hp).is_equal(8)
 	assert_bool(H.unit(b, 1).nullify).is_false() # consumed
-	assert_int(H.unit(b, 2).hp).is_equal(8)
-	assert_bool(H.unit(b, 2).nullify).is_true()  # already 0 after the sum: nothing consumed
 	_fire(b, 0, Vector2i(2, 3))
 	assert_int(H.unit(b, 1).hp).is_equal(5)      # later Surges hit normally
 

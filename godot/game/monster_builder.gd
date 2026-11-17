@@ -306,7 +306,8 @@ func _refresh() -> void:
 		lines.append("")
 		lines.append("[b]%s[/b]   %s" % [s.display_name, "passive" if not s.is_active() else "%d AP" % s.cost()])
 		for r in BattleText.skill_rows(_content, s, draft.kin):
-			lines.append("  %s" % String(r[1]))
+			if r[0] != "Cost":
+				lines.append("  %-8s %s" % [r[0], r[1]])
 		if s.is_active() and s.cost() > draft.ap:
 			lines.append("  [color=#d9a04a]costs more AP than the monster has[/color]")
 	var why := problem(_content, draft, editing == &"")

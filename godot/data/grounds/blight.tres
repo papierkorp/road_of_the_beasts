@@ -12,6 +12,7 @@ timing = "round_end"
 script = ExtResource("2_tii04")
 id = &"blight"
 display_name = "Blight"
+content_status = "archived"
 group = "hazard"
 max_level = 2
 triggers = Array[ExtResource("3_lcrak")]([SubResource("Resource_vt44f")])

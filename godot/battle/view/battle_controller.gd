@@ -66,6 +66,7 @@ func _ready() -> void:
 	hud.set_exit_mode(GameSession.return_scene != "")
 	hud.action_pressed.connect(_on_action)
 	hud.end_turn_pressed.connect(_on_end_turn)
+	hud.wait_pressed.connect(_on_wait)
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	hud.resume_pressed.connect(_toggle_pause)
 	hud.menu_pressed.connect(_to_menu)
@@ -128,46 +129,47 @@ func _to_menu() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if get_tree().paused:
-		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		if event.is_action_pressed(&"battle_cancel"):
 			_toggle_pause()
 		return
+	# every key and button is an action of the Input Map (Project Settings), never a key in the code
 	if event is InputEventMouseMotion:
 		var c = view.cell_at_screen(event.position)
 		hover = c if c != null else NOWHERE
 		_refresh()
-	elif event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			_click()
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_rotate()
-	elif event is InputEventKey and event.pressed and not event.echo:
-		match event.keycode:
-			KEY_R:
-				_rotate()
-			KEY_W, KEY_UP:
-				_set_dir(Vector2i(0, -1))
-			KEY_S, KEY_DOWN:
-				_set_dir(Vector2i(0, 1))
-			KEY_A, KEY_LEFT:
-				_set_dir(Vector2i(-1, 0))
-			KEY_D, KEY_RIGHT:
-				_set_dir(Vector2i(1, 0))
-			KEY_1:
-				_on_action(ACT_STEP)
-			KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7:      # the six kit slots, in the order of the bar's columns
-				_on_action(StringName(SLOT_PREFIX + str(event.keycode - KEY_2)))
-			KEY_SPACE, KEY_ENTER:
-				if placing:
-					_on_action(ACT_START)
-				else:
-					_on_end_turn()
-			KEY_ESCAPE:
-				if mode != &"" or placing_pick != &"":
-					_clear_mode()
-					placing_pick = &""
-					_refresh()
-				else:
-					_toggle_pause()
+	elif event.is_action_pressed(&"battle_select"):
+		_click()
+	elif event.is_action_pressed(&"battle_rotate"):
+		_rotate()
+	elif event.is_action_pressed(&"battle_aim_north"):
+		_set_dir(Vector2i(0, -1))
+	elif event.is_action_pressed(&"battle_aim_south"):
+		_set_dir(Vector2i(0, 1))
+	elif event.is_action_pressed(&"battle_aim_west"):
+		_set_dir(Vector2i(-1, 0))
+	elif event.is_action_pressed(&"battle_aim_east"):
+		_set_dir(Vector2i(1, 0))
+	elif event.is_action_pressed(&"battle_step"):
+		_on_action(ACT_STEP)
+	elif event.is_action_pressed(&"battle_glossary"):
+		hud.show_glossary()
+	elif event.is_action_pressed(&"battle_confirm"):
+		if placing:
+			_on_action(ACT_START)
+		else:
+			_on_end_turn()
+	elif event.is_action_pressed(&"battle_cancel"):
+		if mode != &"" or placing_pick != &"":
+			_clear_mode()
+			placing_pick = &""
+			_refresh()
+		else:
+			_toggle_pause()
+	else:
+		for i in 6:                                   # the six kit slots, in the order of the bar's columns
+			if event.is_action_pressed(StringName("battle_skill_%d" % (i + 1))):
+				_on_action(StringName(SLOT_PREFIX + str(i)))
+				return
 
 
 func _set_dir(screen: Vector2i) -> void:
@@ -368,6 +370,16 @@ func _on_end_turn() -> void:
 	_check_ai()
 
 
+## Test switch `delay_turn`: the running turn moves to the end of the round.
+func _on_wait() -> void:
+	if not _my_turn() or battle.check({"type": &"delay"}) != "":
+		return
+	_clear_mode()
+	battle.apply({"type": &"delay"})
+	_refresh()
+	_check_ai()
+
+
 func _after_action() -> void:
 	_clear_mode()
 	_refresh()
@@ -447,7 +459,7 @@ func _check_ai() -> void:
 		while not battle.over and battle.turn_owner == who and battle.queue_idx == entry and battle.round_number == round_no \
 				and guard < AiBrain.MAX_ACTIONS_PER_TURN:
 			guard += 1
-			var a := AiBrain.decide(battle, rng, BattleExperiment.ai_veins)
+			var a := AiBrain.decide(battle, rng, true)
 			if a["type"] == &"end_turn" or not battle.apply(a):
 				break
 			_refresh()
@@ -467,6 +479,9 @@ func _refresh() -> void:
 	view.refresh()
 	hud.update(_order_text(), _portrait_text(), _ap_text(), _hint_text(), _preview_text(),
 			_inspector(), _actions(), _my_turn(), _banner_text())
+	var wait_why := battle.check({"type": &"delay"}) if _my_turn() else ""
+	var wait_unit := battle.active() if _my_turn() else null
+	hud.set_wait(not placing, _my_turn() and wait_why == "", battle.waits_left(wait_unit) if wait_unit != null else -1, wait_why)
 
 
 func _ap_text() -> String:
@@ -567,7 +582,7 @@ func _action_highlights(arrows: Dictionary) -> Dictionary:
 
 
 func _needs_push(u: BattleUnit, s: BattleSkillDef) -> bool:
-	return s.kin_effect and KinRules.strike(u.kin()).get("push", false)
+	return KinRules.of(s, u.kin()).get("push", false)
 
 
 func _move_highlights(opts: Dictionary, out: Dictionary) -> void:
@@ -667,7 +682,28 @@ func _order_text() -> String:
 			continue
 		var mark := "▶ " if i == battle.queue_idx and not battle.over else ("   " if i > battle.queue_idx else " ✓ ")
 		s += "%s%s %s  %.1f  %d/%d\n" % [mark, _side_tag(u), u.display_name(), e["pace"], u.hp, u.max_hp]
-	return s.strip_edges()
+	return s.strip_edges() + _forecast_text()
+
+
+## What the round end would do on the board as it stands (BattleTurn.round_end_forecast): who is hit by what and
+## who falls. Shown under the queue all the time; the turns still to come can change it.
+func _forecast_text() -> String:
+	if battle.over or _awaiting_choice():
+		return ""
+	var f := BattleTurn.round_end_forecast(battle)
+	if f["hits"].is_empty():
+		return "\n\nIF THE ROUND ENDED NOW\nnobody is hit"
+	var per := {}                                   # unit id -> ["Dragon Vein −1", ...]
+	for h: Dictionary in f["hits"]:
+		if not per.has(h["unit"]):
+			per[h["unit"]] = []
+		per[h["unit"]].append("%s −%d" % [h["source"], h["amount"]])
+	var s := "\n\nIF THE ROUND ENDED NOW"
+	for id in battle.roster:
+		if per.has(id):
+			var u: BattleUnit = battle.units[id]
+			s += "\n%s %s: %s%s" % [_side_tag(u), u.display_name(), ", ".join(per[id]), "  FALLS" if f["falls"].has(id) else ""]
+	return s
 
 
 func _portrait_text() -> String:
@@ -680,7 +716,7 @@ func _portrait_text() -> String:
 
 func _hint_text() -> String:
 	if placing:
-		return "Click a monster, then a start square · Space starts" if placing_pick == &"" else "Click a start square or a monster to swap"
+		return "Click a monster, then a start square · %s starts" % UiTheme.key_text(&"battle_confirm") if placing_pick == &"" else "Click a start square or a monster to swap"
 	if battle.over:
 		return ""
 	if _awaiting_choice():
@@ -699,12 +735,12 @@ func _hint_text() -> String:
 				BattleSkillDef.MOVE:
 					return "Click a blue square"
 				BattleSkillDef.STRIKE:
-					return "Aim and click" + (" · WASD push" if _needs_push(u, s) else "")
+					return "Aim and click" + (" · %s push" % _aim_keys() if _needs_push(u, s) else "")
 				_:
 					var t := "Click to cast"
 					if BattleStats.can_rotate(u) and s.is_free_shape():
 						t += " · R rotates"
-					return t + (" · WASD direction" if s.needs_direction() else "")
+					return t + (" · %s direction" % _aim_keys() if s.needs_direction() else "")
 		&"tamer":
 			var def := battle.tamer_skill(PLAYER_SIDE, tamer_id)
 			if def == null:
@@ -717,50 +753,57 @@ func _hint_text() -> String:
 				TamerSkillDef.BEAST_SWAP:
 					return "Click the monster that leaves"
 			return "Click one of your monsters"
-	return "1 Step · 2–7 Skills · Space End turn"
+	return "%s Step · %s–%s Skills · %s End turn" % [UiTheme.key_text(&"battle_step"), UiTheme.key_text(&"battle_skill_1"),
+		UiTheme.key_text(&"battle_skill_6"), UiTheme.key_text(&"battle_confirm")]
+
+
+## The four aim keys as the Input Map has them ("WASD").
+func _aim_keys() -> String:
+	return "".join([&"battle_aim_north", &"battle_aim_west", &"battle_aim_south", &"battle_aim_east"].map(
+		func(a: StringName) -> String: return UiTheme.key_text(a)))
 
 
 func _actions() -> Array:
 	var out: Array = []
 	if placing:
-		out.append({"id": ACT_START, "group": &"step", "text": "Start Battle\nSpace", "enabled": true, "selected": false,
+		out.append({"id": ACT_START, "group": &"step", "text": "Start Battle\n%s" % UiTheme.key_text(&"battle_confirm"), "enabled": true, "selected": false,
 			"card": {"title": "Start Battle", "rows": []}})
 		return out
 	var u := _active()
 	if u == null or u.side != PLAYER_SIDE:
 		return out
 	var mine := _my_turn()
-	out.append({"id": ACT_STEP, "group": &"step", "text": "Step\n%d AP" % BattleMoves.step_ap(),
+	out.append({"id": ACT_STEP, "group": &"step", "text": "Step\nMove · %d AP" % BattleMoves.step_ap(), "color": BattleText.KINDS["move"][1],
 		"enabled": mine and battle.ap >= BattleMoves.step_ap() and not BattleStats.is_rooted(u),
 		"selected": mode == &"step", "card": {"title": "Step", "rows": BattleText.step_rows()}})
 	var basic := battle.skill_in_slot(u, Battle.BASIC_SLOT)
 	if basic != null:                             # test switch: the Basic Jab stands beside Step, not in the kit
 		var no := "" if not mine else ("needs %d AP, %d left" % [basic.cost(), battle.ap] if battle.ap < basic.cost() else battle.usage_error(u, Battle.BASIC_SLOT))
 		var basic_rows := BattleText.skill_rows(battle.content, basic, u.kin())
-		if no != "":
-			basic_rows.push_front(["", "✗ " + no])
-		out.append({"id": StringName(SLOT_PREFIX + str(Battle.BASIC_SLOT)), "group": &"step", "text": "%s\n%d AP" % [basic.display_name, basic.cost()],
+
+		out.append({"id": StringName(SLOT_PREFIX + str(Battle.BASIC_SLOT)), "group": &"step", "text": "%s\nStrike · %d AP" % [basic.display_name, basic.cost()], "color": BattleText.kind_color(battle.content, basic),
 			"enabled": mine and no == "", "selected": mode == &"skill" and slot == Battle.BASIC_SLOT,
-			"card": {"title": basic.display_name, "rows": basic_rows}})
+			"card": {"title": basic.display_name, "rows": basic_rows, "note": no}})
 	for i in u.sheet.skills.size():
 		var s := u.sheet.skills[i]
 		var rows := BattleText.skill_rows(battle.content, s, u.kin())
-		if s.stamina_price() > 0:
-			rows.append(["", "costs %d Stamina (test switch)" % s.stamina_price()])
 		var why := ""
 		if s.is_active() and mine:
 			if battle.ap < s.cost():
 				why = "needs %d AP, %d left" % [s.cost(), battle.ap]
 			else:
 				why = battle.usage_error(u, i)
-		if why != "":
-			rows.push_front(["", "✗ " + why])
+		var kind_row := BattleText.kind_row(battle.content, s)
+		if not kind_row.is_empty():
+			rows.push_front(kind_row)
+		var kind_word := BattleText.kind_label(battle.content, s)
 		var label := s.display_name
 		if s.kind == BattleSkillDef.STRIKE:
-			label = "%s (%s)" % [KinRules.strike_name(u.kin()) if s.kin_effect else s.display_name, s.shape_label()]
-		out.append({"id": StringName(SLOT_PREFIX + str(i)), "group": &"skill", "text": "%s\n%s" % [label, "passive" if not s.is_active() else (("%d AP + Stamina" % s.cost() if s.cost() > 0 else "Stamina") if s.uses_stamina() else ("%d AP + %d Sta" % [s.cost(), s.stamina_price()] if s.stamina_price() > 0 else "%d AP" % s.cost()))],
+			label = "%s (%s)" % [s.display_name, s.shape_label()]
+		out.append({"id": StringName(SLOT_PREFIX + str(i)), "group": &"skill", "color": BattleText.kind_color(battle.content, s),
+			"text": "%s\n%s%s" % [label, (kind_word + " · ") if kind_word != "" and s.is_active() else "", "Passive" if not s.is_active() else (("%d AP + Stamina" % s.cost() if s.cost() > 0 else "Stamina") if s.uses_stamina() else "%d AP" % s.cost())],
 			"enabled": mine and s.is_active() and why == "", "selected": mode == &"skill" and slot == i,
-			"card": {"title": label, "rows": rows}})
+			"card": {"title": label, "rows": rows, "note": why}})
 	for def: TamerSkillDef in battle.tamer_loadout[PLAYER_SIDE]:
 		var used: bool = battle.tamer_used[PLAYER_SIDE].has(def.id)
 		out.append({"id": StringName(TAMER_PREFIX + String(def.id)), "group": &"tamer", "text": "%s\n%s" % [def.display_name, "used" if used else "tamer"],

@@ -20,33 +20,23 @@ extends SceneTree
 ##                        (--pairs N mirrored pairs each, default 2)
 ##   --experiment bots    one block per bot pairing
 ##   --trace              one battle, board before every turn and detailed event timeline after battle
-##   --variant a,b        open test switches (battle/core/battle_experiment.gd): push=2 /
-##                        push=slide (Strike and Surge pushes and pulls move further) ·
-##                        kinpush (Beast Strikes push, a Spirit Strike trades squares)
-##                        allpush (every Strike pushes 1 away) · step=1 / jab=1 (AP of Step and of
-##                        the Jab) · shieldap=2 / noshield (cost of shield zones, or none usable)
-##                        · move=N (AP of slotted movement skills) · defap=N (AP of shield and mend
+##   --variant a,b        open test switches (battle/core/battle_experiment.gd):
+##                        nopack (what is left of the review pack off) ·
+##                        allpush (every Strike pushes 1 away) · shieldap=2 (cost of shield zones)
+##                        · defap=N (AP of shield and mend
 ##                        zones) · zonepush (push / pull zones also move at cast) · alltraps /
 ##                        alltimed (every marker skill of one kind) · turns=N (timer of Surges)
 ##                        · aggro (the AI closes in more and values support less)
 ##                        · groundfade=N (ground laid in battle ends with the N-th round; rule 2, 0 = never) ·
-##                        trapfade=N (an unsprung trap ends with the N-th round) · trapcap=N (traps
-##                        per trap skill and monster; rule 1, 0 = no limit) ·
 ##                        shield=N (Surge reduction of shield zones) · startback (back-row starts)
 ##                        · for this run only: swap=old>new (kits), hp=±N, hpmin=N, hpmax=N,
 ##                        stat=monster.field:value, tprmax=N, apmin=N, surgedmg=±N, strikedmg=N, zoneonce / castonce (zone
 ##                        skills / all placed skills once per round)
 ##                        · currentap=N / currentonce (all in-game PUSH/PULL zone skills: positive AP / once per round)
 ##                        · openmap (remove preplaced props only) · lifethread (one existing Life Thread per fielded unit)
-##                        · turnonce (every slotted skill once per turn) · nocastpush (push / pull zones do not move at cast)
-##                        · collideone (a blocking monster takes no collision damage)
-##                        · veincharge (Dragon Veins discharge once per round for the first monster that touches them) · fullstep (Step walks up to Movement)
-##                        · veinlate (as veincharge, but the damage comes at the end of the round)
-##                        · build defaults since 2026-11-14 and their opposites: turnfree (no limit of uses per turn) ·
-##                        castpush (push / pull zones also move at cast) · veintouch (build default: a vein belongs to the last side that touched it)
+##                        · veintouch (build default: a vein belongs to the last side that touched it)
 ##                        · balanced / balanced=N (N = 3-6 kit slots: every monster plays a Strike, a movement skill and an even
 ##                        draw of zone, ground, prop and trap skills from the draft pool; win rates per drawn skill and kind)
-##                        · skillstamina (a Strike costs Stamina beside its AP, every monster has the Basic Jab) · pushonly (Strikes deal no damage to monsters; Basic Jab) · staminabase=N · trapdefuse
 ##                        · stamina=N (every monster recovers N Stamina per round instead of the whole number of its Pace; stamina alone = 1) · nostamina (the rule before 2026-11-15: a movement skill covers the Movement stat) · size=N (the mode on an N×N board: 8 or 9 for 3v3; an even board has its Dragon Veins in pairs on the two centre rows) · staminafree (no AP for movement skills)
 ##                        · props=N (N mirrored prop pairs at the start, 0 = none) · buttons=N (N mirrored pairs of button squares) · veinhold (a vein works only while a monster stands on it)
 ##   --no-kind-a / -b K   the bot of side 0 / 1 never uses skills of kind K (what is the kind worth)
@@ -217,14 +207,6 @@ func _apply_variant(text: String) -> String:
 				_open_map = true
 			"lifethread":
 				_life_thread = true
-			"push":
-				BattleExperiment.push_steps = 99 if val == "slide" else maxi(1, val.to_int())
-			"kinpush":
-				BattleExperiment.kin_push = true
-			"step":
-				BattleExperiment.step_ap = maxi(1, val.to_int())
-			"jab":
-				BattleExperiment.jab_ap = maxi(1, val.to_int())
 			"aggro":
 				BattleExperiment.ai_aggressive = true
 			"strikedmg":
@@ -234,8 +216,6 @@ func _apply_variant(text: String) -> String:
 						sd.strike_damage = clampi(val.to_int(), 0, 4)
 			"norotate":
 				BattleExperiment.no_rotation = true
-			"move":
-				BattleExperiment.move_ap = maxi(1, val.to_int())
 			"freeap", "freemod":                     # movement skills other than Run: their AP / squares taken off Movement
 				for sid in BattleContent.shared().skills:
 					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
@@ -250,12 +230,8 @@ func _apply_variant(text: String) -> String:
 				_shield_ap = maxi(1, val.to_int())
 			"groundfade":
 				BattleExperiment.ground_rounds = maxi(0, val.to_int())
-			"trapfade":
-				BattleExperiment.trap_rounds = maxi(1, val.to_int())
 			"startback":
 				BattleExperiment.start_back = true
-			"trapcap":
-				BattleExperiment.trap_cap = maxi(0, val.to_int())
 			"wells":
 				BattleExperiment.wells = maxi(0, val.to_int())
 			"noflank":
@@ -264,10 +240,6 @@ func _apply_variant(text: String) -> String:
 				BattleExperiment.tpr_from_round = 1
 			"flank":
 				BattleExperiment.flank = true
-			"delay":                                  # delay | delay=reverse | delay=first (round 1: two-turn monsters and the fastest)
-				BattleExperiment.delay_turn = true
-				BattleExperiment.delay_reverse = val == "reverse"
-				BattleExperiment.delay_first_round = val == "first"
 			"mixkits":                                # every monster plays a random kit of the game's monsters
 				_mix_kits = true
 			"mixskills":                              # every monster plays four random skills (one of them deals damage)
@@ -275,26 +247,12 @@ func _apply_variant(text: String) -> String:
 			"genskills":                              # genskills=N: mixskills draws from N generated skills (tools/lib/skill_gen.gd)
 				_gen_skills = maxi(8, val.to_int())
 				_mix_skills = true
-			"noveins":                                # the AI without the Dragon Vein fight of 2026-11-16 (and without lookahead for bot `game`)
-				BattleExperiment.ai_veins = false
-			"notry":                                  # the AI without the try bonus (ai_try_all off)
-				BattleExperiment.ai_try_all = false
 			"veinhold":                               # a Dragon Vein only works while a monster stands on it (rule before the reshape)
 				BattleExperiment.vein_touch = false
-			"unfairsurge":                            # a due Surge does not wait for the monsters on it (rule before the reshape)
-				BattleExperiment.surge_fair = false
 			"mixstats":                               # every monster plays random stats: HP 3-8, Pace 1.0-2.9 (whole number 1 or 2 = Stamina recovery), Movement 1-5, Reach 2-4, TPR 1-2, AP 2-3
 				_mix_stats = true
 			"calm":                                   # calm=N: no damage in the first N rounds
 				BattleExperiment.damage_from_round = maxi(1, val.to_int()) + 1
-			"surgewall":
-				BattleExperiment.surge_wall = true
-			"surgeground":
-				BattleExperiment.surge_ground = StringName(val if val != "" else "thornbed")
-			"castersurge":
-				BattleExperiment.surge_at_caster = true
-			"fairsurge":
-				BattleExperiment.surge_fair = true
 			"tpr2":
 				BattleExperiment.tpr_from_round = 2
 			"latepressure":
@@ -314,41 +272,12 @@ func _apply_variant(text: String) -> String:
 				if not val.is_valid_int() or val.to_int() < 6 or val.to_int() > 11:
 					return "size needs a board side length from 6 to 11 (got '%s')" % val
 				BattleExperiment.board_size = val.to_int()
-			"staminafree":                            # with stamina: movement skills cost Stamina only, no AP
-				BattleExperiment.stamina_ap = false
 			"props":                                  # props=N: the board starts with N mirrored prop pairs (0 = none)
 				BattleExperiment.map_props = maxi(0, val.to_int())
 			"buttons":                                # buttons=N: N mirrored pairs of button squares (runes) at the start
 				BattleExperiment.map_buttons = maxi(0, val.to_int())
-			"turnfree":                               # no limit of uses per turn (rule before 2026-11-14)
-				BattleExperiment.once_per_turn = false
-			"castpush":                               # push and pull zones also move their occupants at cast (before 2026-11-14)
-				BattleExperiment.zone_cast_push = true
 			"veintouch":                              # a Dragon Vein belongs to the side that touched it last (reshape rule of 2026-11-13)
 				BattleExperiment.vein_touch = true
-			"turnonce":                               # every slotted skill once per turn of its monster
-				BattleExperiment.once_per_turn = true
-			"nocastpush":                             # push and pull zones move only at the end of the occupant's turn
-				BattleExperiment.zone_cast_push = false
-			"veincharge":                             # charged Dragon Veins: first touch of a round discharges, no round-end vein damage
-				BattleExperiment.vein_charge = true
-			"veinlate":                               # charged veins: the first touch wins the vein for the round, damage at the round end
-				BattleExperiment.vein_charge = true
-				BattleExperiment.vein_charge_late = true
-			"fullstep":                               # the universal Step walks up to Movement
-				BattleExperiment.step_full_move = true
-			"collideone":                             # only the moved monster takes monster collision damage
-				BattleExperiment.collision_both = false
-			"noshield":
-				BattleExperiment.no_shield_zones = true
-			"skillstamina":                           # idea of 2026-11-17: a Strike costs Stamina beside its AP; every monster has the Basic Jab
-				BattleExperiment.skill_stamina = true
-			"pushonly":                               # idea of 2026-11-17: Strikes deal no damage to monsters and only push
-				BattleExperiment.strike_push_only = true
-			"staminabase":                            # staminabase=N: a movement skill costs N Stamina per use on top of its squares
-				BattleExperiment.stamina_base = val.to_int() if val != "" else 1
-			"trapdefuse":                             # a solid prop on a trap removes it unsprung
-				BattleExperiment.trap_defuse = true
 			"hp":
 				for mid in BattleContent.shared().monsters:
 					var md: MonsterDef = BattleContent.shared().monsters[mid]
@@ -407,8 +336,23 @@ func _apply_variant(text: String) -> String:
 					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
 					if sd.kind == BattleSkillDef.SURGE:
 						sd.surge_turns = maxi(1, val.to_int())
+			"nopack":                                 # what is left of the review pack off
+				BattleExperiment.pack(false)
 			_:
-				return "unknown variant '%s' (push, kinpush, step, jab, move, freeap, freemod, mixkits, mixskills, mixstats, genskills, veinhold, unfairsurge, calm, surgewall, surgeground, strikedmg, norotate, aggro, defap, shieldap, noshield, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, currentap, currentonce, openmap, lifethread, groundfade, trapfade, startback, trapcap)" % key
+				if key.begins_with("x."):                 # x.<switch>=<value>: any switch of BattleExperiment by its name
+					var prop := key.trim_prefix("x.")
+					var switches: Script = BattleExperiment
+					var cur: Variant = switches.get(prop)
+					if cur == null:
+						return "unknown switch '%s'" % prop
+					if cur is bool:
+						switches.set(prop, val == "" or val == "true" or val == "1")
+					elif cur is int:
+						switches.set(prop, val.to_int())
+					else:
+						switches.set(prop, val)
+					continue
+				return "unknown variant '%s' (freeap, freemod, mixkits, mixskills, mixstats, genskills, veinhold, calm, strikedmg, norotate, aggro, defap, shieldap, softpressure, alltraps, alltimed, turns, hp, hpmin, hpmax, tprmax, apmin, surgedmg, swap, shield, zoneonce, castonce, currentap, currentonce, openmap, lifethread, groundfade, startback, nopack, x.<switch>=<value>)" % key
 	if _defence_ap > 0:
 		for sid in BattleContent.shared().skills:
 			var sd: BattleSkillDef = BattleContent.shared().skills[sid]
@@ -467,7 +411,7 @@ func _series(setup: Dictionary, label: String) -> int:
 	# battles that reached late-round pressure: [HP leader won, HP leader lost, HP level, Draw or timeout after a lead]
 	var lead := [0, 0, 0, 0]
 	# battles under 3 rounds, over 7, over 10; the longest battle; under 2, over 5. Length target (user, 2026-11-15):
-	# a mean of 3.0–4.9 rounds; every result states how many battles ended under 3 and over 5 rounds.
+	# a mean of 3.5–4.5 rounds; every result states how many battles ended under 3 and over 5 rounds.
 	var length := [0, 0, 0, 0, 0, 0]
 	var round_histogram := {}
 	var outliers: Array[String] = []
@@ -806,6 +750,8 @@ func _series(setup: Dictionary, label: String) -> int:
 		print("| Loadout / AI | no tamer skills · bots `%s` (side 0) and `%s` (side 1), tools/lib/sim_bots.gd |" % bots)
 	if _variant_text(setup) != "build rules":
 		print("| Experiment | %s (in-memory simulation variants / battle experiment switches) |" % _variant_text(setup))
+	print("| Switches changed from the build default | %s |" % BattleExperiment.settings_changed_text())
+	print("| All switches | %s |" % BattleExperiment.settings_all_text())
 	print("| Not covered | 2×2 and air units, tamer skills, human play%s |" % (", Mountains" if builds and setup["board"] == "flat" else ""))
 	print("")
 	# Battle length belongs to every result (user instruction 2026-11-15): the mean and how many battles ended
@@ -899,7 +845,7 @@ func _series(setup: Dictionary, label: String) -> int:
 	print("Rounds: under 3 in %d %%, over 7 in %d %%, over 10 in %d %% of the battles, longest %d; first defeat in round %s (mean); monsters defeated before their own first turn: %s per battle" % [
 		roundi(100.0 * length[0] / n), roundi(100.0 * length[1] / n), roundi(100.0 * length[2] / n), length[3],
 		("%.1f" % (float(first_defeat[0]) / first_defeat[1])) if first_defeat[1] > 0 else "—", per.call(unacted, n)])
-	print("Length target: a mean of 3.0–4.9 rounds. Under 3 rounds: %d of %d battles (%d %%), of them in round 1: %d; over 5 rounds: %d of %d (%d %%)" % [
+	print("Length target: a mean of 3.5–4.5 rounds. Under 3 rounds: %d of %d battles (%d %%), of them in round 1: %d; over 5 rounds: %d of %d (%d %%)" % [
 		length[0], n, roundi(100.0 * length[0] / n), length[4], length[5], n, roundi(100.0 * length[5] / n)])
 	print("")
 	print("| Exact round count | Battles | Share |")

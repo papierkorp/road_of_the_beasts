@@ -39,8 +39,7 @@ func test_run_walks_orthogonally_and_pays_for_rubble_and_climbing() -> void:
 	assert_int(opts.size()).is_equal(9)
 
 
-func test_run_is_blocked_by_props_monsters_and_slowed_by_zones() -> void:
-	var slow := H.zone_skill([FieldEffect.make("slow", 1, 2)])
+func test_run_is_blocked_by_props_and_monsters() -> void:
 	var b := H.battle([_mover(3), [1, Vector2i(3, 2)], [1, Vector2i(6, 6)]])
 	b.add_prop(&"clay_urn", Vector2i(2, 3))
 	var opts := _opts(b, 0, "run")
@@ -49,8 +48,6 @@ func test_run_is_blocked_by_props_monsters_and_slowed_by_zones() -> void:
 	assert_bool(opts.has(Vector2i(3, 1))).is_false()        # around the monster: 4 steps
 	assert_bool(opts.has(Vector2i(1, 3))).is_false()        # around the prop: 4 steps
 	assert_bool(opts.has(Vector2i(6, 3))).is_true()
-	H.zone_on(b, Vector2i(3, 3), slow.zone, 1, 2)           # slow 2: Movement 3 → 1
-	assert_array(_opts(b, 0, "run").keys()).contains_exactly_in_any_order([Vector2i(4, 3), Vector2i(3, 4)])
 
 
 func test_leap_is_a_straight_line_that_only_counts_the_landing_square() -> void:
@@ -60,11 +57,11 @@ func test_leap_is_a_straight_line_that_only_counts_the_landing_square() -> void:
 	assert_bool(opts.has(Vector2i(3, 1))).is_true()         # over the monster
 	assert_bool(opts.has(Vector2i(3, 0))).is_true()
 	assert_bool(opts.has(Vector2i(3, 2))).is_false()        # no occupied landing
-	assert_bool(opts.has(Vector2i(5, 5))).is_true()         # diagonal line over the prop
+	assert_bool(opts.has(Vector2i(5, 5))).is_false()        # no diagonal line: movement is orthogonal (2026-11-17)
 	assert_bool(opts.has(Vector2i(4, 4))).is_false()
 	assert_bool(opts.has(Vector2i(5, 4))).is_false()        # not a straight line
 	assert_bool(opts.has(Vector2i(0, 3))).is_true()
-	assert_bool(opts.has(Vector2i(6, 0))).is_true()         # exactly Movement 3 along the diagonal
+	assert_bool(opts.has(Vector2i(6, 0))).is_false()
 
 
 func test_glide_burrow_phase_and_blink_drop_restrictions() -> void:
@@ -107,16 +104,16 @@ func test_every_movement_skill_moves_at_least_one_square() -> void:
 
 func test_walking_takes_the_route_with_the_least_entry_harm() -> void:
 	var b := H.battle([_mover(4), [1, Vector2i(6, 6)]])
-	b.set_ground(Vector2i(3, 2), &"thornbed", 2)
+	b.set_ground(Vector2i(3, 2), &"thornbed", 1)
 	b.begin()
 	var opts := _opts(b, 0, "run")
 	assert_int(opts[Vector2i(3, 1)]["harm"]).is_equal(0)    # around the Thornbed in 4 steps
-	assert_int(opts[Vector2i(3, 2)]["harm"]).is_equal(2)
+	assert_int(opts[Vector2i(3, 2)]["harm"]).is_equal(1)
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 1)})).is_true()
 	assert_int(H.unit(b, 0).hp).is_equal(5)
 	assert_int(b.ap).is_equal(3)                            # slotted movement: 1 AP
 	assert_bool(b.apply({"type": &"skill", "slot": 0, "to": Vector2i(3, 2)})).is_true()
-	assert_int(H.unit(b, 0).hp).is_equal(3)                 # Thornbed II on entry
+	assert_int(H.unit(b, 0).hp).is_equal(4)                 # Thornbed on entry
 
 
 func test_walk_fires_entry_effects_on_every_square_other_paths_only_on_landing() -> void:

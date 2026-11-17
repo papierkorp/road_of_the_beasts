@@ -48,14 +48,14 @@ func test_second_wind_never_heals_above_max() -> void:
 
 func test_swap_places_trades_squares_and_counts_as_entering() -> void:
 	var b := _battle([[0, Vector2i(2, 2), {"pace": 1.9}], [0, Vector2i(5, 5), {"pace": 1.8}], [1, Vector2i(6, 0)]], [&"swap_places"])
-	b.set_ground(Vector2i(5, 5), &"thornbed", 2)
+	b.set_ground(Vector2i(5, 5), &"thornbed", 1)
 	b.set_ground(Vector2i(2, 2), &"mossbed")
 	H.unit(b, 1).hp = 3
 	b.begin()
 	assert_bool(_use(b, &"swap_places", {"unit": &"u0", "other": &"u1"})).is_true()
 	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(5, 5))
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(2, 2))
-	assert_int(H.unit(b, 0).hp).is_equal(3)      # entered Thornbed II
+	assert_int(H.unit(b, 0).hp).is_equal(4)      # entered Thornbed
 	assert_int(H.unit(b, 1).hp).is_equal(4)      # entered Mossbed
 	assert_str(b.board.unit_id_at(Vector2i(5, 5), Board.GROUND)).is_equal("u0")
 

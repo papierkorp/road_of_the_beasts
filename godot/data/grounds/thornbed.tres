@@ -6,14 +6,14 @@
 
 [sub_resource type="Resource" id="Resource_724xu"]
 script = ExtResource("3_co136")
+amount = 1
 
 [resource]
 script = ExtResource("2_0bjs4")
 id = &"thornbed"
 display_name = "Thornbed"
 group = "hazard"
-max_level = 2
 triggers = Array[ExtResource("3_co136")]([SubResource("Resource_724xu")])
 color = Color(0.3, 0.55, 0.22, 1)
-description = "Damage = level when you enter the square. Punishes moving."
+description = "1 damage when you enter the square. Punishes moving."
 internal_calc_cost = 4.0

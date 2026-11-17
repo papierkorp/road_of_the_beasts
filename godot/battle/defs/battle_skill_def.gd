@@ -72,6 +72,9 @@ const PASSIVE := "passive"
 ## effect turns that push into a chosen cardinal direction; a Strike without push moves nothing.
 @export var strike_push: bool = true
 ## Applies the striker's Kin twist (KinRules). Body-relative variants are separate skills.
+## Damage to props as a part of its own (user, 2026-11-17): -1 = follows the damage (the rule), 0 = spares props,
+## 1 = damages props (2; a Strike that only pushes can still break a prop). See `hits_props`.
+@export var strike_props: int = -1
 @export var kin_effect: bool = true
 ## Body-relative variant (Winged): retreat 1 opposite the shape centre after the attack.
 @export var self_retreat: bool = false
@@ -106,6 +109,9 @@ const PASSIVE := "passive"
 
 @export_group("Movement")
 @export_enum("walk", "line", "free", "teleport") var move_path: String = "walk"
+## A straight line may also run along a diagonal (user decision 2026-11-17: movement is orthogonal unless the
+## card says so; the calculation prices it). Only read for `move_path` "line".
+@export var move_diagonal: bool = false
 @export var blocked_by_objects: bool = true
 @export var blocked_by_monsters: bool = true
 @export var blocked_by_surges: bool = true
@@ -157,25 +163,23 @@ func is_active() -> bool:
 	return kind != PASSIVE
 
 
-## Test switch `strike_push_only` (user idea 2026-11-17): Strikes deal no damage to monsters and only push.
-## The Basic Jab is the exception: it keeps its damage.
+## A Strike of the kit deals no damage to monsters and only pushes (rule since 2026-11-17); what its card names
+## as damage hits props. The Basic Jab is the exception: it damages monsters.
 func push_only() -> bool:
-	return BattleExperiment.strike_push_only and kind == STRIKE and id != &"basic_jab"
+	return kind == STRIKE and id != &"basic_jab"
+
+
+## Whether this Strike damages the props in its shape: -1 = as the rule says (a Strike with damage does, one
+## without does not), 0 = it spares props, 1 = it damages them whatever its damage to monsters is.
+func hits_props() -> bool:
+	if kind != STRIKE or strike_props == 0:
+		return false
+	return strike_props == 1 or strike_damage > 0
 
 
 ## The damage a Strike deals to a monster (props always take the Strike as its card says).
 func monster_damage() -> int:
 	return 0 if push_only() else strike_damage
-
-
-## Test switch `skill_stamina`: the Stamina one use of a Strike costs; 0 without the switch and for every
-## other kind (a movement skill pays its squares, what is placed on the board and a buff cost AP only).
-func stamina_price() -> int:
-	if not BattleExperiment.skill_stamina or not BattleExperiment.stamina or kind != STRIKE:
-		return 0
-	if stamina_cost >= 0:
-		return stamina_cost
-	return 2 if shape_extension > 0 or shape_id() == BattleShapes.CROSS else 1
 
 
 ## Surge or trap: the two kinds that put a marker on the board and detonate.
@@ -188,12 +192,6 @@ func is_placed() -> bool:
 
 
 func cost() -> int:
-	if kind == STRIKE and shape_id() == BattleShapes.JAB and shape_extension == 0 and strike_damage > 0 and BattleExperiment.jab_ap > 0:
-		return BattleExperiment.jab_ap           # test switch: AP of the plain Jab
-	if kind == MOVE and BattleExperiment.stamina and not BattleExperiment.stamina_ap:
-		return 0                                  # test switch: movement is paid in Stamina only
-	if kind == MOVE and BattleExperiment.move_ap > 0:
-		return BattleExperiment.move_ap          # test switch
 	return maxi(1, ap_cost)
 
 

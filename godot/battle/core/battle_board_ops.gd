@@ -14,7 +14,7 @@ static func zone_outcome(cell: BoardCell, def: BattleZoneDef) -> Dictionary:
 	if z == null:
 		return {"kind": &"new", "level": 1}
 	if z.def.id == def.id:
-		return {"kind": &"level", "level": mini(BattleZoneDef.MAX_LEVEL, z.level + 1)}
+		return {"kind": &"level", "level": 1}     # a zone has one level: cast again it only refreshes
 	if z.def.opposes(def) or def.opposes(z.def):
 		# levels subtract; the new cast arrives at level I
 		return {"kind": &"cancel", "level": 0} if z.level <= 1 else {"kind": &"weaken", "level": z.level - 1}
@@ -51,8 +51,7 @@ static func ground_outcome(b: Battle, cell: BoardCell, ground: StringName) -> St
 	if cur != null and cur.immutable:
 		return &"immutable"
 	if cell.ground == ground:
-		var g := b.content.ground(ground)
-		return &"level" if g != null and cell.level < g.max_level else &"kept"
+		return &"refresh"                         # ground has one level: laid again, its clock restarts
 	return &"new" if cell.ground == GroundDef.PLAIN else &"replace"
 
 
@@ -122,31 +121,38 @@ static func can_place_prop(b: Battle, def: PropDef, p: Vector2i) -> bool:
 		if not def.occupies(layer):
 			continue
 		var there := b.board.prop_at(p, layer)
-		if (there != null and not defuses(def, there)) or b.board.unit_id_at(p, layer) != &"":
+		if (there != null and not springs(def, there)) or b.board.unit_id_at(p, layer) != &"":
 			return false
 	return true
 
 
-## Test switch `trap_defuse`: a solid prop takes the square of a trap and removes it unsprung.
-static func defuses(def: PropDef, there: BoardProp) -> bool:
-	return BattleExperiment.trap_defuse and def.solid and there != null and there.hp > 0 and there.def.is_trap()
+## A solid prop may take the square of a trap: it springs the trap (user decision 2026-11-17).
+static func springs(def: PropDef, there: BoardProp) -> bool:
+	return def.solid and there != null and there.hp > 0 and there.def.is_trap()
 
 
-## Removes the trap a solid prop comes onto (`trap_defuse`); it does not act.
-static func defuse_at(b: Battle, def: PropDef, p: Vector2i) -> void:
+## A solid prop comes onto the trap on `p`: the trap is used up like under a monster. Returns what the trap
+## does (a step of BattleProps, empty without a trap); the caller runs it once the prop stands on the square,
+## so whoever the trap pulls in collides with the prop.
+static func spring_at(b: Battle, def: PropDef, p: Vector2i) -> Dictionary:
+	var step := BattleProps.new_step()
 	var there := b.board.prop_at(p, Board.GROUND)
-	if defuses(def, there):
+	if springs(def, there):
+		BattleProps.collect(b, there, Moment.ENTER, step)
 		b.board.remove_prop(there)
-		b.emit(&"trap_defused", {"pos": p, "prop": there.def.id, "by": def.id})
+		b.emit(&"trap_sprung", {"pos": p, "prop": there.def.id, "who": &"", "by": def.id})
+	return step
 
 
 static func place_prop(b: Battle, def: PropDef, p: Vector2i) -> BoardProp:
 	if not can_place_prop(b, def, p):
 		return null
-	defuse_at(b, def, p)
+	var sprung := spring_at(b, def, p)
 	var prop := BoardProp.new(b.next_prop_uid(), def, p)
 	b.board.put_prop(prop)
 	b.emit(&"prop_placed", {"pos": p, "prop": def.id})
+	if not BattleProps.is_empty(sprung):
+		BattleProps.run(b, sprung)
 	return prop
 
 

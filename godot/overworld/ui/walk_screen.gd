@@ -244,7 +244,7 @@ func _build_hud() -> void:
 	_side_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_side_body.add_theme_constant_override("separation", 10)
 	scroll.add_child(_side_body)
-	_side_close = hud_button("Close  (Esc)", _close_side)
+	_side_close = hud_button("Close  (%s)" % UiTheme.key_text(&"ui_cancel"), _close_side)
 	side_col.add_child(_side_close)
 
 
@@ -306,15 +306,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _extra_input(event):
 		viewport.set_input_as_handled()
 		return
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_E:
-			if not (_side.visible and _side_blocks):
-				var thing := _map.nearest_action(_pos)
-				if not thing.is_empty():
-					_interact_with(thing)
-		elif event.physical_keycode == KEY_ESCAPE and _side.visible and _side_closable:
-			_close_side()
-			get_viewport().set_input_as_handled()
+	if event.is_action_pressed(&"interact"):
+		if not (_side.visible and _side_blocks):
+			var thing := _map.nearest_action(_pos)
+			if not thing.is_empty():
+				_interact_with(thing)
+	elif event.is_action_pressed(&"ui_cancel") and _side.visible and _side_closable:
+		_close_side()
+		get_viewport().set_input_as_handled()
 
 
 func _process(delta: float) -> void:
@@ -329,19 +328,19 @@ func _process(delta: float) -> void:
 	_update_actors(delta)
 	_update_camera(minf(1.0, delta * 6.0))
 	var near := _map.nearest_action(_pos)
-	_prompt.text = "" if near.is_empty() or (_side.visible and _side_blocks) else "[E]  " + String(near["label"])
+	_prompt.text = "" if near.is_empty() or (_side.visible and _side_blocks) else "[%s]  " % UiTheme.key_text(&"interact") + String(near["label"])
 
 
 func _move_player(delta: float) -> void:
 	var x := 0.0
 	var z := 0.0
-	if Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT):
+	if Input.is_action_pressed(&"walk_right"):
 		x += 1.0
-	if Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT):
+	if Input.is_action_pressed(&"walk_left"):
 		x -= 1.0
-	if Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP):
+	if Input.is_action_pressed(&"walk_up"):
 		z += 1.0
-	if Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN):
+	if Input.is_action_pressed(&"walk_down"):
 		z -= 1.0
 	if x == 0.0 and z == 0.0:
 		return

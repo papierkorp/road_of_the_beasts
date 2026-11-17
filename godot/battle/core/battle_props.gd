@@ -30,6 +30,8 @@ static func collect(b: Battle, prop: BoardProp, when: String, step: Dictionary, 
 	for a in prop.def.actions(when):
 		if part != "" and (part == "move") != (a.op == "push" or a.op == "pull"):
 			continue
+		if when == Moment.ROUND_END and a.op == "damage":
+			continue                              # it hits whoever ends a turn in its shape instead (turn_end_hits)
 		lines += 1
 		var per_unit := {}                    # unit id -> summed offset (once per prop and unit)
 		var per_prop := {}                    # uid of another prop -> summed offset (pushes and pulls move props too)
@@ -162,3 +164,22 @@ static func round_end(b: Battle, moves: bool) -> void:
 	b.emit(&"props_acted", {"count": acted})
 	run(b, step)
 	BattlePayload.settle(b)
+
+
+## Nothing but Dragon Veins and surrounding deals damage at the round end: the round-end damage line of every
+## standing prop hits `u` when it ends its turn inside the prop's shape.
+static func turn_end_hits(b: Battle, u: BattleUnit) -> Array:
+	var hits: Array = []
+	if not u.is_alive():
+		return hits
+	for prop in b.board.props():
+		if prop.hp <= 0:
+			continue
+		for a in prop.def.actions(Moment.ROUND_END):
+			if a.op != "damage":
+				continue
+			for o in a.offsets():
+				if u.covers(prop.pos + o) and BattleBoardOps.units_in_reach_of(b, prop.def, prop.pos + o).has(u):
+					hits.append({"unit": u.id, "base": a.amount, "type": BattleDamage.AFTERMATH, "source": prop.def.display_name})
+					break
+	return hits

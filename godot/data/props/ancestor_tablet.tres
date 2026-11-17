@@ -12,5 +12,5 @@ prop_class = "residue"
 hp = 2
 ground_left = &"mossbed"
 color = Color(0.8, 0.8, 0.7, 1)
-description = "Destroyed: leaves Hallowed."
+description = "Destroyed: leaves Mossbed."
 internal_calc_cost = 8.0

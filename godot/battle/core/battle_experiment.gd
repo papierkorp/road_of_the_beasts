@@ -1,21 +1,12 @@
 class_name BattleExperiment
 extends RefCounted
 ## Open test switches of the battle (temp_todo T38). The whole build is an experiment, so they
-## apply to every battle; the draft screen and tools/sim.gd set them. Three of them carry build
+## apply to every battle; the draft screen and tools/sim.gd set them. Two of them carry build
 ## rules since 2026-11-12 (user decision after simulation S011) and keep their switch only to
-## compare: `ground_rounds` = 2, `trap_cap` = 1 and `ai_hunt` = true.
+## compare: `ground_rounds` = 2 and `ai_hunt` = true.
 
-## Squares a Strike or Surge push / pull moves (99 = slide until something stops it).
-static var push_steps := 1
-## A Spirit Strike trades squares with one struck monster (every Strike already pushes).
-static var kin_push := false
 ## Turns the free rotation of placed shapes off again (to compare).
 static var no_rotation := false
-## AP of the universal Step and of the Jab shape (0 = the rule: Step 1, Jab 2).
-static var step_ap := 0
-## AP of every slotted movement skill (0 = as authored, 1).
-static var move_ap := 0
-static var jab_ap := 0
 ## The AI values closing in more and standing under its own support effects less.
 static var ai_aggressive := false
 ## The AI does not end a turn with AP left while no enemy is next to it: without a better action
@@ -37,13 +28,6 @@ static var soft_pressure := 0
 ## Plain at the end of the N-th round, counting the round it was laid or levelled in. Ground of
 ## the starting board, Rubble of a destroyed Mountain and Voidscar stay. 0 = no clock.
 static var ground_rounds := 2
-## > 0: a trap nobody sprang lapses at the end of the N-th round, counting the round it was set in.
-static var trap_rounds := 0
-## Build rule (1): a monster holds at most N traps per trap skill; setting one more removes its
-## oldest trap of that skill without effect (the trap moves). 0 = no limit.
-static var trap_cap := 1
-## Shield zone skills cannot be used (kits keep the slot; to try battles without kit protection).
-static var no_shield_zones := false
 ## Every monster starts on the back row of its side (3v3: 6 instead of 4 squares between the lines).
 static var start_back := false
 ## Build rule since 2026-11-13 (user decision, T39; gdd_battle §4.2): that many Wellspring squares lie on
@@ -56,56 +40,19 @@ static var wells := 3
 static var flank := true
 ## First round in which TurnsPerRound counts. Build rule 2: in round 1 every monster has one turn.
 static var tpr_from_round := 2
-## A monster may postpone its turn once per round, before it has done anything: its queue entry
-## moves to the end of the round's queue (action `delay`; draft T39).
-static var delay_turn := false
-## With delay_turn: monsters that postponed act in reverse order of the queue (the one that stood
-## first acts last), so the fastest monster has the last word of a round.
-static var delay_reverse := false
-## With delay_turn (user idea 2026-11-13): postponing is allowed in round 1 only, and only to monsters
-## with TurnsPerRound 2+ (their extra turn does not count yet) and to the first monster of the queue.
-static var delay_first_round := false
 ## No damage of any kind before this round (1 = off; 2 = round 1 is for positioning only).
-static var damage_from_round := 1
-## A charging timed Surge blocks its squares for every movement including Step: nothing may enter
-## or land on them (monsters standing there may leave; pushes are not blocked).
-static var surge_wall := false
-## A timed Surge without ground of its own leaves this ground type on its squares when it detonates
-## ("" = nothing); it fades like other ground laid in battle (`ground_rounds`).
-static var surge_ground := &""
-## A timed Surge detonates at the start of its caster's next turn instead of counting turns of any
-## monster (the rule before 2026-11-12); a Surge whose caster is gone detonates at the next round start.
-static var surge_at_caster := false
-## A timed Surge that is due waits until every monster standing on its squares has finished a turn
-## since the cast (draft T39: nobody is hit by a Surge it had no turn to leave).
-static var surge_fair := true
+static var damage_from_round := 2
 ## true (GDD rule of the reshape of 2026-11-13, kept by the user after S028): a Dragon Vein belongs to
 ## the side that touched it last and deals its damage for that side whether or not a monster stands
 ## on it. false = only while a monster stands on it at the round end (measured in S028).
 static var vein_touch := true
 ## Late-round pressure: "idle" (build rule) only at the end of a round in which nobody holds a
 ## Wellspring · "always" as before 2026-11-13 · "none" never.
-static var pressure_mode := "idle"
-## Build rule since 2026-11-14 (user decision): every slotted skill at most `usage_limit` times per
-## turn of its monster (1 unless the skill says more; the universal Step is not slotted). false = no limit.
+static var pressure_mode := "none"
+## The rule since 2026-11-14 (user decision): every slotted skill at most `usage_limit` times per turn of its
+## monster (1 unless the skill says more; Step is not slotted). No switch of the game or the tools any more
+## (user, 2026-11-17); only the older rule tests turn it off (tests/battle/helpers.gd legacy_rules).
 static var once_per_turn := true
-## Build default since 2026-11-14 (S025, not a GDD rule): a push or pull zone does not move its
-## occupants when it is cast, only at the end of their turn. true = it also moves them at cast.
-static var zone_cast_push := false
-## false: a monster pushed or pulled into another monster takes the collision damage alone;
-## the blocking monster takes none.
-static var collision_both := true
-## Charged Dragon Veins (draft, S026): every vein is charged at the start of a round. The first
-## monster that touches it (walks onto or across it, is pushed or pulled onto it), or the monster
-## standing on it at the end of its own turn, discharges it: 1 damage to the enemy nearest to the
-## square. Then it is empty until the next round. No ownership and no vein damage at the round end.
-static var vein_charge := false
-## With vein_charge: the discharge deals no damage at once. The side that touched the vein first in
-## the round has won it for that round, wherever its monster stands afterwards, and the vein deals
-## its 1 damage for that side at the end of the round (user idea 2026-11-14, S027).
-static var vein_charge_late := false
-## The universal Step walks up to the monster's Movement for its AP (like Run), instead of 1 square.
-static var step_full_move := false
 ## Stamina (rule since 2026-11-15, user decision; S028/S029): the Movement stat is the size of a Stamina
 ## pool a monster spends in battle. A slotted movement skill costs Stamina for every square it enters
 ## (what the ground costs: Plain 1, Rubble 2; a path over other squares 1 per square of the distance)
@@ -116,8 +63,6 @@ static var step_full_move := false
 static var stamina := true
 ## 0 = the rule (recovery by Pace); N > 0 = every monster recovers N per round (to compare, S029).
 static var stamina_regen := 0
-## With stamina: a movement skill also costs its AP (false = Stamina only).
-static var stamina_ap := true
 ## Board switch: mirrored prop pairs a board starts with (-1 = as the layout or its seed says, 0 = none).
 static var map_props := -1
 ## Board switch (user request 2026-11-15): side length of the board, for every mode (0 = the size of the mode;
@@ -127,25 +72,37 @@ static var board_size := 0
 ## Board switch (user idea, 2026-11-15): mirrored pairs of "button" squares the board starts with: walkable
 ## rune props without damage that act on the board when a monster collects them (0 = none).
 static var map_buttons := 0
-## Idea of 2026-11-16 (to try and to measure, no rule): a movement skill costs this much Stamina for its use,
-## on top of the Stamina for every square. 0 = the rule: squares only.
-static var stamina_base := 0
-## Idea of 2026-11-16 (no rule): a solid prop that is created on or pushed onto a trap removes the trap
-## without springing it and takes its square. false = the build rule: a trap square takes no other prop.
-static var trap_defuse := false
-## Idea to try (user, 2026-11-17; no rule): Stamina pays for what the body does. A movement skill pays the
-## squares it enters as before, a Strike pays Stamina beside its AP (BattleSkillDef.stamina_price: 1, or 2
-## for an extended shape and a Cross); skills that place something and buffs cost AP only. Every monster
-## has the Basic Jab (1 AP, 1 damage, no Stamina) as an action beside Step (Battle.BASIC_SLOT).
-static var skill_stamina := false
-## Idea to try (user, 2026-11-17; no rule): Strikes deal no damage to monsters (props still take it); shape
-## and push stay as the card says. Damage comes from ground, collisions, Dragon Veins, props and the Basic
-## Jab, which every monster has with this switch too. (Reach 3 and pulling Strikes were tried and dropped.)
-static var strike_push_only := false
+
+# ---------- What is left of the review pack of 2026-11-17 (test switches, on by default; no rules; docs/todo T44) ----------
+# `damage_from_round` 2 (round 1 is for position), `pressure_mode` "none" (no late-round pressure) and the
+# stronger veins below. `pack(false)` gives the rules of battle.md back.
+
+## From this round on an owned Dragon Vein deals `vein_late_damage` instead of 1 (0 = never). 3 since S039
+## (measured with 5, 4 and 3; with round 1 free of damage, 3 gave the fewest battles over 5 rounds).
+static var vein_late_round := 3
+static var vein_late_damage := 2
+
+## View switch (user request 2026-11-17, to compare): dragging with the middle mouse button also tilts the camera
+## up and down (BattleView). false = the fixed tilt of 40°.
+static var free_camera := true
 
 
-static func has_basic_jab() -> bool:
-	return skill_stamina or strike_push_only
+## Switches what is left of the review pack on (the build default) or off (the rules of battle.md).
+static func pack(on: bool) -> void:
+	vein_late_round = 3 if on else 0
+	vein_late_damage = 2
+	damage_from_round = 2 if on else 1
+	pressure_mode = "none" if on else "idle"
+
+
+## Vein damage in this round.
+static func vein_damage(round_number: int) -> int:
+	return vein_late_damage if vein_late_round > 0 and round_number >= vein_late_round else 1
+
+
+## The three switches below are off here and checked by default in the draft of the multiplayer mode (user,
+## 2026-11-17; DraftScreen): it plays random monsters with kits of skills generated for the battle. Battles
+## started elsewhere, the rule tests and the tools play the monsters as they are.
 ## Kit switch of the multiplayer mode (user request 2026-11-16): every monster of a battle plays a random
 ## kit by a kit template (KitDraw: so many Strikes, movement, zone, ground and prop skills), drawn from the
 ## skills of the game. Its own kit is not used.
@@ -159,22 +116,10 @@ static var fresh_skills := false
 static var random_monsters := false
 ## Seed of the kit draw; the draft screen draws a new one for every battle.
 static var kit_seed := 0
-## The opponent's AI prefers a skill it has not used in this battle, as long as the use costs it nothing
-## (AiBrain.TRY_BONUS), so every skill of a kit gets played. On by default (user, 2026-11-16).
-static var ai_try_all := true
-## The opponent fights for the Dragon Veins (user, 2026-11-16): it walks to veins it does not own, keeps
-## enemies away from its own (walls, a solid prop on the vein) and breaks what keeps it from an enemy vein
-## (AiBrain._vein_score). In the game it also looks one action further (AiBrain.decide). Off = the AI before.
-static var ai_veins := true
 
 
 static func reset() -> void:
-	push_steps = 1
-	kin_push = false
 	no_rotation = false
-	step_ap = 0
-	move_ap = 0
-	jab_ap = 0
 	ai_aggressive = false
 	ai_hunt = true
 	ai_hunt_behind = false
@@ -182,45 +127,23 @@ static func reset() -> void:
 	ai_no_kind = ["", ""]
 	soft_pressure = 0
 	ground_rounds = 2
-	trap_rounds = 0
 	start_back = false
-	no_shield_zones = false
-	trap_cap = 1
 	wells = 3
 	flank = true
 	tpr_from_round = 2
-	pressure_mode = "idle"
-	delay_turn = false
-	delay_reverse = false
-	delay_first_round = false
-	damage_from_round = 1
-	surge_wall = false
-	surge_ground = &""
-	surge_at_caster = false
-	surge_fair = true
 	vein_touch = true
 	once_per_turn = true
-	zone_cast_push = false
-	collision_both = true
-	vein_charge = false
-	vein_charge_late = false
-	step_full_move = false
 	stamina = true
 	stamina_regen = 0
-	stamina_ap = true
 	map_props = -1
 	map_buttons = 0
 	board_size = 0
-	stamina_base = 0
-	trap_defuse = false
-	skill_stamina = false
-	strike_push_only = false
+	free_camera = true
 	random_kits = false
 	fresh_skills = false
 	random_monsters = false
 	kit_seed = 0
-	ai_try_all = true
-	ai_veins = true
+	pack(true)
 
 
 ## The Dragon Vein squares of a board of this size (`wells` of them; none on boards smaller than 7×7).
@@ -258,3 +181,59 @@ static func ring(cells: Array[Vector2i], diagonal: bool) -> Array[Vector2i]:
 				if not cells.has(q) and not out.has(q):
 					out.append(q)
 	return out
+
+
+## Every switch of this file with its value now and its build default: [[name, value, default], ...], in the
+## order of the file. The battle screen shows it (pause menu) and tools/sim.gd prints it with every run.
+static func settings() -> Array:
+	var script: Script = BattleExperiment
+	var names: PackedStringArray = []
+	for line in script.source_code.split("\n"):
+		if line.begins_with("static var "):
+			names.append(line.trim_prefix("static var ").get_slice(" ", 0).get_slice(":", 0))
+	var now := {}
+	for n in names:
+		now[n] = script.get(n)
+		if now[n] is Array:
+			now[n] = (now[n] as Array).duplicate()
+	reset()
+	var out: Array = []
+	for n in names:
+		out.append([n, now[n], script.get(n)])
+	for n in names:
+		script.set(n, now[n])
+	return out
+
+
+## The settings as lines: first what differs from the build default, then the defaults.
+static func settings_lines() -> PackedStringArray:
+	var changed: PackedStringArray = []
+	var same: PackedStringArray = []
+	for row: Array in settings():
+		if str(row[1]) != str(row[2]):
+			changed.append("%s = %s   (default %s)" % [row[0], str(row[1]), str(row[2])])
+		else:
+			same.append("%s = %s" % [row[0], str(row[1])])
+	var lines: PackedStringArray = ["Changed from the build default: %s" % ("none" if changed.is_empty() else str(changed.size()))]
+	lines.append_array(changed)
+	lines.append("")
+	lines.append("Build defaults in use:")
+	lines.append_array(same)
+	return lines
+
+
+## One line for a run block: only what differs from the build default.
+static func settings_changed_text() -> String:
+	var changed: PackedStringArray = []
+	for row: Array in settings():
+		if str(row[1]) != str(row[2]):
+			changed.append("%s=%s" % [row[0], str(row[1])])
+	return "build defaults" if changed.is_empty() else ", ".join(changed)
+
+
+## One line with every switch and its value.
+static func settings_all_text() -> String:
+	var all: PackedStringArray = []
+	for row: Array in settings():
+		all.append("%s=%s" % [row[0], str(row[1])])
+	return ", ".join(all)

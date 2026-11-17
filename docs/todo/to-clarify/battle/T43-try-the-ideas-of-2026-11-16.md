@@ -1,23 +1,18 @@
 # T43 · Try the Ideas of 2026-11-16
 
-**Status:** To clarify — six ideas of the user are built as test switches and experiment content, so that they can be played and measured. None is a rule; each becomes one only by a decision.
+**Status:** To clarify — what is left of the ideas of the user: experiment content, to be played. None is a rule; each becomes one only by a decision.
 **Prerequisites:** the user's play of the build.
 **Sources:** [godot/README.md](../../../../godot/README.md) (switches and how they are built); [battle.md §2.4](../../../battle.md#24-action-points-and-stamina), [battle.md §4.7](../../../battle.md#47-props); [simulation_log.md](../../../simulation_log.md) S032.
 
-| Idea | Built as | Reading chosen while building (to confirm) |
+**Decided on 2026-11-17** ([decisions.md](../../../decisions.md)): Strikes only push and may damage props, with the Basic Jab (2 AP) beside Step (1 AP), are rules ([battle.md §6.1](../../../battle.md#61-damage)), and a solid prop springs a trap it comes onto ([battle.md §4.7](../../../battle.md#47-props)). Dropped and removed from the build: the Stamina base cost of movement, Stamina on Strikes, “a movement skill or a Strike in a turn”, Step at 2 AP. The battle log that explains a defeat stays (no switch).
+
+| Idea still open | Built as | Reading chosen while building (to confirm) |
 |---|---|---|
-| 1 Stamina base cost of a movement skill, on top of the cost per square | number switch “Stamina base cost” (0 = the rule) | paid once per use of a movement skill; Step is no skill and pays no Stamina at all |
-| Stamina pays for what the body does: a Strike costs Stamina beside its AP (user, 2026-11-17, after trying a cost on every skill) | switch “Strikes cost Stamina”; with it every monster has a **Basic Jab** (1 AP, 1 damage, no Stamina) as an action beside Step, not in the kit | 1 Stamina, 2 for an extended shape and a Cross; a movement skill pays its squares; ground, zone, prop and buff skills cost AP only; use limits unchanged; the Basic Jab has no push and no Kin effect and can be used once a turn (reading of the build; Step has no such limit) |
-| Strikes only push; damage comes from ground, collisions, Dragon Veins and props (user, 2026-11-17: direct Strike damage feels unfair and makes square control matter less) | switch “Strikes only push”, with the Basic Jab as the only direct damage | shape and push as on the card; props still take Strike damage; Kin effects unchanged. Reach 3 and pulling Strikes were tried and dropped by the user (2026-11-17) |
-| A zone that damages props | zone **Erosion** (experiment) | every prop in it takes 1 at the round end, in the acting part; monsters are not touched |
-| Ground that allows no props | ground **Shifting Sand** (experiment) | no prop can be placed on it; a prop that already stands there, or is pushed onto it, stays (user, 2026-11-17: it blocks placing, it destroys nothing) |
-| A prop defuses a trap | switch “Props bury traps” | a solid prop placed on or pushed onto a trap removes the trap without setting it off |
-| Stamina recovery from the board | ground **Springwater** (experiment): +1 Stamina on entering; zone **Updraft** (experiment): +1 recovery at the round end while inside | Stamina never rises above the pool |
-| Stamina recovery as a self buff | skill **Deep Breath** (experiment): +1 recovery for its duration | same effect tag as Updraft (`refresh`) |
-| A battle log that explains a defeat | every damage line names its source; the defeat line names the last hit and what else hit in that round; a button per fallen monster opens its whole HP history | built without a switch |
+| Ground that allows no props | ground **Shifting Sand** (experiment) | no prop can be placed on it; a prop that already stands there, or is pushed onto it, stays |
+| A zone that damages props | zone **Erosion** (experiment) | every prop in it takes 1 at the round end; monsters are not touched |
+| Stamina recovery from the board and as a self buff | ground **Springwater** (experiment): +1 Stamina on entering; skill **Deep Breath** (experiment): +1 recovery for its duration | Stamina never rises above the pool. The zone Updraft is archived: a zone changes no stat |
 
 - **Open for the user:** keep, change or drop each row; for those that stay, the rule text and the values.
-- **If Strikes cost Stamina:** a large shape at 2 Stamina needs fewer AP than today, or nobody plays it; the pools and the monster calculation have to be reworked (Stamina is the earlier Movement stat; user, 2026-11-17), battles are expected to get longer and need a way to be shortened again, and the use limits (once a round, once a battle) could be replaced by a higher Stamina cost.
-- **Open details:** whether a walkable prop (a trap) buries another trap; whether Shifting Sand also refuses traps (the build: yes, every prop) and whether a prop may be pushed onto it (the build: yes); whether Erosion should also wear cover faster than a Strike does; what the three Stamina sources cost ([T02](../../open/skills/T02-find-skill-prices.md)).
-- **Measured:** [S035](../../../simulation_log.md) measured the switch still with reach 3 and pulls (3.78 against 3.87 rounds, 4 % under 3 and 4 % over 5 rounds against 12 % and 11 %, collisions the largest source of damage); the version without them is not measured. [S034](../../../simulation_log.md): only Strikes for Stamina gives 4.24 rounds against 3.87, half as many battles under 3 rounds, more board skills, and Thrust (3 AP and 2 Stamina) almost unused. [S033](../../../simulation_log.md): a cost of 1 on every skill 4.10 rounds, the base cost of movement alone 4.44. S032 holds one series with the base cost and trap burying switched on and the experiment content in the pool; it is an indication only.
+- **Open details:** whether a walkable prop (a trap) springs another trap (the build: no); whether Shifting Sand also refuses traps (the build: yes, every prop) and whether a prop may be pushed onto it (the build: yes); whether Erosion fits a zone that otherwise only pushes or pulls; what the Stamina sources cost ([T02](../../open/skills/T02-find-skill-prices.md)).
+- **Measured before the decisions:** [S033–S038](../../../simulation_log.md). Nothing was measured on the rules as they stand now.
 - **Done when:** the user has played the switches and decided each row; what stays is written into the rule files and [content.md](../../../content.md), what goes is removed from the build and the README.

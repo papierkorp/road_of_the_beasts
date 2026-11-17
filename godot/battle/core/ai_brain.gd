@@ -5,6 +5,8 @@ extends RefCounted
 ## can never do anything the rules would not allow and never needs rule knowledge of its own.
 ## The seeded generator only breaks ties between equally good actions.
 
+## false while a tool plays a look-ahead: the bots in it do not postpone a turn. No rule switch.
+static var may_wait := true
 const MAX_ACTIONS_PER_TURN := 8
 ## A skill placement is only simulated if its footprint comes this close to some monster.
 const PLACEMENT_RADIUS := 1
@@ -30,7 +32,6 @@ const DANGER_ENEMY := 0.25
 const TRY_BONUS := 2.5
 ## Test switch `skill_stamina`: what Stamina left in the pool is worth (times the square root of the pool,
 ## so spending from a full pool costs little and the last point about a third of an HP).
-const STAMINA_KEPT := 3.0
 ## ai_veins (a draft of the AI, not a rule; a point of damage counts 10): a Dragon Vein the side owns, a
 ## solid prop on an owned vein (nobody can walk or be pushed onto it), each square the nearest enemy needs
 ## to reach an owned vein (up to VEIN_GUARD_CAP), and per square the nearest own monster is away from a
@@ -56,8 +57,7 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 		for to: Vector2i in steps:
 			out.append({"type": &"step", "to": to, "path": steps[to]["path"]})
 	var slots: Array = range(u.sheet.skills.size())
-	if BattleExperiment.has_basic_jab():
-		slots.append(Battle.BASIC_SLOT)             # the Basic Jab every monster has beside its kit
+	slots.append(Battle.BASIC_SLOT)             # the Basic Jab every monster has beside its kit
 	for slot: int in slots:
 		var s := b.skill_in_slot(u, slot)
 		if s == null or not s.is_active() or b.ap < s.cost() or b.usage_error(u, slot) != "":
@@ -71,7 +71,7 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 					out.append({"type": &"skill", "slot": slot, "to": to, "path": moves[to]["path"]})
 			BattleSkillDef.STRIKE:
 				var pushes: Array[Vector2i] = [Vector2i.ZERO]
-				if s.kin_effect and KinRules.strike(u.kin()).get("push", false):
+				if KinRules.of(s, u.kin()).get("push", false):
 					pushes = Board.CARDINAL
 				for origin in u.cells():
 					for d in s.shape_dirs():
@@ -115,10 +115,8 @@ static func _strike_touches(b: Battle, u: BattleUnit, s: BattleSkillDef, origin:
 	return false
 
 
-## ai_veins: a placement on or next to a Dragon Vein is worth a look (a prop that locks it, a wall).
+## A placement on or next to a Dragon Vein is worth a look (a prop that locks it, a wall).
 static func _near_vein(b: Battle, cells: Array[Vector2i]) -> bool:
-	if not BattleExperiment.ai_veins:
-		return false
 	for p in BattleExperiment.well_squares(b.board.size):
 		for c in cells:
 			if maxi(absi(c.x - p.x), absi(c.y - p.y)) <= 1:
@@ -145,8 +143,6 @@ static func evaluate(b: Battle, side: int) -> float:
 	var theirs := b.living(1 - side)
 	for u in mine:
 		score += 14.0 + 10.0 * u.hp
-		if BattleExperiment.skill_stamina:
-			score += STAMINA_KEPT * sqrt(float(u.stamina))   # the last points of the pool are worth most
 	for u in theirs:
 		score -= 14.0 + 10.0 * u.hp
 	# timed Surges threaten whoever stands in them; traps whoever stands next to them
@@ -186,15 +182,13 @@ static func evaluate(b: Battle, side: int) -> float:
 				continue
 			var cost := DANGER_LETHAL * (14.0 + 10.0 * u.hp) if threat >= u.hp else DANGER_HIT * threat
 			score += -cost if u.side == side else cost * DANGER_ENEMY
-	var vein_fight := BattleExperiment.ai_veins and BattleExperiment.vein_touch and not BattleExperiment.vein_charge
+	var vein_fight := BattleExperiment.vein_touch
 	if vein_fight:
 		score += _vein_score(b, side)
-	for p in (BattleExperiment.well_squares(b.board.size) if not vein_fight and (not BattleExperiment.vein_charge or BattleExperiment.vein_charge_late) else []):
+	for p in (BattleExperiment.well_squares(b.board.size) if not vein_fight else []):
 		var vein_side := b.board.at(p).owner_side if BattleExperiment.vein_touch else -1
 		var holder := b.any_unit_at(p)
-		if BattleExperiment.vein_charge:              # won by the first touch of the round, whoever stands there now
-			vein_side = -1 if b.board.at(p).charged else b.board.at(p).owner_side
-		elif holder != null:
+		if holder != null:
 			vein_side = holder.side
 		if vein_side >= 0:
 			score += WELL_VALUE if vein_side == side else -WELL_VALUE
@@ -349,13 +343,6 @@ static func _push_harm(b: Battle, u: BattleUnit, here: BoardCell, to: Vector2i) 
 ## Weight per point of pending timed Surge damage: higher if the target has no turn left
 ## before the detonation within this round's queue (it cannot walk out by itself).
 static func _timed_weight(b: Battle, s: PendingSurge, t: BattleUnit) -> float:
-	if BattleExperiment.surge_at_caster:       # it fires at its caster's next entry: can the target move before?
-		for i in range(b.queue_idx + 1, b.queue.size()):
-			if b.queue[i]["id"] == t.id:
-				return 2.5
-			if b.queue[i]["id"] == s.owner:
-				return 8.0
-		return 2.5
 	var last := b.queue_idx + s.turns_left + (1 if s.fresh else 0)
 	if last >= b.queue.size():
 		return 2.5                            # crosses the round end: the next order is unknown
@@ -443,7 +430,7 @@ static func decide(b: Battle, rng: RandomNumberGenerator, lookahead := false) ->
 			best = [a]
 		elif absf(gain - best_gain) <= 0.001 and not best.is_empty():
 			best.append(a)
-	if BattleExperiment.delay_turn and (best.is_empty() or best_gain < DELAY_GAIN) and b.check({"type": &"delay"}) == "" and _enemy_acts_later(b, u.side):
+	if may_wait and (best.is_empty() or best_gain < DELAY_GAIN) and b.check({"type": &"delay"}) == "" and _enemy_acts_later(b, u.side):
 		return {"type": &"delay"}
 	if best.is_empty() and BattleExperiment.ai_hunt:
 		best = _approach(b, u, base)
@@ -480,9 +467,9 @@ static func _add_follow_ups(b: Battle, u: BattleUnit, base: float, scored: Array
 		scored[i][0] = float(scored[i][0]) + follow
 
 
-## Test switch `ai_try_all`: what using a slotted skill for the first time in this battle is worth.
+## What using a slotted skill for the first time in this battle is worth: the opponent tries every skill of its kit.
 static func try_bonus(u: BattleUnit, a: Dictionary) -> float:
-	if not BattleExperiment.ai_try_all or a.get("type") != &"skill":
+	if a.get("type") != &"skill":
 		return 0.0
 	return 0.0 if u.used_battle.has(int(a["slot"])) or int(a["slot"]) == Battle.BASIC_SLOT else TRY_BONUS
 
@@ -565,10 +552,7 @@ static func _walk_to_enemy(b: Battle, side: int, from: Vector2i) -> int:
 	for e in b.living(1 - side):
 		best = mini(best, e.manhattan_to(from))
 	for p in BattleExperiment.well_squares(b.board.size):      # a free Wellspring is a goal too
-		if BattleExperiment.vein_charge:
-			if b.board.at(p).charged:
-				best = mini(best, absi(p.x - from.x) + absi(p.y - from.y) + 1)
-		elif b.any_unit_at(p) == null and (not BattleExperiment.vein_touch or b.board.at(p).owner_side != side):
+		if b.any_unit_at(p) == null and (not BattleExperiment.vein_touch or b.board.at(p).owner_side != side):
 			best = mini(best, absi(p.x - from.x) + absi(p.y - from.y) + 1)
 	return best
 

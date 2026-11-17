@@ -13,7 +13,7 @@ func _init(with_back: bool = false) -> void:
 	add_theme_constant_override("separation", 12)
 
 	_fullscreen = CheckButton.new()
-	_fullscreen.text = "Fullscreen (F11)"
+	_fullscreen.text = "Fullscreen (%s)" % UiTheme.key_text(&"toggle_fullscreen")
 	_fullscreen.toggled.connect(func(on: bool): GameSettings.set_fullscreen(on))
 	add_child(_fullscreen)
 

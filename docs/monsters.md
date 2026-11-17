@@ -24,7 +24,7 @@ INDIVIDUAL  stat shape · stats · rarity · stage + sub-tier + XP
 
 | Layer | Decides |
 |---|---|
-| **Kin** (body) | Strike effect, stat lean, skill access |
+| **Kin** (body) | stat lean, skill access |
 | **Themes** (description) | free flavour and visual identity; no mechanical type, no eligibility rule |
 | **Species** | its default kit and its learnable list |
 | **Stat shape** (individual) | how its points are spread |
@@ -40,7 +40,7 @@ INDIVIDUAL  stat shape · stats · rarity · stage + sub-tier + XP
 | Stat | Range | Function |
 |---|---|---|
 | HP | 1–10 | No defense stat. The highest single hit is 2, so a monster with 1 or 2 HP can fall to one hit: that is the buyer's choice |
-| Pace | 1.0–10.0 | Position in the turn queue; the whole number of its current value, at least 1, is the Stamina recovered per round. Counts in points of 0.1 |
+| Pace | 1.0–10.0 | Position in the turn queue and the order of the Dragon Veins it took; the whole number of its current value, at least 1, is the Stamina recovered per round and, above 1, the number of Waits per battle ([battle.md §2.3](battle.md#23-pace-and-the-queue)). Counts in points of 0.1 |
 | Stamina | 1–10 | Size of the pool that pays for movement skills; Step needs none |
 | Reach | 1–10 | How far away a skill may create ground, a zone or a prop, in orthogonal steps; Strikes do not use it. The range is wide because boards may grow in the game |
 | Turns per round | 1–3 | Extra turns from round 2 on |
@@ -103,16 +103,16 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 
 ## 3. Kins
 
-**Kin is what kind of creature it is.** It sets the Strike effect, the stat lean and skill access, never a damage multiplier. There is no weakness triangle, no element system and no attunement.
+**Kin is what kind of creature it is.** It sets the stat lean and skill access. It changes nothing a skill does: no Strike effect, no damage multiplier. There is no weakness triangle, no element system and no attunement.
 
-| Kin | Body fantasy | Stat lean | Strike effect ([skills.md §4](skills.md#4-shapes)) |
-|---|---|---|---|
-| **Beast** | tiger, ape, wolf | skirmisher, high Stamina | none (baseline) |
-| **Winged** | bird, moth, wyvern | swift, caster | retreats 1 square after the Strike |
-| **Scaled** | serpent, turtle, drake | bulwark, low Stamina | pushes in a chosen direction |
-| **Swarm** | insects, rats | swift (two turns) | props take double |
-| **Spirit** | ghost, wisp | low HP, high Pace | target −1 Pace point next round |
-| **Ancient** | golem, treant | max HP, one turn | not defined |
+| Kin | Body fantasy | Stat lean |
+|---|---|---|
+| **Beast** | tiger, ape, wolf | skirmisher, high Stamina |
+| **Winged** | bird, moth, wyvern | swift, caster |
+| **Scaled** | serpent, turtle, drake | bulwark, low Stamina |
+| **Swarm** | insects, rats | swift (two turns) |
+| **Spirit** | ghost, wisp | low HP, high Pace |
+| **Ancient** | golem, treant | max HP, one turn |
 
 The **species learnable list** sets concrete skill access. Neither learnable lists nor Kin access exist as content yet.
 

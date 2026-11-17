@@ -9,7 +9,7 @@ script = ExtResource("1_am")
 when = "enter"
 op = "zone"
 amount = 1
-zone = &"bog"
+zone = &"void_pull"
 zone_rounds = 2
 [resource]
 script = ExtResource("3_pd")
@@ -23,4 +23,4 @@ creatable_by_skill = false
 aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
 ground_left = &""
 color = Color(0.45, 0.55, 0.3, 1)
-description = "Button square (board experiment, 2026-11-15). Walkable; no damage. Collected: a Bog zone (slow 1, pull toward the rune square) for 2 rounds on the 8 squares around it; the rune is used up."
+description = "Button square (board experiment, 2026-11-15). Walkable; no damage. Collected: a Void Pull zone (pull toward the rune square) for 2 rounds on the 8 squares around it; the rune is used up."

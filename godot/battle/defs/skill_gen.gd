@@ -28,7 +28,7 @@ static func _pick(rng: RandomNumberGenerator, list: Array) -> Variant:
 ## The five kinds a kit template counts (KitDraw): what a skill is for.
 const KINDS: Array[String] = ["strike", "move", "zone", "ground", "prop"]
 ## Strike shapes a draw may take: [base shape, extensions].
-const STRIKE_SHAPES := [["jab", 0], ["jab", 1], ["jab", 2], ["pincer", 0], ["arc", 0], ["arc", 1], ["whirl", 0], ["cross", 0], ["storm", 0]]
+const STRIKE_SHAPES := [["jab", 0], ["jab", 1], ["pincer", 0], ["arc", 0], ["arc", 1], ["whirl", 0], ["cross", 0], ["storm", 0]]
 ## Base shapes around the user for a skill that creates: [base shape, extensions].
 const AROUND_SHAPES := [["jab", 1], ["jab", 2], ["arc", 0], ["whirl", 0], ["cross", 0], ["storm", 0]]
 ## Free shapes by number of squares (default arrangements; the anchor (0, 0) is one of the squares).
@@ -39,6 +39,26 @@ const FREE_SHAPES := {
 	4: [[Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)], [Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)]],
 	5: [[Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]],
 }
+## What a draw chooses from, as data: the overview's Generator table shows exactly these lists (a value that
+## stands twice is drawn twice as often).
+const STRIKE_DAMAGE := [0, 1, 1, 2, 2, 2]
+const STRIKE_PUSH := [true, true, false]
+const STRIKE_PROPS := [true, true, false]          # damages the props in its shape, as a part of its own
+const LEAVES := ["none", "none", "none", "ground", "zone"]     # what a Strike or a movement leaves behind
+const MOVE_PATHS := ["walk", "walk", "line", "line", "free"]
+const MOVE_RANGES := [2, 3, 3, 4, 5]
+const MOVE_DIAGONAL_ONE_IN := 4                    # one straight line in four may run diagonally
+const MOVE_IMPACT := ["none", "none", "ahead", "ring"]         # straight lines only
+const ZONE_WITH_GROUND := 0.25                     # a zone skill that also lays ground
+const GROUND_WITH_ZONE := 0.3                      # a ground skill that also leaves a zone
+const AROUND_CHANCE := 0.3                         # a ground skill on a base shape around the user
+const FREE_SQUARES_MAX := 5
+const ANCHOR_MODES := ["reach", "reach", "reach", "adjacent"]
+const SELF_VALUES := [1, 1, 2]
+const SELF_ROUNDS := [1, 2, 2, 3]
+const PROP_COUNTS := [1, 1, 1, 2, 3]
+const ZONE_ROUNDS := [1, 2, 2, 3]
+const USES := ["turn", "turn", "turn", "turn", "turn", "turn", "twice", "round", "battle"]
 ## Timed effects on the user a generated self buff may give (the experiments on AP and turns are left out).
 const SELF_TAGS: Array[String] = ["quicken", "haste", "extend", "refresh"]
 const MOVE_NAMES := {"walk": "Run", "line": "Leap", "free": "Glide"}
@@ -114,10 +134,11 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 			var drawn: Array = _pick(rng, STRIKE_SHAPES)
 			s.shape = drawn[0]
 			s.shape_extension = drawn[1]
-			s.strike_damage = _pick(rng, [0, 1, 1, 2, 2, 2])
-			s.strike_push = _pick(rng, [true, true, false])
-			var leaves: String = _pick(rng, ["none", "none", "none", "ground", "zone"])
-			if s.strike_damage == 0 and not s.strike_push and leaves == "none":
+			s.strike_damage = _pick(rng, STRIKE_DAMAGE)
+			s.strike_push = _pick(rng, STRIKE_PUSH)
+			s.strike_props = 1 if _pick(rng, STRIKE_PROPS) else 0
+			var leaves: String = _pick(rng, LEAVES)
+			if s.strike_damage == 0 and not s.strike_push and s.strike_props == 0 and leaves == "none":
 				s.strike_push = true                  # a Strike does something
 			if leaves == "ground":
 				ground = _pick(rng, ground_ids(content))
@@ -130,15 +151,16 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 				label = "Light " + label
 		"move":
 			s.kind = BattleSkillDef.MOVE
-			s.move_path = _pick(rng, ["walk", "walk", "line", "line", "free"])
+			s.move_path = _pick(rng, MOVE_PATHS)
 			if s.move_path != "walk":
 				s.blocked_by_objects = false
 				s.blocked_by_monsters = false
 				s.blocked_by_surges = false
 				s.ground_costs = false
-			s.move_range = _pick(rng, [2, 3, 3, 4, 5])
-			s.impact_push = _pick(rng, ["none", "none", "ahead", "ring"]) if s.move_path == "line" else "none"
-			var left: String = _pick(rng, ["none", "none", "none", "ground", "zone"])
+			s.move_range = _pick(rng, MOVE_RANGES)
+			s.move_diagonal = s.move_path == "line" and rng.randi_range(1, MOVE_DIAGONAL_ONE_IN) == 1     # one line in four may run diagonally
+			s.impact_push = _pick(rng, MOVE_IMPACT) if s.move_path == "line" else "none"
+			var left: String = _pick(rng, LEAVES)
 			if left == "ground":
 				ground = _pick(rng, ground_ids(content))
 			elif left == "zone":
@@ -147,34 +169,34 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 		"zone":
 			s.kind = BattleSkillDef.GROUND
 			zone = _pick(rng, zones[0])
-			if rng.randf() < 0.25:
+			if rng.randf() < ZONE_WITH_GROUND:
 				ground = _pick(rng, ground_ids(content))
-			label = _draw_shape(rng, s, 5, false)   # a free shape: the player turns it, and with it the push
+			label = _draw_shape(rng, s, FREE_SQUARES_MAX, false)   # a free shape: the player turns it, and with it the push
 		"ground":
 			s.kind = BattleSkillDef.GROUND
 			ground = _pick(rng, ground_ids(content))
-			if rng.randf() < 0.3:
+			if rng.randf() < GROUND_WITH_ZONE and not zones[1].is_empty():     # empty since a zone changes no stat
 				zone = _pick(rng, zones[1])
-			label = _draw_shape(rng, s, 5)
+			label = _draw_shape(rng, s, FREE_SQUARES_MAX)
 		"self":
 			s.kind = BattleSkillDef.BUFF
 			var fx := FieldEffect.new()
 			fx.tag = _pick(rng, SELF_TAGS)
-			fx.base = _pick(rng, [1, 1, 2])
+			fx.base = _pick(rng, SELF_VALUES)
 			fx.cap = fx.base
 			s.buff_effects.append(fx)
-			s.duration = _pick(rng, [1, 2, 2, 3])
+			s.duration = _pick(rng, SELF_ROUNDS)
 			label = "%s %d" % [String(fx.tag).capitalize(), fx.base]
 		"prop":
 			s.kind = BattleSkillDef.GROUND
 			var pid: StringName = _pick(rng, prop_ids(content))
-			var count: int = _pick(rng, [1, 1, 1, 2, 3])
+			var count: int = _pick(rng, PROP_COUNTS)
 			var fp: Array[Vector2i] = []
 			fp.assign(FREE_SHAPES[count][0])
 			s.footprint = fp
 			s.board_ops.append(BoardOp.make(BoardOp.CREATE_PROP, pid))
 			label = content.prop(pid).display_name + ("" if count == 1 else " ×%d" % count)
-	var rounds: int = _pick(rng, [1, 2, 2, 3])
+	var rounds: int = _pick(rng, ZONE_ROUNDS)
 	if zone != &"" and kind == "zone" and ground == &"":
 		s.kind = BattleSkillDef.ZONE                 # a zone skill proper: a push zone gets its direction from the player
 		s.zone = content.zone(zone)
@@ -197,7 +219,7 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 	elif kind != "prop" and kind != "self":
 		label = "%s %s" % [" + ".join(made), label]
 	# use: most skills once per turn; some twice, some once per round or battle
-	var use: String = _pick(rng, ["turn", "turn", "turn", "turn", "turn", "turn", "twice", "round", "battle"])
+	var use: String = _pick(rng, USES)
 	match use:
 		"twice":
 			s.usage_limit = 2
@@ -220,7 +242,7 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 ## Draws where a skill creates: a free shape of 1 to `most` squares at an anchor (within Reach or next to the
 ## user) or a base shape around the user. Returns the words for its name.
 static func _draw_shape(rng: RandomNumberGenerator, s: BattleSkillDef, most: int, around := true) -> String:
-	if around and rng.randf() < 0.3:
+	if around and rng.randf() < AROUND_CHANCE:
 		var drawn: Array = _pick(rng, AROUND_SHAPES)
 		s.shape = drawn[0]
 		s.shape_extension = drawn[1]
@@ -229,7 +251,7 @@ static func _draw_shape(rng: RandomNumberGenerator, s: BattleSkillDef, most: int
 	var fp: Array[Vector2i] = []
 	fp.assign(_pick(rng, FREE_SHAPES[count]))
 	s.footprint = fp
-	s.anchor_mode = _pick(rng, ["reach", "reach", "reach", "adjacent"])
+	s.anchor_mode = _pick(rng, ANCHOR_MODES)
 	return "%d%s" % [count, " near" if s.anchor_mode == "adjacent" else ""]
 
 
@@ -244,7 +266,7 @@ static func place_words(s: BattleSkillDef) -> String:
 		return "line from the user · %d sq" % s.shape_squares()
 	return "%s around the user · %d sq" % [s.shape_label(), s.shape_squares()]
 const PATHS := {"walk": "walks", "line": "straight line", "free": "any path", "teleport": "any free square"}
-const SELF_EFFECTS := {"quicken": "Pace +0.1", "haste": "Movement +1", "extend": "Reach +1", "refresh": "Stamina +1 at the round end", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)"}
+const SELF_EFFECTS := {"quicken": "Pace +0.1", "haste": "movement skills −1 Stamina", "extend": "Reach +1", "refresh": "Stamina +1 at the round end", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)"}
 const NO := "—"
 
 

@@ -8,4 +8,4 @@ id = &"dragon_vein"
 display_name = "Dragon Vein"
 immutable = true
 color = Color(0.2, 0.62, 0.72, 1)
-description = "Belongs to the side whose monster touched it last. At the end of a round it deals 1 damage to the nearest enemy of that side. Nothing changes this ground; no prop may stand on it."
+description = "Belongs to the side whose monster touched it last. At the end of a round it deals damage to the nearest enemy of that side. Nothing changes this ground; a prop may stand on it."

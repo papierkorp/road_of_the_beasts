@@ -23,7 +23,7 @@ const PRICES := {
 	"anchor:adjacent": 0.5, "anchor:user": 1.5, "damage": 19.5, "damage×extra": -0.5, "ground:blight": 12.5,
 	"ground:lava": 10.0, "ground:mossbed": 16.5, "ground:snare": 16.5, "ground:thornbed": 7.5, "ground×extra": 0.0,
 	"impact:ahead": 8.0, "impact:ring": 15.5, "kind:ground": -30.5, "kind:move": -1.0, "kind:prop": -30.5,
-	"kind:strike": -29.0, "kind:zone": -30.5, "leaves:move": -12.0, "leaves:strike": -12.5, "path:free": -5.0,
+	"kind:strike": -29.0, "kind:zone": -30.5, "leaves:move": -12.0, "leaves:strike": -12.5, "path:free": -5.0, "path:diagonal": 5.0,
 	"path:line": 0.5, "prop:ancestor_tablet": 17.0, "prop:bamboo_stand": 21.0, "prop:bronze_gong": 16.0, "prop:clay_urn": 23.5,
 	"prop:earth_wall": 16.0, "prop:ember_brazier": 21.5, "prop:pagoda_column": 17.0, "prop:paper_lantern": 15.5, "prop:peach_tree": 13.0,
 	"prop:spike_trap": 17.5, "prop:stone_lion": 13.0, "prop:storm_drum": 14.0, "prop:thorn_idol": 22.0, "prop:vortex_trap": 14.0,
@@ -60,6 +60,8 @@ static func features(content: BattleContent, s: BattleSkillDef) -> Dictionary:
 			covered = s.move_range if s.move_range > 0 else 3
 			f["kind:move"] = 1.0
 			f["path:%s" % s.move_path] = 1.0
+			if s.move_path == "line" and s.move_diagonal:
+				f["path:diagonal"] = 1.0
 			f["range+"] = float(covered - 2)
 			if s.impact_push != "none":
 				f["impact:%s" % s.impact_push] = 1.0
@@ -163,7 +165,7 @@ static func summary(content: BattleContent, s: BattleSkillDef) -> String:
 const LABELS := {
 	"kind:strike": "a Strike", "kind:move": "a movement", "damage": "damage", "damage×extra": "damage on every further square",
 	"push": "push", "push×extra": "push on every further square", "range+": "range above 2",
-	"impact:ahead": "pushes the monster ahead", "impact:ring": "pushes all neighbours", "path:line": "straight line over everything",
+	"impact:ahead": "pushes the monster ahead", "impact:ring": "pushes all neighbours", "path:line": "straight line over everything", "path:diagonal": "the line may run diagonally (not measured)",
 	"path:free": "any path over everything", "ground×extra": "ground on every further square", "zone×extra": "zone on every further square",
 	"prop×extra": "every further prop", "rounds+": "zone rounds above 1", "anchor:adjacent": "anchor next to the user",
 	"anchor:user": "shape around the user", "leaves:strike": "created by a Strike", "leaves:move": "left by a movement",

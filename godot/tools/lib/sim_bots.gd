@@ -51,7 +51,7 @@ static func play_turn(bot: String, b: Battle, rng: RandomNumberGenerator) -> voi
 		_tactic_turn(b, rng)
 		return
 	if bot == "game":
-		AiBrain.play_turn(b, b.turn_owner, rng, BattleExperiment.ai_veins)
+		AiBrain.play_turn(b, b.turn_owner, rng, true)
 		return
 	if bot == "greedy" or bot == "hunt" or bot == "careful" or bot == "wait" or bot == "chase":
 		AiBrain.play_turn(b, b.turn_owner, rng)
@@ -335,8 +335,8 @@ static func _top(lines: Array, key: String, n: int, taken: Dictionary) -> Array:
 ## has passed) and returns the position for `side`. `own_turns` own turns in between are played
 ## greedy too (the postponed turn).
 static func _rollout(sim: Battle, who: StringName, side: int, own_turns: int, rng: RandomNumberGenerator) -> float:
-	var delay := BattleExperiment.delay_turn
-	BattleExperiment.delay_turn = false               # the bots in the look-ahead do not postpone
+	var delay := AiBrain.may_wait
+	AiBrain.may_wait = false                          # the bots in the look-ahead do not postpone
 	var guard := sim.queue.size() + 1
 	while not sim.over and guard > 0:
 		guard -= 1
@@ -345,7 +345,7 @@ static func _rollout(sim: Battle, who: StringName, side: int, own_turns: int, rn
 				break
 			own_turns -= 1
 		AiBrain.play_turn(sim, sim.turn_owner, rng)
-	BattleExperiment.delay_turn = delay
+	AiBrain.may_wait = delay
 	return AiBrain.evaluate(sim, side)
 
 

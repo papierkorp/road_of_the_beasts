@@ -77,9 +77,9 @@ func _input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-## Second path that doesn't depend on the input map or on event routing: poll the keys directly.
+## Second path that doesn't depend on event routing: poll the action.
 func _process(_delta: float) -> void:
-	var down := Input.is_physical_key_pressed(KEY_F10) or Input.is_physical_key_pressed(KEY_QUOTELEFT)
+	var down := Input.is_action_pressed(&"toggle_cheats")
 	if down and not _key_was_down:
 		_toggle()
 	_key_was_down = down

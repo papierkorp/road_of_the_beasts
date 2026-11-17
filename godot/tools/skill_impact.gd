@@ -9,7 +9,7 @@ extends SceneTree
 ##       --ap random|fair      AP of the generated skills: 1–3 whatever they do (default; cost and strength
 ##                             independent) or what the draft price list gives them (SkillCalc.fair_ap)
 ##       --buffs 0|1           1: half of the monsters swap one skill for a generated self buff (default 0)
-##       --set a=1,b=2         test switches of BattleExperiment by name (stamina_base=1,trap_defuse=1)
+##       --set a=1,b=2         knows no switch any more
 ##       --drop 0|1            1 (default): a kit loses 0–2 of its six skills, so the worth of a skill
 ##                             as such can be read; 0: every kit is full
 ##   godot --headless --path godot -s res://tools/skill_impact.gd -- fit <out files…> [--no-ap] [--prices]
@@ -158,16 +158,9 @@ func _run(args: PackedStringArray) -> int:
 	var long := 0
 	var wins := [0, 0, 0]
 	BattleExperiment.reset()
-	BattleExperiment.ai_try_all = true
-	for pair in switches.split(",", false):
-		var key := pair.get_slice("=", 0)
-		if not key in ["stamina_base", "trap_defuse"]:
-			printerr("unknown switch '%s' (stamina_base, trap_defuse)" % key)
-			return 1
-		if key == "stamina_base":
-			BattleExperiment.stamina_base = int(pair.get_slice("=", 1))
-		else:
-			BattleExperiment.trap_defuse = int(pair.get_slice("=", 1)) != 0
+	if switches != "":
+		printerr("--set knows no switch any more ('%s')" % switches)
+		return 1
 	out.store_line("# skill_impact run: pairs %d seed %d bot %s mode %s ap %s drop %s buffs %s set %s content %s" % [
 		pairs, seed_value, bot, mode, "random" if ap == 0 else "fair", drop, buffs, switches if switches != "" else "-", content.fingerprint()])
 	for j in pairs:

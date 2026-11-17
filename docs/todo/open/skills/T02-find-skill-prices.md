@@ -18,5 +18,6 @@
   - **(d) Combinations** (a landing push with a hazard or a solid prop is worth most) are not in the price of a skill: leave them to kit building, or price them?
   - **(e) Not measured:** Stamina cost of a movement as a price part, the `experiment` self effects (AP +1, one more turn), slots 5 and 6, a second copy.
 - **Direction of 2026-11-17 (being tried, [T43](../../to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md)):** Stamina as a second price of Strikes (S034: 2 Stamina on top of 3 AP removes a skill from play), and Strikes without damage (S035). With the second, damage and the Strike shapes need new prices; the fit of S032 has to be repeated on the rules that stay.
+- **Form decided by the user (2026-11-17):** a calculator like the monster calculator; each of the three AP levels gets a range of points (less is always allowed). Open: the ranges, and the prices on the standard rules (build default: Strikes without damage). The existing skills are temporary and no measure for it.
 - **`internal_calc_cost`** in the Resource files holds numbers of the removed sheets for older records and −1 for everything since: decide whether the field stays.
 - **Done when:** the user has played, a price form is decided and written into Skills §5, and every skill of the game carries a price that play and runs support.

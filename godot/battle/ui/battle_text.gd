@@ -39,6 +39,136 @@ static func unit_name(b: Battle, id: StringName) -> String:
 
 # ---------- definitions ----------
 
+## What kind of skill it is, for the action bar and the card: a word, its colour and one line that says what
+## skills of that kind do. Kinds: strike · move · ground · zone · prop · self · passive.
+const KINDS := {
+	"strike": ["Strike", Color(0.93, 0.42, 0.38), "acts now on the squares of its shape, next to the user"],
+	"move": ["Move", Color(0.40, 0.68, 0.98), "moves the user; costs Stamina per square"],
+	"ground": ["Ground", Color(0.93, 0.62, 0.25), "lays ground on squares within Reach; ground acts at its moment"],
+	"zone": ["Zone", Color(0.70, 0.52, 0.95), "lays a zone within Reach; it moves a monster that ends its turn inside"],
+	"prop": ["Prop", Color(0.86, 0.86, 0.80), "creates a prop on free squares within Reach"],
+	"self": ["Self", Color(0.45, 0.85, 0.55), "an effect on the user"],
+	"passive": ["Passive", Color(0.45, 0.85, 0.55), "always on, costs nothing"],
+}
+
+
+static func kind_id(c: BattleContent, s: BattleSkillDef) -> String:
+	if s.kind == BattleSkillDef.PASSIVE:
+		return "passive"
+	return KitDraw.kind_of(c, s)
+
+
+static func kind_label(c: BattleContent, s: BattleSkillDef) -> String:
+	var k: Array = KINDS.get(kind_id(c, s), [])
+	return k[0] if not k.is_empty() else ""
+
+
+static func kind_color(c: BattleContent, s: BattleSkillDef) -> Color:
+	var k: Array = KINDS.get(kind_id(c, s), [])
+	return k[1] if not k.is_empty() else Color.WHITE
+
+
+## The first row of a skill card: ["Kind", "Strike"]. What the word means stands once in the glossary.
+static func kind_row(c: BattleContent, s: BattleSkillDef) -> Array:
+	var k: Array = KINDS.get(kind_id(c, s), [])
+	return ["Kind", k[0]] if not k.is_empty() else []
+
+
+## What a prop is and does in terms, one line each: its traits, then one line per thing it does ("destroyed: 1 dmg
+## around it"), then when it lapses. The terms are explained once in the glossary (GLOSSARY).
+const PROP_WHEN := {"destroyed": "destroyed", "hit": "hit", "enter": "entered", "round_end": "round end"}
+const PROP_WHERE := {"self": "own sq", "whirl": "next to it", "cross": "diagonal", "storm": "around it", "block": "on and around it"}
+static func prop_lines(c: BattleContent, d: PropDef, _hp := -1, until := 0) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var traits: PackedStringArray = ["trap" if d.is_trap() else ("solid" if d.solid else "walkable")]
+	if d.heavy:
+		traits.append("heavy")
+	if d.spiky:
+		traits.append("spiky")
+	out.append(SEP.join(traits))
+	for a in d.aftermath:
+		if a == null:
+			continue
+		var where: String = PROP_WHERE.get(a.shape, a.shape) + (" ×%d" % (a.extension + 1) if a.extension > 0 and a.shape != "self" else "")
+		var when: String = PROP_WHEN.get(a.when, a.when)
+		if a.when == Moment.ROUND_END and a.op == "damage":
+			when = "turn end"
+		var what := ""
+		match a.op:
+			"damage":
+				what = "%d dmg %s" % [a.amount, where]
+			"push":
+				what = "push 1 %s" % where
+			"pull":
+				what = "pull 1 %s" % where
+			"spawn":
+				var child := c.prop(a.spawn_prop)
+				what = "+ %s %s" % [child.display_name if child != null else String(a.spawn_prop), where]
+			"ground":
+				var laid := c.ground(a.ground)
+				what = "ground %s %s" % [laid.display_name if laid != null else String(a.ground), where]
+			"zone":
+				var made := c.zone(a.zone)
+				what = "zone %s %s · %d rd" % [made.display_name if made != null else String(a.zone), where, a.zone_rounds]
+		out.append("%s: %s" % [when, what])
+	if d.ground_left != &"" and d.ground_left != GroundDef.PLAIN:
+		var g := c.ground(d.ground_left)
+		out.append("destroyed: leaves %s" % (g.display_name if g != null else String(d.ground_left)))
+	if until > 0:
+		out.append("lapses after round %d" % until)
+	return out
+
+
+## Every term of the cards and the inspector, explained once: [[term, meaning], ...] in groups (a row with an
+## empty meaning is a heading). Shown by the pause menu (Glossary) and the key G.
+const GLOSSARY := [
+	["KINDS OF SKILLS", ""],
+	["Strike", "acts now on the squares of its shape, next to the user: pushes, and damages if the card says so"],
+	["Move", "moves the user; costs AP and 1 Stamina per square (Step: no Stamina)"],
+	["Ground", "lays ground on squares within Reach; ground acts at its moment and lasts 2 rounds"],
+	["Zone", "lays a zone within Reach; it moves a monster that ends its turn inside"],
+	["Prop", "creates a prop on free squares within Reach"],
+	["Self", "an effect on the user for some rounds"],
+	["Passive", "always on, costs nothing"],
+	["MOVEMENT", ""],
+	["walk", "square by square, orthogonally; every square on the way counts (ground, traps, Dragon Veins)"],
+	["straight line", "one direction; only the landing square counts, the squares on the way are not touched"],
+	["any path", "free path; only the landing square counts"],
+	["over props / monsters", "the movement passes them; without it they block the way"],
+	["also diagonal", "a straight line may run along a diagonal"],
+	["MOMENTS", ""],
+	["on entering / on leaving", "when a monster walks, is pushed or is pulled onto or off the square"],
+	["turn end", "when the monster standing there ends its own turn"],
+	["round end", "after the last turn of the round"],
+	["destroyed / hit / entered", "when a prop loses its last HP / loses HP and still stands / a monster comes onto a trap"],
+	["PROPS", ""],
+	["solid", "blocks the square and shields the square behind it from a Strike; a monster pushed into it takes 1 and so does the prop"],
+	["walkable", "blocks nothing; a monster can stand on it"],
+	["trap", "walkable; acts once when a monster enters it and is then used up"],
+	["heavy", "cannot be pushed or pulled and takes no collision damage"],
+	["spiky", "a monster pushed into it takes 2 instead of 1"],
+	["lapses", "a prop a skill created goes away without effect at the end of that round"],
+	["next to it / diagonal / around it", "the 4 neighbour squares / the 4 diagonal squares / all 8 squares"],
+	["ZONES", ""],
+	["push 1", "a monster that ends its turn inside is moved 1 square in the zone's direction (arrow)"],
+	["pull 1 to centre", "a monster that ends its turn inside is moved 1 square toward the zone's centre square; on the centre it stays"],
+	["BOARD", ""],
+	["collision", "a pushed monster that cannot move takes 1 (board edge, prop, monster); a monster in the way takes 1 too"],
+	["Dragon Vein", "belongs to the side that touched it last; at the round end it hits the nearest enemy of its owner"],
+	["surrounded", "two or more enemies on the eight neighbour squares at the round end: 1 damage"],
+	["Reach", "how far away a skill may lay ground, a zone or a prop, in orthogonal steps"],
+	["Stamina", "pays for movement skills; recovers by the whole number of Pace at the round end"],
+	["Wait", "postpone this turn to the end of the round; monsters that waited act in reverse order"],
+]
+
+
+static func glossary_text() -> String:
+	var lines: PackedStringArray = []
+	for row: Array in GLOSSARY:
+		lines.append(("\n" + row[0]) if row[1] == "" else "%s — %s" % [row[0], row[1]])
+	return "\n".join(lines).strip_edges()
+
+
 ## "slow 1, shield 2" (an effect that only reaches the air layer is marked).
 static func effects_text(effects: Array, level := 1) -> String:
 	var parts: PackedStringArray = []
@@ -83,7 +213,7 @@ static func prop_brief(c: BattleContent, d: PropDef) -> String:
 		var at: String = {"hit": "hit: ", "enter": "entered: ", "round_end": "round end: "}.get(a.when, "")
 		match a.op:
 			"damage":
-				parts.append("%sburst %d" % [at, a.amount])
+				parts.append("%s%d dmg %s" % [at if at != "" else "destroyed: ", a.amount, {"self": "to who enters", "whirl": "next to it", "cross": "diagonal", "storm": "around it", "block": "on and around it"}.get(a.shape, a.shape)])
 			"push":
 				parts.append("%spush %d" % [at, a.amount])
 			"pull":
@@ -134,18 +264,14 @@ static func _area(s: BattleSkillDef) -> String:
 	return "%d sq" % s.shape_squares() + SEP + s.shape_label() + " around the user"
 
 
-static func _usage(s: BattleSkillDef) -> String:
-	return {"once_per_round": SEP + "1/round", "once_per_battle": SEP + "1/battle"}.get(s.repetition, "")
-
-
-## An effect in plain words: "Movement −1", "Pace +0.2", "push 1".
+## An effect in plain words: "movement skills +1 Stamina", "Pace +0.2", "push 1".
 static func effect_words(e: FieldEffect, level := 1) -> String:
 	var v := e.value_at(level)
 	match e.tag:
 		FieldEffect.SLOW:
-			return "Movement −%d" % v
+			return "movement skills +%d Stamina" % v
 		FieldEffect.HASTE:
-			return "Movement +%d" % v
+			return "movement skills −%d Stamina" % v
 		FieldEffect.DRAIN_PACE:
 			return "Pace −%.1f" % (v * BattleStats.PACE_POINT)
 		FieldEffect.QUICKEN:
@@ -167,17 +293,16 @@ static func effect_words(e: FieldEffect, level := 1) -> String:
 	return e.text(level)
 
 
-## What a zone does: "while inside: Movement −1, Pace −0.2 · pulls 1 at cast and turn end".
-static func zone_brief(z: BattleZoneDef, level := 1) -> String:
+## What a zone does, short for a card: "while inside: movement skills +1 Stamina · turn end: pull 1 to centre".
+## `full` writes the push and the pull as whole sentences (the square inspector).
+static func zone_brief(z: BattleZoneDef, level := 1, full := false) -> String:
 	var inside: PackedStringArray = []
 	var moves: PackedStringArray = []
 	for e: FieldEffect in z.effects:
 		if e.tag == FieldEffect.PUSH:
-			moves.append("pushes 1 at cast and turn end")
+			moves.append("a monster that ends its turn inside is pushed 1 square in the zone's direction (arrow)" if full else "turn end: push 1")
 		elif e.tag == FieldEffect.PULL:
-			moves.append("pulls 1 at cast and turn end")
-		else:
-			inside.append(effect_words(e, level))
+			moves.append("a monster that ends its turn inside is pulled 1 square toward the zone's centre square (arrow); on the centre it stays" if full else "turn end: pull 1 to centre")
 	var parts: PackedStringArray = []
 	if not inside.is_empty():
 		parts.append("while inside: " + ", ".join(inside))
@@ -204,109 +329,134 @@ static func prop_words(c: BattleContent, d: PropDef) -> String:
 	return SEP.join(parts)
 
 
-## The lines for what a skill creates: per ground, zone or prop one line "creates …" and below it one
-## line with what that thing does (its definition, not the skill, holds that).
-static func created_rows(c: BattleContent, s: BattleSkillDef) -> Array:
+## The rows of what a skill creates, the same for every skill: per ground, zone or prop one row
+## [label, "zone Updraft · 1 rd"] and below it one row ["", what that thing does] (its definition, not the
+## skill, holds that). `label` is "Creates", or "Leaves" for what a movement leaves on its path.
+static func created_rows(c: BattleContent, s: BattleSkillDef, label := "Creates") -> Array:
 	var rows: Array = []
 	var rounds := BattleExperiment.ground_rounds
+	if s.kind == BattleSkillDef.ZONE and s.zone != null:
+		rows.append([label, "zone %s%s%d rd" % [s.zone.display_name, SEP, s.duration]])
+		rows.append(["", zone_brief(s.zone)])
 	for op: BoardOp in s.board_ops:
 		match op.op:
 			BoardOp.GROUND:
 				var g := c.ground(op.ground)
 				if g == null:
 					continue
-				rows.append(["", "creates ground: %s%s" % [g.display_name, (SEP + "%d rd" % rounds) if rounds > 0 else ""]])
-				rows.append(["", "  %s: %s" % [g.display_name, ground_words(g)]])
+				rows.append([label, "ground %s%s" % [g.display_name, (SEP + "%d rd" % rounds) if rounds > 0 else ""]])
+				rows.append(["", ground_words(g)])
 			BoardOp.CREATE_ZONE:
 				var z := c.zone(op.zone)
 				if z == null:
 					continue
-				rows.append(["", "creates zone: %s%s%d rd" % [z.display_name, SEP, op.zone_rounds]])
-				rows.append(["", "  %s: %s" % [z.display_name, zone_brief(z)]])
+				rows.append([label, "zone %s%s%d rd" % [z.display_name, SEP, op.zone_rounds]])
+				rows.append(["", zone_brief(z)])
 			BoardOp.CREATE_PROP:
 				var d := c.prop(op.prop)
 				if d == null:
 					continue
-				rows.append(["", "creates prop: %s" % d.display_name])
-				rows.append(["", "  %s: %s" % [d.display_name, prop_words(c, d)]])
-			BoardOp.RAISE_MOUNTAIN:
-				rows.append(["", "creates a Mountain (removed mechanic)"])
-			BoardOp.DESTROY_MOUNTAIN:
-				rows.append(["", "breaks Mountain (removed mechanic)"])
+				rows.append([label, "prop %s" % d.display_name])
+				rows.append(["", prop_words(c, d)])
 	return rows
 
 
-## The card of a skill: what the skill does itself in one line, then what it creates and what each
-## created ground, zone or prop does [["", text], ...]. Name and AP are on the button.
+## What a use costs: "1 AP", "1 AP · Stamina 1/sq", "2 AP · 1 Stamina · 1/round".
+static func cost_text(s: BattleSkillDef) -> String:
+	var parts: PackedStringArray = []
+	if s.cost() > 0 or not s.uses_stamina():
+		parts.append("%d AP" % s.cost())
+	if s.uses_stamina():
+		parts.append("Stamina 1/sq")
+	if s.usage_limit > 1:
+		parts.append("%d/turn" % s.usage_limit)
+	elif s.usage_limit <= 0:
+		parts.append("any number/turn")
+	var rep: String = {"once_per_round": "1/round", "once_per_battle": "1/battle"}.get(s.repetition, "")
+	if rep != "":
+		parts.append(rep)
+	return SEP.join(parts)
+
+
+## The card of a skill, the same build for every skill (user request 2026-11-17). Rows [label, text], always
+## in this order; a row that has nothing to say is left out:
+##   Cost     AP, Stamina, uses
+##   Where    the shape and where it lies, or the path and range of a movement
+##   Does     what the skill does itself: damage, push, the Kin effect, an effect on the user
+##   Creates  one row per ground, zone or prop, and below each what that thing does ("Leaves" for a movement)
 static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 	var rows: Array = []
+	if s.kind == BattleSkillDef.PASSIVE:
+		return [["Passive", s.description if s.description != "" else "passive"]]
+	rows.append(["Cost", cost_text(s)])
 	match s.kind:
 		BattleSkillDef.STRIKE:
-			var n := s.shape_squares()
+			rows.append(["Where", "%s%s%d sq next to the user" % [s.shape_label(), SEP, s.shape_squares()]])
 			var does: PackedStringArray = []
+			var kin_text: String = KinRules.of(s, kin).get("text", "") if kin >= 0 else ""
+			var push := "" if not s.strike_push else (kin_text if kin_text.begins_with("push") else "push 1")   # a Kin that chooses the direction says so
 			if s.push_only():
-				does.append("no dmg to monsters")
-			elif s.strike_damage > 0:
-				does.append("%d dmg" % s.strike_damage)
-			if s.strike_push:
-				does.append("push 1")
-			if does.is_empty():
-				does.append("no dmg, no push")
-			does.append("%d sq" % n)
-			rows.append(["", SEP.join(does)])
-			var extra: PackedStringArray = []
-			if s.kin_effect and kin >= 0 and KinRules.strike(kin).get("text", "") != "":
-				extra.append(KinRules.strike(kin)["text"])
+				if push != "":
+					does.append(push)
+				if s.hits_props():
+					does.append("%d dmg to props" % KinRules.STRIKE_PROP_DAMAGE)
+				elif push == "":
+					does.append("no dmg, no push")
+			else:
+				if s.strike_damage > 0:
+					does.append("%d dmg" % s.strike_damage)
+				if push != "":
+					does.append(push)
+				if does.is_empty():
+					does.append("no dmg, no push")
+				if s.strike_props == 0 and s.strike_damage > 0:
+					does.append("spares props")
+				elif s.strike_props == 1 and s.strike_damage == 0:
+					does.append("props: %d" % KinRules.STRIKE_PROP_DAMAGE)
+			if kin_text != "" and kin_text != push:
+				does.append(kin_text)
 			if s.self_retreat:
-				extra.append("then retreat 1")
-			if not extra.is_empty():
-				rows.append(["", SEP.join(extra)])
+				does.append("then retreat 1")
+			rows.append(["Does", SEP.join(does)])
 			rows.append_array(created_rows(c, s))
 		BattleSkillDef.SURGE, BattleSkillDef.TRAP:            # retired kinds, kept for archived records
-			var parts: PackedStringArray = ["%d dmg" % s.surge_damage, "trap" if s.kind == BattleSkillDef.TRAP else "in %d turns" % s.surge_turns, _area(s)]
+			rows.append(["Where", _area(s)])
+			var parts: PackedStringArray = ["%d dmg" % s.surge_damage, "trap" if s.kind == BattleSkillDef.TRAP else "in %d turns" % s.surge_turns]
 			if s.surge_displacement != "none":
 				parts.append(s.surge_displacement + " 1")
-			rows.append(["", SEP.join(parts)])
-			var after := ops_tokens(c, s.board_ops, true)
-			if not after.is_empty():
-				rows.append(["", SEP.join(after)])
-		BattleSkillDef.ZONE:
-			rows.append(["", _area(s)])
-			if s.zone != null:
-				rows.append(["", "creates zone: %s%s%d rd" % [s.zone.display_name, SEP, s.duration]])
-				rows.append(["", "  %s: %s" % [s.zone.display_name, zone_brief(s.zone)]])
-			rows.append_array(created_rows(c, s))
-		BattleSkillDef.GROUND:
-			rows.append(["", _area(s)])
+			parts.append_array(ops_tokens(c, s.board_ops, true))
+			rows.append(["Does", SEP.join(parts)])
+		BattleSkillDef.ZONE, BattleSkillDef.GROUND:
+			rows.append(["Where", _area(s)])
 			rows.append_array(created_rows(c, s))
 		BattleSkillDef.MOVE:
-			var parts: PackedStringArray = [PATHS.get(s.move_path, s.move_path),
-				("up to %d sq, Stamina per sq" % (s.fixed_distance if s.fixed_distance > 0 else (s.move_range if s.move_range > 0 else 3))) if BattleExperiment.stamina else ("Move" + ("" if s.distance_mod == 0 else " %d" % s.distance_mod))]
-			if s.blocked_by_height:
-				parts.append("not on Mountain")
+			var reach := s.fixed_distance if s.fixed_distance > 0 else (s.move_range if s.move_range > 0 else 3)
+			var where: PackedStringArray = [PATHS.get(s.move_path, s.move_path) + (" (also diagonal)" if s.move_path == "line" and s.move_diagonal else ""),
+				("up to %d sq" % reach) if BattleExperiment.stamina else ("Move" + ("" if s.distance_mod == 0 else " %d" % s.distance_mod))]
+			rows.append(["Where", SEP.join(where)])
+			var over: PackedStringArray = []
+			if not s.blocked_by_objects:
+				over.append("props")
+			if not s.blocked_by_monsters:
+				over.append("monsters")
+			rows.append(["Passes", ("over " + ", ".join(over) if not over.is_empty() else "nothing") + SEP + ("every sq on the way counts" if s.move_path == "walk" else "only the landing sq counts")])
 			if s.impact_push == "ahead":
-				parts.append("pushes the monster ahead")
+				rows.append(["Does", "pushes the monster ahead 1"])
 			elif s.impact_push == "ring":
-				parts.append("pushes all neighbours")
-			rows.append(["", SEP.join(parts)])
-			var behind := created_rows(c, s)
-			if not behind.is_empty():
-				behind[0][1] = String(behind[0][1]).replace("creates ", "leaves on its path: ")
-			rows.append_array(behind)
+				rows.append(["Does", "pushes all neighbours 1 on landing"])
+			rows.append_array(created_rows(c, s, "Leaves"))
 		BattleSkillDef.BUFF:
 			var fx: PackedStringArray = []
 			for e in s.buff_effects:
 				fx.append(effect_words(e))
-			rows.append(["", "self: %s%s%d rd" % [", ".join(fx), SEP, s.duration]])
-		BattleSkillDef.PASSIVE:
-			rows.append(["", s.description if s.description != "" else "passive"])
-	if not rows.is_empty() and s.is_active():
-		rows[0][1] += _usage(s)
+			rows.append(["Where", "the user"])
+			rows.append(["Does", "%s%s%d rd" % [", ".join(fx), SEP, s.duration]])
 	return rows
 
 
+## The card of Step, built like a skill card.
 static func step_rows() -> Array:
-	return [["", "walk" + SEP + ("Movement" if BattleExperiment.step_full_move else "1 sq")]]
+	return [["Cost", "%d AP%sany number/turn" % [BattleMoves.step_ap(), SEP]], ["Where", "walk" + SEP + "1 sq"]]
 
 
 ## The pre-battle datasheet: one stat line and the kit.
@@ -367,6 +517,29 @@ static func _prop_row(c: BattleContent, prop: BoardProp) -> Array:
 	return ["Prop", "%s %d/%d%s" % [prop.def.display_name, prop.hp, prop.def.hp, SEP + brief if brief != "" else ""]]
 
 
+## A prop on a square, for the inspector: its name and HP, then one row per sentence of `prop_lines`.
+static func prop_rows(c: BattleContent, prop: BoardProp) -> Array:
+	var rows: Array = [["Prop", "%s · HP %d/%d" % [prop.def.display_name, prop.hp, prop.def.hp]]]
+	for line in prop_lines(c, prop.def, prop.hp, prop.until):
+		rows.append(["", line])
+	return rows
+
+
+## Where a push or pull zone moves a monster that ends its turn on square `p`, with the compass direction:
+## "here: push north", "here: pull east (to centre)", "here: no pull (diagonal to the centre)". "" for other zones.
+static func zone_way(z: BoardZone, p: Vector2i) -> String:
+	var parts: PackedStringArray = []
+	if z.def.has_tag(FieldEffect.PUSH) and z.dir != Vector2i.ZERO:
+		parts.append("push %s" % dir_name(z.dir))
+	if z.def.has_tag(FieldEffect.PULL):
+		var d := BattleDisplace.pull_dir_cell(p, z.anchor)
+		if d != Vector2i.ZERO:
+			parts.append("pull %s (to centre)" % dir_name(d))
+		elif p != z.anchor:
+			parts.append("no pull (diagonal to the centre)")
+	return "here: " + ", ".join(parts) if not parts.is_empty() else ""
+
+
 ## What is notable about a square, one line per layer. An empty Plain square has nothing to say.
 static func cell_rows(b: Battle, p: Vector2i) -> Array:
 	var cell := b.board.at(p)
@@ -382,16 +555,20 @@ static func cell_rows(b: Battle, p: Vector2i) -> Array:
 		rows.append(["Ground", SEP.join(parts)])
 	if cell.zone != null:
 		var z := cell.zone
-		rows.append(["Zone", "%s %s%s%d rd%s%s" % [z.def.display_name, ROMAN[z.level - 1], SEP, z.duration, SEP, effects_text(z.def.effects, z.level)]])
+		rows.append(["Zone", "%s %s%s%d more round%s" % [z.def.display_name, ROMAN[z.level - 1], SEP, z.duration, "" if z.duration == 1 else "s"]])
+		rows.append(["", zone_brief(z.def, z.level) + (SEP + "centre" if z.def.has_tag(FieldEffect.PULL) and z.anchor == p else "")])
+		var way := zone_way(z, p)
+		if way != "":
+			rows.append(["", way])
 	if cell.surge >= 0:
 		var s := b.surge_by_id(cell.surge)
 		if s != null:
 			rows.append(["Surge", "%s%s%d dmg%s%s" % [s.skill.display_name, SEP, s.skill.surge_damage, SEP,
 				"trap" if s.orphaned else unit_name(b, s.owner)]])
 	if cell.prop != null:
-		rows.append(_prop_row(b.content, cell.prop))
+		rows.append_array(prop_rows(b.content, cell.prop))
 	if cell.air_prop != null and cell.air_prop != cell.prop:
-		rows.append(_prop_row(b.content, cell.air_prop))
+		rows.append_array(prop_rows(b.content, cell.air_prop))
 	return rows
 
 
@@ -546,7 +723,11 @@ static func brief(b: Battle, e: Dictionary) -> String:
 		&"defeated":
 			return "%s falls" % unit_name(b, e["who"])
 		&"displaced", &"retreated":
-			return "%s → %s" % [unit_name(b, e["who"]), pos(e["to"])]
+			var way := ""
+			if e.has("from"):                         # the compass direction of the move
+				var step: Vector2i = e["to"] - e["from"]
+				way = " %s" % dir_name(Vector2i(signi(step.x), signi(step.y)))
+			return "%s%s → %s" % [unit_name(b, e["who"]), way, pos(e["to"])]
 		&"retreat_failed":
 			return "%s cannot retreat" % unit_name(b, e["who"])
 		&"collision":
@@ -568,9 +749,7 @@ static func brief(b: Battle, e: Dictionary) -> String:
 		&"vein_taken":
 			return "%s takes a Dragon Vein" % unit_name(b, e["who"])
 		&"trap_sprung":
-			return "%s springs %s" % [unit_name(b, e["who"]), _prop_name(b, e["prop"])]
-		&"trap_defused":
-			return "%s buried under %s" % [_prop_name(b, e["prop"]), _prop_name(b, e["by"])]
+			return "%s springs %s" % [unit_name(b, e["who"]) if e.get("who", &"") != &"" else _prop_name(b, e["by"]), _prop_name(b, e["prop"])]
 		&"stamina_recovered":
 			return "%s Stamina +%d" % [unit_name(b, e["who"]), e["amount"]]
 		&"prop_placed":

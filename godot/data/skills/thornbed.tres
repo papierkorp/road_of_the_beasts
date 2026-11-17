@@ -8,18 +8,12 @@
 script = ExtResource("1")
 ground = &"thornbed"
 
-[sub_resource type="Resource" id="o2"]
-script = ExtResource("1")
-op = "create_zone"
-zone = &"slowing"
-zone_rounds = 2
-
 [resource]
 script = ExtResource("3")
 id = &"thornbed"
 display_name = "Thornbed"
 kind = "ground"
-description = "1 AP · 3 squares within Reach · creates ground: Thornbed · creates zone: Slowing."
+description = "1 AP · 3 squares within Reach · creates ground: Thornbed."
 status = "reshape 2026-11-13 (skill card, Skills §2); working draft, not priced"
 footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1)])
-board_ops = Array[ExtResource("1")]([SubResource("o1"), SubResource("o2")])
+board_ops = Array[ExtResource("1")]([SubResource("o1")])

@@ -7,6 +7,7 @@ extends CanvasLayer
 
 signal action_pressed(id: StringName)
 signal end_turn_pressed
+signal wait_pressed
 signal restart_pressed
 signal resume_pressed
 signal menu_pressed
@@ -22,7 +23,7 @@ const SKILL_COLUMNS := 3           # six kit slots (gdd_skills §1); a larger ki
 const BAR_ROOM := 196.0
 
 var _buttons := {}                 # id -> Button
-var _step_box: HBoxContainer
+var _step_box: BoxContainer
 var _skill_grid: GridContainer
 var _tamer_panel: PanelContainer
 var _tamer_grid: GridContainer
@@ -32,12 +33,15 @@ var _order: Label
 var _hint: Label
 var _ap: Label
 var _end_button: Button
+var _wait_button: Button
+var _glossary: AcceptDialog
 var _inspector_panel: PanelContainer
 var _inspector_title: Label
 var _inspector_grid: GridContainer
 var _inspector: Label
 var _card_panel: PanelContainer
 var _card_title: Label
+var _card_note: Label
 var _card_grid: GridContainer
 var _cards := {}                   # action id -> {title, rows}
 var _hover_id: StringName = &""
@@ -141,18 +145,29 @@ func _build_bar(root: Control) -> void:
 	_ap.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_ap.add_theme_color_override("font_color", UiTheme.ACCENT)
 	row.add_child(_ap)
-	_step_box = HBoxContainer.new()
+	_step_box = VBoxContainer.new()               # Step over the Basic Jab (user layout to try, 2026-11-17)
 	_step_box.add_theme_constant_override("separation", BAR_GAP)
 	row.add_child(_step_box)
 	row.add_child(_bar_gap())
 	_skill_grid = _bar_grid()
 	row.add_child(_skill_grid)
 	row.add_child(_bar_gap())
+	var end_box := VBoxContainer.new()            # End Turn over Wait (user layout to try, 2026-11-17)
+	end_box.add_theme_constant_override("separation", BAR_GAP)
+	row.add_child(end_box)
 	_end_button = Button.new()
 	_end_button.text = "End Turn"
-	_end_button.custom_minimum_size = Vector2(110, _tall().y)
+	_end_button.custom_minimum_size = Vector2(110, BAR_BUTTON.y)
+	_end_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_end_button.pressed.connect(func(): end_turn_pressed.emit())
-	row.add_child(_end_button)
+	end_box.add_child(_end_button)
+	_wait_button = Button.new()                   # test switch delay_turn: postpone this turn to the end of the round
+	_wait_button.text = "Wait"
+	_wait_button.tooltip_text = "Postpone this turn to the end of the round (once a round, before doing anything). Monsters that waited act in reverse order."
+	_wait_button.custom_minimum_size = Vector2(110, BAR_BUTTON.y)
+	_wait_button.visible = false
+	_wait_button.pressed.connect(func(): wait_pressed.emit())
+	end_box.add_child(_wait_button)
 	_tamer_panel = PanelContainer.new()
 	_tamer_panel.visible = false
 	bar.add_child(_tamer_panel)
@@ -205,7 +220,7 @@ func _sync_buttons(actions: Array) -> void:
 			_:
 				skills.append(a)
 	for a in steps:
-		_step_box.add_child(_action_button(a["id"], _tall()))
+		_step_box.add_child(_action_button(a["id"], _tall() if steps.size() == 1 else BAR_BUTTON))
 	_step_box.visible = not steps.is_empty()
 	_fill_columns(_skill_grid, skills, SKILL_COLUMNS)
 	_fill_columns(_tamer_grid, tamer, 1)
@@ -240,6 +255,25 @@ func _even_widths(grid: GridContainer) -> void:
 			widest = maxf(widest, (c as Button).get_minimum_size().x)
 	for c in grid.get_children():
 		(c as Control).custom_minimum_size.x = widest
+
+
+## A coloured stripe on the left edge and under the button says what kind of skill it is (BattleText.KINDS).
+func _kind_stripe(b: Button, color: Variant) -> void:
+	if color == null or b.has_meta("kind_color") and b.get_meta("kind_color") == color:
+		return
+	b.set_meta("kind_color", color)
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		var sb := b.get_theme_stylebox(state)
+		if not (sb is StyleBoxFlat):
+			continue
+		var own: StyleBoxFlat = sb.duplicate()
+		var c: Color = color
+		if state == "disabled":
+			c = c.darkened(0.45)
+		own.border_color = c
+		own.border_width_left = 6
+		own.border_width_bottom = 2
+		b.add_theme_stylebox_override(state, own)
 
 
 func _action_button(id: StringName, min_size: Vector2) -> Button:
@@ -282,6 +316,10 @@ func _build_inspector(root: Control) -> void:
 	_ignore(cbox)
 	_card_panel.add_child(cbox)
 	_card_title = _card_label(cbox, 18, UiTheme.ACCENT)
+	_card_note = _card_label(cbox, 14, Color(1.0, 0.42, 0.38))      # why the skill cannot be used now: over the whole width
+	_card_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_card_note.custom_minimum_size = Vector2(300, 0)
+	_card_note.visible = false
 	_card_grid = _make_grid(cbox)
 
 
@@ -332,6 +370,9 @@ func _show_card() -> void:
 	if card.is_empty():
 		return
 	_card_title.text = card["title"]
+	var note := String(card.get("note", ""))
+	_card_note.text = "✗ " + note
+	_card_note.visible = note != ""
 	_fill_grid(_card_grid, card["rows"])
 	_place_card.call_deferred()
 
@@ -417,6 +458,8 @@ func _build_pause(root: Control) -> void:
 	col.add_child(title)
 	col.add_child(_menu_button("Resume", func(): resume_pressed.emit()))
 	col.add_child(SettingsPanel.new(false))
+	col.add_child(_menu_button("Rules of this battle", _show_rules))
+	col.add_child(_menu_button("Glossary (%s)" % UiTheme.key_text(&"battle_glossary"), show_glossary))
 	col.add_child(_menu_button("Main Menu", func(): menu_pressed.emit()))
 
 
@@ -438,6 +481,15 @@ func show_pause(on: bool) -> void:
 	_pause.visible = on
 
 
+## The Wait button (test switch `delay_turn`): shown while the switch is on, enabled when the turn can be postponed.
+## `left` >= 0 (test switch `wait_by_pace`): the Waits the acting monster has left in this battle.
+func set_wait(shown: bool, enabled: bool, left: int = -1, why: String = "") -> void:
+	_wait_button.visible = shown
+	_wait_button.disabled = not enabled
+	_wait_button.text = "Wait" if left < 0 else "Wait (%d)" % left
+	_wait_button.tooltip_text = why
+
+
 ## One call per refresh. `actions`: [{id, text, enabled, selected, tooltip, group}] (group: step | skill | tamer).
 ## An empty `inspector` or `preview` hides that panel.
 ## `inspector`: {title, rows, text} — empty dictionary hides it.
@@ -456,6 +508,7 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 			continue
 		b.disabled = not a.get("enabled", false)
 		b.text = a.get("text", "")
+		_kind_stripe(b, a.get("color", null))
 		b.tooltip_text = a.get("tooltip", "")
 		b.modulate = UiTheme.ACCENT if a.get("selected", false) else Color.WHITE
 		if a.has("card"):
@@ -482,6 +535,45 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 		pos.x = minf(pos.x, vp.x - _preview_panel.size.x - 8.0)
 		pos.y = minf(pos.y, vp.y - _preview_panel.size.y - BAR_ROOM - 4.0)
 		_preview_panel.position = pos
+
+
+## The test switches of this battle and the build defaults (BattleExperiment.settings_lines), as a window
+## whose text can be selected and copied.
+func _show_rules() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Rules of this battle: test switches and build defaults"
+	dialog.process_mode = Node.PROCESS_MODE_ALWAYS
+	var text := TextEdit.new()
+	text.editable = false
+	text.text = "\n".join(BattleExperiment.settings_lines())
+	text.custom_minimum_size = Vector2(620, 520)
+	dialog.add_child(text)
+	add_child(dialog)
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered()
+
+
+## Every term of the cards and the inspector, explained once (BattleText.GLOSSARY). Pause menu and key G.
+func show_glossary() -> void:
+	if _glossary != null and is_instance_valid(_glossary):
+		_glossary.queue_free()
+		_glossary = null
+		return
+	var dialog := AcceptDialog.new()
+	dialog.title = "Glossary: what the words on cards and squares mean"
+	dialog.process_mode = Node.PROCESS_MODE_ALWAYS
+	var text := TextEdit.new()
+	text.editable = false
+	text.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	text.text = BattleText.glossary_text()
+	text.custom_minimum_size = Vector2(760, 600)
+	dialog.add_child(text)
+	add_child(dialog)
+	_glossary = dialog
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered()
 
 
 ## Adds a fallen monster to the row above the log: a button that opens everything that changed its HP.

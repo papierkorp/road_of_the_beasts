@@ -16,6 +16,7 @@
 - **Validierung:** Dokumentprüfung, Rechenproben, Tests und Bot-Läufe sind keine Gameplay-Validierung.
 - **Daten:** genau ein Datenordner `godot/data/` mit einem Unterordner je Art; keine zweiten Skill-, Kit- oder Preis-Sätze; keine Python- oder JSON-Dateien im Projekt. Nicht mehr Gebrauchtes löschen oder auf `archived` setzen.
 - **CPU:** volle Auslastung ist erlaubt.
+- **Tasten:** Jede Taste und jeder Mausknopf ist eine Aktion in der Input Map (`godot/project.godot`). Im Code nie Tasten abfragen (`KEY_…`, `MOUSE_BUTTON_…`), sondern Aktionen; Tastennamen in Texten kommen aus `UiTheme.key_text(aktion)`.
 - **Werkzeuge:** [godot/tools/README.md](godot/tools/README.md); Build und Schalter: [godot/README.md](godot/README.md).
 
 ## Dokumente

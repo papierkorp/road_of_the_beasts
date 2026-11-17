@@ -4,7 +4,8 @@ extends Node3D
 ## props, zone/Surge/highlight overlays, direction arrows and small animations.
 ## It only reads the battle state and never decides a rule (gdd_battle §7.1).
 ##
-## Camera: Q / E rotate by 90°, mouse wheel zooms, middle-mouse drag orbits freely.
+## Camera: Q / E rotate by 90°, mouse wheel zooms, middle-mouse drag orbits freely (left and right turn it; with
+## the view switch `free_camera` up and down tilt it between 15° and 88°).
 
 const CELL := 1.0
 const TILE := 0.92
@@ -29,6 +30,11 @@ var _pieces := {}              # unit id -> Node3D
 var _pivot: Node3D
 var _yaw := 45.0
 var _yaw_target := 45.0
+## Tilt of the camera in degrees above the board. View switch `free_camera`: a middle-mouse drag changes it.
+const PITCH_MIN := 15.0
+const PITCH_MAX := 88.0
+var _pitch := PITCH
+var _pitch_target := PITCH
 var _zoom := 8.5
 var _zoom_target := 8.5
 ## Screen height (in viewport units) the HUD's bar takes at the bottom edge: the board is centred in the room above it.
@@ -44,6 +50,7 @@ func build(p_battle: Battle) -> void:
 	_build_base()
 	for cell in battle.board.cells:
 		_tiles[cell.pos] = _make_tile(cell.pos)
+	_make_compass()
 	for id in battle.roster:
 		_pieces[id] = _make_monster(battle.units[id])
 	refresh()
@@ -158,18 +165,19 @@ func set_highlights(map: Dictionary, arrows: Dictionary = {}) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if camera == null:
 		return
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_zoom_target = clampf(_zoom_target - 0.6, ZOOM_MIN, ZOOM_MAX)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_zoom_target = clampf(_zoom_target + 0.6, ZOOM_MIN, ZOOM_MAX)
-	elif event is InputEventMouseMotion and (event.button_mask & MOUSE_BUTTON_MASK_MIDDLE) != 0:
+	# keys and buttons are actions of the Input Map (Project Settings)
+	if event.is_action_pressed(&"camera_zoom_in"):
+		_zoom_target = clampf(_zoom_target - 0.6, ZOOM_MIN, ZOOM_MAX)
+	elif event.is_action_pressed(&"camera_zoom_out"):
+		_zoom_target = clampf(_zoom_target + 0.6, ZOOM_MIN, ZOOM_MAX)
+	elif event is InputEventMouseMotion and Input.is_action_pressed(&"camera_drag"):
 		_yaw_target -= event.relative.x * 0.3
-	elif event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_Q:
-			_yaw_target -= 90.0
-		elif event.keycode == KEY_E:
-			_yaw_target += 90.0
+		if BattleExperiment.free_camera:
+			_pitch_target = clampf(_pitch_target + event.relative.y * 0.3, PITCH_MIN, PITCH_MAX)
+	elif event.is_action_pressed(&"camera_turn_left"):
+		_yaw_target -= 90.0
+	elif event.is_action_pressed(&"camera_turn_right"):
+		_yaw_target += 90.0
 
 
 func _process(delta: float) -> void:
@@ -178,6 +186,11 @@ func _process(delta: float) -> void:
 	_time += delta
 	var k := 1.0 - exp(-10.0 * delta)
 	_yaw = lerpf(_yaw, _yaw_target, k)
+	if not BattleExperiment.free_camera:
+		_pitch_target = PITCH
+	_pitch = lerpf(_pitch, _pitch_target, k)
+	camera.position = Vector3(0, 34.0 * sin(deg_to_rad(_pitch)), 34.0 * cos(deg_to_rad(_pitch)))
+	camera.rotation_degrees = Vector3(-_pitch, 0, 0)
 	_zoom = lerpf(_zoom, _zoom_target, k)
 	_pivot.rotation_degrees.y = _yaw
 	camera.size = _zoom
@@ -262,6 +275,23 @@ func _make_label(parent: Node3D, size_px: int = 26) -> Label3D:
 	l.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(l)
 	return l
+
+
+## A compass around the board (user request 2026-11-17): N, E, S and W beside the middle of each edge, in the
+## directions the texts name (BattleText.DIR_NAMES: north = y − 1, east = x + 1).
+func _make_compass() -> void:
+	var size := battle.board.size
+	var mid := (size - 1) / 2.0
+	var half := (size - 1) / 2.0
+	for entry: Array in [["N", Vector2(mid, -1.1)], ["S", Vector2(mid, size + 0.1)], ["W", Vector2(-1.1, mid)], ["E", Vector2(size + 0.1, mid)]]:
+		var root := Node3D.new()
+		var at: Vector2 = entry[1]
+		root.position = Vector3((at.x - half) * CELL, 0.05, (at.y - half) * CELL)
+		add_child(root)
+		var l := _make_label(root, 28)                # quiet: grey, no strong outline (user, 2026-11-17)
+		l.text = entry[0]
+		l.modulate = Color(0.72, 0.76, 0.82, 0.8)
+		l.outline_modulate = Color(0, 0, 0, 0.35)
 
 
 func _make_tile(p: Vector2i) -> Dictionary:
@@ -378,8 +408,6 @@ func _ground_color(cell: BoardCell) -> Color:
 	base = base.darkened(0.45)
 	if g != null and g.max_level > 1 and cell.level > 1:
 		base = base.lightened(0.18)
-	if BattleExperiment.vein_charge and cell.ground == GroundDef.WELL and not cell.charged:
-		base = base.darkened(0.55)                    # test switch: a discharged Dragon Vein
 	if _vein_owned(cell):                              # a Dragon Vein shows the colour of the side that owns it
 		base = base.lerp(SIDE_COLORS[cell.owner_side], 0.6)
 	if cell.is_mountain():
@@ -389,7 +417,7 @@ func _ground_color(cell: BoardCell) -> Color:
 
 ## Last touch owns (`vein_touch`): the side a Dragon Vein belongs to at the moment, if any.
 func _vein_owned(cell: BoardCell) -> bool:
-	return cell.ground == GroundDef.WELL and BattleExperiment.vein_touch and not BattleExperiment.vein_charge and cell.owner_side >= 0
+	return cell.ground == GroundDef.WELL and BattleExperiment.vein_touch and cell.owner_side >= 0
 
 
 func _set_overlay(ov: Dictionary, y: float, color: Color, shown: bool) -> void:
@@ -466,13 +494,15 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 		if surge != null:
 			lines += "⚠ %s · %d\n" % [surge.skill.display_name, surge.skill.surge_damage]
 	if cell.zone != null:
-		lines += "%s %s · %dr\n" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1], cell.zone.duration]
+		lines += "%s %s · %dr%s\n" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1], cell.zone.duration,
+			" · centre" if cell.zone.def.has_tag(FieldEffect.PULL) and cell.zone.anchor == cell.pos else ""]
 	if g != null and cell.ground != GroundDef.PLAIN:
 		lines += g.label(cell.level) + "\n"
-	if BattleExperiment.vein_charge and cell.ground == GroundDef.WELL:
-		lines += ("● charged" if cell.charged else ("○ side %d" % (cell.owner_side + 1) if BattleExperiment.vein_charge_late else "○ empty")) + "\n"
-	if cell.ground == GroundDef.WELL and BattleExperiment.vein_touch and not BattleExperiment.vein_charge:
+	if cell.ground == GroundDef.WELL and BattleExperiment.vein_touch:
 		lines += ("◆ yours" if cell.owner_side == 0 else ("◆ enemy" if cell.owner_side == 1 else "◇ unclaimed")) + "\n"
+		var taker: BattleUnit = battle.units.get(cell.owner_unit) if battle != null else null
+		if cell.owner_side >= 0 and taker != null and taker.is_alive():
+			lines += "%s · Pace %.1f\n" % [taker.display_name(), BattleStats.pace(battle, taker)]
 	var label: Label3D = t["label"]
 	label.modulate = SIDE_COLORS[cell.owner_side].lerp(Color.WHITE, 0.5) if _vein_owned(cell) else Color.WHITE
 	label.text = lines.strip_edges()
