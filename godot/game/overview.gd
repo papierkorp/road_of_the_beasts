@@ -46,7 +46,6 @@ const TABLES := {
 		"columns": [
 			["name", "Monster", 190, false, false],
 			["kin", "Kin", 90, false, false],
-			["strike", "Kin Strike", 110, false, false],
 			["hp", "HP", 50, false, true],
 			["pace", "Pace", 60, false, true],
 			["move", "Stamina", 80, false, true],
@@ -177,7 +176,6 @@ static func monster_rows(c: BattleContent) -> Array[Dictionary]:
 			"id": String(id),
 			"name": m.display_name,
 			"kin": MonsterDef.kin_name(m.kin),
-			"strike": m.strike_name(),
 			"hp": m.hp,
 			"pace": m.pace,
 			"move": m.move,
@@ -263,7 +261,7 @@ static func generator_rows(c: BattleContent) -> Array[Dictionary]:
 	add.call("Strike", "Shape", shapes.call(SkillGen.STRIKE_SHAPES))
 	add.call("Strike", "Damage to monsters", "none: a Strike only pushes; what its card names as damage hits props")
 	add.call("Strike", "Push 1", yes_no.call(SkillGen.STRIKE_PUSH))
-	add.call("Strike", "Damages props", yes_no.call(SkillGen.STRIKE_PROPS) + " (%d damage)" % KinRules.STRIKE_PROP_DAMAGE)
+	add.call("Strike", "Damages props", yes_no.call(SkillGen.STRIKE_PROPS) + " (%d damage)" % BattleSkillDef.STRIKE_PROP_DAMAGE)
 	add.call("Strike", "Leaves on the struck squares", left)
 
 	var paths: PackedStringArray = []

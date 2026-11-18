@@ -214,14 +214,14 @@ func test_with_a_calm_round_nothing_deals_damage_before_round_two() -> void:
 	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "skills": ["strike_jab"]}], [1, Vector2i(3, 2), {"pace": 1.5}]])
 	BattleExperiment.damage_from_round = 2
 	b.begin()
-	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 3)})).is_true()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.UP, "origin": Vector2i(3, 3)})).is_true()
 	assert_int(H.unit(b, 1).hp).is_equal(H.unit(b, 1).max_hp)
 	_end_round(b)
 	assert_int(b.round_number).is_equal(2)
 	var foe := H.unit(b, 1)
 	var dir := foe.pos - H.unit(b, 0).pos
 	if absi(dir.x) + absi(dir.y) == 1:
-		assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": dir, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 3)})).is_true()
+		assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": dir, "origin": Vector2i(3, 3)})).is_true()
 		assert_int(foe.hp).is_less(foe.max_hp)
 
 
@@ -247,7 +247,7 @@ func test_binding_vines_hurt_on_leaving_also_when_pushed() -> void:
 	b.set_ground(Vector2i(3, 5), &"snare")
 	b.set_ground(Vector2i(0, 0), &"snare")
 	b.begin()
-	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 6)})).is_true()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "origin": Vector2i(3, 6)})).is_true()
 	assert_int(H.unit(b, 1).hp).is_equal(6)                    # 2 for being pushed off the vines
 	b.end_turn()
 	b.end_turn()
@@ -263,7 +263,7 @@ func test_a_movement_skill_can_leave_ground_on_its_path_and_a_strike_on_its_squa
 	for x in [1, 2, 3]:
 		assert_that(b.board.at(Vector2i(x, 6)).ground).is_equal(&"lava")
 	assert_that(b.board.at(Vector2i(4, 6)).ground).is_equal(&"plain")      # not under the monster itself
-	assert_bool(b.apply({"type": &"skill", "slot": 1, "dir": H.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(4, 6)})).is_true()
+	assert_bool(b.apply({"type": &"skill", "slot": 1, "dir": H.UP, "origin": Vector2i(4, 6)})).is_true()
 	assert_that(b.board.at(Vector2i(4, 5)).ground).is_equal(&"thornbed")
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(4, 4))
 
@@ -335,7 +335,7 @@ func test_a_blocking_monster_takes_collision_damage_too() -> void:
 	var b := H.battle([[0, Vector2i(3, 6), {"pace": 1.9, "ap": 3, "skills": ["strike_jab"]}], [1, Vector2i(3, 5), {"pace": 1.5, "hp": 8}],
 		[1, Vector2i(3, 4), {"pace": 1.4, "hp": 8}]])
 	b.begin()
-	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 6)})).is_true()
+	assert_bool(b.apply({"type": &"skill", "slot": 0, "dir": H.UP, "origin": Vector2i(3, 6)})).is_true()
 	assert_int(H.unit(b, 1).hp).is_equal(7)                                   # 1 for the collision
 	assert_int(H.unit(b, 2).hp).is_equal(7)
 

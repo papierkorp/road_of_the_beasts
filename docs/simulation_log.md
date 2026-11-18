@@ -54,11 +54,329 @@ Kit sets of the entries below (S019 and later). Entries S001–S018 measured rul
 
 # Entries
 
+## S045 · 2026-11-18 · Heal (the action called Mend up to S044) for 1 AP and 3 Stamina: 2 HP against 1 HP
+
+**State:** main, base `66ece96` dirty (the Heal switches of [T47](todo/done/battle/T47-heal-spend-stamina-to-heal.md) and the entries S040–S044 uncommitted); content `2026-11-15.5`, kit set `93e3f45f139d`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 388 cases, the two known non-battle failures. The action and its switches were renamed before this run: `mend_spend` is `heal_spend`, `stamina_mend` is `heal_burn`.
+
+**Runs:** as S042 (one process per battle, seeds 1–320, `--variant x.random_monsters=1,x.fresh_skills=1,x.kit_seed=<seed>,x.damage_from_round=1,tpr1,x.heal_spend=3,x.heal_amount=2`, bot greedy on both sides, 7×7 with three Dragon Veins, not side-swapped). Battle *n* has the same board, monsters and kits in all rows; the first two rows are those of S042 and S044, not new runs. No battle timed out.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Defeats / battle | Heal uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| without Heal (S042) | 320 | 161 / 159 / 0 / 0 | 3.53 | 26 (8 %) | 7 (2 %) | 0 | 7 | 1.90 | 4.6 | 2.3 | 8.9 | 3.0 | 9.5 | 1.8 | 30.1 | 4.09 | — |
+| 1 HP for 3 Stamina and 1 AP (S044) | 320 | 163 / 157 / 0 / 0 | 3.65 | 19 (6 %) | 15 (5 %) | 1 | 8 | 1.95 | 4.6 | 2.3 | 9.2 | 2.9 | 10.2 | 1.9 | 31.1 | 3.96 | 1.82 |
+| 2 HP for 3 Stamina and 1 AP | 320 | 162 / 158 / 0 / 0 | 3.83 | 15 (5 %) | 17 (5 %) | 1 | 8 | 2.00 | 4.7 | 2.4 | 9.6 | 3.0 | 11.1 | 2.1 | 32.9 | 3.88 | 2.65 |
+
+**Battles by the round they ended in (2 HP):** 1: 1 · 2: 14 · 3: 117 · 4: 119 · 5: 52 · 6: 9 · 7: 7 · 8: 1.
+
+**Win rate of a monster's side by its stat value (monsters with that value; every monster costs 60 points):**
+
+| Stat value | without Heal | 1 HP | 2 HP |
+|---|---|---|---|
+| HP 3 (129) | 35 % | 38 % | 35 % |
+| HP 4 (287) | 48 % | 46 % | 47 % |
+| HP 5 (495) | 47 % | 49 % | 49 % |
+| HP 6 (447) | 51 % | 51 % | 52 % |
+| HP 7 (361) | 57 % | 54 % | 56 % |
+| HP 8 (151) | 54 % | 52 % | 50 % |
+| HP 9 (44) | 55 % | 73 % | 61 % |
+| Stamina 2 (226) | 53 % | 50 % | 46 % |
+| Stamina 3 (416) | 48 % | 49 % | 48 % |
+| Stamina 4 (489) | 49 % | 49 % | 49 % |
+| Stamina 5 (419) | 53 % | 51 % | 53 % |
+| Stamina 6 (214) | 49 % | 50 % | 53 % |
+| Stamina 7 (100) | 48 % | 53 % | 47 % |
+| Stamina 8 (56) | 50 % | 55 % | 55 % |
+| Reach 2 (801) | 54 % | 53 % | 52 % |
+| Reach 3 (721) | 50 % | 50 % | 51 % |
+| Reach 4 (398) | 43 % | 44 % | 44 % |
+| one turn (1465) | 51 % | 51 % | 51 % |
+| two turns (455) | 48 % | 45 % | 46 % |
+| AP 2 (940) | 49 % | 48 % | 48 % |
+| AP 3 (805) | 52 % | 53 % | 54 % |
+| AP 4 (175) | 47 % | 47 % | 43 % |
+| Pace 1.0–1.9 (1782) | 50 % | 50 % | 50 % |
+| Pace 2.0 and more (138) | 44 % | 48 % | 52 % |
+
+**Observations** (indications; bots on both sides; about ±4 points on a value with 400 monsters, ±9 with 100, ±13 with 56; matched rows):
+
+- *2 HP per Heal lengthens more:* 3.83 against 3.65 rounds (3.53 without), 15 against 19 battles under 3 rounds, 17 against 15 over 5; inside the length target. The bots heal 2.65 against 1.82 times per battle, at the same cost: the larger gain beats other actions more often.
+- *Stamina leans a little the way the idea wants:* Stamina 2, which can never heal, reads 46 % (53 % without Heal, 50 % with 1 HP), Stamina 5 and 6 read 53 %, Stamina 8 reads 55 %; Stamina 7 reads 47 %. Pace 2.0 and more reads 52 % (44 % without, 48 % with 1 HP). Every step is inside the noise; the direction is the same in S044 and here.
+- *The HP slope is as steep as without Heal:* 35 % at HP 3, 56 % at HP 7: 2 HP back help the sturdy as much as the frail.
+- *More damage is dealt:* 32.9 against 30.1 per battle, Dragon Veins 11.1 against 9.5; defeats per battle 3.88 against 4.09.
+
+**Follow-up:** T47, T03, T40. No rule and no value was changed by this entry.
+
+320 battles in 320 runs.
+
+## S044 · 2026-11-18 · Mend for 1 AP and 3 Stamina from the pool, nothing burned
+
+**State:** main, base `66ece96` dirty (the Mend switches of [T47](todo/done/battle/T47-heal-spend-stamina-to-heal.md) and the entries S040–S043 uncommitted); content `2026-11-15.5`, kit set `93e3f45f139d`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 387 cases, the two known non-battle failures.
+
+**Runs:** as S042 (one process per battle, seeds 1–320, `--variant x.random_monsters=1,x.fresh_skills=1,x.kit_seed=<seed>,x.damage_from_round=1,tpr1,x.mend_spend=3`, bot greedy on both sides, 7×7 with three Dragon Veins, not side-swapped). Battle *n* has the same board, monsters and kits in all rows; the first two rows are those of S042, not new runs. No battle timed out.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Defeats / battle | Mend uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| without Mend (S042) | 320 | 161 / 159 / 0 / 0 | 3.53 | 26 (8 %) | 7 (2 %) | 0 | 7 | 1.90 | 4.6 | 2.3 | 8.9 | 3.0 | 9.5 | 1.8 | 30.1 | 4.09 | — |
+| burn 2 maximum Stamina, 1 AP (S042) | 320 | 163 / 157 / 0 / 0 | 3.66 | 20 (6 %) | 13 (4 %) | 1 | 9 | 1.92 | 4.7 | 2.3 | 9.1 | 3.0 | 10.1 | 1.9 | 31.1 | 3.98 | 1.95 |
+| spend 3 Stamina, 1 AP, nothing burned | 320 | 163 / 157 / 0 / 0 | 3.65 | 19 (6 %) | 15 (5 %) | 1 | 8 | 1.95 | 4.6 | 2.3 | 9.2 | 2.9 | 10.2 | 1.9 | 31.1 | 3.96 | 1.82 |
+
+**Battles by the round they ended in (spend 3 Stamina):** 1: 2 · 2: 17 · 3: 143 · 4: 109 · 5: 34 · 6: 10 · 7: 4 · 8: 1.
+
+**Win rate of a monster's side by its stat value (monsters with that value; every monster costs 60 points):**
+
+| Stat value | without Mend | burn 2, 1 AP | spend 3, 1 AP |
+|---|---|---|---|
+| HP 3 (129) | 35 % | 39 % | 38 % |
+| HP 4 (287) | 48 % | 46 % | 46 % |
+| HP 5 (495) | 47 % | 50 % | 49 % |
+| HP 6 (447) | 51 % | 49 % | 51 % |
+| HP 7 (361) | 57 % | 57 % | 54 % |
+| HP 8 (151) | 54 % | 50 % | 52 % |
+| HP 9 (44) | 55 % | 57 % | 73 % |
+| Stamina 2 (226) | 53 % | 49 % | 50 % |
+| Stamina 3 (416) | 48 % | 50 % | 49 % |
+| Stamina 4 (489) | 49 % | 48 % | 49 % |
+| Stamina 5 (419) | 53 % | 54 % | 51 % |
+| Stamina 6 (214) | 49 % | 49 % | 50 % |
+| Stamina 7 (100) | 48 % | 47 % | 53 % |
+| Stamina 8 (56) | 50 % | 50 % | 55 % |
+| Reach 2 (801) | 54 % | 52 % | 53 % |
+| Reach 3 (721) | 50 % | 50 % | 50 % |
+| Reach 4 (398) | 43 % | 45 % | 44 % |
+| one turn (1465) | 51 % | 51 % | 51 % |
+| two turns (455) | 48 % | 48 % | 45 % |
+| AP 2 (940) | 49 % | 48 % | 48 % |
+| AP 3 (805) | 52 % | 53 % | 53 % |
+| AP 4 (175) | 47 % | 46 % | 47 % |
+| Pace 1.0–1.9 (1782) | 50 % | 51 % | 50 % |
+| Pace 2.0 and more (138) | 44 % | 43 % | 48 % |
+
+**Observations** (indications; bots on both sides; about ±4 points on a value with 400 monsters, ±9 with 100, ±13 with 56; matched rows):
+
+- *Spending 3 Stamina behaves like burning 2:* 1.82 against 1.95 uses per battle, 3.65 against 3.66 rounds, 19 against 20 battles under 3 rounds, 15 against 13 over 5; both a little longer than without Mend (3.53, 26 and 7).
+- *The first row in which Stamina leans upward:* 49–51 % from Stamina 2 to 6, then 53 % at 7 and 55 % at 8 (48 % and 50 % without Mend); with 100 and 56 monsters this stays inside the noise. Pace 2.0 and more reads 48 % against 44 %, also inside it.
+- *The HP slope stays:* 38 % at HP 3, 54 % at HP 7.
+- *The bots do not see the price:* their evaluation gives Stamina in the pool no worth, so they mend whenever 3 are there and plan no movement around it.
+
+**Follow-up:** T47, T03, T40. No rule and no value was changed by this entry.
+
+320 battles in 320 runs.
+
+## S043 · 2026-11-18 · Mend at 1 maximum Stamina per HP, paid with 1 AP or with 1 Stamina
+
+**State:** main, base `66ece96` dirty (the Mend switches of [T47](todo/done/battle/T47-heal-spend-stamina-to-heal.md) and the entries S040–S042 uncommitted); content `2026-11-15.5`, kit set `93e3f45f139d`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 386 cases, the two known non-battle failures.
+
+**Runs:** as S042 (one process per battle, seeds 1–320, `--variant x.random_monsters=1,x.fresh_skills=1,x.kit_seed=<seed>,x.damage_from_round=1,tpr1,x.stamina_mend=1[,x.mend_pays_stamina=1]`, bot greedy on both sides, 7×7 with three Dragon Veins, not side-swapped). Battle *n* has the same board, monsters and kits in all rows; the first two rows are those of S042, not new runs. “Paid with 1 Stamina”: Mend costs no AP and takes 1 Stamina from the pool, besides the maximum it burns. No battle timed out.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Defeats / battle | Mend uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| without Mend (S042) | 320 | 161 / 159 / 0 / 0 | 3.53 | 26 (8 %) | 7 (2 %) | 0 | 7 | 1.90 | 4.6 | 2.3 | 8.9 | 3.0 | 9.5 | 1.8 | 30.1 | 4.09 | — |
+| 2 Stamina per HP, 1 AP (S042) | 320 | 163 / 157 / 0 / 0 | 3.66 | 20 (6 %) | 13 (4 %) | 1 | 9 | 1.92 | 4.7 | 2.3 | 9.1 | 3.0 | 10.1 | 1.9 | 31.1 | 3.98 | 1.95 |
+| 1 Stamina per HP, 1 AP | 320 | 156 / 164 / 0 / 0 | 3.84 | 14 (4 %) | 19 (6 %) | 1 | 8 | 1.96 | 5.0 | 2.4 | 9.4 | 3.0 | 11.2 | 2.0 | 33.0 | 3.94 | 4.31 |
+| 1 Stamina per HP, paid with 1 Stamina | 320 | 161 / 159 / 0 / 0 | 3.99 | 11 (3 %) | 24 (8 %) | 2 | 8 | 2.04 | 5.5 | 2.7 | 10.3 | 3.3 | 12.0 | 2.3 | 36.0 | 3.79 | 8.20 |
+
+**Battles by the round they ended in:**
+
+| Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| without Mend | 1 | 25 | 147 | 109 | 31 | 3 | 4 | 0 | 0 |
+| 2 per HP, 1 AP | 2 | 18 | 142 | 101 | 44 | 11 | 1 | 0 | 1 |
+| 1 per HP, 1 AP | 2 | 12 | 125 | 103 | 59 | 14 | 4 | 1 | 0 |
+| 1 per HP, 1 Stamina | 0 | 11 | 105 | 113 | 67 | 18 | 4 | 2 | 0 |
+
+**Win rate of a monster's side by its stat value (monsters with that value; every monster costs 60 points):**
+
+| Stat value | without Mend | 2 per HP, 1 AP | 1 per HP, 1 AP | 1 per HP, 1 Stamina |
+|---|---|---|---|---|
+| HP 3 (129) | 35 % | 39 % | 40 % | 43 % |
+| HP 4 (287) | 48 % | 46 % | 46 % | 43 % |
+| HP 5 (495) | 47 % | 50 % | 51 % | 47 % |
+| HP 6 (447) | 51 % | 49 % | 51 % | 55 % |
+| HP 7 (361) | 57 % | 57 % | 53 % | 55 % |
+| HP 8 (151) | 54 % | 50 % | 51 % | 50 % |
+| HP 9 (44) | 55 % | 57 % | 57 % | 55 % |
+| Stamina 2 (226) | 53 % | 49 % | 46 % | 50 % |
+| Stamina 3 (416) | 48 % | 50 % | 50 % | 48 % |
+| Stamina 4 (489) | 49 % | 48 % | 49 % | 50 % |
+| Stamina 5 (419) | 53 % | 54 % | 54 % | 52 % |
+| Stamina 6 (214) | 49 % | 49 % | 50 % | 49 % |
+| Stamina 7 (100) | 48 % | 47 % | 48 % | 57 % |
+| Stamina 8 (56) | 50 % | 50 % | 50 % | 46 % |
+| Reach 2 (801) | 54 % | 52 % | 53 % | 50 % |
+| Reach 3 (721) | 50 % | 50 % | 50 % | 51 % |
+| Reach 4 (398) | 43 % | 45 % | 43 % | 49 % |
+| one turn (1465) | 51 % | 51 % | 50 % | 51 % |
+| two turns (455) | 48 % | 48 % | 49 % | 48 % |
+| AP 2 (940) | 49 % | 48 % | 48 % | 51 % |
+| AP 3 (805) | 52 % | 53 % | 53 % | 50 % |
+| AP 4 (175) | 47 % | 46 % | 46 % | 47 % |
+| Pace 1.0–1.9 (1782) | 50 % | 51 % | 50 % | 50 % |
+| Pace 2.0 and more (138) | 44 % | 43 % | 48 % | 45 % |
+
+**Observations** (indications; bots on both sides; about ±4 points on a value with 400 monsters, ±9 with 100; matched rows):
+
+- *The cheaper Mend is, the more it is used and the longer the battles:* 1.95, 4.31 and 8.20 uses per battle; 3.66, 3.84 and 3.99 rounds against 3.53 without; battles over 5 rounds 13, 19 and 24 against 7, under 3 rounds 20, 14 and 11 against 26. All rows stay inside the length target of 3.5–4.5 rounds.
+- *Stamina still shows no worth:* its win rates stay within 46–57 % without a slope in every row; Stamina 2, which cannot mend at all, loses nothing clear (46 % and 50 % against 53 % without Mend, inside the noise).
+- *The HP slope gets a little flatter with 1 AP at 1 per HP* (40 % at HP 3, 53 % at HP 7 against 35 % and 57 %); paid with Stamina it runs from 43 % at HP 3 and 4 to 55 % at HP 6 and 7. None of these steps leaves the noise.
+- *Healing turns into more damage dealt, not fewer defeats per battle alone:* total damage 31.1, 33.0 and 36.0 against 30.1, veins 10.1, 11.2 and 12.0 against 9.5; defeats per battle 3.98, 3.94 and 3.79 against 4.09.
+- *The bots' use of Mend is not a human's:* their evaluation weighs maximum Stamina at a guessed 3 against 10 for an HP and current Stamina at nothing, so without an AP cost they mend almost every turn they are hurt.
+
+**Follow-up:** T47, T03, T40. No rule and no value was changed by this entry.
+
+640 battles in 640 runs.
+
+## S042 · 2026-11-18 · Mend (burn 2 maximum Stamina for 1 HP) with damage and extra turns from round 1
+
+**State:** main, base `66ece96` dirty (the Mend switch of [T47](todo/done/battle/T47-heal-spend-stamina-to-heal.md) and the entries S040 and S041 uncommitted); content `2026-11-15.5`, kit set `93e3f45f139d`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 384 cases, the two known non-battle failures.
+
+**Runs:** as S040 (one process per battle, `sim.gd -- 1 3v3 <seed> --paired --variant x.random_monsters=1,x.fresh_skills=1,x.kit_seed=<seed>,x.damage_from_round=1,tpr1[,x.stamina_mend=2]`, seeds 1–320, bot greedy on both sides, 7×7 with three Dragon Veins, not side-swapped). Battle *n* has the same board, monsters and kits in both rows. The control row was run again on this state and equals the fourth row of S040 battle for battle. No battle timed out.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Defeats / battle | Mend uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| without Mend | 320 | 161 / 159 / 0 / 0 | 3.53 | 26 (8 %) | 7 (2 %) | 0 | 7 | 1.90 | 4.6 | 2.3 | 8.9 | 3.0 | 9.5 | 1.8 | 30.1 | 4.09 | — |
+| Mend, 2 maximum Stamina per HP | 320 | 163 / 157 / 0 / 0 | 3.66 | 20 (6 %) | 13 (4 %) | 1 | 9 | 1.92 | 4.7 | 2.3 | 9.1 | 3.0 | 10.1 | 1.9 | 31.1 | 3.98 | 1.95 |
+
+**Battles by the round they ended in:**
+
+| Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---|---|---|---|---|---|---|---|---|
+| without Mend | 1 | 25 | 147 | 109 | 31 | 3 | 4 | 0 | 0 |
+| Mend | 2 | 18 | 142 | 101 | 44 | 11 | 1 | 0 | 1 |
+
+**Win rate of a monster's side by its stat value (monsters with that value; every monster costs 60 points):**
+
+| Stat value | without Mend | Mend |
+|---|---|---|
+| HP 3 (129) | 35 % | 39 % |
+| HP 4 (287) | 48 % | 46 % |
+| HP 5 (495) | 47 % | 50 % |
+| HP 6 (447) | 51 % | 49 % |
+| HP 7 (361) | 57 % | 57 % |
+| HP 8 (151) | 54 % | 50 % |
+| HP 9 (44) | 55 % | 57 % |
+| Stamina 2 (226) | 53 % | 49 % |
+| Stamina 3 (416) | 48 % | 50 % |
+| Stamina 4 (489) | 49 % | 48 % |
+| Stamina 5 (419) | 53 % | 54 % |
+| Stamina 6 (214) | 49 % | 49 % |
+| Stamina 7 (100) | 48 % | 47 % |
+| Stamina 8 (56) | 50 % | 50 % |
+| Reach 2 (801) | 54 % | 52 % |
+| Reach 3 (721) | 50 % | 50 % |
+| Reach 4 (398) | 43 % | 45 % |
+| one turn (1465) | 51 % | 51 % |
+| two turns (455) | 48 % | 48 % |
+| AP 2 (940) | 49 % | 48 % |
+| AP 3 (805) | 52 % | 53 % |
+| AP 4 (175) | 47 % | 46 % |
+| Pace 1.0–1.9 (1782) | 50 % | 51 % |
+| Pace 2.0 and more (138) | 44 % | 43 % |
+
+**Observations** (indications; bots on both sides; about ±4 points on a value with 400 monsters, ±9 with 100; matched rows):
+
+- *The bots use Mend:* 1.95 times per battle, in 273 of 320 battles, up to 7 times in one. The weight their evaluation gives maximum Stamina (3 against 10 for an HP) is a guess.
+- *Battles get a little longer:* 3.66 against 3.53 rounds, 20 against 26 under 3 rounds, 13 against 7 over 5 rounds, the longest 9 against 7. The winner changes in 52 of the 320 battles.
+- *Stamina is worth no more with it:* the win rate stays flat over the Stamina values (47–54 % against 48–53 %); the HP slope stays (39 % at HP 3, 57 % at HP 7), as do Reach, AP, turns and Pace.
+- *The healed HP come back as damage:* 31.1 against 30.1 damage per battle, most of the difference from Dragon Veins (10.1 against 9.5).
+
+**Follow-up:** T47 (keep or drop after play; the rate), T03, T40. No rule and no value was changed by this entry.
+
+640 battles in 640 runs.
+
+## S041 · 2026-11-18 · Random monsters: win rate by stat value, with HP at 6 points and Reach at 4 points
+
+**State:** main, base `66ece96` with the S040 entry uncommitted; content `2026-11-15.5`, kit set `93e3f45f139d`; Godot 4.7.2. The price rows ran on copies of the working tree in which only `MonsterDef.PRICE_HP` and `PRICE_REACH` were changed; the repository holds the prices of [monsters.md §2.2](monsters.md#22-prices-and-points) unchanged. No test run belongs to this entry.
+
+**Runs:** as the standard row of S040 (one process per battle, `sim.gd -- 1 3v3 <seed> --paired --variant x.random_monsters=1,x.fresh_skills=1,x.kit_seed=<seed>`, seeds 1–320, bot greedy on both sides, build default switches). Every monster costs exactly 60 points in every row. The row “prices as they are” is the standard row of S040, not a new run. A changed price changes the draw, so the rows do not hold the same monsters. The stats were drawn again per seed with `MonsterDraw.stats` and checked against one traced battle. No battle timed out.
+
+| Row | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Mean HP | Mean Reach |
+|---|---|---|---|---|---|---|---|---|---|---|
+| prices as they are (HP 5, Reach 5) | 320 | 158 / 160 / 2 / 0 | 3.91 | 3 (1 %) | 12 (4 %) | 2 | 8 | 2.51 | 5.67 | 2.79 |
+| HP 6 | 320 | 170 / 150 / 0 / 0 | 3.83 | 3 (1 %) | 10 (3 %) | 1 | 8 | 2.52 | 5.28 | 2.74 |
+| Reach 4 | 320 | 168 / 152 / 0 / 0 | 3.93 | 2 (1 %) | 12 (4 %) | 1 | 9 | 2.55 | 5.79 | 2.86 |
+| HP 6 and Reach 4 | 320 | 156 / 163 / 1 / 0 | 3.82 | 4 (1 %) | 8 (3 %) | 0 | 6 | 2.49 | 5.34 | 2.79 |
+
+**Win rate of a monster's side by its stat value (monsters with that value):**
+
+| Stat value | prices as they are | HP 6 | Reach 4 | HP 6 and Reach 4 |
+|---|---|---|---|---|
+| HP 3 | 41 % (129) | 40 % (148) | 43 % (127) | 44 % (144) |
+| HP 4 | 46 % (287) | 49 % (400) | 47 % (256) | 44 % (381) |
+| HP 5 | 48 % (495) | 49 % (552) | 45 % (433) | 48 % (538) |
+| HP 6 | 52 % (447) | 52 % (478) | 54 % (527) | 53 % (481) |
+| HP 7 | 56 % (361) | 52 % (265) | 54 % (301) | 57 % (285) |
+| HP 8 | 49 % (151) | 61 % (74) | 51 % (215) | 55 % (88) |
+| HP 9 | 64 % (44) | 33 % (3) | 54 % (46) | 33 % (3) |
+| HP 10 | 50 % (6) | — | 67 % (15) | — |
+| Reach 2 | 54 % (801) | 53 % (875) | 51 % (744) | 51 % (812) |
+| Reach 3 | 49 % (721) | 48 % (675) | 50 % (705) | 51 % (691) |
+| Reach 4 | 44 % (398) | 46 % (370) | 47 % (471) | 47 % (417) |
+| one turn | 51 % (1465) | 50 % (1521) | 51 % (1438) | 51 % (1501) |
+| two turns | 48 % (455) | 50 % (399) | 48 % (482) | 47 % (419) |
+| AP 2 | 49 % (940) | 50 % (1020) | 50 % (897) | 50 % (996) |
+| AP 3 | 52 % (805) | 51 % (763) | 51 % (823) | 51 % (767) |
+| AP 4 | 48 % (175) | 45 % (137) | 47 % (200) | 42 % (157) |
+| Pace 1.0–1.9 | 50 % (1782) | 50 % (1802) | 50 % (1756) | 51 % (1786) |
+| Pace 2.0 and more | 47 % (138) | 45 % (118) | 48 % (164) | 42 % (134) |
+| Stamina 2 | 44 % (226) | 45 % (267) | 51 % (217) | 50 % (265) |
+| Stamina 3 | 53 % (416) | 53 % (466) | 47 % (450) | 48 % (469) |
+| Stamina 4 | 50 % (489) | 50 % (500) | 50 % (500) | 50 % (507) |
+| Stamina 5 | 53 % (419) | 50 % (378) | 53 % (352) | 51 % (361) |
+| Stamina 6 | 48 % (214) | 52 % (203) | 49 % (226) | 53 % (195) |
+| Stamina 7 | 48 % (100) | 45 % (74) | 47 % (115) | 48 % (89) |
+| Stamina 8 | 41 % (56) | 50 % (32) | 58 % (60) | 47 % (34) |
+
+**Observations** (indications; bots on both sides; about ±4 points on a value with 400 monsters, ±9 with 100; the six monsters of a battle are not independent):
+
+- *With the prices as they are, HP rises and Reach falls at equal cost:* 41 % at HP 3 to 56 % at HP 7, 54 % at Reach 2 to 44 % at Reach 4; the same slopes show in all four rows of S040.
+- *One point on the price moves little:* with HP at 6 points the HP slope stays (40 % at HP 3, 52 % at HP 6 and 7); with Reach at 4 points the Reach slope is flatter (51 / 50 / 47 %); with both, HP still runs from 44 % to 57 %.
+- *A price only moves the win rate through what the saved points buy:* a monster at HP 3 instead of HP 7 gains 4 more points from the higher HP price, which buy 0.4 Pace or 2 Stamina, and neither shows any worth with these bots (Pace and Stamina are flat in every row).
+- *Length is unchanged:* 3.82–3.93 rounds, 2–4 battles under 3 rounds and 8–12 over 5; the mean HP falls from 5.67 to 5.28 with the higher HP price.
+- *Side 0 wins 170 to 150 and 168 to 152 in two rows* and is level in the other two; within the noise of one series.
+
+**Follow-up:** T03 (stat prices; what Pace and Stamina are worth), T40. No rule and no price was changed by this entry.
+
+960 battles in 960 runs.
+
+## S040 · 2026-11-18 · Random monsters with generated kits: damage in round 1 and extra turns from round 1
+
+**State:** main, base `66ece96` (two untracked text files only; the run label reads `66ece96-dirty`); content `2026-11-15.5`, kit set `93e3f45f139d`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. No test run belongs to this entry.
+
+**Runs:** one process per battle, `sim.gd -- 1 3v3 <seed> --paired --variant x.random_monsters=1,x.fresh_skills=1,x.kit_seed=<seed>[,…]`, seeds 1–320, 320 battles per row, bot greedy on both sides, 7×7 with three Dragon Veins, not side-swapped. Every battle draws its own monsters (stats and Kin) and kits of skills generated for that battle, as the multiplayer mode does; battle *n* has the same board, monsters and kits in all four rows. `sim.gd` does not draw a new `kit_seed` per battle, hence one process per battle. Rows are sums over the full blocks; the blocks are not pasted. No battle timed out and no monster was defeated before its own first turn.
+
+| Row | Added variant | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Strike | Ground | Collision | Prop | Vein | Flank | Total damage / battle | Defeats / battle | Step uses / battle | Basic Jab uses / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| standard (build default: no damage in round 1, extra turns from round 2) | none | 320 | 158 / 160 / 2 / 0 | 3.91 | 3 (1 %) | 12 (4 %) | 2 | 8 | 2.51 | 4.8 | 2.6 | 9.0 | 2.3 | 9.6 | 1.5 | 29.8 | 3.94 | 4.9 | 5.4 |
+| damage in round 1 | `x.damage_from_round=1` | 320 | 155 / 164 / 1 / 0 | 3.61 | 12 (4 %) | 3 (1 %) | 0 | 7 | 2.02 | 4.3 | 2.3 | 8.8 | 2.8 | 9.8 | 1.8 | 30.0 | 4.06 | 4.1 | 4.8 |
+| no damage in round 1, extra turns from round 1 | `tpr1` | 320 | 170 / 149 / 1 / 0 | 3.86 | 4 (1 %) | 8 (3 %) | 0 | 6 | 2.52 | 4.9 | 2.7 | 9.0 | 2.3 | 9.3 | 1.4 | 29.7 | 3.93 | 5.0 | 5.6 |
+| damage in round 1 and extra turns from round 1 | `x.damage_from_round=1,tpr1` | 320 | 161 / 159 / 0 / 0 | 3.53 | 26 (8 %) | 7 (2 %) | 0 | 7 | 1.90 | 4.6 | 2.3 | 8.9 | 3.0 | 9.5 | 1.8 | 30.1 | 4.09 | 4.2 | 5.0 |
+
+**Battles by the round they ended in:**
+
+| Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| standard | 0 | 3 | 106 | 145 | 54 | 10 | 0 | 2 |
+| damage in round 1 | 0 | 12 | 153 | 107 | 45 | 2 | 1 | 0 |
+| extra turns from round 1 | 0 | 4 | 101 | 159 | 48 | 8 | 0 | 0 |
+| both | 1 | 25 | 147 | 109 | 31 | 3 | 4 | 0 |
+
+**Observations** (indications; bots on both sides, about ±4 points on a share of 320 battles; the rows are matched, not independent):
+
+- *All four rows lie inside the length target of 3.5–4.5 rounds;* the two with damage in round 1 at its lower edge (3.61 and 3.53).
+- *Damage in round 1 shortens by about 0.3 rounds and moves battles from round 4 to round 3:* under 3 rounds 12 against 3, over 5 rounds 3 against 12, first defeat in round 2.02 against 2.51.
+- *Extra turns from round 1 alone change almost nothing* (3.86 against 3.91 rounds, 4 against 3 under 3, 8 against 12 over 5): without damage a second turn in round 1 is only position. Side 0 wins 170 to 149 in this row; the other rows are level, and one series does not explain it.
+- *Together they give the most short battles:* 26 under 3 rounds, one of them in round 1, first defeat in round 1.90.
+- *Damage sources stay the same in all rows:* veins 9.3–9.8 and collisions 8.8–9.0 of about 30 damage per battle, Strikes 4.3–4.9.
+
+**Follow-up:** T44 (the calm round 1 as a switch). No rule and no value was changed by this entry.
+
+1 280 battles in 1 280 runs.
+
 ## S039 · 2026-11-17 · The review pack: a calm round 1, stronger veins late, Wait, once per round and the smaller switches
 
 **State:** main, base `5ca023c` dirty; content `2026-11-15.5`, kit set `0521d83d4da4`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 395 cases, the two known non-battle failures.
 
-**Switches measured** (test switches, no rules; [T44](todo/to-clarify/battle/T44-review-pack-of-2026-11-17.md), [godot/README.md](../godot/README.md)). “The pack” is everything on, as the build stood during the runs: `strike_push_all`, no `kin_effects`, no `zone_stats`, `flat_ground`, no `round_end_hazards`, `usage_per_round`, `vein_late_round` 5 with `vein_late_damage` 2, `prop_rounds` 2, `delay_turn` with `delay_reverse`, `damage_from_round` 2, `pressure_mode` none; on top of the build defaults of S038 (Strikes only push, Step 1 AP, Basic Jab 2 AP, props bury traps). After the runs the build default of `vein_late_round` was set to 3.
+**Switches measured** (test switches, no rules; [T44](todo/done/battle/T44-review-pack-of-2026-11-17.md), [godot/README.md](../godot/README.md)). “The pack” is everything on, as the build stood during the runs: `strike_push_all`, no `kin_effects`, no `zone_stats`, `flat_ground`, no `round_end_hazards`, `usage_per_round`, `vein_late_round` 5 with `vein_late_damage` 2, `prop_rounds` 2, `delay_turn` with `delay_reverse`, `damage_from_round` 2, `pressure_mode` none; on top of the build defaults of S038 (Strikes only push, Step 1 AP, Basic Jab 2 AP, props bury traps). After the runs the build default of `vein_late_round` was set to 3.
 
 **Runs:** `sim.gd -- 40 3v3 <seed> --paired [--variant …]`, seeds 1–8, 320 battles per row, bot greedy on both sides; `tactic` on both sides with 20 battles per seed, 160 per row; 7×7 with three Dragon Veins unless the row says otherwise; not side-swapped. Rows are sums over the full blocks; the blocks are not pasted. The rows “the rules” and “before the pack” reproduce S037 and S038 exactly. No battle of any row ended in round 1 and none timed out.
 

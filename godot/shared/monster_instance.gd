@@ -144,7 +144,7 @@ func sheet_text(with_kit := true) -> String:
 		float(stats["pace"]), int(stats["move"]), int(stats["tpr"]), int(stats["reach"])]
 	if not with_kit:
 		return head + "\n" + line
-	var kit := "Kit: %s · Strike: %s" % [def.kit_text(), def.strike_name()]
+	var kit := "Kit: %s" % def.kit_text()
 	return head + "\n" + line + "\n" + kit
 
 

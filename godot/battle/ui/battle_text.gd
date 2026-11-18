@@ -382,9 +382,9 @@ static func cost_text(s: BattleSkillDef) -> String:
 ## in this order; a row that has nothing to say is left out:
 ##   Cost     AP, Stamina, uses
 ##   Where    the shape and where it lies, or the path and range of a movement
-##   Does     what the skill does itself: damage, push, the Kin effect, an effect on the user
+##   Does     what the skill does itself: damage, push, an effect on the user
 ##   Creates  one row per ground, zone or prop, and below each what that thing does ("Leaves" for a movement)
-static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
+static func skill_rows(c: BattleContent, s: BattleSkillDef) -> Array:
 	var rows: Array = []
 	if s.kind == BattleSkillDef.PASSIVE:
 		return [["Passive", s.description if s.description != "" else "passive"]]
@@ -393,13 +393,12 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 		BattleSkillDef.STRIKE:
 			rows.append(["Where", "%s%s%d sq next to the user" % [s.shape_label(), SEP, s.shape_squares()]])
 			var does: PackedStringArray = []
-			var kin_text: String = KinRules.of(s, kin).get("text", "") if kin >= 0 else ""
-			var push := "" if not s.strike_push else (kin_text if kin_text.begins_with("push") else "push 1")   # a Kin that chooses the direction says so
+			var push := "push 1" if s.strike_push else ""
 			if s.push_only():
 				if push != "":
 					does.append(push)
 				if s.hits_props():
-					does.append("%d dmg to props" % KinRules.STRIKE_PROP_DAMAGE)
+					does.append("%d dmg to props" % BattleSkillDef.STRIKE_PROP_DAMAGE)
 				elif push == "":
 					does.append("no dmg, no push")
 			else:
@@ -412,9 +411,7 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef, kin := -1) -> Array:
 				if s.strike_props == 0 and s.strike_damage > 0:
 					does.append("spares props")
 				elif s.strike_props == 1 and s.strike_damage == 0:
-					does.append("props: %d" % KinRules.STRIKE_PROP_DAMAGE)
-			if kin_text != "" and kin_text != push:
-				does.append(kin_text)
+					does.append("props: %d" % BattleSkillDef.STRIKE_PROP_DAMAGE)
 			if s.self_retreat:
 				does.append("then retreat 1")
 			rows.append(["Does", SEP.join(does)])
@@ -752,6 +749,8 @@ static func brief(b: Battle, e: Dictionary) -> String:
 			return "%s springs %s" % [unit_name(b, e["who"]) if e.get("who", &"") != &"" else _prop_name(b, e["by"]), _prop_name(b, e["prop"])]
 		&"stamina_recovered":
 			return "%s Stamina +%d" % [unit_name(b, e["who"]), e["amount"]]
+		&"heal_used":
+			return "%s heals: Stamina −%d" % [unit_name(b, e["who"]), e["spent"]]
 		&"prop_placed":
 			return "+ %s" % _prop_name(b, e["prop"])
 		&"mountain_raised":

@@ -4,12 +4,29 @@
 
 ## 1. Ground
 
+**Multiplayer battle:** a ground is named by what it does: the moment, the effect, “Ground”.
+
+| | Damage | Heal | Stamina |
+|---|---|---|---|
+| **Entry** (on entering) | Entry Damage Ground: 1 damage | Entry Heal Ground: 1 HP | Entry Stamina Ground: 1 Stamina |
+| **Exit** (on leaving, also by push or pull) | Exit Damage Ground: 2 damage | Exit Heal Ground: 1 HP | Exit Stamina Ground: 1 Stamina |
+| **Stay** (end of the occupant's turn) | Stay Damage Ground: 1 damage | Stay Heal Ground: 1 HP | Stay Stamina Ground: 1 Stamina |
+
+**No-Prop Ground:** no prop can be placed on it; it does nothing to monsters. Healing never exceeds the maximum HP, Stamina never the pool.
+
+**Both battles:**
+
+| Ground | Moment | Effect |
+|---|---|---|
+| **Plain** | — | movement cost 1 |
+| **Rubble** | on entering | movement cost 2; left by several destroyed props |
+| **Voidscar** | end of the occupant's turn | 1 damage; permanent; nothing creates it at present |
+| **Dragon Vein** | end of the round | nothing to whoever stands on it; damages the nearest enemy of its owner; permanent |
+
+**Ingame battle:**
+
 | Group | Ground | Moment | Effect |
 |---|---|---|---|
-| Neutral | **Plain** | — | movement cost 1 |
-| Neutral | **Rubble** | on entering | movement cost 2; left by several destroyed props |
-| Neutral | **Voidscar** | end of the occupant's turn | 1 damage; permanent, spreads with late-round pressure |
-| Neutral | **Dragon Vein** | end of the round | nothing to whoever stands on it; 1 damage to the nearest enemy of its owner; permanent |
 | Hazard | **Lava** | end of the occupant's turn | 1 damage: punishes staying |
 | Hazard | **Thornbed** | on entering | 1 damage: punishes moving in |
 | Hazard | **Binding Vines** | on leaving | 2 damage: stay or pay; may be laid under a monster |
@@ -19,12 +36,18 @@
 
 ## 2. Zones
 
-| Zone | Effects | Comes with |
+| Battle | Zone | Effect |
 |---|---|---|
-| **Gale** | `push` | its own skill |
-| **Void Pull** | `pull` | its own skill; Coiling Rift |
+| Multiplayer | **Push Zone** | `push` |
+| Multiplayer | **Pull Zone** | `pull` |
+| Multiplayer | **Prop Damage Zone** | 1 damage to every prop in it at the round end |
+| Ingame | **Gale** | `push`; its own skill |
+| Ingame | **Void Pull** | `pull`; its own skill, Coiling Rift |
+| Ingame | **Erosion** *(experiment)* | 1 damage to every prop in it at the round end |
 
 Every zone a skill creates lasts 2 rounds.
+
+**Generated skills of the multiplayer battle** are named the same way: a Strike is a “Push Strike” or, when it only damages props, a “Prop Strike”, with its shape in front (“Cross Push Strike”); a skill that lays something carries the name of the ground or zone.
 
 ## 3. Props
 

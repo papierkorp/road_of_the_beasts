@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="2"]
+
+[sub_resource type="Resource" id="t1"]
+script = ExtResource("2")
+timing = "leave"
+kind = "heal"
+amount = 1
+
+[resource]
+script = ExtResource("1")
+id = &"exit_heal"
+display_name = "Exit Heal Ground"
+battle = "multiplayer"
+group = "blessed"
+triggers = Array[ExtResource("2")]([SubResource("t1")])
+color = Color(0.34, 0.6, 0.5, 1)
+description = "1 HP back, never above the maximum when a monster leaves the square, by walking or by being pushed or pulled."

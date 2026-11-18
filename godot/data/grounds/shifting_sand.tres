@@ -6,6 +6,7 @@
 script = ExtResource("1")
 id = &"shifting_sand"
 display_name = "Shifting Sand"
+battle = "ingame"
 content_status = "experiment"
 no_props = true
 color = Color(0.78, 0.7, 0.48, 1)

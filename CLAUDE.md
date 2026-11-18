@@ -3,8 +3,9 @@
 - **Road of the Beasts:** deterministische, rundenbasierte Monsterkämpfe mit Management und Kultivierung.
 - **Designziel:** „Easy to learn, hard to master“: wenige, einheitliche und gut lesbare Regeln; Tiefe entsteht aus Kombinationen und Entscheidungen, nicht aus Sonderregeln. Vorschläge daran messen, Ausnahmen begründen.
 - **Battle-Ziele:** stehen in [docs/battle.md §1](docs/battle.md#1-goals-and-pillars); Regel-, Inhalts- und Preisvorschläge daran messen.
-- **Fokus:** Das Battle ist der Kern und wird zuerst fertig. Die Overworld ist bis dahin nachrangig: nicht daran arbeiten, sie nicht als Grund für Battle-Entscheidungen heranziehen und beim Battle-Umbau nicht schonen.
-- **Begriffe:** „Multiplayer-Modus“ ist die Draft-Sandbox im Godot-Build (Teams wählen, kämpfen); „das Spiel“ meint das Spiel mit Overworld und Fortschritt.
+- **Fokus:** Das Battle ist der Kern und wird zuerst fertig; Multiplayer-Kampf und Ingame-Kampf werden parallel entwickelt. Die Overworld ist bis dahin nachrangig: nicht daran arbeiten, sie nicht als Grund für Battle-Entscheidungen heranziehen und beim Battle-Umbau nicht schonen.
+- **Zwei Kämpfe, strikt getrennt:** Der „Multiplayer-Kampf“ (Multiplayer-Modus: Draft-Sandbox im Godot-Build, gleiche Punkte für alle) und der „Ingame-Kampf“ (gewachsene Monster, eigene Battlegrounds, Board-Events) teilen nur die Kernregeln aus `docs/battle.md`. Regeln, Inhalte, Messungen und Balance des einen sind kein Grund für Entscheidungen im anderen; bei jedem Vorschlag und jedem Lauf den Kampf nennen.
+- **Begriffe:** „das Spiel“ meint das Spiel mit Overworld und Fortschritt.
 
 ## Safety
 
@@ -23,7 +24,8 @@
 
 | Datei | Zuständig für | Richtwert (Zeichen) |
 |---|---|---|
-| [`docs/battle.md`](docs/battle.md) | Regeln des Kampfs: Ablauf, Zeitpunkte, Brett, Rollen von Boden/Zone/Prop, Schaden, Verschiebung | 30 000 |
+| [`docs/battle.md`](docs/battle.md) | Kernregeln beider Kämpfe (Multiplayer-Eigenes dort gekennzeichnet): Ablauf, Zeitpunkte, Brett, Rollen von Boden/Zone/Prop, Schaden, Verschiebung | 30 000 |
+| [`docs/battle_ingame.md`](docs/battle_ingame.md) | Regeln, die nur der Ingame-Kampf hat: Battlegrounds, Board-Events, eigene Skills und Funktionen | 15 000 |
 | [`docs/skills.md`](docs/skills.md) | Regeln der Skills: Kit, Skill-Karte, Formen, Bewegungsarten, Passives, Slots | 20 000 |
 | [`docs/monsters.md`](docs/monsters.md) | Regeln der Monster: Stats, Kalkulation, Kins, Seltenheit, Wachstum | 15 000 |
 | [`docs/content.md`](docs/content.md) | Alle Inhaltsentwürfe: Böden, Zonen, Props, Skills, Kits, Monster | 20 000 |

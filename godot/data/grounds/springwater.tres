@@ -12,6 +12,7 @@ amount = 1
 script = ExtResource("1")
 id = &"springwater"
 display_name = "Springwater"
+battle = "ingame"
 content_status = "experiment"
 group = "blessed"
 triggers = Array[ExtResource("2")]([SubResource("t1")])

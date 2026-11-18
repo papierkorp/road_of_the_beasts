@@ -20,6 +20,9 @@ const WELL := &"dragon_vein"
 ## authoring note, not a rule, not a player value and not settled. Per created cell (permanent-state package).
 ## -1 = not calculated.
 @export var internal_calc_cost: float = -1.0
+## Which battle the record belongs to (docs/architecture.md §4): the multiplayer battle names things by what they do,
+## the ingame battle has its own content. The generator of skills (SkillGen) uses no record of the ingame battle.
+@export_enum("both", "multiplayer", "ingame") var battle: String = "both"
 @export_enum("neutral", "hazard", "blessed") var group: String = "neutral"
 ## Movement points to enter (movement profiles with ground costs only; gdd_skills §3).
 @export var move_cost: int = 1

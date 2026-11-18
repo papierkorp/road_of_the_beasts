@@ -12,6 +12,7 @@ amount = 1
 script = ExtResource("2_0bjs4")
 id = &"thornbed"
 display_name = "Thornbed"
+battle = "ingame"
 group = "hazard"
 triggers = Array[ExtResource("3_co136")]([SubResource("Resource_724xu")])
 color = Color(0.3, 0.55, 0.22, 1)

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="2"]
+
+[sub_resource type="Resource" id="t1"]
+script = ExtResource("2")
+kind = "heal"
+amount = 1
+
+[resource]
+script = ExtResource("1")
+id = &"entry_heal"
+display_name = "Entry Heal Ground"
+battle = "multiplayer"
+group = "blessed"
+triggers = Array[ExtResource("2")]([SubResource("t1")])
+color = Color(0.42, 0.7, 0.42, 1)
+description = "1 HP back, never above the maximum when a monster enters the square."

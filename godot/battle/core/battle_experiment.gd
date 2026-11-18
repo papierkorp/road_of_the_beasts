@@ -40,14 +40,15 @@ static var wells := 3
 static var flank := true
 ## First round in which TurnsPerRound counts. Build rule 2: in round 1 every monster has one turn.
 static var tpr_from_round := 2
-## No damage of any kind before this round (1 = off; 2 = round 1 is for positioning only).
-static var damage_from_round := 2
+## No damage of any kind before this round. 1 = the rule (user, 2026-11-18): damage from round 1; 2 = round 1 is
+## for positioning only (to compare, `sim.gd --variant calm=1`).
+static var damage_from_round := 1
 ## true (GDD rule of the reshape of 2026-11-13, kept by the user after S028): a Dragon Vein belongs to
 ## the side that touched it last and deals its damage for that side whether or not a monster stands
 ## on it. false = only while a monster stands on it at the round end (measured in S028).
 static var vein_touch := true
-## Late-round pressure: "idle" (build rule) only at the end of a round in which nobody holds a
-## Wellspring · "always" as before 2026-11-13 · "none" never.
+## Late-round pressure: "none" (the rule since 2026-11-18) never · "idle" only at the end of a round in which nobody
+## holds a Dragon Vein · "always" as before 2026-11-13.
 static var pressure_mode := "none"
 ## The rule since 2026-11-14 (user decision): every slotted skill at most `usage_limit` times per turn of its
 ## monster (1 unless the skill says more; Step is not slotted). No switch of the game or the tools any more
@@ -73,25 +74,24 @@ static var board_size := 0
 ## rune props without damage that act on the board when a monster collects them (0 = none).
 static var map_buttons := 0
 
-# ---------- What is left of the review pack of 2026-11-17 (test switches, on by default; no rules; docs/todo T44) ----------
-# `damage_from_round` 2 (round 1 is for position), `pressure_mode` "none" (no late-round pressure) and the
-# stronger veins below. `pack(false)` gives the rules of battle.md back.
+# ---------- Rules since 2026-11-18 (user decision; docs/battle.md §4.2): no late-round pressure (`pressure_mode` "none")
+# and the stronger veins below. `pack(false)` plays the rules before them (veins always 1, late-round pressure while
+# nobody owns a vein): the older rule tests use it, and `sim.gd --variant nopack` to compare.
 
 ## From this round on an owned Dragon Vein deals `vein_late_damage` instead of 1 (0 = never). 3 since S039
 ## (measured with 5, 4 and 3; with round 1 free of damage, 3 gave the fewest battles over 5 rounds).
 static var vein_late_round := 3
 static var vein_late_damage := 2
 
-## View switch (user request 2026-11-17, to compare): dragging with the middle mouse button also tilts the camera
+## The camera of the battle (user decision 2026-11-18): dragging with the middle mouse button turns it and tilts it
 ## up and down (BattleView). false = the fixed tilt of 40°.
 static var free_camera := true
 
 
-## Switches what is left of the review pack on (the build default) or off (the rules of battle.md).
+## true: the rules (veins deal 2 from round 3, no late-round pressure). false: the rules before 2026-11-18.
 static func pack(on: bool) -> void:
 	vein_late_round = 3 if on else 0
 	vein_late_damage = 2
-	damage_from_round = 2 if on else 1
 	pressure_mode = "none" if on else "idle"
 
 
@@ -100,9 +100,8 @@ static func vein_damage(round_number: int) -> int:
 	return vein_late_damage if vein_late_round > 0 and round_number >= vein_late_round else 1
 
 
-## The three switches below are off here and checked by default in the draft of the multiplayer mode (user,
-## 2026-11-17; DraftScreen): it plays random monsters with kits of skills generated for the battle. Battles
-## started elsewhere, the rule tests and the tools play the monsters as they are.
+## The three switches below are for the tools (`sim.gd --variant x.random_monsters=1`): the battle screens draw
+## through the request instead (BattleRequest.draw_seed). Rule tests and tools play the monsters as they are.
 ## Kit switch of the multiplayer mode (user request 2026-11-16): every monster of a battle plays a random
 ## kit by a kit template (KitDraw: so many Strikes, movement, zone, ground and prop skills), drawn from the
 ## skills of the game. Its own kit is not used.
@@ -139,6 +138,7 @@ static func reset() -> void:
 	map_buttons = 0
 	board_size = 0
 	free_camera = true
+	damage_from_round = 1
 	random_kits = false
 	fresh_skills = false
 	random_monsters = false

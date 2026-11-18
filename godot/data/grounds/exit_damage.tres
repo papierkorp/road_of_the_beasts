@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="2"]
+
+[sub_resource type="Resource" id="t1"]
+script = ExtResource("2")
+timing = "leave"
+amount = 2
+
+[resource]
+script = ExtResource("1")
+id = &"exit_damage"
+display_name = "Exit Damage Ground"
+battle = "multiplayer"
+group = "hazard"
+triggers = Array[ExtResource("2")]([SubResource("t1")])
+color = Color(0.5, 0.26, 0.42, 1)
+description = "2 damage when a monster leaves the square, by walking or by being pushed or pulled."

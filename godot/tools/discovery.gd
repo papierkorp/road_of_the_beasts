@@ -47,7 +47,7 @@ func _run() -> void:
 	print("Harness own SHA256=%s; parent SHA256=%s; content=%s; new resource hashes=%s; Godot=%s" % [FileAccess.get_sha256("res://tools/discovery.gd"), _source_hash(), before.content, _pairs(before.resources), Engine.get_version_info().string])
 	print("Maps: base uses canonical RUNNER seeded board. open removes every preplaced prop without aftermath, retains grounds/veins. screens replaces props with exactly two point-mirrored reed_screen pairs. split first relocates veins (1,3),(3,3),(5,3) -> (1,2),(3,3),(5,4), then uses the same screen generator. split_mist/cloud also replace subject movement. Props block movement only; NO ranged cover. No starter grass is added. Map RNG is local, seeded with setup seed; play/setup RNG is untouched by edits.")
 	print("single_vein: remove only the two outer Dragon Veins after canonical setup, retaining the centre (3,3), all props, starts and RNG state. No candidate skills or stats change; maps affect both teams. The standard generator still runs first so prop availability cannot confound the count comparison.")
-	print("Eligibility: first MOVE for mist/cloud; first positive-damage Jab with no board ops for receding, preserving kin_effect. Winged already retreats: retreat flag does not stack. Screen: first pure CREATE_PROP placement, else first GROUND, else last slot; no extra slots. Only subject changes except both_*. Both teams receive map edits. Schedule: same draw-A/draw-B-excluding-A/setup-seed progression scheme; fresh setup RNG each scenario/swap, divergent play may consume different RNG draws.")
+	print("Eligibility: first MOVE for mist/cloud; first positive-damage Jab with no board ops for receding. Screen: first pure CREATE_PROP placement, else first GROUND, else last slot; no extra slots. Only subject changes except both_*. Both teams receive map edits. Schedule: same draw-A/draw-B-excluding-A/setup-seed progression scheme; fresh setup RNG each scenario/swap, divergent play may consume different RNG draws.")
 	print("Ablation metadata: mist_control [no trail] / split_mist_control [no trail] replace the same first subject MOVE with a local deep copy of mist_step, clearing ONLY board_ops. Same 2 AP walk/profile; no trail or zone effect. split_mist_control uses identical split geometry. Candidate ID remains mist_step: usage/fielded-slot and round counts in these scenarios count the no-trail CONTROL, not zone-producing Mist Step.")
 	var schedule: PackedStringArray = []
 	print("\n| Seed | Pair | Subject A | Opponent B | Setup seed |\n|---|---|---|---|---|")
@@ -150,8 +150,6 @@ func _team(ids: Array[StringName], scenario: String, subject: bool, current_ap: 
 			agg.eligible += 1
 			var old := copies[slot]
 			var replacement := BattleContent.shared().skill(StringName(candidate)).duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as BattleSkillDef
-			if candidate == "receding_blow":
-				replacement.kin_effect = old.kin_effect
 			var control := scenario in ["mist_control", "split_mist_control"]
 			if control:
 				replacement.board_ops.clear()
@@ -345,8 +343,6 @@ func _self_test() -> void:
 						_check(peers[i].skills[k].ap_cost == ap, "bilateral current family cost")
 					if k != expected:
 						_check(skill.id == authored.skills[k].id, "unchanged non-target slot")
-					elif name == "receding_blow":
-						_check(skill.kin_effect == authored.skills[k].kin_effect, "preserved Kin flag")
 					for op_index in skill.board_ops.size():
 						var source := BattleContent.shared().skill(skill.id)
 						_check(skill.board_ops[op_index] != source.board_ops[op_index], "nested BoardOp isolated")
@@ -489,7 +485,7 @@ func _action_fixtures() -> void:
 	for kin in [MonsterDef.Kin.BEAST, MonsterDef.Kin.WINGED]:
 		b = _fixture(["receding_blow"], Vector2i(3, 3), Vector2i(3, 2), {"kin": kin})
 		b.begin()
-		_check(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.UP, "push_dir": Vector2i.UP}), "receding real strike accepted kin=%d" % kin)
+		_check(b.apply({"type": &"skill", "slot": 0, "dir": Vector2i.UP}), "receding real strike accepted kin=%d" % kin)
 		_check(h.unit(b, 1).hp == 6 and h.unit(b, 1).pos == Vector2i(3, 1), "receding exactly 2 damage and target push kin=%d" % kin)
 		_check(h.unit(b, 0).pos == Vector2i(3, 4) and b.ap == 2, "receding exactly one retreat, Winged not doubled kin=%d" % kin)
 	BattleExperiment.stamina = false              # the Cloudstep candidate of S023 is defined against the Movement stat (the rule before 2026-11-15)

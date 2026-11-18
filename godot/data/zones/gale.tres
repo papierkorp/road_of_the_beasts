@@ -11,6 +11,7 @@ tag = "push"
 script = ExtResource("2_7ekut")
 id = &"gale"
 display_name = "Gale"
+battle = "ingame"
 internal_calc_cost = 2.0
 effects = Array[ExtResource("1_3g7if")]([SubResource("Resource_u1wic")])
 color = Color(0.7, 0.86, 0.9, 1)

@@ -9,6 +9,9 @@ extends Resource
 ## label the game filters on, `status` a free note on the origin.
 
 const STRIKE := "strike"
+## The most a Strike deals to a monster, and what it deals to a prop.
+const STRIKE_DAMAGE := 2
+const STRIKE_PROP_DAMAGE := 2
 const SURGE := "surge"
 const TRAP := "trap"
 const ZONE := "zone"
@@ -71,11 +74,9 @@ const PASSIVE := "passive"
 ## (a property of the single skill since 2026-11-15; before, every Strike with damage pushed). The Scaled Kin
 ## effect turns that push into a chosen cardinal direction; a Strike without push moves nothing.
 @export var strike_push: bool = true
-## Applies the striker's Kin twist (KinRules). Body-relative variants are separate skills.
 ## Damage to props as a part of its own (user, 2026-11-17): -1 = follows the damage (the rule), 0 = spares props,
 ## 1 = damages props (2; a Strike that only pushes can still break a prop). See `hits_props`.
 @export var strike_props: int = -1
-@export var kin_effect: bool = true
 ## Body-relative variant (Winged): retreat 1 opposite the shape centre after the attack.
 @export var self_retreat: bool = false
 

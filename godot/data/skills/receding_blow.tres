@@ -14,5 +14,4 @@ internal_calc_cost = -1.0
 ap_cost = 2
 shape = "jab"
 strike_damage = 2
-kin_effect = true
 self_retreat = true

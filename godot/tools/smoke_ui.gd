@@ -31,17 +31,9 @@ func _process(_delta: float) -> bool:
 	if scene == null:
 		return false
 	if _stage == 0 and scene.name == "Draft" and _frames > 5:
-		var size := BattleSetup.team_size(_mode)
-		var pick := BattleSetup.random_enemy([] as Array[StringName], size, _rng)
-		for id in pick:
-			scene._toggle(id, true)
-		for tid: StringName in [&"second_wind", &"spirit_shield", &"domain_glimpse"]:
-			scene._toggle_tamer(tid, true)
-		print("[smoke] draft pick: ", pick)
-		if _box != "":
-			(scene._experiments[_box] as CheckBox).button_pressed = true
-			print("[smoke] ticked: ", _box, " (wells ", BattleExperiment.wells, ")")
-		scene._start(_mode)
+		print("[smoke] multiplayer start screen")
+		print("[smoke] same monsters for both sides: ", _box == "same")
+		scene._start(_mode, _box == "same")
 		_stage = 1
 		return false
 	if _stage == 1 and scene.has_method("_my_turn"):
@@ -122,7 +114,6 @@ func _play_one(c) -> void:
 					c.hover = a["to"]
 				BattleSkillDef.STRIKE:
 					c.hover = a["origin"] + a["dir"]
-					c.aim_dir = a["push_dir"] if a["push_dir"] != Vector2i.ZERO else c.aim_dir
 				BattleSkillDef.BUFF:
 					_player_actions += 1
 					return                      # applied by the button itself

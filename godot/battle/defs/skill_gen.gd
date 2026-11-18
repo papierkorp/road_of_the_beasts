@@ -82,7 +82,7 @@ static func zone_ids(content: BattleContent) -> Array:
 	var stats: Array[StringName] = []
 	for id: StringName in BattleContent.sorted_ids(content.zones):
 		var z: BattleZoneDef = content.zones[id]
-		if not ContentStatus.in_game(z):
+		if not ContentStatus.in_game(z) or z.battle == "ingame":
 			continue
 		if z.has_tag(FieldEffect.PUSH) or z.has_tag(FieldEffect.PULL) or z.has_tag(FieldEffect.ERODE):
 			moving.append(id)
@@ -96,7 +96,7 @@ static func ground_ids(content: BattleContent) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for id: StringName in BattleContent.sorted_ids(content.grounds):
 		var g: GroundDef = content.grounds[id]
-		if ContentStatus.in_game(g) and (g.group != "neutral" or g.no_props) and not g.immutable and not GroundDef.is_reserved(id):
+		if ContentStatus.in_game(g) and g.battle != "ingame" and (g.group != "neutral" or g.no_props) and not g.immutable and not GroundDef.is_reserved(id):
 			out.append(id)
 	return out
 
@@ -138,17 +138,14 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 			s.strike_push = _pick(rng, STRIKE_PUSH)
 			s.strike_props = 1 if _pick(rng, STRIKE_PROPS) else 0
 			var leaves: String = _pick(rng, LEAVES)
-			if s.strike_damage == 0 and not s.strike_push and s.strike_props == 0 and leaves == "none":
-				s.strike_push = true                  # a Strike does something
+			if not s.strike_push and s.strike_props == 0 and leaves == "none":
+				s.strike_push = true                  # a Strike does something: its damage number deals nothing to a monster
 			if leaves == "ground":
 				ground = _pick(rng, ground_ids(content))
 			elif leaves == "zone":
 				zone = _pick(rng, any_zone)
-			label = BattleShapes.shape_name(s.shape_id(), s.shape_extension)
-			if s.strike_damage == 0:
-				label += " Shove" if s.strike_push else " Touch"
-			elif s.strike_damage == 1:
-				label = "Light " + label
+			label = BattleShapes.shape_name(s.shape_id(), s.shape_extension)       # named by what it does
+			label += " Push Strike" if s.strike_push else (" Prop Strike" if s.strike_props == 1 else " Touch")
 		"move":
 			s.kind = BattleSkillDef.MOVE
 			s.move_path = _pick(rng, MOVE_PATHS)
@@ -215,7 +212,7 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 	if zone != &"":
 		made.append(content.zone(zone).display_name)
 	if kind == "strike" or kind == "move":
-		label = (" ".join(made) + " " + label).strip_edges()
+		label = " + ".join(PackedStringArray([label]) + made)      # "Cleave Push Strike + Exit Damage Ground"
 	elif kind != "prop" and kind != "self":
 		label = "%s %s" % [" + ".join(made), label]
 	# use: most skills once per turn; some twice, some once per round or battle

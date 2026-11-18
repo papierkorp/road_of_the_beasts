@@ -1,7 +1,7 @@
 extends Control
-## Start menu: start the game or the multiplayer mode (the draft sandbox, earlier "battle prototype"), overview (debug tables of skills and monsters), settings, quit.
+## Start menu: start the game or open the battle menu (ingame prototype and multiplayer battle), overview (debug tables of skills and monsters), settings, quit.
 
-const DRAFT_SCENE := "res://battle/draft.tscn"
+const BATTLE_MENU_SCENE := "res://battle/battle_menu.tscn"
 const OVERWORLD_SCENE := "res://overworld/district.tscn"
 const OVERVIEW_SCENE := "res://game/overview.tscn"
 
@@ -44,7 +44,7 @@ func _ready() -> void:
 	_add_button("New Game", _new_game)
 	var cont := _add_button("Continue", _continue_game)
 	cont.disabled = not SaveGame.exists()
-	_add_button("Multiplayer Mode", func(): get_tree().change_scene_to_file(DRAFT_SCENE))
+	_add_button("Battle", func(): get_tree().change_scene_to_file(BATTLE_MENU_SCENE))
 	_add_button("Overview", func(): get_tree().change_scene_to_file(OVERVIEW_SCENE))
 	_add_button("Settings", _show_settings)
 	_add_button("Quit", func(): get_tree().quit())

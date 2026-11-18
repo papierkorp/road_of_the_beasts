@@ -35,7 +35,7 @@ var slot := -1                     # kit slot while mode is &"skill"
 var tamer_id: StringName = &""     # loadout skill while mode is &"tamer"
 var picked: Array[StringName] = [] # units chosen so far for a tamer skill
 var rot := 0                       # quarter turns (Adaptive) / tetromino index (Domain Glimpse)
-var aim_dir := Vector2i(0, -1)     # cardinal direction for pushes
+var aim_dir := Vector2i(0, -1)     # cardinal direction of a placed skill that needs one
 var hover := NOWHERE
 var placing := false               # pre-battle placement phase (gdd_battle §2.1 step 2)
 var placing_pick: StringName = &""
@@ -67,6 +67,7 @@ func _ready() -> void:
 	hud.action_pressed.connect(_on_action)
 	hud.end_turn_pressed.connect(_on_end_turn)
 	hud.wait_pressed.connect(_on_wait)
+	hud.heal_pressed.connect(_on_heal)
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	hud.resume_pressed.connect(_toggle_pause)
 	hud.menu_pressed.connect(_to_menu)
@@ -151,6 +152,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_set_dir(Vector2i(1, 0))
 	elif event.is_action_pressed(&"battle_step"):
 		_on_action(ACT_STEP)
+	elif event.is_action_pressed(&"battle_heal"):
+		_on_heal()
 	elif event.is_action_pressed(&"battle_glossary"):
 		hud.show_glossary()
 	elif event.is_action_pressed(&"battle_confirm"):
@@ -255,7 +258,7 @@ func _aimed_action() -> Dictionary:
 					var aim := _strike_aim(u, s)
 					if aim.is_empty():
 						return {}
-					return {"type": &"skill", "slot": slot, "dir": aim["dir"], "origin": aim["origin"], "push_dir": aim_dir}
+					return {"type": &"skill", "slot": slot, "dir": aim["dir"], "origin": aim["origin"]}
 				_:
 					if not s.is_free_shape():             # a base shape around the user: aimed like a Strike
 						var around := _strike_aim(u, s)
@@ -370,6 +373,15 @@ func _on_end_turn() -> void:
 	_check_ai()
 
 
+## Heal: the acting monster spends Stamina and heals (docs/battle.md §2.4).
+func _on_heal() -> void:
+	if placing or not _my_turn() or battle.check({"type": &"heal"}) != "":
+		return
+	_clear_mode()
+	battle.apply({"type": &"heal"})
+	_refresh()
+
+
 ## Test switch `delay_turn`: the running turn moves to the end of the round.
 func _on_wait() -> void:
 	if not _my_turn() or battle.check({"type": &"delay"}) != "":
@@ -482,7 +494,9 @@ func _refresh() -> void:
 	var wait_why := battle.check({"type": &"delay"}) if _my_turn() else ""
 	var wait_unit := battle.active() if _my_turn() else null
 	hud.set_wait(not placing, _my_turn() and wait_why == "", battle.waits_left(wait_unit) if wait_unit != null else -1, wait_why)
-
+	var heal_why := battle.check({"type": &"heal"}) if _my_turn() and not placing else ""
+	var heal_text := "Heal: costs %d Stamina and no AP, heals %d HP. Once per turn." % [Battle.HEAL_STAMINA, Battle.HEAL_HP]
+	hud.set_heal(not placing, _my_turn() and not placing and heal_why == "", heal_text if heal_why == "" else "%s\n%s" % [heal_text, heal_why])
 
 func _ap_text() -> String:
 	var u := _active()
@@ -567,22 +581,16 @@ func _action_highlights(arrows: Dictionary) -> Dictionary:
 					var aim := _strike_aim(u, s)
 					if aim.is_empty():
 						return out
-					var legal := battle.strike_error(u, s, aim["dir"], aim_dir if _needs_push(u, s) else Vector2i(0, -1), aim["origin"]) == ""
+					var legal := battle.strike_error(u, s, aim["dir"], aim["origin"]) == ""
 					for h in s.shape_hits(aim["dir"]):
 						var cell: Vector2i = aim["origin"] + h["o"]
 						if battle.board.in_bounds(cell) and not u.covers(cell):
 							out[cell] = COL_HIT if legal else COL_BAD
-							if legal and _needs_push(u, s) and battle.any_unit_at(cell) != null:
-								arrows[cell] = aim_dir
 				_:
 					_placement_highlights(u, s, out, arrows)
 		&"tamer":
 			_tamer_highlights(out)
 	return out
-
-
-func _needs_push(u: BattleUnit, s: BattleSkillDef) -> bool:
-	return KinRules.of(s, u.kin()).get("push", false)
 
 
 func _move_highlights(opts: Dictionary, out: Dictionary) -> void:
@@ -735,7 +743,7 @@ func _hint_text() -> String:
 				BattleSkillDef.MOVE:
 					return "Click a blue square"
 				BattleSkillDef.STRIKE:
-					return "Aim and click" + (" · %s push" % _aim_keys() if _needs_push(u, s) else "")
+					return "Aim and click"
 				_:
 					var t := "Click to cast"
 					if BattleStats.can_rotate(u) and s.is_free_shape():
@@ -779,14 +787,14 @@ func _actions() -> Array:
 	var basic := battle.skill_in_slot(u, Battle.BASIC_SLOT)
 	if basic != null:                             # test switch: the Basic Jab stands beside Step, not in the kit
 		var no := "" if not mine else ("needs %d AP, %d left" % [basic.cost(), battle.ap] if battle.ap < basic.cost() else battle.usage_error(u, Battle.BASIC_SLOT))
-		var basic_rows := BattleText.skill_rows(battle.content, basic, u.kin())
+		var basic_rows := BattleText.skill_rows(battle.content, basic)
 
 		out.append({"id": StringName(SLOT_PREFIX + str(Battle.BASIC_SLOT)), "group": &"step", "text": "%s\nStrike · %d AP" % [basic.display_name, basic.cost()], "color": BattleText.kind_color(battle.content, basic),
 			"enabled": mine and no == "", "selected": mode == &"skill" and slot == Battle.BASIC_SLOT,
 			"card": {"title": basic.display_name, "rows": basic_rows, "note": no}})
 	for i in u.sheet.skills.size():
 		var s := u.sheet.skills[i]
-		var rows := BattleText.skill_rows(battle.content, s, u.kin())
+		var rows := BattleText.skill_rows(battle.content, s)
 		var why := ""
 		if s.is_active() and mine:
 			if battle.ap < s.cost():

@@ -475,10 +475,10 @@ BREAKTHROUGH High → next stage's Lower
 
 ### 6.4 Tamer Skills
 
-Tamer skills are **learned over the game**, then **slotted before each battle**; runtime: [battle.md §5.2](battle.md#52-tamer-skills) (activation window, Swap Places, Urgent Order, Second Wind, Life Thread, Beast Swap). *Proposal* rows (Double Bind, Seal Mastery) wait for the catching rules.
+Tamer skills are **learned over the game**, then **slotted before each battle**; runtime: [battle_ingame.md §5](battle_ingame.md#5-tamer-skills) (activation window, Swap Places, Urgent Order, Second Wind, Life Thread, Beast Swap). *Proposal* rows (Double Bind, Seal Mastery) wait for the catching rules.
 
 - **Shared board, separate source:** tamer skills act on the same squares, grounds and zones as monster skills ([battle.md §4](battle.md#4-the-board)) but are defined here, not as skill cards ([skills.md §2](skills.md#2-the-skill-card)).
- - Explicit tamer permissions/unlocks/loadout/usage stay here and in [battle.md §5.2](battle.md#52-tamer-skills).
+ - Explicit tamer permissions/unlocks/loadout/usage stay here and in [battle_ingame.md §5](battle_ingame.md#5-tamer-skills).
  - The table summarizes effects, not executable definitions.
 - **No permission transfer:** monster-profile permissions, species/Kin access, slot development and monster-action AP prices do not transfer to tamers. Own-monster repositioning, zone clearing/ground reset and proposed direct healing do not authorize monster equivalents. Life Thread rule: [battle.md §6.1](battle.md#61-damage). **Spirit Shield has no effect defined.**
 - **Domain Glimpse:** removes zones and resets ground to Plain on the squares of its tetromino. The tamer picks any of the 7 tetrominoes in any rotation or reflection and places it anywhere on the board (no range or LOS; all four squares must lie on the board, no trimming). Voidscar and Dragon Veins stay, and props and monsters are unaffected.

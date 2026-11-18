@@ -41,11 +41,10 @@ static func sheet(o: Dictionary = {}) -> UnitSheet:
 
 ## specs: [[side, pos, sheet overrides], ...] → units u0, u1, ... in that order (slot = the
 ## count of earlier units on the same side). Late-round pressure is off unless a test sets it.
-## The rule tests play traps that take no other prop and switch off what is left of the review pack (calm
-## round 1, stronger veins, Wait, veins in Pace order); a test of those switches sets them after building its
-## battle.
+## The rule tests play the rules before 2026-11-18 (veins always deal 1, late-round pressure while nobody owns a
+## vein); a test of the stronger veins or of a switch sets it after building its battle.
 static func rule_strikes() -> void:
-	BattleExperiment.pack(false)                 # what is left of the review pack are test switches too
+	BattleExperiment.pack(false)
 
 
 static func battle(specs: Array, size: int = 7, p_content: BattleContent = null) -> Battle:
@@ -69,8 +68,8 @@ static func unit(b: Battle, i: int) -> BattleUnit:
 	return b.units[StringName("u%d" % i)]
 
 
-## A Strike record with the given shape (Kin twist on by default).
-static func strike(shape := "jab", kin_effect := true) -> BattleSkillDef:
+## A Strike record with the given shape.
+static func strike(shape := "jab") -> BattleSkillDef:
 	var s := BattleSkillDef.new()
 	s.id = StringName("t_strike_" + shape)
 	s.display_name = "Strike " + shape
@@ -79,7 +78,6 @@ static func strike(shape := "jab", kin_effect := true) -> BattleSkillDef:
 	s.shape = legacy[0]
 	s.shape_extension = legacy[1]
 	s.ap_cost = maxi(1, BattleShapes.draft_ap(StringName(s.shape), s.shape_extension))
-	s.kin_effect = kin_effect
 	return s
 
 

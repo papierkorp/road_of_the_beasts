@@ -105,7 +105,7 @@ Monster = Step and Basic Jab (always, no slot)
 - **Ground under a monster** is not entering; it acts at its next moment.
 - **Laid again:** the same ground or zone on the same square only restarts its clock.
 - **A trap is a prop:** a skill creates a walkable prop that acts when a monster enters it.
-- Own ground and zones bind the caster too. No zone damages or heals.
+- Own ground and zones bind the caster too. No zone damages or heals a monster.
 
 ## 4. Shapes
 

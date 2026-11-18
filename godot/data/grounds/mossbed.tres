@@ -13,6 +13,7 @@ amount = 1
 script = ExtResource("2_b8enf")
 id = &"mossbed"
 display_name = "Mossbed"
+battle = "ingame"
 group = "blessed"
 triggers = Array[ExtResource("3_mbbdk")]([SubResource("Resource_57tcu")])
 color = Color(0.5, 0.74, 0.5, 1)

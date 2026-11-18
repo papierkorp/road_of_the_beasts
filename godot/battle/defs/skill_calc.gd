@@ -33,6 +33,8 @@ const PRICES := {
 	"use:round": 1.0, "use:twice": 2.0, "zone:bog": 11.5, "zone:gale": 11.5, "zone:mire": 5.5,
 	"zone:shockwave": 11.5, "zone:slowing": 7.0, "zone:tailwind": 8.0, "zone:void_pull": 11.5, "zone×extra": 0.0,
 	"ground:shifting_sand": 13.5, "ground:springwater": 8.5, "zone:erosion": 8.5, "zone:updraft": 6.5,
+	"ground:entry_damage": 7.5, "ground:stay_damage": 10.0, "ground:exit_damage": 16.5, "ground:entry_heal": 16.5,
+	"ground:entry_stamina": 8.5, "ground:no_prop": 13.5, "zone:push_zone": 11.5, "zone:pull_zone": 11.5, "zone:prop_damage_zone": 8.5,
 	"kind:self": -12.0, "self:extend": -4.5, "self:haste": -2.0, "self:quicken": -4.5, "self:refresh": -0.5,
 }
 ## Points of one square of a ground, zone or prop not named in PRICES.

@@ -14,4 +14,3 @@ ap_cost = 2
 stamina_cost = 0
 strike_damage = 1
 strike_push = false
-kin_effect = false

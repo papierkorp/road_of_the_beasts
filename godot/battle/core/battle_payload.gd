@@ -24,13 +24,11 @@ static func _base(b: Battle, kind: String, owner: StringName, skill: BattleSkill
 		"dir": Vector2i.ZERO, "anchor": Vector2i.ZERO}
 
 
-## A Strike from `origin` in `dir` (ZERO for symmetric shapes); `push_dir` is the Scaled choice.
-static func strike(b: Battle, u: BattleUnit, skill: BattleSkillDef, origin: Vector2i, dir: Vector2i,
-		push_dir: Vector2i) -> Dictionary:
+## A Strike from `origin` in `dir` (ZERO for symmetric shapes).
+static func strike(b: Battle, u: BattleUnit, skill: BattleSkillDef, origin: Vector2i, dir: Vector2i) -> Dictionary:
 	var p := _base(b, "strike", u.id, skill, 0)
 	p["origin"] = origin
 	p["dir"] = dir
-	p["push_dir"] = push_dir
 	return p
 
 
@@ -153,15 +151,13 @@ static func _phase_damage(b: Battle, payloads: Array) -> void:
 		match p["kind"]:
 			"strike":
 				_collect_strike(b, p)
-				var owner: BattleUnit = b.units[p["owner"]]
-				var kin := KinRules.of(skill, owner.kin())
 				b.emit(&"strike", {"who": p["owner"], "skill": skill.id, "cells": p["cells"].duplicate(), "dir": p["dir"]})
 				if skill.monster_damage() > 0:
 					for id: StringName in p["units"]:
 						hits.append({"unit": id, "base": skill.monster_damage(), "type": BattleDamage.STRIKE, "source": p["label"], "by": p["owner"]})
 				if skill.hits_props():
 					for uid in p["props"]:
-						prop_hits.append([p["props"][uid], int(kin.get("prop_damage", KinRules.STRIKE_PROP_DAMAGE))])
+						prop_hits.append([p["props"][uid], BattleSkillDef.STRIKE_PROP_DAMAGE])
 			"surge":
 				_collect_surge(b, p)
 				b.emit(&"surge_fired", {"who": p["owner"], "skill": skill.id, "cells": p["cells"].duplicate(), "surge": p["seq"], "struck": p["units"].duplicate()})
@@ -202,18 +198,11 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 	for p: Dictionary in payloads:
 		var skill: BattleSkillDef = p["skill"]
 		if p["kind"] == "strike":
-			var owner: BattleUnit = b.units[p["owner"]]
-			var kin := KinRules.of(skill, owner.kin())
 			for id: StringName in p["units"]:
 				var t: BattleUnit = b.units[id]
 				if not t.is_alive():
 					continue
-				if int(kin.get("pace_penalty", 0)) > 0:
-					b.apply_effect(t, "kin:%s:%s" % [KinRules.strike_name(owner.kin()), owner.id],
-						FieldEffect.DRAIN_PACE, int(kin["pace_penalty"]), 1)
-				if skill.strike_push and kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
-					entries.append({"unit": id, "dir": p["push_dir"], "cause": p["label"], "multi": true})
-				if skill.strike_push and not kin.get("push", false):   # a Strike that pushes: 1 away from the striker
+				if skill.strike_push:                    # a Strike that pushes: 1 away from the striker
 					# only hit cells next to the origin push, each along its own offset (gdd_skills §3)
 					var d := _push_dir(p["offsets"].get(id, []), p["dir"])
 					if d != Vector2i.ZERO:
@@ -222,8 +211,6 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 			var push_all: bool = skill.strike_push
 			for uid in p.get("prop_offsets", {}):
 				var dp := _push_dir(p["prop_offsets"][uid], p["dir"])
-				if kin.get("push", false) and Board.CARDINAL.has(p["push_dir"]):
-					dp = p["push_dir"]
 				if push_all and dp != Vector2i.ZERO:
 					entries.append({"prop": uid, "dir": dp, "cause": p["label"], "multi": true})
 		elif p["kind"] == "surge" and skill.surge_displacement != "none":
@@ -354,8 +341,7 @@ static func _phase_retreat(b: Battle, payloads: Array) -> void:
 			continue
 		var u: BattleUnit = b.units[p["owner"]]
 		var skill: BattleSkillDef = p["skill"]
-		var kin := KinRules.of(skill, u.kin())
-		if not u.is_alive() or not (skill.self_retreat or kin.get("retreat", false)):
+		if not u.is_alive() or not skill.self_retreat:
 			continue
 		var rd := BattleShapes.retreat_dir(skill.shape_id(), p["dir"], skill.shape_extension)
 		if rd != Vector2i.ZERO:

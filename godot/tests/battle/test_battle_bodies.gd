@@ -152,7 +152,7 @@ func test_a_2x2_striker_picks_its_origin_square_and_never_hits_itself() -> void:
 
 
 func test_the_push_of_a_2x2_target_uses_the_mean_of_its_adjacent_hit_squares() -> void:
-	var shove := H.strike("storm", false)
+	var shove := H.strike("storm")
 	shove.strike_push = true
 	shove.strike_damage = 0
 	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "skills": [shove]}], _big(Vector2i(3, 2), 1), _big(Vector2i(1, 4), 1)])
@@ -171,7 +171,7 @@ func test_the_push_of_a_2x2_target_uses_the_mean_of_its_adjacent_hit_squares() -
 	var d := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 4, "skills": [shove]}], _big(Vector2i(2, 2), 1), [0, Vector2i(6, 6)]])
 	H.unit(d, 1).pos = Vector2i(2, 2)
 	d.begin()
-	var shove_arc := H.strike("jab", false)
+	var shove_arc := H.strike("jab")
 	shove_arc.strike_push = true
 	shove_arc.strike_damage = 0
 	H.unit(d, 0).sheet.skills[0] = shove_arc

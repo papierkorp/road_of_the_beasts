@@ -147,7 +147,7 @@ func _ready() -> void:
 	form.add_child(_row("Name", _name))
 	_kin = OptionButton.new()
 	for k in MonsterDef.Kin.values():
-		_kin.add_item("%s — Strike: %s" % [MonsterDef.kin_name(k), _kin_effect(k)])
+		_kin.add_item(MonsterDef.kin_name(k))
 	_kin.item_selected.connect(func(_i): _refresh())
 	form.add_child(_row("Kin", _kin))
 	for st: Array in STATS:
@@ -200,13 +200,6 @@ func _ready() -> void:
 
 	_fill_lists()
 	_load_picked()
-
-
-static func _kin_effect(k: int) -> String:
-	var text := String(KinRules.strike(k).get("text", ""))
-	if k == MonsterDef.Kin.ANCIENT:
-		return "none (it broke Mountains)"
-	return text if text != "" else "none"
 
 
 func _row(label: String, field: Control) -> Control:
@@ -299,13 +292,12 @@ func _refresh() -> void:
 	lines.append("[b]%d points[/b] of %d in the multiplayer mode (%s)" % [points, MonsterDef.MULTIPLAYER_POINTS,
 		"%d left" % left if left > 0 else ("exactly spent" if left == 0 else "[color=#d9a04a]%d over[/color]" % -left)])
 	lines.append("[color=#8a93a3]%s[/color]" % " · ".join(parts))
-	lines.append("[color=#8a93a3]Strike effect of the Kin:[/color] %s" % _kin_effect(draft.kin))
 	lines.append("")
 	lines.append("[color=#8a93a3]Step[/color]   1 AP · 1 square")
 	for s in draft.skills:
 		lines.append("")
 		lines.append("[b]%s[/b]   %s" % [s.display_name, "passive" if not s.is_active() else "%d AP" % s.cost()])
-		for r in BattleText.skill_rows(_content, s, draft.kin):
+		for r in BattleText.skill_rows(_content, s):
 			if r[0] != "Cost":
 				lines.append("  %-8s %s" % [r[0], r[1]])
 		if s.is_active() and s.cost() > draft.ap:

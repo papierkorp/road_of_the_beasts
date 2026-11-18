@@ -22,11 +22,10 @@ func test_skill_cards_are_a_few_short_lines() -> void:
 	H.rule_strikes()
 	var c := H.content()
 	for id: StringName in c.skills:
-		for kin in MonsterDef.Kin.values():
-			var rows := BattleText.skill_rows(c, c.skill(id), kin)
-			assert_int(rows.size()).is_between(1, MAX_CARD_ROWS)
-			for r in rows:
-				assert_int(String(r[1]).length()).is_less_equal(MAX_LINE)
+		var rows := BattleText.skill_rows(c, c.skill(id))
+		assert_int(rows.size()).is_between(1, MAX_CARD_ROWS)
+		for r in rows:
+			assert_int(String(r[1]).length()).is_less_equal(MAX_LINE)
 	assert_array(BattleText.step_rows()).is_equal([["Cost", "1 AP · any number/turn"], ["Where", "walk · 1 sq"]])
 
 
@@ -49,9 +48,8 @@ func test_skill_cards_say_what_matters() -> void:
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"headbutt")))).is_equal(["2 AP · Stamina 1/sq", "straight line · up to 3 sq", "over props, monsters · only the landing sq counts", "pushes the monster ahead 1"])
 	assert_array(BattleText.skill_rows(c, c.skill(&"battle_trance"))).is_equal([["Cost", "1 AP · 1/battle"], ["Where", "the user"], ["Does", "AP +1 · 2 rd"]])
 	assert_array(BattleText.skill_rows(c, c.skill(&"immovable"))).is_equal([["Passive", "Ignores push and pull."]])
-	# a Strike deals no damage to monsters; the Kin of the user adds nothing
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.BEAST))).is_equal(["2 AP", "Jab · 1 sq next to the user", "push 1 · 2 dmg to props"])
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab"), MonsterDef.Kin.SCALED))).is_equal(["2 AP", "Jab · 1 sq next to the user", "push 1 · 2 dmg to props"])
+	# a Strike deals no damage to monsters
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab")))).is_equal(["2 AP", "Jab · 1 sq next to the user", "push 1 · 2 dmg to props"])
 	var limited: BattleSkillDef = c.skill(&"lava_field").duplicate()
 	limited.repetition = "once_per_round"
 	assert_str(_values(BattleText.skill_rows(c, limited))[0]).is_equal("1 AP · 1/round")

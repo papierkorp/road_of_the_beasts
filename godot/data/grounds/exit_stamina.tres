@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="GroundDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/ground_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/ground_trigger.gd" id="2"]
+
+[sub_resource type="Resource" id="t1"]
+script = ExtResource("2")
+timing = "leave"
+kind = "stamina"
+amount = 1
+
+[resource]
+script = ExtResource("1")
+id = &"exit_stamina"
+display_name = "Exit Stamina Ground"
+battle = "multiplayer"
+group = "blessed"
+triggers = Array[ExtResource("2")]([SubResource("t1")])
+color = Color(0.36, 0.5, 0.76, 1)
+description = "1 Stamina back, never above the pool when a monster leaves the square, by walking or by being pushed or pulled."

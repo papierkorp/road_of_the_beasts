@@ -15,7 +15,7 @@ extends RefCounted
 ## Actions are Dictionaries:
 ##   {type: &"step", to}                                    universal Step, 2 AP
 ##   {type: &"skill", slot, ...}                            a kit skill of the active monster
-##        move:   to            strike: dir, push_dir, origin
+##        move:   to            strike: dir, origin
 ##        surge / zone / ground: anchor, dir, rot           buff: nothing else
 ##   {type: &"end_turn"}
 ##   {type: &"tamer", side, skill, unit, other, cells}      battle loadout (gdd_battle §5.2)
@@ -349,6 +349,8 @@ func check(a: Dictionary) -> String:
 			return "nobody acts after %s this round" % u.display_name()
 		return ""
 	match type:
+		&"heal":
+			return heal_error(u)
 		&"step":
 			if ap < BattleMoves.step_ap():
 				return "Step needs %d AP, %d left" % [BattleMoves.step_ap(), ap]
@@ -360,6 +362,34 @@ func check(a: Dictionary) -> String:
 		&"skill":
 			return _skill_error(u, a)
 	return "unknown action"
+
+
+## Heal (rule since 2026-11-18, user decision; docs/battle.md §2.4): an action every monster has beside Step and the
+## Basic Jab. It costs HEAL_STAMINA Stamina from the pool and no AP, gives HEAL_HP HP back, never above the maximum,
+## once per turn. HEAL_SLOT is its usage key in `used_turn` (no slot of the sheet).
+const HEAL_SLOT := 98
+const HEAL_STAMINA := 3
+const HEAL_HP := 1
+
+
+## Why the acting monster cannot heal right now ("" = it can).
+func heal_error(u: BattleUnit) -> String:
+	if not BattleExperiment.stamina:
+		return "Heal needs the Stamina pool"
+	if u.stamina < HEAL_STAMINA:
+		return "Heal needs %d Stamina, %d left" % [HEAL_STAMINA, u.stamina]
+	if int(u.used_turn.get(HEAL_SLOT, 0)) > 0:
+		return "Heal was already used this turn"
+	if u.hp >= u.max_hp:
+		return "%s is at full HP" % u.display_name()
+	return ""
+
+
+func _use_heal(u: BattleUnit) -> void:
+	u.stamina -= HEAL_STAMINA
+	u.used_turn[HEAL_SLOT] = 1
+	emit(&"heal_used", {"who": u.id, "spent": HEAL_STAMINA})
+	BattleDamage.heal(self, u, HEAL_HP, "Heal")
 
 
 func _skill_error(u: BattleUnit, a: Dictionary) -> String:
@@ -381,7 +411,7 @@ func _skill_error(u: BattleUnit, a: Dictionary) -> String:
 			if not BattleMoves.options(self, u, BattleMoves.profile_of(s)).has(a.get("to")):
 				return "%s cannot reach that square" % s.display_name
 		BattleSkillDef.STRIKE:
-			return strike_error(u, s, a.get("dir", Vector2i.ZERO), a.get("push_dir", Vector2i.ZERO), a.get("origin", u.pos))
+			return strike_error(u, s, a.get("dir", Vector2i.ZERO), a.get("origin", u.pos))
 		BattleSkillDef.SURGE, BattleSkillDef.TRAP, BattleSkillDef.ZONE, BattleSkillDef.GROUND:
 			return BattleCasting.error(self, u, s, a.get("anchor", u.pos), a.get("dir", Vector2i.ZERO), int(a.get("rot", 0)))
 	return ""
@@ -389,7 +419,7 @@ func _skill_error(u: BattleUnit, a: Dictionary) -> String:
 
 ## A Strike is legal whenever its direction fits the shape and at least one square of it lies on the
 ## board; squares over the edge are dropped (user decision 2026-11-17). An empty hit pattern is allowed.
-func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, push_dir: Vector2i, origin: Vector2i) -> String:
+func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, origin: Vector2i) -> String:
 	if not BattleShapes.is_legal_dir(s.shape_id(), dir, s.shape_extension):
 		return "%s cannot be aimed in that direction" % s.shape_label()
 	if not u.covers(origin):
@@ -402,8 +432,6 @@ func strike_error(u: BattleUnit, s: BattleSkillDef, dir: Vector2i, push_dir: Vec
 			break
 	if not any_on_board:
 		return "no square of the shape lies on the board"
-	if KinRules.of(s, u.kin()).get("push", false) and not Board.CARDINAL.has(push_dir):
-		return "choose the push direction"
 	return ""
 
 
@@ -432,6 +460,8 @@ func apply(a: Dictionary, trusted := false) -> bool:
 		if type == &"step":
 			ap -= BattleMoves.step_ap()
 			BattleMoves.execute(self, u, BattleMoves.step_profile(), a["to"], "Step", a.get("path", []) if trusted else [])
+		elif type == &"heal":
+			_use_heal(u)
 		else:
 			_use_skill(u, a, trusted)
 		BattleTurn.spring_traps(self)
@@ -485,8 +515,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 				behind["anchor"] = a["to"]
 				BattlePayload.resolve(self, [behind])
 		BattleSkillDef.STRIKE:
-			BattlePayload.resolve(self, [BattlePayload.strike(self, u, s, a.get("origin", u.pos),
-				a.get("dir", Vector2i.ZERO), a.get("push_dir", Vector2i.ZERO))])
+			BattlePayload.resolve(self, [BattlePayload.strike(self, u, s, a.get("origin", u.pos), a.get("dir", Vector2i.ZERO))])
 		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
 			_declare_surge(u, s, a)
 		BattleSkillDef.ZONE:

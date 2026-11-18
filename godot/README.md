@@ -8,7 +8,7 @@ shared/      data schemas and the cultivation model, used by every part
 battle/      the deterministic grid battle (docs/battle.md, skills.md, monsters.md)
   defs/      DEFINITIONS — pure data Resources and tables, no rules
              FieldEffect, GroundDef + GroundTrigger, PropDef + PropAftermath, BattleZoneDef, BattleSkillDef + BoardOp,
-             TamerSkillDef, UnitSheet, KinRules, ContentStatus,
+             TamerSkillDef, UnitSheet, ContentStatus,
              BattleShapes (the one shape vocabulary), Moment (the moments and the roles of ground, zone and prop),
              BoardSheet (reads ground, zones and props as one sheet),
              BattleContent (registry of data/)
@@ -93,7 +93,7 @@ validates the whole set and shows a new ground, prop and skill built from existi
 | **Monster** | new `MonsterDef` in `data/monsters/<id>.tres`: Kin, reference stats and the kit of up to 6 skills in one file | — |
 | **Tamer skill** | new `TamerSkillDef` in `data/tamer/` | always: tamer skills are unique mechanics, each has its resolver in `BattleTamer` |
 
-Unique mechanics stay local: the Kin twists live in the `KinRules` table, tamer skills in `BattleTamer`, late-round
+Unique mechanics stay local: tamer skills in `BattleTamer`, late-round
 pressure in `BattleTurn`. No other module asks for a concrete monster, skill, prop or ground id.
 
 ## Content status and build rules
@@ -115,7 +115,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     nearest enemy of the side that touched them last (GDD rule, kept by the user after S028; `BoardCell.owner_side`,
     `Battle.touch_veins`; the board tints an owned vein in its side colour and labels it yours / enemy / unclaimed;
     `vein_touch` = false: only while a monster stands on it at the round end). A vein takes props like any other ground. A monster with two enemies on its eight neighbour squares
-    takes 1 (`flank`). Late-round pressure runs only when nobody owns a vein (`pressure_mode` = `idle`).
+    takes 1 (`flank`). An owned vein deals 2 from round 3 on (`vein_late_round`, `vein_late_damage`). There is no late-round pressure (`pressure_mode` = `none`).
   - **Working values:** highest hit 2 (HP runs from 1 to 10; the monster builder offers the ranges of monsters.md); ground laid in battle lasts 2 rounds (`ground_rounds`); a
     Strike pushes 1 if its record says so (`strike_push`, on by default); the board edge deals 1 and a spiky prop 2 to a monster moved into it; Step 1 AP, Run 1 AP; authored movement costs vary (including user experiments), with the reference
     non-Run movement skills at 2 AP (plus Stamina, below); extra turns count from round 2 (`tpr_from_round`); push and
@@ -200,11 +200,47 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   `experiment`) and registered in `BattleContent` and `GameData` (`GameData.register`), so it stands in the team choice at
   once. “New skill” opens the skill builder, which returns to the caller (`SkillBuilder.return_scene`). No price, budget
   or Kin access is checked. Changing an existing monster rewrites its file: Git is the way back.
+- **Two battles** (docs/battle_ingame.md §1): the main menu button “Battle” opens `battle/battle_menu.tscn` with
+  “Ingame Prototype” and “Multiplayer” (the draft, `battle/draft.tscn`). The ingame prototype
+  (`battle/ingame/ingame_prototype.gd`) is a test battle without the overworld: points per side from 25 to 110 in
+  steps of 5 with the stage they stand for, a board size, 1v1 / 2v2 / 3v3. It writes a `BattleRequest` with
+  `battle_kind` `ingame`, `side_points` and `draw_seed`; `BattleSetup` then draws every monster for the points of its
+  side up to the ranges of the sheet (`MonsterDraw.INGAME_TOP`: AP 5, three turns) with a kit of generated skills.
+  The screen resets `BattleExperiment` to the build defaults, so no switch of the draft carries over. It has no
+  battlegrounds, board events or skills of its own yet (docs/todo T46). The existing folders are not sorted into
+  `battle/multiplayer/` and `battle/ingame/` yet; that is part of the rebuild (docs/architecture.md §2).
+  Tests: `tests/battle/test_ingame_prototype.gd`.
+- **Multiplayer start screen** (`battle/ui/draft_screen.gd`, scene `battle/draft.tscn`; docs/battle.md §1): always
+  3v3 on a generated, point-symmetric 7×7 board, without tamer skills and without fixed monsters or skills. Nothing
+  is picked: `request()` writes a `BattleRequest` with a `draw_seed`, and `BattleSetup` then draws every monster for
+  the 60 points (`MonsterDraw`) with a kit of skills generated for the battle (`KitDraw`); the species is only the
+  look. Two start buttons: “Random monsters for both sides” (every monster drawn on its own) and “Same monsters
+  for both sides” (`mirror_draw`: monster 1, 2 and 3 of both sides have the same stats, Kin and kit). The monster cards, “Arrange shapes”, the three random check boxes, the
+  start buttons for 1v1 and 2v2 and the tamer test loadout are gone. The alternating draft of monsters and skills is
+  not built here (docs/todo T48). The monster builder still saves monsters, but this screen fields none of them.
+  `BattleExperiment.random_monsters`, `random_kits` and `fresh_skills` remain for `sim.gd` only. `ShapeEditor` is
+  used by no screen any more (its checks are still tested).
+- **Content of the multiplayer battle** (docs/content.md §1, §2): `GroundDef.battle` and `BattleZoneDef.battle` say
+  whether a record belongs to both battles, to the multiplayer battle or to the ingame battle. The multiplayer
+  records are named by what they do: `data/grounds/entry_damage … stay_stamina` (three moments × damage, heal,
+  Stamina), `no_prop`, and `data/zones/push_zone`, `pull_zone`, `prop_damage_zone`. `SkillGen.ground_ids` and
+  `zone_ids` (generated skills, skill builder, overview tab Generator) use no record of the ingame battle; Lava,
+  Thornbed, Mossbed, Binding Vines, Springwater, Shifting Sand, Gale, Void Pull and Erosion are ingame records.
+  Generated Strikes are called “<shape> Push Strike”, “<shape> Prop Strike” or “<shape> Touch”, and the generator
+  makes no Strike that does nothing. Drawn monsters are called Random Alpha, Beta, … (`MonsterDraw.LETTERS`). The
+  draft prices of the new records copy those of the old ones with the same effect; the others use the default.
+  Tests: `tests/battle/test_multiplayer_content.gd`. Not built: a Strike that pulls.
 - **Test switches** (`battle/core/battle_experiment.gd`, set by `sim.gd --variant` and partly in the draft screen;
-  none is a rule): `damage_from_round`
-  (a calm first round), `start_back` (back-row starts), `no_rotation`, `soft_pressure`, the switches of S025–S030 (`vein_touch`, `stamina_regen`, `map_props`, `map_buttons`, `board_size`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
+  none is a rule): `damage_from_round` 2
+  (a calm first round; the rule and build default is 1: damage from round 1), `start_back` (back-row starts), `no_rotation`, `soft_pressure`, the switches of S025–S030 (`vein_touch`, `stamina_regen`, `map_props`, `map_buttons`, `board_size`; also check boxes and number fields in the draft screen, whose rows wrap, a charged or empty vein is labelled on the board), and the AI switches `ai_hunt`, `ai_hunt_behind`, `ai_careful`, `ai_aggressive`,
   `ai_no_kind`. Tests: `tests/battle/test_battle_experiment.gd`.
-- **Kit switches** (draft check boxes; `tests/battle/test_kit_draw.gd`): **Random kits** (`random_kits`) gives every
+- **Heal** (rule since 2026-11-18, docs/battle.md §2.4; no switch): an action every monster has beside Step and
+  the Basic Jab (`{type: &"heal"}`, `Battle.heal_error`, HUD button under Wait, Input Map action `battle_heal`). It
+  costs 3 Stamina from the pool and no AP and gives 1 HP back, once per turn (`Battle.HEAL_STAMINA`, `HEAL_HP`). The
+  opponent AI lists it whenever it is legal and gives Stamina in the pool no worth; a full `sim.gd` block prints the
+  Heal uses. In the action bar Wait stands over Heal and End Turn to their right, as high as both.
+  Tests: `tests/battle/test_stamina_heal.gd`.
+- **Kit switches** (for `sim.gd` and tests; the battle screens draw through the request instead; `tests/battle/test_kit_draw.gd`): **Random kits** (`random_kits`) gives every
   monster of a battle a random kit instead of its own. Each monster draws a kit template (`KitDraw.TEMPLATES`:
   Balanced, Bruiser, Skirmisher, Controller, Trapper, Shaper) that names no skill, only how many Strikes, movement,
   zone, ground and prop skills the six slots hold; the skills are drawn from the game's own. **New skills every
@@ -230,8 +266,8 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
       `{type: &"skill", slot: Battle.BASIC_SLOT, dir}`, a button of its own next to Step. Step costs 1 AP.
     - *Strike push:* every monster and prop a Strike struck is pushed, also on the farther squares of an extended
       shape, along the line of its square (`BattlePayload._push_dir`).
-    - *Kin:* the Kin of the striker adds nothing to a Strike (`KinRules.of` returns nothing; the table of the
-      former effects still lies in `kin_rules.gd`).
+    - *Kin:* the Kin of the striker adds nothing to a Strike; the table of the former effects, the push direction
+      of an action and the skill flag `kin_effect` are removed.
     - *Zones:* a zone only pushes or pulls and has one level (`BattleStats.contributions`,
       `BattleBoardOps.zone_outcome`). The zones Mire, Slowing, Tailwind, Updraft, Bog and Shockwave are `archived`.
     - *Ground:* one level; laying it again restarts its clock (result `refresh`). Blight is `archived`; Gloom Rift
@@ -255,16 +291,19 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
       taker and its Pace under an owned vein.
     - *Traps:* a solid prop created on or pushed onto a trap springs it and takes its square
       (`BattleBoardOps.spring_at`, event `trap_sprung` with `by`); what the trap does runs once the prop stands there.
-- **Test switches of 2026-11-17 that are left (no rules; [T44](../docs/todo/to-clarify/battle/T44-review-pack-of-2026-11-17.md)):**
-  `BattleExperiment.pack(false)` switches the first three off (`tests/battle/helpers.gd rule_strikes`,
-  `sim.gd --variant nopack`); `--variant x.<switch>=<value>` sets any switch by its name. Tests:
-  `tests/battle/test_review_pack.gd`. `tools/discovery.gd` and `tools/progression.gd` were not run against the new rules.
-    - `vein_late_round` 3, `vein_late_damage` 2: an owned Dragon Vein deals 2 from that round on (S039 measured 5, 4
-      and 3). The round is a board value of the draft (**Veins deal 2 from round**, 0 = never).
-    - `damage_from_round` 2 (**Pack: no damage in round 1**) and `pressure_mode` “none” (**Pack: no late-round
-      pressure**).
-    - `free_camera` (**Free camera**, on; a view switch, to compare): a middle-mouse drag also tilts the camera up
-      and down, between 15° and 88° (`BattleView._pitch_target`); off = the fixed tilt of 40°.
+- **Settled for now (user, 2026-11-18; [T44](../docs/todo/done/battle/T44-review-pack-of-2026-11-17.md), docs/battle.md):**
+  the multiplayer battle as built. The draft has no check box for these any more; the switches stay in
+  `BattleExperiment` for the tools and tests. `--variant x.<switch>=<value>` sets any switch by its name. Tests:
+  `tests/battle/test_review_pack.gd`. `tools/discovery.gd` and `tools/progression.gd` were not run against these rules.
+    - `vein_touch` true: last touch owns a Dragon Vein.
+    - `damage_from_round` 1: damage from round 1.
+    - `vein_late_round` 3, `vein_late_damage` 2: an owned Dragon Vein deals 2 from round 3 on (S039 measured 5, 4
+      and 3). The round is still a board value of the draft (**Veins deal 2 from round**, 0 = never).
+    - `pressure_mode` “none”: no late-round pressure. `BattleExperiment.pack(false)` plays the rules before (veins
+      always 1, pressure while nobody owns a vein): `tests/battle/helpers.gd rule_strikes` for the older rule tests,
+      `sim.gd --variant nopack` to compare.
+    - `free_camera` true: a middle-mouse drag turns the camera and tilts it up and down, between 15° and 88°
+      (`BattleView._pitch_target`).
     - **Round-end forecast** (no switch): under the queue the HUD always shows what the round end would do on the
       board as it stands, who is hit by what and who falls (`BattleTurn.round_end_forecast`, a dry run on a copy).
     - *Experiment content* (status `experiment`, in no kit; the skill builder and the generated skills can use it):

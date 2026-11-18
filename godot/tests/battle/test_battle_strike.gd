@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## Strike shapes, Kin twists and the body-relative variants (gdd_skills §3, §8.1).
+## Strike shapes and the body-relative variants (gdd_skills §3, §8.1).
 
 const H := preload("res://tests/battle/helpers.gd")
 
@@ -146,7 +146,7 @@ func test_damage_modifiers_sum_in_one_step_and_are_floored_at_zero() -> void:
 
 
 func test_a_strike_without_damage_pushes_adjacent_targets_outward_only() -> void:
-	var shove := H.strike("storm", false)
+	var shove := H.strike("storm")
 	shove.strike_push = true
 	shove.strike_damage = 0                      # movement-only variant: no damage at all
 	var b := H.battle([
@@ -173,7 +173,7 @@ func test_strikes_reach_the_air_layer() -> void:
 # --- decision of 2026-11-15: damage and push are both optional parts of a Strike ---
 
 func test_a_strike_without_push_damages_props_and_moves_nothing() -> void:
-	var blow := H.strike("storm", false)
+	var blow := H.strike("storm")
 	blow.strike_push = false
 	var b := H.battle([
 		[0, Vector2i(3, 3), {"pace": 1.9, "ap": 4, "skills": [blow, H.strike()]}],

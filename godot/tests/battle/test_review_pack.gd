@@ -23,11 +23,13 @@ func _ground_skill(ground: StringName, id: String) -> BattleSkillDef:
 	return H.board_skill([op], [Vector2i.ZERO], id)
 
 
-func test_the_pack_is_the_build_default_and_can_be_switched_off() -> void:
+func test_the_rules_are_the_build_default_and_the_rules_before_can_be_played() -> void:
 	BattleExperiment.reset()
 	assert_int(BattleExperiment.vein_late_round).is_equal(3)
-	assert_int(BattleExperiment.damage_from_round).is_equal(2)
-	assert_str(BattleExperiment.pressure_mode).is_equal("none")
+	assert_int(BattleExperiment.damage_from_round).is_equal(1)        # damage from round 1
+	assert_str(BattleExperiment.pressure_mode).is_equal("none")       # no late-round pressure
+	assert_bool(BattleExperiment.vein_touch).is_true()                # last touch owns a Dragon Vein
+	assert_bool(BattleExperiment.free_camera).is_true()
 	BattleExperiment.pack(false)
 	assert_int(BattleExperiment.vein_late_round).is_equal(0)
 	assert_int(BattleExperiment.damage_from_round).is_equal(1)
@@ -35,11 +37,11 @@ func test_the_pack_is_the_build_default_and_can_be_switched_off() -> void:
 
 
 func test_a_strike_pushes_the_far_square_of_its_shape_too() -> void:
-	var thrust := H.strike("thrust", false)
+	var thrust := H.strike("thrust")
 	thrust.strike_push = true
 	var b := H.battle([[0, Vector2i(3, 5), {"pace": 1.9, "ap": 5, "skills": [thrust]}], [1, Vector2i(3, 3), {"pace": 1.2}]])
 	b.begin()
-	var act := {"type": &"skill", "slot": 0, "dir": Vector2i.UP, "push_dir": Vector2i.ZERO, "origin": Vector2i(3, 5)}
+	var act := {"type": &"skill", "slot": 0, "dir": Vector2i.UP, "origin": Vector2i(3, 5)}
 	assert_bool(b.apply(act)).is_true()
 	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 2))          # two squares away is pushed too, along its line
 

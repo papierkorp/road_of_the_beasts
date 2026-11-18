@@ -88,6 +88,8 @@ static func _decide(bot: String, b: Battle, rng: RandomNumberGenerator, moved: b
 static func _kind(b: Battle, a: Dictionary) -> String:
 	if a["type"] == &"step":
 		return BattleSkillDef.MOVE
+	if a["type"] == &"heal":
+		return ""
 	return b.skill_in_slot(b.active(), int(a["slot"])).kind
 
 
@@ -96,6 +98,8 @@ static func _is_move(b: Battle, a: Dictionary) -> bool:
 
 
 static func _cost(b: Battle, a: Dictionary) -> int:
+	if a["type"] == &"heal":
+		return 0
 	return BattleMoves.step_ap() if a["type"] == &"step" else b.skill_in_slot(b.active(), int(a["slot"])).cost()
 
 
@@ -241,7 +245,7 @@ static func _kite(b: Battle, rng: RandomNumberGenerator, moved: bool) -> Diction
 static func _random(b: Battle, rng: RandomNumberGenerator) -> Dictionary:
 	var groups := {}
 	for a in AiBrain.candidates(b):
-		var key: int = -1 if a["type"] == &"step" else int(a["slot"])
+		var key: int = -1 if a["type"] == &"step" else int(a.get("slot", Battle.HEAL_SLOT))
 		if not groups.has(key):
 			groups[key] = [] as Array[Dictionary]
 		groups[key].append(a)

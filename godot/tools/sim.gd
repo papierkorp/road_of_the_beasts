@@ -336,7 +336,7 @@ func _apply_variant(text: String) -> String:
 					var sd: BattleSkillDef = BattleContent.shared().skills[sid]
 					if sd.kind == BattleSkillDef.SURGE:
 						sd.surge_turns = maxi(1, val.to_int())
-			"nopack":                                 # what is left of the review pack off
+			"nopack":                                 # the rules before 2026-11-18: veins always 1, late-round pressure while nobody owns a vein
 				BattleExperiment.pack(false)
 			_:
 				if key.begins_with("x."):                 # x.<switch>=<value>: any switch of BattleExperiment by its name
@@ -648,6 +648,8 @@ func _series(setup: Dictionary, label: String) -> int:
 				damage[ev["kind"]] = int(damage.get(ev["kind"], 0)) + int(ev["amount"])
 			elif counts.has(ev["type"]):
 				counts[ev["type"]] += 1
+			if ev["type"] == &"heal_used":
+				skills_used["Heal"] = int(skills_used.get("Heal", 0)) + 1
 			if ev["type"] in [&"surge_declared", &"cast", &"strike", &"moved"] and ev.has("skill"):
 				var key := String(ev["skill"])
 				# Only movement events use display names; resolve against the actor's actual kit.
@@ -840,6 +842,7 @@ func _series(setup: Dictionary, label: String) -> int:
 		var uses := int(skills_used.get(sid, 0))
 		print("| %s | %d | %d | %s |" % [sid, uses, slots_by_skill[sid], per.call(uses, slots_by_skill[sid])])
 	print("Step uses (not a kit slot): %d" % int(skills_used.get("Step", 0)))
+	print("Heal uses (not a kit slot): %d" % int(skills_used.get("Heal", 0)))
 	print("")
 	print("Reached late-round pressure: HP leader won %d, lost %d, HP level %d, no winner %d" % lead)
 	print("Rounds: under 3 in %d %%, over 7 in %d %%, over 10 in %d %% of the battles, longest %d; first defeat in round %s (mean); monsters defeated before their own first turn: %s per battle" % [

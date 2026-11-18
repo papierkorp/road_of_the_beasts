@@ -222,7 +222,7 @@ func _validate_skill(s: BattleSkillDef) -> void:
 		BattleSkillDef.STRIKE:
 			if s.is_free_shape():
 				problems.append(where + ": a Strike needs a base shape around its user")
-			if s.strike_damage < 0 or s.strike_damage > KinRules.STRIKE_DAMAGE:
+			if s.strike_damage < 0 or s.strike_damage > BattleSkillDef.STRIKE_DAMAGE:
 				problems.append(where + ": Strike damage is 0-2 (damage law)")
 		BattleSkillDef.SURGE, BattleSkillDef.TRAP:
 			if s.surge_damage < 0:

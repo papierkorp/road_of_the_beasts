@@ -56,6 +56,8 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 		var steps := BattleMoves.options(b, u, BattleMoves.step_profile())
 		for to: Vector2i in steps:
 			out.append({"type": &"step", "to": to, "path": steps[to]["path"]})
+	if b.heal_error(u) == "":
+		out.append({"type": &"heal"})
 	var slots: Array = range(u.sheet.skills.size())
 	slots.append(Battle.BASIC_SLOT)             # the Basic Jab every monster has beside its kit
 	for slot: int in slots:
@@ -70,15 +72,11 @@ static func candidates(b: Battle) -> Array[Dictionary]:
 				for to: Vector2i in moves:
 					out.append({"type": &"skill", "slot": slot, "to": to, "path": moves[to]["path"]})
 			BattleSkillDef.STRIKE:
-				var pushes: Array[Vector2i] = [Vector2i.ZERO]
-				if KinRules.of(s, u.kin()).get("push", false):
-					pushes = Board.CARDINAL
 				for origin in u.cells():
 					for d in s.shape_dirs():
-						for pd in pushes:
-							var a := {"type": &"skill", "slot": slot, "dir": d, "push_dir": pd, "origin": origin}
-							if b.check(a) == "" and _strike_touches(b, u, s, origin, d):
-								out.append(a)
+						var a := {"type": &"skill", "slot": slot, "dir": d, "origin": origin}
+						if b.check(a) == "" and _strike_touches(b, u, s, origin, d):
+							out.append(a)
 			BattleSkillDef.SURGE, BattleSkillDef.TRAP, BattleSkillDef.ZONE, BattleSkillDef.GROUND:
 				var dirs: Array[Vector2i] = [Vector2i.ZERO]
 				if s.needs_direction():

@@ -6,11 +6,6 @@ extends Resource
 
 enum Kin { BEAST, WINGED, SCALED, SWARM, SPIRIT, ANCIENT }
 
-const STRIKE_NAMES := {
-	Kin.BEAST: "Bite", Kin.WINGED: "Dive", Kin.SCALED: "Tail Sweep",
-	Kin.SWARM: "Gnaw", Kin.SPIRIT: "Siphon", Kin.ANCIENT: "Slam",
-}
-
 @export var id: StringName
 @export var display_name: String
 ## ContentStatus: a test-only or simulation-only monster is never offered by the game.
@@ -41,10 +36,6 @@ const STRIKE_NAMES := {
 
 static func kin_name(k: Kin) -> String:
 	return Kin.keys()[k].capitalize()
-
-
-func strike_name() -> String:
-	return STRIKE_NAMES[kin]
 
 
 ## "Skill · Skill · Skill" for datasheets.

@@ -8,6 +8,7 @@ extends CanvasLayer
 signal action_pressed(id: StringName)
 signal end_turn_pressed
 signal wait_pressed
+signal heal_pressed
 signal restart_pressed
 signal resume_pressed
 signal menu_pressed
@@ -34,6 +35,7 @@ var _hint: Label
 var _ap: Label
 var _end_button: Button
 var _wait_button: Button
+var _heal_button: Button
 var _glossary: AcceptDialog
 var _inspector_panel: PanelContainer
 var _inspector_title: Label
@@ -152,22 +154,28 @@ func _build_bar(root: Control) -> void:
 	_skill_grid = _bar_grid()
 	row.add_child(_skill_grid)
 	row.add_child(_bar_gap())
-	var end_box := VBoxContainer.new()            # End Turn over Wait (user layout to try, 2026-11-17)
-	end_box.add_theme_constant_override("separation", BAR_GAP)
-	row.add_child(end_box)
-	_end_button = Button.new()
-	_end_button.text = "End Turn"
-	_end_button.custom_minimum_size = Vector2(110, BAR_BUTTON.y)
-	_end_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_end_button.pressed.connect(func(): end_turn_pressed.emit())
-	end_box.add_child(_end_button)
-	_wait_button = Button.new()                   # test switch delay_turn: postpone this turn to the end of the round
+	var side_box := VBoxContainer.new()           # Wait over Heal, End Turn to their right over both rows (user layout, 2026-11-18)
+	side_box.add_theme_constant_override("separation", BAR_GAP)
+	row.add_child(side_box)
+	_wait_button = Button.new()                   # postpone this turn to the end of the round
 	_wait_button.text = "Wait"
 	_wait_button.tooltip_text = "Postpone this turn to the end of the round (once a round, before doing anything). Monsters that waited act in reverse order."
 	_wait_button.custom_minimum_size = Vector2(110, BAR_BUTTON.y)
 	_wait_button.visible = false
 	_wait_button.pressed.connect(func(): wait_pressed.emit())
-	end_box.add_child(_wait_button)
+	side_box.add_child(_wait_button)
+	_heal_button = Button.new()                   # Heal: Stamina for HP
+	_heal_button.text = "Heal"
+	_heal_button.custom_minimum_size = Vector2(110, BAR_BUTTON.y)
+	_heal_button.visible = false
+	_heal_button.pressed.connect(func(): heal_pressed.emit())
+	side_box.add_child(_heal_button)
+	_end_button = Button.new()
+	_end_button.text = "End Turn"
+	_end_button.custom_minimum_size = Vector2(110, BAR_BUTTON.y * 2 + BAR_GAP)
+	_end_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_end_button.pressed.connect(func(): end_turn_pressed.emit())
+	row.add_child(_end_button)
 	_tamer_panel = PanelContainer.new()
 	_tamer_panel.visible = false
 	bar.add_child(_tamer_panel)
@@ -475,6 +483,14 @@ func _menu_button(text: String, action: Callable) -> Button:
 func set_exit_mode(from_overworld: bool) -> void:
 	_banner_restart.visible = not from_overworld
 	_banner_menu.text = "Continue" if from_overworld else "Main Menu"
+
+
+## The Heal button: enabled when the acting monster can heal.
+func set_heal(shown: bool, enabled: bool, why: String = "") -> void:
+	_heal_button.visible = shown
+	_heal_button.disabled = not enabled
+	_heal_button.text = "Heal [%s]" % UiTheme.key_text(&"battle_heal")
+	_heal_button.tooltip_text = why
 
 
 func show_pause(on: bool) -> void:

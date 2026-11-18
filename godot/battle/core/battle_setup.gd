@@ -50,7 +50,8 @@ static func build(request: BattleRequest) -> Battle:
 	var b := Battle.new(null, content)
 	var starts := BattleBoards.build(b, request.mode, request.board_seed)
 	var size := mini(request.team_size(), starts.size())
-	var kits := BattleExperiment.random_kits or BattleExperiment.fresh_skills or BattleExperiment.random_monsters      # test switches: no kit of its own
+	var drawn := request.draw_seed != 0             # drawn monsters and generated kits (BattleRequest.draw_seed)
+	var kits := drawn or BattleExperiment.random_kits or BattleExperiment.fresh_skills or BattleExperiment.random_monsters      # test switches: no kit of its own
 	for side in 2:
 		var team: Array[MonsterInstance] = request.player_team if side == 0 else request.enemy_team
 		var prefix := "p" if side == 0 else "e"
@@ -80,9 +81,15 @@ static func build(request: BattleRequest) -> Battle:
 			var def := content.tamer_skill(id)
 			if def != null and not b.tamer_loadout[side].has(def):
 				b.tamer_loadout[side].append(def)
-	if BattleExperiment.random_monsters:
+	if drawn:
+		if request.battle_kind == BattleRequest.INGAME and request.side_points.size() == 2:
+			MonsterDraw.deal(b, request.draw_seed, request.side_points, MonsterDraw.INGAME_TOP, request.mirror_draw)
+		else:
+			MonsterDraw.deal(b, request.draw_seed, [], MonsterDraw.TOP, request.mirror_draw)
+		KitDraw.deal(b, request.draw_seed, true, -1, request.mirror_draw)
+	elif BattleExperiment.random_monsters:
 		MonsterDraw.deal(b, BattleExperiment.kit_seed)
-	if kits:
+	if kits and not drawn:
 		KitDraw.deal(b, BattleExperiment.kit_seed, BattleExperiment.fresh_skills)
 	return b
 

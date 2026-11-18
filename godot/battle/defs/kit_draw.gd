@@ -87,14 +87,25 @@ static func kit(content: BattleContent, rng: RandomNumberGenerator, tpl: Diction
 
 ## Gives every monster of a battle that has not begun a kit by a template of its own (`BattleSetup.build`
 ## calls this when a kit switch is on). The same seed gives the same kits.
-static func deal(b: Battle, kit_seed: int, fresh: bool, ap := -1) -> void:
+## `mirror`: a unit of side 1 plays the kit of the unit of side 0 in the same slot.
+static func deal(b: Battle, kit_seed: int, fresh: bool, ap := -1, mirror := false) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = kit_seed
 	var number := 0
+	var first := {}                               # slot -> [template, skills] of side 0
 	for id in b.roster:
 		var u: BattleUnit = b.units[id]
-		var tpl := template(rng)
-		u.sheet.skills = kit(b.content, rng, tpl, fresh, number, ap)
+		var tpl: Dictionary
+		if mirror and u.side == 1 and first.has(u.slot):
+			tpl = first[u.slot][0]
+			var same: Array[BattleSkillDef] = []
+			same.assign(first[u.slot][1])
+			u.sheet.skills = same
+		else:
+			tpl = template(rng)
+			u.sheet.skills = kit(b.content, rng, tpl, fresh, number, ap)
+			if u.side == 0:
+				first[u.slot] = [tpl, u.sheet.skills]
 		u.sheet.notes.append("random kit: %s" % tpl["name"])
 		u.sheet.set_meta("kit_template", tpl["name"])
 		number += 1

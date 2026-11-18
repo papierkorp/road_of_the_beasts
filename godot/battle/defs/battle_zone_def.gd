@@ -13,6 +13,9 @@ const MAX_LEVEL := 3
 ## authoring note, not a rule, not a player value and not settled. Per cell and round at level I.
 ## -1 = not calculated.
 @export var internal_calc_cost: float = -1.0
+## Which battle the record belongs to (docs/architecture.md §4): the multiplayer battle names things by what they do,
+## the ingame battle has its own content. The generator of skills (SkillGen) uses no record of the ingame battle.
+@export_enum("both", "multiplayer", "ingame") var battle: String = "both"
 @export var effects: Array[FieldEffect] = []
 @export var color: Color = Color(0.5, 0.7, 0.9)
 

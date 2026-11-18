@@ -7,6 +7,18 @@ extends RefCounted
 ##
 ## Not yet carried (open: T18/T19/T21): medicines, arrays, the board generator contract.
 
+## Which of the two battles this is (docs/battle_ingame.md §1): the multiplayer battle or the ingame battle.
+const MULTIPLAYER := &"multiplayer"
+const INGAME := &"ingame"
+var battle_kind: StringName = MULTIPLAYER
+## Drawn monsters (the multiplayer battle has no fixed monsters and skills; the ingame prototype draws too):
+## `draw_seed` != 0 = every monster gets drawn stats, a drawn Kin and a kit of skills generated for this battle; the
+## species is only the look. `side_points` (ingame only): the points of side 0 and side 1; [] = the points of the
+## multiplayer mode. `mirror_draw`: monster i of both sides has the same stats, Kin and kit.
+var side_points: Array[int] = []
+var draw_seed := 0
+var mirror_draw := false
+
 var mode: StringName = &"3v3"
 var player_team: Array[MonsterInstance] = []
 var enemy_team: Array[MonsterInstance] = []

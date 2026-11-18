@@ -22,32 +22,31 @@ docs/todo/
 
 ## Current State
 
-- **Focus:** the battle is finished first. The multiplayer mode (pick teams, fight) is the place to try it.
-- **Decided and built:** Pace and Stamina, the round end (moves, acts, ticks), cover, traps as walkable props, one shape per skill with free shapes, one sheet for ground, zones and props, the monster calculation (ranges from 1, price list, 25 points +5 per step).
-- **Content:** nine monsters at 60 points with six-skill kits. All of it is temporary and may be deleted; rules are not judged by it.
-- **Skill calculation (draft):** a first price list from bot runs stands in the build ([S032](simulation_log.md)); test switches deal random kits, generated skills and random monsters (60 points).
-- **Rules since 2026-11-17:** Strikes only push and may damage props, Basic Jab (2 AP) beside Step, no Kin effects, zones only push or pull, one ground level, no ground or prop damage at the round end, created props last 2 rounds, Wait bought with Pace, Dragon Veins in Pace order, a solid prop springs a trap. Not measured by a run.
-- **Test switches left (on by default, no rules):** stronger veins from a set round, no damage in round 1, no late-round pressure (T44); a free camera tilt. The draft checks the random switches by default.
-- **Next:** play the switches that are left, then the skill calculator with a point range per AP level ([T02](todo/open/skills/T02-find-skill-prices.md)); the price list of S032 does not hold on the new rules.
-- **Played by hand:** the user plays every iteration manually; the rebuild starts when the user is satisfied with the battle ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)).
-- **Display (2026-11-17, not played by hand):** overview tab Generator, skill kinds with colour, glossary, compass, round-end forecast; keys only as Input Map actions ([README](../godot/README.md)).
-- **Build and rules differ** in the places listed in [todo/implementation.md](todo/implementation.md).
+- **Two battles on one core,** developed in parallel ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer.
+- **Multiplayer battle, settled for now:** always 3v3 on a generated symmetric 7×7 board, no tamer skills, no fixed monsters or skills; last touch owns a Dragon Vein, damage from round 1, veins deal 2 from round 3, no late-round pressure, extra turns from round 2, Heal (1 HP for 3 Stamina, no AP, once per turn), a free camera; plus the rules of 2026-11-17.
+- **Multiplayer content:** monsters drawn for 60 points (Random Alpha, Beta, …), kits of generated skills, grounds and zones named by what they do ([content.md §1](content.md#1-ground)). The nine monsters and the named grounds and zones are ingame content, all temporary.
+- **Build:** main menu → Battle → Ingame Prototype (points per side) or Multiplayer (random monsters, or the same for both sides). The draft comes with the rebuild (T48).
+- **Measured on 2026-11-18** ([S040–S045](simulation_log.md), bots, indications): at equal points more HP wins more often, Reach less; Pace and Stamina show no worth; Heal lengthens a battle by 0.1–0.5 rounds. **Not measured:** Heal without AP, the settled state as a whole, the new grounds and zones.
+- **Next:** define the ingame battle (T46) and the draft (T48); skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)): the list of S032 does not hold on the new rules.
+- **Tests:** three known failures: two outside the battle (I46), and the content test for the user's monster `highreach` (Reach 6).
+- **By hand:** the user plays every iteration; the rebuild starts when satisfied ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). Build and rules differ where [todo/implementation.md](todo/implementation.md) says.
 
 ## Open Questions for the User
 
 | # | Question | Task |
 |---|---|---|
 | 1 | How does a stat shape split the points at the roll? | T03 |
-| 2 | Which of the switches that are left become rules: Dragon Veins that deal 2 from a set round (and which round), no damage in round 1, no late-round pressure? Free camera tilt or the fixed angle? | T44 |
-| 3 | Which props of the catalogue stay, and do aura props return? May a prop a skill creates last for rounds only? | T41 |
-| 4 | 3v3 on 7×7, 8×8 or 9×9, and how many Dragon Veins on an even board? Dragon Veins for 1v1, 2v2 and 5v5? | T39 |
+| 2 | Ingame battle: battlegrounds, board events, ends other than 0 HP, a brake without Dragon Veins, ingame-only skills | T46 |
+| 3 | Which props of the catalogue stay, and do aura props return? | T41 |
+| 4 | Square control: do the current means suffice, or does it need more? | T39 |
 | 5 | How many kit slots are open at the start of the game, and what opens the others? | T05 |
-| 6 | Which pushes are cardinal, which use eight directions (written as the build plays them)? | T04 |
+| 6 | Which pushes are cardinal, which use eight directions? | T04 |
 | 7 | How far may a shape that is no Strike be extended? | T06 |
-| 8 | The Thorn Idol passes a Strike on to its neighbours in the same turn, against “fair damage at range”: keep, change or drop? | T41 |
+| 8 | The Thorn Idol passes a Strike on to its neighbours in the same turn: keep, change or drop? | T41 |
 | 9 | May effects on AP or turns per round ever reach other monsters? | T07 |
 | 10 | Does the kit rule of the nine monsters also bind kits a player composes? | T11 |
-| 11 | Skill prices: is “10 points = 1 AP” the form, and what happens to ground, zone and prop skills, which all come out below 1 AP? What does “damages props” cost on a Strike? | T02 |
+| 11 | Skill prices: is “10 points = 1 AP” the form? Ground, zone and prop skills all come out below 1 AP. What does “damages props” cost on a Strike? | T02 |
+| 12 | Multiplayer: a Strike that pulls (new mechanic)? Function names for the props too? The draft: pools, number of skills, saved creations | T48 |
 | 12 | Which of the ideas that are left stay: Erosion, Shifting Sand, Stamina recovery from ground and as a self buff? | T43 |
 
 ## Tasks
@@ -58,7 +57,8 @@ docs/todo/
 | T39 | [Dragon Veins: Square Control as the Way to Win by Defeat](todo/to-clarify/battle/T39-dragon-veins-square-control-as-the-way-to-win-by.md) | to clarify | battle |
 | T41 | [Bring the Props, Slots and Stamina of the Build into the GDDs, or Drop Them](todo/to-clarify/battle/T41-bring-the-props-slots-and-stamina-of-the-build-i.md) | to clarify | battle |
 | T43 | [Try the Ideas of 2026-11-16](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md) | to clarify | battle |
-| T44 | [Review Pack of 2026-11-17](todo/to-clarify/battle/T44-review-pack-of-2026-11-17.md) | to clarify | battle |
+| T46 | [Define the Ingame Battle](todo/to-clarify/battle/T46-define-the-ingame-battle.md) | to clarify | battle |
+| T48 | [Define the Draft of the Multiplayer Battle](todo/to-clarify/battle/T48-define-the-draft-of-the-multiplayer-battle.md) | to clarify | battle |
 | T03 | [Review Stat Budgets, Frames and Progression Limits](todo/to-clarify/monsters/T03-review-stat-budgets-frames-and-progression-limit.md) | to clarify | monsters |
 | T26 | [Draft Staff Traits and Numbers](todo/to-clarify/overworld/T26-draft-staff-traits-and-numbers.md) | to clarify | overworld |
 | T05 | [Complete Skill Improvements](todo/to-clarify/skills/T05-complete-skill-improvements.md) | to clarify | skills |
@@ -92,7 +92,7 @@ docs/todo/
 | T11 | [Learn Lists, Passives and Kits](todo/open/skills/T11-learn-lists-passives-and-kits.md) | open | skills |
 | T32 | [Design Signature Skills](todo/open/skills/T32-design-signature-skills.md) | open | skills |
 
-Finished: T45 ([todo/done/](todo/done/)); archived: T01, T08, T09, T33, T34, T36, T38 ([todo/archive/](todo/archive/)).
+Finished: T44, T45, T47 ([todo/done/](todo/done/)); archived: T01, T08, T09, T33, T34, T36, T38 ([todo/archive/](todo/archive/)).
 
 ## Test Switches of the Build
 

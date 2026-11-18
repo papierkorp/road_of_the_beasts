@@ -1,31 +1,40 @@
 # Battle Rules
 
-Turn-based, isometric monster battles about **grid control**, fully deterministic and readable.
+Turn-based, isometric monster battles about **grid control**, deterministic and readable.
 
 - **This file owns** the rules of a battle: flow, timing, the board, what ground, zones and props are, damage and displacement.
-- **Elsewhere:** what a skill is ([skills.md](skills.md)), what a monster is ([monsters.md](monsters.md)), every concrete ground, zone, prop, skill, kit and monster ([content.md](content.md)), meta progression and tamer skills ([overworld.md](overworld.md)).
-- **Status:** rules are decided unless a section says “working value”. Working values are untested numbers. The user plays every iteration by hand; no number is settled by it.
+- **Elsewhere:** what only the ingame battle has ([battle_ingame.md](battle_ingame.md)), what a skill is ([skills.md](skills.md)), what a monster is ([monsters.md](monsters.md)), every concrete ground, zone, prop, skill, kit and monster ([content.md](content.md)), meta progression and tamer skills ([overworld.md](overworld.md)).
+- **Status:** rules are decided unless a section says “working value”. Working values are untested numbers. **The multiplayer battle as written here is settled for now;** a change needs a new reason.
 
 ## 1. Goals and Pillars
 
-**Goals** (what a battle has to deliver; rules, content and prices are judged against them):
+**Two battles, one core:** the **multiplayer battle** and the **ingame battle** both play this file; each adds rules, content, boards and balance of its own, and nothing balanced for one binds the other.
 
-- **Influence and consequence:** the player's decisions shape the board and have visible consequences.
+**Goals of both battles** (rules, content and prices are judged against them):
+
 - **Deterministic:** no dice, no hidden information.
-- **Short:** about 15 rounds is already very long. Target for 3v3: a **mean between 3.5 and 4.5 rounds**; a battle counts the round it ends in. Battles end by fighting, not by late-round pressure. Even short battles offer meaningful decisions through AP, turns and positioning. Where possible no monster is defeated in round 1.
-- **Tactical:** repeating one skill must not win a battle; position and combination decide.
-- **Every skill has its situation:** each skill is the right choice in some situations and none in all.
-- **Fair defeats:** a loss reads as the player's own mistake; no monster is defeated without its player having had a chance to act.
 - **Simple to learn, hard to master:** few uniform rules, no hidden abilities; everything a monster can do is visible.
-- **Monsters differ:** different monsters offer different ways to play, and every stat matters.
+- **Influence and consequence:** the player's decisions shape the board and the course of the battle, visibly.
+- **Won by tactics and strategy:** repeating one skill must not win a battle; position and combination decide. Skill variety matters: each skill is the right choice in some situations and none in all.
+- **Monsters differ:** different monsters offer different ways to play. That is what the stat calculation is for: every stat matters, and monsters must not all come out alike.
+- **Square control is the basic aim.**
+
+**Goals of the multiplayer battle only:**
+
+- **No helpless defeat:** no monster is defeated without its player having had a chance to act: every monster gets at least one turn, and best no monster falls in round 1.
 - **Win condition:** the battle ends when every monster of one side has 0 HP.
+- **Not endless:** a **mean of 3.5–4.5 rounds**; a battle counts the round it ends in.
+- **Always 3v3,** on a generated, point-symmetric 7×7 board ([§4.1](#41-board-generation)).
+- **No fixed monsters or skills:** they are generated or drafted for a battle; both players get the same pool or each their own. A player can save monsters and skills of their own. The draft is not defined.
+
+The goals of the ingame battle: [battle_ingame.md §1](battle_ingame.md#1-the-two-battles).
 
 **Pillars** (the means):
 
 1. **Control squares, not just units.** A skill acts through a Strike, movement, an effect on its user, or by creating ground, a zone or a prop. The board is the weapon.
 2. **Deterministic and readable.** Before confirming, the player sees which squares a skill takes, what it creates there and where every pushed monster lands.
 3. **A square has two layers with one role each.** Ground acts at a moment; a zone acts while a monster stands in it. A monster or a prop occupies the square. There is no height, no air layer and no delayed area attack.
-4. **A skill only delivers.** What a ground, a zone or a prop does, and when, is written once in its own definition; a skill names what it creates. Learning the grounds, zones and props is learning the game.
+4. **A skill only delivers.** What a ground, a zone or a prop does, and when, is written once in its own definition; a skill names what it creates.
 5. **Fair damage.** Damage from a distance never hits a monster that has had no turn of its own since the cast ([§6.1](#61-damage)).
 6. **Small HP, small hits.** The highest single hit is 2 *(working value)* and HP ends at 10. A monster with 3 or more HP never falls to one hit; HP 1 and 2 exist and are a risk their owner chose.
 7. **Hold the Dragon Veins.** Square control is the way to the win condition: a Dragon Vein works for the side that touched it last, and whoever waits loses HP.
@@ -36,15 +45,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 ### 2.1 Modes
 
-| Mode | Board | Role |
-|---|---|---|
-| 1v1 | 5×5 | duel, tutorial, early game |
-| 2v2 | 6×6 | step between duel and team battle |
-| **3v3** | **7×7** | **standard battle** |
-| 5v5 | 9×9 | special battles only (bosses, tournaments) |
-
-- The encounter chooses a mode within the player's available team size ([overworld.md §6.3](overworld.md#63-stage-unlock-table)).
-- 7×7 for 3v3: 6 monsters on 49 squares is about as crowded as 2 on 25; an odd size gives a centre row for the Dragon Veins and mirror-fair starts.
+The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal or unequal, belongs to the ingame battle ([battle_ingame.md §2](battle_ingame.md#2-team-sizes-and-the-end-of-a-battle)).
 
 ### 2.2 Core Loop
 
@@ -53,7 +54,7 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 3. **Each round:** one queue for all monsters of both sides ([§2.3](#23-pace-and-the-queue)).
 4. **A monster's turn:** it spends AP and Stamina on legal actions ([§2.4](#24-action-points-and-stamina)), then its end-of-turn effects resolve ([§3](#3-timing)).
 5. The round ends with the round-end events ([§3](#3-timing)).
-6. **End of battle:** a side may concede during a turn of one of its own monsters, which ends the battle at once as its defeat. Otherwise the end is checked after a payload has fully resolved, including its defeats. The battle then ends at once and anything still pending lapses. If both sides have no monsters left after the same resolution, the result is a **Draw**.
+6. **End of battle** (when a side has no monsters left; the ingame battle may name other ends): a side may concede during a turn of one of its own monsters, which ends the battle at once as its defeat. Otherwise the end is checked after a payload has fully resolved, including its defeats. The battle then ends at once and anything still pending lapses. If both sides have no monsters left after the same resolution, the result is a **Draw**.
 
 ### 2.3 Pace and the Queue
 
@@ -68,19 +69,20 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 ### 2.4 Action Points and Stamina
 
-**AP per turn = the monster's AP stat.** **Stamina** is a pool that pays for movement.
+**AP per turn = the monster's AP stat.** **Stamina** is a pool that pays for movement and for Heal.
 
 - An action costs the AP on its card, at least 1.
 - **Step** (every monster): 1 AP, 1 square, no Stamina.
-- **Basic Jab** (every monster): 2 AP, 1 damage to the monster or prop on a neighbouring square, no push, once per turn. It is the only direct damage to a monster.
-- **Repetition:** each equipped skill may be used once per turn of its monster unless its card names more uses, once per round or once per battle ([skills.md §2](skills.md#2-the-skill-card)). There is no cooldown system.
+- **Basic Jab** (every monster): 2 AP, 1 damage to the monster or prop on a neighbouring square, no push, once per turn. The only direct damage to a monster.
+- **Heal** (every monster): 3 Stamina, no AP, 1 HP back up to the maximum, once per turn.
+- **Repetition:** each equipped skill may be used once per turn of its monster unless its card names more uses, once per round or once per battle ([skills.md §2](skills.md#2-the-skill-card)).
 
 | Stamina | Rule |
 |---|---|
 | Pool | The monster's Stamina stat; full at the start of a battle |
 | Cost | A movement skill costs its AP **and** Stamina for every square it enters: the movement cost of that square's ground. A path that passes over squares (straight line, any path) costs 1 per square of its distance |
 | Range | A movement skill reaches at most the range on its card (3 squares unless it names another) and never further than the Stamina left |
-| Free | Step, and being pushed or pulled |
+| Free | Step, being pushed or pulled |
 | Recovery | At the round end every monster recovers the **whole number of its current Pace, at least 1**, never above its pool. The current value counts: a timed effect on Pace changes the recovery when it carries the monster across a whole number (Pace 2.0 with a drain of 1 recovers 1; Pace 1.9 with `quicken` 1 recovers 2) |
 
 *Working values:* the range of 3 and every cost.
@@ -101,12 +103,11 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 **The round end: first everything moves, then everything acts, then all clocks tick.**
 
 1. Push and pull zones move the props standing in them.
-2. Props that push or pull at the round end act, in one step. What reacts to entering or leaving fires at the move.
+2. Props that push or pull at the round end act, in one step. What reacts to entering or leaving fires at the move. Zones that damage props act.
 3. Surround damage in one step, then the Dragon Veins one after another ([§4.2](#42-dragon-veins-surrounding-and-late-round-pressure)).
 4. Stamina recovery by the current Pace.
 5. All clocks: zones lose a round, timed effects on monsters expire, ground laid in battle fades, props a skill created lapse ([§4.4](#44-lifetimes)).
-6. Late-round pressure, if it runs.
-7. The queue is built anew.
+6. The queue is built anew.
 
 - **Nothing but Dragon Veins and surrounding deals damage at the round end:** no ground and no prop does. A monster pushed onto end-of-turn ground or next to a damaging prop at the round end takes nothing then and can still leave in its next turn; ground that acts on entering fires at the push.
 - **Clocks last:** a thing that lasts N rounds still counts at its N-th round end. An effect in its last round still counts for the Stamina recovery.
@@ -118,19 +119,15 @@ Turn-based, isometric monster battles about **grid control**, fully deterministi
 
 ### 4.1 Board Generation
 
+*Multiplayer battle only.*
+
 - Ground and props are generated **point-symmetric around the centre**, so both sides get the same distances.
 - **Props** are placed only as point-mirrored pairs; the centre square of an odd board never holds one. A pair may start on Dragon Veins.
-- **Every map has at least one Dragon Vein.**
 - **Board distance:** Chebyshev, `max(|dx|, |dy|)`; diagonals count like orthogonal steps. **Reach is the exception:** it counts orthogonal steps ([skills.md §2](skills.md#2-the-skill-card)).
 
-| Mode | Board | Start area per side | Dragon Veins | Props *(working values)* |
-|---|---|---|---|---|
-| 1v1 | 5×5 | opposite corners | not defined | 2 |
-| 2v2 | 6×6 | back row | not defined | 2 or 4 |
-| **3v3** | **7×7** | back two rows; players place their monsters | **3 on the centre row (x = 1, 3, 5)** | 4 or 6 |
-| 5v5 | 9×9 | back two rows | not defined | 6 or 8 |
-
-On 7×7 the start rows lie 4 squares apart; the first round is for position.
+| Board | Start area per side | Dragon Veins | Props *(working values)* |
+|---|---|---|---|
+| 7×7 | back two rows; players place their monsters | 3 on the centre row (x = 1, 3, 5) | 4 or 6 |
 
 ### 4.2 Dragon Veins, Surrounding and Late-Round Pressure
 
@@ -138,11 +135,11 @@ On 7×7 the start rows lie 4 squares apart; the first round is for position.
 
 - **Dragon Vein:** a ground type that nothing changes. Otherwise it is ordinary ground: a prop may stand on it and a zone may lie on it; only no ground is laid on it.
 - **Ownership by last touch:** a Dragon Vein belongs to the side whose monster touched it last (walked onto or across it, was pushed or pulled onto it, or stands on it). It stays with that side until a monster of the other side touches it. At the start nobody owns one. A prop touches nothing: a solid prop on a vein blocks the square, and the vein keeps working for its owner.
-- **Dragon Vein damage:** at the round end every owned Dragon Vein deals **1 damage to the nearest enemy of its owner** (board distance). Ties: the enemy with more HP, then with more Pace, then **the owning side chooses**.
+- **Dragon Vein damage:** at the round end every owned Dragon Vein deals **1 damage, from round 3 on 2, to the nearest enemy of its owner** (board distance). Ties: the enemy with more HP, then with more Pace, then **the owning side chooses**.
 - **The veins act one after another,** the vein of the faster taker first: the taker is the monster that took the vein for its side (a later touch by an ally does not change it); its current Pace counts, then the queue order. A vein whose taker has fallen acts last. Each vein picks its target on the board as it then stands, defeats are resolved after each, and the battle ends as soon as one side is gone.
 - **Surrounding:** at the round end a monster with **two or more enemies on its eight neighbour squares** takes 1 damage, all in one step before the veins.
 - No source reduces Dragon Vein or surround damage.
-- **Late-round pressure is only a brake.** It runs only at the end of a round in which nobody owns a Dragon Vein (in a mode without Dragon Veins: every round), from a set round (1v1: 6, 2v2: 6, 3v3: 8, 5v5: 8): the square farthest from all living monsters becomes **Voidscar**. Each square's distance is measured to its nearest living monster; the largest value wins, and all equally far squares convert together. **Collapse:** once no free square is left to convert, every living monster takes 1 damage per round.
+- **No late-round pressure:** nothing shrinks the board or punishes waiting; the Dragon Veins are the brake.
 
 ### 4.3 The Square: Ground, Zone and Occupant
 
@@ -182,7 +179,7 @@ What a skill lays is temporary: permanent hazards fill the board and make waitin
 
 ### 4.6 Zones
 
-**A zone pushes or pulls:** a monster that ends its turn inside is moved 1 square. A zone changes no stat, never deals damage, never heals and has one level.
+**A zone pushes or pulls:** a monster that ends its turn inside is moved 1 square. A third kind damages the props standing in it at the round end (1 damage) and does nothing to monsters. A zone changes no stat, never damages or heals a monster and has one level.
 
 | Effect | When | Action | Opposite |
 |---|---|---|---|
@@ -288,14 +285,7 @@ Identity comes from species, Kin, stats, skills and passives. Themes impose no m
 
 ### 5.2 Tamer Skills
 
-Battle resolves the effects of the tamer's prepared loadout deterministically and with previews. Wild monsters have no tamer. Definitions, slots and access: [overworld.md §6.4](overworld.md#64-tamer-skills).
-
-- **Window:** a slotted tamer skill (once per battle) may be used during the turn of one of the tamer's own monsters, never inside a payload resolution or during an enemy turn. It costs no AP and no turn.
-- **Swap Places:** two own monsters trade squares; no range. Each counts as leaving its square and entering the new one.
-- **Urgent Order:** an own monster that has not acted this round is inserted directly after the current turn; its original entry of this round is removed. Extra-turn entries are not affected.
-- **Second Wind:** one own monster on the field regains 1 HP, never above its maximum.
-- **Life Thread:** set on one own monster: the first time it would fall, from any damage source, its HP becomes 1 and the effect is consumed; further simultaneous damage of that step changes nothing.
-- **Beast Swap:** the incoming monster takes the square and queue entry of the swapped-out monster (it acts this round only if that entry is still pending) and arrives with its current HP. The swapped-out monster is not defeated and may be swapped back later; what it created stays.
+Tamer skills exist in the ingame battle only ([battle_ingame.md §5](battle_ingame.md#5-tamer-skills)).
 
 ## 6. Damage and Displacement
 
@@ -360,6 +350,6 @@ Battle resolves the effects of the tamer's prepared loadout deterministically an
 
 ## 7. Technical Requirements
 
-- Godot 4, **3D square grid, orthogonal camera**, never hex. The camera angle is not defined.
+- Godot 4, **3D square grid, orthogonal camera**, never hex. The player turns and tilts the camera freely.
 - Round-end resolution reads the Dragon Vein squares actually on the board, not a fixed list.
-- Target architecture: [architecture.md](architecture.md). The current build and its tools: [godot/README.md](../godot/README.md).
+- Architecture: [architecture.md](architecture.md); the build and its tools: [godot/README.md](../godot/README.md).

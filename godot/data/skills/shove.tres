@@ -14,4 +14,3 @@ status = "test data (T38 experiment, no GDD rule)"
 internal_calc_cost = 10.0
 ap_cost = 1
 strike_damage = 0
-kin_effect = false
