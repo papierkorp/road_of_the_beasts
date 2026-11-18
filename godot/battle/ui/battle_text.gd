@@ -552,7 +552,8 @@ static func cell_rows(b: Battle, p: Vector2i) -> Array:
 		rows.append(["Ground", SEP.join(parts)])
 	if cell.zone != null:
 		var z := cell.zone
-		rows.append(["Zone", "%s %s%s%d more round%s" % [z.def.display_name, ROMAN[z.level - 1], SEP, z.duration, "" if z.duration == 1 else "s"]])
+		var left := "the whole battle" if z.rounds_text() == "" else "%d more round%s" % [z.duration, "" if z.duration == 1 else "s"]
+		rows.append(["Zone", "%s %s%s%s" % [z.def.display_name, ROMAN[z.level - 1], SEP, left]])
 		rows.append(["", zone_brief(z.def, z.level) + (SEP + "centre" if z.def.has_tag(FieldEffect.PULL) and z.anchor == p else "")])
 		var way := zone_way(z, p)
 		if way != "":

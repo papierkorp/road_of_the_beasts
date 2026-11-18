@@ -48,26 +48,34 @@ static func create_from_units(p_mode: StringName, player: Array[MonsterInstance]
 static func build(request: BattleRequest) -> Battle:
 	var content := BattleContent.shared()
 	var b := Battle.new(null, content)
-	var starts := BattleBoards.build(b, request.mode, request.board_seed)
+	var starts: Array[Vector2i] = []
+	var map_starts: Array = [[], []]              # custom map: the default squares of each side
+	if request.map != null:
+		BattleBoards.build_map(b, request.map)
+		map_starts = [BattleBoards.spread(b.start_areas[0], request.player_team.size()), BattleBoards.spread(b.start_areas[1], request.enemy_team.size())]
+	else:
+		starts = BattleBoards.build(b, request.mode, request.board_seed)
 	var size := mini(request.team_size(), starts.size())
 	var drawn := request.draw_seed != 0             # drawn monsters and generated kits (BattleRequest.draw_seed)
 	var kits := drawn or BattleExperiment.random_kits or BattleExperiment.fresh_skills or BattleExperiment.random_monsters      # test switches: no kit of its own
 	for side in 2:
 		var team: Array[MonsterInstance] = request.player_team if side == 0 else request.enemy_team
 		var prefix := "p" if side == 0 else "e"
-		for i in mini(team.size(), size):
+		var fielded := mini(team.size(), size) if request.map == null else (map_starts[side] as Array).size()
+		for i in fielded:
 			var sheet := UnitSheets.from_instance(team[i], content)
 			if not kits:
 				UnitSheets.arrange(sheet, (request.player_shapes if side == 0 else request.enemy_shapes).get(i, {}))
 			if side == 0 and request.prep_pace.has(i):
 				sheet.pace_bonus = float(request.prep_pace[i])      # battle-prep pill (gdd_overworld §6.6)
-			var pos := starts[i]
+			var pos: Vector2i = starts[i] if request.map == null else map_starts[side][i]
 			if side == 0 and i < request.player_starts.size() and _legal_start(b, request, request.player_starts, i):
 				pos = request.player_starts[i]
-			if BattleExperiment.start_back:
-				pos.y = b.board.size - 1          # test switch: back row only
-			if side == 1:
-				pos = b.board.mirrored(pos) - Vector2i(sheet.size - 1, sheet.size - 1)
+			if request.map == null:
+				if BattleExperiment.start_back:
+					pos.y = b.board.size - 1          # test switch: back row only
+				if side == 1:
+					pos = b.board.mirrored(pos) - Vector2i(sheet.size - 1, sheet.size - 1)
 			var u := BattleUnit.new(StringName("%s%d_%s" % [prefix, i, team[i].species_id]), sheet, side, i, pos)
 			u.team_index = i
 			b.add_unit(u)
@@ -97,7 +105,7 @@ static func build(request: BattleRequest) -> Battle:
 ## A chosen start square must lie in the start area, be free and not repeat an earlier choice.
 static func _legal_start(b: Battle, request: BattleRequest, chosen: Array[Vector2i], i: int) -> bool:
 	var p := chosen[i]
-	if not BattleBoards.in_start_area(request.mode, p):
+	if not BattleBoards.may_start(b, request.mode, p):
 		return false
 	var cell := b.board.at(p)
 	if cell == null or cell.prop != null:

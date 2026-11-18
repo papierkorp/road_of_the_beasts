@@ -43,9 +43,18 @@ Every team size other than 3v3 is an ingame matter: 1v1, 2v2, 5v5, and unequal s
 
 - **The player builds battlegrounds in the overworld** and uses them in battles.
 - **Every monster of the player has a battleground of its own.**
-- **A battleground need not be 7×7 and need not be a rectangle.**
 
-Not defined: how a battleground is built and what it costs; what it may hold (ground, props, Dragon Veins, start areas); which outlines and sizes are legal; whose battleground a battle is fought on and what the opponent brings; what the monster gains on its own battleground.
+**What a battleground is** *(the map editor of the build; sizes are working values):*
+
+| Part | Rule |
+|---|---|
+| Outline | a rectangle of a chosen width and height, each 3 to 12 squares, from which single squares can be taken out. A missing square counts like the board edge: nothing stands on it, enters it or is laid on it, and a push against it is a collision ([battle.md §6.3](battle.md#63-collision)) |
+| Ground | every square has one ground; a Dragon Vein is a ground and lies wherever the map puts it, in any number |
+| Props | one prop per square |
+| Zones | one zone per square, with the direction a push zone pushes and the number of rounds it lasts; it may last the whole battle. A pull zone pulls toward the middle of all squares of its kind on the map |
+| Start areas | one per side, any squares. A side fields as many monsters as its area has free squares at most; the sides may differ in number. The player places their monsters inside their area before the battle |
+
+Not defined: how a battleground is built in the overworld and what it costs; which grounds, props and zones a player may use; whose battleground a battle is fought on and what the opponent brings; what the monster gains on its own battleground; where the monsters of the opponent stand inside their area.
 
 ## 4. Board Events
 

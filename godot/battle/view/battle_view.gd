@@ -49,7 +49,8 @@ func build(p_battle: Battle) -> void:
 	_build_environment()
 	_build_base()
 	for cell in battle.board.cells:
-		_tiles[cell.pos] = _make_tile(cell.pos)
+		if battle.board.in_bounds(cell.pos):          # a custom map leaves squares out
+			_tiles[cell.pos] = _make_tile(cell.pos)
 	_make_compass()
 	for id in battle.roster:
 		_pieces[id] = _make_monster(battle.units[id])
@@ -494,7 +495,7 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 		if surge != null:
 			lines += "⚠ %s · %d\n" % [surge.skill.display_name, surge.skill.surge_damage]
 	if cell.zone != null:
-		lines += "%s %s · %dr%s\n" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1], cell.zone.duration,
+		lines += "%s %s%s%s\n" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1], "" if cell.zone.rounds_text() == "" else " · " + cell.zone.rounds_text(),
 			" · centre" if cell.zone.def.has_tag(FieldEffect.PULL) and cell.zone.anchor == cell.pos else ""]
 	if g != null and cell.ground != GroundDef.PLAIN:
 		lines += g.label(cell.level) + "\n"

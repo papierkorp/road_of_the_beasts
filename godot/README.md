@@ -210,6 +210,20 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   battlegrounds, board events or skills of its own yet (docs/todo T46). The existing folders are not sorted into
   `battle/multiplayer/` and `battle/ingame/` yet; that is part of the rebuild (docs/architecture.md §2).
   Tests: `tests/battle/test_ingame_prototype.gd`.
+- **Map editor and custom maps** (`battle/ingame/map_editor.gd`, scene `map_editor.tscn`, reached from the ingame
+  prototype; docs/battle_ingame.md §3): makes a battleground and saves it as a `MapDef`
+  (`battle/defs/map_def.gd`) under `data/maps/<id>.tres`. Width and height from 3 to 12; tools, by click or drag:
+  Ground, Dragon Vein, Prop, Zone (with direction and rounds, 0 = the whole battle), the start areas of both
+  sides, Remove / Restore square, Clear square (`MapEditor.paint`). The message line says what keeps a map from
+  being played (`MapDef.problems`). In the ingame prototype the row “Map” picks a saved map, “Your monsters” and
+  “Enemy monsters” set the team sizes (they may differ), “Battle on the map” starts. In the battle
+  (`BattleRequest.map`, `BattleBoards.build_map`): the rectangle sits in the middle of a square grid and every
+  other square is in `Board.missing`, which `Board.in_bounds` treats as off the board; start areas are
+  `Battle.start_areas` (`BattleBoards.may_start`), the default places are spread over the area
+  (`BattleBoards.spread`) and the player rearranges theirs in the placement phase; a zone that lasts the whole
+  battle has the duration `BoardZone.WHOLE_BATTLE`. The opponent AI reads the Dragon Veins from the board now
+  (`Board.veins`), not from the fixed squares of a board size. Not built: tamer skills, board events, a way to
+  delete a map in the editor (delete the file), 2×2 bodies on maps. Tests: `tests/battle/test_custom_map.gd`.
 - **Multiplayer start screen** (`battle/ui/draft_screen.gd`, scene `battle/draft.tscn`; docs/battle.md §1): always
   3v3 on a generated, point-symmetric 7×7 board, without tamer skills and without fixed monsters or skills. Nothing
   is picked: `request()` writes a `BattleRequest` with a `draw_seed`, and `BattleSetup` then draws every monster for

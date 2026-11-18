@@ -18,6 +18,9 @@ var battle_kind: StringName = MULTIPLAYER
 var side_points: Array[int] = []
 var draw_seed := 0
 var mirror_draw := false
+## Ingame battle: a custom map (MapDef) instead of the board of the mode. The teams may then differ in size; each
+## side fields as many monsters as its team holds and its start area has free squares.
+var map: MapDef = null
 
 var mode: StringName = &"3v3"
 var player_team: Array[MonsterInstance] = []

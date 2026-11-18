@@ -14,6 +14,11 @@ var size: int
 ## them count as off the board.
 var margin: int = 0
 var cells: Array[BoardCell] = []
+## Squares of the grid that are no part of the board (a custom map, MapDef): they count as off the board.
+var missing := {}
+## The Dragon Vein squares, in row order; built at the first call of `veins()` (nothing changes a Dragon Vein).
+var _veins: Array[Vector2i] = []
+var _veins_known := false
 ## layer -> {Vector2i: unit id}; a 2x2 body is entered on all four squares.
 var occupants: Array[Dictionary] = [{}, {}]
 
@@ -26,7 +31,23 @@ func _init(board_size: int = 7) -> void:
 
 
 func in_bounds(p: Vector2i) -> bool:
-	return p.x >= margin and p.y >= margin and p.x < size - margin and p.y < size - margin
+	return p.x >= margin and p.y >= margin and p.x < size - margin and p.y < size - margin and not missing.has(p)
+
+
+## The Dragon Vein squares actually on the board, in row order.
+func veins() -> Array[Vector2i]:
+	if not _veins_known:
+		_veins.clear()
+		for c in cells:
+			if c.ground == GroundDef.WELL and in_bounds(c.pos):
+				_veins.append(c.pos)
+		_veins_known = true
+	return _veins
+
+
+## Call after Dragon Veins were set by hand (board builders, tests).
+func forget_veins() -> void:
+	_veins_known = false
 
 
 func at(p: Vector2i) -> BoardCell:
@@ -109,6 +130,9 @@ func clone() -> Board:
 	var b := Board.new(0)
 	b.margin = margin
 	b.size = size
+	b.missing = missing
+	b._veins = _veins
+	b._veins_known = _veins_known
 	var props_seen := {}
 	for c in cells:
 		b.cells.append(c.clone(props_seen))

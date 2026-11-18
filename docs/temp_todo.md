@@ -25,11 +25,11 @@ docs/todo/
 - **Two battles on one core,** developed in parallel ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer.
 - **Multiplayer battle, settled for now:** always 3v3 on a generated symmetric 7×7 board, no tamer skills, no fixed monsters or skills; last touch owns a Dragon Vein, damage from round 1, veins deal 2 from round 3, no late-round pressure, extra turns from round 2, Heal (1 HP for 3 Stamina, no AP, once per turn), a free camera; plus the rules of 2026-11-17.
 - **Multiplayer content:** monsters drawn for 60 points (Random Alpha, Beta, …), kits of generated skills, grounds and zones named by what they do ([content.md §1](content.md#1-ground)). The nine monsters and the named grounds and zones are ingame content, all temporary.
-- **Build:** main menu → Battle → Ingame Prototype (points per side) or Multiplayer (random monsters, or the same for both sides). The draft comes with the rebuild (T48).
+- **Build:** main menu → Battle → Ingame Prototype (points per side, custom maps from the map editor, unequal teams) or Multiplayer (random or mirrored monsters).
 - **Measured on 2026-11-18** ([S040–S045](simulation_log.md), bots, indications): at equal points more HP wins more often, Reach less; Pace and Stamina show no worth; Heal lengthens a battle by 0.1–0.5 rounds. **Not measured:** Heal without AP, the settled state as a whole, the new grounds and zones.
-- **Next:** define the ingame battle (T46) and the draft (T48); skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)): the list of S032 does not hold on the new rules.
-- **Tests:** three known failures: two outside the battle (I46), and the content test for the user's monster `highreach` (Reach 6).
-- **By hand:** the user plays every iteration; the rebuild starts when satisfied ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). Build and rules differ where [todo/implementation.md](todo/implementation.md) says.
+- **Next:** the ingame battle (T46; the multiplayer battle counts as finished for now): board events, ends of a battle, tamer skills in the prototype. Later the draft (T48) and skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)).
+- **Tests:** three known failures: two outside the battle (I46), one for the user's monster `highreach`.
+- **By hand:** the user plays each iteration; then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). Differences: [todo/implementation.md](todo/implementation.md).
 
 ## Open Questions for the User
 

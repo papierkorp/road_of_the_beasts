@@ -71,7 +71,10 @@ func _ready() -> void:
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	hud.resume_pressed.connect(_toggle_pause)
 	hud.menu_pressed.connect(_to_menu)
-	hud.log_line("%s on %d×%d" % [request.mode, battle.board.size, battle.board.size])
+	if request.map != null:
+		hud.log_line("%s (%d×%d), %d against %d" % [request.map.display_name, request.map.width, request.map.height, battle.living(0).size(), battle.living(1).size()])
+	else:
+		hud.log_line("%s on %d×%d" % [request.mode, battle.board.size, battle.board.size])
 	for u in battle.living(PLAYER_SIDE):
 		var notes: PackedStringArray = []
 		if u.sheet.pace_bonus > 0.0:
@@ -415,7 +418,7 @@ func _after_action() -> void:
 func _start_squares() -> Array[Vector2i]:
 	var out: Array[Vector2i] = []
 	for cell in battle.board.cells:
-		if BattleBoards.in_start_area(request.mode, cell.pos) and cell.prop == null:
+		if battle.board.in_bounds(cell.pos) and BattleBoards.may_start(battle, request.mode, cell.pos) and cell.prop == null:
 			out.append(cell.pos)
 	return out
 
@@ -447,7 +450,7 @@ func _placement_click() -> void:
 func _can_start_at(u: BattleUnit, origin: Vector2i) -> bool:
 	for c in u.cells_at(origin):
 		var cell := battle.board.at(c)
-		if cell == null or not BattleBoards.in_start_area(request.mode, c) or battle.board.prop_at(c, u.layer) != null:
+		if cell == null or not BattleBoards.may_start(battle, request.mode, c) or battle.board.prop_at(c, u.layer) != null:
 			return false
 		var other := battle.board.unit_id_at(c, u.layer)
 		if other != &"" and other != u.id:

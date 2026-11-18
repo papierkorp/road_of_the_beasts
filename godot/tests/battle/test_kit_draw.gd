@@ -133,6 +133,7 @@ func test_the_ai_values_owned_locked_and_guarded_veins() -> void:
 	var veins := BattleExperiment.well_squares(7)
 	var vein: Vector2i = veins[0]
 	var b := H.battle([[0, Vector2i(3, 6), {}], [1, vein + Vector2i(0, -2), {}]])
+	BattleBoards.place_wells(b)                  # the AI reads the Dragon Veins of the board
 	b.begin()
 	for p in veins:
 		b.board.at(p).owner_side = -1
@@ -154,6 +155,7 @@ func test_the_ai_values_owned_locked_and_guarded_veins() -> void:
 func test_the_game_ai_locks_its_vein_with_a_prop() -> void:
 	var vein: Vector2i = BattleExperiment.well_squares(7)[1]
 	var b := H.battle([[0, vein, {"skills": ["plant_bamboo"], "ap": 3, "pace": 2.9}], [1, Vector2i(3, 0), {"pace": 1.0}]])
+	BattleBoards.place_wells(b)                  # the AI reads the Dragon Veins of the board
 	b.begin()
 	assert_str(String(b.turn_owner)).is_equal("u0")
 	b.board.at(vein).owner_side = 0

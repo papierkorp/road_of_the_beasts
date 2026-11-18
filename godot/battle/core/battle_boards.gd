@@ -166,6 +166,78 @@ static func _pair_squares(b: Battle, mode: StringName, d: Dictionary, starts: Ar
 	return [free, spare]
 
 
+## Builds a custom map (MapDef) into `b`: the rectangle sits in the middle of a square grid, every square outside
+## it and every missing square counts as off the board. Sets the start areas of both sides.
+static func build_map(b: Battle, map: MapDef) -> void:
+	var size := maxi(map.width, map.height)
+	@warning_ignore("integer_division")
+	var shift := Vector2i((size - map.width) / 2, (size - map.height) / 2)
+	b.board = Board.new(size)
+	b.voidscar_from = 999
+	for cell in b.board.cells:
+		if not map.has_square(cell.pos - shift):
+			b.board.missing[cell.pos] = true
+	for p: Vector2i in map.grounds:
+		var g := b.content.ground(map.grounds[p])
+		if g != null and map.has_square(p):
+			b.set_ground(p + shift, g.id)
+	b.board.forget_veins()
+	var prop_squares := map.props.keys()
+	prop_squares.sort()
+	for p: Vector2i in prop_squares:
+		if map.has_square(p) and b.content.prop(map.props[p]) != null:
+			b.add_prop(map.props[p], p + shift)
+	# a pull zone pulls toward the middle of all squares of its kind on the map
+	var middle := {}
+	for p: Vector2i in map.zones:
+		var zid: StringName = map.zones[p].get("zone", &"")
+		var sum: Array = middle.get(zid, [Vector2i.ZERO, 0])
+		middle[zid] = [sum[0] + p, sum[1] + 1]
+	var zone_squares := map.zones.keys()
+	zone_squares.sort()
+	for p: Vector2i in zone_squares:
+		var entry: Dictionary = map.zones[p]
+		var def := b.content.zone(entry.get("zone", &""))
+		if def == null or not map.has_square(p):
+			continue
+		var rounds := int(entry.get("rounds", 0))
+		var sum: Array = middle[def.id]
+		var centre := Vector2i(roundi(float(sum[0].x) / sum[1]), roundi(float(sum[0].y) / sum[1]))
+		b._next_gid += 1
+		BattleBoardOps.land_zone(b, b.board.at(p + shift), def, b._next_gid, &"", rounds if rounds > 0 else BoardZone.WHOLE_BATTLE,
+			entry.get("dir", Vector2i.ZERO), centre + shift)
+	for side in 2:
+		var area: Array[Vector2i] = []
+		for p in map.free_starts(b.content, side):
+			area.append(p + shift)
+		b.start_areas[side] = area
+
+
+## Whether `p` is a square `side` may place a monster on: the start area of the custom map, else of the mode.
+static func may_start(b: Battle, mode: StringName, p: Vector2i, side := 0) -> bool:
+	if not (b.start_areas[side] as Array).is_empty():
+		return (b.start_areas[side] as Array).has(p)
+	return in_start_area(mode, p, side)
+
+
+## `count` squares of a start area, spread evenly over it (the default places before the player arranges them).
+static func spread(area: Array, count: int) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for i in mini(count, area.size()):
+		@warning_ignore("integer_division")
+		out.append(area[(i * area.size() + area.size() / 2) / count % area.size()] if count <= area.size() else area[i])
+	var unique: Array[Vector2i] = []
+	for p in out:
+		if not unique.has(p):
+			unique.append(p)
+	for p: Vector2i in area:                      # fill up if the spread hit a square twice
+		if unique.size() >= mini(count, area.size()):
+			break
+		if not unique.has(p):
+			unique.append(p)
+	return unique
+
+
 ## Turns the Dragon Vein squares of the board size into Dragon Veins (BattleExperiment.well_squares).
 static func place_wells(b: Battle) -> void:
 	for p in BattleExperiment.well_squares(b.board.size):
@@ -173,6 +245,7 @@ static func place_wells(b: Battle) -> void:
 		cell.ground = GroundDef.WELL
 		cell.level = 1
 		cell.height = 0
+	b.board.forget_veins()
 
 
 static func _seeded_props(b: Battle, mode: StringName, d: Dictionary, starts: Array[Vector2i], seed_value: int, fixed_pairs := -1) -> Dictionary:

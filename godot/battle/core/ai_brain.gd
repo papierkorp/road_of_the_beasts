@@ -115,7 +115,7 @@ static func _strike_touches(b: Battle, u: BattleUnit, s: BattleSkillDef, origin:
 
 ## A placement on or next to a Dragon Vein is worth a look (a prop that locks it, a wall).
 static func _near_vein(b: Battle, cells: Array[Vector2i]) -> bool:
-	for p in BattleExperiment.well_squares(b.board.size):
+	for p in b.board.veins():
 		for c in cells:
 			if maxi(absi(c.x - p.x), absi(c.y - p.y)) <= 1:
 				return true
@@ -183,7 +183,7 @@ static func evaluate(b: Battle, side: int) -> float:
 	var vein_fight := BattleExperiment.vein_touch
 	if vein_fight:
 		score += _vein_score(b, side)
-	for p in (BattleExperiment.well_squares(b.board.size) if not vein_fight else []):
+	for p in (b.board.veins() if not vein_fight else []):
 		var vein_side := b.board.at(p).owner_side if BattleExperiment.vein_touch else -1
 		var holder := b.any_unit_at(p)
 		if holder != null:
@@ -207,7 +207,7 @@ static func evaluate(b: Battle, side: int) -> float:
 ## enter it counts VEIN_GUARD (walls and bodies in the way raise it). A vein a side does not own pulls its
 ## nearest monster (VEIN_PULL per square). Both sides are counted, so blocking the enemy's way scores too.
 static func _vein_score(b: Battle, side: int) -> float:
-	var veins := BattleExperiment.well_squares(b.board.size)
+	var veins := b.board.veins()
 	if veins.is_empty():
 		return 0.0
 	var reach: Array[Dictionary] = [_walk_map(b, 0), _walk_map(b, 1)]
@@ -443,7 +443,7 @@ static func _add_follow_ups(b: Battle, u: BattleUnit, base: float, scored: Array
 	var order := range(scored.size())
 	order.sort_custom(func(x: int, y: int) -> bool: return scored[x][0] > scored[y][0])
 	var looked: Array = order.slice(0, LOOKAHEAD)
-	if BattleExperiment.well_squares(b.board.size).has(u.pos):
+	if b.board.veins().has(u.pos):
 		var off := 0
 		for i: int in order:
 			if off >= LOOKAHEAD:
@@ -549,7 +549,7 @@ static func _walk_to_enemy(b: Battle, side: int, from: Vector2i) -> int:
 	var best := 99
 	for e in b.living(1 - side):
 		best = mini(best, e.manhattan_to(from))
-	for p in BattleExperiment.well_squares(b.board.size):      # a free Wellspring is a goal too
+	for p in b.board.veins():      # a free Wellspring is a goal too
 		if b.any_unit_at(p) == null and (not BattleExperiment.vein_touch or b.board.at(p).owner_side != side):
 			best = mini(best, absi(p.x - from.x) + absi(p.y - from.y) + 1)
 	return best

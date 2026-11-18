@@ -32,6 +32,8 @@ var content: BattleContent
 var board: Board
 var units := {}                          # id -> BattleUnit
 var roster: Array[StringName] = []       # stable order: player slots, enemy slots, benches
+## Custom map (MapDef): the squares side 0 and side 1 may place their monsters on ([] = the start area of the mode).
+var start_areas: Array = [[], []]
 var queue: Array[Dictionary] = []        # this round's entries (BattleQueue)
 var prev_queue: Array[Dictionary] = []   # the finished round's queue (orphaned Surge order)
 var queue_idx := 0
