@@ -287,7 +287,7 @@ Five powers hold the city. Each one is a favor faction (§7.2):
 
 - **Nodes:** rooms linked by doors; wild monsters roam visibly (no random encounters), touch triggers battle (flow: [§2.2](#22-expedition-loop); costs: [§2.6](#26-action-catalog)).
 - **Individuals:** own stat shape, stage, slot development; visually telegraphed Kin/themes and full pre-battle sheets enable informed picks/counter-picks.
-- Node fixes **mode** (1v1 / 2v2 / 3v3 / 5v5) and wild-monster count; board generation follows [battle.md §4.1](battle.md#41-board-generation).
+- Node fixes its **battleground** ([battle_ingame.md §3](battle_ingame.md#3-battlegrounds)) and the wild monsters; the battleground sets the team size and the ends of the battle.
 
 ---
 
@@ -439,15 +439,15 @@ BREAKTHROUGH High → next stage's Lower
 
 | Stage | Monster unlock | Player unlock |
 |----------------|----------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| Qi Gathering | full kit | holds 1 monster · **1v1** (5×5) · 1 tamer slot |
-| Foundation | slot-development step | holds 3+ monsters · **3v3** (7×7, standard) · **2v2** (6×6) |
+| Qi Gathering | full kit | holds 1 monster · **1v1** · 1 tamer slot |
+| Foundation | slot-development step | holds 3+ monsters · **3v3** · **2v2** |
 | Core Formation | slot-development step · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer slot · **5v5** special battles |
 | Soul Tier | slot-development step | mid-battle **Beast Swap** access ([§6.4](#64-tamer-skills)) |
 | Immortal | slot-development step | 3rd tamer slot |
 | Sovereign | Signature skill (Legendary) | full spatial arsenal |
 
 - Bigger teams and swap **are the rewards**: one mechanic per breakthrough also provides a natural tutorial.
-- **Encounter sets mode**, within fieldable team size: narrow corridor 1v1/2v2, dungeon hall 3v3, tournament 5v5; player needs at least that many monsters.
+- **The battleground sets the team size**, within the fieldable team size ([battle_ingame.md §2](battle_ingame.md#2-team-sizes-and-the-end-of-a-battle)): narrow corridor 1v1/2v2, dungeon hall 3v3, tournament 5v5; player needs at least that many monsters.
 
 #### 6.3.1 Breakthrough Trials
 

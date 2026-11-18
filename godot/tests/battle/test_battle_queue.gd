@@ -92,11 +92,13 @@ func test_queue_is_recalculated_every_round_from_effective_pace() -> void:
 		[0, Vector2i(0, 6), {"pace": 1.6}],
 		[1, Vector2i(6, 0), {"pace": 1.5}],
 	])
-	b.apply_effect(H.unit(b, 0), "t:drain", "drain_pace", 2, 5)     # a timed effect on the monster (a zone changes no stat)
+	b.apply_effect(H.unit(b, 0), "t:drain", "drain_pace", 1, 5)     # a timed effect on the monster (a zone changes no stat)
 	b.begin()
-	# 1.6 - 2 points = 1.4 < 1.5: the drained monster acts second
+	# a drain point counts double: 1.6 - 0.2 = 1.4 < 1.5, so one point passes a monster of lower base Pace
 	assert_array(_ids(b)).is_equal([[&"u1", "1.5"], [&"u0", "1.4"]])
 	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(1.4, 0.001)
+	b.apply_effect(H.unit(b, 0), "t:quicken", "quicken", 1, 5)
+	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(1.5, 0.001)   # quicken counts single
 
 
 func test_pace_floor_is_point_one() -> void:

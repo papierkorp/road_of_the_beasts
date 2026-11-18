@@ -3,7 +3,7 @@
 The battle inside the game: grown monsters on battlegrounds of the world. It plays the core rules of [battle.md](battle.md) and adds its own.
 
 - **This file owns** every rule only the ingame battle has. The core and what only the multiplayer battle has stand in [battle.md](battle.md).
-- **Status:** the frame of §1 is decided; §5 and §7 are decided as written, the numbers of §7 are working values. Everything else is not defined.
+- **Status:** the frame of §1, the ends of §2, the kinds of board events of §4, §5 and §7 are decided as written; the numbers of §7 are working values. Everything else is not defined.
 
 ## 1. The Two Battles
 
@@ -25,24 +25,26 @@ Both battles share the goals of [battle.md §1](battle.md#1-goals-and-pillars): 
 
 - **Room to grow:** every mechanic of the ingame battle carries upgrade paths for the ranks of the tamer ([overworld.md §6](overworld.md#6-progression)), because the monsters grow too and a mechanic that does not grow with them falls behind.
 
-- **One core:** flow, timing, the square, damage and displacement are the same in both battles.
+- **One core:** flow, timing, the square, damage and displacement are the same in both battles. **Dragon Veins and surrounding are core rules;** a battleground has Dragon Veins where its map puts them, or none.
 - **Strictly apart above the core:** a rule, a skill, a board or a number of one battle is no reason for a decision in the other. A measurement names the battle it was made in.
 - **In the build:** the main menu leads through “Battle” to “Ingame Prototype” and “Multiplayer”. The prototype is a test battle without the overworld: points per side, which may differ, and a board are chosen there.
 
 ## 2. Team Sizes and the End of a Battle
 
-Every team size other than 3v3 is an ingame matter: 1v1, 2v2, 5v5, and unequal sides such as 3v1. The encounter chooses within the player's available team size ([overworld.md §6.3](overworld.md#63-stage-unlock-table)).
+Every team size other than 3v3 is an ingame matter: 1v1, 2v2, 5v5, and unequal sides such as 3v1. **Every board of the game comes from a battleground** ([§3](#3-battlegrounds)): its start areas set how many monsters each side fields, never more than the player's available team size ([overworld.md §6.3](overworld.md#63-stage-unlock-table)).
 
-*Working values of the boards built so far; Dragon Veins on them are not defined:*
+**A battle need not end with every monster of a side at 0 HP.** **The battleground names its ends;** besides the end at 0 HP, a battleground may have these:
 
-| Size | Board | Start area per side | Props | Role |
-|---|---|---|---|---|
-| 1v1 | 5×5 | opposite corners | 2 | duel, tutorial, early game |
-| 2v2 | 6×6 | back row | 2 or 4 | step between duel and team battle |
-| 3v3 | 7×7 | back two rows | 4 or 6 | standard battle |
-| 5v5 | 9×9 | back two rows | 6 or 8 | special battles (bosses, tournaments) |
+| End | Rule |
+|---|---|
+| Leader | a side has a leader (a boss, the head of a pack); when the leader is defeated, the battle ends and the others flee |
+| Flight | a monster leaves the board over an exit; who reaches the exit is out of the battle and does not count as defeated |
+| Race | the first side to bring a monster onto a goal square wins |
+| Hold | the side that holds the goal squares at a round end wins |
 
-**A battle need not end with every monster of a side at 0 HP.** Not defined: which other ends exist, who names the end of a battle, and what brakes a battle that has no Dragon Veins.
+**Brake:** a battleground without Dragon Veins brakes a battle through its board events ([§4](#4-board-events)); one with neither has no brake.
+
+Not defined: the numbers of the ends (how many goal squares, how long they are held, when a wild monster flees); whether several ends may apply in one battle.
 
 ## 3. Battlegrounds
 
@@ -63,7 +65,17 @@ Not defined: how a battleground is built in the overworld and what it costs; whi
 
 ## 4. Board Events
 
-The ingame battle has board events. Not defined: what an event is, when it acts ([battle.md §3](battle.md#3-timing)) and how the player sees it before it acts.
+A **board event** is part of the battleground: the map names where it acts and what it does, in the vocabulary of ground, zones, props and displacement ([battle.md §4](battle.md#4-the-board)). Nothing about it is hidden.
+
+| Kind | Starts | Seen |
+|---|---|---|
+| Scheduled | in the round the map names, at the round end ([battle.md §3](battle.md#3-timing)) | the whole schedule from the start of the battle |
+| Announced | at the round end after it was announced | marked on its squares one round before |
+| Switched | when a monster enters its switch square | the switch square and what it starts |
+
+- **When in the round end:** each event names its step of the round end ([battle.md §3](battle.md#3-timing)); an event that names none acts at the very end, after the clocks tick and before the queue of the next round.
+
+Not defined: what an event may do beyond the vocabulary of the board.
 
 ## 5. Tamer Skills
 

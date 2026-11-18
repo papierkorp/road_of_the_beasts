@@ -136,9 +136,14 @@ static func total(b: Battle, u: BattleUnit, tag: String) -> int:
 	return sum
 
 
+## A drain point counts double (user decision 2026-11-18, docs/battle.md §2.3): `drain_pace 1` lowers Pace by 0.2, so a
+## drain can pass a monster of lower base Pace; `quicken 1` still raises it by 0.1.
+const DRAIN_FACTOR := 2
+
+
 ## Effective Pace: the queue position of a monster. `quicken` and `drain_pace` change it in Pace points.
 static func pace(b: Battle, u: BattleUnit) -> float:
-	var v := u.sheet.pace + u.sheet.pace_bonus + PACE_POINT * (total(b, u, FieldEffect.QUICKEN) - total(b, u, FieldEffect.DRAIN_PACE))
+	var v := u.sheet.pace + u.sheet.pace_bonus + PACE_POINT * (total(b, u, FieldEffect.QUICKEN) - DRAIN_FACTOR * total(b, u, FieldEffect.DRAIN_PACE))
 	return maxf(MIN_PACE, snappedf(v, 0.1))
 
 

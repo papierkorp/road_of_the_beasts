@@ -124,7 +124,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     something else points where the placement is turned (`BattleCasting.rot_dir`).
   - **Build since 2026-11-15 (user decisions of that day; S030; docs/temp_todo.md handoff and T41):**
     - *Pace:* the stat Initiative is called Pace everywhere (`pace`, `drain_pace`, `pace_bonus`). Scale: base 1.0, a
-      stat point is 0.1 (`BattleStats.PACE_POINT`); `quicken` / `drain_pace` values count in points; an extra-turn entry
+      stat point is 0.1 (`BattleStats.PACE_POINT`); `quicken` / `drain_pace` values count in points (a drain point double since 2026-11-18, `BattleStats.DRAIN_FACTOR`); an extra-turn entry
       sits 0.2 lower (`BattleQueue.EXTRA_TURN_PENALTY`); the nine monsters were converted by their points (9.0 → 1.4 …
       1.0 → 1.0); the AI weighs a Pace point double so that its choices stay as before. Saves from before load through
       `StatShape.pace_from_pool`; the overworld's stat shapes still count Pace on their 1–9 pool scale internally.
@@ -204,7 +204,8 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
 - **Two battles** (docs/battle_ingame.md §1): the main menu button “Battle” opens `battle/battle_menu.tscn` with
   “Ingame Prototype” and “Multiplayer” (the draft, `battle/draft.tscn`). The ingame prototype
   (`battle/ingame/ingame_prototype.gd`) is a test battle without the overworld: points per side from 25 to 110 in
-  steps of 5 with the stage they stand for, a board size, 1v1 / 2v2 / 3v3. It writes a `BattleRequest` with
+  steps of 5 with the stage they stand for, a board size, 1v1 / 2v2 / 3v3 on the generated boards of `BattleBoards`
+  (1v1 5×5, 2v2 6×6, 3v3 7×7; a test tool only: every board of the game is a battleground, docs/battle_ingame.md §2). It writes a `BattleRequest` with
   `battle_kind` `ingame`, `side_points` and `draw_seed`; `BattleSetup` then draws every monster for the points of its
   side up to the ranges of the sheet (`MonsterDraw.INGAME_TOP`: AP 5, three turns) with a kit of generated skills.
   The screen resets `BattleExperiment` to the build defaults, so no switch of the draft carries over. It has no

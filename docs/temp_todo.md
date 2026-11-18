@@ -28,7 +28,8 @@ docs/todo/
 - **Build:** main menu → Battle → Ingame Prototype (points per side, custom maps from the map editor, unequal teams, a wild enemy and a seal for catching) or Multiplayer (random or mirrored monsters).
 - **Measured on 2026-11-18** ([S040–S045](simulation_log.md), bots, indications): at equal points more HP wins more often, Reach less; Pace and Stamina show no worth; Heal lengthens a battle by 0.1–0.5 rounds. **Not measured:** Heal without AP, the settled state as a whole, the new grounds and zones.
 - **Catching, decided and built on 2026-11-18** ([battle_ingame.md §7](battle_ingame.md#7-catching), [godot/README.md](../godot/README.md)): indestructible Seal Ground laid by the tamer (seal item by rarity or the Seal skill, one tamer slot from the start), a seeded chance at the turn end of a wild monster with few HP, certain at 0 HP on it; wild monsters die elsewhere, contracted monsters never. Not built: a wild AI that avoids Seal Ground, Seal upgrades. Readings of the build: [implementation.md](todo/implementation.md). Details: T49.
-- **Next:** the user plays Seal Ground by hand; then a wild AI that values Seal Ground (T49) and the rest of the ingame battle (T46; the multiplayer battle counts as finished for now): board events, ends of a battle, tamer skills in the prototype. **Development pattern** decided on 2026-11-18 for monster and tamer skills alike ([skills.md §8](skills.md#8-development)); Seal has a draft option list, the other skills none. Later the draft (T48) and skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)).
+- **Ingame battle, decided on 2026-11-18** ([battle_ingame.md §2](battle_ingame.md#2-team-sizes-and-the-end-of-a-battle), [§4](battle_ingame.md#4-board-events)): every board is a battleground, which sets the team size and names its ends (leader, flight, race, hold) and its board events (scheduled, announced, switched; each names its step of the round end). Board events brake a battle without Dragon Veins; veins and surrounding are core. A drain point counts double (core, no content uses it yet).
+- **Next:** build ends and board events into the map editor and the battle (T46); the user plays Seal Ground (T49); then a wild AI that values Seal Ground. Later the draft (T48) and skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)).
 - **Tests:** two known failures outside the battle (I46: the overworld roamer, the reference stats); all 260 battle tests pass (2026-11-18), the earlier failure for `highreach` did not occur.
 - **By hand:** the user plays each iteration; then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). Differences: [todo/implementation.md](todo/implementation.md).
 
@@ -37,7 +38,7 @@ docs/todo/
 | # | Question | Task |
 |---|---|---|
 | 1 | How does a stat shape split the points at the roll? | T03 |
-| 2 | Ingame battle: battlegrounds, board events, ends other than 0 HP, a brake without Dragon Veins, ingame-only skills | T46 |
+| 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills, battlegrounds in the overworld (cost, content, whose board) | T46 |
 | 13 | Seal: item and skill Seal Ground together? The upgrade scroll as an item; options of the other tamer skills | T49 |
 | 3 | Which props of the catalogue stay, and do aura props return? | T41 |
 | 4 | Square control: do the current means suffice, or does it need more? | T39 |
