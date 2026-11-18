@@ -310,6 +310,10 @@ func _tamer_action() -> Dictionary:
 			var cells: Array = []
 			cells.assign(Shapes.footprint(_tetrominoes[rot % _tetrominoes.size()], hover))
 			a["cells"] = cells
+		TamerSkillDef.SEAL:
+			if hover == NOWHERE:
+				return {}
+			a["cells"] = [hover]
 		TamerSkillDef.SWAP_PLACES:
 			if picked.is_empty() or target == null:
 				return {}
@@ -664,7 +668,7 @@ func _tamer_highlights(out: Dictionary) -> void:
 	var def := battle.tamer_skill(PLAYER_SIDE, tamer_id)
 	if def == null:
 		return
-	if def.effect == TamerSkillDef.DOMAIN_GLIMPSE:
+	if def.effect == TamerSkillDef.DOMAIN_GLIMPSE or def.effect == TamerSkillDef.SEAL:
 		var a := _tamer_action()
 		if a.is_empty():
 			return
@@ -759,6 +763,9 @@ func _hint_text() -> String:
 			match def.effect:
 				TamerSkillDef.DOMAIN_GLIMPSE:
 					return "R changes shape · click places"
+				TamerSkillDef.SEAL:
+					var why := battle.check(_tamer_action()) if hover != NOWHERE else ""
+					return why if why != "" else "Click a square to lay Seal Ground (%d%% at 1 HP)" % def.seal_base
 				TamerSkillDef.SWAP_PLACES:
 					return "Click the %s monster" % ("first" if picked.is_empty() else "second")
 				TamerSkillDef.BEAST_SWAP:
@@ -819,7 +826,7 @@ func _actions() -> Array:
 		var used: bool = battle.tamer_used[PLAYER_SIDE].has(def.id)
 		out.append({"id": StringName(TAMER_PREFIX + String(def.id)), "group": &"tamer", "text": "%s\n%s" % [def.display_name, "used" if used else "tamer"],
 			"enabled": mine and not used, "selected": mode == &"tamer" and tamer_id == def.id,
-			"card": {"title": def.display_name, "rows": [["", def.description], ["", "tamer · 1/battle"]]}})
+			"card": {"title": def.display_name, "rows": [["", def.description], ["", "seal item · used up when laid" if def.seal_item else "tamer · 1/battle"]]}})
 	return out
 
 

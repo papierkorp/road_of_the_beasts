@@ -14,7 +14,7 @@
 | Goals | Decided: a tactics puzzle that may be unfair. Open: a length target |
 | End of a battle | Which ends other than every monster of a side at 0 HP exist, and who names them? What brakes a battle without Dragon Veins? |
 | Team sizes | Boards, start areas and Dragon Veins for 1v1, 2v2, 5v5 and unequal sides such as 3v1 |
-| Tamer skills | Ingame only (decided); the prototype screen offers none yet |
+| Tamer skills | Ingame only (decided); the prototype screen offers none yet. Catching on the board is decided ([battle_ingame.md §7](../../../battle_ingame.md#7-catching)); its details: T49 |
 | Core or multiplayer | Are Dragon Veins and surrounding core, or multiplayer only? |
 | Growth in battle | Which stats and stages the prototype should offer; AP 5 and a third turn were never played |
 

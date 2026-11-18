@@ -157,7 +157,7 @@ The **species learnable list** sets concrete skill access. Neither learnable lis
 | 17 | Sovereign Middle | 105 | +1 slot-development step | 12000 |
 | 18 | Sovereign High | 110 | +1 slot-development step | — |
 
-- **Slot-development step:** the monster may develop one skill slot ([skills.md §8](skills.md#8-slot-development)): 1 per step for Normal and Rare, 2 for Epic and Legendary.
+- **Slot-development step:** the monster may develop one skill slot ([skills.md §8](skills.md#8-development)): 1 per step for Normal and Rare, 2 for Epic and Legendary.
 - **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
 - Breakthrough trials: [overworld.md §6.3](overworld.md#63-stage-unlock-table).
 

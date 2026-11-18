@@ -11,9 +11,16 @@ const LIFE_THREAD := "life_thread"
 const BEAST_SWAP := "beast_swap"
 const SPIRIT_SHIELD := "spirit_shield"
 const DOMAIN_GLIMPSE := "domain_glimpse"
+## Seal Ground (docs/battle_ingame.md §7): catching on the board. The Seal skill and the seal items share it.
+const SEAL := "seal"
 
 @export var id: StringName
 @export var display_name: String
-@export_enum("swap_places", "urgent_order", "second_wind", "life_thread", "beast_swap", "spirit_shield", "domain_glimpse")
+@export_enum("swap_places", "urgent_order", "second_wind", "life_thread", "beast_swap", "spirit_shield", "domain_glimpse", "seal")
 var effect: String = SWAP_PLACES
 @export_multiline var description: String = ""
+## Seal only: the catch chance in percent at 1 HP (docs/battle_ingame.md §7, working value): the Seal skill without
+## upgrades 50, seal items by rarity 20 / 35 / 50 / 65.
+@export var seal_base: int = 50
+## Seal only: a seal item, used up when laid (false = the tamer skill).
+@export var seal_item: bool = false

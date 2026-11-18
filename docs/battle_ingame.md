@@ -3,7 +3,7 @@
 The battle inside the game: grown monsters on battlegrounds of the world. It plays the core rules of [battle.md](battle.md) and adds its own.
 
 - **This file owns** every rule only the ingame battle has. The core and what only the multiplayer battle has stand in [battle.md](battle.md).
-- **Status:** the frame of §1 is decided; §5 is decided as written. Everything else is not defined.
+- **Status:** the frame of §1 is decided; §5 and §7 are decided as written, the numbers of §7 are working values. Everything else is not defined.
 
 ## 1. The Two Battles
 
@@ -16,9 +16,14 @@ Both battles share the goals of [battle.md §1](battle.md#1-goals-and-pillars): 
 | Team size | always 3v3 | any, also unequal ([§2](#2-team-sizes-and-the-end-of-a-battle)) |
 | Board | generated, point-symmetric 7×7 ([battle.md §4.1](battle.md#41-board-generation)) | battlegrounds that differ completely, by the monster and by what the player built ([§3](#3-battlegrounds)) |
 | End of a battle | every monster of one side at 0 HP | not always that ([§2](#2-team-sizes-and-the-end-of-a-battle)) |
-| Defeats | no monster falls without a turn of its own | no such promise |
+| Defeats | no monster falls without a turn of its own | no such promise; a wild monster at 0 HP dies, a contracted one is injured ([§7](#7-catching)) |
+| Chance | none | one roll: the catch ([§7](#7-catching)) |
 | Length | a mean of 3.5–4.5 rounds | not defined |
-| Mechanics | the core | more: tamer skills ([§5](#5-tamer-skills)), board events ([§4](#4-board-events)), skills of its own |
+| Mechanics | the core | more: tamer skills ([§5](#5-tamer-skills)), board events ([§4](#4-board-events)), catching ([§7](#7-catching)), skills of its own |
+
+**Goal of the ingame battle only:**
+
+- **Room to grow:** every mechanic of the ingame battle carries upgrade paths for the ranks of the tamer ([overworld.md §6](overworld.md#6-progression)), because the monsters grow too and a mechanic that does not grow with them falls behind.
 
 - **One core:** flow, timing, the square, damage and displacement are the same in both battles.
 - **Strictly apart above the core:** a rule, a skill, a board or a number of one battle is no reason for a decision in the other. A measurement names the battle it was made in.
@@ -76,3 +81,16 @@ Battle resolves the effects of the tamer's prepared loadout deterministically an
 ## 6. Skills and Functions
 
 The ingame battle offers more and other skills and functions than the multiplayer battle. Not defined: which ones, and whether a skill of one battle may appear in the other.
+
+## 7. Catching
+
+Monsters are caught on the board, during the battle, and nowhere else.
+
+- **Contract:** a monster with a tamer (the player's or an enemy tamer's) never dies: at 0 HP it is defeated and injured ([overworld.md §5.2](overworld.md#52-defeat-and-injury)). A **wild monster** has no contract: at 0 HP it dies, unless it stands on a Seal Zone.
+- **Seal Ground:** the tamer lays it on a square of their choice in the window of tamer skills ([§5](#5-tamer-skills)). It is a ground ([battle.md §4](battle.md#4-the-board)) that **cannot be destroyed:** it replaces the ground of its square, no other ground replaces it, no reset removes it, and it does not lapse; it lies until the battle ends or it catches. It cannot be laid on a Dragon Vein. Zones and props on its square stay and act as usual. **One Seal Ground at a time** per tamer.
+- **Two sources,** both available from the start of the game: the **Binding Seal item**, consumed when laid, and the **Seal tamer skill**, once per battle and upgradable ([overworld.md §6.4](overworld.md#64-tamer-skills)). Tier and grade of the seal limit which monster it can catch ([overworld.md §5.1](overworld.md#51-obtaining-monsters)).
+- **The catch:** a wild monster that **ends its turn** on Seal Ground is caught with a chance of **its base at 1 HP, 10 points less for every further HP.** The base is **50 %** for the Seal skill without upgrades and **20 / 35 / 50 / 65 %** for a Normal / Rare / Epic / Legendary seal item. A wild monster that reaches **0 HP on Seal Ground is caught, always.** The roll is the only chance in a battle; before the turn ends the player sees the chance on the square.
+- **Caught:** the monster leaves the board and counts as defeated for the end of the battle; the Seal Ground is used up. A failed roll changes nothing; the battle goes on and the ground stays.
+- **Against tamers:** nothing is caught, no monster dies.
+
+*Working values:* the bases and the step per HP. Not defined: where the contract does not hold (fights to the death against tamers, areas of dungeons); how the wild side plays around Seal Ground.

@@ -17,7 +17,7 @@ battle/      the deterministic grid battle (docs/battle.md, skills.md, monsters.
              rules:  BattleStats (effective stats, modifiers), BattleQueue (pace), BattleMoves (movement
                      profiles), BattleCasting (placement), BattleDamage (damage law, ground triggers),
                      BattleDisplace (push / pull, collision, fall), BattleBoardOps (zones, ground, height, props),
-                     BattlePayload (the §6.2 resolution order), BattleTurn (turn / round flow), BattleTamer
+                     BattlePayload (the §6.2 resolution order), BattleTurn (turn / round flow), BattleTamer, BattleCatch (Seal Ground, ingame)
              setup:  BattleSetup (BattleRequest → Battle → BattleResult), BattleBoards (layouts), UnitSheets
                      (adapter: overworld individual → finished unit sheet)
              AiBrain (an opponent that only uses the public battle API)
@@ -58,7 +58,8 @@ that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends
 
 - **One entry point:** every change is an action Dictionary passed to `Battle.apply()` (`step`, `skill`, `end_turn`,
   `tamer`); `Battle.check()` says why an action is illegal and never changes state.
-- **Determinism:** the rules contain no randomness. Same start state + same content (`BattleContent.VERSION` /
+- **Determinism:** the rules contain no randomness but the seeded catch roll of the ingame battle (`BattleCatch`,
+  `Battle.roll_seed` / `rolls`; dry runs never roll, so previews and the AI see only the chance). Same start state + same content (`BattleContent.VERSION` /
   `fingerprint()`) + same ordered actions = same `events` and `state_hash()`. `Battle.actions` is the replayable
   log (`Battle.replay`). Seeds exist only outside the rules: board layout (`BattleRequest.board_seed`) and the
   AI's tie-breaks.
@@ -210,6 +211,18 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   battlegrounds, board events or skills of its own yet (docs/todo T46). The existing folders are not sorted into
   `battle/multiplayer/` and `battle/ingame/` yet; that is part of the rebuild (docs/architecture.md §2).
   Tests: `tests/battle/test_ingame_prototype.gd`.
+- **Catching in the ingame prototype** (docs/battle_ingame.md §7; `battle/core/battle_catch.gd`): the prototype screen
+  has “Enemy: wild (no tamer)” (on by default) and “Your seal” (none, the Seal skill 50 %, or a Normal / Rare / Epic /
+  Legendary seal item 20 / 35 / 50 / 65 %); `IngamePrototype.add_catching` writes `BattleRequest.enemy_wild`,
+  `player_tamer` and `roll_seed`. In the battle the seal stands in the tamer panel: click a square to lay Seal Ground
+  (ground `data/grounds/seal.tres`, immutable, no fade; not on a Dragon Vein or other immutable ground; one per
+  tamer at a time, `Battle.seals`). A wild monster that ends its turn on enemy Seal Ground is rolled for
+  (`seal_base` − `BattleExperiment.seal_step` × (HP − 1)); one that falls to 0 HP there is caught; a wild monster
+  falling elsewhere dies (`BattleUnit.caught` / `died`, also in `BattleResult`). The square label and the unit card
+  show the chance; the log shows the roll. Records: `data/tamer/seal.tres`, `seal_normal … seal_legendary.tres`
+  (`TamerSkillDef.seal_base`, `seal_item`). Not built: upgrades of the Seal skill, a wild AI that avoids Seal Ground,
+  items as a loadout of their own (an item is a loadout entry like a tamer skill). Tests:
+  `tests/battle/test_battle_catch.gd`.
 - **Map editor and custom maps** (`battle/ingame/map_editor.gd`, scene `map_editor.tscn`, reached from the ingame
   prototype; docs/battle_ingame.md §3): makes a battleground and saves it as a `MapDef`
   (`battle/defs/map_def.gd`) under `data/maps/<id>.tres`. Width and height from 3 to 12; tools, by click or drag:

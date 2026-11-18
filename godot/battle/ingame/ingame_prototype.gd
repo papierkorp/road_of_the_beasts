@@ -23,6 +23,11 @@ static var map_id: StringName = &""
 static var team: Array[int] = [3, 3]
 const EDITOR_SCENE := "res://battle/ingame/map_editor.tscn"
 const GENERATED := "— generated board —"
+## Catching (docs/battle_ingame.md §7): the enemy side is wild, and the seal of the player's loadout ("" = none).
+static var enemy_wild := true
+static var seal: StringName = &"seal"
+const SEALS: Array = [[&"", "no seal"], [&"seal", "Seal skill (50%)"], [&"seal_normal", "Normal Seal item (20%)"],
+	[&"seal_rare", "Rare Seal item (35%)"], [&"seal_epic", "Epic Seal item (50%)"], [&"seal_legendary", "Legendary Seal item (65%)"]]
 
 var _points: Array[SpinBox] = []
 var _stage: Array[Label] = []
@@ -31,6 +36,17 @@ var _map: OptionButton
 var _team: Array[SpinBox] = []
 var _map_note: Label
 var _start_map: Button
+var _wild: CheckBox
+var _seal: OptionButton
+
+
+## Catching on top of a request: a wild enemy side, the chosen seal in the player's loadout, a seed for the rolls.
+static func add_catching(r: BattleRequest, wild: bool, seal_id: StringName, rng: RandomNumberGenerator) -> void:
+	r.enemy_wild = wild
+	if seal_id != &"":
+		r.player_tamer.clear()
+		r.player_tamer.append(seal_id)
+	r.roll_seed = rng.randi_range(1, 1 << 30)
 
 
 ## "Core Formation Middle" for 60 points.
@@ -148,6 +164,24 @@ func _ready() -> void:
 		grid.add_child(count)
 		_team.append(count)
 		grid.add_child(_label(""))
+	grid.add_child(_label("Enemy"))
+	_wild = CheckBox.new()
+	_wild.text = "wild (no tamer)"
+	_wild.button_pressed = enemy_wild
+	_wild.tooltip_text = "Wild monsters die at 0 HP and can be caught on Seal Ground; monsters with a tamer never die."
+	_wild.toggled.connect(func(_on: bool): _changed())
+	grid.add_child(_wild)
+	grid.add_child(_label(""))
+	grid.add_child(_label("Your seal"))
+	_seal = OptionButton.new()
+	for pair: Array in SEALS:
+		_seal.add_item(pair[1])
+		if pair[0] == seal:
+			_seal.select(_seal.item_count - 1)
+	_seal.tooltip_text = "Lays Seal Ground once in the battle (tamer panel). The chance is given at 1 HP, 10 points less for every further HP."
+	_seal.item_selected.connect(func(_i: int): _changed())
+	grid.add_child(_seal)
+	grid.add_child(_label(""))
 
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -192,6 +226,10 @@ func _changed() -> void:
 		points[side] = int(_points[side].value)
 		_stage[side].text = stage_name(points[side])
 	board_size = int(_board.value)
+	if _wild != null:
+		enemy_wild = _wild.button_pressed
+	if _seal != null:
+		seal = SEALS[_seal.selected][0]
 	if _map == null or _start_map == null:
 		return
 	var text := _map.get_item_text(_map.selected)
@@ -217,7 +255,9 @@ func _start_on_map() -> void:
 	BattleExperiment.reset()
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	GameSession.start_battle(map_request(map, team[0], team[1], points, rng), SELF_SCENE)
+	var r := map_request(map, team[0], team[1], points, rng)
+	add_catching(r, enemy_wild, seal, rng)
+	GameSession.start_battle(r, SELF_SCENE)
 	get_tree().change_scene_to_file(BATTLE_SCENE)
 
 
@@ -227,5 +267,7 @@ func _start(mode: StringName) -> void:
 	BattleExperiment.board_size = board_size if board_size >= 8 else 0
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	GameSession.start_battle(request(mode, points, rng), SELF_SCENE)
+	var r := request(mode, points, rng)
+	add_catching(r, enemy_wild, seal, rng)
+	GameSession.start_battle(r, SELF_SCENE)
 	get_tree().change_scene_to_file(BATTLE_SCENE)

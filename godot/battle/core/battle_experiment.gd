@@ -73,6 +73,9 @@ static var board_size := 0
 ## Board switch (user idea, 2026-11-15): mirrored pairs of "button" squares the board starts with: walkable
 ## rune props without damage that act on the board when a monster collects them (0 = none).
 static var map_buttons := 0
+## Ingame battle, catching (docs/battle_ingame.md §7, working value): points of catch chance lost for every HP above
+## 1 (the base comes with the seal, TamerSkillDef.seal_base).
+static var seal_step := 10
 
 # ---------- Rules since 2026-11-18 (user decision; docs/battle.md §4.2): no late-round pressure (`pressure_mode` "none")
 # and the stronger veins below. `pack(false)` plays the rules before them (veins always 1, late-round pressure while
@@ -143,6 +146,7 @@ static func reset() -> void:
 	fresh_skills = false
 	random_monsters = false
 	kit_seed = 0
+	seal_step = 10
 	pack(true)
 
 

@@ -179,6 +179,9 @@ static func end_turn(b: Battle) -> void:
 			if not prop_hits.is_empty():
 				BattleDamage.apply_round(b, prop_hits)
 				BattleDamage.defeat_step(b)
+		# 4. a wild monster on Seal Ground may be caught (docs/battle_ingame.md §7)
+		if u.is_alive():
+			BattleCatch.turn_end(b, u)
 		if b.check_over():
 			return
 	tick_timers(b)

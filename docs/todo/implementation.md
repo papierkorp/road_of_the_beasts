@@ -108,3 +108,4 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 
 - **Dragon Vein tie:** a human side picks the target at the last tie; the AI and the tools pick the enemy with the fewest HP, then the highest Pace, then the lowest max HP, then roster order.
 - **Code comments** under `godot/` still cite sections of the earlier GDD files (`gdd_battle §…`); they were not changed with the documents.
+- **Catching (T49, [battle_ingame.md §7](../battle_ingame.md#7-catching)):** Seal Ground is refused on every immutable ground, not only on a Dragon Vein (also Voidscar); it may be laid under a monster or a prop; it catches only monsters of the other side; a 2×2 body counts if any of its squares lies on it; the roll comes last at the turn end (after zone push, ground and props); after a failed roll the ground stays and rolls again at every later turn end of a wild monster on it; the wild AI does not know Seal Ground.

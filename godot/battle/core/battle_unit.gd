@@ -35,6 +35,10 @@ var used_turn := {}
 ## Stamina left in the pool (the Movement stat of the sheet is its size; BattleExperiment.stamina).
 var stamina: int = 0
 var kills: int = 0
+## Ingame battle (docs/battle_ingame.md §7): a wild monster that was caught on Seal Ground, or that died at 0 HP
+## off it. Both count as defeated for the end of the battle; a monster with a tamer has neither.
+var caught: bool = false
+var died: bool = false
 
 
 func _init(p_id: StringName = &"", p_sheet: UnitSheet = null, p_side := 0, p_slot := 0, p_pos := Vector2i.ZERO) -> void:
@@ -124,4 +128,6 @@ func clone() -> BattleUnit:
 	u.used_turn = used_turn.duplicate()
 	u.stamina = stamina
 	u.kills = kills
+	u.caught = caught
+	u.died = died
 	return u

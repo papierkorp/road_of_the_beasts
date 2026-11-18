@@ -82,7 +82,7 @@ A dungeon run turns AP and HP into materials and monsters.
 
 - **HP persists** through the run; battles start at current HP, making pills logistics. Defeated monsters are **Injured**, not dead (§5.2).
 - Wild monsters are visible: no random encounters or **ambush bonus**, including attacks from behind. The node fixes battle mode and wild-monster count (§3.3).
-- After winning, the player may **bind one** defeated wild monster with a Binding Seal (§5.1).
+- Wild monsters are caught during the battle, on Seal Ground ([battle_ingame.md §7](battle_ingame.md#7-catching)); a wild monster that falls elsewhere dies.
 
 ### 2.3 Day Loop
 
@@ -154,7 +154,7 @@ Business turns what dungeons bring into money, and money into speed and breadth.
 | Monster action / skill | Battle | the AP on its skill card: [skills.md §2](skills.md#2-the-skill-card) (prices open, [skills.md §7](skills.md#7-value-and-prices)) | in a fight | runtime: battle.md |
 | Tamer skill | Battle | usage: [§6.4](#64-tamer-skills) | slotted before battle | independent tamer source / loadout |
 | Use a medicine / array | Battle | 1 medicine / 1 array from the loadout; battle-AP cost unresolved | human tamer | planned; medicine consumed, array consumption depends on its definition |
-| Bind a defeated wild monster | Battle | free + 1 Binding Seal | win; seal tier and grade high enough (§5.1) | in the result screen |
+| Lay Seal Ground | Battle | 1 Binding Seal, or free with the Seal tamer skill | seal tier and grade high enough (§5.1) | in battle ([battle_ingame.md §7](battle_ingame.md#7-catching)) |
 | Start an expedition | Expedition | 1 AP (2 AP deeper floor) | Teleport Array | includes all its battles |
 | Walk, inspect, teleport out | Expedition | free | — | teleport out keeps the loot |
 | Heal in a run | Expedition | 1 healing pill | pill | between battles; restriction scope unresolved, see §6.6 |
@@ -382,7 +382,7 @@ Eggs in an Incubator do not count against capacity until they hatch.
 
 ## 5. Monsters in the Overworld
 
-[monsters.md](monsters.md) owns individuals, stats, Kins, roster and rarity; [skills.md](skills.md) owns skills and slot development ([skills.md §8](skills.md#8-slot-development)); this chapter owns acquisition/defeat. Battle sees only the finished unit sheet (§2.1).
+[monsters.md](monsters.md) owns individuals, stats, Kins, roster and rarity; [skills.md](skills.md) owns skills and slot development ([skills.md §8](skills.md#8-development)); this chapter owns acquisition/defeat. Battle sees only the finished unit sheet (§2.1).
 
 ### 5.1 Obtaining Monsters
 
@@ -390,7 +390,7 @@ Eggs in an Incubator do not count against capacity until they hatch.
 
 | Way | How | Notes |
 |-------------------|---------------------------------------------------------------------------------------|--------------------------------------------------------|
-| **Bind (Seal)** | after a win the player binds **one** defeated wild monster with a **Binding Seal** (result-screen action; cost in §2.6) | the default way (decided); no dice (below) |
+| **Seal (in battle)** | the tamer lays **Seal Ground** on the board; a wild monster that ends its turn on it with few HP, or falls to 0 HP on it, is caught ([battle_ingame.md §7](battle_ingame.md#7-catching)) | the default way (decided); a wild monster at 0 HP off a Seal Zone dies |
 | **Auction** | buy monsters and eggs at the Guild's Auction Hall (Deal) | sheet visible before the bid; Monster hall can resell |
 | **Breeding** | a male and a female of the same species in a **Breeding Den**: an egg after N nights (N by rarity) | only species with `breeds: true`; offspring: species of one parent, shape rolled by the Kin lean, rarity = the lower parent's, stage Qi Gathering Lower |
 | **Eggs** | found in dungeons, bought, quest rewards; hatched in an **Incubator** | an egg fixes species and rarity; the hatching rolls shape |
@@ -399,13 +399,13 @@ Eggs in an Incubator do not count against capacity until they hatch.
 | **Hire** | Guard Barracks lend beasts for a while | not owned, no stat growth |
 
 - **Binding Seal** (`kind: Seal`): tier = stage, grade = rarity (§7.5); target stage ≤ seal tier, rarity ≤ seal grade. **Player-stage ceiling** also applies ([monsters.md §2.2](monsters.md#22-prices-and-points)); stronger monsters stay wild until the next breakthrough.
-- Player chooses the defeated **0-HP** monster; only the seal is needed. Without one, it is released. Normal seals are cheap; higher grades come from dungeons, Guild or Array Workshop crafting.
-- Proposed tamer improvements belong to [§6.4](#64-tamer-skills), not the base seal. Auctions/breeding/eggs are long-term acquisition; seals underpin dungeon catching. Catching and Monster hall commerce remain separate loops (§7.1).
+- **Two sources of Seal Ground,** both from the start of the game: the seal item, consumed when laid, and the Seal tamer skill, which costs nothing per battle but a tamer slot and grows with the ranks ([§6.4](#64-tamer-skills)). Seal items catch by rarity (Normal, Rare, Epic, Legendary; the chance in [battle_ingame.md §7](battle_ingame.md#7-catching)); Normal seals are cheap, higher grades come from dungeons, Guild or Array Workshop crafting. The skill is the better way in most cases, because the player chooses its upgrades; a Legendary seal beats the skill without upgrades.
+- Auctions/breeding/eggs are long-term acquisition; seals underpin dungeon catching. Catching and Monster hall commerce remain separate loops (§7.1).
 
 ### 5.2 Defeat and Injury
 
-- **Injured, not dead:** battle result marks fallen monsters; unavailable for the remaining expedition and **2 nights** of Internal World rest. **Recovery Spring** halves recovery (round up); **Revival pill** ends it immediately. Never lose sub-tier, stat points or slot development; **Arena never injures**.
-- **Deadly dungeons:** optional, marked at Teleport Array, better loot; defeat means **permanent loss** unless protected by **Soul Tether** (one monster) or the proposed own-monster fall-prevention tamer skill ([§6.4](#64-tamer-skills); interaction unresolved ). Death stays meaningful without risking a favorite every run.
+- **Injured, not dead:** the contract with its tamer holds a monster ([battle_ingame.md §7](battle_ingame.md#7-catching)). The battle result marks fallen monsters; unavailable for the remaining expedition and **2 nights** of Internal World rest. **Recovery Spring** halves recovery (round up); **Revival pill** ends it immediately. Never lose sub-tier, stat points or slot development; **Arena never injures**.
+- **Death:** only wild monsters die ([battle_ingame.md §7](battle_ingame.md#7-catching)). Places or fights where the contract does not hold are not defined.
 
 ---
 
@@ -439,8 +439,8 @@ BREAKTHROUGH High → next stage's Lower
 
 | Stage | Monster unlock | Player unlock |
 |----------------|----------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| Qi Gathering | full kit | holds 1 monster · **1v1** (5×5) |
-| Foundation | slot-development step | holds 3+ monsters · **3v3** (7×7, standard) · **2v2** (6×6) · 1 tamer slot |
+| Qi Gathering | full kit | holds 1 monster · **1v1** (5×5) · 1 tamer slot |
+| Foundation | slot-development step | holds 3+ monsters · **3v3** (7×7, standard) · **2v2** (6×6) |
 | Core Formation | slot-development step · 2nd artifact slot at Epic+ | holds 5+ monsters (bench for counter-picks) · 2nd tamer slot · **5v5** special battles |
 | Soul Tier | slot-development step | mid-battle **Beast Swap** access ([§6.4](#64-tamer-skills)) |
 | Immortal | slot-development step | 3rd tamer slot |
@@ -466,16 +466,16 @@ BREAKTHROUGH High → next stage's Lower
 
 #### 6.3.2 Permanent Skill-Slot Development (confirmed)
 
-- **[skills.md §8](skills.md#8-slot-development) alone defines** permanent slot development, development steps, replacement eligibility, retained progress/upgrade reselection, authored paths and the battle-AP policy. Skill prices are open and are not §7.6 Blueprint items.
+- **[skills.md §8](skills.md#8-development) alone defines** permanent slot development, development steps, replacement eligibility, retained progress/upgrade reselection, authored paths and the battle-AP policy. Skill prices are open and are not §7.6 Blueprint items.
 - **Integration:**
  - Slot development is granted at advancement steps ([monsters.md §5](monsters.md#5-growth)), not bought and not a focused-XP Train reward; where the choice is made (Trial Pillar at the breakthrough versus Evolution Pillar) is open.
  - Skill replacement via **relearning pill** in monster management outside expeditions, under source eligibility.
  - The [action catalog](#26-action-catalog), [item overview](#66-pills--medicines) and saved individual (§8) integrate, not redefine, these rules.
-- **Open:** day-AP costs of both actions: [§2.6](#26-action-catalog); step supply, slot unlocks and respec/replacement: [skills.md §8](skills.md#8-slot-development). [monsters.md §4](monsters.md#4-rarity) step tables do not validate the supply.
+- **Open:** day-AP costs of both actions: [§2.6](#26-action-catalog); step supply, slot unlocks and respec/replacement: [skills.md §8](skills.md#8-development). [monsters.md §4](monsters.md#4-rarity) step tables do not validate the supply.
 
 ### 6.4 Tamer Skills
 
-Tamer skills are **learned over the game**, then **slotted before each battle**; runtime: [battle_ingame.md §5](battle_ingame.md#5-tamer-skills) (activation window, Swap Places, Urgent Order, Second Wind, Life Thread, Beast Swap). *Proposal* rows (Double Bind, Seal Mastery) wait for the catching rules.
+Tamer skills are **learned over the game**, then **slotted before each battle**; runtime: [battle_ingame.md §5](battle_ingame.md#5-tamer-skills) (activation window, Swap Places, Urgent Order, Second Wind, Life Thread, Beast Swap) and [§7](battle_ingame.md#7-catching) (Seal).
 
 - **Shared board, separate source:** tamer skills act on the same squares, grounds and zones as monster skills ([battle.md §4](battle.md#4-the-board)) but are defined here, not as skill cards ([skills.md §2](skills.md#2-the-skill-card)).
  - Explicit tamer permissions/unlocks/loadout/usage stay here and in [battle_ingame.md §5](battle_ingame.md#5-tamer-skills).
@@ -486,21 +486,32 @@ Tamer skills are **learned over the game**, then **slotted before each battle**;
 
 | Skill | Stage | Effect | Kind |
 |-----------------|-------|--------------------------------------------------------------------------|--------|
+| Seal | from the start | lays Seal Ground ([battle_ingame.md §7](battle_ingame.md#7-catching)); options below | catching, uses a slot |
 | Qi Suppression | Foundation | an enemy monster −1 Pace point next round | tempo |
 | Spirit Shield | Foundation | not defined | defense |
 | Swap Places | Foundation | two own monsters trade squares | position |
 | Domain Glimpse | Core | clear a tetromino of zones and reset its ground to Plain | terrain |
 | Urgent Order | Core | an own monster that has not acted this round acts next | tempo |
 | Second Wind | Core | an own monster regains 1 HP (never above max) | defense |
-| Life Thread | Core | the next time an own monster would fall it stays at 1 HP | defense (also protects in Deadly dungeons) |
-| Double Bind *(proposal)* | Core | after the battle one extra defeated wild monster may be bound (§5.1) | catching, uses a slot |
+| Life Thread | Core | the next time an own monster would fall it stays at 1 HP | defense |
 | Beast Swap | Soul | exchange an active monster with one from the spatial space | position |
-| Seal Mastery *(proposal)* | Soul | Binding Seals one tier lower than the target still bind it | catching, uses a slot |
 
 - **Learning:** each *player* breakthrough grants one choice from that stage's list. Studying a `kind: Scroll` item (§7.6; cost [§2.6](#26-action-catalog)) teaches one skill; sources (§7.8): dungeons, Guild Hall, auction, quests, clan leader, favor rewards. Higher grades teach later-stage skills early—the main use of Rare scrolls.
-- **Slots:** unlocks [§6.3](#63-stage-unlock-table), none at Qi Gathering; humans only, never monsters. **Beast Swap** slots only from Soul Tier. Catching skills deliberately replace a battle skill.
+- **Slots:** unlocks [§6.3](#63-stage-unlock-table), one from the start; humans only, never monsters. **Beast Swap** slots only from Soul Tier. The Seal skill deliberately takes a slot a battle skill could have.
 - **Usage/visibility:** each slotted skill is **once per battle**, free, never consumed; selection is pre-battle, visible in the player's preview and enemy tamers' sheets.
+- **Development:** tamer skills develop by the pattern of [skills.md §8](skills.md#8-development), levels 1–3, one option per level, never more uses. **Steps:** one per player breakthrough, and one per **upgrade scroll** studied, which is bound to one skill; scrolls come from the sources above. A learned skill keeps its level for good.
 - Sub-tier **never** changes strength. Artifact modifications ([§6.7](#67-artifacts-equipment--socketed-passives), subject to §6.9) never increase uses.
+
+**Options of Seal** *(draft; the other skills have none yet)*:
+
+| Option | Vocabulary | Effect |
+|---|---|---|
+| Wide Seal | Area | Seal Ground on two adjacent squares |
+| Strong Seal | Number | base chance 65 % |
+| Patient Seal | Number | 5 points less per HP instead of 10 |
+| Drawing Seal | Addition | Seal Ground also pulls like a pull zone |
+| Walled Seal | Addition | lays Earth Walls on the free squares around it |
+| Deep Seal | Condition | a seal one tier below the target suffices |
 
 ### 6.5 The Balance Rule (Pills, Medicines, Artifacts, Arrays)
 
@@ -514,12 +525,12 @@ Pills link progression, expedition supply and Producer economy. [§7.5](#75-mate
 | Product family | Role / responsible rules |
 |----------------|--------------------------|
 | Cultivation | routine progression supply; XP curve validation |
-| Relearning pill | deliberate skill replacement: [skills.md §8](skills.md#8-slot-development), meta integration [§6.3.2](#632-permanent-skill-slot-development-confirmed); economy |
+| Relearning pill | deliberate skill replacement: [skills.md §8](skills.md#8-development), meta integration [§6.3.2](#632-permanent-skill-slot-development-confirmed); economy |
 | Breakthrough | stage-up ingredient / penalty relief in the [trial proposal](#631-breakthrough-trials); exact role unresolved |
 | Healing | expedition attrition supply line; catalog effect applies between battles |
 | Swift / Ward (battle prep) | pre-battle preparation; effects in §7.5 |
 | Bloodline | rarity-ascension sink: [monsters.md §4](monsters.md#4-rarity) |
-| Revival / Soul Tether | defeat and permanent-loss logistics: [§5.2](#52-defeat-and-injury) |
+| Revival | ends an injury: [§5.2](#52-defeat-and-injury) |
 | Reshape Elixir | rare ritual input: [monsters.md §2.2](monsters.md#22-prices-and-points) |
 | Medicine *(planned)* | consumed in battle through the loadout; effects and item-kind treatment unresolved |
 
@@ -724,7 +735,6 @@ Furnace, Array Workshop and the Forge are the same code with different stations 
 | Ward (battle prep) | first-hit immunity in the next battle | 2 herbs + 1 beast part |
 | Breakthrough | removes the trial penalty (§6.3.1) | 1 Rare herb of tier T+1 + 2 ore |
 | Bloodline | rarity ascension ([monsters.md §4](monsters.md#4-rarity)) | 1 Rare+ beast part of the Kin + 1 herb of tier T+1 + Upper stones |
-| Soul Tether | permanent-loss protection: [§5.2](#52-defeat-and-injury) | 1 Epic herb + 1 beast part |
 | Reshape Elixir | re-roll into another stat shape ([monsters.md §2.2](monsters.md#22-prices-and-points)) | 1 Epic essence + 3 herbs |
 | *Medicine* *(planned)*| used in battle (planned) | not specified |
 
@@ -786,7 +796,7 @@ All sources feed one item schema; money is only a partial input for top grades (
 - **Species:** existing `MonsterDef` files hold Kin, free themes, learnlist, default kit and species passive; stats come from individuals, not species.
 - **Individual:** save record, **no battle rules**:
  - Identity/stats: species id, shape, stats, unspent points, rarity; progression: stage/sub-tier/XP, available development steps.
- - Skills: permanent progress per slot, equipped skill and selected skill-specific upgrades; persist progress/resolved selections per [skills.md §8](skills.md#8-slot-development) (meta §6.3.2).
+ - Skills: permanent progress per slot, equipped skill and selected skill-specific upgrades; persist progress/resolved selections per [skills.md §8](skills.md#8-development) (meta §6.3.2).
  - Equipment/health: artifacts, current HP. Blueprint points are internal design data, not saved player currency.
  - Skill definitions are the Resource files of [skills.md §9](skills.md#9-data), never a separate overworld skill model.
 - **Slot-development paths, stat shapes, stage ceilings, items, structures, businesses, dungeons:** fixed-template data files, loaded/validated by the monster/skill/zone registry pattern; new content = new file.

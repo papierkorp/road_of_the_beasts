@@ -3,7 +3,8 @@ extends RefCounted
 ## What a finished battle reports back (gdd_overworld §1.3): facts, not rewards.
 ## The overworld decides what they are worth (XP, loot, catch) and which HP to keep.
 ##
-## Per unit, in team order: {species, index, hp_left, max_hp, alive, fielded}.
+## Per unit, in team order: {species, index, hp_left, max_hp, alive, fielded, caught, died}. `caught` / `died`: a wild
+## monster caught on Seal Ground / dead at 0 HP off it (docs/battle_ingame.md §7); monsters with a tamer have neither.
 ## `hp_left` 0 means the monster fell. What that costs the owner is a game rule that is still
 ## open (gdd_overworld §12), so `apply_hp` only writes the number.
 

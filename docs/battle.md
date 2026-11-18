@@ -12,7 +12,7 @@ Turn-based, isometric monster battles about **grid control**, deterministic and 
 
 **Goals of both battles** (rules, content and prices are judged against them):
 
-- **Deterministic:** no dice, no hidden information.
+- **Deterministic:** no hidden information, no dice; the ingame battle has one roll, the catch ([battle_ingame.md §7](battle_ingame.md#7-catching)).
 - **Simple to learn, hard to master:** few uniform rules, no hidden abilities; everything a monster can do is visible.
 - **Influence and consequence:** the player's decisions shape the board and the course of the battle, visibly.
 - **Won by tactics and strategy:** repeating one skill must not win a battle; position and combination decide. Skill variety matters: each skill is the right choice in some situations and none in all.

@@ -1,6 +1,6 @@
 # T23 · Align Injury and Deadly Dungeons
 
-**Status:** Open — combat fall-prevention/HP/defeat interfaces needed before Battle acceptance; recovery/pricing/Deadly-dungeon tuning queued afterward.
+**Status:** Open — Deadly dungeons with permanent loss and Soul Tether are dropped (2026-11-18, [battle_ingame.md §7](../../../battle_ingame.md#7-catching)); the exceptions to the contract come with the rework of the dungeons. The rows below that touch Deadly dungeons or Soul Tether are void; injury downtime, Revival price, the Draw consequence and healing on return stay.
 **Prerequisites:** Combat fall-prevention/HP/defeat-output interfaces with T04/T20 before the Battle gate, without deciding the Deadly-dungeon launch scope implicitly. Recovery/permanent-loss logistics and prices follow the gate with T16/T20/T22.
 **Sources:** Overworld [overworld.md §5.2](../../../overworld.md#52-defeat-and-injury), [overworld.md §6.6](../../../overworld.md#66-pills--medicines).
 - Review two nights of downtime, Revival price and Deadly loot bonus; confirm or defer optional Deadly dungeons for launch.

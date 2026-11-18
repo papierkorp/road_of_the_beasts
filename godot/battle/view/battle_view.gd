@@ -499,6 +499,12 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 			" · centre" if cell.zone.def.has_tag(FieldEffect.PULL) and cell.zone.anchor == cell.pos else ""]
 	if g != null and cell.ground != GroundDef.PLAIN:
 		lines += g.label(cell.level) + "\n"
+	if battle != null and battle.seals.has(cell.pos):
+		var seal: Dictionary = battle.seals[cell.pos]
+		lines += "%s · %d%% at 1 HP\n" % ["◆ yours" if int(seal["side"]) == 0 else "◆ enemy", int(seal["base"])]
+		var on := battle.any_unit_at(cell.pos)
+		if on != null and BattleCatch.chance(battle, on) >= 0:
+			lines += "catch %d%%\n" % BattleCatch.chance(battle, on)
 	if cell.ground == GroundDef.WELL and BattleExperiment.vein_touch:
 		lines += ("◆ yours" if cell.owner_side == 0 else ("◆ enemy" if cell.owner_side == 1 else "◇ unclaimed")) + "\n"
 		var taker: BattleUnit = battle.units.get(cell.owner_unit) if battle != null else null

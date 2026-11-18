@@ -1,6 +1,6 @@
 # T24 · Specify Binding, Eggs, Breeding and Hive
 
-**Status:** Open — blocked by T12, T16, T20, T22.
+**Status:** Open — blocked by T12, T16, T20, T22. Binding after the win is replaced by catching on the board (2026-11-18, T49); the seal row below is about prices and grades only.
 **Prerequisites:** T12, T16, T20, T22.
 **Sources:** Overworld [overworld.md §5.1](../../../overworld.md#51-obtaining-monsters), [overworld.md §7.5](../../../overworld.md#75-materials-seeds-and-grades).
 - Balance seal prices/grades and the **proposed** second binding (Double Bind, T20); keep deterministic post-win binding and player Stage cap. Seal Mastery is a proposal, not permission to exceed that player cap.

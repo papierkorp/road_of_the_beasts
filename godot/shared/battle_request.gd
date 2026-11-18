@@ -43,6 +43,10 @@ var player_starts: Array[Vector2i] = []
 ## Battle loadout (gdd_battle §5.2): slotted tamer skill ids per side. Wild monsters have none.
 var player_tamer: Array[StringName] = []
 var enemy_tamer: Array[StringName] = []
+## Ingame battle (docs/battle_ingame.md §7): the enemy side has no tamer. Its monsters die at 0 HP and can be caught on
+## Seal Ground. `roll_seed` seeds the catch rolls (the battle replays the same with the same seed).
+var enemy_wild := false
+var roll_seed := 0
 ## Monsters available to Beast Swap (not on the field at the start).
 var player_bench: Array[MonsterInstance] = []
 var enemy_bench: Array[MonsterInstance] = []

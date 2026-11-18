@@ -499,6 +499,11 @@ static func unit_rows(b: Battle, u: BattleUnit) -> Array:
 		marks.append("Nullify")
 	if u.life_thread:
 		marks.append("Life Thread")
+	if b.wild[u.side]:
+		marks.append("wild")
+		var ch := BattleCatch.chance(b, u)
+		if ch >= 0:
+			marks.append("on Seal Ground: catch %d%% at its turn end" % ch)
 	if not marks.is_empty():
 		rows.append(["", ", ".join(marks)])
 	var kit: PackedStringArray = []
@@ -684,6 +689,16 @@ static func event_line(b: Battle, e: Dictionary) -> String:
 			return "%s: %s" % ["Tamer" if int(e["side"]) == 0 else "Enemy tamer", t.display_name if t != null else String(e["skill"])]
 		&"surge_lapsed":
 			return "A trap lapses"
+		&"seal_laid":
+			return "Seal Ground at %s (%d%% at 1 HP)" % [pos(e["pos"]), e["base"]]
+		&"catch_roll":
+			return "%s: catch %d%% — rolled %d, %s" % [unit_name(b, e["who"]), e["chance"], e["roll"], "caught!" if e["caught"] else "breaks free"]
+		&"catch_chance":
+			return "%s stands on Seal Ground: catch %d%%" % [unit_name(b, e["who"]), e["chance"]]
+		&"caught":
+			return "%s is caught" % unit_name(b, e["who"])
+		&"died":
+			return "%s dies (wild, off Seal Ground)" % unit_name(b, e["who"])
 		&"zones_faded":
 			return "%d zone sq fade" % e["count"]
 		&"battle_over":

@@ -89,6 +89,10 @@ static func build(request: BattleRequest) -> Battle:
 			var def := content.tamer_skill(id)
 			if def != null and not b.tamer_loadout[side].has(def):
 				b.tamer_loadout[side].append(def)
+	if request.battle_kind == BattleRequest.INGAME and request.enemy_wild:
+		b.wild[1] = true                         # a wild side has no tamer (docs/battle_ingame.md §7)
+		b.tamer_loadout[1] = []
+	b.roll_seed = request.roll_seed
 	if drawn:
 		if request.battle_kind == BattleRequest.INGAME and request.side_points.size() == 2:
 			MonsterDraw.deal(b, request.draw_seed, request.side_points, MonsterDraw.INGAME_TOP, request.mirror_draw)
@@ -127,7 +131,8 @@ static func make_result(b: Battle) -> BattleResult:
 	for id in b.roster:
 		var u: BattleUnit = b.units[id]
 		var entry := {"species": u.sheet.species_id, "index": u.team_index, "hp_left": maxi(u.hp, 0),
-			"max_hp": u.max_hp, "alive": not u.defeated, "fielded": u.on_field or u.defeated}
+			"max_hp": u.max_hp, "alive": not u.defeated, "fielded": u.on_field or u.defeated,
+			"caught": u.caught, "died": u.died}
 		if u.side == 0:
 			r.player.append(entry)
 		else:

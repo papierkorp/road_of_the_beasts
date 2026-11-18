@@ -25,10 +25,11 @@ docs/todo/
 - **Two battles on one core,** developed in parallel ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer.
 - **Multiplayer battle, settled for now:** always 3v3 on a generated symmetric 7×7 board, no tamer skills, no fixed monsters or skills; last touch owns a Dragon Vein, damage from round 1, veins deal 2 from round 3, no late-round pressure, extra turns from round 2, Heal (1 HP for 3 Stamina, no AP, once per turn), a free camera; plus the rules of 2026-11-17.
 - **Multiplayer content:** monsters drawn for 60 points (Random Alpha, Beta, …), kits of generated skills, grounds and zones named by what they do ([content.md §1](content.md#1-ground)). The nine monsters and the named grounds and zones are ingame content, all temporary.
-- **Build:** main menu → Battle → Ingame Prototype (points per side, custom maps from the map editor, unequal teams) or Multiplayer (random or mirrored monsters).
+- **Build:** main menu → Battle → Ingame Prototype (points per side, custom maps from the map editor, unequal teams, a wild enemy and a seal for catching) or Multiplayer (random or mirrored monsters).
 - **Measured on 2026-11-18** ([S040–S045](simulation_log.md), bots, indications): at equal points more HP wins more often, Reach less; Pace and Stamina show no worth; Heal lengthens a battle by 0.1–0.5 rounds. **Not measured:** Heal without AP, the settled state as a whole, the new grounds and zones.
-- **Next:** the ingame battle (T46; the multiplayer battle counts as finished for now): board events, ends of a battle, tamer skills in the prototype. Later the draft (T48) and skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)).
-- **Tests:** three known failures: two outside the battle (I46), one for the user's monster `highreach`.
+- **Catching, decided and built on 2026-11-18** ([battle_ingame.md §7](battle_ingame.md#7-catching), [godot/README.md](../godot/README.md)): indestructible Seal Ground laid by the tamer (seal item by rarity or the Seal skill, one tamer slot from the start), a seeded chance at the turn end of a wild monster with few HP, certain at 0 HP on it; wild monsters die elsewhere, contracted monsters never. Not built: a wild AI that avoids Seal Ground, Seal upgrades. Readings of the build: [implementation.md](todo/implementation.md). Details: T49.
+- **Next:** the user plays Seal Ground by hand; then a wild AI that values Seal Ground (T49) and the rest of the ingame battle (T46; the multiplayer battle counts as finished for now): board events, ends of a battle, tamer skills in the prototype. **Development pattern** decided on 2026-11-18 for monster and tamer skills alike ([skills.md §8](skills.md#8-development)); Seal has a draft option list, the other skills none. Later the draft (T48) and skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)).
+- **Tests:** two known failures outside the battle (I46: the overworld roamer, the reference stats); all 260 battle tests pass (2026-11-18), the earlier failure for `highreach` did not occur.
 - **By hand:** the user plays each iteration; then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). Differences: [todo/implementation.md](todo/implementation.md).
 
 ## Open Questions for the User
@@ -37,6 +38,7 @@ docs/todo/
 |---|---|---|
 | 1 | How does a stat shape split the points at the roll? | T03 |
 | 2 | Ingame battle: battlegrounds, board events, ends other than 0 HP, a brake without Dragon Veins, ingame-only skills | T46 |
+| 13 | Seal: item and skill Seal Ground together? The upgrade scroll as an item; options of the other tamer skills | T49 |
 | 3 | Which props of the catalogue stay, and do aura props return? | T41 |
 | 4 | Square control: do the current means suffice, or does it need more? | T39 |
 | 5 | How many kit slots are open at the start of the game, and what opens the others? | T05 |
@@ -61,6 +63,7 @@ docs/todo/
 | T48 | [Define the Draft of the Multiplayer Battle](todo/to-clarify/battle/T48-define-the-draft-of-the-multiplayer-battle.md) | to clarify | battle |
 | T03 | [Review Stat Budgets, Frames and Progression Limits](todo/to-clarify/monsters/T03-review-stat-budgets-frames-and-progression-limit.md) | to clarify | monsters |
 | T26 | [Draft Staff Traits and Numbers](todo/to-clarify/overworld/T26-draft-staff-traits-and-numbers.md) | to clarify | overworld |
+| T49 | [Catching on the Board](todo/to-clarify/overworld/T49-catching-on-the-board.md) | to clarify | overworld |
 | T05 | [Complete Skill Improvements](todo/to-clarify/skills/T05-complete-skill-improvements.md) | to clarify | skills |
 | T06 | [Complete Strike Shapes and Kin Effects](todo/to-clarify/skills/T06-complete-strike-shapes-and-kin-effects.md) | to clarify | skills |
 | T07 | [Ground and Zone Values](todo/open/battle/T07-ground-and-zone-values.md) | open | battle |

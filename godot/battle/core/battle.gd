@@ -8,7 +8,8 @@ extends RefCounted
 ##   rules        Battle* modules in this folder (static functions on a Battle)
 ##   presentation battle/view, battle/ui: they call `check` / `apply` and read `events`
 ##
-## Determinism: the rules use no randomness, no time and no engine nodes. The same start
+## Determinism: the rules use no time and no engine nodes, and no randomness but the seeded catch roll of the
+## ingame battle (BattleCatch: `roll_seed`, `rolls`; dry runs never roll). The same start
 ## state, the same content and the same ordered actions always give the same events and the
 ## same `state_hash()`. `actions` is the replayable log of everything that was applied.
 ##
@@ -61,6 +62,12 @@ var surges: Array[PendingSurge] = []
 ## Loadouts per side: slotted tamer skills and the ids used this battle.
 var tamer_loadout: Array = [[], []]
 var tamer_used: Array[Dictionary] = [{}, {}]
+## Catching (docs/battle_ingame.md §7, BattleCatch): sides without a tamer, the Seal Ground on the board
+## (pos -> {side, base}) and the seed and count of the catch rolls.
+var wild: Array[bool] = [false, false]
+var seals := {}
+var roll_seed := 0
+var rolls := 0
 ## Events collected for event-driven passives during a payload (gdd_battle §2.4).
 var reaction_events: Array[Dictionary] = []
 var events: Array[Dictionary] = []
@@ -278,6 +285,7 @@ func end_unit_effects(u: BattleUnit) -> void:
 ## Zones, ground, props and Surges stay when their caster falls; its Surges become orphaned
 ## and stay set (a Surge is a trap and never lapses).
 func defeat(u: BattleUnit) -> void:
+	BattleCatch.on_defeat(self, u)          # a wild monster is caught on Seal Ground or dies
 	u.hp = 0
 	u.defeated = true
 	lift(u)
@@ -623,6 +631,10 @@ func clone() -> Battle:
 		b.surges.append(s.clone())
 	b.tamer_loadout = [tamer_loadout[0].duplicate(), tamer_loadout[1].duplicate()]
 	b.tamer_used = [tamer_used[0].duplicate(), tamer_used[1].duplicate()]
+	b.wild = wild.duplicate()
+	b.seals = seals.duplicate(true)
+	b.roll_seed = roll_seed
+	b.rolls = rolls
 	b._next_gid = _next_gid
 	b._next_surge = _next_surge
 	b._next_prop = _next_prop
@@ -655,7 +667,8 @@ func snapshot() -> Dictionary:
 	for id in roster:
 		var u: BattleUnit = units[id]
 		us.append([String(id), u.side, u.slot, u.pos, u.layer, u.hp, u.max_hp, u.on_field, u.defeated,
-			u.nullify, u.life_thread, u.effects.duplicate(true), u.used_round.duplicate(), u.used_battle.keys(), u.used_turn.duplicate(), u.stamina])
+			u.nullify, u.life_thread, u.effects.duplicate(true), u.used_round.duplicate(), u.used_battle.keys(), u.used_turn.duplicate(), u.stamina,
+			u.caught, u.died])
 	var cs := []
 	for c in board.cells:
 		var z := []
@@ -672,7 +685,8 @@ func snapshot() -> Dictionary:
 		qs.append([String(e["id"]), e["pace"], e["extra"]])
 	return {"round": round_number, "turn": String(turn_owner), "ap": ap, "idx": queue_idx, "over": over,
 		"winner": winner_side, "draw": draw, "tie": tie_side, "units": us, "cells": cs, "surges": ss,
-		"queue": qs, "choice": str(pending_choice), "tamer_used": [tamer_used[0].keys(), tamer_used[1].keys()]}
+		"queue": qs, "choice": str(pending_choice), "tamer_used": [tamer_used[0].keys(), tamer_used[1].keys()],
+		"wild": wild.duplicate(), "seals": str(seals), "rolls": rolls}
 
 
 func state_hash() -> String:

@@ -6,8 +6,8 @@ extends RefCounted
 ## small resolver here; nothing else in the core knows a tamer skill by name.
 ##
 ## Confirmed and implemented: Swap Places, Urgent Order, Second Wind, Life Thread, Beast Swap,
-## Spirit Shield (Nullify), Domain Glimpse. Not implemented because their status is open
-## (T20/T24): Spatial Pull, Qi Suppression, Double Bind, Seal Mastery.
+## Spirit Shield (Nullify), Domain Glimpse, Seal (lays Seal Ground, docs/battle_ingame.md §7; the catch itself
+## is resolved in BattleCatch). Not implemented because its status is open (T20): Qi Suppression.
 
 
 static func _own(b: Battle, side: int, id: StringName) -> BattleUnit:
@@ -64,6 +64,9 @@ static func error(b: Battle, a: Dictionary) -> String:
 			var cells: Array = a.get("cells", [])
 			if not _is_tetromino(b, cells):
 				return "choose four connected squares on the board (any tetromino)"
+		TamerSkillDef.SEAL:
+			var picked: Array = a.get("cells", [])
+			return BattleCatch.lay_error(b, side, picked[0] if picked.size() == 1 else null)
 	return ""
 
 
@@ -104,6 +107,8 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 			b.emit(&"protected", {"target": a["unit"], "kind": "nullify"})
 		TamerSkillDef.BEAST_SWAP:
 			_beast_swap(b, b.units[a["unit"]], b.units[a["other"]])
+		TamerSkillDef.SEAL:
+			BattleCatch.lay(b, side, def, a["cells"][0])
 		TamerSkillDef.DOMAIN_GLIMPSE:
 			for p: Vector2i in a["cells"]:
 				var cell := b.board.at(p)

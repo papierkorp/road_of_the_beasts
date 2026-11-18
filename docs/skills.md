@@ -181,7 +181,7 @@ A movement may leave ground or a zone on the squares it left. Concrete movement 
 ## 6. Passives
 
 - A passive occupies a normal kit slot, costs no AP and is an effect on its bearer. One active skill and passives in every other slot is legal but weak.
-- **Passives that lower AP costs are allowed; no action ever costs less than 1 AP.** The rule “development never lowers AP” ([§8](#8-slot-development)) applies to skill development, not to these passives.
+- **Passives that lower AP costs are allowed; no action ever costs less than 1 AP.** The rule “development never lowers AP” ([§8](#8-development)) applies to skill development, not to these passives.
 - Passives of the game and candidates: [content.md §4](content.md#4-skills).
 
 ## 7. Value and Prices
@@ -194,17 +194,18 @@ Principles:
 - **A complete kit at original AP:** development never forces a higher AP cost on a skill.
 - **Monster stats and skills are priced apart** ([monsters.md §2](monsters.md#2-stats)) and validated together.
 
-## 8. Slot Development
+## 8. Development
 
-**Slot development is permanent** and gained only at advancement steps ([monsters.md §5](monsters.md#5-growth)): a step offers the individual monster the option to develop one skill slot. There is no separate experience currency, no spending outside an advancement and no physical evolution.
+**One pattern develops monster skills and tamer skills.** A monster skill is developed on the slot of one monster; a tamer skill on the skill the player learned ([overworld.md §6.4](overworld.md#64-tamer-skills)). Development is permanent, there is no experience currency and no physical evolution.
 
-- A step develops one slot on one monster, not the skill or the species. The player picks from options written for the equipped skill, never free components.
-- **Replacement:** outside expeditions a slot may take another skill of the species' learnable list with a **relearning pill**; the slot keeps its development.
-- **Levels 1–3** per slot.
-- **Never by development:** more damage than the maxima of [battle.md §6.1](battle.md#61-damage), lower AP, more Reach.
+- **Levels 1–3.** Level 1 is the skill as written; levels 2 and 3 cost one **development step** each. Monsters gain steps at advancement steps ([monsters.md §5](monsters.md#5-growth)), tamers at breakthroughs and from scrolls ([overworld.md §6.4](overworld.md#64-tamer-skills)).
+- **One option per level** from the list written for that skill, each option once; level 3 combines two options. No free components.
+- **Option vocabulary:** every option is one of **Area** (one more square or a larger shape), **Number** (one effect value changed within the caps), **Duration** (more rounds), **Addition** (what the skill creates also does something an existing ground, zone or prop does), **Condition** (a requirement loosened), **Count** (one more use per turn). Count exists for monster skills only.
+- **Never by development:** more damage than the maxima of [battle.md §6.1](battle.md#61-damage), lower AP, more Reach, more uses of a tamer skill.
 - **AP policy:** every skill has a complete path at its original AP; a bigger option may cost more AP, shown before selection, and is never the only path.
 - **Useful from the start:** development expands an already viable kit, with several useful routes and no compulsory first upgrade.
-- Where and when: [overworld.md §6.3](overworld.md#63-stage-unlock-table).
+- **Replacement:** outside expeditions a slot may take another skill of the species' learnable list with a **relearning pill**; the slot keeps its level, and its options are chosen anew from the new skill's list.
+- The options of each skill: not defined. Where and when a choice is made: [overworld.md §6.3](overworld.md#63-stage-unlock-table).
 
 ## 9. Data
 
