@@ -633,13 +633,10 @@ func _night_structures() -> Array[String]:
 	return notes
 
 
-## Takes a resource of a wild area (docs/overworld.md §2.2): 1 day AP, and its zone must not be above the
-## player's stage. Returns "" when taken, otherwise why not.
-func take_resource(key: String, item: String, nights: int, zone_stage: int) -> String:
+## Takes a resource of a wild area (docs/overworld.md §2.2): 1 day AP, in a zone of any stage. Returns "" when taken, otherwise why not.
+func take_resource(key: String, item: String, nights: int) -> String:
 	if taken.has(key):
 		return "Nothing grows here yet."
-	if zone_stage > int(stage):
-		return "This zone needs %s." % Stage.NAMES[zone_stage]
 	if not spend_ap(1):
 		return "No day AP left."
 	add_item(item)

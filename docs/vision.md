@@ -82,13 +82,13 @@ flowchart TB
 
 | Kind | What it is | What changes |
 |---|---|---|
-| **Wild area** | a fixed place open to all, such as the school's mountain or a wild forest; split into zones with their resources and monsters, the better zones need a higher stage | resources and monsters come back; the layout stays, unless an event changes it |
-| **One-time realm** | a world the game generates; the player is teleported in once | everything; it is gone afterwards |
+| **Wild area** | a fixed place open to all, such as the school's mountain or a wild forest; split into zones with their resources and monsters, every stage has at least one zone, and every zone is open to all | resources and monsters come back; the layout stays, unless an event changes it |
+| **One-time realm** | a world the game generates: opened by a group for some days, or by the world itself for one single visit | everything; it is gone afterwards |
 | **Internal World** | the player's own world, which nobody else enters ([§8](#8-growth)) | whatever the player builds |
 
 - **Wild area, cost:** entering and walking are free. Each battle the player starts and each resource the player takes costs day AP.
 - **Wild area, return:** what was taken or defeated returns after a fixed number of nights, rare things later; which monsters appear is drawn from the fixed list of the zone.
-- **One-time realm, opening:** the city announces a realm some days ahead. Entry needs a token; tokens come from groups (standing), the auction, requests or battle. Other groups send their people in too. A teleport array is the gate.
+- **One-time realm, opening:** the city announces a realm some days ahead. Entry to a realm of a group needs a token; tokens come from groups (standing), the auction, requests or battle. Other groups send their people in too. A teleport array is the gate.
 - **No other dungeons:** wild areas and one-time realms are the only places of this kind; there are no repeatable dungeons.
 
 ## 5. Ways to Power
@@ -170,7 +170,7 @@ There is no skill tree.
 
 - **No stage opens a team size.** The battleground says how many monsters may fight; the player fields as many as the Internal World holds.
 - **Tamer slots come from the stage:** 1 at Qi Gathering, 2 at Foundation, 3 at Core Formation, 4 at Immortal.
-- **Battlegrounds of one's own:** the player builds them in a building of the Internal World, several, each for a cost, and shapes them to the team, for example with the Dragon Veins on the own side ([battle_ingame.md §3](battle_ingame.md#3-battlegrounds)). A step of growth opens this; which one is not defined.
+- **Battlegrounds of one's own:** the player builds them in a building of the Internal World, several, each for a cost, and shapes them to the team, for example with the Dragon Veins on the own side ([battle_ingame.md §3](battle_ingame.md#3-battlegrounds)). The second stage of the Internal World opens this, so Foundation at the earliest.
 
 | Stage | Arc | Opens besides *(draft)* |
 |---|---|---|

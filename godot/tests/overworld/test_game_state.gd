@@ -162,23 +162,23 @@ func test_an_unfinished_battle_changes_nothing() -> void:
 	assert_int(g.money).is_equal(0)
 
 
-## docs/overworld.md §2.2 and §3.3: a resource of a wild area costs 1 day AP, needs the stage of its zone and
-## comes back after its nights.
+## docs/overworld.md §2.2 and §3.3: a resource of a wild area costs 1 day AP in a zone of any stage and comes
+## back after its nights.
 func test_a_resource_is_taken_for_a_day_ap_and_comes_back_after_its_nights() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
 	var g := GameState.new_game(rng)
 	var item := ItemCatalog.materials_of_tier(0)[0]
-	assert_str(g.take_resource("mountain/1/0", item, 1, 1)).contains("Foundation")
-	assert_int(g.ap).is_equal(g.max_ap)
-	assert_str(g.take_resource("mountain/0/0", item, 2, 0)).is_empty()
+	assert_str(g.take_resource("mountain/2/0", item, 1)).is_empty()        # a zone above the player's stage
+	g.ap = g.max_ap
+	assert_str(g.take_resource("mountain/0/0", item, 2)).is_empty()
 	assert_int(g.ap).is_equal(g.max_ap - 1)
-	assert_int(g.item_count(item)).is_equal(1)
-	assert_str(g.take_resource("mountain/0/0", item, 2, 0)).is_not_empty()
+	assert_int(g.item_count(item)).is_equal(2)
+	assert_str(g.take_resource("mountain/0/0", item, 2)).is_not_empty()
 	g.end_day(rng)
 	assert_bool(g.taken.has("mountain/0/0")).is_true()
 	assert_bool(GameState.from_dict(g.to_dict()).taken.has("mountain/0/0")).is_true()
 	g.end_day(rng)
 	assert_bool(g.taken.has("mountain/0/0")).is_false()
 	g.ap = 0
-	assert_str(g.take_resource("mountain/0/0", item, 2, 0)).contains("AP")
+	assert_str(g.take_resource("mountain/0/0", item, 2)).contains("AP")

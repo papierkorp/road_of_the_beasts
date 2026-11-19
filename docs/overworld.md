@@ -108,9 +108,10 @@ A day is one turn: spend day AP in the city, the night resolves everything at on
 | Deed | Cost | Needs |
 |---|---|---|
 | Walk, look, enter an area or a building, talk, plan, arrange the Internal World | free | — |
-| Take a resource in a wild area or a realm | 1 AP | the stage of its zone |
+| Take a resource in a wild area or a realm | 1 AP | — |
 | Engage a wild monster | 1 AP | — |
-| Enter a one-time realm | 1 token | the realm is open |
+| Enter a group realm | 1 token for all its days | the realm is open |
+| Enter a world realm | not defined | once only |
 | Use a tamer skill, a weapon or a pill in battle | its tamer slot | [§7.9](#79-inventory-and-loadout) |
 | Lay Seal Ground | 1 Binding Seal, or free with the Seal skill | [§5.1](#51-obtaining-monsters) |
 | Cultivate · train a monster | 1 AP | — |
@@ -180,7 +181,8 @@ These two are the only places of their kind; there are no repeatable dungeons.
 
 **Wild area:** a fixed place open to all, split into zones.
 
-- **A zone** has a stage and a fixed list of what grows and lives there. A resource of a zone above the player's stage cannot be taken; its monsters can be met.
+- **A zone** has a stage and a fixed list of what grows and lives there. Every zone is open to every player: its resources can be taken and its monsters met at any stage. Only the strength of its monsters holds a player back.
+- **Every stage has at least one zone.**
 - **Return:** a taken resource and a defeated or caught monster come back after a fixed number of nights. Which monster appears is drawn from the zone's list.
 - **Costs:** [§2.2](#22-wild-area-loop).
 
@@ -188,6 +190,7 @@ These two are the only places of their kind; there are no repeatable dungeons.
 |---|---|
 | The school's mountain | Foothill (Qi Gathering), Slope (Foundation), Peak (Core Formation) |
 | The wild forest | Edge (Foundation), Deep Wood (Soul Tier), Heart (Immortal) |
+| A third area for the late stages | among them a zone for Sovereign; name and zones are not defined |
 
 | Returns after *(working values)* | Nights |
 |---|---|
@@ -196,10 +199,15 @@ These two are the only places of their kind; there are no repeatable dungeons.
 | Epic resource | 7 |
 | Wild monster | 2 |
 
-**One-time realm:** a world the game generates.
+**One-time realm:** a world the game generates. There are two kinds:
 
-- **Announced:** the city announces a realm some days ahead and for how many days it stays open (working value: 3).
-- **Token:** entry needs a token; tokens come from groups (Standing), the Auction Hall, requests or battle. A token is used up by the first entry and holds for the days the realm is open.
+| Kind | Opened by | How long | Entry |
+|---|---|---|---|
+| **Group realm** | a group of the city | several days (working value: 3) | a token, used up by the first entry; it holds for the days the realm is open |
+| **World realm** | the world itself, neutral | one single visit | who leaves does not come back |
+
+- **Announced:** the city announces a realm some days ahead.
+- **Tokens** of a group realm come from groups (Standing), the Auction Hall, requests or battle. What a world realm asks for entry is not defined.
 - **Inside:** resources and battles cost day AP as in a wild area; nothing returns. Other groups send their people in.
 - **Gone:** when it closes, the realm no longer exists.
 - How the people of other groups act inside is not defined.
@@ -437,7 +445,7 @@ A pill is made in the cauldron from plants that share a property ([§7.5](#75-ma
 
 | Piece | Worn by | Gives | Slots |
 |---|---|---|---|
-| **Weapon** | the tamer | a skill of its own, used once per battle from a tamer slot | as many as tamer slots |
+| **Weapon** | the tamer | a skill of its own, used once per battle from a tamer slot | 1 |
 | **Armour** | a monster | one more passive of the list in [skills.md §6](skills.md#6-passives) | 1 per monster |
 
 - **No equipment raises a stat,** and none raises damage.
@@ -578,7 +586,7 @@ FORMS    plant · ore · beast part (by Kin) · essence
 - A golem is forged from ore and an essence.
 - **No crafting is a minigame.**
 
-**Rank of a craft:** the Alchemy Hall and the Smiths' Hall each grant five ranks by trial: the player hands in the piece the hall asks for, at the grade it asks for. A rank opens the hall's better requests and stores and counts toward the weight ([§7.2](#72-favor--faction)).
+**Rank of a craft:** the Alchemy Hall and the Smiths' Hall each grant six ranks by trial, named and counted like the six stages (Qi Gathering to Sovereign): the player hands in the piece the hall asks for, at the grade it asks for. A rank opens the hall's better requests and stores and counts toward the weight ([§7.2](#72-favor--faction)).
 
 ### 7.6 Item Schema
 
@@ -614,7 +622,7 @@ ITEM
 ### 7.9 Inventory and Loadout
 
 - **The player carries the inventory;** a monster owns only its armour. Goods have no weight.
-- **Tamer slots:** before a battle the player fills each slot with one learned tamer skill, one weapon or one pill. Each acts once in that battle; a pill is used up, a skill and a weapon are not.
+- **Tamer slots:** before a battle the player fills each slot with one learned tamer skill, one weapon or one pill. The tamer carries one weapon at most. Each acts once in that battle; a pill is used up, a skill and a weapon are not.
 - **How many:** [§6.3](#63-stage-unlock-table).
 - A human opponent brings slots of their own; a wild monster has none.
 

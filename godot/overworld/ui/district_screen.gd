@@ -216,7 +216,7 @@ func _show_info(key: StringName) -> void:
 ## Takes a resource of a wild area: 1 day AP, and it is gone until it has grown back.
 func _take(thing: Dictionary) -> void:
 	var node: Dictionary = thing["node"]
-	var why := _game.take_resource(String(thing["id"]), node["item"], node["nights"], node["stage"])
+	var why := _game.take_resource(String(thing["id"]), node["item"], node["nights"])
 	if why != "":
 		_say(why)
 		return

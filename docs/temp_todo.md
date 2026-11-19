@@ -14,20 +14,21 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 ## Current State
 
 - **Read first:** [vision.md](vision.md), the frame of the game (T50). It holds over the rule files; [overworld.md](overworld.md) is rewritten along it.
-- **Decided alone, to review (T51):** the rewrite of overworld.md and the first world; each such decision is a row in T51 and a working draft until the user has gone through it.
-- **World in the build ([godot/README.md](../godot/README.md)):** New Game leads into a hub with every district, both wild areas, the Realm Gate (the old dungeon run stands in) and the Internal World as teleporters; a follow camera; resources of a wild area for 1 day AP that return after nights. Main menu → Growth Preview walks through the growth by clicking. Not built: persons, battle in a wild area, the house, weight, crafting, the Internal World and tamer slots by the new rules. Not tried by hand: looking around with the mouse, taking resources, the way through the Realm Gate.
-- **Next:** the user walks the world and the growth preview and goes through T51 and T50; then the old overworld tasks (T15–T31) are sorted anew; then the first slice of the overworld (school, its mountain, the Internal World of the first stage). The ingame battle waits.
+- **Decided alone, to review (T51):** the user went through 17 of the 28 rows on 2026-11-19 ([decisions.md](decisions.md)); open are rows 6 and 21 (rules), 22–26 and 28 (build) and 17–19, which wait for T52.
+- **World in the build ([godot/README.md](../godot/README.md)):** New Game leads into a hub with every district, both wild areas, the Realm Gate (the old dungeon run stands in) and the Internal World as teleporters; a follow camera; resources of a wild area for 1 day AP that return after nights. Main menu → Growth Preview walks through the growth by clicking. Not built: the third wild area, the two kinds of one-time realm, persons, battle in a wild area, the house, weight, crafting, the Internal World and tamer slots by the new rules. Not tried by hand: looking around with the mouse, taking resources, the way through the Realm Gate.
+- **Next:** continue the talk of T52 with its six goal questions (the user wants the goal of the player's people settled first and declined a question dialog for it); then the rest of T51, then T50; then the old overworld tasks (T15–T31) are sorted anew; then the first slice of the overworld (school, its mountain, the Internal World of the first stage). The user has not yet walked the world or the growth preview. The ingame battle waits.
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. When it resumes: ends and board events in the map editor and the battle (T46); the user plays Seal Ground (T49); then a wild AI that values Seal Ground. Then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)).
-- **Tests:** 418 cases ([implementation.md](todo/implementation.md)); two known failures outside the battle (I46: the overworld roamer, the reference stats).
+- **Tests:** 418 cases ([implementation.md](todo/implementation.md)); two known failures outside the battle (I46: the overworld roamer, the reference stats). On 2026-11-19 only `tests/overworld/test_game_state.gd` was run after the change to wild resources (13 cases pass); a run of all of `tests/overworld` did not finish within 30 minutes and was stopped, cause not looked into.
 
 ## Open Questions for the User
 
 | # | Question | Task |
 |---|---|---|
 | 0 | The frame is decided; open are its lists and the points seen in the growth preview (a sub-tier gives the tamer nothing, four choices on one breakthrough) | T50 |
-| 0 | 28 rows decided without the user: rules of overworld.md and the first world of the build | T51 |
+| 0 | 11 rows decided without the user are left (6, 21, 22–26, 28; 17–19 wait for T52); open besides: name and zones of the third wild area, entry to a world realm | T51 |
+| 0 | What is the goal of the player's people, and with it: is weight needed, is favor kept? | T52 |
 | 1 | How does a stat shape split the points at the roll? | T03 |
 | 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills, battlegrounds in the overworld (cost, content, whose board) | T46 |
 | 13 | Seal: item and skill Seal Ground together? The upgrade scroll as an item; options of the other tamer skills | T49 |
@@ -58,6 +59,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | T49 | [Catching on the Board](todo/to-clarify/overworld/T49-catching-on-the-board.md) | to clarify | overworld |
 | T50 | [Set the Frame of the Game](todo/to-clarify/overworld/T50-set-the-frame-of-the-game.md) | to clarify | overworld |
 | T51 | [Review What Was Decided Alone](todo/to-clarify/overworld/T51-review-what-was-decided-alone.md) | to clarify | overworld |
+| T52 | [The Role of People, Standing and Weight](todo/to-clarify/overworld/T52-the-role-of-people-standing-and-weight.md) | to clarify | overworld |
 | T05 | [Complete Skill Improvements](todo/to-clarify/skills/T05-complete-skill-improvements.md) | to clarify | skills |
 | T06 | [Complete Strike Shapes and Kin Effects](todo/to-clarify/skills/T06-complete-strike-shapes-and-kin-effects.md) | to clarify | skills |
 | T07 | [Ground and Zone Values](todo/open/battle/T07-ground-and-zone-values.md) | open | battle |

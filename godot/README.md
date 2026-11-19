@@ -28,7 +28,7 @@ overworld/   days, AP, night phase, economy, Internal World (docs/overworld.md).
              (`CityAreas`, a test layout): every district of the ten groups, the two wild areas, the Realm Gate
              and the Internal World stand side by side as teleporters. A district is a room of tall buildings;
              a building opens what is built (trader, request board, the three old factions) or says what it is
-             meant for. A wild area has three zones by stage; a resource costs 1 day AP, needs the stage of its
+             meant for. A wild area has three zones by stage; a resource costs 1 day AP in any
              zone and returns after its nights (`GameState.taken`); its monsters only wander. The Realm Gate
              starts the old dungeon run, which stands in for a one-time realm. No persons yet. Every walkable
              area has a follow camera: hold the action `world_look` or `camera_drag` to turn, the zoom
