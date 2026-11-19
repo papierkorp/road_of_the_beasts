@@ -7,7 +7,7 @@ extends RefCounted
 ## Phase 1 placeholders (marked, to be replaced by the real systems): the night heals everybody
 ## fully and the player's own stage never changes (monsters rise through sub-tiers with XP).
 
-const START_AP := 3
+const START_AP := 6                 # docs/overworld.md §2.6: 6 at Qi Gathering, +1 per stage
 const STARTER := &"blaze_tiger"
 
 var day := 1
@@ -26,6 +26,7 @@ var favor := {}                     # faction -> balance
 var standing := {}                  # faction -> lifetime favor earned
 var quests: Array[Dictionary] = []  # open requests, see QuestBoard
 var licenses: Array[String] = []    # bought with favor, see FactionCatalog.LICENSES
+var taken := {}                     # resources taken in wild areas: key -> nights until it is back
 var recruits: Array[Dictionary] = []   # monsters for hire: {faction, cost, monster: MonsterInstance}
 var _next_quest := 1
 
@@ -632,12 +633,40 @@ func _night_structures() -> Array[String]:
 	return notes
 
 
+## Takes a resource of a wild area (docs/overworld.md §2.2): 1 day AP, and its zone must not be above the
+## player's stage. Returns "" when taken, otherwise why not.
+func take_resource(key: String, item: String, nights: int, zone_stage: int) -> String:
+	if taken.has(key):
+		return "Nothing grows here yet."
+	if zone_stage > int(stage):
+		return "This zone needs %s." % Stage.NAMES[zone_stage]
+	if not spend_ap(1):
+		return "No day AP left."
+	add_item(item)
+	taken[key] = nights
+	return ""
+
+
+## One night passes for what was taken; returns how many resources are back.
+func _night_wild() -> int:
+	var back := 0
+	for key: String in taken.keys():
+		taken[key] = int(taken[key]) - 1
+		if int(taken[key]) <= 0:
+			taken.erase(key)
+			back += 1
+	return back
+
+
 func end_day(rng: RandomNumberGenerator = null) -> Dictionary:
 	if rng == null:
 		rng = RandomNumberGenerator.new()
 		rng.randomize()
 	var healed := 0
 	var notes := _night_structures()
+	var back := _night_wild()
+	if back > 0:
+		notes.append("%d resource(s) of the wild areas are back." % back)
 	for m in monsters:
 		if m.current_hp < m.max_hp():
 			healed += 1
@@ -659,7 +688,8 @@ func to_dict() -> Dictionary:
 		"sub_tier": int(sub_tier), "monsters": ms, "items": items.duplicate(), "market": market.to_dict(),
 		"structures": structures.duplicate(true), "next_uid": _next_uid,
 		"favor": favor.duplicate(), "standing": standing.duplicate(), "quests": quests.duplicate(true),
-		"licenses": licenses.duplicate(), "next_quest": _next_quest, "recruits": _recruits_to_dicts()}
+		"licenses": licenses.duplicate(), "next_quest": _next_quest, "recruits": _recruits_to_dicts(),
+		"taken": taken.duplicate()}
 
 
 func _recruits_to_dicts() -> Array:
@@ -679,7 +709,7 @@ static func _int_dict(d: Dictionary) -> Dictionary:
 static func from_dict(d: Dictionary) -> GameState:
 	var g := GameState.new()
 	g.day = int(d["day"])
-	g.max_ap = int(d["max_ap"])
+	g.max_ap = maxi(int(d["max_ap"]), START_AP + int(d["stage"]))      # saves from before the day AP of the frame
 	g.ap = int(d["ap"])
 	g.money = int(d["money"])
 	g.stage = int(d["stage"]) as Stage.Type
@@ -700,6 +730,7 @@ static func from_dict(d: Dictionary) -> GameState:
 		rng.randomize()
 		g.market = Market.create(int(g.stage), rng)
 	g.favor = _int_dict(d.get("favor", {}))
+	g.taken = _int_dict(d.get("taken", {}))
 	g.standing = _int_dict(d.get("standing", {}))
 	g._next_quest = int(d.get("next_quest", 1))
 	for l in d.get("licenses", []):

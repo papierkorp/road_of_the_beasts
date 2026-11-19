@@ -1,9 +1,10 @@
 extends Control
-## Start menu: start the game or open the battle menu (ingame prototype and multiplayer battle), overview (debug tables of skills and monsters), settings, quit.
+## Start menu: start the game or open the battle menu (ingame prototype and multiplayer battle), overview (debug tables of skills and monsters), growth preview (test screen), settings, quit.
 
 const BATTLE_MENU_SCENE := "res://battle/battle_menu.tscn"
 const OVERWORLD_SCENE := "res://overworld/district.tscn"
 const OVERVIEW_SCENE := "res://game/overview.tscn"
+const GROWTH_SCENE := "res://game/growth_preview.tscn"
 
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
@@ -46,6 +47,7 @@ func _ready() -> void:
 	cont.disabled = not SaveGame.exists()
 	_add_button("Battle", func(): get_tree().change_scene_to_file(BATTLE_MENU_SCENE))
 	_add_button("Overview", func(): get_tree().change_scene_to_file(OVERVIEW_SCENE))
+	_add_button("Growth Preview", func(): get_tree().change_scene_to_file(GROWTH_SCENE))
 	_add_button("Settings", _show_settings)
 	_add_button("Quit", func(): get_tree().quit())
 
@@ -69,7 +71,7 @@ func _new_game() -> void:
 	rng.randomize()
 	GameSession.game = GameState.new_game(rng)
 	GameSession.expedition = null
-	GameSession.district = &"plaza"
+	GameSession.district = &"city"
 	GameSession.arrive_from = &"start"
 	SaveGame.save(GameSession.game)
 	get_tree().change_scene_to_file(OVERWORLD_SCENE)
@@ -81,7 +83,7 @@ func _continue_game() -> void:
 		return
 	GameSession.game = g
 	GameSession.expedition = null
-	GameSession.district = &"plaza"
+	GameSession.district = &"city"
 	GameSession.arrive_from = &"start"
 	get_tree().change_scene_to_file(OVERWORLD_SCENE)
 

@@ -2,7 +2,7 @@
 
 **Status:** Open — board-generation/BattleRequest contract prioritized for Battle; dungeon-node content and healthy-team availability follow afterward.
 **Prerequisites:** T04 board rules for generator inputs now; T12 for final opponent/roster coverage tests. No full dungeon/loot/capacity design prerequisite to the board contract.
-**Sources:** [overworld.md §3.3](../../../overworld.md#33-dungeons); [battle.md §4.1](../../../battle.md#41-board-generation).
+**Sources:** [overworld.md §3.3](../../../overworld.md#33-wild-areas-and-one-time-realms); [battle.md §4.1](../../../battle.md#41-board-generation).
 - **Battle deliverable:** finish the allowed board-generation inputs, mode/team-size constraints and deterministic placement responsibility before final T13; test requests can supply these without a whole dungeon run. **Meta deliverable:** populate dungeon nodes and check healthy-team/capacity access after the gate.
 - Node-owned mode and wild-monster count are already the working design in Overworld §3.3. Define the remaining parameters: theme/ground families, prop-count ranges, start areas and seed/placement responsibility. Point-symmetric generation remains Battle §4.1's constraint; assigning all these parameters to the node is only a proposal.
 - Check encounter access against required team size and available healthy monsters.

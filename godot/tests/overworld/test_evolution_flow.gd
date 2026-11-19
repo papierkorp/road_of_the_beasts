@@ -41,7 +41,7 @@ func test_the_player_needs_a_ready_monster_materials_and_ap_to_break_through() -
 	_ready_for_foundation(g)
 	assert_int(g.breakthrough_monster()).is_equal(0)
 	assert_bool(g.can_break_through()).is_true()
-	g.spend_ap(3)
+	g.spend_ap(g.ap)
 	assert_bool(g.can_break_through()).is_false()                 # no AP
 
 

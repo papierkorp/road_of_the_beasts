@@ -85,7 +85,7 @@ func test_constructing_needs_the_blueprint_the_materials_and_ap() -> void:
 	g.add_item(_mat(Aspect.Type.FORCE), 3)
 	assert_bool(g.can_construct(&"meditation_stone")).is_true()
 	assert_bool(g.can_construct(&"qi_spring")).is_false()                  # no blueprint
-	g.spend_ap(3)
+	g.spend_ap(g.ap)
 	assert_bool(g.can_construct(&"meditation_stone")).is_false()           # no AP
 
 

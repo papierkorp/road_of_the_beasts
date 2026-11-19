@@ -4,9 +4,10 @@ extends RefCounted
 ## buildings and gates. Pure geometry on the ground plane (x, z), no nodes — the scene only draws
 ## it. Movement slides along walls; `nearest_action` tells what the player can use right now.
 ##
-## Actions (a StringName on a thing): "panel:<place>" opens a PlacePanel, "goto:<district>" walks to
-## another district, "locked:<place>" is announced but closed. Empty = decoration.
-## Phase 2 first step: three districts in code; they become data files when there are more.
+## Actions (a StringName on a thing): "panel:<place>" opens a PlacePanel, "faction:<id>" a FavorPanel,
+## "goto:<area>" leads to another area, "info:<district>.<building>" says what a building is for,
+## "take:<key>" takes a resource of a wild area, "locked:<place>" is announced but closed. Empty = decoration.
+## The areas of the city are laid out in CityAreas; the Internal World and the dungeon room here.
 
 const PLAYER_RADIUS := 0.35
 const REACH := 1.3
@@ -19,6 +20,10 @@ var ground := Color(0.30, 0.28, 0.26)
 var things: Array[Dictionary] = []
 ## Where the player appears, by where they came from ("start" is the default).
 var arrivals := {}
+## The zones of a wild area: {name, stage, rect}. Empty anywhere else.
+var zones: Array[Dictionary] = []
+## Open sky above, or a closed dark place.
+var sky := true
 
 
 ## A dungeon room: entrance (leave portal) on the west, doors to the next nodes on the east and a
@@ -29,6 +34,7 @@ static func room(seed_value: int, doors: Array[Dictionary]) -> DistrictMap:
 	m.title = "Dungeon"
 	m.size = Vector2(16, 10)
 	m.ground = Color(0.18, 0.17, 0.2)
+	m.sky = false
 	m.arrivals = {&"start": Vector2(2.6, 5.0)}
 	m._add("leave", "Teleport out", Vector2(0.8, 5.0), Vector2(1.6, 3.0), 2.0, Color(0.45, 0.35, 0.7), &"leave",
 		"Teleport back to the city")
@@ -46,57 +52,36 @@ static func room(seed_value: int, doors: Array[Dictionary]) -> DistrictMap:
 
 
 static func ids() -> Array[StringName]:
-	return [&"plaza", &"market", &"inner", &"clan"]
+	var out := CityAreas.ids()
+	out.append(&"inner")
+	return out
 
 
+## The area with this id; an unknown id gives the hub of the city (CityAreas).
 static func of(district_id: StringName) -> DistrictMap:
+	if district_id != &"inner":
+		return CityAreas.build(district_id)
+	# the grid area (BuildGrid) is free ground; the strip below holds the stone and the gate
 	var m := DistrictMap.new()
-	m.id = district_id
-	match district_id:
-		&"market":
-			m.title = "Market District"
-			m.size = Vector2(14, 10)
-			m.ground = Color(0.34, 0.29, 0.22)
-			m.arrivals = {&"start": Vector2(7, 8), &"plaza": Vector2(2.6, 5)}
-			m._add("trader", "Trader", Vector2(7, 2.6), Vector2(4.4, 1.6), 1.5, Color(0.75, 0.55, 0.25), &"panel:market", "Trade with the Trader")
-			m._add("stall_w", "", Vector2(3.4, 2.6), Vector2(2.0, 1.4), 1.2, Color(0.5, 0.4, 0.3))
-			m._add("stall_e", "", Vector2(10.6, 2.6), Vector2(2.0, 1.4), 1.2, Color(0.5, 0.4, 0.3))
-			m._add("crates_a", "", Vector2(5.0, 6.0), Vector2(1.0, 1.0), 0.8, Color(0.45, 0.35, 0.25))
-			m._add("crates_b", "", Vector2(9.6, 5.4), Vector2(1.2, 1.0), 0.8, Color(0.45, 0.35, 0.25))
-			m._add("guild_factor", "Guild Factor", Vector2(11.8, 7.6), Vector2(1.8, 1.4), 1.5, Color(0.8, 0.65, 0.3), &"faction:guild", "Speak to the Guild Factor")
-			m._add("gate", "Plaza", Vector2(0.8, 5), Vector2(1.6, 3.2), 2.2, Color(0.35, 0.55, 0.75), &"goto:plaza", "Back to the Teleport Plaza")
-		&"clan":
-			m.title = "Clan Compound"
-			m.size = Vector2(14, 10)
-			m.ground = Color(0.30, 0.24, 0.24)
-			m.arrivals = {&"start": Vector2(7, 8), &"plaza": Vector2(2.6, 5)}
-			m._add("envoy_family", "Clan Envoy", Vector2(3.6, 2.6), Vector2(2.0, 1.6), 1.6, Color(0.75, 0.55, 0.3), &"faction:family", "Speak to the Clan Envoy")
-			m._add("envoy_guild", "Guild Factor", Vector2(7.0, 2.6), Vector2(2.0, 1.6), 1.6, Color(0.8, 0.65, 0.3), &"faction:guild", "Speak to the Guild Factor")
-			m._add("envoy_watch", "Watch Captain", Vector2(10.4, 2.6), Vector2(2.0, 1.6), 1.6, Color(0.4, 0.5, 0.7), &"faction:watch", "Speak to the Watch Captain")
-			m._add("board", "Notice Board", Vector2(7.0, 6.0), Vector2(3.0, 0.8), 1.4, Color(0.55, 0.4, 0.25), &"panel:clan", "Read the notice board")
-			m._add("gate", "Plaza", Vector2(0.8, 5), Vector2(1.6, 3.2), 2.2, Color(0.35, 0.55, 0.75), &"goto:plaza", "Back to the Teleport Plaza")
-		&"inner":
-			# the grid area (BuildGrid) is free ground; the strip below holds the stone and the gate
-			m.title = "Inner World"
-			m.size = Vector2(16, 13)
-			m.ground = Color(0.20, 0.27, 0.22)
-			m.arrivals = {&"start": Vector2(8, 10.9), &"plaza": Vector2(8, 10.9)}
-			m._add("stone", "Cultivation Stone", Vector2(12.6, 11.2), Vector2(1.6, 1.6), 1.2, Color(0.55, 0.62, 0.75), &"panel:inner", "Look at your monsters")
-			m._add("gate", "Return to the city", Vector2(8, 12.2), Vector2(3.6, 1.0), 2.0, Color(0.35, 0.55, 0.75), &"goto:plaza", "Return to the city")
-		_:
-			m.id = &"plaza"
-			m.title = "Teleport Plaza"
-			m.size = Vector2(16, 12)
-			m.ground = Color(0.30, 0.29, 0.31)
-			m.arrivals = {&"start": Vector2(8, 9), &"market": Vector2(11.6, 6), &"inner": Vector2(4.6, 6), &"dungeon": Vector2(8, 4.8), &"clan": Vector2(8, 9.4)}
-			m._add("array", "Teleport Array", Vector2(8, 2.2), Vector2(4.0, 2.2), 1.0, Color(0.45, 0.35, 0.7), &"panel:plaza", "Use the Teleport Array")
-			m._add("pavilion", "Meditation Pavilion", Vector2(2.6, 6), Vector2(2.4, 2.6), 1.8, Color(0.35, 0.6, 0.5), &"goto:inner", "Enter your Inner World")
-			m._add("market_gate", "Market District", Vector2(13.6, 6), Vector2(1.8, 3.2), 2.2, Color(0.35, 0.55, 0.75), &"goto:market", "Go to the Market District")
-			m._add("clan_gate", "Clan Compound", Vector2(8, 11.3), Vector2(4.0, 1.0), 2.0, Color(0.5, 0.3, 0.3), &"goto:clan", "Go to the Clan Compound")
-			m._add("watch_post", "Watch Post", Vector2(13.4, 9.4), Vector2(1.8, 1.4), 1.5, Color(0.4, 0.5, 0.7), &"faction:watch", "Speak to the Watch")
-			m._add("pillar_w", "", Vector2(4.0, 3.5), Vector2(0.8, 0.8), 2.0, Color(0.5, 0.5, 0.52))
-			m._add("pillar_e", "", Vector2(12.0, 3.5), Vector2(0.8, 0.8), 2.0, Color(0.5, 0.5, 0.52))
+	m.id = &"inner"
+	m.title = "Internal World"
+	m.size = Vector2(16, 13)
+	m.ground = Color(0.20, 0.27, 0.22)
+	m.arrivals = {&"start": Vector2(8, 10.9), &"city": Vector2(8, 10.9)}
+	m._add("stone", "Cultivation Stone", Vector2(12.6, 11.2), Vector2(1.6, 1.6), 1.2, Color(0.55, 0.62, 0.75), &"panel:inner", "Look at your monsters")
+	m._add("gate", "Return to the city", Vector2(8, 12.2), Vector2(3.6, 1.0), 2.0, Color(0.35, 0.55, 0.75), &"goto:city", "Return to the city")
 	return m
+
+
+## A flat patch of ground that blocks nothing (the zone of a wild area).
+func _patch(thing_id: String, thing_name: String, rect: Rect2, color: Color) -> void:
+	things.append({"id": thing_id, "name": thing_name, "pos": rect.get_center(), "size": rect.size, "height": 0.04,
+		"color": color, "solid": false, "action": &"", "label": "", "patch": true})
+
+
+## Leaves out the resources the player took and that have not come back yet (GameState.taken).
+func remove_taken(taken: Dictionary) -> void:
+	things = things.filter(func(t: Dictionary) -> bool: return not (t.has("node") and taken.has(String(t["id"]))))
 
 
 ## The structures the player built in the Inner World become solid things you can use.

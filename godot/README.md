@@ -24,9 +24,20 @@ battle/      the deterministic grid battle (docs/battle.md, skills.md, monsters.
   view/      PRESENTATION — 3D board (BattleView) and the input controller
   ui/        battle HUD, BattleText (datasheets, log, previews), the draft sandbox and ShapeEditor (free shapes before a battle)
   battle.tscn, draft.tscn
-overworld/   days, AP, night phase, economy, internal world (overworld.md)
+overworld/   days, AP, night phase, economy, Internal World (docs/overworld.md). New Game starts in a hub
+             (`CityAreas`, a test layout): every district of the ten groups, the two wild areas, the Realm Gate
+             and the Internal World stand side by side as teleporters. A district is a room of tall buildings;
+             a building opens what is built (trader, request board, the three old factions) or says what it is
+             meant for. A wild area has three zones by stage; a resource costs 1 day AP, needs the stage of its
+             zone and returns after its nights (`GameState.taken`); its monsters only wander. The Realm Gate
+             starts the old dungeon run, which stands in for a one-time realm. No persons yet. Every walkable
+             area has a follow camera: hold the action `world_look` or `camera_drag` to turn, the zoom
+             actions to zoom
 game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession), Overview (debug tables
-             of content with an optional in-game-only filter, reached from the main menu)
+             of content with an optional in-game-only filter, reached from the main menu), Growth Preview
+             (test screen from the main menu: click through the growth of docs/vision.md §8 and see what a step
+             gives, where the player chooses and where the rules have a gap; `GrowthModel` holds its draft
+             tables, of which the insights, the numbers of the Internal World and the weight are placeholders)
 data/        ALL content as Resource files, one folder per kind (a new file = new content)
              monsters/ skills/ zones/ grounds/ props/ tamer/  — the game's content and, with the status
                                                                "simulation", test monsters of the tools; every

@@ -31,7 +31,7 @@ Both battles share the goals of [battle.md §1](battle.md#1-goals-and-pillars): 
 
 ## 2. Team Sizes and the End of a Battle
 
-Every team size other than 3v3 is an ingame matter: 1v1, 2v2, 5v5, and unequal sides such as 3v1. **Every board of the game comes from a battleground** ([§3](#3-battlegrounds)): its start areas set how many monsters each side fields, never more than the player's available team size ([overworld.md §6.3](overworld.md#63-stage-unlock-table)).
+Every team size other than 3v3 is an ingame matter: 1v1, 2v2, 5v5, and unequal sides such as 3v1. **Every board of the game comes from a battleground** ([§3](#3-battlegrounds)): its start areas set how many monsters each side fields, and the player fields at most as many as the Internal World holds ([overworld.md §4.4](overworld.md#44-capacity-and-growth)).
 
 **A battle need not end with every monster of a side at 0 HP.** **The battleground names its ends;** besides the end at 0 HP, a battleground may have these:
 
@@ -48,7 +48,7 @@ Not defined: the numbers of the ends (how many goal squares, how long they are h
 
 ## 3. Battlegrounds
 
-- **The player builds battlegrounds in the overworld** and uses them in battles.
+- **The player builds battlegrounds in a building of the Internal World** and uses them in battles: several, each for a cost, shaped to the own team (for example with the Dragon Veins on the own side).
 - **Every monster of the player has a battleground of its own.**
 
 **What a battleground is** *(the map editor of the build; sizes are working values):*
@@ -81,9 +81,9 @@ Not defined: what an event may do beyond the vocabulary of the board.
 
 Tamer skills exist in the ingame battle only.
 
-Battle resolves the effects of the tamer's prepared loadout deterministically and with previews. Wild monsters have no tamer. Definitions, slots and access: [overworld.md §6.4](overworld.md#64-tamer-skills).
+Battle resolves what the tamer brought in the tamer slots deterministically and with previews: a tamer skill, a weapon or a pill per slot, each once per battle ([overworld.md §7.9](overworld.md#79-inventory-and-loadout)). Wild monsters have no tamer. Definitions and access: [overworld.md §6.4](overworld.md#64-tamer-skills); what a weapon's skill or a pill does on the board is not defined.
 
-- **Window:** a slotted tamer skill (once per battle) may be used during the turn of one of the tamer's own monsters, never inside a payload resolution or during an enemy turn. It costs no AP and no turn.
+- **Window:** what a tamer slot holds (once per battle) may be used during the turn of one of the tamer's own monsters, never inside a payload resolution or during an enemy turn. It costs no AP and no turn.
 - **Swap Places:** two own monsters trade squares; no range. Each counts as leaving its square and entering the new one.
 - **Urgent Order:** an own monster that has not acted this round is inserted directly after the current turn; its original entry of this round is removed. Extra-turn entries are not affected.
 - **Second Wind:** one own monster on the field regains 1 HP, never above its maximum.

@@ -3,7 +3,8 @@
 - **Road of the Beasts:** deterministische, rundenbasierte Monsterkämpfe mit Management und Kultivierung.
 - **Designziel:** „Easy to learn, hard to master“: wenige, einheitliche und gut lesbare Regeln; Tiefe entsteht aus Kombinationen und Entscheidungen, nicht aus Sonderregeln. Vorschläge daran messen, Ausnahmen begründen.
 - **Battle-Ziele:** stehen in [docs/battle.md §1](docs/battle.md#1-goals-and-pillars); Regel-, Inhalts- und Preisvorschläge daran messen.
-- **Fokus:** Das Battle ist der Kern und wird zuerst fertig; Multiplayer-Kampf und Ingame-Kampf werden parallel entwickelt. Die Overworld ist bis dahin nachrangig: nicht daran arbeiten, sie nicht als Grund für Battle-Entscheidungen heranziehen und beim Battle-Umbau nicht schonen.
+- **Rahmen:** [docs/vision.md](docs/vision.md) beschreibt das Spiel im Ganzen und geht den Regeldateien vor; Vorschläge für Overworld und Ingame-Kampf daran messen.
+- **Fokus:** Der Battle-Kern steht. Zuerst werden die Overworld-Regeln an den Rahmen angeglichen, dann wird ein erster Overworld-Baustein gebaut; der Ingame-Kampf wartet so lange. Der Rahmen darf Entscheidungen des Ingame-Kampfs begründen, nie die des Multiplayer-Kampfs.
 - **Zwei Kämpfe, strikt getrennt:** Der „Multiplayer-Kampf“ (Multiplayer-Modus: Draft-Sandbox im Godot-Build, gleiche Punkte für alle) und der „Ingame-Kampf“ (gewachsene Monster, eigene Battlegrounds, Board-Events) teilen nur die Kernregeln aus `docs/battle.md`. Regeln, Inhalte, Messungen und Balance des einen sind kein Grund für Entscheidungen im anderen; bei jedem Vorschlag und jedem Lauf den Kampf nennen.
 - **Begriffe:** „das Spiel“ meint das Spiel mit Overworld und Fortschritt.
 
@@ -29,6 +30,7 @@
 | [`docs/skills.md`](docs/skills.md) | Regeln der Skills: Kit, Skill-Karte, Formen, Bewegungsarten, Passives, Slots | 20 000 |
 | [`docs/monsters.md`](docs/monsters.md) | Regeln der Monster: Stats, Kalkulation, Kins, Seltenheit, Wachstum | 15 000 |
 | [`docs/content.md`](docs/content.md) | Alle Inhaltsentwürfe: Böden, Zonen, Props, Skills, Kits, Monster | 20 000 |
+| [`docs/vision.md`](docs/vision.md) | Rahmen des Spiels (Overworld und Ingame-Kampf) mit Diagrammen; geht den Regeldateien vor | 15 000 |
 | [`docs/overworld.md`](docs/overworld.md) | Welt, Expeditionen, Wirtschaft, Fortschritt, Tamer-Skills | 60 000 |
 | [`docs/architecture.md`](docs/architecture.md) | Technische Zielstruktur | — |
 | [`docs/contract.md`](docs/contract.md) | Vertrag des neu gebauten Kampfs: Formate, Aktionen, Events, lesbarer Zustand | eingefrorener Entwurf |

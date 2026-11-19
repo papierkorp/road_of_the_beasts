@@ -58,26 +58,68 @@ func test_gates_lead_somewhere_and_back() -> void:
 
 
 func test_walls_stop_and_slide() -> void:
-	var m := DistrictMap.of(&"plaza")
-	var p := Vector2(8, 9)
-	assert_object(m.move(p, Vector2(0.5, 0))).is_equal(Vector2(8.5, 9))
+	var m := DistrictMap.of(&"guild")
+	var p := Vector2(20, 20)
+	assert_object(m.move(p, Vector2(0.5, 0))).is_equal(Vector2(20.5, 20))
 	# towards the left edge: never leaves the district
-	var q := p
+	var q := Vector2(12, 24)
 	for i in 100:
 		q = m.move(q, Vector2(-0.5, 0))
 	assert_float(q.x).is_greater_equal(DistrictMap.PLAYER_RADIUS - 0.001)
-	# sliding along the clan gate (south wall): the blocked axis stops, the free one continues
-	var edge := Vector2(8, 11.65 - 0.0)
-	var slid := m.move(Vector2(6.0, 10.4), Vector2(0.5, 0.5))
-	assert_float(slid.x).is_greater(6.0)
-	assert_bool(m.blocked(edge)).is_true()
+	# sliding along the city gate (south wall): the blocked axis stops, the free one continues
+	var slid := m.move(Vector2(19.0, 27.9), Vector2(0.5, 0.5))
+	assert_float(slid.x).is_greater(19.0)
+	assert_float(slid.y).is_equal_approx(27.9, 0.001)
+	assert_bool(m.blocked(Vector2(20, 29))).is_true()
 
 
-func test_the_trader_can_be_used_when_standing_in_front() -> void:
-	var m := DistrictMap.of(&"market")
-	assert_bool(m.nearest_action(Vector2(7, 4.4)).is_empty()).is_false()
-	assert_str(String(m.nearest_action(Vector2(7, 4.4))["action"])).is_equal("panel:market")
-	assert_bool(m.nearest_action(Vector2(7, 9)).is_empty()).is_true()
+func test_the_traders_can_be_used_when_standing_in_front() -> void:
+	var m := DistrictMap.of(&"guild")
+	var front := Vector2(9.8, 15.5)                     # east of Trader's Row, the building in the west slot
+	assert_str(String(m.nearest_action(front)["action"])).is_equal("panel:market")
+	assert_bool(m.nearest_action(Vector2(20, 20)).is_empty()).is_true()
+
+
+func test_the_hub_leads_into_every_area_and_an_unknown_id_gives_the_hub() -> void:
+	var hub := DistrictMap.of(&"nowhere")
+	assert_str(String(hub.id)).is_equal("city")
+	var targets := {}
+	for t in hub.things:
+		if String(t["action"]).begins_with("goto:"):
+			targets[String(t["action"]).trim_prefix("goto:")] = true
+	for id in DistrictMap.ids():
+		if id != &"city":
+			assert_bool(targets.has(String(id))).is_true()
+
+
+func test_every_building_without_a_function_says_what_it_is_for() -> void:
+	for id in DistrictMap.ids():
+		for t in DistrictMap.of(id).things:
+			var parts := String(t["action"]).split(":")
+			if parts[0] == "info":
+				var d := CityAreas.info(StringName(parts[1]))
+				assert_str(String(d.get("name", ""))).is_equal(t["name"])
+				assert_str(String(d.get("text", ""))).is_not_empty()
+	assert_bool(CityAreas.info(&"guild.nothing").is_empty()).is_true()
+
+
+func test_a_wild_area_has_three_zones_with_resources_and_the_taken_ones_are_gone() -> void:
+	for id: StringName in CityAreas.WILDS:
+		var m := DistrictMap.of(id)
+		assert_int(m.zones.size()).is_equal(3)
+		var nodes: Array[Dictionary] = []
+		for t in m.things:
+			if t.has("node"):
+				nodes.append(t)
+				var zone: Dictionary = m.zones[int(String(t["id"]).split("/")[1])]
+				assert_bool((zone["rect"] as Rect2).has_point(t["pos"])).is_true()
+				assert_int(int(t["node"]["stage"])).is_equal(int(zone["stage"]))
+				assert_str(ItemCatalog.display_name(t["node"]["item"])).is_not_empty()
+		assert_int(nodes.size()).is_equal(12)
+		assert_object(DistrictMap.of(id).things).is_equal(m.things)         # the layout is always the same
+		m.remove_taken({String(nodes[0]["id"]): 1})
+		assert_bool(m.things.has(nodes[0])).is_false()
+		assert_bool(m.things.has(nodes[1])).is_true()
 
 
 func test_every_usable_thing_can_be_reached_on_foot() -> void:

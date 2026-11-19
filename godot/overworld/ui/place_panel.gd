@@ -1,6 +1,6 @@
 class_name PlacePanel
 extends VBoxContainer
-## What a place of the city offers, as a UI panel (inner world, teleport plaza, market, clan).
+## What a place of the city offers, as a UI panel (Internal World, Realm Gate, Trader's Row, Notice Wall).
 ## Used by the city map and by the walkable districts; it owns no scene of its own.
 ## Decisions are free, execution costs: only entering a dungeon spends AP (gdd_overworld §7).
 
@@ -9,14 +9,14 @@ signal changed                      # the game changed (trade, pill, ...): refre
 const DUNGEON_SCENE := "res://overworld/dungeon_room.tscn"
 
 const INFO := {
-	&"inner": {"name": "Inner World", "built": true,
-		"blurb": "Your spatial space: the monsters you hold, and later cultivation spots, plots and structures (§6.3)."},
-	&"plaza": {"name": "Teleport Plaza", "built": true,
-		"blurb": "Travel arrays lead to dungeon regions. Entering a dungeon costs 1 AP and includes its battles (§7)."},
-	&"market": {"name": "Market District", "built": true,
-		"blurb": "The Trader: sell dungeon loot, buy cultivation pills, and play the price swings — they drift every night (§8, §11)."},
-	&"clan": {"name": "Clan Compound", "built": true,
-		"blurb": "The notice board of the three factions: requests to fill for favor, licenses, rare offers (§8.2). Each faction also has an envoy to talk to."},
+	&"inner": {"name": "Internal World", "built": true,
+		"blurb": "Your own world: the monsters you hold, your fields and your structures. Nobody else enters."},
+	&"plaza": {"name": "Realm Gate", "built": true,
+		"blurb": "The teleport array into a one-time realm. Realms are not built yet: the old dungeon run stands in for one. Entering costs 1 day AP and includes its battles."},
+	&"market": {"name": "Trader's Row", "built": true,
+		"blurb": "The traders of the Merchant Guild: sell what you found, buy pills, and watch the prices, which drift every night."},
+	&"clan": {"name": "Notice Wall", "built": true,
+		"blurb": "The requests of the groups that are built so far (your family, the Merchant Guild, the City Guard): fill them for favor."},
 }
 
 var _game: GameState

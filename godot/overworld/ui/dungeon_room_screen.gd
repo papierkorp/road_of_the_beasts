@@ -274,7 +274,7 @@ func _interact_with(thing: Dictionary) -> void:
 
 func _leave() -> void:
 	GameSession.expedition = null
-	GameSession.district = &"plaza"
+	GameSession.district = &"city"
 	GameSession.arrive_from = &"dungeon"
 	SaveGame.save(_game)
 	get_tree().change_scene_to_file(CITY_SCENE)

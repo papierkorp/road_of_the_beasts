@@ -1,17 +1,19 @@
 class_name WalkScreen
 extends Node3D
-## Base of every screen where the player walks around a DistrictMap (city districts, dungeon rooms):
-## fixed isometric camera like the battles, WASD to walk (relative to the camera), E to use a thing,
-## a top bar, a prompt, a toast line and a side panel. Subclasses fill in what is special
+## Base of every screen where the player walks around a DistrictMap (the city and its areas, dungeon rooms):
+## a follow camera the player turns and zooms freely (docs/vision.md §2), walking relative to the camera, a key to
+## use a thing, a top bar, a prompt, a toast line and a side panel. Subclasses fill in what is special
 ## (`_make_map`, `_build_actors`, `_update_actors`, `_interact_with`, `_top_buttons`).
 ## The layout comes from DistrictMap; this script only draws it and moves the player.
 
 const MENU_SCENE := "res://game/menu.tscn"
 
-const SPEED := 5.0
-const YAW := 45.0
-const PITCH := 40.0
-const CAMERA_SIZE := 11.0
+const SPEED := 6.5
+const PITCH_MIN := 6.0
+const PITCH_MAX := 78.0
+const DIST_MIN := 4.0
+const DIST_MAX := 48.0
+const LOOK_SPEED := 0.3
 
 var _game: GameState
 var _map: DistrictMap
@@ -21,6 +23,9 @@ var _facing := Vector2.ZERO               # direction of the player's last move
 var _player: Node3D
 var _camera: Camera3D
 var _camera_target := Vector3.ZERO
+var _yaw := 0.0                          # degrees; 0 looks north (towards -z), from behind the player
+var _pitch := 24.0
+var _dist := 15.0
 var _header: Label
 var _top: HBoxContainer
 var _toast: Label
@@ -44,7 +49,7 @@ func _fallback_scene() -> String:
 
 
 func _make_map() -> DistrictMap:
-	return DistrictMap.of(&"plaza")
+	return DistrictMap.of(CityAreas.HUB)
 
 
 func _spawn_point() -> Vector2:
@@ -71,6 +76,11 @@ func _after_ready() -> void:
 	pass
 
 
+## Whether the look button of the world may turn the camera now (a screen may need that button itself).
+func _may_look() -> bool:
+	return true
+
+
 ## Extra input of a subclass; return true when the event was used.
 func _extra_input(_event: InputEvent) -> bool:
 	return false
@@ -92,7 +102,8 @@ func _ready() -> void:
 	_build_actors()
 	_build_hud()
 	GameSession.state_changed.connect(_on_state_changed)
-	_camera_target = Vector3(_pos.x, 0.0, _pos.y)
+	_camera_target = Vector3(_pos.x, 1.3, _pos.y)
+	_yaw = _open_yaw()
 	_update_camera(1.0)
 	_refresh_header()
 	_after_ready()
@@ -101,44 +112,65 @@ func _ready() -> void:
 func _build_world() -> void:
 	get_viewport().msaa_3d = Viewport.MSAA_4X
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.075, 0.082, 0.094)
+	if _map.sky:
+		var sky_mat := ProceduralSkyMaterial.new()
+		sky_mat.sky_top_color = Color(0.24, 0.36, 0.62)
+		sky_mat.sky_horizon_color = Color(0.70, 0.74, 0.80)
+		sky_mat.ground_horizon_color = Color(0.36, 0.36, 0.38)
+		sky_mat.ground_bottom_color = Color(0.10, 0.10, 0.12)
+		var sky := Sky.new()
+		sky.sky_material = sky_mat
+		env.background_mode = Environment.BG_SKY
+		env.sky = sky
+	else:
+		env.background_mode = Environment.BG_COLOR
+		env.background_color = Color(0.03, 0.03, 0.045)
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.75, 0.78, 0.9)
-	env.ambient_light_energy = 0.55
+	env.ambient_light_energy = 0.4
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52, 30, 0)
+	sun.light_energy = 0.6
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 40.0
+	sun.directional_shadow_max_distance = 110.0
 	add_child(sun)
 
 	_camera = Camera3D.new()
-	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	_camera.size = CAMERA_SIZE
-	_camera.far = 100.0
+	_camera.fov = 58.0
+	_camera.far = 500.0
 	add_child(_camera)
 
-	_flat(Vector3(_map.size.x + 40.0, 0.02, _map.size.y + 40.0), Vector3(_map.size.x / 2.0, -0.03, _map.size.y / 2.0),
-		Color(0.05, 0.055, 0.065))
+	_flat(Vector3(_map.size.x + 400.0, 0.02, _map.size.y + 400.0), Vector3(_map.size.x / 2.0, -0.03, _map.size.y / 2.0),
+		_map.ground.darkened(0.45))
 	_flat(Vector3(_map.size.x, 0.1, _map.size.y), Vector3(_map.size.x / 2.0, -0.05, _map.size.y / 2.0), _map.ground)
 	for t in _map.things:
 		var h: float = t["height"]
 		var sz: Vector2 = t["size"]
 		var p: Vector2 = t["pos"]
-		_flat(Vector3(sz.x, h, sz.y), Vector3(p.x, h / 2.0, p.y), t["color"])
+		var c: Color = t["color"]
+		_flat(Vector3(sz.x, h, sz.y), Vector3(p.x, h / 2.0, p.y), c)
+		if h >= 4.5 and t["name"] != "":
+			# a building: a wide roof, an upper storey and its roof, so that it stands above the player
+			_flat(Vector3(sz.x + 1.4, 0.5, sz.y + 1.4), Vector3(p.x, h + 0.25, p.y), c.darkened(0.55))
+			_flat(Vector3(sz.x * 0.62, h * 0.35, sz.y * 0.62), Vector3(p.x, h + 0.5 + h * 0.175, p.y), c.lightened(0.08))
+			_flat(Vector3(sz.x * 0.62 + 1.2, 0.45, sz.y * 0.62 + 1.2), Vector3(p.x, h * 1.35 + 0.72, p.y), c.darkened(0.55))
 		if t["name"] != "":
 			var label := Label3D.new()
 			label.text = t["name"]
 			label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			label.pixel_size = 0.012
+			label.pixel_size = 0.012 if h < 3.0 else 0.017
 			label.font_size = 40
 			label.outline_size = 8
-			label.no_depth_test = true
-			label.position = Vector3(p.x, h + 0.6, p.y)
+			label.no_depth_test = h >= 3.0 or t.get("patch", false)      # a building is named through walls, a small thing is not
+			label.position = Vector3(p.x, minf(h + 0.7, 5.0), p.y)
+			if t.get("patch", false):
+				label.position.y = 0.5
+				label.modulate = Color(1, 1, 1, 0.7)
 			add_child(label)
 
 
@@ -306,7 +338,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _extra_input(event):
 		viewport.set_input_as_handled()
 		return
-	if event.is_action_pressed(&"interact"):
+	if event.is_action_pressed(&"camera_zoom_in"):
+		_dist = clampf(_dist * 0.88, DIST_MIN, DIST_MAX)
+	elif event.is_action_pressed(&"camera_zoom_out"):
+		_dist = clampf(_dist / 0.88, DIST_MIN, DIST_MAX)
+	elif event is InputEventMouseMotion and (Input.is_action_pressed(&"camera_drag") or (_may_look() and Input.is_action_pressed(&"world_look"))):
+		_yaw -= event.relative.x * LOOK_SPEED
+		_pitch = clampf(_pitch + event.relative.y * LOOK_SPEED, PITCH_MIN, PITCH_MAX)
+	elif event.is_action_pressed(&"interact"):
 		if not (_side.visible and _side_blocks):
 			var thing := _map.nearest_action(_pos)
 			if not thing.is_empty():
@@ -345,7 +384,7 @@ func _move_player(delta: float) -> void:
 	if x == 0.0 and z == 0.0:
 		return
 	# screen directions on the ground, for a camera looking along (-sin yaw, -cos yaw)
-	var yaw := deg_to_rad(YAW)
+	var yaw := deg_to_rad(_yaw)
 	var right := Vector2(cos(yaw), -sin(yaw))
 	var forward := Vector2(-sin(yaw), -cos(yaw))
 	var dir := (right * x + forward * z).normalized()
@@ -356,12 +395,38 @@ func _move_player(delta: float) -> void:
 
 
 func _update_camera(weight: float) -> void:
-	_camera_target = _camera_target.lerp(Vector3(_pos.x, 0.0, _pos.y), weight)
-	var yaw := deg_to_rad(YAW)
-	var pitch := deg_to_rad(PITCH)
+	_camera_target = _camera_target.lerp(Vector3(_pos.x, 1.3, _pos.y), weight)
+	var yaw := deg_to_rad(_yaw)
+	var pitch := deg_to_rad(_pitch)
 	var dir := Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch))
-	_camera.position = _camera_target + dir * 30.0
+	_camera.position = _camera_target + dir * _clear_distance(dir)
 	_camera.look_at(_camera_target, Vector3.UP)
+
+
+## The direction with the most room behind the player, so that the camera does not start against a wall.
+func _open_yaw() -> float:
+	var best := 0.0
+	var best_d := -1.0
+	var pitch := deg_to_rad(_pitch)
+	for yaw_deg: float in [0.0, 90.0, -90.0, 180.0]:
+		var yaw := deg_to_rad(yaw_deg)
+		var d := _clear_distance(Vector3(sin(yaw) * cos(pitch), sin(pitch), cos(yaw) * cos(pitch)))
+		if d > best_d + 0.01:
+			best_d = d
+			best = yaw_deg
+	return best
+
+
+## How far the camera may stand from the player along `dir` before a building comes between them.
+func _clear_distance(dir: Vector3) -> float:
+	var d := 1.0
+	while d < _dist:
+		var p := _camera_target + dir * d
+		for t in _map.things:
+			if t["solid"] and p.y < float(t["height"]) + 0.4 and DistrictMap.distance_to(t, Vector2(p.x, p.z)) < 0.5:
+				return maxf(d - 0.6, 1.0)
+		d += 0.5
+	return _dist
 
 
 func _to_menu() -> void:

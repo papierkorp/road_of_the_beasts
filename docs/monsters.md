@@ -97,7 +97,7 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 | Caster | weak body, long Reach; works from behind the others |
 
 - **Viable from the start:** the points of the first step must pay for a monster that works with its starter kit. Progression expands a viable build rather than repairs it; several routes must be useful.
-- **Reshape:** pool all points and reroll by the new shape at the same number of points. Spending level-up points never changes the shape label. Item and ritual: [overworld.md §2.6](overworld.md#26-action-catalog).
+- **Reshape:** pool all points and reroll by the new shape at the same number of points. Spending level-up points never changes the shape label. Item: [overworld.md §6.6](overworld.md#66-pills--medicines).
 - **Stage rule:** a monster cannot exceed the player's **stage** (not the exact sub-tier): the spatial space sustains only what the tamer's qi can feed.
 - How a shape splits the points at the roll is not defined.
 
@@ -134,23 +134,23 @@ The **species learnable list** sets concrete skill access. Neither learnable lis
 
 ## 5. Growth
 
-**18 steps:** six stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills and modes, never a stat value. A monster exceeds neither the player's stage nor its rarity's last stage.
+**18 steps:** six stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills, never a stat value; what the tamer gains per stage stands in [overworld.md §6.3](overworld.md#63-stage-unlock-table). A monster exceeds neither the player's stage nor its rarity's last stage.
 
 | # | Stage · sub-tier | Points | Also gained | XP to the next step |
 |---|---|---|---|---|
-| 1 | Qi Gathering Lower | 25 | full kit · 1v1 | 60 |
+| 1 | Qi Gathering Lower | 25 | full kit | 60 |
 | 2 | Qi Gathering Middle | 30 | | 120 |
 | 3 | Qi Gathering High | 35 | breakthrough trial opens | 200 (+ trial) |
-| 4 | Foundation Lower | 40 | slot-development step · +1 learnable skill · 3v3 / 2v2 · 1 tamer slot | 150 |
+| 4 | Foundation Lower | 40 | slot-development step · +1 learnable skill | 150 |
 | 5 | Foundation Middle | 45 | | 300 |
 | 6 | Foundation High | 50 | | 500 (+ trial) |
-| 7 | Core Formation Lower | 55 | slot-development step · +1 learnable skill · 5v5 special · 2nd tamer slot | 400 |
+| 7 | Core Formation Lower | 55 | slot-development step · +1 learnable skill | 400 |
 | 8 | Core Formation Middle | 60 | | 800 |
 | 9 | Core Formation High | 65 | | 1300 (+ trial) |
-| 10 | Soul Tier Lower | 70 | slot-development step · +1 learnable skill · Beast Swap | 1000 |
+| 10 | Soul Tier Lower | 70 | slot-development step · +1 learnable skill | 1000 |
 | 11 | Soul Tier Middle | 75 | | 2000 |
 | 12 | Soul Tier High | 80 | | 3200 (+ trial) |
-| 13 | Immortal Lower | 85 | slot-development step · +1 learnable skill · 3rd tamer slot | 2500 |
+| 13 | Immortal Lower | 85 | slot-development step · +1 learnable skill | 2500 |
 | 14 | Immortal Middle | 90 | +1 slot-development step | 5000 |
 | 15 | Immortal High | 95 | +1 slot-development step | 8000 (+ trial) |
 | 16 | Sovereign Lower | 100 | slot-development step · Signature skill (Legendary) | 6000 |
@@ -159,6 +159,6 @@ The **species learnable list** sets concrete skill access. Neither learnable lis
 
 - **Slot-development step:** the monster may develop one skill slot ([skills.md §8](skills.md#8-development)): 1 per step for Normal and Rare, 2 for Epic and Legendary.
 - **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
-- Breakthrough trials: [overworld.md §6.3](overworld.md#63-stage-unlock-table).
+- Breakthrough trials: [overworld.md §6.3.1](overworld.md#631-breakthrough-trials).
 
 *Working values (XP):* bars grow about ×2.5 per stage; a sub-tier takes roughly 3–6 focused days at the right stage. A cultivation pill gives about half its tier's Lower bar (Qi +30, Foundation +80, Core +200, Soul +500, Immortal +1200). A win gives 10 XP at Qi Gathering, ×2.5 per stage. A night at a cultivation spot gives a small gain (Meditation Stone about one tenth of a win, Qi Spring double).

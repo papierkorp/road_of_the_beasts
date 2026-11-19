@@ -1,11 +1,11 @@
 class_name DistrictScreen
 extends WalkScreen
-## A walkable city district (gdd_overworld §6.1). Your first monster follows you (§6.2); in the
-## Inner World all your monsters wander freely (§6.3). What a place offers is shown in a PlacePanel,
-## so the menu map and the streets share the same content.
+## A walkable area of the city (docs/overworld.md §3): the hub, a district, a wild area or the Internal World.
+## Your first monster follows you; in the Internal World all your monsters wander freely; in a wild area wild
+## monsters wander in their zones (they cannot be fought there yet). A building opens a panel, leads to another
+## area or says what it is meant for; a resource of a wild area is taken for 1 day AP.
 
 const SCENE := "res://overworld/district.tscn"
-const MAP_SCENE := "res://overworld/overworld.tscn"
 
 const FOLLOW_GAP := 1.3
 const WANDER_SPEED := 1.2
@@ -16,6 +16,7 @@ var _wanderers: Array[Dictionary] = []     # {node, pos, target, wait}
 var _panel: PlacePanel
 var _structures: StructurePanel
 var _favor: FavorPanel
+var _info: VBoxContainer
 var _cursor: MeshInstance3D
 var _cursor_mat: StandardMaterial3D
 
@@ -25,6 +26,7 @@ func _make_map() -> DistrictMap:
 	GameSession.district = m.id
 	if m.id == &"inner":
 		m.add_structures(_game.structures)
+	m.remove_taken(_game.taken)
 	return m
 
 
@@ -56,6 +58,11 @@ func _after_ready() -> void:
 	_favor.visible = false
 	_favor.changed.connect(_on_state_changed)
 	_side_body.add_child(_favor)
+	_info = VBoxContainer.new()
+	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_info.add_theme_constant_override("separation", 10)
+	_info.visible = false
+	_side_body.add_child(_info)
 	if _map.id == &"inner":
 		_build_overlay()
 		if GameSession.build_mode:
@@ -63,7 +70,11 @@ func _after_ready() -> void:
 	else:
 		GameSession.build_mode = false
 	if GameSession.arrive_from == &"start":
-		_say("%s%s%s%s to walk, %s to use things." % [UiTheme.key_text(&"walk_up"), UiTheme.key_text(&"walk_left"), UiTheme.key_text(&"walk_down"), UiTheme.key_text(&"walk_right"), UiTheme.key_text(&"interact")], 5.0)
+		_say("%s%s%s%s to walk, %s to use things. Hold %s and move the mouse to look around, %s / %s to zoom." % [
+			UiTheme.key_text(&"walk_up"), UiTheme.key_text(&"walk_left"), UiTheme.key_text(&"walk_down"), UiTheme.key_text(&"walk_right"),
+			UiTheme.key_text(&"interact"), UiTheme.key_text(&"world_look"), UiTheme.key_text(&"camera_zoom_in"), UiTheme.key_text(&"camera_zoom_out")], 9.0)
+	elif not _map.zones.is_empty():
+		_say("Walking is free. Taking a resource costs 1 day AP; it grows back after some nights. A zone above your stage gives nothing.", 7.0)
 
 
 func _top_buttons() -> Array[Button]:
@@ -73,7 +84,8 @@ func _top_buttons() -> Array[Button]:
 		if GameSession.build_mode:
 			out.append(hud_button("Build menu", _show_build_panel))
 	out.append(hud_button("End day", _end_day))
-	out.append(hud_button("City map", func(): get_tree().change_scene_to_file(MAP_SCENE)))
+	if _map.id != CityAreas.HUB:
+		out.append(hud_button("To the city", func(): _go(CityAreas.HUB)))
 	out.append(hud_button("Menu", _save_and_menu))
 	return out
 
@@ -91,6 +103,17 @@ func _build_actors() -> void:
 		_follower_pos = _map.move(_pos, Vector2(0.0, FOLLOW_GAP), 0.3)
 		_follower.position = Vector3(_follower_pos.x, 0.0, _follower_pos.y)
 		add_child(_follower)
+	# wild monsters of a wild area: two per zone, each stays in its zone; the same ones every visit
+	var species := GameData.monster_ids()
+	for z in _map.zones.size():
+		var region: Rect2 = (_map.zones[z]["rect"] as Rect2).grow(-1.0)
+		for i in 2:
+			var node := MonsterLook.make_body(GameData.monster(species[(z * 2 + i + String(_map.id).length()) % species.size()]))
+			node.scale = Vector3.ONE * (1.0 + 0.25 * z)
+			add_child(node)
+			var start := _map.random_free_point(_rng, 0.5, region)
+			node.position = Vector3(start.x, 0.0, start.y)
+			_wanderers.append({"node": node, "pos": start, "target": _map.random_free_point(_rng, 0.5, region), "wait": _rng.randf_range(0.0, 2.0), "region": region})
 
 
 func _update_actors(delta: float) -> void:
@@ -128,11 +151,11 @@ func _move_wanderers(delta: float) -> void:
 		var to_target: Vector2 = w["target"] - from
 		if to_target.length() < 0.15:
 			w["wait"] = _rng.randf_range(1.0, 3.0)
-			w["target"] = _map.random_free_point(_rng)
+			w["target"] = _map.random_free_point(_rng, 0.5, w.get("region", Rect2()))
 			continue
 		var next := _map.move(from, to_target.normalized() * minf(to_target.length(), WANDER_SPEED * delta), 0.3)
 		if next == from:
-			w["target"] = _map.random_free_point(_rng)       # stuck behind something
+			w["target"] = _map.random_free_point(_rng, 0.5, w.get("region", Rect2()))       # stuck behind something
 		w["pos"] = next
 		var node: Node3D = w["node"]
 		node.position = Vector3(next.x, 0.0, next.y)
@@ -144,27 +167,61 @@ func _interact_with(thing: Dictionary) -> void:
 	var arg := StringName(parts[1])
 	match parts[0]:
 		"panel":
-			_panel.visible = true
-			_structures.visible = false
-			_favor.visible = false
+			_show_only(_panel)
 			_panel.show_place(arg)
 			_open_side()
 		"faction":
-			_panel.visible = false
-			_structures.visible = false
-			_favor.visible = true
+			_show_only(_favor)
 			_favor.show_faction(arg)
 			_open_side()
 		"structure":
-			_panel.visible = false
-			_favor.visible = false
-			_structures.visible = true
+			_show_only(_structures)
 			_structures.show_structure(int(parts[1]))
 			_open_side()
+		"info":
+			_show_info(arg)
+		"take":
+			_take(thing)
 		"goto":
 			_go(arg)
 		"locked":
 			_say(String(thing["label"]))
+
+
+func _show_only(panel: Control) -> void:
+	for p: Control in [_panel, _structures, _favor, _info]:
+		p.visible = p == panel
+
+
+## What a building is meant for (CityAreas.info): its name, its group and a text.
+func _show_info(key: StringName) -> void:
+	var d := CityAreas.info(key)
+	if d.is_empty():
+		return
+	for c in _info.get_children():
+		_info.remove_child(c)
+		c.queue_free()
+	for line: Array in [[String(d["name"]).to_upper(), UiTheme.ACCENT, 22], [d["group"], UiTheme.DIM, 0], [d["text"], UiTheme.TEXT, 0]]:
+		var l := Label.new()
+		l.text = line[0]
+		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		l.add_theme_color_override("font_color", line[1])
+		if line[2] > 0:
+			l.add_theme_font_size_override("font_size", line[2])
+		_info.add_child(l)
+	_show_only(_info)
+	_open_side()
+
+
+## Takes a resource of a wild area: 1 day AP, and it is gone until it has grown back.
+func _take(thing: Dictionary) -> void:
+	var node: Dictionary = thing["node"]
+	var why := _game.take_resource(String(thing["id"]), node["item"], node["nights"], node["stage"])
+	if why != "":
+		_say(why)
+		return
+	SaveGame.save(_game)
+	_reload_here()
 
 
 func _go(district: StringName) -> void:
@@ -184,8 +241,10 @@ func _end_day() -> void:
 	SaveGame.save(_game)
 	_refresh_header()
 	if _side.visible:
-		_panel.refresh()
-		_structures.refresh()
+		if _panel.visible:
+			_panel.refresh()
+		if _structures.visible:
+			_structures.refresh()
 	var text := "The night passes. Day %d begins; %d monster(s) recovered." % [report["day"], report["healed"]]
 	for line in report["notes"]:
 		text += "\n" + String(line)
@@ -199,6 +258,10 @@ func _save_and_menu() -> void:
 
 
 # ---------- build mode (gdd_overworld §6.4) ----------
+
+func _may_look() -> bool:
+	return not GameSession.build_mode        # in build mode that button picks a structure up
+
 
 func _extra_input(event: InputEvent) -> bool:
 	if _map.id != &"inner":
@@ -231,9 +294,7 @@ func _reload_here() -> void:
 
 
 func _show_build_panel() -> void:
-	_panel.visible = false
-	_favor.visible = false
-	_structures.visible = true
+	_show_only(_structures)
 	_structures.show_build(GameSession.build_item, GameSession.build_rot)
 	_open_side(true, false)       # the build menu doesn't stop you from walking
 
@@ -305,8 +366,7 @@ func _build_click() -> void:
 	if GameSession.build_item == &"":
 		var s := BuildGrid.at_cell(_game, _mouse_cell())
 		if not s.is_empty():
-			_panel.visible = false
-			_structures.visible = true
+			_show_only(_structures)
 			_structures.show_structure(int(s["uid"]))
 			_open_side()
 		return

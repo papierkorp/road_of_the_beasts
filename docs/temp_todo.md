@@ -4,16 +4,7 @@ The task list of the project. Rules live in the rule files ([battle.md](battle.m
 
 ## How the Task Folder Works
 
-```
-docs/todo/
-  to-clarify/<epic>/   waits for a decision of the user
-  open/<epic>/         can be worked on
-  in-progress/<epic>/  being worked on
-  done/<epic>/         finished; later moved to archive/
-  archive/             old finished tasks
-  ideas.md             ideas without a task
-  implementation.md    where the build differs from the rules
-```
+Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the user), `open/<epic>/`, `in-progress/<epic>/`, `done/<epic>/` (later moved to `archive/`); `ideas.md` holds ideas without a task, `implementation.md` where the build differs from the rules.
 
 - **One task, one file:** `T<number>-<slug>.md`. Epics: `battle`, `skills`, `monsters`, `overworld`, `project`.
 - **A status change moves the file** to the other folder; the table below is updated in the same step.
@@ -22,21 +13,21 @@ docs/todo/
 
 ## Current State
 
-- **Two battles on one core,** developed in parallel ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer.
-- **Multiplayer battle, settled for now:** always 3v3 on a generated symmetric 7×7 board, no tamer skills, no fixed monsters or skills; last touch owns a Dragon Vein, damage from round 1, veins deal 2 from round 3, no late-round pressure, extra turns from round 2, Heal (1 HP for 3 Stamina, no AP, once per turn), a free camera; plus the rules of 2026-11-17.
-- **Multiplayer content:** monsters drawn for 60 points (Random Alpha, Beta, …), kits of generated skills, grounds and zones named by what they do ([content.md §1](content.md#1-ground)). The nine monsters and the named grounds and zones are ingame content, all temporary.
-- **Build:** main menu → Battle → Ingame Prototype (points per side, custom maps from the map editor, unequal teams, a wild enemy and a seal for catching) or Multiplayer (random or mirrored monsters).
-- **Measured on 2026-11-18** ([S040–S045](simulation_log.md), bots, indications): at equal points more HP wins more often, Reach less; Pace and Stamina show no worth; Heal lengthens a battle by 0.1–0.5 rounds. **Not measured:** Heal without AP, the settled state as a whole, the new grounds and zones.
-- **Catching, decided and built on 2026-11-18** ([battle_ingame.md §7](battle_ingame.md#7-catching), [godot/README.md](../godot/README.md)): indestructible Seal Ground laid by the tamer (seal item by rarity or the Seal skill, one tamer slot from the start), a seeded chance at the turn end of a wild monster with few HP, certain at 0 HP on it; wild monsters die elsewhere, contracted monsters never. Not built: a wild AI that avoids Seal Ground, Seal upgrades. Readings of the build: [implementation.md](todo/implementation.md). Details: T49.
-- **Ingame battle, decided on 2026-11-18** ([battle_ingame.md §2](battle_ingame.md#2-team-sizes-and-the-end-of-a-battle), [§4](battle_ingame.md#4-board-events)): every board is a battleground, which sets the team size and names its ends (leader, flight, race, hold) and its board events (scheduled, announced, switched; each names its step of the round end). Board events brake a battle without Dragon Veins; veins and surrounding are core. A drain point counts double (core, no content uses it yet).
-- **Next:** build ends and board events into the map editor and the battle (T46); the user plays Seal Ground (T49); then a wild AI that values Seal Ground. Later the draft (T48) and skill prices ([T02](todo/open/skills/T02-find-skill-prices.md)).
-- **Tests:** two known failures outside the battle (I46: the overworld roamer, the reference stats); all 260 battle tests pass (2026-11-18), the earlier failure for `highreach` did not occur.
-- **By hand:** the user plays each iteration; then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)). Differences: [todo/implementation.md](todo/implementation.md).
+- **Read first:** [vision.md](vision.md), the frame of the game (T50). It holds over the rule files; [overworld.md](overworld.md) is rewritten along it.
+- **Decided alone, to review (T51):** the rewrite of overworld.md and the first world; each such decision is a row in T51 and a working draft until the user has gone through it.
+- **World in the build ([godot/README.md](../godot/README.md)):** New Game leads into a hub with every district, both wild areas, the Realm Gate (the old dungeon run stands in) and the Internal World as teleporters; a follow camera; resources of a wild area for 1 day AP that return after nights. Main menu → Growth Preview walks through the growth by clicking. Not built: persons, battle in a wild area, the house, weight, crafting, the Internal World and tamer slots by the new rules. Not tried by hand: looking around with the mouse, taking resources, the way through the Realm Gate.
+- **Next:** the user walks the world and the growth preview and goes through T51 and T50; then the old overworld tasks (T15–T31) are sorted anew; then the first slice of the overworld (school, its mountain, the Internal World of the first stage). The ingame battle waits.
+- **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
+- **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
+- **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. When it resumes: ends and board events in the map editor and the battle (T46); the user plays Seal Ground (T49); then a wild AI that values Seal Ground. Then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)).
+- **Tests:** 418 cases ([implementation.md](todo/implementation.md)); two known failures outside the battle (I46: the overworld roamer, the reference stats).
 
 ## Open Questions for the User
 
 | # | Question | Task |
 |---|---|---|
+| 0 | The frame is decided; open are its lists and the points seen in the growth preview (a sub-tier gives the tamer nothing, four choices on one breakthrough) | T50 |
+| 0 | 28 rows decided without the user: rules of overworld.md and the first world of the build | T51 |
 | 1 | How does a stat shape split the points at the roll? | T03 |
 | 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills, battlegrounds in the overworld (cost, content, whose board) | T46 |
 | 13 | Seal: item and skill Seal Ground together? The upgrade scroll as an item; options of the other tamer skills | T49 |
@@ -65,6 +56,8 @@ docs/todo/
 | T03 | [Review Stat Budgets, Frames and Progression Limits](todo/to-clarify/monsters/T03-review-stat-budgets-frames-and-progression-limit.md) | to clarify | monsters |
 | T26 | [Draft Staff Traits and Numbers](todo/to-clarify/overworld/T26-draft-staff-traits-and-numbers.md) | to clarify | overworld |
 | T49 | [Catching on the Board](todo/to-clarify/overworld/T49-catching-on-the-board.md) | to clarify | overworld |
+| T50 | [Set the Frame of the Game](todo/to-clarify/overworld/T50-set-the-frame-of-the-game.md) | to clarify | overworld |
+| T51 | [Review What Was Decided Alone](todo/to-clarify/overworld/T51-review-what-was-decided-alone.md) | to clarify | overworld |
 | T05 | [Complete Skill Improvements](todo/to-clarify/skills/T05-complete-skill-improvements.md) | to clarify | skills |
 | T06 | [Complete Strike Shapes and Kin Effects](todo/to-clarify/skills/T06-complete-strike-shapes-and-kin-effects.md) | to clarify | skills |
 | T07 | [Ground and Zone Values](todo/open/battle/T07-ground-and-zone-values.md) | open | battle |
