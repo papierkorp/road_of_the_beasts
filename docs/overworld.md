@@ -1,6 +1,6 @@
 # Overworld and Meta
 
-- **This file owns** the rules around the battle: the city and its groups, wild areas and one-time realms, the Internal World, obtaining and housing monsters, the growth of the player, tamer skills, items, the house and the day.
+- **This file owns** the rules around the battle: the city and its groups, wild areas and one-time realms, the Internal World, obtaining and housing monsters, the growth of the player, tamer skills, items, persons and the day.
 - **Frame:** [vision.md](vision.md) says what the game is; this file says how it works. Where the two differ, the frame holds.
 - **Elsewhere:** battle rules ([battle.md](battle.md), [battle_ingame.md](battle_ingame.md)), monster skills ([skills.md](skills.md)), monsters and their stats ([monsters.md](monsters.md)).
 - **Status:** working draft throughout; every number is a working value and nothing is validated by play.
@@ -15,13 +15,13 @@ A xuanhuan **city of cultivators** around deterministic grid battles and monster
 ### 1.1 Setting and Player Fantasy
 
 - **Beast tamer:** monsters live in the Internal World, a world of the player's own that nobody else enters.
-- **The city is the whole world:** ten groups hold it ([§3.2](#32-the-groups-of-the-city)). A barrier keeps everyone below Sovereign inside; passing it is the end of the game.
+- **The city is the whole world:** ten groups and the sects hold it ([§3.2](#32-the-groups-of-the-city)). A barrier keeps everyone below Sovereign inside; passing it is the end of the game.
 - **The player is small:** buildings and districts are imposing, and the player starts as the least regarded member of their family.
 
 ### 1.2 Design Pillars
 
 1. **Growth opens kinds of play, not bigger numbers:** a stage opens something new; numbers stay small and hard-capped.
-2. **Weight is a key and a target:** what the player shows opens doors and draws reactions ([§7.2](#72-favor--faction)).
+2. **Nothing about a person is hidden:** stats, traits, bond and wish are visible; fame opens doors ([§7.2](#72-bonds-standing-and-fame)).
 3. **Looking is free, deciding costs:** day AP are spent on deeds, never on walking, looking or planning.
 4. **Several keys to every obstacle:** fight it, send one's people, or use one's standing. Only the trial of a breakthrough demands a battle.
 5. **Found by trying, always the same result:** crafting hides what a plant or a part gives until the player tries it; nothing rolls.
@@ -37,8 +37,8 @@ A xuanhuan **city of cultivators** around deterministic grid battles and monster
 | **Battle** | minutes | XP, loot, catches |
 | **Wild area** | part of a day | materials, monsters, HP lost |
 | **Day** | one turn of the game | everything resolved at night |
-| **Cultivation** | many days (one arc) | stages, stat points, insights |
-| **House and craft** | the whole game | money, standing, people, goods |
+| **Cultivation** | many days | stages, stat points, insights |
+| **People and craft** | the whole game | money, standing, people, goods |
 
 [§2.6](#26-action-catalog) alone owns what an action costs.
 
@@ -75,29 +75,30 @@ A day is one turn: spend day AP in the city, the night resolves everything at on
 1. The day starts with the day AP of the stage ([§2.6](#26-action-catalog)).
 2. The player spends them on deeds, in any order.
 3. The day ends by hand or when the day AP run out.
-4. **Night:** orders of the house resolve, golems work, plants grow, eggs and breeding progress, monsters in a fitting habitat gain XP, injured monsters rest, what was taken in a wild area moves one night closer to its return, prices shift.
+4. **Night:** orders resolve, golems work, plants grow, eggs and breeding progress, monsters in a fitting habitat gain XP, injured monsters rest, what was taken in a wild area moves one night closer to its return, prices shift.
 5. Morning report, then the new day.
 
-- **No time pressure:** requests expire in days and never force a deed. There is no clock within a day.
+- **Calendar:** day, season, year. Everything that recurs falls on the turn of a season: the wishes of hired persons, rogue cultivators arriving and leaving, offers of rivals, persons cultivating ([§7.2](#72-bonds-standing-and-fame)). Events stand on the calendar with their day ([§3.4](#34-events)). How long a season is is not defined.
+- **No time pressure within a day:** requests expire in days and never force a deed. There is no clock within a day.
 - The night synchronizes all systems once: there is no real-time simulation.
 
 ### 2.4 Cultivation Loop
 
 1. Battles, pills and cultivating fill the XP bars of the player and of each monster.
 2. A full bar is a sub-tier (Lower → Middle → High); a monster gets stat points ([monsters.md §2.2](monsters.md#22-prices-and-points)).
-3. At High, the end of the arc and the trial lead to the next stage ([§6.3.1](#631-breakthrough-trials)).
+3. At High, the trial leads to the next stage ([§6.3.1](#631-breakthrough-trials)).
 4. The breakthrough gives what [§6.3](#63-stage-unlock-table) lists and one insight.
 
 - **Ceiling:** a monster never exceeds the player's stage, the Internal World never either.
 
-### 2.5 House and Craft Loop
+### 2.5 People and Craft Loop
 
 1. **Acquire:** wild areas, realms, buying, catching, requests.
 2. **Make:** pills in the cauldron, weapons and armour in the forge ([§7.5](#75-materials-seeds-and-grades)).
-3. **Use:** in battle, as a gift, for a request or a hall's trial, to equip one's people, or for sale.
-4. **Reinvest:** the Internal World, the house and its wings, people, tokens for a realm.
+3. **Use:** in battle, for a wish, a request or a hall's trial, on one's people, or for sale.
+4. **Reinvest:** the Internal World, the organisation and its wings, people, tokens for a realm.
 
-- **No route is the gate of another:** a player may grow by battle, by people or by craft; each opens obstacles in its own way ([§7.2](#72-favor--faction)).
+- **No route is the gate of another:** a player may grow by battle, by people or by craft; each opens obstacles in its own way ([§7.2](#72-bonds-standing-and-fame)).
 - **Stones buy speed and breadth,** never a thing that only a deed can give ([§7.7](#77-economy-design-rule)).
 
 ### 2.6 Action Catalog
@@ -121,7 +122,7 @@ A day is one turn: spend day AP in the city, the night resolves everything at on
 | Change a monster skill | a relearning pill | outside a battle |
 | Breakthrough | the trial and its materials | High sub-tier |
 | Raise the Internal World | materials | below the tamer's stage |
-| Build or upgrade a structure or a wing | 1 AP + materials or stones | room on the grid; the house |
+| Build or upgrade a structure or a wing | 1 AP + materials or stones | room on the grid; the organisation |
 | Build a battleground | materials | the Battleground Hall |
 | Work a cauldron or a forge by hand | 1 AP + inputs | the structure |
 | Leave a standing order for a golem | free + inputs | a golem |
@@ -129,7 +130,7 @@ A day is one turn: spend day AP in the city, the night resolves everything at on
 | Buy · sell | spirit stones | a trader |
 | Accept or hand in a request · consign · bid | 1 AP | the group |
 | Take a hall's trial | 1 AP + the piece asked for | the hall |
-| Give an order to the house | 1 AP (more in hiding, [§7.1](#71-the-house)) | people |
+| Give an order | 1 AP | a hired person, a steward or a position ([§7.1.1](#711-leading-people)) |
 | End the day | free | — |
 
 ---
@@ -159,21 +160,24 @@ What each building offers is not defined beyond its group's row in [§3.2](#32-t
 
 ### 3.2 The Groups of the City
 
-Ten groups, each with favor and Standing of its own ([§7.2](#72-favor--faction)) and a few named key persons. The player's house becomes the eleventh ([§7.1](#71-the-house)).
+Ten groups and the sects, each with Standing and fame of its own ([§7.2](#72-bonds-standing-and-fame)) and a few named key persons. An organisation the player founds becomes a group too ([§7.1.1](#711-leading-people)).
 
 | Group | Role | Offers *(draft)* |
 |---|---|---|
-| **The player's family** | a great clan that looks down on the player | bloodlines, family requests, the arc of the family |
+| **The player's family** | a great clan that looks down on the player | bloodlines, family requests, the events of the family |
 | **Two rival families** | compete with the player's family | requests against the other families, their treasures |
 | **City Lord with the City Guard** | law and order; opposed to the Underground | permits, bounties, the Realm Gate |
 | **Merchant Guild** | buys and sells, makes nothing | traders with drifting prices, licences |
 | **Auction Hall** | neutral, serves all | monsters, eggs, rare goods, tokens; consignment |
 | **Alchemy Hall** | ranks for alchemists | trials, plants, requests for pills |
 | **Smiths' Hall** | ranks for smiths | trials, ore, requests for weapons and armour |
-| **The school** | teaches; rivals inside it | the first arc, the Arena, its mountain |
-| **Underground** | black market; opposed to the City Lord | the Slave Market (monsters and subordinates), goods without questions, hush for a hidden house |
+| **The school** | neutral; teaches; rivals inside it | its events, the Arena, its mountain |
+| **Sects** | beside the school; rivals for people | not defined |
+| **Underground** | black market; opposed to the City Lord | the Slave Market (monsters and subordinates), goods without questions |
 
-Names and key persons are not defined.
+Names, key persons and the number of sects are not defined.
+
+**A group shows:** its fame, the player's Standing, its members by position, what it holds, and its events with what sets them off.
 
 ### 3.3 Wild Areas and One-Time Realms
 
@@ -211,6 +215,23 @@ These two are the only places of their kind; there are no repeatable dungeons.
 - **Inside:** resources and battles cost day AP as in a wild area; nothing returns. Other groups send their people in.
 - **Gone:** when it closes, the realm no longer exists.
 - How the people of other groups act inside is not defined.
+
+### 3.4 Events
+
+Events carry the story; there is no fixed order of arcs. The spine is the stage ([§6.3](#63-stage-unlock-table)).
+
+| Part of an event | Meaning |
+|---|---|
+| What sets it off | the state of the player (a membership, fame, a stage, an organisation) or the calendar of the world (a realm opens, the monster riot) |
+| Day | on the calendar, shown ahead |
+| Course | a battle on a battleground, an order, or a choice |
+| Outcome | fame, Standing, goods, further events |
+
+- **Who never joins never sees:** an event of a group happens only to those it concerns.
+- **Nothing single is lost by time alone:** what the calendar of the world brings returns or waits.
+- **Two sources:** written events (those of each group and the great ones, [vision.md §6](vision.md#6-story-and-the-end)) and events from pools (wishes, rogue cultivators, realms).
+- **A group the player passes in fame** answers with an event: it tests, demands, or allies against the player.
+- The list of events and what sets each off are not defined.
 
 ---
 
@@ -304,7 +325,7 @@ Every way yields an **individual** ([monsters.md §1](monsters.md#1-species-and-
 | **Auction Hall** | young monsters and eggs; the sheet is visible before the bid |
 | **Eggs** | found in wild areas and realms, bought, given; hatched in an Incubator. An egg fixes species and rarity; hatching rolls the shape |
 | **Breeding** | two monsters of one species in a fitting habitat: an egg after some nights |
-| **Gift** | from a key person, as the reward of a request or an arc |
+| **Gift** | from a key person, as the reward of a request or an event |
 
 - **Binding Seal** (item): tier = stage, grade = rarity; it catches a monster of at most its tier and grade. The player's stage is a ceiling as well.
 - **Two sources of Seal Ground,** both from the start: the seal item, used up when laid, and the Seal tamer skill, which costs nothing per battle but a tamer slot ([§6.4](#64-tamer-skills)). Seal items catch by rarity (chances: [battle_ingame.md §7](battle_ingame.md#7-catching)).
@@ -334,7 +355,7 @@ Monsters use the same names ([monsters.md §5](monsters.md#5-growth)).
 |---|---|---|
 | **The tamer's stage** | cultivation; the same for every player | the trial |
 | **An insight** | one of three at every breakthrough: one for battle, one for people, one for craft and trade | five in the game |
-| **Ladders of deeds** | the rank of a craft, favor and Standing with a group, the house, the stage of the Internal World | day AP |
+| **Ladders of deeds** | the rank of a craft, Standing with a group and the bond to a person, fame, the organisation, the stage of the Internal World | day AP |
 | **A monster** | stat points, skill development, rarity, armour | the tamer's stage |
 
 - There is no skill tree and there are no points to distribute for the player.
@@ -343,19 +364,16 @@ Monsters use the same names ([monsters.md §5](monsters.md#5-growth)).
 
 ### 6.3 Stage Unlock Table
 
-One arc per stage; the breakthrough closes the arc ([vision.md §6](vision.md#6-story-and-the-end)).
-
-| Stage | Arc | Tamer slots | Opens besides |
-|---|---|---|---|
-| Qi Gathering | School | 1 | catching; the Internal World; the foothill of the school's mountain |
-| Foundation | Family | 2 | habitats, the forge and golems; the Battleground Hall; the wild forest |
-| Core Formation | One-time realm | 3 | the house and its orders ([§7.1](#71-the-house)) |
-| Soul Tier | Monster riot | 3 | Beast Swap |
-| Immortal | Struggle for the city | 4 | battlegrounds for five monsters; holding districts |
-| Sovereign | Leaving | 4 | the barrier opens |
+| Stage | Tamer slots | Opens besides |
+|---|---|---|
+| Qi Gathering | 1 | catching; the Internal World; the foothill of the school's mountain |
+| Foundation | 2 | habitats, the forge and golems; the Battleground Hall; the wild forest |
+| Core Formation | 3 | an organisation of one's own ([§7.1.1](#711-leading-people)) |
+| Soul Tier | 3 | Beast Swap |
+| Immortal | 4 | battlegrounds for five monsters; holding districts |
+| Sovereign | 4 | the barrier opens |
 
 - **No stage opens a team size** ([§2.1](#21-battle-loop)).
-- **The end of an arc:** the player shows themselves or stays unseen ([§7.2](#72-favor--faction)); a few great decisions also open or lock later steps of the story.
 - What a monster gains per stage: [monsters.md §5](monsters.md#5-growth).
 
 #### 6.3.1 Breakthrough Trials
@@ -450,7 +468,6 @@ A pill is made in the cauldron from plants that share a property ([§7.5](#75-ma
 
 - **No equipment raises a stat,** and none raises damage.
 - **A weapon's skill** is fixed by its parts and does not develop.
-- **Worn openly, a piece counts toward the player's weight** ([§7.2](#72-favor--faction)); kept in the Internal World it does not.
 - The lists of weapon skills and armour passives are not defined.
 
 ### 6.8 Arrays (artifacts for places)
@@ -468,79 +485,90 @@ There are no arrays as items. A player who wants a board in their favour builds 
 
 ## 7. Management
 
-### 7.1 The House
+### 7.1 Persons
 
-From Core Formation the player founds **a house of their own**: the eleventh group of the city, with a weight of its own.
+*Status: set in outline. Lists and numbers are not defined.*
+
+Every person has one card, and all of it is visible.
+
+| Field | Meaning |
+|---|---|
+| Stage | the stage and sub-tier of cultivation, or none |
+| Roots | one to three, each a kind and a grade |
+| Fame | [§7.2](#72-bonds-standing-and-fame) |
+| Traits | two to four |
+| Group | the group and the position in it, or none |
+| Bond | the rank toward the player ([§7.2](#72-bonds-standing-and-fame)) |
+| Hired | whether the person follows the player |
+| Wish | what the person currently asks for |
+
+- **Roots:** the kind says what work fits the person, the grade how fast and how far they cultivate. Few roots: fast and high but narrow; many: slow and low but broad. The grade is potential, as rarity is for a monster ([monsters.md §4](monsters.md#4-rarity)); one pill with a ritual raises it.
+- **Traits** are drawn from one pool of good, bad and two-sided ones, one line each. A pill removes a trait.
+- **Rogue cultivator:** no group; generated; comes and goes with the seasons. Anyone may approach them.
+- **Member:** belongs to a group and holds a position. The Standing with the group opens their wishes.
+- **Key person:** a member with an office, fixed traits and written wishes; may add a monster team and things only they offer.
+- The kinds and grades of roots, the pool of traits and the positions are not defined.
+
+#### 7.1.1 Leading People
+
+| Way | How | From |
+|---|---|---|
+| **Alone** | hired persons, each given their order | the start |
+| **A position** | Standing Allied or Sworn with a group lends some of its members for orders | the start |
+| **An organisation of one's own** | a sect, a gang or a trading house | Core Formation |
+
+- **One schema for every organisation:** the kind sets which orders it does well and which group is its rival; what each kind sets is not defined. It is a group of the city with a fame of its own.
 
 | Wing | Holds | Gives |
 |---|---|---|
-| **School** | students: the player's people | orders at night |
+| **School** | students | orders at night |
 | **Workshop** | cauldrons and forges with people at them | goods made at night |
 | **Trading hall** | shelves and a counter | sales at night, consignment for others |
 | **Monster hall** | pens | trained monsters for sale and for hire |
 
-- **Wings come one after another;** all four can stand. Which the player builds is the route. What a wing costs is not defined.
-- **Open or hidden:** a house is founded openly or in hiding. A hidden house may do everything and adds no visible weight, but each of its orders costs 1 day AP more and hush money to the Underground. Only an event of the story uncovers it.
-- **Before the house** the player sells to the traders of the Merchant Guild and consigns at the Auction Hall.
+- **Wings come one after another;** all four can stand. What a wing costs is not defined.
+- **Before an organisation** the player sells to the traders of the Merchant Guild and consigns at the Auction Hall.
+- **No fixed number of followers:** every hired person brings a wish per season ([§7.2](#72-bonds-standing-and-fame)); the player holds as many as they can serve.
+- **Stewards:** a follower from Allied on can lead a group. The player gives the order to the steward, and the steward brings one wish for the whole group.
+- **Orders:** given by day from one list that is reachable anywhere: harvest a zone of a wild area, guard a place, press a demand against a group, enter a realm. An order has a kind (a root) and a level (a stage). A person fits by root and counts by stage and equipment; traits change it.
+- **The night decides** by comparing what those sent count with the visible value of the task or of the other side; the higher wins, a tie holds what was. The outcome is shown before the order is given. There is no battle on the board.
+- **Goods for people:** pills change who a person is (the grade of a root, a trait removed, the stage); forged pieces change what a person can do: a weapon or a tool per kind of root, counted on orders.
 
-#### 7.1.1 People
+### 7.2 Bonds, Standing and Fame
 
-The player's people are the students and staff of the house.
-
-| Field | Meaning |
-|---|---|
-| Strength | one visible number; equipment the player hands out raises it |
-| Loyalty | visible 0–5; wages and care raise it, neglect and better offers lower it; at 0 the person leaves |
-| Trait | one visible trait |
-
-- **Orders:** by day the player gives an order to some of their people: harvest a zone of a wild area, guard a place, press a demand against a group, enter a realm.
-- **The night decides** by comparing the summed Strength of the people sent with the visible value of the task or of the other side; the higher wins, a tie holds what was. The outcome is shown before the order is given. There is no battle on the board.
-- Traits, wages and where people come from (the school of the house, the Slave Market, key persons) are not defined.
-
-### 7.2 Favor & Faction
-
-Every group knows the player by two numbers, and the city knows the player by their weight.
+*Status: set in outline. Numbers are not defined.*
 
 ```
-FAVOR      points, earned and spent: a discount, an introduction, a token
-STANDING   a rank: Stranger → Known → Trusted → Allied → Sworn
-           the sum of all favor ever earned; never spent
-WEIGHT     what the city sees of the player; every group has a weight too
+BOND       Stranger → Known → Trusted → Allied → Sworn
+           one ladder for persons and groups; with a group it is called Standing
+FAME       one value for persons, groups and the player
 ```
 
-**Deeds:** favor is earned through requests, sales the group wants, wins in its name and gifts to its key persons.
+- **A fulfilled wish raises the bond by one rank;** a request of a group is its wish. Sworn never sinks. There are no gifts and no points to spend.
+- **A wish** comes from a pool (key persons: written) and asks for what the game makes: a pill, a forged piece, a monster, a scripture, spirit stones, a deed. It grows with the worth of the person, and what it asks for is shown before.
+- **When a wish appears:** for anyone when the player asks; for a hired person at every turn of a season.
+- **Only an ignored wish of a hired person lowers a bond,** by one rank; below Trusted the person leaves. Nothing else decays with time.
+- **Harm:** a request that harms another group says so before the player accepts, and by how much; so does hiring a member of a group. Harm lowers the Standing with the harmed group. No group dislikes the player for a friendship alone.
 
-- **A request that harms another group says so before the player accepts,** and by how much: the harmed group loses that much favor toward the player. Favor below zero is a grudge; a group with a grudge gives no requests until it is paid off.
-- No group dislikes the player for a friendship alone, and nothing decays with time.
-
-| Size of a request | Favor | Lifetime |
+| Rank | Rogue cultivator | Member of a group |
 |---|---|---|
-| Errand | 1 | 3 days |
-| Task | 3 | 5 days |
-| Commission | 8 | 10 days |
-| Great deed | 20 | story |
+| **Stranger** | the card is visible | the card is visible |
+| **Known** | names a wish | names a wish if the Standing with the group suffices |
+| **Trusted** | can be hired; can be lured away | helps once: teaches, sells, or takes part in one order; can be hired |
+| **Allied** | holds while no wish is ignored; can be a steward | speaks for the player in the group |
+| **Sworn** | never sinks, never leaves | never sinks; stands with the player, hired or not |
 
-Standing: Known 5 · Trusted 30 · Allied 100 · Sworn 250.
+- **Hiring** is a state apart from the bond: possible from Trusted on, and only if the player's fame reaches the person's.
+- **Luring away:** a rival's offer for a Trusted follower stands on the calendar; a wish fulfilled before the turn of the season keeps the person. Lent equipment returns; what was spent on the person is lost.
 
-**Weight:** the sum of what the player shows.
-
-| Shown | Weight |
+| Size of a request | Lifetime |
 |---|---|
-| each stage above Qi Gathering | 1 |
-| each arc at whose end the player showed themselves | 2 |
-| each rank of a craft | 1 |
-| an open house, and each of its wings | 1 |
-| a weapon or armour of Epic grade or higher, worn openly | 1 |
+| Errand | 3 days |
+| Task | 5 days |
+| Commission | 10 days |
+| Great deed | story |
 
-- **A group whose weight the player passes reacts:** it tests the player, demands something, or allies with another group against them. Which group does what is part of the story.
-- **A group below the player's weight gives way:** the player's Standing opens what it guards without a battle.
-
-| | Show oneself | Stay unseen |
-|---|---|---|
-| **Gains** | the reward of the arc and Standing; key persons come with offers; doors open by Standing | no group reacts; rivals do not prepare |
-| **Costs** | every group whose weight the player passes reacts | no reward; every obstacle is fought, paid for or left to one's people |
-
-The weights of the groups are not defined.
+**Fame:** public deeds raise it, nothing lowers it. It opens hiring, the offers of groups and events ([§3.4](#34-events)); the fame of an organisation draws better rogue cultivators. Its scale and which deeds raise it are not defined.
 
 ### 7.3 Currency: Spirit Stones Only
 
@@ -550,9 +578,8 @@ One whole number, shown in denominations: 100 Lower = 1 Middle · 100 Middle = 1
 
 | Resource | Sources | Sinks |
 |---|---|---|
-| **Spirit stones** | sales, requests, the house | people, materials, structures, hush money |
+| **Spirit stones** | sales, requests, the organisation | wishes, materials, structures |
 | **Materials** | wild areas, realms, fields, buying | pills, weapons, armour, structures, the Internal World |
-| **Favor** | requests, sales, gifts | discounts, introductions, tokens, licences |
 | **XP** | battles, cultivating, pills, habitats | sub-tiers |
 
 ### 7.5 Materials, Seeds and Grades
@@ -586,7 +613,7 @@ FORMS    plant · ore · beast part (by Kin) · essence
 - A golem is forged from ore and an essence.
 - **No crafting is a minigame.**
 
-**Rank of a craft:** the Alchemy Hall and the Smiths' Hall each grant six ranks by trial, named and counted like the six stages (Qi Gathering to Sovereign): the player hands in the piece the hall asks for, at the grade it asks for. A rank opens the hall's better requests and stores and counts toward the weight ([§7.2](#72-favor--faction)).
+**Rank of a craft:** the Alchemy Hall and the Smiths' Hall each grant six ranks by trial, named and counted like the six stages (Qi Gathering to Sovereign): the player hands in the piece the hall asks for, at the grade it asks for. A rank opens the hall's better requests and stores.
 
 ### 7.6 Item Schema
 

@@ -1,6 +1,6 @@
 # T51 · Review What Was Decided Alone
 
-**Status:** To clarify — while the user was away (2026-11-19) the overworld rules were rewritten along the frame and a first world was built. Every row below was decided without the user and stands as a working draft; the user confirms, changes or drops it. The user went through rows 1–5, 7–16, 20 and 27 on 2026-11-19 ([decisions.md](../../../decisions.md)); they are gone from the tables. Rows 17–19 wait for [T52](T52-the-role-of-people-standing-and-weight.md). Next to ask: rows 6 and 21, then the build rows 22–26 and 28.
+**Status:** To clarify — while the user was away (2026-11-19) the overworld rules were rewritten along the frame and a first world was built. Every row below was decided without the user and stands as a working draft; the user confirms, changes or drops it. The user went through rows 1–5, 7–16, 20 and 27 on 2026-11-19 and replaced rows 17–19 on 2026-11-20 by the frame of persons ([decisions.md](../../../decisions.md)); they are gone from the tables. Next to ask: rows 6 and 21, then the build rows 22–26 and 28.
 **Prerequisites:** none.
 **Sources:** [overworld.md](../../../overworld.md), [vision.md](../../../vision.md), [godot/README.md](../../../../godot/README.md).
 
@@ -9,9 +9,6 @@
 | # | Topic | What was written | Where |
 |---|---|---|---|
 | 6 | Buildings per district | A list of buildings for every group | [§3.1](../../../overworld.md#31-the-city) |
-| 17 | People | Strength, Loyalty 0–5, one trait; the night compares summed Strength with the task, a tie holds what was | [§7.1.1](../../../overworld.md#711-people) |
-| 18 | Harm | A request that harms a group lowers its favor toward the player; below zero is a grudge that stops its requests until paid off; Standing is never lost | [§7.2](../../../overworld.md#72-favor--faction) |
-| 19 | Weight | A table of what counts (stage, arcs shown, craft ranks, open house and wings, Epic pieces worn); a group below the player's weight gives way | §7.2 |
 | 21 | Dropped without a successor | Arena tournaments, beasts for hire, the Business District, staff model B as written, the Trial and Evolution Pillars, Hive Nest, Qi Spring | — |
 
 **In the build:**

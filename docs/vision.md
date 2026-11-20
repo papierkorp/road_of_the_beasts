@@ -27,6 +27,7 @@ flowchart LR
 
 - **Genre:** xuanhuan first, with wuxia and xianxia: more fantasy than history.
 - **A day is one turn:** the player spends day AP in the city, the night resolves everything at once. Walking and looking are free; only decisions cost day AP.
+- **One calendar:** day, season, year. Everything that recurs falls on the turn of a season, and every event stands on the calendar with its day ([§6](#6-story-and-the-end)).
 - **The player is small:** buildings and districts are imposing, the city is full of people, cultivators and monsters.
 
 ## 2. The World
@@ -38,9 +39,9 @@ flowchart LR
 
 ## 3. The Groups of the City
 
-*Status: set. Names, key persons and numbers are not defined.*
+*Status: set; persons, bonds and fame are set in outline. Names, key persons and numbers are not defined.*
 
-Ten groups, each with a standing of its own:
+Ten groups and the sects, each with a standing of its own:
 
 ```mermaid
 flowchart TB
@@ -61,7 +62,8 @@ flowchart TB
         Smith["Smiths' Hall<br/>ranks for smiths"]
     end
     subgraph Learning
-        School["The school<br/>rivals inside it"]
+        School["The school<br/>neutral, rivals inside it"]
+        Sects["Sects<br/>rivals for people"]
     end
     subgraph Shadow
         Under["Underground<br/>black market, Slave Market"]
@@ -71,10 +73,15 @@ flowchart TB
 
 - **One school:** large, with many buildings and its mountain. Its rivalry comes from inside: houses or teachers with their own students, and the children of the three families.
 - **The Slave Market** (monsters and subordinates) is a business of the Underground, not a group.
-- **Standing belongs to a group.** Each group also has a few named key persons (an elder, a rival, a teacher) with a relation of their own; they carry the story.
-- **Why nobody is friends with all:**
-  - **Deeds:** a request of one group harms another group, and the harm is shown before the player accepts. No group dislikes the player for a friendship alone.
-  - **Weight:** every group has a visible weight, and so has the player. A group whose weight the player passes reacts: it tests, demands, or allies against the player.
+- **Sects** stand beside the school, which stays neutral; they compete for people. How many there are is not defined.
+- **Every person has one card, and all of it is visible:** stage, one to three roots, fame, two to four traits, group and position (or none), the bond to the player, hired or not, the current wish.
+  - **Roots:** the kind says what work fits a person, the grade how fast and how far they cultivate. Few roots: fast and high but narrow; many: slow and low but broad.
+  - **Traits** are drawn from one pool of good, bad and two-sided ones, so a person worth finding exists.
+- **Two kinds of person:** a rogue cultivator has no group, is generated, and comes and goes; a member has a group and a position. A key person is a member with an office, fixed traits and written wishes; key persons carry the story.
+- **One ladder for persons and groups:** Stranger → Known → Trusted → Allied → Sworn; with a group it is called standing. A fulfilled wish raises it by one, and a request of a group is its wish. Sworn never sinks. There are no gifts and no points to spend.
+- **Hiring is apart from the bond:** possible from Trusted on and only if the player's fame reaches the person's. A hired person brings a wish at every turn of a season; an ignored one lowers the bond, and below Trusted the person leaves. Rivals lure hired persons away by an offer shown on the calendar.
+- **Fame:** one visible value for persons, groups and the player. Public deeds raise it, nothing lowers it; it opens hiring, offers and events.
+- **Why nobody is friends with all:** a request of one group harms another group, and so does hiring one of its members; the harm is shown before the player accepts. No group dislikes the player for a friendship alone.
 
 ## 4. Places Outside the Streets
 
@@ -97,34 +104,34 @@ flowchart TB
 
 - **The battle is always possible and rarely required.** An obstacle has several keys: fight it, send one's own people, or use one's standing.
 - **Required battles:** only the trial of each breakthrough, which the player passes on the board; five in the whole game.
-- **One's own people act at night:** the player gives the order by day (harvest an area, guard something, press a demand). The night decides by the visible values of both sides; the outcome is certain and shown before the order is given. No battle on the board.
-- **Three means, many routes:** power is monsters, people and standing. A route is where the player gets them: as a beast tamer, as the founder of a house, as a master of a craft, as a merchant, as heir of the family, or from the shadow.
-- **A house of one's own:** the player founds a house, which becomes the eleventh group of the city with a weight of its own. It gains wings over time: a school (students), a workshop, a trading hall, a monster hall. Which wings the player builds is the route.
-- **A hidden house:** a house is founded openly or in hiding. A hidden house may do everything and does not count toward the visible weight, but each of its orders costs more (hush money to the Underground). Only an event of the story uncovers it.
-- **Several ways to earn:** catching and selling monsters, alchemy, smithing, the wings of the house.
+- **One's own people act at night:** the player gives the order by day (harvest an area, guard something, press a demand), from one list that is reachable anywhere. An order has a kind (a root) and a level (a stage); a person fits by root and counts by stage and equipment, and traits change it. The night decides by the visible values of both sides; the outcome is certain and shown before the order is given. No battle on the board.
+- **Three means, many routes:** power is monsters, people and standing. A route is where the player gets them: as a beast tamer, as the founder of a sect, as a master of a craft, as a merchant, or as heir of the family.
+- **Three ways to lead people:** alone, with hired persons ordered one by one; by a position, since a high standing with a group lends some of its members; by an organisation of one's own.
+- **An organisation of one's own:** a sect, a gang or a trading house, built by one schema; the kind sets which orders it does well and which group is its rival. It becomes a group of the city with a fame of its own and gains wings over time: a school (students), a workshop, a trading hall, a monster hall.
+- **No fixed number of followers:** every hired person brings wishes, and the player holds as many as they can serve. A follower from Allied on can be a steward: the steward leads a group, takes the order for it and brings one wish for all of it.
+- **Several ways to earn:** catching and selling monsters, alchemy, smithing, the wings of the organisation.
 - **Several ways to a monster:** catching, the Slave Market, hatching eggs, young monsters at auction.
 
 ## 6. Story and the End
 
-*Status: set. The content of the arcs is a working draft.*
+*Status: set. The list of great events is a working draft.*
 
 - **The end:** a barrier holds everyone below Sovereign in the city. A player who reaches Sovereign can pass it and leaves. The ending shows as what the player leaves: City Lord, head of the family, grand alchemist, an unknown.
-- **One arc per stage, in a fixed order.** Each arc ends with an event, and the breakthrough to the next stage closes it.
+- **The spine is the stage:** the trial of each breakthrough is the only step everyone takes. There is no fixed order of arcs.
+- **Events carry the story.** An event names what sets it off, stands on the calendar with its day and is shown ahead; it has a course (a battle on a battleground, an order, a choice) and an outcome (fame, standing, goods, further events).
 
 ```mermaid
 flowchart LR
-    A1["Qi Gathering<br/>School: the best of the year"] --> A2["Foundation<br/>Family: lead, serve or leave"] --> A3["Core Formation<br/>One-time realm: all groups compete"] --> A4["Soul Tier<br/>Monster riot"] --> A5["Immortal<br/>Struggle for the city"] --> A6["Sovereign<br/>Leave the city"]
+    State["The player's state<br/>a membership, fame, a stage, an organisation"] --> Event["Event<br/>on the calendar, shown ahead"]
+    World["The world's calendar<br/>a realm opens, the monster riot"] --> Event
+    Event --> Out["Outcome<br/>fame, standing, goods"]
+    Out --> State
 ```
 
-- **The choice at the end of every arc:** show oneself or stay unseen. Weight is a key and a target at once ([§3](#3-the-groups-of-the-city)). *(The table is a draft.)*
-
-| | Show oneself | Stay unseen |
-|---|---|---|
-| **Gains** | the reward of the arc and standing; key persons come with offers and requests; groups below one's weight give way, so standing opens doors without a battle | no group tests, demands or allies against the player; rivals do not prepare for them |
-| **Costs** | every group whose weight the player passes reacts | no reward; no door opens by standing, so each obstacle is fought, paid for or left to one's people |
-| **Suits** | the craft master, the merchant, the heir | the beast tamer, the shadow, a hidden house |
-
-- **A few great decisions branch the story:** they open or lock later steps, such as leading the family or leaving it.
+- **Who never joins never sees:** an event of the school happens only to its students. What the world's calendar brings returns or waits; nothing single is lost by time alone.
+- **Two sources:** written events (those of each group and the great ones) and events from pools (wishes, rogue cultivators, realms).
+- **Great events** *(draft)*: the best of the year at the school; lead, serve or leave the family; a one-time realm in which all groups compete; the monster riot; the struggle for the city.
+- **A few great decisions branch the story:** they open or lock later events, such as leading the family or leaving it.
 
 ## 7. Making Things
 
@@ -146,8 +153,8 @@ flowchart LR
 - **A piece has three parts:** a body of ore (tier and grade), a core from a part of a monster (which skill or passive, by the kind of monster), a temper from an essence (one variation). What a part gives is found by trying; the same parts always give the same piece. No crafting is a minigame.
 - **One rule for what the tamer brings:** a tamer skill, a weapon and a pill each take a tamer slot and act once per battle. Stages add slots ([§8](#8-growth)).
 - **Pills in battle** heal, protect or move; they never raise damage. A pill is used up; a skill and a weapon are not. Other pills serve cultivation, healing between battles and rituals.
-- **Uses outside the battle** *(draft)*: trade; gifts to key persons; pieces for requests and trials; equipment for the player's people, which raises their visible values. What the player wears openly counts toward the weight; what lies in the Internal World does not.
-- **Rank of a craft:** the Alchemy Hall and the Smiths' Hall grant ranks by trial: make the piece they ask for at the grade they ask for. A rank opens better requests and ingredients and counts toward the player's weight.
+- **Uses outside the battle:** trade; pieces for wishes, requests and trials; and one's people. Pills change who a person is (the grade of a root, a trait removed, the stage); forged pieces change what a person can do (a weapon or a tool per kind of root, counted on orders).
+- **Rank of a craft:** the Alchemy Hall and the Smiths' Hall are neutral and grant ranks by trial: make the piece they ask for at the grade they ask for. A rank opens better requests and ingredients.
 
 ## 8. Growth
 
@@ -161,7 +168,7 @@ Qi Gathering → Foundation → Core Formation → Soul Tier → Immortal → So
 |---|---|---|
 | **The tamer's stage** | cultivation; the same for every player | the breakthrough trial |
 | **An insight** | at every breakthrough the player chooses one of three: one for battle, one for people, one for craft and trade | five choices in the game |
-| **Ladders of deeds** | the rank of a craft, the standing with a group, the size of the house, the stage of the Internal World; no points to spend | day AP: nobody tends everything |
+| **Ladders of deeds** | the rank of a craft, the standing with a group and the bond to a person, fame, the size of the organisation, the stage of the Internal World; no points to spend | day AP: nobody tends everything |
 | **A monster** | stat points, development of its skills, rarity, its armour | the tamer's stage |
 
 There is no skill tree.
@@ -172,14 +179,14 @@ There is no skill tree.
 - **Tamer slots come from the stage:** 1 at Qi Gathering, 2 at Foundation, 3 at Core Formation, 4 at Immortal.
 - **Battlegrounds of one's own:** the player builds them in a building of the Internal World, several, each for a cost, and shapes them to the team, for example with the Dragon Veins on the own side ([battle_ingame.md §3](battle_ingame.md#3-battlegrounds)). The second stage of the Internal World opens this, so Foundation at the earliest.
 
-| Stage | Arc | Opens besides *(draft)* |
-|---|---|---|
-| Qi Gathering | School | catching; the Internal World with a field and a cauldron; the wild area of the school |
-| Foundation | Family | habitats, a forge and the first golem |
-| Core Formation | One-time realm | a house of one's own and its orders at night |
-| Soul Tier | Monster riot | Beast Swap |
-| Immortal | Struggle for the city | battlegrounds for five monsters; holding districts |
-| Sovereign | Leaving | the barrier opens |
+| Stage | Opens besides *(draft)* |
+|---|---|
+| Qi Gathering | catching; the Internal World with a field and a cauldron; the wild area of the school |
+| Foundation | habitats, a forge and the first golem |
+| Core Formation | an organisation of one's own |
+| Soul Tier | Beast Swap |
+| Immortal | battlegrounds for five monsters; holding districts |
+| Sovereign | the barrier opens |
 
 **The Internal World:**
 

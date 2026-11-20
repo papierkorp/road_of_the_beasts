@@ -14,9 +14,10 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 ## Current State
 
 - **Read first:** [vision.md](vision.md), the frame of the game (T50). It holds over the rule files; [overworld.md](overworld.md) is rewritten along it.
-- **Decided alone, to review (T51):** the user went through 17 of the 28 rows on 2026-11-19 ([decisions.md](decisions.md)); open are rows 6 and 21 (rules), 22–26 and 28 (build) and 17–19, which wait for T52.
+- **Frame of persons (2026-11-20):** one card per person, one bond ladder, hiring by wishes, a calendar with events instead of ordered arcs, three ways to lead people, fame instead of weight; staying low profile is dropped ([overworld.md §7](overworld.md#7-management), [§3.4](overworld.md#34-events)). Its details are open in T52.
+- **Decided alone, to review (T51):** open are rows 6 and 21 (rules) and 22–26 and 28 (build).
 - **World in the build ([godot/README.md](../godot/README.md)):** New Game leads into a hub with every district, both wild areas, the Realm Gate (the old dungeon run stands in) and the Internal World as teleporters; a follow camera; resources of a wild area for 1 day AP that return after nights. Main menu → Growth Preview walks through the growth by clicking. Not built: the third wild area, the two kinds of one-time realm, persons, battle in a wild area, the house, weight, crafting, the Internal World and tamer slots by the new rules. Not tried by hand: looking around with the mouse, taking resources, the way through the Realm Gate.
-- **Next:** continue the talk of T52 with its six goal questions (the user wants the goal of the player's people settled first and declined a question dialog for it); then the rest of T51, then T50; then the old overworld tasks (T15–T31) are sorted anew; then the first slice of the overworld (school, its mountain, the Internal World of the first stage). The user has not yet walked the world or the growth preview. The ingame battle waits.
+- **Next:** the details of T52 in the chat, the rough shape before details; then the rest of T51, then T50; then the old overworld tasks (T15–T31) are sorted anew; then the first slice of the overworld (school, its mountain, the Internal World of the first stage). The build still shows the ordered arcs, weight and the hidden house (T52). The user has not yet walked the world or the growth preview. The ingame battle waits.
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. When it resumes: ends and board events in the map editor and the battle (T46); the user plays Seal Ground (T49); then a wild AI that values Seal Ground. Then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)).
@@ -27,8 +28,8 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | # | Question | Task |
 |---|---|---|
 | 0 | The frame is decided; open are its lists and the points seen in the growth preview (a sub-tier gives the tamer nothing, four choices on one breakthrough) | T50 |
-| 0 | 11 rows decided without the user are left (6, 21, 22–26, 28; 17–19 wait for T52); open besides: name and zones of the third wild area, entry to a world realm | T51 |
-| 0 | What is the goal of the player's people, and with it: is weight needed, is favor kept? | T52 |
+| 0 | 8 rows decided without the user are left (6, 21, 22–26, 28); open besides: name and zones of the third wild area, entry to a world realm | T51 |
+| 0 | Details of the frame of persons: kinds of roots, roots of the player, tamer skills by root, sects, kinds of organisation, pools of traits and wishes, the season, fame, the list of events | T52 |
 | 1 | How does a stat shape split the points at the roll? | T03 |
 | 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills, battlegrounds in the overworld (cost, content, whose board) | T46 |
 | 13 | Seal: item and skill Seal Ground together? The upgrade scroll as an item; options of the other tamer skills | T49 |
@@ -91,7 +92,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | T11 | [Learn Lists, Passives and Kits](todo/open/skills/T11-learn-lists-passives-and-kits.md) | open | skills |
 | T32 | [Design Signature Skills](todo/open/skills/T32-design-signature-skills.md) | open | skills |
 
-Finished: T44, T45, T47 ([todo/done/](todo/done/)); archived: T01, T08, T09, T33, T34, T36, T38 ([todo/archive/](todo/archive/)).
+Finished: T44, T45, T47, T53 ([todo/done/](todo/done/)); archived: T01, T08, T09, T33, T34, T36, T38 ([todo/archive/](todo/archive/)).
 
 ## Test Switches of the Build
 
