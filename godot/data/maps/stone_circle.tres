@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MapDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/map_def.gd" id="1_u5p7q"]
+
+[resource]
+script = ExtResource("1_u5p7q")
+id = &"stone_circle"
+display_name = "Stone Circle"
+width = 6
+height = 5
+grounds = {
+Vector2i(0, 2): &"dragon_vein",
+Vector2i(5, 2): &"dragon_vein"
+}
+props = {
+Vector2i(2, 2): &"earth_wall",
+Vector2i(3, 2): &"earth_wall"
+}
+start_a = Array[Vector2i]([Vector2i(1, 4), Vector2i(2, 4), Vector2i(3, 4)])
+start_b = Array[Vector2i]([Vector2i(2, 0), Vector2i(3, 0)])

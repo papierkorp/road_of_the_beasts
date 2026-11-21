@@ -28,33 +28,15 @@ var hub_panel: StringName = &""
 var editor_job: BattlegroundJob = null
 
 
-## The battleground a fight is fought on.
-func map_of(f: Fight) -> MapDef:
-	return MapData.from_dict(f.own_map) if f.map_id == &"" else MapDef.load_map(f.map_id)
-
-
 func map_summary(f: Fight) -> String:
-	return MapData.summary(map_of(f), BattleContent.shared())
-
-
-## The request of a fight of the hub game: an ingame battle on a battleground with the monsters as they are.
-func request_of(f: Fight) -> BattleRequest:
-	var r := BattleRequest.new()
-	r.battle_kind = BattleRequest.INGAME
-	r.map = map_of(f)
-	r.player_team = f.team
-	r.enemy_team = f.enemies
-	r.player_tamer = f.tamer.duplicate()
-	r.enemy_wild = f.wild
-	r.roll_seed = f.roll_seed
-	return r
+	return MapData.summary(FightBridge.map_of(f), BattleContent.shared())
 
 
 ## Sends a fight into the battle scene; the hub reads `last_result` when the scene comes back.
 func start_fight(f: Fight) -> void:
 	BattleExperiment.reset()                 # the ingame battle plays none of the switches of the multiplayer draft
 	fight = f
-	start_battle(request_of(f), HUB_SCENE)
+	start_battle(FightBridge.request_of(f), HUB_SCENE)
 	get_tree().change_scene_to_file(BATTLE_SCENE)
 
 

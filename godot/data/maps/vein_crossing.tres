@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MapDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/map_def.gd" id="1_qqk10"]
+
+[resource]
+script = ExtResource("1_qqk10")
+id = &"vein_crossing"
+display_name = "Vein Crossing"
+width = 6
+height = 6
+grounds = {
+Vector2i(1, 2): &"dragon_vein",
+Vector2i(2, 3): &"thornbed",
+Vector2i(3, 2): &"thornbed",
+Vector2i(4, 3): &"dragon_vein"
+}
+start_a = Array[Vector2i]([Vector2i(1, 5), Vector2i(2, 5), Vector2i(3, 5)])
+start_b = Array[Vector2i]([Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0)])
