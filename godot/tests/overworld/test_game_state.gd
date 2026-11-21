@@ -136,8 +136,24 @@ func test_a_reshape_gives_every_point_back() -> void:
 
 func test_the_cultivation_systems_and_the_eggs_of_the_values_exist() -> void:
 	assert_int(CultivationDef.ids().size()).is_equal(3)
-	for id in GameValues.shared().eggs:
+	var v := GameValues.shared()
+	for id in v.egg_pool:
 		assert_object(GameData.monster(id)).is_not_null()
+		assert_int(int(GameData.monster(id).kin)).is_not_equal(int(MonsterDef.Kin.VOID))
+	for seed_value in 30:
+		var offer := GameState.egg_offer(v, seed_value, 0)
+		assert_int(offer.size()).is_equal(3)
+		var kins := {}
+		for id in offer:
+			kins[GameData.monster(id).kin] = true
+			assert_bool(v.egg_pool.find(id) < v.egg_pool_start).is_true()      # only what the first game has open
+		assert_int(kins.size()).is_equal(3)
+		assert_array(GameState.egg_offer(v, seed_value, 0)).is_equal(offer)
+	var seen := {}
+	for seed_value in 60:
+		for id in GameState.egg_offer(v, seed_value, 99):
+			seen[id] = true
+	assert_int(seen.size()).is_equal(v.egg_pool.size())      # finished games open the whole pool
 	var content := BattleContent.shared()
 	for sid in CultivationDef.ids():
 		for n: Dictionary in CultivationDef.of(sid).nodes:

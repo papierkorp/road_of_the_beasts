@@ -94,7 +94,7 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | I97 | Properties: each plant draws 3 of 7; the core of a piece is drawn per Kin from six names, the temper per essence tier from four; a piece and an armour change nothing in a battle | lists of pills, weapon skills, armour passives | T58 |
 | I98 | Pills: reshape (every point back), bloodline (rarity +1 up to Epic), healing (2 HP, between the battles of a dungeon). Pills for a battle and the relearning pill can be brewed and not used | pills in the battle loadout (I22), learn lists (I25) | T58, T19 |
 | I99 | An egg hatches after one night at the first sub-tier of the tamer's stage; a won wild battle gives an egg with a chance, a rare encounter always; the roster holds 8, eggs included | where eggs come from, the roster cap | T59 |
-| I100 | A finished game is counted in `user://legacy.json` and its save removed; nothing is opened for the next game | what a game leaves behind | T54 |
+| I100 | A finished game, won or lost, is counted in `user://legacy.json` and its save removed. The pool of eggs holds 14 species in a fixed order: 7 from the first game on, 2 more per finished game | what a game leaves behind; the size and order of the pool | T54, T59 |
 | I101 | The Binding Seal item is not in the hub game: the Seal skill is the only seal | how a Binding Seal is made | T58 |
 | I102 | A Draw counts as not won | Draw consequences (I29) | T19 |
 | I103 | The battle is fought with the skills in the monster's slots; a development level is stored per slot and changes nothing | slot development (I24) | T05 |

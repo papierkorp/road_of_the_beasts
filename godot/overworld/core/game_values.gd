@@ -15,8 +15,11 @@ const PATH := "res://data/game/values.tres"
 @export var xp_per_win: PackedInt32Array
 
 @export_group("Start and roster (T59)")
-## The three species of the nest.
-@export var eggs: Array = []
+## The pool the three eggs of the nest are drawn from, in the order the species join it: the first
+## `egg_pool_start` from the first game on, `egg_pool_per_game` more for every finished game. No creature of the void.
+@export var egg_pool: Array = []
+@export var egg_pool_start := 0
+@export var egg_pool_per_game := 0
 @export var roster_cap := 0
 ## Nights an egg needs to hatch.
 @export var egg_nights := 0

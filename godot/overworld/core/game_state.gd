@@ -77,6 +77,27 @@ static func new_game(p_seed: int, p_system: StringName, egg_species: StringName,
 	return g
 
 
+## The three eggs of the nest for a new game (docs/vision.md §5): drawn from the part of the pool that the finished
+## games have opened, each of another Kin.
+static func egg_offer(p_values: GameValues, offer_seed: int, finished_games: int) -> Array[StringName]:
+	var open: Array[StringName] = []
+	var n := mini(p_values.egg_pool.size(), p_values.egg_pool_start + p_values.egg_pool_per_game * maxi(0, finished_games))
+	for i in n:
+		if GameData.monster(StringName(p_values.egg_pool[i])) != null:
+			open.append(StringName(p_values.egg_pool[i]))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([offer_seed, "eggs"])
+	var out: Array[StringName] = []
+	var kins := {}
+	while out.size() < 3 and not open.is_empty():
+		var id: StringName = open.pop_at(rng.randi_range(0, open.size() - 1))
+		var kin := int(GameData.monster(id).kin)
+		if not kins.has(kin):
+			kins[kin] = true
+			out.append(id)
+	return out
+
+
 ## A generator for one purpose: the same game, day and tag always give the same numbers.
 func rng_for(tag: String, with_day := false) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()

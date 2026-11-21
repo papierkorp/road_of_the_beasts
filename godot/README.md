@@ -91,7 +91,7 @@ day AP and takes all that are left, a harvest costs 1. The hub shows a day as a 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
 ("Hub Game"). **Not built:** the effect of a development level, of the tier of a forged piece and of its temper, the Kin gifts
 that `data/kins/` gives no flags (stored and shown as "not built"), species skills, the relearning pill,
-what a finished game leaves for the next one (the games are only counted), ends of a battle other
+anything a finished game leaves besides more species to draw eggs from, ends of a battle other
 than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
 Foundation), an Android export.
 

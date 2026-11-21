@@ -8,7 +8,7 @@
 
 | Topic | Questions |
 |---|---|
-| The three eggs | Which monsters, and what tells them apart (kin, a way to play); whether the three are the same in every game |
+| The three eggs | Decided: drawn per game from a pool that grows with finished games, each of another Kin. Open: the species of the pool, its start size and what a finished game adds (build: 7, then 2 per game; a lost game counts too) |
 | The first battles | With one monster they are 1v1; how the team grows to the sizes the battlegrounds ask for |
 | Roster | How many monsters it holds and what raises the number |
 | Further eggs | Where they come from (loot of a wild area, a rare encounter); how long hatching takes |

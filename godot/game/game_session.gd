@@ -98,6 +98,16 @@ func part_name(part: String) -> String:
 	return "%s (%s)" % [def.get("display_name") if def != null else String(id), kind]
 
 
+## Games that were played to their end, won or lost (what a game leaves behind: the pool of eggs grows).
+func finished_games() -> int:
+	var l := SaveGame.legacy()
+	var n := 0
+	for key in l:
+		if l[key] is float or l[key] is int:
+			n += int(l[key])
+	return n
+
+
 ## What a skill does, as the battle shows it on its card: generated from the record, never from its free text
 ## (the description fields of the data are partly older than the rules).
 func skill_text(s: BattleSkillDef) -> String:

@@ -107,7 +107,7 @@ A battle is made of three things, and every resource of the game feeds one of th
 
 *Status: set.*
 
-- The player is an orphan and finds a nest with three eggs. The player chooses one; the first monster hatches from it. Every further monster is caught or hatched.
+- The player is an orphan and finds a nest with three eggs. The three are drawn anew for every game from a pool of species, each of another Kin and none of the void; every finished game adds species to the pool. The player chooses one; the first monster hatches from it. Every further monster is caught or hatched.
 - **The player chooses a cultivation system** from a selection ([§8](#8-growth)).
 
 ## 6. The Hub

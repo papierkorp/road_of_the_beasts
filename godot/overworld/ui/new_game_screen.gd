@@ -7,10 +7,15 @@ const MENU_SCENE := "res://game/menu.tscn"
 
 var _system: StringName = &""
 var _egg: StringName = &""
+## The seed of the game to come; the three eggs are drawn from it.
+var _seed := 0
 var _body: VBoxContainer
 
 
 func _ready() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	_seed = rng.randi_range(1, 1 << 30)
 	var margin := HubUi.page(self)
 	_body = HubUi.col(14)
 	margin.add_child(_body)
@@ -39,10 +44,10 @@ func _build() -> void:
 		systems.add_child(_choice("%s\n%s\n\n%s" % [def.display_name, def.blurb, "\n".join(lines)], _system == id, func():
 			_system = id
 			_build()))
-	list.add_child(HubUi.label("The nest", 22, UiTheme.ACCENT))
+	list.add_child(HubUi.label("The nest — three eggs, drawn anew for every game; every game you finish adds species to draw from", 22, UiTheme.ACCENT))
 	var eggs := HubUi.row()
 	list.add_child(eggs)
-	for id in GameValues.shared().eggs:
+	for id in GameState.egg_offer(GameValues.shared(), _seed, GameSession.finished_games()):
 		var def := GameData.monster(id)
 		if def == null:
 			continue
@@ -72,9 +77,7 @@ func _choice(text: String, picked: bool, action: Callable) -> Button:
 
 
 func _begin() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
-	GameSession.game = GameState.new_game(rng.randi_range(1, 1 << 30), _system, _egg)
+	GameSession.game = GameState.new_game(_seed, _system, _egg)
 	GameSession.fight = null
 	GameSession.hub_panel = &"monsters"
 	GameSession.hub_tabs = {&"monsters": &"stats"}
