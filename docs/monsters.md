@@ -9,14 +9,14 @@
 A monster the player owns is two layers: a fixed **species** and a unique **individual**.
 
 ```
-SPECIES     Kin · descriptive themes · default kit · learnable skills · blurb · art
+SPECIES     Kin · descriptive themes · default kit · learnable skills · species skill · blurb · art
 INDIVIDUAL  stat shape · stats · rarity · stage + sub-tier + XP
-            slot development and equipped skill per slot · artifacts · current HP
+            open slots · slot development and equipped skill per slot · Kin gifts · artifacts · current HP
 ```
 
 - **The battle only ever sees the finished sheet:** name, Kin, the six stats and the kit (Step plus up to 6 slots).
 - **Stat shape is individual, not species-wide:** two individuals of one species can play differently with the same kit.
-- Wild and newly caught monsters roll a shape weighted by their **Kin lean** ([§3](#3-kins)); rare off-lean rolls are prized finds.
+- Wild and newly caught monsters roll a shape weighted by their **Kin lean** ([§3](#3-kins)); rare off-lean rolls are prized finds. A monster from an egg is shaped by the player ([overworld.md §4.1](overworld.md#41-obtaining-monsters)).
 - **Current HP** persists between the battles of a dungeon run ([vision.md §4](vision.md#4-where-battles-happen)).
 - Every monster is 1×1 and stands on the ground.
 
@@ -24,11 +24,11 @@ INDIVIDUAL  stat shape · stats · rarity · stage + sub-tier + XP
 
 | Layer | Decides |
 |---|---|
-| **Kin** (body) | stat lean, skill access |
+| **Kin** (body) | its Kin trait, the skill groups it can learn, stat lean |
 | **Themes** (description) | free flavour and visual identity; no mechanical type, no eligibility rule |
-| **Species** | its default kit and its learnable list |
+| **Species** | its learnable list, its species skill and its default kit |
 | **Stat shape** (individual) | how its points are spread |
-| **Kit** | up to 6 slots, chosen by the player from the learnable list |
+| **Kit** | 4 slots at the start and up to 6, chosen by the player from the learnable list |
 
 - **No fixed roles:** Kin is not class; kits determine team function.
 - **Design test:** one sentence per monster built from its kit. If two monsters read the same, change a skill, a stat or its theme.
@@ -103,7 +103,12 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 
 ## 3. Kins
 
-**Kin is what kind of creature it is.** It sets the stat lean and skill access. It changes nothing a skill does: no Strike effect, no damage multiplier. There is no weakness triangle, no element system and no attunement.
+**Kin is what kind of creature it is.** It sets a trait, skill access and the stat lean. It changes nothing a skill does: no Strike effect, no damage multiplier. There is no weakness triangle, no element system and no attunement.
+
+- **Kin trait:** one innate property that no other Kin has. It takes no slot and changes how the monster deals with the board, never a damage number.
+- **Skill groups:** the groups are what a skill does or creates ([skills.md §3](skills.md#3-what-a-skill-does-and-creates)): Strike, movement, effect on the user, ground, zone, prop. A Kin can learn only some of them.
+- **Kin gifts:** each Kin has a pool of further, smaller properties; a monster gains one as a choice at a stage breakthrough ([§5](#5-growth)).
+- **Species skill:** every species has one skill or self buff that no other species can learn. It is on the learnable list from the start, fills a slot like any skill and may be left out.
 
 | Kin | Body fantasy | Stat lean |
 |---|---|---|
@@ -112,9 +117,15 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 | **Scaled** | serpent, turtle, drake | bulwark, low Stamina |
 | **Swarm** | insects, rats | swift (two turns) |
 | **Spirit** | ghost, wisp | low HP, high Pace |
-| **Ancient** | golem, treant | max HP, one turn |
+| **Stone** | golem, statue | max HP, one turn |
+| **Flora** | treant, fungus, vine | not defined |
+| **Void** | creatures of the void | not defined |
 
-The **species learnable list** sets concrete skill access. Neither learnable lists nor Kin access exist as content yet.
+*Working value:* the list of Kins.
+
+- **Void** monsters live in the void only and cannot be caught; the player gains one as an egg ([overworld.md §4.1](overworld.md#41-obtaining-monsters)).
+
+The **species learnable list** sets concrete skill access within the groups of its Kin. Drafts of the traits, the groups of each Kin and the gifts: [content.md §7](content.md#7-kins); the species skills and the learnable lists are not defined.
 
 ## 4. Rarity
 
@@ -123,14 +134,14 @@ The **species learnable list** sets concrete skill access. Neither learnable lis
 | | Normal | Rare | Epic | Legendary |
 |---|---|---|---|---|
 | Kit | up to 6 slots | same | same | same, plus a Signature skill at its highest stage |
-| Slot-development steps per advancement | 1 | 1 | 2 | 2 |
+| Choices at a stage breakthrough ([§5](#5-growth)) | 1 of 3 | 1 of 3 | 2 of 3 | 2 of 3 |
 | Highest stage | Core | Soul | Immortal | Sovereign |
 
-- **No stat bonus from rarity:** rarity buys development steps and a higher last stage, never numbers.
+- **No stat bonus from rarity:** rarity buys choices and a higher last stage, never numbers.
 - Rarity does not decide the stat shape.
-- **Ascension** is a major event, not a grind: one **Bloodline pill** ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)). The monster gains the new rarity's steps and last stage and keeps everything else. **Normal can climb to Epic, never to Legendary.**
+- **Ascension** is a major event, not a grind: one **Bloodline pill** ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)). The monster gains the new rarity's choices and last stage and keeps everything else. **Normal can climb to Epic, never to Legendary.**
 
-*Working values:* the step counts per rarity.
+*Working values:* the number of choices per rarity.
 
 ## 5. Growth
 
@@ -138,26 +149,27 @@ The **species learnable list** sets concrete skill access. Neither learnable lis
 
 | # | Stage · sub-tier | Points | Also gained | XP to the next step |
 |---|---|---|---|---|
-| 1 | Qi Gathering Lower | 25 | full kit | 60 |
+| 1 | Qi Gathering Lower | 25 | 4 slots | 60 |
 | 2 | Qi Gathering Middle | 30 | | 120 |
 | 3 | Qi Gathering High | 35 | breakthrough trial opens | 200 (+ trial) |
-| 4 | Foundation Lower | 40 | slot-development step · +1 learnable skill | 150 |
+| 4 | Foundation Lower | 40 | choice · +1 learnable skill | 150 |
 | 5 | Foundation Middle | 45 | | 300 |
 | 6 | Foundation High | 50 | | 500 (+ trial) |
-| 7 | Core Formation Lower | 55 | slot-development step · +1 learnable skill | 400 |
+| 7 | Core Formation Lower | 55 | choice · +1 learnable skill | 400 |
 | 8 | Core Formation Middle | 60 | | 800 |
 | 9 | Core Formation High | 65 | | 1300 (+ trial) |
-| 10 | Soul Tier Lower | 70 | slot-development step · +1 learnable skill | 1000 |
+| 10 | Soul Tier Lower | 70 | choice · +1 learnable skill | 1000 |
 | 11 | Soul Tier Middle | 75 | | 2000 |
 | 12 | Soul Tier High | 80 | | 3200 (+ trial) |
-| 13 | Immortal Lower | 85 | slot-development step · +1 learnable skill | 2500 |
+| 13 | Immortal Lower | 85 | choice · +1 learnable skill | 2500 |
 | 14 | Immortal Middle | 90 | +1 slot-development step | 5000 |
 | 15 | Immortal High | 95 | +1 slot-development step | 8000 (+ trial) |
-| 16 | Sovereign Lower | 100 | slot-development step · Signature skill (Legendary) | 6000 |
+| 16 | Sovereign Lower | 100 | choice · Signature skill (Legendary) | 6000 |
 | 17 | Sovereign Middle | 105 | +1 slot-development step | 12000 |
 | 18 | Sovereign High | 110 | +1 slot-development step | — |
 
-- **Slot-development step:** the monster may develop one skill slot ([skills.md §8](skills.md#8-development)): 1 per step for Normal and Rare, 2 for Epic and Legendary.
+- **The choice at a stage breakthrough:** the monster takes one of three: **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)) or **Blood** (a Kin gift drawn from the pool of its Kin, [§3](#3-kins)). Epic and Legendary take two of the three.
+- **Slot-development step** (steps 14, 15, 17 and 18): the monster develops one skill slot.
 - **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
 - Breakthrough trials: [overworld.md §5.2](overworld.md#52-the-breakthrough-trial).
 

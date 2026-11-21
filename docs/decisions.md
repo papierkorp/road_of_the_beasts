@@ -120,6 +120,11 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-15 | Prices | The price list with rising AP steps and a turn price that follows the AP | HP at 2 or 3 points; flat or doubling AP prices; a flat turn price | turns and AP multiply | [monsters.md §2.2](monsters.md#22-prices-and-points) |
 | 2026-11-15 | Points | 25 at the start, +5 per step, 110 at the end | 20 at the start; 120 at the end | no monster should reach the top in everything | [monsters.md §2.2](monsters.md#22-prices-and-points) |
 | 2026-11-15 | Immortal and Sovereign | Give points like every step | no points at these stages | — | [monsters.md §5](monsters.md#5-growth) |
+| 2026-11-21 | What makes a monster | Three layers: a Kin with one trait of its own and the skill groups it can learn; a species with a learnable list and a species skill; the individual | a new element; Kin as stat lean only | variety from how a monster deals with the board, no hidden multiplier | [monsters.md §3](monsters.md#3-kins) |
+| 2026-11-21 | Slots | A monster starts with 4 slots; the 5th and 6th come by progression | 6 from the start | a kit that grows | [skills.md §1](skills.md#1-the-kit) |
+| 2026-11-21 | Stage breakthrough of a monster | One of three: a new slot, a development step, a Kin gift; Epic and Legendary take two | a fixed gain per stage; slots at fixed stages | a choice at every major step, no monster has everything | [monsters.md §5](monsters.md#5-growth) |
+| 2026-11-21 | Kins | Eight as a working list: Beast, Winged, Scaled, Swarm, Spirit, Stone, Flora, Void; Stone and Flora take the place of Ancient; Void monsters come from an egg of the trial only, never by Seal | more Kins; catching void monsters | each Kin needs a trait of its own, variety grows by species; the trial gets a trophy that stands on the board | [monsters.md §3](monsters.md#3-kins) |
+| 2026-11-21 | Trait, gifts and species skill | A Kin trait and Kin gifts take no slot; the species skill fills a slot and may be left out | the species skill as a fixed extra skill | no skill is mandatory | [monsters.md §3](monsters.md#3-kins) |
 
 ## Skills
 
@@ -249,6 +254,8 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-21 | Rule files aligned with the frame | overworld.md rewritten as the rules around the battle; battle_ingame.md, monsters.md and skills.md aligned; T15–T18, T20–T31, T51 and T52 archived, T54–T61 opened. Consequences drawn without the user (no injury, no XP of the tamer, nothing grown or sold and others) are listed in T50 for confirmation | — | — | [T50](todo/to-clarify/overworld/T50-set-the-frame-of-the-game.md) |
 | 2026-11-21 | The start | The player is an orphan and chooses one of three eggs from a nest; further monsters are caught | the player's family and its rivals | — | [vision.md §5](vision.md#5-the-start) |
 | 2026-11-21 | Crafting stays | Alchemy and smithing stay as they were; materials come from battles | crafting reduced to recipes; pills, weapons and armour as loot only | only the way to the materials changes | [vision.md §7](vision.md#7-making-things) |
+| 2026-11-21 | Eggs | The player spends the stat points and chooses the skills of every monster from an egg; a caught monster comes as it is; a game starts with one monster | free shaping for the first egg only; rolled hatching | an egg hatches for the player, and egg and catch differ | [overworld.md §4.1](overworld.md#41-obtaining-monsters) |
+| 2026-11-21 | Choices of the tamer | Branches of a tree exclude each other; vows: a strong benefit with a lasting restriction, at most one per stage, may shut out a Kin | — | decisions that make games differ | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
 
 ## Way of Working
 

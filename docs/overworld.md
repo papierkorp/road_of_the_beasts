@@ -84,8 +84,9 @@ Every way yields an **individual** ([monsters.md §1](monsters.md#1-species-and-
 |---|---|
 | **The first egg** | one of three from the nest ([vision.md §5](vision.md#5-the-start)) |
 | **Seal (in battle)** | the tamer lays Seal Ground in a wild area; a wild monster that ends its turn on it with few HP, or falls to 0 HP on it, is caught ([battle_ingame.md §7](battle_ingame.md#7-catching)) |
-| **Eggs** | hatched in the Nest. An egg fixes species and rarity; hatching rolls the shape. Where further eggs come from is not defined |
+| **Eggs** | hatched in the Nest. An egg fixes species and rarity; the player spends its stat points and chooses its four skills from the learnable list ([monsters.md §1](monsters.md#1-species-and-individual)). This holds for every egg, the first one too. Where further eggs come from is not defined |
 
+- **Void monsters** are never caught: a void egg is the trophy of a passed breakthrough trial ([monsters.md §3](monsters.md#3-kins)). Which trials give one is not defined.
 - **Two sources of Seal Ground,** both from the start: the Binding Seal item, used up when laid, and the Seal tamer skill, which costs nothing per battle but a tamer slot ([§5.4](#54-tamer-skills)). What limits a seal and its chances: [battle_ingame.md §7](battle_ingame.md#7-catching). How a Binding Seal is made is not defined.
 - Breeding is not defined.
 
@@ -138,7 +139,9 @@ The outline: [vision.md §8](vision.md#8-growth).
 - **A tree per stage;** a breakthrough opens the next one. The trees of earlier stages stay open.
 - **Path points** come from the depths of the void, one per depth won, and from nowhere else.
 - **A node** is one of: a tamer skill ([§5.4](#54-tamer-skills)), a development step for a tamer skill the player has, a blueprint for a part of a battleground ([battle_ingame.md §3](battle_ingame.md#3-battlegrounds)).
-- The systems, their trees, the price of a node and what tells one system from another are not defined.
+- **Branches exclude each other:** a tree has two or three branches, and the path points of a stage buy about half of it.
+- **Vows:** at each stage three vows are drawn and the player may take at most one. A vow is a strong benefit with a lasting restriction; it may shut out a Kin entirely, so that its monsters can no longer be bound.
+- The systems, their trees, the price of a node, the vows and what tells one system from another are not defined.
 
 ### 5.4 Tamer Skills
 
@@ -178,7 +181,7 @@ Tamer skills are **learned for good** and then brought into a battle in a tamer 
 
 [skills.md §8](skills.md#8-development) alone defines the development of skills, for monsters and tamers alike.
 
-- A monster gains development steps at its advancement steps ([monsters.md §5](monsters.md#5-growth)); they are never bought.
+- A monster gains development steps as a choice at a stage breakthrough and at late advancement steps ([monsters.md §5](monsters.md#5-growth)); they are never bought.
 - A skill is replaced with a **relearning pill**, outside a battle; the slot keeps its level.
 - Where the choice is made is free: anywhere outside a battle.
 

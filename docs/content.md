@@ -162,3 +162,38 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 | Soul Tier (70) | 10 / 1.0 / 1 / 1 / 3 / 3 | 4 / 1.1 / 3 / 2 / 3 / 3 | 5 / 2.7 / 5 / 1 / 3 / 3 |
 | Immortal (85) | 10 / 1.9 / 4 / 1 / 3 / 3 | 7 / 1.1 / 3 / 2 / 3 / 3 | 6 / 2.4 / 4 / 1 / 3 / 4 |
 | Sovereign (100) | 10 / 1.1 / 3 / 2 / 3 / 3 | 5 / 1.1 / 3 / 3 / 3 / 2 | 6 / 1.9 / 4 / 1 / 3 / 5 |
+
+## 7. Kins
+
+**Draft, checked against the rules of [battle.md](battle.md) on paper only; nothing is built or played.** The rules: [monsters.md §3](monsters.md#3-kins). A trait and a gift are passives that take no slot; each uses only moments and effects the battle already has, and is shown on the monster's sheet.
+
+**Trait and skill groups** (every Kin learns four of the six groups; Step and Basic Jab stay with every monster):
+
+| Kin | Trait | Learns | Never learns |
+|---|---|---|---|
+| **Beast** | **Follow-up:** after its Strike pushed a monster, it may enter the square that monster left, free of AP and Stamina; this is movement | Strike · movement · self · ground | zone · prop |
+| **Winged** | **Aloft:** ground does not act on it on entering or leaving; end-of-turn ground and traps act as usual | movement · self · ground · zone | Strike · prop |
+| **Scaled** | **Armoured:** takes no collision damage when it is the one moved; what it is moved into takes its damage | Strike · self · ground · prop | movement · zone |
+| **Swarm** | **Scatter:** its Step may enter the square of an ally; the two swap, which is movement for both | Strike · movement · ground · prop | self · zone |
+| **Spirit** | **Bodiless:** its movement passes over monsters; it cannot end on one | movement · self · zone · prop | Strike · ground |
+| **Stone** | **Bulwark:** gives cover like a solid prop: a Strike that hits it does not strike the square behind it | Strike · self · zone · prop | movement · ground |
+| **Flora** | **Rooted Growth:** ground it lays lasts 3 rounds | Strike · ground · zone · prop | movement · self |
+| **Void** | **Unmoored:** push and pull zones do not move it | Strike · movement · ground · zone | self · prop |
+
+- A movement skill that pushes on landing counts as movement, a Strike that leaves ground as a Strike: the group is what the skill is, not what it creates besides.
+- The group “self” holds few skills so far ([§4](#4-skills)).
+
+**Gifts** (three examples per Kin; a pool is meant to hold about six):
+
+| Kin | Gifts |
+|---|---|
+| Beast | **Tireless** (a movement skill costs it 1 Stamina less per use, at least 1) · **Surefoot** (Rubble costs it 1) · **Brawler** (Basic Jab twice per turn) |
+| Winged | **Updraft** (its movement passes over props) · **Dive** (in a turn in which it moved 3 or more squares its Basic Jab also pushes 1) · **Featherlight** (no collision damage from the board edge) |
+| Scaled | **Anchored** (cannot be pulled) · **Spined** (a monster moved into it takes 2 collision damage) · **Heatproof** (end-of-turn ground does not act on it) |
+| Swarm | **Overrun** (counts as two enemies for surrounding) · **Skitter** (its Step may go diagonally) · **Many Bodies** (Heal costs it 2 Stamina) |
+| Spirit | **Phase** (its movement passes over solid props too) · **Weightless** (springs no trap) · **Fleeting** (one more Wait per battle) |
+| Stone | **Keystone** (allies orthogonally next to it cannot be pushed or pulled) · **Hard Shell** (takes no damage from props) · **Monolith** (surrounding it takes three enemies) |
+| Flora | **Thornwalker** (damage from ground on entering does not hit it) · **Deep Roots** (props it creates last 3 rounds) · **Sap** (healing ground heals it 1 more, never above its maximum) |
+| Void | **Rift Walker** (its straight-line movement may go diagonally) · **Hollow** (stat changes of props do not act on it) · **Unravel** (a zone it ends its turn in loses 1 round) |
+
+The nine monsters of [§5](#5-the-nine-monsters) and the build still carry Ancient and ignore the groups.

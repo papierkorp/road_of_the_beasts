@@ -30,16 +30,16 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | 0 | Lifespan, day AP, length of a game, what a game leaves behind | T54 |
 | 0 | Wild area and dungeon: numbers, challenges, loot, where the boards come from | T55 |
 | 0 | The void: limits of the own battleground, depths, void monsters, the five trials | T56 |
-| 0 | Cultivation systems: how many, their trees, which tamer skills | T57 |
+| 0 | Cultivation systems: how many, their trees, which tamer skills, the vows | T57 |
 | 0 | Materials, pills, weapons, armour, the seal item, a currency | T58 |
 | 0 | The three eggs, the roster, further eggs | T59 |
+| 0 | Kins: the drafts of traits, skill groups and gifts ([content.md §7](content.md#7-kins)); species per Kin | T12 |
 | 0 | The hub's buildings, 3D or 2D board, the phone | T60 |
 | 1 | How does a stat shape split the points at the roll? | T03 |
 | 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills | T46 |
 | 13 | Seal: item and skill Seal Ground together? | T49 |
 | 3 | Which props of the catalogue stay, and do aura props return? | T41 |
 | 4 | Square control: do the current means suffice, or does it need more? | T39 |
-| 5 | How many kit slots are open at the start of the game, and what opens the others? | T05 |
 | 6 | Which pushes are cardinal, which use eight directions? | T04 |
 | 7 | How far may a shape that is no Strike be extended? | T06 |
 | 8 | The Thorn Idol passes a Strike on to its neighbours in the same turn: keep, change or drop? | T41 |
