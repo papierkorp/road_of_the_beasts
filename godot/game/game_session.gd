@@ -32,6 +32,65 @@ func map_summary(f: Fight) -> String:
 	return MapData.summary(FightBridge.map_of(f), BattleContent.shared())
 
 
+const EDITOR_SCENE := "res://battle/ingame/map_editor.tscn"
+
+
+## The limits of the player's own battleground for the running game (test values, T56).
+func _job() -> BattlegroundJob:
+	var v := game.values
+	var job := BattlegroundJob.new()
+	job.map = MapData.from_dict(game.battleground)
+	job.parts = game.parts.duplicate()
+	job.budget = GameValues.at(v.bg_budget, int(game.stage))
+	job.weights = v.bg_weights
+	job.min_side = v.bg_min_side
+	job.max_side = v.bg_max_side
+	job.enemy_starts = v.bg_enemy_starts
+	job.return_scene = HUB_SCENE
+	if game.battleground.is_empty():
+		job.map.width = v.bg_min_side + 1
+		job.map.height = v.bg_min_side + 1
+	return job
+
+
+## Opens the map editor on the player's battleground; `take_battleground` reads it back in the hub.
+func edit_battleground() -> void:
+	editor_job = _job()
+	get_tree().change_scene_to_file(EDITOR_SCENE)
+
+
+## Called by the hub when it is shown: a battleground saved in the editor becomes the player's.
+func take_battleground() -> void:
+	if editor_job != null and editor_job.saved and game != null:
+		game.battleground = MapData.to_dict(editor_job.map)
+		game.say("Your battleground is saved.")
+	editor_job = null
+
+
+## What keeps the player's battleground from being used in the void ([] = legal).
+func battleground_problems() -> PackedStringArray:
+	if game == null or game.battleground.is_empty():
+		return PackedStringArray(["you have not built a battleground yet"])
+	var job := _job()
+	return job.problems(job.map, BattleContent.shared())
+
+
+func battleground_summary() -> String:
+	if game == null or game.battleground.is_empty():
+		return "none yet"
+	var job := _job()
+	return "%s · budget %d / %d" % [MapData.summary(job.map, BattleContent.shared()), job.cost(job.map), job.budget]
+
+
+## The name of a part of a battleground ("ground:lava" -> "Lava (ground)").
+func part_name(part: String) -> String:
+	var kind := part.get_slice(":", 0)
+	var id := StringName(part.get_slice(":", 1))
+	var c := BattleContent.shared()
+	var def: Resource = c.ground(id) if kind == "ground" else (c.prop(id) if kind == "prop" else c.zone(id))
+	return "%s (%s)" % [def.get("display_name") if def != null else String(id), kind]
+
+
 ## Sends a fight into the battle scene; the hub reads `last_result` when the scene comes back.
 func start_fight(f: Fight) -> void:
 	BattleExperiment.reset()                 # the ingame battle plays none of the switches of the multiplayer draft

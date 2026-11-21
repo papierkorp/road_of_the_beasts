@@ -72,6 +72,8 @@ const PATH := "res://data/game/values.tres"
 @export var bg_enemy_starts := 0
 ## Parts the player owns from the start: part id -> number. A part id is "ground:<id>", "prop:<id>" or "zone:<id>".
 @export var bg_start_parts: Dictionary = {}
+## The battleground the player starts with, in the format of MapData ({} = none).
+@export var bg_start_map: Dictionary = {}
 ## Materials one unit of a part costs to build: form -> number (the tier is the tamer's stage or below).
 @export var bg_part_cost: Dictionary = {}
 

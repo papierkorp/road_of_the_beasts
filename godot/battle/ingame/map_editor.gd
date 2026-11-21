@@ -4,9 +4,14 @@ extends Control
 ## MapDef under res://data/maps. A rectangle of a chosen width and height; single squares can be taken out, so the
 ## outline is free. On the squares: ground (a Dragon Vein is a ground), one prop, one zone with its direction and
 ## its rounds, and the start areas of both sides. The ingame prototype plays the saved maps. No rule.
+##
+## The hub game opens the same editor for the player's own battleground (GameSession.editor_job, a BattlegroundJob):
+## then only the parts the player owns are offered, the size, the budget and the reachable start area of the
+## opponent are checked, and Save hands the map back instead of writing a file.
 
 const MENU_SCENE := "res://battle/ingame/ingame_prototype.tscn"
 const CELL := 52
+const JOB_CELL := 84                  # the player's battleground is small: squares a finger hits
 const TOOLS: Array[String] = ["Ground", "Dragon Vein", "Prop", "Zone", "Start area: you", "Start area: enemy",
 	"Remove square", "Restore square", "Clear square"]
 const DIRS := {"north": Vector2i(0, -1), "east": Vector2i(1, 0), "south": Vector2i(0, 1), "west": Vector2i(-1, 0)}
@@ -29,12 +34,20 @@ var _grid: GridContainer
 var _message: Label
 var _buttons := {}                   # Vector2i -> Button
 var _loading := false
+var _job: BattlegroundJob = null
+var _cell := CELL
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = UiTheme.create()
 	_content = BattleContent.shared()
+	_job = GameSession.editor_job
+	if _job != null:
+		map = _job.map.duplicate(true)
+		_cell = JOB_CELL
+		theme.default_font_size = 20
+		theme.set_font_size("font_size", "Button", 20)
 	var bg := ColorRect.new()
 	bg.color = Color(0.075, 0.082, 0.094)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -53,19 +66,23 @@ func _ready() -> void:
 	form.add_theme_constant_override("separation", 8)
 	split.add_child(form)
 	var title := Label.new()
-	title.text = "MAP EDITOR"
+	title.text = "MAP EDITOR" if _job == null else "YOUR BATTLEGROUND"
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", UiTheme.ACCENT)
 	form.add_child(title)
 	_pick = OptionButton.new()
 	_pick.item_selected.connect(func(_i: int): _load_picked())
 	form.add_child(_row("Map", _pick))
+	_pick.get_parent().visible = _job == null
 	_name = LineEdit.new()
 	_name.placeholder_text = "name of the map"
 	form.add_child(_row("Name", _name))
-	_width = _spin(MapDef.MIN_SIDE, MapDef.MAX_SIDE, map.width)
+	_name.get_parent().visible = _job == null
+	var low := MapDef.MIN_SIDE if _job == null else _job.min_side
+	var high := MapDef.MAX_SIDE if _job == null else _job.max_side
+	_width = _spin(low, high, map.width)
 	form.add_child(_row("Width", _width))
-	_height = _spin(MapDef.MIN_SIDE, MapDef.MAX_SIDE, map.height)
+	_height = _spin(low, high, map.height)
 	form.add_child(_row("Height", _height))
 	for sb: SpinBox in [_width, _height]:
 		sb.value_changed.connect(func(_v: float): _resize())
@@ -74,21 +91,21 @@ func _ready() -> void:
 	_ground = OptionButton.new()
 	for id in BattleContent.sorted_ids(_content.grounds):
 		var g: GroundDef = _content.grounds[id]
-		if ContentStatus.in_game(g) and id != GroundDef.WELL:
+		if (ContentStatus.in_game(g) if _job == null else _owned("ground", id) or id == GroundDef.PLAIN) and id != GroundDef.WELL:
 			_ground.add_item(g.display_name)
 			_ground.set_item_metadata(_ground.item_count - 1, id)
 	form.add_child(_row("Ground", _ground))
 	_prop = OptionButton.new()
 	for id in BattleContent.sorted_ids(_content.props):
 		var pd: PropDef = _content.props[id]
-		if ContentStatus.in_game(pd):
+		if ContentStatus.in_game(pd) if _job == null else _owned("prop", id):
 			_prop.add_item(pd.display_name)
 			_prop.set_item_metadata(_prop.item_count - 1, id)
 	form.add_child(_row("Prop", _prop))
 	_zone = OptionButton.new()
 	for id in BattleContent.sorted_ids(_content.zones):
 		var zd: BattleZoneDef = _content.zones[id]
-		if ContentStatus.in_game(zd):
+		if ContentStatus.in_game(zd) if _job == null else _owned("zone", id):
 			_zone.add_item(zd.display_name)
 			_zone.set_item_metadata(_zone.item_count - 1, id)
 	form.add_child(_row("Zone", _zone))
@@ -104,11 +121,11 @@ func _ready() -> void:
 	hint.text = "Click or drag over the squares. Each square holds one ground, one prop and one zone."
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.add_theme_color_override("font_color", UiTheme.DIM)
-	hint.add_theme_font_size_override("font_size", 13)
+	hint.add_theme_font_size_override("font_size", 13 if _job == null else 16)
 	form.add_child(hint)
 	_message = Label.new()
 	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_message.add_theme_font_size_override("font_size", 13)
+	_message.add_theme_font_size_override("font_size", 13 if _job == null else 16)
 	form.add_child(_message)
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -116,10 +133,10 @@ func _ready() -> void:
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
 	form.add_child(buttons)
-	for pair: Array in [["Back", func(): get_tree().change_scene_to_file(MENU_SCENE)], ["Save", _save]]:
+	for pair: Array in [["Back", _back], ["Save", _save]]:
 		var b := Button.new()
 		b.text = pair[0]
-		b.custom_minimum_size = Vector2(150, 44)
+		b.custom_minimum_size = Vector2(150, 44 if _job == null else 60)
 		b.pressed.connect(pair[1])
 		buttons.add_child(b)
 
@@ -135,6 +152,16 @@ func _ready() -> void:
 	_build_grid()
 
 
+## Whether the player of the hub game owns at least one unit of a part.
+func _owned(kind: String, id: StringName) -> bool:
+	return _job != null and int(_job.parts.get("%s:%s" % [kind, id], 0)) > 0
+
+
+func _back() -> void:
+	var target := MENU_SCENE if _job == null else _job.return_scene
+	get_tree().change_scene_to_file(target)
+
+
 func _row(label: String, field: Control) -> Control:
 	var row := HBoxContainer.new()
 	var l := Label.new()
@@ -142,6 +169,8 @@ func _row(label: String, field: Control) -> Control:
 	l.custom_minimum_size = Vector2(120, 0)
 	row.add_child(l)
 	field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	if _job != null:
+		field.custom_minimum_size.y = 56      # a finger hits it
 	row.add_child(field)
 	return row
 
@@ -205,9 +234,9 @@ func _build_grid() -> void:
 		for x in map.width:
 			var p := Vector2i(x, y)
 			var b := Button.new()
-			b.custom_minimum_size = Vector2(CELL, CELL)
+			b.custom_minimum_size = Vector2(_cell, _cell)
 			b.clip_text = true
-			b.add_theme_font_size_override("font_size", 11)
+			b.add_theme_font_size_override("font_size", 11 if _job == null else 14)
 			b.pressed.connect(_apply.bind(p))
 			b.mouse_entered.connect(_drag.bind(p))
 			_grid.add_child(b)
@@ -318,13 +347,37 @@ func _show(p: Vector2i) -> void:
 
 
 func _status() -> void:
+	if _job != null:
+		_job_status()
+		return
 	var problems := map.problems(_content)
 	_message.add_theme_color_override("font_color", Color(0.85, 0.63, 0.3) if not problems.is_empty() else UiTheme.DIM)
 	_message.text = "Not playable yet: " + "; ".join(problems) if not problems.is_empty() else \
 		"Playable: up to %d of your monsters against up to %d." % [map.free_starts(_content, 0).size(), map.free_starts(_content, 1).size()]
 
 
+## The hub game: what is placed against what is owned, the budget, and what keeps the battleground from being legal.
+func _job_status() -> void:
+	var problems := _job.problems(map, _content)
+	var used := BattlegroundJob.used(map)
+	var parts: PackedStringArray = []
+	for part: String in _job.parts:
+		parts.append("%s %d/%d" % [part.get_slice(":", 1).capitalize(), int(used.get(part, 0)), int(_job.parts[part])])
+	var text := "Budget %d / %d\nParts placed / owned: %s\n" % [_job.cost(map), _job.budget, ", ".join(parts) if not parts.is_empty() else "none"]
+	_message.add_theme_color_override("font_color", Color(0.85, 0.63, 0.3) if not problems.is_empty() else UiTheme.DIM)
+	_message.text = text + ("Not legal yet: " + "; ".join(problems) if not problems.is_empty() else
+		"Legal: up to %d of your monsters against up to %d." % [map.free_starts(_content, 0).size(), map.free_starts(_content, 1).size()])
+
+
 func _save() -> void:
+	if _job != null:
+		if not _job.problems(map, _content).is_empty():
+			_job_status()
+			return
+		_job.map = map
+		_job.saved = true
+		get_tree().change_scene_to_file(_job.return_scene)
+		return
 	map.display_name = _name.text.strip_edges()
 	map.id = MapDef.slug(map.display_name)
 	var why := map.save()

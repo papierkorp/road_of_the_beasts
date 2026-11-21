@@ -36,6 +36,7 @@ bg_budget = PackedInt32Array(8, 12, 16, 20, 24, 28)
 bg_weights = {"ground": 1, "dragon_vein": 3, "prop": 2, "zone": 2}
 bg_enemy_starts = 3
 bg_start_parts = {"ground:dragon_vein": 1, "prop:earth_wall": 2}
+bg_start_map = {"w": 5, "h": 5, "start_a": [[1, 4], [2, 4], [3, 4]], "start_b": [[1, 0], [2, 0], [3, 0]]}
 bg_part_cost = {"ore": 1}
 battlegrounds = [{"id": &"reed_shallows", "stage": 0, "mine": 3, "theirs": 2}, {"id": &"stone_circle", "stage": 0, "mine": 3, "theirs": 2}, {"id": &"vein_crossing", "stage": 0, "mine": 3, "theirs": 3}, {"id": &"thorn_gully", "stage": 1, "mine": 3, "theirs": 3}, {"id": &"gale_ridge", "stage": 1, "mine": 3, "theirs": 3}, {"id": &"ember_court", "stage": 1, "mine": 4, "theirs": 4}]
 plants = [{"id": &"moonleaf", "name": "Moonleaf", "stage": 0}, {"id": &"ironroot", "name": "Ironroot", "stage": 0}, {"id": &"sunpetal", "name": "Sunpetal", "stage": 0}, {"id": &"mistcap", "name": "Mistcap", "stage": 0}, {"id": &"frostfern", "name": "Frostfern", "stage": 1}, {"id": &"emberbloom", "name": "Emberbloom", "stage": 2}, {"id": &"soulvine", "name": "Soulvine", "stage": 3}, {"id": &"starmoss", "name": "Starmoss", "stage": 4}]

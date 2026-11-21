@@ -28,6 +28,7 @@ func _ready() -> void:
 	if GameSession.fight != null:
 		Places.resolve(game, GameSession.fight, GameSession.last_result)
 		GameSession.fight = null
+	GameSession.take_battleground()
 	SaveGame.save(game)
 	if game.is_over():
 		get_tree().change_scene_to_file.call_deferred(OVER_SCENE)

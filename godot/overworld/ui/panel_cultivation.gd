@@ -1,6 +1,6 @@
 class_name CultivationPanel
 extends HubPanel
-## Cultivation Hall (docs/vision.md §6).
+## Cultivation Hall (docs/vision.md §8): the tree of the cultivation system, a tree per stage.
 
 
 func title() -> String:
@@ -16,4 +16,33 @@ func hint() -> String:
 
 
 func build(into: VBoxContainer) -> void:
-	into.add_child(HubUi.label("Not built yet."))
+	var def := Cultivation.system(game)
+	into.add_child(HubUi.label("%s — %d path point(s). A depth of the void won gives one." % [def.display_name, game.path_points], 22, UiTheme.ACCENT))
+	into.add_child(HubUi.dim(def.blurb))
+	var list := HubUi.scroll(into)
+	var content := BattleContent.shared()
+	for s in Stage.Type.size():
+		var nodes := def.nodes_of(s)
+		if nodes.is_empty():
+			continue
+		var open := s <= int(game.stage)
+		list.add_child(HubUi.label("Tree of %s%s" % [Stage.stage_name(s as Stage.Type), "" if open else " — opens with the breakthrough"], 20, UiTheme.TEXT if open else UiTheme.DIM))
+		var row := HubUi.flow()
+		list.add_child(row)
+		for n: Dictionary in nodes:
+			var card := HubUi.card(row, 440)
+			var id := StringName(n["id"])
+			card.add_child(HubUi.label("%s (%d)" % [n["name"], int(n["cost"])], 20, UiTheme.ACCENT))
+			var what := ""
+			if n["kind"] == "tamer":
+				var t := content.tamer_skill(n["ref"])
+				what = "Tamer skill: %s" % (t.description if t != null else "?")
+			else:
+				what = "Lets you build %s in the workshop." % GameSession.part_name(String(n["ref"]))
+			card.add_child(HubUi.label(what))
+			var why := Cultivation.problem(game, id)
+			var b := HubUi.button("Buy" if why == "" else why.capitalize(), func():
+				Cultivation.buy(game, id)
+				hub.refresh(), 300)
+			b.disabled = why != ""
+			card.add_child(b)

@@ -65,6 +65,7 @@ static func new_game(p_seed: int, p_system: StringName, egg_species: StringName,
 	g.lifespan = GameValues.at(g.values.lifespan_days, 0)
 	g.ap = g.max_ap()
 	g.parts = g.values.bg_start_parts.duplicate()
+	g.battleground = g.values.bg_start_map.duplicate(true)
 	var def := GameData.monster(egg_species)
 	if def != null:
 		g.roster.append(MonsterInstance.grown(def, g.rng_for("egg")))

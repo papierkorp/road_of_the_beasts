@@ -205,7 +205,9 @@ func _ready() -> void:
 	var editor := Button.new()
 	editor.text = "Map editor"
 	editor.custom_minimum_size = Vector2(160, 46)
-	editor.pressed.connect(func(): get_tree().change_scene_to_file(EDITOR_SCENE))
+	editor.pressed.connect(func():
+		GameSession.editor_job = null
+		get_tree().change_scene_to_file(EDITOR_SCENE))
 	row2.add_child(editor)
 	var back := Button.new()
 	back.text = "Back"
