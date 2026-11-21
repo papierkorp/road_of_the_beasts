@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CultivationDef" format=3]
+
+[ext_resource type="Script" path="res://overworld/core/cultivation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"way_of_the_formation"
+display_name = "Way of the Formation"
+blurb = "The ground fights for you. Many parts for the battleground, few tamer skills."
+nodes = [{"id": &"dragon_vein", "stage": 0, "name": "Blueprint: Dragon Vein", "kind": "blueprint", "ref": &"ground:dragon_vein", "cost": 1, "needs": &""}, {"id": &"springwater", "stage": 0, "name": "Blueprint: Springwater", "kind": "blueprint", "ref": &"ground:springwater", "cost": 1, "needs": &""}, {"id": &"spike_trap", "stage": 0, "name": "Blueprint: Spike Trap", "kind": "blueprint", "ref": &"prop:spike_trap", "cost": 1, "needs": &""}, {"id": &"push_zone", "stage": 1, "name": "Blueprint: Push Zone", "kind": "blueprint", "ref": &"zone:push_zone", "cost": 1, "needs": &""}, {"id": &"lava", "stage": 1, "name": "Blueprint: Lava", "kind": "blueprint", "ref": &"ground:lava", "cost": 2, "needs": &"spike_trap"}, {"id": &"domain_glimpse", "stage": 1, "name": "Domain Glimpse", "kind": "tamer", "ref": &"domain_glimpse", "cost": 1, "needs": &""}]

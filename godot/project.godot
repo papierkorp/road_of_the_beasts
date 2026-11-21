@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 GameSettings="*res://game/game_settings.gd"
 GameSession="*res://game/game_session.gd"
+CheatMenu="*res://game/cheat_menu.gd"
 
 [display]
 

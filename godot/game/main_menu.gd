@@ -1,7 +1,9 @@
 extends Control
-## Start menu: the battle menu (ingame prototype and multiplayer battle), overview (debug tables of skills and monsters), settings, quit.
+## Start menu: a new game or the saved one (the hub game), the battle menu (ingame prototype and multiplayer battle), overview (debug tables of skills and monsters), settings, quit.
 
 const BATTLE_MENU_SCENE := "res://battle/battle_menu.tscn"
+const NEW_GAME_SCENE := "res://overworld/new_game.tscn"
+const HUB_SCENE := "res://overworld/hub.tscn"
 const OVERVIEW_SCENE := "res://game/overview.tscn"
 
 var _buttons: VBoxContainer
@@ -40,6 +42,9 @@ func _ready() -> void:
 	_buttons = VBoxContainer.new()
 	_buttons.add_theme_constant_override("separation", 10)
 	col.add_child(_buttons)
+	_add_button("New Game", func(): get_tree().change_scene_to_file(NEW_GAME_SCENE))
+	var cont := _add_button("Continue", _continue_game)
+	cont.disabled = not SaveGame.exists()
 	_add_button("Battle", func(): get_tree().change_scene_to_file(BATTLE_MENU_SCENE))
 	_add_button("Overview", func(): get_tree().change_scene_to_file(OVERVIEW_SCENE))
 	_add_button("Settings", _show_settings)
@@ -54,10 +59,20 @@ func _ready() -> void:
 func _add_button(text: String, action: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(280, 48)
+	b.custom_minimum_size = Vector2(320, 60)
 	b.pressed.connect(action)
 	_buttons.add_child(b)
 	return b
+
+
+func _continue_game() -> void:
+	var g := SaveGame.load_game()
+	if g == null:
+		return
+	GameSession.game = g
+	GameSession.fight = null
+	GameSession.hub_panel = &""
+	get_tree().change_scene_to_file(HUB_SCENE)
 
 
 func _show_settings() -> void:

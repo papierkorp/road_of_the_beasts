@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CultivationDef" format=3]
+
+[ext_resource type="Script" path="res://overworld/core/cultivation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"way_of_the_beast_lord"
+display_name = "Way of the Beast Lord"
+blurb = "Commands in the middle of a battle. Many tamer skills, few parts for the battleground."
+nodes = [{"id": &"swap_places", "stage": 0, "name": "Swap Places", "kind": "tamer", "ref": &"swap_places", "cost": 1, "needs": &""}, {"id": &"second_wind", "stage": 0, "name": "Second Wind", "kind": "tamer", "ref": &"second_wind", "cost": 1, "needs": &""}, {"id": &"thornbed", "stage": 0, "name": "Blueprint: Thornbed", "kind": "blueprint", "ref": &"ground:thornbed", "cost": 1, "needs": &""}, {"id": &"urgent_order", "stage": 1, "name": "Urgent Order", "kind": "tamer", "ref": &"urgent_order", "cost": 1, "needs": &""}, {"id": &"life_thread", "stage": 1, "name": "Life Thread", "kind": "tamer", "ref": &"life_thread", "cost": 2, "needs": &"urgent_order"}, {"id": &"stone_lion", "stage": 1, "name": "Blueprint: Stone Lion", "kind": "blueprint", "ref": &"prop:stone_lion", "cost": 1, "needs": &""}]

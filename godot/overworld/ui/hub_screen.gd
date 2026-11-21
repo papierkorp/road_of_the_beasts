@@ -1,0 +1,231 @@
+class_name HubScreen
+extends Control
+## The hub (docs/vision.md §6): one screen with the buildings; a tap opens a building and its actions. The head
+## shows the day, the day AP, the stage and the lifespan. The hub also reads the result of a fight it sent into the
+## battle scene (GameSession.fight) and saves the game whenever it is shown.
+
+const MENU_SCENE := "res://game/menu.tscn"
+const OVER_SCENE := "res://overworld/game_over.tscn"
+## The buildings in the order of the screen: id -> the script of its panel.
+const BUILDINGS := {}
+
+var game: GameState
+var _head: HBoxContainer
+var _body: VBoxContainer
+var _log: Label
+var _panel: HubPanel = null
+var _panel_id: StringName = &""
+## A fight the player is preparing (team and loadout) and what starts it.
+var _preparing: Fight = null
+var _on_start: Callable
+
+
+func _ready() -> void:
+	game = GameSession.game
+	if game == null:
+		get_tree().change_scene_to_file.call_deferred(MENU_SCENE)
+		return
+	if GameSession.fight != null:
+		Places.resolve(game, GameSession.fight, GameSession.last_result)
+		GameSession.fight = null
+	SaveGame.save(game)
+	if game.is_over():
+		get_tree().change_scene_to_file.call_deferred(OVER_SCENE)
+		return
+	var margin := HubUi.page(self)
+	var main := HubUi.col(14)
+	margin.add_child(main)
+	var head_panel := PanelContainer.new()
+	main.add_child(head_panel)
+	_head = HubUi.row(24)
+	head_panel.add_child(_head)
+	_body = HubUi.col(12)
+	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main.add_child(_body)
+	_log = HubUi.dim("")
+	main.add_child(_log)
+	GameSession.state_changed.connect(refresh)
+	_panel_id = GameSession.hub_panel
+	refresh()
+
+
+func panels() -> Dictionary:
+	return {&"nest": NestPanel, &"wild": WildPanel, &"dungeon": DungeonPanel, &"training": TrainingPanel,
+		&"scripture": ScripturePanel, &"cauldron": CauldronPanel, &"forge": ForgePanel, &"void": VoidPanel,
+		&"cultivation": CultivationPanel, &"workshop": WorkshopPanel}
+
+
+func _make_panel(id: StringName) -> HubPanel:
+	var p: HubPanel = panels()[id].new()
+	p.hub = self
+	p.game = game
+	return p
+
+
+func open(id: StringName) -> void:
+	_panel_id = id
+	_preparing = null
+	GameSession.hub_panel = id
+	refresh()
+
+
+## Rebuilds the whole screen from the state.
+func refresh() -> void:
+	if game.is_over():
+		SaveGame.save(game)
+		get_tree().change_scene_to_file.call_deferred(OVER_SCENE)
+		return
+	_build_head()
+	for c in _body.get_children():
+		_body.remove_child(c)
+		c.queue_free()
+	if _preparing != null:
+		_build_prepare()
+	elif _panel_id == &"":
+		_build_buildings()
+	else:
+		_panel = _make_panel(_panel_id)
+		var top := HubUi.row()
+		top.add_child(HubUi.button("← Hub", open.bind(&""), 140))
+		top.add_child(HubUi.title(_panel.title()))
+		_body.add_child(top)
+		_panel.build(_body)
+	var last: Array[String] = game.messages.slice(maxi(0, game.messages.size() - 3))
+	_log.text = "\n".join(PackedStringArray(last))
+
+
+func _build_head() -> void:
+	for c in _head.get_children():
+		_head.remove_child(c)
+		c.queue_free()
+	_head.add_child(HubUi.label("Day %d" % game.day, 22, UiTheme.TEXT, false))
+	_head.add_child(HubUi.label("Day AP %d / %d" % [game.ap, game.max_ap()], 22, UiTheme.ACCENT, false))
+	_head.add_child(HubUi.label(Stage.stage_name(game.stage), 22, UiTheme.TEXT, false))
+	var left := "Lifespan: %d days" % game.lifespan if not game.forced_trial else "Lifespan over: take the trial"
+	_head.add_child(HubUi.label(left, 22, HubUi.WARN if game.lifespan <= 2 else UiTheme.TEXT, false))
+	var system := CultivationDef.of(game.system)
+	_head.add_child(HubUi.label(system.display_name if system != null else "", 18, UiTheme.DIM, false))
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_head.add_child(gap)
+	var end := HubUi.button("End day", _end_day, 160)
+	end.disabled = not game.can_end_day()
+	_head.add_child(end)
+	_head.add_child(HubUi.button("Menu", func(): get_tree().change_scene_to_file(MENU_SCENE), 110))
+
+
+func _build_buildings() -> void:
+	if game.forced_trial:
+		_body.add_child(HubUi.label("Your lifespan has run out. Only the Void Gate is open: take the breakthrough trial.", 22, HubUi.WARN))
+	var grid := GridContainer.new()
+	grid.columns = 5
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 14)
+	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body.add_child(grid)
+	for id: StringName in panels():
+		var p := _make_panel(id)
+		var b := Button.new()
+		b.custom_minimum_size = Vector2(0, 190)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		b.disabled = game.forced_trial and id != &"void"
+		b.pressed.connect(open.bind(id))
+		grid.add_child(b)
+		var inner := HubUi.col(6)
+		inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 12)
+		inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		inner.alignment = BoxContainer.ALIGNMENT_CENTER
+		b.add_child(inner)
+		for l: Label in [HubUi.label(p.title(), 24, UiTheme.ACCENT), HubUi.label(p.pillar(), 16, UiTheme.DIM), HubUi.label(p.hint(), 18)]:
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			inner.add_child(l)
+
+
+func _end_day() -> void:
+	if game.end_day():
+		SaveGame.save(game)
+	refresh()
+
+
+# ---------- preparing a fight ----------
+
+## Shows a fight before it starts: the battleground, the opponents, the team and the tamer slots. `on_start` pays
+## for it (day AP) and returns false when the player cannot afford it.
+func prepare(f: Fight, on_start: Callable) -> void:
+	_preparing = f
+	_on_start = on_start
+	if f.team.is_empty():
+		f.team = game.default_team(f.max_team)
+	if f.tamer.is_empty():
+		f.tamer = game.default_loadout()
+	refresh()
+
+
+func _build_prepare() -> void:
+	var f := _preparing
+	var top := HubUi.row()
+	top.add_child(HubUi.button("← Back", func():
+		_preparing = null
+		refresh(), 140))
+	top.add_child(HubUi.title(f.title))
+	_body.add_child(top)
+	var list := HubUi.scroll(_body)
+	var place := HubUi.card(list)
+	place.add_child(HubUi.label("Battleground: %s" % GameSession.map_summary(f)))
+	if f.loot_text != "":
+		place.add_child(HubUi.label("A win gives: %s" % f.loot_text))
+	var foes := HubUi.card(list)
+	foes.add_child(HubUi.label("Opponents%s" % (" (wild: they can be caught on Seal Ground)" if f.wild else ""), 20, UiTheme.ACCENT))
+	for e in f.enemies:
+		foes.add_child(HubUi.label(HubUi.monster_lines(e)))
+	var mine := HubUi.card(list)
+	mine.add_child(HubUi.label("Your team: %d of at most %d" % [f.team.size(), f.max_team], 20, UiTheme.ACCENT))
+	for m in game.roster:
+		var b := Button.new()
+		b.toggle_mode = true
+		b.button_pressed = f.team.has(m)
+		b.disabled = m.current_hp <= 0 or (not f.team.has(m) and f.team.size() >= f.max_team)
+		b.text = HubUi.monster_lines(m, false)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(0, HubUi.TAP + 16)
+		b.toggled.connect(func(on: bool):
+			if on and not f.team.has(m):
+				f.team.append(m)
+			elif not on:
+				f.team.erase(m)
+			refresh())
+		mine.add_child(b)
+	var slots := HubUi.card(list)
+	slots.add_child(HubUi.label("Tamer slots: %d of %d, each once in the battle" % [f.tamer.size(), game.tamer_slots()], 20, UiTheme.ACCENT))
+	var content := BattleContent.shared()
+	for id in game.tamer_skills:
+		var def := content.tamer_skill(id)
+		var b := Button.new()
+		b.toggle_mode = true
+		b.button_pressed = f.tamer.has(id)
+		b.disabled = not f.tamer.has(id) and f.tamer.size() >= game.tamer_slots()
+		b.text = "%s: %s" % [def.display_name, def.description] if def != null else String(id)
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(0, HubUi.TAP)
+		b.toggled.connect(func(on: bool):
+			if on and not f.tamer.has(id):
+				f.tamer.append(id)
+			elif not on:
+				f.tamer.erase(id)
+			refresh())
+		slots.add_child(b)
+	var go := HubUi.button("Fight", _start_fight, 260)
+	go.disabled = f.team.is_empty()
+	_body.add_child(go)
+
+
+func _start_fight() -> void:
+	var f := _preparing
+	if f == null or f.team.is_empty() or not bool(_on_start.call(f)):
+		refresh()
+		return
+	_preparing = null
+	SaveGame.save(game)
+	GameSession.start_fight(f)

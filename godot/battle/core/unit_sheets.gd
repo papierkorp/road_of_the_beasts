@@ -32,6 +32,14 @@ static func from_instance(inst: MonsterInstance, _content: BattleContent = null)
 		s.reach = def.reach
 		s.ap = def.ap
 		s.current_hp = -1 if inst.current_hp >= inst.max_hp() else clampi(inst.current_hp, 1, def.hp)
+	elif inst.uses_points():                     # the points model of the hub game: every stat is bought
+		s.hp = clampi(int(inst.stats["hp"]), 1, 10)
+		s.pace = clampf(float(inst.stats["pace"]), 0.1, 10.0)
+		s.movement = maxi(1, int(inst.stats["move"]))
+		s.tpr = clampi(int(inst.stats["tpr"]), 1, 3)
+		s.reach = maxi(1, int(inst.stats["reach"]))
+		s.ap = clampi(int(inst.stats["ap"]), 1, 5)
+		s.current_hp = clampi(inst.current_hp, 1, s.hp)
 	else:
 		s.hp = clampi(int(inst.stats["hp"]), 1, 10)
 		s.pace = clampf(float(inst.stats["pace"]), 0.1, 10.0)

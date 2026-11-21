@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="GameValues" format=3]
+
+[ext_resource type="Script" path="res://overworld/core/game_values.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+day_ap = PackedInt32Array(3, 3, 4, 4, 5, 5)
+lifespan_days = PackedInt32Array(8, 9, 10, 11, 12, 0)
+xp_per_win = PackedInt32Array(30, 75, 190, 470, 1170, 2900)
+eggs = [&"blaze_tiger", &"moss_turtle", &"dusk_moth"]
+roster_cap = 8
+egg_nights = 1
+wild_encounters = 4
+wild_enemies = [[1, 2], [2, 3], [2, 3]]
+wild_ap = 1
+rare_every = 4
+rare_announce = 1
+rare_stays = 2
+egg_chance = 15
+dungeon_layers = PackedInt32Array(2, 2, 2, 1)
+dungeon_enemies = [[1, 2], [2, 3], [2, 3]]
+dungeon_node_loot = 2
+dungeon_defeat_keeps = 50
+dungeon_rest_layers = PackedInt32Array(2)
+rest_heal = 2
+dungeon_challenges = [{"kind": "streak", "n": 1}, {"kind": "rounds", "n": 6}, {"kind": "streak", "n": 2}]
+harvest_yield = 3
+void_depths = 3
+void_ap = 1
+void_enemies = PackedInt32Array(1, 2, 2)
+void_steps_above = PackedInt32Array(1, 2, 3)
+trial_materials = 1
+bg_min_side = 4
+bg_max_side = 7
+bg_budget = PackedInt32Array(8, 12, 16, 20, 24, 28)
+bg_weights = {"ground": 1, "dragon_vein": 3, "prop": 2, "zone": 2}
+bg_enemy_starts = 3
+bg_start_parts = {"ground:dragon_vein": 1, "prop:earth_wall": 2}
+bg_part_cost = {"ore": 1}
+battlegrounds = [{"id": &"reed_shallows", "stage": 0, "mine": 3, "theirs": 2}, {"id": &"stone_circle", "stage": 0, "mine": 3, "theirs": 2}, {"id": &"vein_crossing", "stage": 0, "mine": 3, "theirs": 3}, {"id": &"thorn_gully", "stage": 1, "mine": 3, "theirs": 3}, {"id": &"gale_ridge", "stage": 1, "mine": 3, "theirs": 3}, {"id": &"ember_court", "stage": 1, "mine": 4, "theirs": 4}]
+plants = [{"id": &"moonleaf", "name": "Moonleaf", "stage": 0}, {"id": &"ironroot", "name": "Ironroot", "stage": 0}, {"id": &"sunpetal", "name": "Sunpetal", "stage": 0}, {"id": &"mistcap", "name": "Mistcap", "stage": 0}, {"id": &"frostfern", "name": "Frostfern", "stage": 1}, {"id": &"emberbloom", "name": "Emberbloom", "stage": 2}, {"id": &"soulvine", "name": "Soulvine", "stage": 3}, {"id": &"starmoss", "name": "Starmoss", "stage": 4}]
+properties = [{"id": &"mending", "name": "Mending", "pill": "Healing pill: one monster regains 2 HP", "use": "dungeon"}, {"id": &"clarity", "name": "Clarity", "pill": "Relearning pill: a skill slot takes another skill", "use": "hub"}, {"id": &"change", "name": "Change", "pill": "Reshape pill: every stat point of a monster comes back", "use": "hub"}, {"id": &"bloodline", "name": "Bloodline", "pill": "Bloodline pill: the rarity of a monster rises by one", "use": "hub"}, {"id": &"warding", "name": "Warding", "pill": "Warding pill: the next hit on one monster this round deals nothing", "use": "battle"}, {"id": &"swiftness", "name": "Swiftness", "pill": "Swiftness pill: one monster +1 Pace point until the round ends", "use": "battle"}, {"id": &"anchoring", "name": "Anchoring", "pill": "Anchoring pill: one monster cannot be pushed or pulled until the round ends", "use": "battle"}]
+properties_per_plant = 3
+tempers = ["Wide", "Lasting", "Keen", "Steady"]
