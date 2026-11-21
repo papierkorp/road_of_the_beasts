@@ -117,3 +117,52 @@ func test_a_part_is_built_from_a_blueprint_and_materials() -> void:
 	assert_int(int(g.parts[part])).is_equal(1)
 	assert_int(g.count(Materials.ore(0))).is_equal(0)
 	assert_bool(Cultivation.build_part(g, part)).is_false()          # no ore left
+
+
+func test_every_system_has_two_branches_and_every_node_belongs_to_one() -> void:
+	for sid in CultivationDef.ids():
+		var def := CultivationDef.of(sid)
+		assert_int(def.branches.size()).is_equal(2)
+		var ids := [String(def.branches[0]["id"]), String(def.branches[1]["id"])]
+		for stage in 2:
+			var cost := {ids[0]: 0, ids[1]: 0}
+			for n: Dictionary in def.nodes_of(stage):
+				assert_bool(ids.has(String(n["branch"]))).is_true()
+				cost[String(n["branch"])] += int(n["cost"])
+				if n["kind"] == "perk":
+					assert_int((n["effects"] as Dictionary).size()).is_equal(1)
+			for b: String in ids:                               # a stage gives 3 path points: about one branch
+				assert_bool(int(cost[b]) >= 2 and int(cost[b]) <= 4).is_true()
+
+
+func test_a_perk_of_the_tree_changes_what_it_names() -> void:
+	var g := GameState.new_game(71, &"way_of_the_artificer", &"blaze_tiger")
+	g.path_points = 9
+	g.stage = Stage.Type.FOUNDATION
+	g.add_item("weapon:Ember Brand (Qi Gathering)", 1)
+	g.add_item("weapon:Thorn Whip (Qi Gathering)", 1)
+	g.add_item("pill:warding:0", 2)
+	var items := Crafting.battle_items(g)
+	var both: Array[StringName] = [&"seal", &"weapon_ember_brand", &"weapon_thorn_whip"]
+	assert_int(g.tamer_slots()).is_equal(2)
+	assert_bool(g.loadout_fits(both, items)).is_false()
+	assert_bool(Cultivation.buy(g, &"weapon_rack")).is_true()
+	assert_bool(g.loadout_fits(both, items)).is_true()         # the rack takes one weapon
+	both.append(&"pill_warding")
+	assert_bool(g.loadout_fits(both, items)).is_false()        # a rack takes no pill
+	assert_bool(Cultivation.buy(g, &"pill_pouch")).is_true()
+	assert_bool(g.loadout_fits(both, items)).is_true()
+	assert_bool(Cultivation.buy(g, &"lasting_dose")).is_true()
+	var f := Fight.new()
+	f.tamer_items = items
+	var r := BattleResult.new()
+	r.used_tamer = [&"pill_warding"]
+	Crafting.spend_used(g, f, r)
+	assert_int(g.count("pill:warding:0")).is_equal(2)          # the first pill of a battle is not used up
+	assert_bool(Cultivation.buy(g, &"twin_grip")).is_true()
+	assert_int(g.vow_sum("weapon_uses")).is_equal(2)
+	var lord := GameState.new_game(72, &"way_of_the_beast_lord", &"blaze_tiger")
+	lord.path_points = 1
+	var cap := lord.roster_cap()
+	Cultivation.buy(lord, &"wider_nest")
+	assert_int(lord.roster_cap()).is_equal(cap + 2)

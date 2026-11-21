@@ -248,7 +248,7 @@ static func harvest(game: GameState, stage: int) -> Dictionary:
 		return {}
 	game.spend_ap(game.values.harvest_ap)
 	game.dungeon_runs += 1
-	var loot := _loot(game, game.rng_for("harvest%d" % game.dungeon_runs), stage, game.values.harvest_yield)
+	var loot := _loot(game, game.rng_for("harvest%d" % game.dungeon_runs), stage, game.values.harvest_yield + game.vow_sum("harvest"))
 	for id in loot:
 		game.add_item(String(id), int(loot[id]))
 	game.say("Harvest of the dungeon of %s: %s." % [Stage.stage_name(stage as Stage.Type), Materials.list_text(loot, game.values)])

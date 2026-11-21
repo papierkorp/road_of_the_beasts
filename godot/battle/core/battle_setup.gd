@@ -89,6 +89,8 @@ static func build(request: BattleRequest) -> Battle:
 			var def := content.tamer_skill(id)
 			if def != null and not b.tamer_loadout[side].has(def):
 				b.tamer_loadout[side].append(def)
+		if side == 0:
+			b.tamer_uses[0] = request.player_tamer_uses.duplicate()
 	if request.battle_kind == BattleRequest.INGAME and request.enemy_wild:
 		b.wild[1] = true                         # a wild side has no tamer (docs/battle_ingame.md §7)
 		b.tamer_loadout[1] = []

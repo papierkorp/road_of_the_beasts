@@ -24,7 +24,7 @@ static func error(b: Battle, a: Dictionary) -> String:
 	var def: TamerSkillDef = b.tamer_skill(side, a.get("skill", &""))
 	if def == null:
 		return "this tamer skill is not in the loadout"
-	if b.tamer_used[side].has(def.id):
+	if b.tamer_spent(side, def.id):
 		return "%s was already used this battle" % def.display_name
 	match def.effect:
 		TamerSkillDef.SWAP_PLACES:
@@ -100,7 +100,7 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 		return false
 	var side: int = int(a["side"])
 	var def: TamerSkillDef = b.tamer_skill(side, a["skill"])
-	b.tamer_used[side][def.id] = true
+	b.tamer_used[side][def.id] = int(b.tamer_used[side].get(def.id, 0)) + 1
 	b.emit(&"tamer_skill", {"side": side, "skill": def.id})
 	match def.effect:
 		TamerSkillDef.SWAP_PLACES:

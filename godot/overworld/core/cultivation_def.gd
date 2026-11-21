@@ -8,8 +8,12 @@ const DIR := "res://data/cultivation"
 @export var id: StringName
 @export var display_name: String = ""
 @export_multiline var blurb: String = ""
-## {"id", "stage" (the tree it belongs to), "name", "kind": "tamer" | "blueprint", "ref": tamer skill id or part id,
-## "cost": path points, "needs": id of the node that must be bought first, or ""}.
+## The two branches of its trees: {"id", "name", "text"}. The path points of a stage buy about one of them.
+@export var branches: Array = []
+## {"id", "stage" (the tree it belongs to), "branch", "name", "kind": "tamer" | "blueprint" | "perk", "ref": tamer
+## skill id or part id, "cost": path points, "needs": id of the node that must be bought first, or ""; a perk also
+## has "text" and "effects" {key: value}}. The effect keys the build reads: roster, bench_xp, solo_xp, bg_budget,
+## wild_ore, harvest, weapon_slot, pill_slot, weapon_uses, pill_keep.
 @export var nodes: Array = []
 
 static var _all := {}

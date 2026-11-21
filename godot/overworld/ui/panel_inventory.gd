@@ -34,7 +34,7 @@ func build(into: VBoxContainer) -> void:
 	you.add_child(HubUi.label("Tamer skills: %s" % ", ".join(names)))
 
 	var mons := HubUi.card(list)
-	mons.add_child(HubUi.label("Monsters: %d, eggs: %d (room for %d)" % [game.roster.size(), game.eggs.size(), game.values.roster_cap], 22, UiTheme.ACCENT))
+	mons.add_child(HubUi.label("Monsters: %d, eggs: %d (room for %d)" % [game.roster.size(), game.eggs.size(), game.roster_cap()], 22, UiTheme.ACCENT))
 	for m in game.roster:
 		mons.add_child(HubUi.label("%s · %s" % [m.title(), m.xp_text()]))
 

@@ -101,21 +101,44 @@ func vow_def(id: StringName) -> Dictionary:
 	return {}
 
 
-## The sum of an effect over the vows taken (a flag counts 1).
+## The sum of an effect over the vows taken and the perks bought in the tree (a flag counts 1).
 func vow_sum(key: String) -> int:
 	var sum := 0
 	for id in vows:
 		var e: Dictionary = vow_def(id).get("effects", {})
 		if e.has(key):
 			sum += int(e[key])
+	var def := CultivationDef.of(system)
+	if def != null:
+		for id in nodes:
+			var perk: Dictionary = def.node(id).get("effects", {})
+			if perk.has(key):
+				sum += int(perk[key])
 	return sum
 
 
 func vow_has(key: String) -> bool:
+	return vow_sum(key) != 0 or _vow_names(key)
+
+
+func _vow_names(key: String) -> bool:
 	for id in vows:
 		if (vow_def(id).get("effects", {}) as Dictionary).has(key):
 			return true
 	return false
+
+
+## Whether a loadout fits the tamer slots: a slot of the stage takes anything, a rack only a weapon, a pouch only
+## a pill. `items`: tamer skill id -> the item it stands for.
+func loadout_fits(loadout: Array[StringName], items: Dictionary) -> bool:
+	var weapons := 0
+	var pills := 0
+	for id in loadout:
+		var form := Materials.form(String(items.get(id, "")))
+		weapons += 1 if form == "weapon" else 0
+		pills += 1 if form == "pill" else 0
+	var need := loadout.size() - mini(weapons, vow_sum("weapon_slot")) - mini(pills, vow_sum("pill_slot"))
+	return need <= tamer_slots()
 
 
 ## The values of an effect over the vows taken (the Kins of `ban_kin`, of `kin_choice`).
@@ -223,7 +246,7 @@ func end_day() -> bool:
 		m.heal_full()
 	for e in eggs.duplicate():
 		e["nights"] = int(e["nights"]) - 1
-		if int(e["nights"]) <= 0 and roster.size() < values.roster_cap:
+		if int(e["nights"]) <= 0 and roster.size() < roster_cap():
 			eggs.erase(e)
 			var def := GameData.monster(StringName(e["species"]))
 			_join(MonsterInstance.hatched(def, int(stage) * 3))
@@ -274,8 +297,12 @@ func take_item(item: String, n := 1) -> bool:
 	return true
 
 
+func roster_cap() -> int:
+	return values.roster_cap + vow_sum("roster")
+
+
 func has_room() -> bool:
-	return roster.size() + eggs.size() < values.roster_cap
+	return roster.size() + eggs.size() < roster_cap()
 
 
 func add_monster(m: MonsterInstance) -> bool:
@@ -326,6 +353,14 @@ static func step_of(place_stage: int, sub_tier := 1) -> int:
 func award_xp(team: Array[MonsterInstance], place_stage: int) -> Array[String]:
 	var lines: Array[String] = []
 	var amount := GameValues.at(values.xp_per_win, place_stage)
+	var fought := team.filter(func(m: MonsterInstance) -> bool: return m.current_hp > 0)
+	if fought.size() == 1 and team.size() == 1:
+		amount += amount * vow_sum("solo_xp") / 100
+	var bench := amount * vow_sum("bench_xp") / 100
+	if bench > 0:
+		for m in roster:
+			if not team.has(m):
+				m.gain_xp(bench, stage)
 	for m in team:
 		if m.current_hp <= 0:
 			continue

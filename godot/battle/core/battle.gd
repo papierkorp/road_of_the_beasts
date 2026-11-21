@@ -63,7 +63,9 @@ var voidscar_ground: StringName = &"voidscar"
 var surges: Array[PendingSurge] = []
 ## Loadouts per side: slotted tamer skills and the ids used this battle.
 var tamer_loadout: Array = [[], []]
-var tamer_used: Array[Dictionary] = [{}, {}]
+var tamer_used: Array[Dictionary] = [{}, {}]      # id -> times used
+## Uses per battle of a loadout entry (default 1): id -> uses.
+var tamer_uses: Array[Dictionary] = [{}, {}]
 ## Catching (docs/battle_ingame.md §7, BattleCatch): sides without a tamer, the Seal Ground on the board
 ## (pos -> {side, base}) and the seed and count of the catch rolls.
 var wild: Array[bool] = [false, false]
@@ -249,6 +251,11 @@ func step_cost(u: BattleUnit, to) -> int:
 ## The least a Step of `u` costs right now.
 func min_step_cost(u: BattleUnit) -> int:
 	return 0 if u != null and follow.get("who", &"") == u.id else BattleMoves.step_ap()
+
+
+## Whether a loadout entry has no use left in this battle.
+func tamer_spent(side: int, id: StringName) -> bool:
+	return int(tamer_used[side].get(id, 0)) >= int(tamer_uses[side].get(id, 1))
 
 
 func relocate(u: BattleUnit, to: Vector2i) -> void:
@@ -649,6 +656,7 @@ func clone() -> Battle:
 		b.surges.append(s.clone())
 	b.tamer_loadout = [tamer_loadout[0].duplicate(), tamer_loadout[1].duplicate()]
 	b.tamer_used = [tamer_used[0].duplicate(), tamer_used[1].duplicate()]
+	b.tamer_uses = [tamer_uses[0].duplicate(), tamer_uses[1].duplicate()]
 	b.wild = wild.duplicate()
 	b.seals = seals.duplicate(true)
 	b.roll_seed = roll_seed

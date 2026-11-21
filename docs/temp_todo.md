@@ -21,7 +21,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. Open in the build: ends and board events in the map editor (T46), Seal Ground played by hand (T49), a wild AI that values Seal Ground; then the rebuild (T42).
-- **Tests:** 357 cases, 0 failures, a full run in about 45 s ([implementation.md](todo/implementation.md)).
+- **Tests:** 360 cases, 0 failures, a full run in about 45 s ([implementation.md](todo/implementation.md)).
 
 ## Open Questions for the User
 
@@ -30,7 +30,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | 0 | Lifespan, day AP, length of a game, what a game leaves behind | T54 |
 | 0 | Wild area and dungeon: numbers, challenges, loot, where the boards come from | T55 |
 | 0 | The void: limits of the own battleground, depths, void monsters, the five trials | T56 |
-| 0 | Cultivation systems: the third system, the nodes of the branches, which tamer skills, the list of vows | T57 |
+| 0 | Cultivation systems: the nodes of the branches, which tamer skills, the list of vows | T57 |
 | 0 | Materials, pills, weapons, armour, the seal item, a currency | T58 |
 | 0 | The three eggs, the roster, further eggs | T59 |
 | 0 | Kins: the drafts of traits, skill groups and gifts ([content.md §7](content.md#7-kins)); species per Kin | T12 |

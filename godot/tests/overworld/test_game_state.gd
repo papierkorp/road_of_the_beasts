@@ -135,7 +135,7 @@ func test_a_reshape_gives_every_point_back() -> void:
 
 
 func test_the_cultivation_systems_and_the_eggs_of_the_values_exist() -> void:
-	assert_int(CultivationDef.ids().size()).is_equal(2)
+	assert_int(CultivationDef.ids().size()).is_equal(3)
 	for id in GameValues.shared().eggs:
 		assert_object(GameData.monster(id)).is_not_null()
 	var content := BattleContent.shared()

@@ -140,8 +140,8 @@ The outline: [vision.md §8](vision.md#8-growth).
 - **One system per game,** chosen at the start.
 - **A tree per stage;** a breakthrough opens the next one. The trees of earlier stages stay open.
 - **Path points** come from the depths of the void, one per depth won, and from nowhere else.
-- **A node** is one of: a tamer skill ([§5.4](#54-tamer-skills)), a development step for a tamer skill the player has, a blueprint for a part of a battleground ([battle_ingame.md §3](battle_ingame.md#3-battlegrounds)).
-- **Branches exclude each other:** a tree has two branches, and the path points of a stage buy about one of them. The Way of the Beast Lord: a pack (fight wide) and a champion (carry one monster). The Way of the Formation: hazard (ground and traps that harm) and bulwark (walls, props and Dragon Veins that take room). A third system is planned.
+- **A node** is one of: a tamer skill ([§5.4](#54-tamer-skills)), a development step for a tamer skill the player has, a blueprint for a part of a battleground ([battle_ingame.md §3](battle_ingame.md#3-battlegrounds)), a lasting benefit of the system.
+- **Branches exclude each other:** a tree has two branches, and the path points of a stage buy about one of them. The Way of the Beast Lord: a pack (fight wide) and a champion (carry one monster). The Way of the Formation: hazard (ground and traps that harm) and bulwark (walls, props and Dragon Veins that take room). The Way of the Artificer: blade (the weapons of the forge) and cauldron (pills taken in the battle). Each system carries one pillar: the monsters, the board, the tamer.
 - **Vows:** at the start of a game and after every breakthrough three vows are drawn; the player takes one or none, and at most three in a game. A vow is a strong benefit with a lasting restriction and holds for the rest of the game. It may shut out a Kin: the player binds no monster of that Kin again, and those in the roster stay. A benefit for the monsters "owned" means the roster at the moment of the vow.
 - The systems, their trees, the price of a node, the vows and what tells one system from another are not defined.
 

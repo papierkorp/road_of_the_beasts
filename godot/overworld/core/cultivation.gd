@@ -36,7 +36,7 @@ static func buy(game: GameState, node_id: StringName) -> bool:
 	if n["kind"] == "tamer":
 		if not game.tamer_skills.has(StringName(n["ref"])):
 			game.tamer_skills.append(StringName(n["ref"]))
-	else:
+	elif n["kind"] == "blueprint":
 		if not game.blueprints.has(StringName(n["ref"])):
 			game.blueprints.append(StringName(n["ref"]))
 	game.say("Learned: %s." % n["name"])

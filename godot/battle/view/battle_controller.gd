@@ -228,7 +228,7 @@ func _on_action(id: StringName) -> void:
 		var tid := StringName(text.trim_prefix(TAMER_PREFIX))
 		var again := mode == &"tamer" and tamer_id == tid
 		_clear_mode()
-		if not again and battle.tamer_skill(PLAYER_SIDE, tid) != null and not battle.tamer_used[PLAYER_SIDE].has(tid):
+		if not again and battle.tamer_skill(PLAYER_SIDE, tid) != null and not battle.tamer_spent(PLAYER_SIDE, tid):
 			mode = &"tamer"
 			tamer_id = tid
 	_refresh()
@@ -835,7 +835,7 @@ func _actions() -> Array:
 			"enabled": mine and s.is_active() and why == "", "selected": mode == &"skill" and slot == i,
 			"card": {"title": label, "rows": rows, "note": why}})
 	for def: TamerSkillDef in battle.tamer_loadout[PLAYER_SIDE]:
-		var used: bool = battle.tamer_used[PLAYER_SIDE].has(def.id)
+		var used: bool = battle.tamer_spent(PLAYER_SIDE, def.id)
 		out.append({"id": StringName(TAMER_PREFIX + String(def.id)), "group": &"tamer", "text": "%s\n%s" % [def.display_name, "used" if used else "tamer"],
 			"enabled": mine and not used, "selected": mode == &"tamer" and tamer_id == def.id,
 			"card": {"title": def.display_name, "rows": [["", def.description], ["", def.source_text()]]}})

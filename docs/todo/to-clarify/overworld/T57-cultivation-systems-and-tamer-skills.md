@@ -14,6 +14,6 @@
 | Beast Swap | Never played; it needs a monster of the roster outside the battle |
 | What a stage opens | Anything besides tamer slots, the tree and the places |
 
-- **Decided on 2026-11-21:** two branches per system (pack and champion; hazard and bulwark), a third system is wanted; vows as in [overworld.md §5.3](../../../overworld.md#53-the-cultivation-system), built with sixteen test vows. Open: what the third system is (proposed: the tamer's own tools, with a branch of weapons and one of pills), the nodes of each branch, the final list of vows.
+- **Decided on 2026-11-21:** two branches per system (pack and champion; hazard and bulwark), a third system is wanted; vows as in [overworld.md §5.3](../../../overworld.md#53-the-cultivation-system), built with sixteen test vows. The third system is the Way of the Artificer (blade, cauldron); all three are built with test nodes. Open: the nodes of each branch, the final list of vows, the trees beyond Foundation.
 
 - **Done when:** every row is decided and written into [overworld.md §5](../../../overworld.md#5-progression) and [battle_ingame.md §5](../../../battle_ingame.md#5-tamer-skills), with lines in [decisions.md](../../../decisions.md).

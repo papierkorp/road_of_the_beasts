@@ -90,8 +90,8 @@ day AP and takes all that are left, a harvest costs 1. The hub shows a day as a 
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
 ("Hub Game"). **Not built:** the effect of a development level, of the tier of a forged piece and of its temper, the Kin gifts
-that `data/kins/` gives no flags (stored and shown as "not built"), species skills, the relearning pill, branches
-of the trees, what a finished game leaves for the next one (the games are only counted), ends of a battle other
+that `data/kins/` gives no flags (stored and shown as "not built"), species skills, the relearning pill,
+what a finished game leaves for the next one (the games are only counted), ends of a battle other
 than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
 Foundation), an Android export.
 
@@ -119,8 +119,12 @@ eight weapons, three battle pills and eight armours are test content.
 
 **Vows.** Three are offered at the start and after every breakthrough, in the Cultivation Hall; one or none is
 taken, at most three in a game (`GameState.offer_vows`, `take_vow`). The sixteen vows and what each changes are
-data (`vows` in `values.tres`: a text for gain and price and two effect keys the code reads). The trees have no
-branches yet.
+data (`vows` in `values.tres`: a text for gain and price and two effect keys the code reads).
+
+**Systems.** Three in `data/cultivation/`: Beast Lord (pack, champion), Formation (hazard, bulwark), Artificer
+(blade, cauldron). A node is a tamer skill, a blueprint or a perk (a text and one effect key, read through
+`GameState.vow_sum` like a vow). A rack or a pouch is a tamer slot that only a weapon or a pill fills
+(`GameState.loadout_fits`); Twin Grip gives a weapon two uses (`BattleRequest.player_tamer_uses`).
 
 **Cheat menu:** the action `toggle_cheats` or the button in the bottom-right corner: refill day AP, change the
 lifespan, XP, path points, materials; the next stage for the tamer and for the monsters.

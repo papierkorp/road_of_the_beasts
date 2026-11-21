@@ -29,10 +29,14 @@ func _build() -> void:
 	list.add_child(systems)
 	for id in CultivationDef.ids():
 		var def := CultivationDef.of(id)
-		var names: PackedStringArray = []
-		for n: Dictionary in def.nodes:
-			names.append(String(n["name"]))
-		systems.add_child(_choice("%s\n%s\n\nIts tree: %s" % [def.display_name, def.blurb, ", ".join(names)], _system == id, func():
+		var lines: PackedStringArray = []
+		for br: Dictionary in def.branches:
+			var names: PackedStringArray = []
+			for n: Dictionary in def.nodes:
+				if String(n.get("branch", "")) == String(br["id"]):
+					names.append(String(n["name"]).trim_prefix("Blueprint: "))
+			lines.append("%s: %s" % [br["name"], ", ".join(names)])
+		systems.add_child(_choice("%s\n%s\n\n%s" % [def.display_name, def.blurb, "\n".join(lines)], _system == id, func():
 			_system = id
 			_build()))
 	list.add_child(HubUi.label("The nest", 22, UiTheme.ACCENT))

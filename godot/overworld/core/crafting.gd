@@ -225,7 +225,10 @@ static func battle_items(game: GameState) -> Dictionary:
 static func spend_used(game: GameState, f: Fight, result: BattleResult) -> void:
 	if result == null:
 		return
+	var keep := game.vow_sum("pill_keep")
 	for id in result.used_tamer:
 		var item := String(f.tamer_items.get(id, ""))
-		if Materials.form(item) == "pill" and game.take_item(item):
+		if Materials.form(item) == "pill" and keep > 0:
+			keep -= 1
+		elif Materials.form(item) == "pill" and game.take_item(item):
 			game.say("%s was used up." % Materials.display_name(item, game.values))

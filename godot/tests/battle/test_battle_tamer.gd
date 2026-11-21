@@ -221,3 +221,13 @@ func test_a_swiftness_pill_raises_the_pace() -> void:
 	b.begin()
 	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_swiftness", "unit": &"u0"})).is_true()
 	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(1.8, 0.001)
+
+
+func test_a_loadout_entry_with_two_uses_is_spent_after_the_second() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"weapon_root_chain"])
+	b.tamer_uses[0][&"weapon_root_chain"] = 2
+	b.begin()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"weapon_root_chain", "cells": [Vector2i(1, 1)]})).is_true()
+	assert_bool(b.tamer_spent(0, &"weapon_root_chain")).is_false()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"weapon_root_chain", "cells": [Vector2i(2, 2)]})).is_true()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"weapon_root_chain", "cells": [Vector2i(4, 4)]})).contains("already used")

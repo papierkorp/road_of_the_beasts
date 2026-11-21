@@ -111,6 +111,8 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 			if bool(e.get("died", false)) and i < f.enemies.size():
 				var part := Materials.beast_part(int(f.enemies[i].species().kin))
 				loot[part] = int(loot.get(part, 0)) + 1
+		if game.vow_sum("wild_ore") > 0:
+			loot[Materials.ore(f.stage)] = game.vow_sum("wild_ore")
 		for id in loot:
 			game.add_item(id, int(loot[id]))
 		game.say("%s won. Loot: %s." % [f.title, Materials.list_text(loot, game.values)])

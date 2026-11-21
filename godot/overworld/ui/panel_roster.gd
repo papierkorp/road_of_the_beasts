@@ -4,7 +4,7 @@ extends HubPanel
 
 
 func build(into: VBoxContainer) -> void:
-	into.add_child(HubUi.dim("%d of %d places taken. The order is the order a team is filled in. A monster grows only by the XP of the battles it fought, and never past your stage." % [game.roster.size() + game.eggs.size(), game.values.roster_cap]))
+	into.add_child(HubUi.dim("%d of %d places taken. The order is the order a team is filled in. A monster grows only by the XP of the battles it fought, and never past your stage." % [game.roster.size() + game.eggs.size(), game.roster_cap()]))
 	var list := HubUi.scroll(into)
 	for i in game.roster.size():
 		var m := game.roster[i]

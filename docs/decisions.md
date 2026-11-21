@@ -263,6 +263,7 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-21 | Vows | Offered at the start and after every breakthrough, three drawn, one or none taken, at most three in a game; a Kin shut out is not bound again and the monsters owned stay | a vow at every offer without a cap; releasing the monsters of a banned Kin | — | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
 | 2026-11-21 | Branches of the trees | Two branches per system: pack and champion (Beast Lord), hazard and bulwark (Formation); a third system will come | — | two ways to play each system | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
 | 2026-11-21 | Team and roster | The roster is every monster owned, the team those sent into the next battle; a rule names which it means | — | the words were mixed | [overworld.md §4.3](overworld.md#43-the-roster) |
+| 2026-11-21 | Third cultivation system | The Way of the Artificer: the tamer's own tools, with the branches blade (weapons) and cauldron (pills in battle) | — | the three systems carry the three pillars | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
 
 ## Way of Working
 

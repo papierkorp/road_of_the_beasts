@@ -17,6 +17,7 @@ static func request_of(f: Fight) -> BattleRequest:
 	r.player_team = f.team
 	r.enemy_team = f.enemies
 	r.player_tamer = f.tamer.duplicate()
+	r.player_tamer_uses = f.tamer_uses.duplicate()
 	r.enemy_wild = f.wild
 	r.roll_seed = f.roll_seed
 	return r
