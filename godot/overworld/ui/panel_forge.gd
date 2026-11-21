@@ -63,7 +63,7 @@ func build(into: VBoxContainer) -> void:
 	_pick(make, "Temper (optional):", "essence", essence, func(v: String): essence = v, true)
 	for k: String in [Crafting.WEAPON, Crafting.ARMOUR]:
 		var card := HubUi.card(list)
-		card.add_child(HubUi.label("Weapons: a skill for a tamer slot" if k == Crafting.WEAPON else "Armour: one more passive for a monster", 22, UiTheme.ACCENT))
+		card.add_child(HubUi.label(("Weapons: a skill for a tamer slot" + (" — your vow forbids them" if game.vow_has("no_weapons") else "")) if k == Crafting.WEAPON else "Armour: one more passive for a monster", 22, UiTheme.ACCENT))
 		for kin in MonsterDef.Kin.size():
 			var p := Materials.beast_part(kin)
 			var core := Crafting.core_of(game, k, kin)

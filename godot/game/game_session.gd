@@ -43,8 +43,13 @@ func _job() -> BattlegroundJob:
 	var job := BattlegroundJob.new()
 	job.map = MapData.from_dict(game.battleground)
 	job.parts = game.parts.duplicate()
-	job.budget = GameValues.at(v.bg_budget, int(game.stage))
-	job.weights = v.bg_weights
+	job.budget = GameValues.at(v.bg_budget, int(game.stage)) + game.vow_sum("bg_budget")
+	job.weights = v.bg_weights.duplicate()
+	if game.vow_has("vein_weight"):
+		job.weights["dragon_vein"] = game.vow_sum("vein_weight")
+	for pair: Array in [["no_zones", "zone"], ["no_props", "prop"]]:
+		if game.vow_has(pair[0]):
+			job.banned.append(pair[1])
 	job.min_side = v.bg_min_side
 	job.max_side = v.bg_max_side
 	job.enemy_starts = v.bg_enemy_starts

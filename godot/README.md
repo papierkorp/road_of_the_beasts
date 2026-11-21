@@ -110,6 +110,11 @@ which the multiplayer battle, the prototype and the tools never see (`GameData.m
 test content. Creatures of the void are met in the void only, are never caught, and a passed trial leaves an
 egg of one. The hub shows a skill as the battle card does (`GameSession.skill_text`), not its free text.
 
+**Vows.** Three are offered at the start and after every breakthrough, in the Cultivation Hall; one or none is
+taken, at most three in a game (`GameState.offer_vows`, `take_vow`). The sixteen vows and what each changes are
+data (`vows` in `values.tres`: a text for gain and price and two effect keys the code reads). The trees have no
+branches yet.
+
 **Cheat menu:** the action `toggle_cheats` or the button in the bottom-right corner: refill day AP, change the
 lifespan, XP, path points, materials; the next stage for the tamer and for the monsters.
 

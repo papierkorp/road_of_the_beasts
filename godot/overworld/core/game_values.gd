@@ -21,6 +21,16 @@ const PATH := "res://data/game/values.tres"
 ## Nights an egg needs to hatch.
 @export var egg_nights := 0
 
+@export_group("Vows (T57)")
+## Vows a game may hold at most; three are offered at the start and after every breakthrough.
+@export var vow_cap := 0
+@export var vow_offer := 0
+## {"id", "name", "gain": text, "price": text, "effects": {key: value}}. The keys the build reads:
+## gain: kin_choice (Kin: one more choice at a stage breakthrough), gift_all, slot_all, tamer_slots, dungeon_heal,
+## wild_egg, ap, bg_budget, vein_weight, void_eggs. price: ban_kin (Kin), one_kin_team, team, no_weapons, no_pills,
+## no_seal, lifespan, no_zones, no_props, no_wild_eggs.
+@export var vows: Array = []
+
 @export_group("Wild area (T55)")
 @export var wild_encounters := 0
 ## Enemies per encounter, per stage: [least, most].

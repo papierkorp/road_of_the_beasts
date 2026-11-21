@@ -74,6 +74,8 @@ var gifts: Array[StringName] = []
 ## two different ones).
 var choice_picks := 0
 var choice_taken: Array[String] = []
+## Gifts of its Kin it may still take outright (a vow).
+var gift_picks := 0
 
 
 ## The species' own numbers, unrolled: the "reference individual" of gdd_battle §6.2.
@@ -227,6 +229,8 @@ func relearn(slot: int, skill_id: StringName) -> bool:
 
 
 func can_choose(choice: String) -> bool:
+	if choice_taken.size() >= CHOICES.size():
+		choice_taken.clear()
 	if choice_picks <= 0 or choice_taken.has(choice):
 		return false
 	match choice:
@@ -266,8 +270,17 @@ func choose(choice: String, gift: StringName = &"", rng: RandomNumberGenerator =
 			gifts.append(gift)
 	choice_picks -= 1
 	choice_taken.append(choice)
-	if choice_picks % steps_per_gain() == 0:
+	if choice_picks == 0:
 		choice_taken.clear()
+	return true
+
+
+## Takes a gift of its Kin outright (a vow gave the pick).
+func take_gift(gift: StringName) -> bool:
+	if gift_picks <= 0 or not open_gifts().has(gift):
+		return false
+	gifts.append(gift)
+	gift_picks -= 1
 	return true
 
 
@@ -498,7 +511,7 @@ func to_dict() -> Dictionary:
 		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "core": core.duplicate(), "current_hp": current_hp,
 		"unspent": unspent, "dev_steps": dev_steps, "slot_levels": slot_levels.duplicate(), "armour": String(armour),
 		"slots": slots, "kit": kit.map(func(k: StringName) -> String: return String(k)), "fresh": fresh, "gifts": gifts.map(func(g: StringName) -> String: return String(g)),
-		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate()}
+		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate(), "gift_picks": gift_picks}
 
 
 static func from_dict(d: Dictionary) -> MonsterInstance:
@@ -536,6 +549,7 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 	for g in d.get("gifts", []):
 		m.gifts.append(StringName(g))
 	m.choice_picks = int(d.get("choice_picks", 0))
+	m.gift_picks = int(d.get("gift_picks", 0))
 	for taken in d.get("choice_taken", []):
 		m.choice_taken.append(String(taken))
 	return m

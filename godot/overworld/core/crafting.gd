@@ -39,6 +39,8 @@ static func plant_of(item: String) -> StringName:
 
 
 static func can_brew(game: GameState, plants: Array[String]) -> bool:
+	if game.vow_has("no_pills"):
+		return false
 	if plants.size() < 2 or plants.size() > 3:
 		return false
 	var seen := {}
@@ -88,6 +90,8 @@ static func pill_properties(pill: String) -> PackedStringArray:
 static func use_problem(game: GameState, pill: String, m: MonsterInstance, in_dungeon: bool) -> String:
 	if game.count(pill) < 1:
 		return "none left"
+	if game.vow_has("no_pills"):
+		return "your vow: no pills"
 	var can := false
 	for p in pill_properties(pill):
 		match p:
@@ -147,7 +151,7 @@ static func piece_name(game: GameState, kind: String, ore: String, part: String,
 
 
 static func can_forge(game: GameState, kind: String, ore: String, part: String, essence := "") -> bool:
-	return kind in [WEAPON, ARMOUR] and Materials.form(ore) == "ore" and game.count(ore) > 0 \
+	return kind in [WEAPON, ARMOUR] and not (kind == WEAPON and game.vow_has("no_weapons")) and Materials.form(ore) == "ore" and game.count(ore) > 0 \
 		and Materials.form(part) == "part" and game.count(part) > 0 \
 		and (essence == "" or (Materials.form(essence) == "essence" and game.count(essence) > 0))
 

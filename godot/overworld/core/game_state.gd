@@ -28,6 +28,9 @@ var path_points := 0
 ## Bought nodes of the cultivation system.
 var nodes: Array[StringName] = []
 var tamer_skills: Array[StringName] = [SEAL]
+## Vows taken (docs/overworld.md §5.3), and the vows offered right now ([] = no offer open).
+var vows: Array[StringName] = []
+var vow_offer: Array[StringName] = []
 var blueprints: Array[StringName] = []
 ## Built parts of the battleground: part id -> number owned.
 var parts := {}
@@ -64,6 +67,7 @@ static func new_game(p_seed: int, p_system: StringName, egg_species: StringName,
 	g.system = p_system
 	g.lifespan = GameValues.at(g.values.lifespan_days, 0)
 	g.ap = g.max_ap()
+	g.offer_vows()
 	g.parts = g.values.bg_start_parts.duplicate()
 	g.battleground = g.values.bg_start_map.duplicate(true)
 	var def := GameData.monster(egg_species)
@@ -81,11 +85,108 @@ func rng_for(tag: String, with_day := false) -> RandomNumberGenerator:
 
 
 func max_ap() -> int:
-	return GameValues.at(values.day_ap, int(stage))
+	return GameValues.at(values.day_ap, int(stage)) + vow_sum("ap")
 
 
 func tamer_slots() -> int:
-	return TAMER_SLOTS[clampi(int(stage), 0, TAMER_SLOTS.size() - 1)]
+	return TAMER_SLOTS[clampi(int(stage), 0, TAMER_SLOTS.size() - 1)] + vow_sum("tamer_slots")
+
+
+# ---------- vows ----------
+
+func vow_def(id: StringName) -> Dictionary:
+	for v: Dictionary in values.vows:
+		if StringName(v["id"]) == id:
+			return v
+	return {}
+
+
+## The sum of an effect over the vows taken (a flag counts 1).
+func vow_sum(key: String) -> int:
+	var sum := 0
+	for id in vows:
+		var e: Dictionary = vow_def(id).get("effects", {})
+		if e.has(key):
+			sum += int(e[key])
+	return sum
+
+
+func vow_has(key: String) -> bool:
+	for id in vows:
+		if (vow_def(id).get("effects", {}) as Dictionary).has(key):
+			return true
+	return false
+
+
+## The values of an effect over the vows taken (the Kins of `ban_kin`, of `kin_choice`).
+func vow_values(key: String) -> Array[int]:
+	var out: Array[int] = []
+	for id in vows:
+		var e: Dictionary = vow_def(id).get("effects", {})
+		if e.has(key):
+			out.append(int(e[key]))
+	return out
+
+
+## Draws a new offer: vows not taken yet, none whose Kin the player's first monster is banned by. No offer once the
+## cap is reached.
+func offer_vows() -> void:
+	vow_offer.clear()
+	if vows.size() >= values.vow_cap or is_over():
+		return
+	var pool: Array[StringName] = []
+	for v: Dictionary in values.vows:
+		if not vows.has(StringName(v["id"])):
+			pool.append(StringName(v["id"]))
+	var rng := rng_for("vows%d_%d" % [int(stage), vows.size()])
+	while vow_offer.size() < values.vow_offer and not pool.is_empty():
+		vow_offer.append(pool.pop_at(rng.randi_range(0, pool.size() - 1)))
+
+
+## Takes one vow of the offer (&"" = none): it holds for the rest of the game.
+func take_vow(id: StringName) -> bool:
+	if id == &"":
+		vow_offer.clear()
+		say("You took no vow.")
+		return true
+	if not vow_offer.has(id) or vows.size() >= values.vow_cap:
+		return false
+	vows.append(id)
+	vow_offer.clear()
+	var e: Dictionary = vow_def(id).get("effects", {})
+	if e.has("lifespan") and not forced_trial:
+		lifespan = maxi(1, lifespan + int(e["lifespan"]))
+	if e.has("ap"):
+		ap += int(e["ap"])
+	if e.has("no_seal"):
+		tamer_skills.erase(SEAL)
+	if e.has("slot_all"):
+		for m in roster:
+			m.slots = mini(MonsterInstance.MAX_SLOTS, m.slots + 1)
+	if e.has("gift_all"):
+		for m in roster:
+			if not m.open_gifts().is_empty():
+				m.gift_picks += 1
+	say("You swore: %s." % vow_def(id)["name"])
+	return true
+
+
+func kin_banned(kin: int) -> bool:
+	return vow_values("ban_kin").has(kin)
+
+
+## What keeps a team from a battle ("" = nothing).
+func team_problem(team: Array[MonsterInstance]) -> String:
+	if vow_has("one_kin_team"):
+		for m in team:
+			if m.species().kin != team[0].species().kin:
+				return "your vow: a team of one Kin only"
+	return ""
+
+
+## The places a team has on a battleground that offers `room`.
+func team_cap(room: int) -> int:
+	return maxi(1, room + vow_sum("team"))
 
 
 func is_over() -> bool:
@@ -125,7 +226,7 @@ func end_day() -> bool:
 		if int(e["nights"]) <= 0 and roster.size() < values.roster_cap:
 			eggs.erase(e)
 			var def := GameData.monster(StringName(e["species"]))
-			roster.append(MonsterInstance.hatched(def, int(stage) * 3))
+			_join(MonsterInstance.hatched(def, int(stage) * 3))
 			say("An egg hatched: %s. Shape it under Monsters." % def.display_name)
 	if lifespan <= 0:
 		lifespan = 0
@@ -143,9 +244,10 @@ func break_through() -> void:
 		outcome = WON
 		say("You have reached Sovereign.")
 		return
-	lifespan = GameValues.at(values.lifespan_days, int(stage))
+	lifespan = maxi(1, GameValues.at(values.lifespan_days, int(stage)) + vow_sum("lifespan"))
 	ap = max_ap()
 	say("Breakthrough: you are now at %s. Lifespan: %d years." % [Stage.stage_name(stage), lifespan])
+	offer_vows()
 
 
 func lose() -> void:
@@ -177,14 +279,21 @@ func has_room() -> bool:
 
 
 func add_monster(m: MonsterInstance) -> bool:
-	if not has_room():
+	if not has_room() or kin_banned(int(m.species().kin)):
 		return false
-	roster.append(m)
+	_join(m)
 	return true
 
 
+func _join(m: MonsterInstance) -> void:
+	if vow_has("slot_all"):
+		m.slots = mini(MonsterInstance.MAX_SLOTS, m.slots + 1)
+	roster.append(m)
+
+
 func add_egg(species: StringName) -> bool:
-	if not has_room():
+	var egg_def := GameData.monster(species)
+	if not has_room() or (egg_def != null and kin_banned(int(egg_def.kin))):
 		return false
 	eggs.append({"species": String(species), "nights": values.egg_nights})
 	return true
@@ -194,7 +303,7 @@ func add_egg(species: StringName) -> bool:
 func default_team(size: int) -> Array[MonsterInstance]:
 	var out: Array[MonsterInstance] = []
 	for m in roster:
-		if m.current_hp > 0 and out.size() < size:
+		if m.current_hp > 0 and out.size() < size and team_problem(out + ([m] as Array[MonsterInstance])) == "":
 			out.append(m)
 	return out
 
@@ -220,7 +329,10 @@ func award_xp(team: Array[MonsterInstance], place_stage: int) -> Array[String]:
 	for m in team:
 		if m.current_hp <= 0:
 			continue
+		var before := int(m.stage)
 		var ups := m.gain_xp(amount, stage)
+		if int(m.stage) > before and vow_values("kin_choice").has(int(m.species().kin)):
+			m.choice_picks += int(m.stage) - before             # a vow of its Kin: one more of the three
 		if ups > 0:
 			lines.append("%s grew to %s %s: +%d stat points%s." % [m.species().display_name, Stage.stage_name(m.stage),
 				Stage.sub_tier_name(m.sub_tier), ups * MonsterInstance.STEP_POINTS, " and a breakthrough choice" if m.choice_picks > 0 else ""])
@@ -235,7 +347,7 @@ func to_dict() -> Dictionary:
 		r.append(m.to_dict())
 	return {"version": 2, "seed": game_seed, "day": day, "ap": ap, "stage": int(stage), "lifespan": lifespan,
 		"forced_trial": forced_trial, "outcome": String(outcome), "system": String(system), "path_points": path_points,
-		"nodes": _strings(nodes), "tamer_skills": _strings(tamer_skills), "blueprints": _strings(blueprints),
+		"nodes": _strings(nodes), "vows": _strings(vows), "vow_offer": _strings(vow_offer), "tamer_skills": _strings(tamer_skills), "blueprints": _strings(blueprints),
 		"parts": parts.duplicate(), "battleground": battleground.duplicate(true), "roster": r, "eggs": eggs.duplicate(true),
 		"items": items.duplicate(), "wild_gone": wild_gone.duplicate(), "rare_gone": rare_gone.duplicate(),
 		"dungeon": dungeon.duplicate(true), "dungeon_runs": dungeon_runs, "dungeon_mastered": dungeon_mastered.duplicate(),
@@ -259,6 +371,8 @@ static func from_dict(d: Dictionary, p_values: GameValues = null) -> GameState:
 	g.path_points = int(d["path_points"])
 	g.nodes = _names(d["nodes"])
 	g.tamer_skills = _names(d["tamer_skills"])
+	g.vows = _names(d.get("vows", []))
+	g.vow_offer = _names(d.get("vow_offer", []))
 	g.blueprints = _names(d["blueprints"])
 	for k in d["parts"]:
 		g.parts[String(k)] = int(d["parts"][k])

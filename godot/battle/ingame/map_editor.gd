@@ -154,7 +154,7 @@ func _ready() -> void:
 
 ## Whether the player of the hub game owns at least one unit of a part.
 func _owned(kind: String, id: StringName) -> bool:
-	return _job != null and int(_job.parts.get("%s:%s" % [kind, id], 0)) > 0
+	return _job != null and not _job.banned.has(kind) and int(_job.parts.get("%s:%s" % [kind, id], 0)) > 0
 
 
 func _back() -> void:

@@ -137,6 +137,8 @@ static func todo_text(m: MonsterInstance) -> String:
 		parts.append("%d free slot(s)" % (m.slots - m.kit.size()))
 	if m.choice_picks > 0:
 		parts.append("a breakthrough choice waits")
+	if m.gift_picks > 0:
+		parts.append("a gift to choose")
 	if m.dev_steps > 0:
 		parts.append("%d development step(s)" % m.dev_steps)
 	return "To decide: %s." % "; ".join(parts) if not parts.is_empty() else ""

@@ -15,7 +15,7 @@ func pillar() -> String:
 func hint() -> String:
 	var todo := 0
 	for m in game.roster:
-		if m.unspent > 0 or m.choice_picks > 0 or m.kit.size() < m.slots:
+		if m.unspent > 0 or m.choice_picks > 0 or m.gift_picks > 0 or m.kit.size() < m.slots:
 			todo += 1
 	return "Roster, stats, skills" + ("\n%d with something to decide" % todo if todo > 0 else "")
 

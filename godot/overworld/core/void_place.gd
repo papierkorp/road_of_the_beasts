@@ -85,8 +85,10 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 		game.break_through()
 		var eggs := GameData.species_ids(true)              # the trophy of the trial: an egg of the void
 		if not eggs.is_empty() and not game.is_over():
-			var egg: StringName = eggs[game.rng_for("void_egg%d" % f.stage).randi_range(0, eggs.size() - 1)]
-			game.say("The void left an egg: %s." % GameData.monster(egg).display_name if game.add_egg(egg) else "The void left an egg, but your nest is full.")
+			var egg_rng := game.rng_for("void_egg%d" % f.stage)
+			for i in maxi(1, game.vow_sum("void_eggs")):
+				var egg: StringName = eggs[egg_rng.randi_range(0, eggs.size() - 1)]
+				game.say("The void left an egg: %s." % GameData.monster(egg).display_name if game.add_egg(egg) else "The void left an egg, but your nest is full.")
 	else:
 		game.void_depth += 1
 		game.say("%s won: +1 path point." % f.title)

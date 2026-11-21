@@ -223,6 +223,9 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 	game.say("Battle won. Gathered: %s." % Materials.list_text(n["loot"], game.values))
 	for line in game.award_xp(f.team, stage):
 		game.say(line)
+	for m in f.team:                              # a vow: HP back after a battle won
+		if m.current_hp > 0:
+			m.current_hp = mini(m.max_hp(), m.current_hp + game.vow_sum("dungeon_heal"))
 	if not bool(f.ref.get("last", false)):
 		return
 	game.dungeon_streak[stage] = int(game.dungeon_streak.get(stage, 0)) + 1

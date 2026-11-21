@@ -20,6 +20,7 @@ func build(into: VBoxContainer) -> void:
 	into.add_child(HubUi.label("%s — %d path point(s). A depth of the void won gives one." % [def.display_name, game.path_points], 22, UiTheme.ACCENT))
 	into.add_child(HubUi.dim(def.blurb))
 	var list := HubUi.scroll(into)
+	_vows(list)
 	var content := BattleContent.shared()
 	for s in Stage.Type.size():
 		var nodes := def.nodes_of(s)
@@ -46,3 +47,27 @@ func build(into: VBoxContainer) -> void:
 				hub.refresh(), 300)
 			b.disabled = why != ""
 			card.add_child(b)
+
+
+## The vows (docs/overworld.md §5.3): those taken, and the offer if one is open.
+func _vows(list: VBoxContainer) -> void:
+	var card := HubUi.card(list)
+	card.add_child(HubUi.label("Vows: %d of at most %d" % [game.vows.size(), game.values.vow_cap], 22, UiTheme.ACCENT))
+	card.add_child(HubUi.dim("A vow gives something strong and takes something for the rest of the game. Three are offered at the start and after every breakthrough; you take one or none."))
+	for id in game.vows:
+		var v := game.vow_def(id)
+		card.add_child(HubUi.label("%s — %s Price: %s" % [v["name"], v["gain"], v["price"]]))
+	if game.vow_offer.is_empty():
+		return
+	card.add_child(HubUi.label("Offered now:", 20, HubUi.GOOD))
+	for id in game.vow_offer:
+		var v := game.vow_def(id)
+		var row := HubUi.row()
+		card.add_child(row)
+		row.add_child(HubUi.label("%s\nYou gain: %s\nThe price: %s" % [v["name"], v["gain"], v["price"]]))
+		row.add_child(HubUi.button("Swear", func():
+			game.take_vow(id)
+			hub.refresh(), 160))
+	card.add_child(HubUi.button("Take none", func():
+		game.take_vow(&"")
+		hub.refresh(), 220))

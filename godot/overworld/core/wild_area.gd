@@ -103,7 +103,7 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 		if game.add_monster(m):
 			game.say("Caught: %s." % m.title())
 		else:
-			game.say("%s was caught, but the roster is full: it went free." % m.species().display_name)
+			game.say("%s was caught, but %s: it went free." % [m.species().display_name, "your vow forbids its Kin" if game.kin_banned(int(m.species().kin)) else "the roster is full"])
 	if won:
 		var loot := {}
 		for e in result.enemy:
@@ -117,7 +117,8 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 		for line in game.award_xp(f.team, f.stage):
 			game.say(line)
 		var roll := game.rng_for("egg%d_%s" % [game.day, f.ref]).randi_range(1, 100)
-		if (f.ref.has("rare") or roll <= game.values.egg_chance) and not f.enemies.is_empty() and game.add_egg(f.enemies[0].species_id):
+		var egg := (f.ref.has("rare") or roll <= game.values.egg_chance or game.vow_has("wild_egg")) and not game.vow_has("no_wild_eggs")
+		if egg and not f.enemies.is_empty() and game.add_egg(f.enemies[0].species_id):
 			game.say("You found an egg: %s." % f.enemies[0].species().display_name)
 	else:
 		game.say("%s lost. The AP are spent." % f.title)

@@ -260,6 +260,9 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-21 | Unit of time shown | A day of play is shown as a year of the tamer's life | a lifespan shown in days | eight days read as no life | [vision.md §3](vision.md#3-the-day-and-the-lifespan) |
 | 2026-11-21 | Cost of a dungeon | A run costs all day AP left and needs a least number; a harvest costs fewer | a run and a harvest for all day AP of a full day | after one battle in the wild area the rest of the day had only one place to go | [overworld.md §2.3](overworld.md#23-action-catalog) |
 | 2026-11-21 | Forging | What the parts give is known before forging | properties of the parts drawn per game and found by trying | guessing at the forge was no fun; the cauldron keeps its drawn properties | [overworld.md §6.3](overworld.md#63-smithing-weapons-and-armour) |
+| 2026-11-21 | Vows | Offered at the start and after every breakthrough, three drawn, one or none taken, at most three in a game; a Kin shut out is not bound again and the monsters owned stay | a vow at every offer without a cap; releasing the monsters of a banned Kin | — | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
+| 2026-11-21 | Branches of the trees | Two branches per system: pack and champion (Beast Lord), hazard and bulwark (Formation); a third system will come | — | two ways to play each system | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
+| 2026-11-21 | Team and roster | The roster is every monster owned, the team those sent into the next battle; a rule names which it means | — | the words were mixed | [overworld.md §4.3](overworld.md#43-the-roster) |
 
 ## Way of Working
 

@@ -13,6 +13,8 @@ var min_side := MapDef.MIN_SIDE
 var max_side := MapDef.MAX_SIDE
 ## Free squares the start area of the opponent needs at least.
 var enemy_starts := 1
+## Kinds of parts the battleground may not hold at all ("zone", "prop"): a vow of the player.
+var banned: Array[String] = []
 var return_scene := ""
 ## Set by the editor when the player saved a legal battleground.
 var saved := false
@@ -87,6 +89,11 @@ func problems(m: MapDef, content: BattleContent) -> PackedStringArray:
 	for part in u:
 		if int(u[part]) > int(parts.get(part, 0)):
 			out.append("%s: %d placed, %d owned" % [part.get_slice(":", 1).capitalize(), int(u[part]), int(parts.get(part, 0))])
+	for kind in banned:
+		for part: String in u:
+			if part.get_slice(":", 0) == kind:
+				out.append("your vow: no %s on your battleground" % kind)
+				break
 	if cost(m) > budget:
 		out.append("budget: %d of %d used" % [cost(m), budget])
 	if m.free_starts(content, 1).size() < enemy_starts:

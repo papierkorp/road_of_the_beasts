@@ -14,6 +14,14 @@ func build(into: VBoxContainer) -> void:
 		card.add_child(HubUi.dim(HubUi.kin_lines(m)))
 		if m.choice_picks > 0:
 			_choice(card, m)
+		if m.gift_picks > 0 and not m.open_gifts().is_empty():
+			card.add_child(HubUi.label("Your vow: choose %d gift(s) of its Kin." % m.gift_picks, 20, HubUi.GOOD))
+			var gifts := HubUi.flow()
+			card.add_child(gifts)
+			for g in m.open_gifts():
+				gifts.add_child(HubUi.button(KinDef.gift_line(m.species().kin, g), func():
+					m.take_gift(g)
+					hub.refresh(), 330))
 		var skills := m.kit_skills()
 		for slot in skills.size():
 			var s := skills[slot]

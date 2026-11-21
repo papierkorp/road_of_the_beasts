@@ -123,6 +123,8 @@ func _build_head() -> void:
 func _build_buildings() -> void:
 	if game.forced_trial:
 		_body.add_child(HubUi.label("Your lifespan has run out. Only the void is open (Gates): take the breakthrough trial.", 22, HubUi.WARN))
+	if not game.vow_offer.is_empty():
+		_body.add_child(HubUi.button("A vow is offered: see it in the Cultivation Hall", open.bind(&"cultivation", &""), 620))
 	var grid := GridContainer.new()
 	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 14)
@@ -162,6 +164,9 @@ func _end_day() -> void:
 func prepare(f: Fight, on_start: Callable) -> void:
 	_preparing = f
 	_on_start = on_start
+	if not f.ref.has("capped"):                 # a vow may take a place of the team
+		f.max_team = game.team_cap(f.max_team)
+		f.ref["capped"] = true
 	if f.team.is_empty():
 		f.team = game.default_team(f.max_team)
 	if f.tamer.is_empty():
@@ -222,14 +227,17 @@ func _build_prepare() -> void:
 				f.tamer.erase(id)
 			refresh())
 		slots.add_child(b)
+	var why := game.team_problem(f.team)
+	if why != "":
+		_body.add_child(HubUi.label("Not yet: %s." % why, 20, HubUi.WARN))
 	var go := HubUi.button("Fight", _start_fight, 260)
-	go.disabled = f.team.is_empty()
+	go.disabled = f.team.is_empty() or why != ""
 	_body.add_child(go)
 
 
 func _start_fight() -> void:
 	var f := _preparing
-	if f == null or f.team.is_empty() or not bool(_on_start.call(f)):
+	if f == null or f.team.is_empty() or game.team_problem(f.team) != "" or not bool(_on_start.call(f)):
 		refresh()
 		return
 	_preparing = null
