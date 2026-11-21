@@ -1,6 +1,6 @@
 # Monster Rules
 
-- **This file owns** what a monster is: species and individual, stats and their calculation, Kins, rarity and growth.
+- **This file owns** what a monster is: species and individual, stats and their calculation, Kins, bloodline and growth.
 - **Elsewhere:** what a monster can do ([skills.md](skills.md)); how a fight runs ([battle.md](battle.md)); the nine monsters, their stats and kits ([content.md](content.md)); obtaining monsters and the game around the battle ([overworld.md](overworld.md)).
 - **Status:** the system is decided. **Every number is an untested starting value.** The game checks no price and no point total.
 
@@ -10,8 +10,8 @@ A monster the player owns is two layers: a fixed **species** and a unique **indi
 
 ```
 SPECIES     Kin · descriptive themes · default kit · learnable skills · species skill · blurb · art
-INDIVIDUAL  stat shape · stats · rarity · stage + sub-tier + XP
-            open slots · slot development and equipped skill per slot · Kin gifts · artifacts · current HP
+INDIVIDUAL  stat shape · stats · bloodline · stage + sub-tier + XP
+            open slots · slot development and equipped skill per slot · Kin gifts · current HP
 ```
 
 - **The battle only ever sees the finished sheet:** name, Kin, the six stats and the kit (Step plus up to 6 slots).
@@ -76,7 +76,7 @@ POINTS  every monster of a stage and sub-tier has the same number of points; a s
 | Qi Gathering | 25 | 30 | 35 |
 | Foundation | 40 | 45 | 50 |
 | Core Formation | 55 | 60 | 65 |
-| Soul Tier | 70 | 75 | 80 |
+| Nascent Soul | 70 | 75 | 80 |
 | Immortal | 85 | 90 | 95 |
 | Sovereign | 100 | 105 | 110 |
 
@@ -127,25 +127,25 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 
 The **species learnable list** sets concrete skill access within the groups of its Kin. Drafts of the traits, the groups of each Kin and the gifts: [content.md §7](content.md#7-kins); the species skills and the learnable lists are not defined.
 
-## 4. Rarity
+## 4. Bloodline
 
-**Rarity is potential and flexibility, not raw power.**
+**Bloodline is potential and flexibility, not raw power.** A monster is born with its grade.
 
-| | Normal | Rare | Epic | Legendary |
+| | Mortal | Spirit | Ancient | Divine |
 |---|---|---|---|---|
-| Kit | up to 6 slots | same | same | same, plus a Signature skill at its highest stage |
-| Choices at a stage breakthrough ([§5](#5-growth)) | 1 of 3 | 1 of 3 | 2 of 3 | 2 of 3 |
-| Highest stage | Core | Soul | Immortal | Sovereign |
+| Kin gifts awakened from the start ([§3](#3-kins)) | 0 | 1 | 2 | 3 |
+| Choice at a stage breakthrough ([§5](#5-growth)): taken of offered | 1 of 3 | 1 of 4 | 2 of 4 | 2 of 5 |
 
-- **No stat bonus from rarity:** rarity buys choices and a higher last stage, never numbers.
-- Rarity does not decide the stat shape.
-- **Ascension** is a major event, not a grind: one **Bloodline pill** ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)). The monster gains the new rarity's choices and last stage and keeps everything else. **Normal can climb to Epic, never to Legendary.**
+- **No stat bonus and no ceiling of stage:** a bloodline buys gifts and choices, never numbers; every grade reaches every stage.
+- Bloodline does not decide the stat shape.
+- **Ascension** is a major event, not a grind: one **Bloodline pill** ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)). The monster gains the choices of the new grade, awakens one Kin gift the player chooses from the pool of its Kin, and keeps everything else. **Mortal can climb to Ancient, never to Divine.**
+- Not defined: what the fourth and fifth offer of a breakthrough are; when a Divine monster gains its Signature skill.
 
-*Working values:* the number of choices per rarity.
+*Working values:* the four grades, the gifts and the choices per grade.
 
 ## 5. Growth
 
-**18 steps:** six stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills, never a stat value; what the tamer gains per stage stands in [overworld.md §5.1](overworld.md#51-stages). A monster exceeds neither the player's stage nor its rarity's last stage.
+**18 steps:** six stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills, never a stat value; what the tamer gains per stage stands in [overworld.md §5.1](overworld.md#51-stages). A monster never exceeds the player's stage.
 
 | # | Stage · sub-tier | Points | Also gained | XP to the next step |
 |---|---|---|---|---|
@@ -158,19 +158,19 @@ The **species learnable list** sets concrete skill access within the groups of i
 | 7 | Core Formation Lower | 55 | choice · +1 learnable skill | 400 |
 | 8 | Core Formation Middle | 60 | | 800 |
 | 9 | Core Formation High | 65 | | 1300 (+ trial) |
-| 10 | Soul Tier Lower | 70 | choice · +1 learnable skill | 1000 |
-| 11 | Soul Tier Middle | 75 | | 2000 |
-| 12 | Soul Tier High | 80 | | 3200 (+ trial) |
+| 10 | Nascent Soul Lower | 70 | choice · +1 learnable skill | 1000 |
+| 11 | Nascent Soul Middle | 75 | | 2000 |
+| 12 | Nascent Soul High | 80 | | 3200 (+ trial) |
 | 13 | Immortal Lower | 85 | choice · +1 learnable skill | 2500 |
 | 14 | Immortal Middle | 90 | +1 slot-development step | 5000 |
 | 15 | Immortal High | 95 | +1 slot-development step | 8000 (+ trial) |
-| 16 | Sovereign Lower | 100 | choice · Signature skill (Legendary) | 6000 |
+| 16 | Sovereign Lower | 100 | choice | 6000 |
 | 17 | Sovereign Middle | 105 | +1 slot-development step | 12000 |
 | 18 | Sovereign High | 110 | +1 slot-development step | — |
 
-- **The choice at a stage breakthrough:** the monster takes one of three: **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)) or **Blood** (a Kin gift drawn from the pool of its Kin, [§3](#3-kins)). Epic and Legendary take two of the three.
+- **The choice at a stage breakthrough:** the monster takes one of three: **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)) or **Blood** (a Kin gift drawn from the pool of its Kin, [§3](#3-kins)). How many are offered and how many are taken follows the bloodline ([§4](#4-bloodline)).
 - **Slot-development step** (steps 14, 15, 17 and 18): the monster develops one skill slot.
 - **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
 - Breakthrough trials: [overworld.md §5.2](overworld.md#52-the-breakthrough-trial).
 
-*Working values (XP):* bars grow about ×2.5 per stage; a sub-tier takes roughly 3–6 focused days at the right stage. A win gives 10 XP at Qi Gathering, ×2.5 per stage. XP comes from the battles a monster fought ([vision.md §2](vision.md#2-the-pillars)).
+*Working values (XP):* bars grow about ×2.5 per stage; a sub-tier takes roughly 3–6 focused days at the right stage. A win gives 10 XP at Qi Gathering, ×2.5 per stage. XP comes from the battles a monster fought, never from a dungeon ([vision.md §4](vision.md#4-where-battles-happen)).

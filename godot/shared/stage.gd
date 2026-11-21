@@ -10,7 +10,7 @@ const NAMES := {
 	Type.QI_GATHERING: "Qi Gathering",
 	Type.FOUNDATION: "Foundation",
 	Type.CORE_FORMATION: "Core Formation",
-	Type.SOUL: "Soul Tier",
+	Type.SOUL: "Nascent Soul",
 	Type.IMMORTAL: "Immortal",
 	Type.SOVEREIGN: "Sovereign",
 }

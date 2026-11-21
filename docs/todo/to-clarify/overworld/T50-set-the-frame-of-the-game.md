@@ -13,7 +13,7 @@
 | The start (§5) | set; the eggs open | [T59](T59-roster-eggs-and-the-start.md) |
 | The hub (§6) | draft | [T60](T60-hub-and-platform.md) |
 | Making things (§7) | set; lists open | [T58](T58-materials-pills-and-forged-pieces.md) |
-| Growth and the cultivation system (§8) | set in outline | [T57](T57-cultivation-systems-and-tamer-skills.md) |
+| Growth and the Way (§8) | set in outline | [T57](T57-cultivation-systems-and-tamer-skills.md) |
 
 **Drawn as consequences while the rule files were aligned, without the user; to confirm:**
 

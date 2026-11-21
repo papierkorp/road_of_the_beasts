@@ -111,6 +111,8 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | I108 | The eight Kin traits act in the ingame battle as passives without a slot; of the gifts only Updraft, Phase, Heatproof, Keystone and Spined act, the others are stored and shown as not built. Follow-up is built as a Step that costs no AP onto a square its Strike cleared, until the monster's next other action; Updraft and Phase do the same (pass over solid props); the AI does not plan for traits | the traits and gifts are drafts ([content.md §7](../content.md#7-kins)) | T12 |
 | I109 | Development steps come from a Depth choice and from the steps 14, 15, 17 and 18; Epic and Legendary take two different choices of the three | step supply | T05 |
 | I110 | The hub has seven buildings: Monsters and Gates each hold three tabs; while a dungeon run or the forced trial is under way the other gates are closed | the hub's buildings | T60 |
+| I117 | The build still has what the rules dropped on 2026-11-21: a breakthrough material from the last battle of a dungeon that the chosen trial uses up, monster XP from dungeon battles, a run that takes all day AP left with a least number, perk nodes in the trees, and fixed void monsters per depth | — | T61 |
+| I118 | The build still shows the names cultivation system, path points and Normal to Legendary, gives a rarity a highest stage and no awakened gifts, forges from ore, a beast part and an essence, and has armour with passives, blueprints as nodes of the trees and parts built from a blueprint; reaching Sovereign wins without a Sovereign beast | — | T61 |
 
 ## Verification and Code Follow-ups
 

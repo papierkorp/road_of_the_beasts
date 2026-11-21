@@ -48,9 +48,9 @@ Not defined: the numbers of the ends (how many goal squares, how long they are h
 
 ## 3. Battlegrounds
 
-- **Every place brings its battlegrounds:** an encounter of a wild area and a node of a dungeon name theirs.
+- **Every place brings its battlegrounds:** an encounter of a wild area and a node of a dungeon name theirs. They are generated, not written by hand; the generator is not defined.
 - **The player's own battleground counts in the void only** ([vision.md §4](vision.md#4-where-battles-happen)): the player builds it in the hub, shaped to the own team and to the opponent shown ahead, and may change it before every battle there.
-- **A part needs a blueprint and materials:** the blueprint is a node of the cultivation system ([overworld.md §5.3](overworld.md#53-the-cultivation-system)), the part is built from crafting materials ([overworld.md §6.3](overworld.md#63-smithing-weapons-and-armour)).
+- **A part is forged:** a ground, a zone or a prop for the own battleground is made in the forge from crafting materials ([overworld.md §6.3](overworld.md#63-smithing-weapons-and-parts-of-a-battleground)); the player places it freely in the editor.
 - **Limits:** a budget per stage; the start area of the opponent stays reachable.
 
 **What a battleground is** *(the map editor of the build; sizes are working values):*
@@ -63,7 +63,7 @@ Not defined: the numbers of the ends (how many goal squares, how long they are h
 | Zones | one zone per square, with the direction a push zone pushes and the number of rounds it lasts; it may last the whole battle. A pull zone pulls toward the middle of all squares of its kind on the map |
 | Start areas | one per side, any squares. A side fields as many monsters as its area has free squares at most; the sides may differ in number. The player places their monsters inside their area before the battle |
 
-Not defined: the budget and what a part costs; which grounds, props and zones a blueprint may open and what the player can build without one; whether the player holds one battleground or several; where the monsters of the opponent stand inside their area.
+Not defined: the budget and what a part costs; which grounds, props and zones can be forged and what the player can place before the first forged part; whether the player holds one battleground or several; where the monsters of the opponent stand inside their area.
 
 ## 4. Board Events
 
@@ -102,8 +102,8 @@ Monsters are caught on the board, during the battle, and nowhere else.
 
 - **Contract:** a monster with a tamer (the player's or an enemy tamer's) never dies: at 0 HP it is defeated ([overworld.md §4.2](overworld.md#42-defeat)). A **wild monster** has no contract: at 0 HP it dies, unless it stands on a Seal Zone.
 - **Seal Ground:** the tamer lays it on a square of their choice in the window of tamer skills ([§5](#5-tamer-skills)). It is a ground ([battle.md §4](battle.md#4-the-board)) that **cannot be destroyed:** it replaces the ground of its square, no other ground replaces it, no reset removes it, and it does not lapse; it lies until the battle ends or it catches. It cannot be laid on a Dragon Vein. Zones and props on its square stay and act as usual. **One Seal Ground at a time** per tamer.
-- **Two sources,** both available from the start of the game: the **Binding Seal item**, consumed when laid, and the **Seal tamer skill**, once per battle and upgradable ([overworld.md §5.4](overworld.md#54-tamer-skills)). A seal item has a tier (a stage) and a grade (a rarity) and catches a monster of at most both; the tamer's stage is a ceiling as well.
-- **The catch:** a wild monster that **ends its turn** on Seal Ground is caught with a chance of **its base at 1 HP, 10 points less for every further HP.** The base is **50 %** for the Seal skill without upgrades and **20 / 35 / 50 / 65 %** for a Normal / Rare / Epic / Legendary seal item. A wild monster that reaches **0 HP on Seal Ground is caught, always.** The roll is the only chance in a battle; before the turn ends the player sees the chance on the square.
+- **Two sources,** both available from the start of the game: the **Binding Seal item**, consumed when laid, and the **Seal tamer skill**, once per battle and upgradable ([overworld.md §5.4](overworld.md#54-tamer-skills)). A seal item has a tier (a stage) and a grade (a bloodline) and catches a monster of at most both; the tamer's stage is a ceiling as well.
+- **The catch:** a wild monster that **ends its turn** on Seal Ground is caught with a chance of **its base at 1 HP, 10 points less for every further HP.** The base is **50 %** for the Seal skill without upgrades and **20 / 35 / 50 / 65 %** for a Mortal / Spirit / Ancient / Divine seal item. A wild monster that reaches **0 HP on Seal Ground is caught, always.** The roll is the only chance in a battle; before the turn ends the player sees the chance on the square.
 - **Caught:** the monster leaves the board and counts as defeated for the end of the battle; the Seal Ground is used up. A failed roll changes nothing; the battle goes on and the ground stays.
 - **Against tamers:** nothing is caught, no monster dies.
 

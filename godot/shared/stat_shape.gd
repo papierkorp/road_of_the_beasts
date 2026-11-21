@@ -98,7 +98,7 @@ const SUB_TIER_FILL := {Stage.SubTier.LOWER: 0.75, Stage.SubTier.MIDDLE: 0.9, St
 
 ## Snaps a Core-scale spread to a stage: HP and Pace scale with the cap and the sub-tier, Move / TPR / Reach
 ## keep their value but never exceed the cap — and a stat that sat on the Core cap sits on the
-## cap of the new stage (so a Berserker's TPR 2 becomes TPR 3 at Soul Tier).
+## cap of the new stage (so a Berserker's TPR 2 becomes TPR 3 at Nascent Soul).
 static func at_stage(core: Dictionary, stage: Stage.Type, sub_tier: Stage.SubTier = Stage.SubTier.HIGH) -> Dictionary:
 	var cap := Stage.caps(stage)
 	var core_cap := Stage.caps(Stage.Type.CORE_FORMATION)

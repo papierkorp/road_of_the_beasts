@@ -9,7 +9,7 @@ extends RefCounted
 ##   - reference individuals (no rolled spread): the species' reference sheet
 ##   - rolled individuals: their own HP / Pace / Movement / TPR; AP = 2 (the GDD base
 ##     value, the overworld has no AP stat); Reach raised to the GDD minimum of 2
-##   - Winged individuals at Soul Tier or above are on the air layer (gdd_battle §4.3).
+##   - Winged individuals at Nascent Soul or above are on the air layer (gdd_battle §4.3).
 ## Slot development (gdd_skills §6) is not built; the legacy skill evolution was removed.
 
 const BASE_AP := 2

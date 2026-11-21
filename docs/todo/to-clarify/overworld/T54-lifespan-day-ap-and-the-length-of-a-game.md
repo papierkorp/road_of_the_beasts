@@ -8,11 +8,11 @@
 
 | Topic | Questions |
 |---|---|
-| Length of a game | About ten hours is a working value; how many days is that, and how long may one day take on a phone? |
+| Length of a game | Three to four hours is a working value; how many days is that, and how long may one day take on a phone? |
 | Day AP | Day AP per stage (the earlier 6 to 11 were set for another game); whether a later stage has more |
 | Lifespan | Days per stage; whether anything besides a breakthrough lengthens it (a pill); what a trial lost before the end of the lifespan costs |
 | Monster XP | The XP table of [monsters.md §5](../../../monsters.md#5-growth) against the lifespan: can a team reach the cap of a stage within it, and should it? Whether a pill gives XP |
-| What a game leaves behind | How further cultivation systems and eggs are opened for later games; whether a won game leaves more than a lost one |
+| What a game leaves behind | How further Ways and eggs are opened for later games; whether a won game leaves more than a lost one |
 
 - **From the first play (user, 2026-11-21):** a lifespan counted in days reads wrong ("8 days" is no life). Decided: a day of play is shown as a year. Open: whether the numbers of a lifespan fit that reading.
 

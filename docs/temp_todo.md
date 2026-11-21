@@ -14,10 +14,10 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 ## Current State
 
 - **Read first:** [vision.md](vision.md), the frame of the game. It holds over the rule files.
-- **The frame (2026-11-21):** the battle is the game; a hub of buildings; offline single player, phone in landscape and PC; three pillars (monster, tamer, board); day AP and a lifespan per stage with the trial forced at its end; wild area, roguelike dungeon (harvest once its challenge is met) and the void (own battleground, last depth is the trial); a cultivation system chosen at the start; crafting with materials drawn per game.
+- **The frame (2026-11-21):** the battle is the game; a hub of buildings; offline single player, phone in landscape and PC; three pillars (monster, tamer, board); day AP and a lifespan per stage with the trial forced at its end; wild area, roguelike dungeon (harvest once its challenge is met) and the void (own battleground, last depth is the trial); a Way chosen at the start; crafting with materials drawn per game.
 - **Rule files follow the frame:** [overworld.md](overworld.md) is rewritten; [battle_ingame.md](battle_ingame.md), [monsters.md](monsters.md) and [skills.md](skills.md) are aligned. The city, persons, the Internal World, injury, scrolls and grades of materials are gone.
 - **The build follows the frame (T61):** the hub game is built as a first version to click through, with test values in `godot/data/game/values.tres` ([godot/README.md](../godot/README.md), "The hub game"; solutions without a rule: [implementation.md](todo/implementation.md) I83–I110). Played once by the user; monsters now have their own kit of 4 slots, shaped eggs and the choice at a stage breakthrough, the eight Kin traits act in the ingame battle, and sixteen test species (two per Kin) learn inside the groups of their Kin; most gifts are not built. [architecture.md](architecture.md) still describes dialogue, story and faction requests; earlier rows of [decisions.md](decisions.md) link to sections that no longer exist.
-- **Next:** the user plays the hub game; then the questions of T54 to T60 in the chat, the rough shape before details: the limits of the own battleground (T56), the cultivation systems (T57), the numbers of day and lifespan (T54).
+- **Next:** the user plays the hub game; then the questions of T54 to T60 in the chat, the rough shape before details: the limits of the own battleground (T56), the Ways (T57), the numbers of day and lifespan (T54).
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. Open in the build: ends and board events in the map editor (T46), Seal Ground played by hand (T49), a wild AI that values Seal Ground; then the rebuild (T42).
@@ -30,8 +30,8 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | 0 | Lifespan, day AP, length of a game, what a game leaves behind | T54 |
 | 0 | Wild area and dungeon: numbers, challenges, loot, where the boards come from | T55 |
 | 0 | The void: limits of the own battleground, depths, void monsters, the five trials | T56 |
-| 0 | Cultivation systems: the nodes of the branches, which tamer skills, the list of vows | T57 |
-| 0 | Materials, pills, weapons, armour, the seal item, a currency | T58 |
+| 0 | Ways: the nodes of the branches, which tamer skills, the list of vows | T57 |
+| 0 | Materials, pills, weapons, parts of a battleground, the seal item, a currency | T58 |
 | 0 | The three eggs, the roster, further eggs | T59 |
 | 0 | Kins: the drafts of traits, skill groups and gifts ([content.md §7](content.md#7-kins)); species per Kin | T12 |
 | 0 | The hub's buildings, 3D or 2D board, the phone | T60 |
@@ -65,7 +65,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | T54 | [Lifespan, Day AP and the Length of a Game](todo/to-clarify/overworld/T54-lifespan-day-ap-and-the-length-of-a-game.md) | to clarify | overworld |
 | T55 | [Wild Area and Dungeon: Numbers, Challenges and Loot](todo/to-clarify/overworld/T55-wild-area-and-dungeon-numbers-challenges-loot.md) | to clarify | overworld |
 | T56 | [The Void and the Player's Battleground](todo/to-clarify/overworld/T56-the-void-and-the-players-battleground.md) | to clarify | overworld |
-| T57 | [Cultivation Systems and Tamer Skills](todo/to-clarify/overworld/T57-cultivation-systems-and-tamer-skills.md) | to clarify | overworld |
+| T57 | [Ways and Tamer Skills](todo/to-clarify/overworld/T57-cultivation-systems-and-tamer-skills.md) | to clarify | overworld |
 | T58 | [Materials, Pills and Forged Pieces](todo/to-clarify/overworld/T58-materials-pills-and-forged-pieces.md) | to clarify | overworld |
 | T59 | [Roster, Eggs and the Start](todo/to-clarify/overworld/T59-roster-eggs-and-the-start.md) | to clarify | overworld |
 | T60 | [Hub and Platform](todo/to-clarify/overworld/T60-hub-and-platform.md) | to clarify | overworld |

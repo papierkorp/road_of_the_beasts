@@ -12,7 +12,7 @@ const MENU_SCENE := "res://battle/battle_menu.tscn"
 const POINTS_MIN := 25
 const POINTS_MAX := 110
 const POINTS_STEP := 5
-const STAGES: Array[String] = ["Qi Gathering", "Foundation", "Core Formation", "Soul Tier", "Immortal", "Sovereign"]
+const STAGES: Array[String] = ["Qi Gathering", "Foundation", "Core Formation", "Nascent Soul", "Immortal", "Sovereign"]
 const TIERS: Array[String] = ["Lower", "Middle", "High"]
 
 ## What the screen showed last, kept while the game runs.

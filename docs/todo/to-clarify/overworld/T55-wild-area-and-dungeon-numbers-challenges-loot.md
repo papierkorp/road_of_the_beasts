@@ -13,9 +13,9 @@
 | Challenge and harvest | The list of challenges and whether a dungeon has one or several; the yield of a harvest against a run |
 | Loot | What each place gives in numbers, by stage ([vision.md §7](../../../vision.md#7-making-things)) |
 | Opponents | Wild monsters only, or tamers too; if tamers, the contract of [battle_ingame.md §7](../../../battle_ingame.md#7-catching) applies |
-| Boards | Where the battlegrounds of the places come from: written by hand in the map editor, generated, or both; how a generated one stays a puzzle with ends and board events |
+| Boards | Decided: the battlegrounds of the places are generated. Open: the generator; how a generated one stays a puzzle with ends and board events |
 | One-time realms | Dropped with the frame unless the user wants them beside the dungeon |
 
-- **From the first play (user, 2026-11-21):** day AP have only battles to go to, and after one AP in the wild area the dungeon is closed for the day, so the rest must be spent there too. Decided: a run takes all day AP left with a least number, a harvest costs fewer; no deed without a battle. Open: the numbers (build: 2 and 1), and whether each resource has one source (recommended) or some have two.
+- **From the first play (user, 2026-11-21):** day AP have only battles to go to, and after one AP in the wild area the dungeon is closed for the day, so the rest must be spent there too. Decided: a run costs a fixed number of day AP and gives no monster XP, a harvest costs fewer. Open: the numbers, and whether each resource has one source (recommended) or some have two.
 
 - **Done when:** every row is decided and written into [vision.md](../../../vision.md), [overworld.md](../../../overworld.md) or [battle_ingame.md](../../../battle_ingame.md), with lines in [decisions.md](../../../decisions.md).

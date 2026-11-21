@@ -198,7 +198,7 @@ Principles:
 
 **One pattern develops monster skills and tamer skills.** A monster skill is developed on the slot of one monster; a tamer skill on the skill the player learned ([overworld.md §5.4](overworld.md#54-tamer-skills)). Development is permanent, there is no experience currency and no physical evolution.
 
-- **Levels 1–3.** Level 1 is the skill as written; levels 2 and 3 cost one **development step** each. Monsters gain steps as a choice at a stage breakthrough and at late advancement steps ([monsters.md §5](monsters.md#5-growth)), tamers as nodes of their cultivation system ([overworld.md §5.3](overworld.md#53-the-cultivation-system)).
+- **Levels 1–3.** Level 1 is the skill as written; levels 2 and 3 cost one **development step** each. Monsters gain steps as a choice at a stage breakthrough and at late advancement steps ([monsters.md §5](monsters.md#5-growth)), tamers as nodes of their Way ([overworld.md §5.3](overworld.md#53-the-way)).
 - **One option per level** from the list written for that skill, each option once; level 3 combines two options. No free components.
 - **Option vocabulary:** every option is one of **Area** (one more square or a larger shape), **Number** (one effect value changed within the caps), **Duration** (more rounds), **Addition** (what the skill creates also does something an existing ground, zone or prop does), **Condition** (a requirement loosened), **Count** (one more use per turn). Count exists for monster skills only.
 - **Never by development:** more damage than the maxima of [battle.md §6.1](battle.md#61-damage), lower AP, more Reach, more uses of a tamer skill.

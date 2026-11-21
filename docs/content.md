@@ -159,7 +159,7 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 | Qi Gathering (25) | 4 / 1.0 / 1 / 1 / 2 / 2 | 3 / 1.3 / 2 / 1 / 2 / 2 | 2 / 1.6 / 3 / 1 / 2 / 2 |
 | Foundation (40) | 6 / 1.0 / 1 / 1 / 3 / 2 | 3 / 1.0 / 1 / 2 / 2 / 2 | 3 / 1.6 / 3 / 1 / 2 / 3 |
 | Core Formation (55) | 8 / 1.3 / 2 / 1 / 3 / 2 | 5 / 1.1 / 3 / 2 / 2 / 2 | 4 / 2.1 / 3 / 1 / 3 / 3 |
-| Soul Tier (70) | 10 / 1.0 / 1 / 1 / 3 / 3 | 4 / 1.1 / 3 / 2 / 3 / 3 | 5 / 2.7 / 5 / 1 / 3 / 3 |
+| Nascent Soul (70) | 10 / 1.0 / 1 / 1 / 3 / 3 | 4 / 1.1 / 3 / 2 / 3 / 3 | 5 / 2.7 / 5 / 1 / 3 / 3 |
 | Immortal (85) | 10 / 1.9 / 4 / 1 / 3 / 3 | 7 / 1.1 / 3 / 2 / 3 / 3 | 6 / 2.4 / 4 / 1 / 3 / 4 |
 | Sovereign (100) | 10 / 1.1 / 3 / 2 / 3 / 3 | 5 / 1.1 / 3 / 3 / 3 / 2 | 6 / 1.9 / 4 / 1 / 3 / 5 |
 
@@ -183,7 +183,7 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 - A movement skill that pushes on landing counts as movement, a Strike that leaves ground as a Strike: the group is what the skill is, not what it creates besides.
 - The group “self” holds few skills so far ([§4](#4-skills)).
 
-**Gifts** (three examples per Kin; a pool is meant to hold about six):
+**Gifts** (a pool holds six, so that a Divine monster with three awakened gifts still has a choice; [monsters.md §4](monsters.md#4-bloodline)):
 
 | Kin | Gifts |
 |---|---|
@@ -195,5 +195,18 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 | Stone | **Keystone** (allies orthogonally next to it cannot be pushed or pulled) · **Hard Shell** (takes no damage from props) · **Monolith** (surrounding it takes three enemies) |
 | Flora | **Thornwalker** (damage from ground on entering does not hit it) · **Deep Roots** (props it creates last 3 rounds) · **Sap** (healing ground heals it 1 more, never above its maximum) |
 | Void | **Rift Walker** (its straight-line movement may go diagonally) · **Hollow** (stat changes of props do not act on it) · **Unravel** (a zone it ends its turn in loses 1 round) |
+
+**Further gifts** *(proposals to fill the pools to six; not checked against every rule and not built)*:
+
+| Kin | Gifts |
+|---|---|
+| Beast | **Second Breath** (recovers 1 more Stamina per round) · **Thick Hide** (takes no collision damage from props) · **Lunge** (Follow-up also works when its Strike defeated the monster) |
+| Winged | **Glide** (its straight-line movement reaches 1 square further) · **Slipstream** (pull zones do not move it) · **Tailwind** (a push zone moves it 1 square further) |
+| Scaled | **Tail Lash** (its Basic Jab also pushes 1) · **Wedged** (cannot be pushed while it stands next to a solid prop or the board edge) · **Shed** (the first damage from ground in a battle does not hit it) |
+| Swarm | **Gnaw** (its Basic Jab deals 2 damage to a prop) · **Close Ranks** (moved into an ally, neither takes collision damage) · **Spread** (cannot be surrounded while an ally stands orthogonally next to it) |
+| Spirit | **Linger** (zones it creates last 1 more round) · **Insubstantial** (a monster moved into it takes no collision damage, and neither does it) · **Thin Air** (push zones do not move it) |
+| Stone | **Immovable** (cannot be pushed) · **Crumble** (leaves Rubble on its square when it is defeated) · **Grinding** (its Basic Jab deals 2 damage to a prop) |
+| Flora | **Overgrowth** (zones it creates last 1 more round) · **Stubborn** (the ground under it cannot be replaced while it stands there) · **Bark** (takes no collision damage from the board edge) |
+| Void | **Erase** (the square it leaves by its own movement is reset to Plain) · **Deep Pull** (pull zones it creates pull 1 square further) · **Out of Reach** (a push moves it 1 square less) |
 
 The kits of the nine monsters of [§5](#5-the-nine-monsters) ignore the groups; the test species and learnable lists of the build are no content drafts.
