@@ -51,7 +51,9 @@ func _build() -> void:
 		var def := GameData.monster(id)
 		if def == null:
 			continue
-		eggs.add_child(_choice("%s (%s)\n%s\n\nCan learn: %s\n\n%s" % [def.display_name, MonsterDef.kin_name(def.kin), def.blurb, def.learn_text(), KinDef.of(def.kin).trait_line() if KinDef.of(def.kin) != null else ""], _egg == id, func():
+		var kin := KinDef.of(def.kin)
+		var groups := "Learns: %s\nNever learns: %s\n%s" % [" · ".join(kin.learns), " · ".join(kin.never_learns()), kin.trait_line()] if kin != null else ""
+		eggs.add_child(_choice("%s (%s)\n%s\n\n%s" % [def.display_name, MonsterDef.kin_name(def.kin), def.blurb, groups], _egg == id, func():
 			_egg = id
 			_build()))
 	var bottom := HubUi.row()
