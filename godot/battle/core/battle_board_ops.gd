@@ -57,7 +57,7 @@ static func ground_outcome(b: Battle, cell: BoardCell, ground: StringName) -> St
 
 ## Same type: hazards +1 level up to their maximum, blessed ground stays. Different type:
 ## replaced at level I. Voidscar is never replaced.
-static func lay_ground(b: Battle, cell: BoardCell, ground: StringName, source := "") -> StringName:
+static func lay_ground(b: Battle, cell: BoardCell, ground: StringName, source := "", more_rounds := 0) -> StringName:
 	var out := ground_outcome(b, cell, ground)
 	match out:
 		&"level":
@@ -68,7 +68,7 @@ static func lay_ground(b: Battle, cell: BoardCell, ground: StringName, source :=
 	if out != &"kept" and out != &"immutable":
 		var laid := b.content.ground(cell.ground)
 		var fades := BattleExperiment.ground_rounds > 0 and cell.ground != GroundDef.PLAIN and (laid == null or not laid.immutable)
-		cell.ground_until = b.round_number + BattleExperiment.ground_rounds - 1 if fades else 0
+		cell.ground_until = b.round_number + BattleExperiment.ground_rounds + more_rounds - 1 if fades else 0
 	if out != &"kept" and out != &"immutable":
 		b.emit(&"ground_changed", {"pos": cell.pos, "ground": cell.ground, "level": cell.level,
 			"result": out, "source": source})

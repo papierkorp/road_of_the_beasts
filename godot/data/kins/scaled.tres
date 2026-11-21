@@ -8,5 +8,6 @@ id = &"scaled"
 display_name = "Scaled"
 trait_name = "Armoured"
 trait_text = "Takes no collision damage when it is the one moved."
+trait_flags = {"reduces_damage": ["collision_self"], "reduction": 2}
 learns = PackedStringArray("strike", "self", "ground", "prop")
-gifts = Array[Dictionary]([{"id": &"anchored", "name": "Anchored", "text": "cannot be pulled"}, {"id": &"spined", "name": "Spined", "text": "a monster moved into it takes 2 collision damage"}, {"id": &"heatproof", "name": "Heatproof", "text": "end-of-turn ground does not act on it"}])
+gifts = Array[Dictionary]([{"id": &"anchored", "name": "Anchored", "text": "cannot be pulled"}, {"id": &"spined", "name": "Spined", "text": "a monster moved into it takes 2 collision damage", "flags": {"spiky_body": true}}, {"id": &"heatproof", "name": "Heatproof", "text": "end-of-turn ground does not act on it", "flags": {"ignores_ground_moments": ["turn_end"]}}])

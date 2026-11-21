@@ -88,12 +88,19 @@ first stage, 4 encounters a day, a dungeon of 6 battle nodes and a rest of which
 void, 1 breakthrough material for the trial, 30 XP per win against 60 for the first step.
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
-("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour, of a development level, of a Kin trait and of
-a Kin gift (they are stored and shown), the skill groups of a Kin (a monster learns the skills of its species file),
+("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour and of a development level, the Kin gifts that
+`data/kins/` gives no flags (they are stored and shown as "not built"), the skill groups of a Kin (a monster learns the skills of its species file),
 species of the Kins Flora and Void, vows,
 the relearning pill, what a finished game leaves for the next one (the games are only counted), ends of a battle
 other than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
 Foundation), an Android export.
+
+**Kin traits in the battle.** A grown monster of the hub game carries the trait of its Kin and its built gifts as
+passives without a slot (`UnitSheet.innate`, built by `KinDef.passives` from the flags in `data/kins/<kin>.tres`;
+the flags are fields of `BattleSkillDef`). All eight traits act: Follow-up (a Step onto the square its Strike
+cleared costs no AP until its next other action), Aloft, Armoured, Scatter, Bodiless, Bulwark, Rooted Growth,
+Unmoored. Built gifts: Updraft, Phase, Heatproof, Keystone, Spined. The multiplayer battle and reference
+individuals carry none. The AI plays with them through the same rules but does not plan for them.
 
 **Cheat menu:** the action `toggle_cheats` or the button in the bottom-right corner: refill day AP, change the
 lifespan, XP, path points, materials; the next stage for the tamer and for the monsters.

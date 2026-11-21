@@ -40,6 +40,8 @@ var prev_queue: Array[Dictionary] = []   # the finished round's queue (orphaned 
 var queue_idx := 0
 var turn_owner: StringName = &""
 var ap := 0
+## Follow-up (Kin trait of Beast): {"who": unit id, "cells": squares a Step of that unit enters for no AP}.
+var follow := {}
 ## Test switch delay_turn: the running entry has acted already · unit id -> round it postponed a turn in.
 var entry_acted := false
 var delayed := {}
@@ -237,6 +239,18 @@ func put(u: BattleUnit, p: Vector2i) -> void:
 		board.occupants[u.layer][c] = u.id
 
 
+## What a Step of `u` onto `to` costs: nothing onto a square its Follow-up opened, else the AP of a Step.
+func step_cost(u: BattleUnit, to) -> int:
+	if u != null and follow.get("who", &"") == u.id and to is Vector2i and (follow["cells"] as Array).has(to):
+		return 0
+	return BattleMoves.step_ap()
+
+
+## The least a Step of `u` costs right now.
+func min_step_cost(u: BattleUnit) -> int:
+	return 0 if u != null and follow.get("who", &"") == u.id else BattleMoves.step_ap()
+
+
 func relocate(u: BattleUnit, to: Vector2i) -> void:
 	lift(u)
 	put(u, to)
@@ -362,7 +376,7 @@ func check(a: Dictionary) -> String:
 		&"heal":
 			return heal_error(u)
 		&"step":
-			if ap < BattleMoves.step_ap():
+			if ap < step_cost(u, a.get("to")):
 				return "Step needs %d AP, %d left" % [BattleMoves.step_ap(), ap]
 			if BattleStats.is_rooted(u):
 				return "%s cannot move" % u.display_name()
@@ -467,8 +481,11 @@ func apply(a: Dictionary, trusted := false) -> bool:
 	else:
 		entry_acted = true
 		var u := active()
+		if type != &"step":
+			follow = {}
 		if type == &"step":
-			ap -= BattleMoves.step_ap()
+			ap -= step_cost(u, a["to"])
+			follow = {}
 			BattleMoves.execute(self, u, BattleMoves.step_profile(), a["to"], "Step", a.get("path", []) if trusted else [])
 		elif type == &"heal":
 			_use_heal(u)
@@ -614,6 +631,7 @@ func clone() -> Battle:
 	b.queue_idx = queue_idx
 	b.turn_owner = turn_owner
 	b.ap = ap
+	b.follow = follow.duplicate(true)
 	b.entry_acted = entry_acted
 	b.delayed = delayed.duplicate()
 	b.waits = waits.duplicate()

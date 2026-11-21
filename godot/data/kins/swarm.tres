@@ -8,5 +8,6 @@ id = &"swarm"
 display_name = "Swarm"
 trait_name = "Scatter"
 trait_text = "Its Step may enter the square of an ally; the two swap places."
+trait_flags = {"swaps_allies": true}
 learns = PackedStringArray("strike", "movement", "ground", "prop")
 gifts = Array[Dictionary]([{"id": &"overrun", "name": "Overrun", "text": "counts as two enemies for surrounding"}, {"id": &"skitter", "name": "Skitter", "text": "its Step may go diagonally"}, {"id": &"many_bodies", "name": "Many Bodies", "text": "Heal costs it 2 Stamina"}])

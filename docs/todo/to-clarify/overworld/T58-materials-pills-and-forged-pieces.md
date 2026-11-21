@@ -17,4 +17,6 @@
 | Currency | Whether Spirit Stones exist without a market |
 | Growing | Whether plants are grown in the hub or come from battles and harvests alone |
 
+- **From the first play (user, 2026-11-21):** the forge as built (pick an ore, a beast part and an essence) is no fun. Open: another form for making weapons and armour.
+
 - **Done when:** every row is decided and written into [overworld.md §6](../../../overworld.md#6-goods) and [content.md](../../../content.md), with lines in [decisions.md](../../../decisions.md).

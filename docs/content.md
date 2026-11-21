@@ -165,7 +165,7 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 
 ## 7. Kins
 
-**Draft, checked against the rules of [battle.md](battle.md) on paper only; nothing is built or played.** The rules: [monsters.md §3](monsters.md#3-kins). A trait and a gift are passives that take no slot; each uses only moments and effects the battle already has, and is shown on the monster's sheet.
+**Draft, not played.** The traits and some gifts are built ([godot/README.md](../godot/README.md), "Kin traits in the battle"). The rules: [monsters.md §3](monsters.md#3-kins). A trait and a gift are passives that take no slot; each uses only moments and effects the battle already has, and is shown on the monster's sheet.
 
 **Trait and skill groups** (every Kin learns four of the six groups; Step and Basic Jab stay with every monster):
 

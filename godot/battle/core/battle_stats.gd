@@ -220,6 +220,28 @@ static func is_immovable(b: Battle, u: BattleUnit) -> bool:
 	return false
 
 
+## Whether a passive of the unit (kit, Kin trait or gift) sets the flag `name` of BattleSkillDef.
+static func has_flag(u: BattleUnit, name: StringName) -> bool:
+	for s in u.passives():
+		if bool(s.get(name)):
+			return true
+	return false
+
+
+static func ignores_ground_at(u: BattleUnit, timing: String) -> bool:
+	for s in u.passives():
+		if s.ignores_ground_moments.has(timing):
+			return true
+	return false
+
+
+static func ground_rounds_bonus(u: BattleUnit) -> int:
+	var n := 0
+	for s in u.passives():
+		n += s.ground_rounds_bonus
+	return n
+
+
 static func is_rooted(u: BattleUnit) -> bool:
 	for s in u.passives():
 		if s.rooted:

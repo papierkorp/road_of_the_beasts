@@ -137,6 +137,9 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> boo
 		for puid in block_props:
 			if block_props[puid].def.spiky:
 				own = SPIKY_DAMAGE
+		for other_id in block_units:
+			if BattleStats.has_flag(b.units[other_id], &"spiky_body"):
+				own = SPIKY_DAMAGE
 		var hits: Array = [{"unit": u.id, "base": own, "type": BattleDamage.COLLISION, "source": "Collision", "pushed": true}]
 		for id in b.roster:
 			if block_units.has(id):

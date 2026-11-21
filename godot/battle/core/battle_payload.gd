@@ -89,6 +89,9 @@ static func _collect_strike(b: Battle, p: Dictionary) -> void:
 			var front := b.board.at(origin + h["front"])
 			if front != null and front.prop != null and front.prop.def.solid:
 				continue                      # a solid prop takes the hit and blocks the cell behind it
+			var guard := b.unit_at(origin + h["front"], Board.GROUND)
+			if guard != null and guard.id != u.id and BattleStats.has_flag(guard, &"gives_cover"):
+				continue                      # Bulwark: a monster that covers like a solid prop
 		p["cells"].append(cell)
 		for layer in [Board.GROUND, Board.AIR]:
 			var prop := b.board.prop_at(cell, layer)
@@ -223,7 +226,30 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 				else:
 					entries.append({"unit": id, "dir": BattleDisplace.pull_dir(t, p["anchor"]),
 						"key": t.chebyshev_to(p["anchor"]), "cause": p["label"]})   # nearest the anchor first
+	var before := {}
+	for p: Dictionary in payloads:
+		if p["kind"] == "strike":
+			for id: StringName in p["units"]:
+				before[id] = b.units[id].pos
 	BattleDisplace.resolve(b, entries)
+	# Follow-up: the squares the monsters its Strike pushed away have left are free to step onto
+	for p: Dictionary in payloads:
+		var striker: BattleUnit = b.units.get(p["owner"])
+		if p["kind"] != "strike" or striker == null or not striker.is_alive() or not BattleStats.has_flag(striker, &"follows_push"):
+			continue
+		var cells: Array[Vector2i] = []
+		for id: StringName in p["units"]:
+			var was: Vector2i = before[id]
+			if b.units[id].pos != was and Board.manhattan(striker.pos, was) == 1 and b.unit_at(was, Board.GROUND) == null:
+				cells.append(was)
+		if not cells.is_empty():
+			b.follow = {"who": striker.id, "cells": cells}
+
+
+## Rounds the ground of a payload lasts longer (Rooted Growth of its owner).
+static func _ground_bonus(b: Battle, p: Dictionary) -> int:
+	var owner: BattleUnit = b.units.get(p.get("owner", &""))
+	return BattleStats.ground_rounds_bonus(owner) if owner != null else 0
 
 
 # ---------- 4: board operations ----------
@@ -278,7 +304,7 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 					continue
 				if (c.is_mountain() or p["destroyed"].has(cell)) and not op.on_mountain:
 					continue
-				BattleBoardOps.lay_ground(b, c, op.ground, p["label"])
+				BattleBoardOps.lay_ground(b, c, op.ground, p["label"], _ground_bonus(b, p))
 		for op in p["skill"].ops_of(BoardOp.CREATE_ZONE):              # (f) a zone the skill leaves
 			var zdef := b.content.zone(op.zone)
 			if zdef == null:

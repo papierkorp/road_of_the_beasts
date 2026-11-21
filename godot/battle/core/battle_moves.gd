@@ -22,7 +22,7 @@ const WALK_DIRS: Array[Vector2i] = Board.CARDINAL
 
 static func step_profile() -> Dictionary:
 	return {"path": "walk", "objects": true, "monsters": true, "surges": true, "height": false,
-		"ground_costs": false, "distance_mod": 0, "fixed": 1}
+		"ground_costs": false, "distance_mod": 0, "fixed": 1, "step": true}
 
 
 static func profile_of(s: BattleSkillDef) -> Dictionary:
@@ -74,7 +74,7 @@ static func _passable(b: Battle, u: BattleUnit, origin: Vector2i, prof: Dictiona
 			if b.board.solid_at(c, u.layer) != null:
 				return false
 		var other := b.board.unit_id_at(c, u.layer)
-		if other != &"" and other != u.id and (prof["monsters"] or flying):
+		if other != &"" and other != u.id and (prof["monsters"] or flying) and not BattleStats.has_flag(u, &"passes_monsters"):
 			return false
 	return true
 
@@ -137,6 +137,11 @@ static func options(b: Battle, u: BattleUnit, prof: Dictionary) -> Dictionary:
 	match String(prof["path"]) if not flying else "walk":
 		"walk":
 			_walk(b, u, prof, dist, out)
+			if prof.get("step", false) and u.size == 1 and BattleStats.has_flag(u, &"swaps_allies"):
+				for d in WALK_DIRS:               # Scatter: a Step onto an ally swaps the two
+					var ally := b.unit_at(u.pos + d, u.layer)
+					if ally != null and ally.side == u.side and ally.size == 1 and ally.is_alive():
+						out[u.pos + d] = {"cost": 1, "harm": _entry_harm(b, u, u.pos, u.pos + d), "path": [u.pos + d], "swap": ally.id}
 		"line":
 			for d in (Board.RING8 if prof.get("diagonal", false) else Board.CARDINAL):   # orthogonal unless the card says diagonal too (2026-11-17)
 				for k in range(1, dist + 1):
@@ -216,6 +221,9 @@ static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, la
 			return false
 		path = opts[to]["path"]
 	var from := u.pos
+	var ally := b.unit_at(to, u.layer)
+	if prof.get("step", false) and ally != null and ally.id != u.id:
+		return _swap(b, u, ally, label)
 	b.emit(&"moved", {"who": u.id, "from": from, "to": to, "path": path.duplicate(), "skill": label})
 	var expected := from
 	for i in path.size():
@@ -241,6 +249,28 @@ static func execute(b: Battle, u: BattleUnit, prof: Dictionary, to: Vector2i, la
 	return true
 
 
+## Scatter: `u` steps onto the square of an ally and the ally takes its square. Leaving and entering count for both.
+static func _swap(b: Battle, u: BattleUnit, ally: BattleUnit, label: String) -> bool:
+	var from := u.pos
+	var to := ally.pos
+	for who: BattleUnit in [u, ally]:
+		BattleDamage.ground_triggers(b, who, Moment.LEAVE)
+	if not u.is_alive() or not ally.is_alive():
+		return true
+	b.lift(u)
+	b.lift(ally)
+	b.put(u, to)
+	b.put(ally, from)
+	b.touch_veins(u)
+	b.touch_veins(ally)
+	b.emit(&"moved", {"who": u.id, "from": from, "to": to, "path": [to], "skill": label})
+	b.emit(&"displaced", {"who": ally.id, "from": to, "to": from, "cause": "Scatter"})
+	BattleDamage.ground_triggers(b, u, Moment.ENTER, [to] as Array[Vector2i])
+	if ally.is_alive():
+		BattleDamage.ground_triggers(b, ally, Moment.ENTER, [from] as Array[Vector2i])
+	return true
+
+
 ## Whether the next square of a route can still be entered: on the board, and free of what the
 ## profile cannot pass over; the landing square is never a solid prop's or another monster's.
 static func _way_free(b: Battle, u: BattleUnit, prof: Dictionary, n: Vector2i, landing: bool) -> bool:
@@ -250,7 +280,7 @@ static func _way_free(b: Battle, u: BattleUnit, prof: Dictionary, n: Vector2i, l
 		if (landing or bool(prof.get("objects", true))) and b.board.solid_at(c, u.layer) != null:
 			return false
 		var other := b.board.unit_id_at(c, u.layer)
-		if (landing or bool(prof.get("monsters", true))) and other != &"" and other != u.id:
+		if (landing or (bool(prof.get("monsters", true)) and not BattleStats.has_flag(u, &"passes_monsters"))) and other != &"" and other != u.id:
 			return false
 	return true
 

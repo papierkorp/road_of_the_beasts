@@ -792,7 +792,7 @@ func _actions() -> Array:
 		return out
 	var mine := _my_turn()
 	out.append({"id": ACT_STEP, "group": &"step", "text": "Step\nMove · %d AP" % BattleMoves.step_ap(), "color": BattleText.KINDS["move"][1],
-		"enabled": mine and battle.ap >= BattleMoves.step_ap() and not BattleStats.is_rooted(u),
+		"enabled": mine and battle.ap >= battle.min_step_cost(u) and not BattleStats.is_rooted(u),
 		"selected": mode == &"step", "card": {"title": "Step", "rows": BattleText.step_rows()}})
 	var basic := battle.skill_in_slot(u, Battle.BASIC_SLOT)
 	if basic != null:                             # test switch: the Basic Jab stands beside Step, not in the kit

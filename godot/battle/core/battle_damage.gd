@@ -134,6 +134,8 @@ static func _triggers(g: GroundDef, timing: String) -> Array[GroundTrigger]:
 static func ground_effects(b: Battle, u: BattleUnit, timing: String, cells: Array[Vector2i]) -> Dictionary:
 	var hits: Array = []
 	var heals: Array = []
+	if BattleStats.ignores_ground_at(u, timing):
+		return {"hits": hits, "heals": heals}
 	var grounds := BattleStats.grounds_under(b, u, cells)
 	var ids := grounds.keys()
 	ids.sort()
@@ -165,7 +167,7 @@ static func ground_triggers(b: Battle, u: BattleUnit, timing: String, cells: Arr
 	if not parts["hits"].is_empty() or not heals.is_empty():
 		apply_round(b, parts["hits"], heals)
 		defeat_step(b)
-	if u.is_alive():                              # experiment: ground that gives Stamina back
+	if u.is_alive() and not BattleStats.ignores_ground_at(u, timing):      # experiment: ground that gives Stamina back
 		var under := BattleStats.grounds_under(b, u, over)
 		for gid: StringName in under:
 			var g := b.content.ground(gid)

@@ -8,5 +8,6 @@ id = &"spirit"
 display_name = "Spirit"
 trait_name = "Bodiless"
 trait_text = "Its movement passes over monsters; it cannot end on one."
+trait_flags = {"passes_monsters": true}
 learns = PackedStringArray("movement", "self", "zone", "prop")
-gifts = Array[Dictionary]([{"id": &"phase", "name": "Phase", "text": "its movement passes over solid props too"}, {"id": &"weightless", "name": "Weightless", "text": "springs no trap"}, {"id": &"fleeting", "name": "Fleeting", "text": "one more Wait per battle"}])
+gifts = Array[Dictionary]([{"id": &"phase", "name": "Phase", "text": "its movement passes over solid props too", "flags": {"phasing": true}}, {"id": &"weightless", "name": "Weightless", "text": "springs no trap"}, {"id": &"fleeting", "name": "Fleeting", "text": "one more Wait per battle"}])

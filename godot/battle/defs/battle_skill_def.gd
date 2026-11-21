@@ -155,6 +155,23 @@ const PASSIVE := "passive"
 @export var rotate_shapes: bool = false
 ## Moves through solid props (may not stop on them).
 @export var phasing: bool = false
+## ---- Kin traits and gifts (docs/content.md §7); a monster has them without a slot (UnitSheet.innate) ----
+## Moments (Moment.ENTER, LEAVE, TURN_END) at which ground does not act on this monster.
+@export var ignores_ground_moments: Array[String] = []
+## Its movement passes over monsters (it never ends on one).
+@export var passes_monsters: bool = false
+## Push and pull zones do not move it.
+@export var ignores_zones: bool = false
+## Ground its skills lay lasts this many rounds longer.
+@export var ground_rounds_bonus: int = 0
+## Gives cover like a solid prop: a Strike that hits it does not strike the square behind it.
+@export var gives_cover: bool = false
+## Its Step may enter the square of an ally; the two swap places.
+@export var swaps_allies: bool = false
+## After its Strike pushed a monster away, its next Step onto the square that monster left costs no AP.
+@export var follows_push: bool = false
+## A monster moved into it takes the collision damage of a spiky prop.
+@export var spiky_body: bool = false
 ## Event-driven reaction (gdd_battle §2.4): at most once per triggering event.
 @export_enum("none", "prop_destroyed_in_reach") var react_event: String = "none"
 @export var react_heal: int = 0

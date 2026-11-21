@@ -8,5 +8,6 @@ id = &"winged"
 display_name = "Winged"
 trait_name = "Aloft"
 trait_text = "Ground does not act on it on entering or leaving; end-of-turn ground and traps act as usual."
+trait_flags = {"ignores_ground_moments": ["enter", "leave"]}
 learns = PackedStringArray("movement", "self", "ground", "zone")
-gifts = Array[Dictionary]([{"id": &"updraft", "name": "Updraft", "text": "its movement passes over props"}, {"id": &"dive", "name": "Dive", "text": "in a turn in which it moved 3 or more squares its Basic Jab also pushes 1"}, {"id": &"featherlight", "name": "Featherlight", "text": "no collision damage from the board edge"}])
+gifts = Array[Dictionary]([{"id": &"updraft", "name": "Updraft", "text": "its movement passes over props", "flags": {"phasing": true}}, {"id": &"dive", "name": "Dive", "text": "in a turn in which it moved 3 or more squares its Basic Jab also pushes 1"}, {"id": &"featherlight", "name": "Featherlight", "text": "no collision damage from the board edge"}])

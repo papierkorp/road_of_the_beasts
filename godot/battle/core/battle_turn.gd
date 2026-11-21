@@ -150,10 +150,11 @@ static func end_turn(b: Battle) -> void:
 		return
 	var u: BattleUnit = b.units.get(b.turn_owner)
 	b.ap = 0
+	b.follow = {}
 	if u != null and u.is_alive():
 		b.emit(&"turn_ended", {"who": u.id})
 		# 1. push / pull
-		var d := zone_step(b, u)
+		var d := zone_step(b, u) if not BattleStats.has_flag(u, &"ignores_zones") else Vector2i.ZERO
 		if d != Vector2i.ZERO:
 			BattleDisplace.shove(b, u, d, "zone")
 			BattlePayload.settle(b)

@@ -8,5 +8,6 @@ id = &"stone"
 display_name = "Stone"
 trait_name = "Bulwark"
 trait_text = "Gives cover like a solid prop: a Strike that hits it does not strike the square behind it."
+trait_flags = {"gives_cover": true}
 learns = PackedStringArray("strike", "self", "zone", "prop")
-gifts = Array[Dictionary]([{"id": &"keystone", "name": "Keystone", "text": "allies orthogonally next to it cannot be pushed or pulled"}, {"id": &"hard_shell", "name": "Hard Shell", "text": "takes no damage from props"}, {"id": &"monolith", "name": "Monolith", "text": "surrounding it takes three enemies"}])
+gifts = Array[Dictionary]([{"id": &"keystone", "name": "Keystone", "text": "allies orthogonally next to it cannot be pushed or pulled", "flags": {"anchors_adjacent_allies": true}}, {"id": &"hard_shell", "name": "Hard Shell", "text": "takes no damage from props"}, {"id": &"monolith", "name": "Monolith", "text": "surrounding it takes three enemies"}])

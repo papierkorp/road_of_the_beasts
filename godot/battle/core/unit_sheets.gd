@@ -52,6 +52,10 @@ static func from_instance(inst: MonsterInstance, _content: BattleContent = null)
 		if int(inst.stats["reach"]) < MIN_REACH:
 			s.notes.append("Reach raised to %d" % MIN_REACH)
 		# no air layer since the reshape of 2026-11-13: Winged monsters stand on the ground
+	if inst.uses_points():                       # the hub game: the trait of its Kin and its gifts act without a slot
+		var kin := KinDef.of(def.kin)
+		if kin != null:
+			s.innate = kin.passives(inst.gifts)
 	var kit := inst.kit_skills()
 	if kit.is_empty():
 		s.notes.append("no kit: Step only")

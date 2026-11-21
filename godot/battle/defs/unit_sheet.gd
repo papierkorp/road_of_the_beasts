@@ -28,6 +28,8 @@ var pace_bonus: float = 0.0
 var look: MonsterDef = null
 ## What the adapter could not carry over (shown before the battle, never a rule).
 var notes: Array[String] = []
+## Passives it has without a slot: the trait of its Kin and its Kin gifts (ingame battle only).
+var innate: Array[BattleSkillDef] = []
 
 
 func active_skills() -> Array[BattleSkillDef]:
@@ -43,6 +45,7 @@ func passives() -> Array[BattleSkillDef]:
 	for s in skills:
 		if not s.is_active():
 			out.append(s)
+	out.append_array(innate)
 	return out
 
 

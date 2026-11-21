@@ -2,11 +2,11 @@ class_name SkillsPanel
 extends HubPanel
 ## The kit of each monster (docs/skills.md §1, §8; docs/monsters.md §5): the skills in its slots, their development
 ## and the choice at a stage breakthrough. The options of a skill are not defined, so a level changes nothing in a
-## battle yet; Kin traits and gifts are shown and do not act in a battle yet.
+## battle yet; a Kin trait acts in a battle, a gift only if it is built (KinDef).
 
 
 func build(into: VBoxContainer) -> void:
-	into.add_child(HubUi.dim("A monster starts with %d slots. At each stage breakthrough it takes one of three: a new slot, a development step, or a gift of its Kin. Not built yet: a skill level, a Kin trait and a gift change nothing in a battle." % MonsterInstance.START_SLOTS))
+	into.add_child(HubUi.dim("A monster starts with %d slots. At each stage breakthrough it takes one of three: a new slot, a development step, or a gift of its Kin. The trait of its Kin acts in every battle. Not built yet: a skill level changes nothing in a battle, and so does a gift marked \"not built\"." % MonsterInstance.START_SLOTS))
 	var list := HubUi.scroll(into)
 	for m in game.roster:
 		var card := HubUi.card(list)

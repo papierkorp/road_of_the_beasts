@@ -465,7 +465,7 @@ static func sheet_rows(_c: BattleContent, s: UnitSheet) -> Array:
 		["", "%s%sHP %d%sPace %.1f%s%s %d%sReach %d%sAP %d%s" % [MonsterDef.kin_name(s.kin), SEP, s.hp, SEP, s.pace, SEP,
 			"Stamina" if BattleExperiment.stamina else "Move", s.movement, SEP, s.reach, SEP, s.ap, "" if s.tpr <= 1 else SEP + "TPR %d" % s.tpr]],
 		["", SEP.join(kit)],
-	]
+	] + innate_rows(s)
 
 
 # ---------- state ----------
@@ -511,6 +511,15 @@ static func unit_rows(b: Battle, u: BattleUnit) -> Array:
 		kit.append(k.display_name)
 	if not kit.is_empty():
 		rows.append(["", SEP.join(kit)])
+	rows.append_array(innate_rows(u.sheet))
+	return rows
+
+
+## The Kin trait and the Kin gifts of a monster (passives without a slot): one row each, with what it does.
+static func innate_rows(s: UnitSheet) -> Array:
+	var rows: Array = []
+	for p in s.innate:
+		rows.append(["", "%s: %s" % [p.display_name, p.description]])
 	return rows
 
 
