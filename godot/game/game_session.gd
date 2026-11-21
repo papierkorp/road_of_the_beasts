@@ -4,31 +4,12 @@ extends Node
 ## scene; the battle scene reads it and leaves its BattleResult here.
 ## The request stays after the battle so "Fight Again" fights the same teams again.
 
-## Emitted when something outside a screen changed the running game (the F10 cheat menu).
-@warning_ignore("unused_signal")
-signal state_changed
-
 var request: BattleRequest = null
 var last_result: BattleResult = null
 ## Scene the battle returns to when it is over ("" = back to the main menu).
 var return_scene := ""
 ## Let the AI play both sides (headless smoke tests: --autoplay).
 var autoplay := false
-
-## The running game (null in the plain multiplayer mode) and its current dungeon run.
-var game: GameState = null
-
-## The walkable district the player is in and where they came from (decides where they appear).
-var district: StringName = &"city"
-var arrive_from: StringName = &"start"
-## Set when a screen reloads itself and the player should stay where they are.
-var resume_pos := Vector2(-1.0, -1.0)
-
-## Build mode of the Inner World (gdd_overworld §6.4): on / off, the structure being placed, its rotation.
-var build_mode := false
-var build_item: StringName = &""
-var build_rot := false
-var expedition: Expedition = null
 
 
 func start_battle(r: BattleRequest, return_to := "") -> void:

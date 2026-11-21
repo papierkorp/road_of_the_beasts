@@ -369,3 +369,57 @@ So möchte ich das Ergebnis, auf Deutsch:
 - Danach kurz, was am Plan gut ist und bleiben sollte.
 - Zum Schluss deine Fragen an mich, falls du welche hast, und welche drei Punkte du als Nächstes klären würdest.
 ```
+
+## Hub-Spiel umsetzen (erste klickbare Fassung nach dem neuen Rahmen)
+
+Für eine neue Sitzung im Projektordner. Der Agent baut den Code um; die Regeldateien ändert er nicht.
+
+```text
+Ich habe den Rahmen von Road of the Beasts neu gesetzt: Der rundenbasierte Kampf ist das Spiel, alles drumherum dient ihm. Statt der begehbaren 3D-Stadt gibt es einen Hub aus Gebäuden, drei Orte für Kämpfe (Wildnis, Dungeon, Void), eine Lebensspanne als Frist und ein Kultivierungssystem. Die Dokumente sind angeglichen, der Godot-Build zeigt noch das alte Spiel. Bau ihn um.
+
+Wozu das Ganze: Ich will die Oberfläche selbst durchklicken und danach die offenen Detailfragen entscheiden (Aufgaben T54 bis T60). Mir hilft deshalb eine Fassung, in der der ganze Kreislauf einmal funktioniert, mehr als ein einzelner Teil, der fertig ausgearbeitet ist. Breite vor Tiefe, Platzhalter statt Feinschliff.
+
+Lies zuerst:
+- docs/vision.md ganz (der Rahmen, er geht allem vor)
+- docs/overworld.md ganz, docs/battle_ingame.md ganz
+- docs/temp_todo.md, dazu T50, T54 bis T61 und T19 unter docs/todo/
+- godot/README.md und docs/architecture.md §1 (die Trennung von battle/, overworld/, shared/ und game/)
+- docs/monsters.md §5 und docs/skills.md §8 nur so weit, wie du sie für Wachstum und Entwicklung brauchst
+
+Was am Ende stehen soll: Ich starte ein neues Spiel, wähle ein Kultivierungssystem und eines von drei Eiern, und lande im Hub. Von dort erreiche ich jedes Gebäude aus vision.md §6. Ich kann Tage spielen: in der Wildnis einzelne Kämpfe für Tages-AP, im Dungeon einen Lauf für den ganzen Tag, im Void eine Tiefe auf meinem eigenen Battleground. Kämpfe geben, was vision.md §4 nennt; die Nacht zählt die Lebensspanne herunter. Die letzte Tiefe einer Stufe ist die Durchbruchsprüfung; läuft die Lebensspanne ab, muss ich sie antreten, und wer sie dann verliert, hat das Spiel verloren und fängt beim Nest neu an. Das Ganze ist im Querformat mit Maus und mit Finger bedienbar.
+
+Arbeite in dieser Reihenfolge. Nach jedem Schritt startet das Spiel, die Tests des Schritts laufen grün, und du committest auf main:
+
+1. Aufräumen: die begehbare 3D-Welt, Bezirke, Markt, Aufträge, Gunst, Strukturen des Internal World und die Growth Preview samt ihren Tests und Daten entfernen. Der Kampf, der Karteneditor, der Ingame-Prototyp und die Multiplayer-Sandbox bleiben unverändert erreichbar. Prüfe, was vom alten Dungeon-Lauf (overworld/core/expedition.gd, dungeon.tscn) zum neuen Dungeon passt, bevor du ihn löschst oder übernimmst.
+2. Spielzustand und Hub: neues Spiel mit beiden Wahlen, der Hub-Bildschirm, Tages-AP, Tag beenden, Lebensspanne, Stufe, Speichern und Laden.
+3. Wildnis: die Liste der heutigen Begegnungen mit Battleground, Gegnern, Fangbarem und Beute; Kampf, Ergebnis, XP, Fang; jede Nacht neu; eine angekündigte seltene Begegnung.
+4. Nest, Trainingsplatz, Schriftenhalle: Roster, Statpunkte, Kit und Skill-Entwicklung.
+5. Dungeon: Knotenkarte mit Gabelungen, HP bleiben stehen, Aussteigen, Niederlage kostet Beute, Endkampf mit Durchbruchsmaterial; die Challenge und danach das Ernten.
+6. Void, Werkstatt und Kultivierungshalle: Tiefen, eigener Battleground aus Blueprints und Material, Pfadpunkte und der Baum, die Prüfung, das erzwungene Ende, der Bildschirm für ein verlorenes und für ein gewonnenes Spiel.
+7. Kessel und Schmiede: Eigenschaften je Spiel gezogen, Entdecken durch Ausprobieren, Pillen außerhalb des Kampfs.
+
+Wenn die Zeit oder der Kontext nicht für alles reicht, hör nach einem vollständigen Schritt auf und sag, wo du stehst. Ein halber Schritt nützt mir nichts.
+
+Was du wissen musst, bevor du anfängst:
+- Viele Zahlen und Listen sind in den Regeln mit Absicht „not defined“: Tages-AP je Stufe, Tage der Lebensspanne, Zahl der Begegnungen, Beute, die Kultivierungssysteme und ihre Bäume, das Budget eines Battlegrounds, die Pflanzen und ihre Eigenschaften. Setz dafür Testwerte, alle an einer Stelle unter godot/data/, und wähle sie so, dass ich in einer halben Stunde eine Stufe durchspielen und die Prüfung sehen kann. Das sind keine Regeln: Schreib sie nicht in die Regeldateien, sondern liste sie in godot/README.md und in docs/todo/implementation.md.
+- Wo eine Regel fehlt und du ohne sie nicht weiterkommst, nimm die einfachste Lösung, die dem Rahmen nicht widerspricht, und führe sie in derselben Liste. Frag mich nur, wenn zwei Lösungen das Spiel deutlich verschieden machen.
+- godot/data/maps/ ist leer, und jedes Brett des Spiels soll ein Battleground sein. Leg eine kleine Zahl Test-Battlegrounds als Daten an; es genügt Inhalt für die ersten zwei Stufen, die späteren dürfen ihn wiederverwenden. Zwei Kultivierungssysteme zur Auswahl genügen.
+- Pillen und Waffen im Kampf (Tamer-Slots über Tamer-Skills hinaus) sind im Kampf nicht gebaut (implementation.md, I22). Ändere dafür nicht die Kernregeln des Kampfs; lass sie weg und nenne es im Bericht. Was der Request zusätzlich tragen muss (HP durch einen Dungeon-Lauf, der eigene Battleground im Void), darfst du ergänzen.
+- Der eigene Battleground soll den vorhandenen Karteneditor nutzen, eingeschränkt auf das, wofür der Spieler Blueprints hat, mit einem Budget und der Regel, dass das Startfeld des Gegners erreichbar bleibt. Die genauen Grenzen sind offen (T56); bau sie so, dass ich die Werte leicht ändern kann.
+- Für den Finger: große Tippflächen, keine Information, die nur beim Überfahren mit der Maus erscheint, nichts, das eine Tastatur braucht. Ein Android-Export gehört nicht dazu.
+- Ein Lauf aller Tests unter tests/overworld ist zuletzt nach 30 Minuten nicht fertig geworden, die Ursache ist unbekannt. Wenn die alten Suiten wegfallen, prüfe, ob das Problem bleibt.
+
+Was gilt:
+- Die Arbeitsregeln stehen in CLAUDE.md; sie gelten alle. Wichtig hier: keine Simulationsläufe, eine Aktion der Input Map für jede Taste und jeden Mausknopf, genau ein Datenordner godot/data/, nicht mehr Gebrauchtes löschen.
+- battle/ und overworld/ kennen einander nicht; sie treffen sich nur über BattleRequest und BattleResult in shared/. Der Umbau auf die Zielarchitektur (T42) gehört nicht zu diesem Auftrag.
+- Der Multiplayer-Kampf wird nicht angefasst: keine Regel, kein Inhalt und keine Zahl von ihm ändert sich.
+- Die Regeldateien unter docs/ bleiben, wie sie sind. Findest du einen Widerspruch zwischen ihnen, halt dich an vision.md und nenn ihn mir. Pflegen sollst du godot/README.md, godot/tools/README.md, docs/todo/implementation.md, die Aufgabe T61 und den Stand in docs/temp_todo.md.
+- Die Logik jedes Schritts bekommt gdUnit-Tests (Tag und Lebensspanne, Ziehen der Begegnungen, Dungeon-Lauf und Ernten, Void und Prüfung, Baum, Ziehen der Eigenschaften mit festem Seed). Für die Oberfläche genügt, dass du jeden Bildschirm einmal gestartet und angesehen hast.
+
+So möchte ich den Bericht, auf Deutsch:
+- Zuerst: Bis zu welchem Schritt bist du gekommen, und wie starte ich das Spiel?
+- Dann je Schritt in wenigen Sätzen, was gebaut ist und was fehlt.
+- Die Liste aller Testwerte und aller Lösungen, die du ohne Regel gewählt hast.
+- Was du geprüft hast und wie: welche Tests gelaufen sind und mit welchem Ergebnis, welche Bildschirme du gesehen hast. Trenn, was du geprüft hast, von dem, was du annimmst.
+- Widersprüche in den Regeln, auf die du gestoßen bist, und deine Fragen an mich.
+```

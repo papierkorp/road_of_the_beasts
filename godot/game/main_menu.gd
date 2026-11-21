@@ -1,10 +1,8 @@
 extends Control
-## Start menu: start the game or open the battle menu (ingame prototype and multiplayer battle), overview (debug tables of skills and monsters), growth preview (test screen), settings, quit.
+## Start menu: the battle menu (ingame prototype and multiplayer battle), overview (debug tables of skills and monsters), settings, quit.
 
 const BATTLE_MENU_SCENE := "res://battle/battle_menu.tscn"
-const OVERWORLD_SCENE := "res://overworld/district.tscn"
 const OVERVIEW_SCENE := "res://game/overview.tscn"
-const GROWTH_SCENE := "res://game/growth_preview.tscn"
 
 var _buttons: VBoxContainer
 var _settings: SettingsPanel
@@ -42,12 +40,8 @@ func _ready() -> void:
 	_buttons = VBoxContainer.new()
 	_buttons.add_theme_constant_override("separation", 10)
 	col.add_child(_buttons)
-	_add_button("New Game", _new_game)
-	var cont := _add_button("Continue", _continue_game)
-	cont.disabled = not SaveGame.exists()
 	_add_button("Battle", func(): get_tree().change_scene_to_file(BATTLE_MENU_SCENE))
 	_add_button("Overview", func(): get_tree().change_scene_to_file(OVERVIEW_SCENE))
-	_add_button("Growth Preview", func(): get_tree().change_scene_to_file(GROWTH_SCENE))
 	_add_button("Settings", _show_settings)
 	_add_button("Quit", func(): get_tree().quit())
 
@@ -64,28 +58,6 @@ func _add_button(text: String, action: Callable) -> Button:
 	b.pressed.connect(action)
 	_buttons.add_child(b)
 	return b
-
-
-func _new_game() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.randomize()
-	GameSession.game = GameState.new_game(rng)
-	GameSession.expedition = null
-	GameSession.district = &"city"
-	GameSession.arrive_from = &"start"
-	SaveGame.save(GameSession.game)
-	get_tree().change_scene_to_file(OVERWORLD_SCENE)
-
-
-func _continue_game() -> void:
-	var g := SaveGame.load_game()
-	if g == null:
-		return
-	GameSession.game = g
-	GameSession.expedition = null
-	GameSession.district = &"city"
-	GameSession.arrive_from = &"start"
-	get_tree().change_scene_to_file(OVERWORLD_SCENE)
 
 
 func _show_settings() -> void:
