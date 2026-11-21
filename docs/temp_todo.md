@@ -13,11 +13,11 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 
 ## Current State
 
-- **Read first:** [vision.md](vision.md), the frame of the game (T50). It holds over the rule files; [overworld.md](overworld.md) is rewritten along it.
-- **Frame of persons (2026-11-20):** one card per person, one bond ladder, hiring by wishes, a calendar with events instead of ordered arcs, three ways to lead people, fame instead of weight; staying low profile is dropped ([overworld.md §7](overworld.md#7-management), [§3.4](overworld.md#34-events)). Its details are open in T52.
-- **Decided alone, to review (T51):** open are rows 6 and 21 (rules) and 22–26 and 28 (build).
+- **Read first:** [vision.md](vision.md), the frame of the game (T50). It holds over the rule files.
+- **New frame (2026-11-21):** the battle is the game; a hub of buildings in place of the 3D city; offline single player, phone in landscape and PC; three pillars (monster, tamer, board); day AP, a lifespan per stage with the trial forced at its end (losing it loses the game), Sovereign as the end; wild areas, roguelike dungeons and the void (own battleground, its last depth is the trial) as the places of battle; an orphan with one of three eggs and a cultivation system chosen at the start (a small tree per stage, path points from the void); a mastered dungeon can be harvested without a battle; crafting stays, materials have a tier and no grade. Persons, bonds, fame, orders and organisations are dropped.
+- **Not yet aligned with the frame:** [overworld.md](overworld.md) (still the walked city with persons), T51, T52 and the old overworld tasks (see T50), and the build (the 3D hub world, the Growth Preview).
 - **World in the build ([godot/README.md](../godot/README.md)):** New Game leads into a hub with every district, both wild areas, the Realm Gate (the old dungeon run stands in) and the Internal World as teleporters; a follow camera; resources of a wild area for 1 day AP that return after nights. Main menu → Growth Preview walks through the growth by clicking. Not built: the third wild area, the two kinds of one-time realm, persons, battle in a wild area, the house, weight, crafting, the Internal World and tamer slots by the new rules. Not tried by hand: looking around with the mouse, taking resources, the way through the Realm Gate.
-- **Next:** the details of T52 in the chat, the rough shape before details; then the rest of T51, then T50; then the old overworld tasks (T15–T31) are sorted anew; then the first slice of the overworld (school, its mountain, the Internal World of the first stage). The build still shows the ordered arcs, weight and the hidden house (T52). The user has not yet walked the world or the growth preview. The ingame battle waits.
+- **Next:** the open rows of T50 in the chat, the rough shape before details (first: the hub and the remaining rows, in the order of T50); then [overworld.md](overworld.md) is rewritten and the old overworld tasks are sorted anew; then the first slice is chosen.
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. When it resumes: ends and board events in the map editor and the battle (T46); the user plays Seal Ground (T49); then a wild AI that values Seal Ground. Then the rebuild ([T42](todo/open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)).
@@ -27,9 +27,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 
 | # | Question | Task |
 |---|---|---|
-| 0 | The frame is decided; open are its lists and the points seen in the growth preview (a sub-tier gives the tamer nothing, four choices on one breakthrough) | T50 |
-| 0 | 8 rows decided without the user are left (6, 21, 22–26, 28); open besides: name and zones of the third wild area, entry to a world realm | T51 |
-| 0 | Details of the frame of persons: kinds of roots, roots of the player, tamer skills by root, sects, kinds of organisation, pools of traits and wishes, the season, fame, the list of events | T52 |
+| 0 | The new frame: what a game leaves behind, the numbers of the lifespan, the cultivation systems, the limits of a battleground, the hub's buildings, the numbers of dungeon, wild area and void, 3D or 2D board | T50 |
 | 1 | How does a stat shape split the points at the roll? | T03 |
 | 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills, battlegrounds in the overworld (cost, content, whose board) | T46 |
 | 13 | Seal: item and skill Seal Ground together? The upgrade scroll as an item; options of the other tamer skills | T49 |

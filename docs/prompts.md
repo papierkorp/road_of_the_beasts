@@ -329,3 +329,43 @@ Dann die Antworten auf die Fragen 2 bis 8, je in wenigen Sätzen, und zum Schlus
 Fragen, die nur der Projektinhaber beantworten kann. Lieber wenige belastbare Befunde als
 eine lange Liste von Kleinigkeiten.
 ```
+
+## Overworld-Plan kritisch prüfen (Genre, Umsetzbarkeit, Lücken, Vorstellung)
+
+Für eine neue Sitzung im Projektordner. Der Agent liest nur und ändert nichts.
+
+```text
+Ich möchte eine kritische Durchsicht des aktuellen Overworld-Plans von Road of the Beasts, bevor ich weiter ins Detail gehe. Der Plan ist schnell gewachsen, zuletzt um einen Rahmen für Personen (Bindungen, Wünsche, Events statt fester Arcs, Ruhm). Ich will wissen, ob das Ganze trägt, bevor darauf gebaut wird. Mir hilft ein ehrliches Urteil mehr als eine vollständige Liste: Wenn etwas nicht funktioniert, sag es deutlich.
+
+Lies dafür:
+- docs/vision.md (der Rahmen, er geht den Regeldateien vor)
+- docs/overworld.md ganz
+- docs/temp_todo.md und alle Aufgaben unter docs/todo/ mit Epic overworld, vor allem T50, T51 und T52; dazu docs/todo/done/overworld/T53
+- den Abschnitt „Overworld“ in docs/decisions.md, damit du weißt, was ich schon entschieden und was ich verworfen habe
+- docs/battle_ingame.md und docs/monsters.md nur so weit, wie der Overworld-Plan sich darauf stützt
+
+Beurteile den Plan unter diesen fünf Fragen:
+
+1. Passt es zu einer Wuxia/Xianxia-Welt? Was würde ein Kenner des Genres vermissen, was wirkt fremd oder falsch benannt, wo verschenkt der Plan typische Motive (Sekten, Meister und Schüler, Gesicht und Ansehen, Tribulation, Erbschaften, geheime Reiche, Fehden)? Nenne konkrete Stellen.
+
+2. Ist es umsetzbar? Ich entwickle allein, mit Godot. Wo steckt der meiste Aufwand an Inhalt (geschriebene Events, Pools für Wünsche und Traits, Schlüsselpersonen), an Systemen und an Oberfläche? Was davon ist für ein erstes spielbares Stück nötig, was kann warten, was ist in diesem Umfang unrealistisch?
+
+3. Gibt es Lücken und Widersprüche? Trenne dabei, was die Aufgaben schon als offen führen, von dem, was noch niemand bemerkt hat. Mich interessieren vor allem Regeln, die einander widersprechen, Systeme ohne Zweck für den Spieler und Stellen, an denen zwei Systeme dieselbe Frage beantworten.
+
+4. Ergibt es als Spiel Sinn? Wo liegen die Entscheidungen des Spielers an einem gewöhnlichen Tag, und sind sie interessant? Was treibt ihn von Stufe zu Stufe, wenn es keine feste Reihenfolge von Arcs gibt? Greifen Kampf, Handwerk und Personen ineinander oder laufen sie nebeneinander her? Miss das am Designziel „easy to learn, hard to master“: wenige einheitliche Regeln, Tiefe aus Kombinationen.
+
+5. Entspricht es meiner Vorstellung? Meine Vorstellung steht in vision.md, in meinen Entscheidungen in decisions.md und in dem, was T52 als meine Wünsche festhält. Wo weicht overworld.md davon ab, wo hat ein Agent etwas hineingeschrieben, das ich so nie gesagt habe, und wo widersprechen sich meine eigenen Wünsche? Wenn du meine Absicht an einer Stelle nicht erkennen kannst, rate nicht, sondern stell mir dazu eine Frage.
+
+Rahmen für die Arbeit:
+- Nur lesen. Ändere keine Dateien, committe nichts, starte keine Simulationsläufe und keine Tests.
+- Es geht um den Overworld und den Ingame-Kampf als seinen Teil, nicht um den Multiplayer-Kampf.
+- Die vorhandenen Monster, Skills und Zahlen sind vorläufig; bewerte den Plan nicht an ihnen.
+- Schlag nichts vor, was ich laut decisions.md schon verworfen habe, außer du hast einen neuen Grund; dann nenne ihn.
+- Belege jede Schwäche mit der Stelle (Datei und Abschnitt). Kennzeichne, was du in den Dateien gelesen hast und was du daraus folgerst.
+
+So möchte ich das Ergebnis, auf Deutsch:
+- Zuerst dein Gesamturteil in drei bis fünf Sätzen: Trägt der Plan, und was ist sein größtes Risiko?
+- Dann die Schwächen, nach Gewicht geordnet, die wichtigsten zuerst und höchstens zehn. Je Schwäche: was das Problem ist, wo es steht, warum es dem Spiel schadet, und ein Vorschlag, wie man es löst. Vorschläge sind Entwürfe, keine Entscheidungen.
+- Danach kurz, was am Plan gut ist und bleiben sollte.
+- Zum Schluss deine Fragen an mich, falls du welche hast, und welche drei Punkte du als Nächstes klären würdest.
+```

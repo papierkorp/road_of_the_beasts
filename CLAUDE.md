@@ -1,12 +1,12 @@
 # Project
 
-- **Road of the Beasts:** deterministische, rundenbasierte Monsterkämpfe mit Management und Kultivierung.
+- **Road of the Beasts:** deterministische, rundenbasierte Monsterkämpfe; offline, Einzelspieler, am Handy (Querformat) wie am PC spielbar. Der Kampf ist das Spiel: Alles drumherum (Hub, Kultivierung, Handwerk) existiert nur, um den Kampf zu verändern oder zu verbessern; Vorschläge daran messen.
 - **Designziel:** „Easy to learn, hard to master“: wenige, einheitliche und gut lesbare Regeln; Tiefe entsteht aus Kombinationen und Entscheidungen, nicht aus Sonderregeln. Vorschläge daran messen, Ausnahmen begründen.
 - **Battle-Ziele:** stehen in [docs/battle.md §1](docs/battle.md#1-goals-and-pillars); Regel-, Inhalts- und Preisvorschläge daran messen.
-- **Rahmen:** [docs/vision.md](docs/vision.md) beschreibt das Spiel im Ganzen und geht den Regeldateien vor; Vorschläge für Overworld und Ingame-Kampf daran messen.
-- **Fokus:** Der Battle-Kern steht. Zuerst werden die Overworld-Regeln an den Rahmen angeglichen, dann wird ein erster Overworld-Baustein gebaut; der Ingame-Kampf wartet so lange. Der Rahmen darf Entscheidungen des Ingame-Kampfs begründen, nie die des Multiplayer-Kampfs.
+- **Rahmen:** [docs/vision.md](docs/vision.md) beschreibt das Spiel im Ganzen und geht den Regeldateien vor; Vorschläge für Hub und Ingame-Kampf daran messen.
+- **Fokus:** Der Battle-Kern steht. Zuerst wird der Rahmen fertig geklärt (Säulen, ihre Ressourcen und Quellen), dann werden die Regeldateien und Aufgaben daran angeglichen. Der Multiplayer-Kampf ist kein Arbeitsziel; der Rahmen darf Entscheidungen des Ingame-Kampfs begründen, nie die des Multiplayer-Kampfs.
 - **Zwei Kämpfe, strikt getrennt:** Der „Multiplayer-Kampf“ (Multiplayer-Modus: Draft-Sandbox im Godot-Build, gleiche Punkte für alle) und der „Ingame-Kampf“ (gewachsene Monster, eigene Battlegrounds, Board-Events) teilen nur die Kernregeln aus `docs/battle.md`. Regeln, Inhalte, Messungen und Balance des einen sind kein Grund für Entscheidungen im anderen; bei jedem Vorschlag und jedem Lauf den Kampf nennen.
-- **Begriffe:** „das Spiel“ meint das Spiel mit Overworld und Fortschritt.
+- **Begriffe:** „das Spiel“ meint das Spiel mit Hub und Fortschritt.
 
 ## Safety
 
