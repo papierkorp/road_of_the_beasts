@@ -51,7 +51,7 @@ func _pick(into: Control, label: String, form: String, current: String, set_it: 
 
 
 func build(into: VBoxContainer) -> void:
-	into.add_child(HubUi.dim("You see what you get before you forge. The beast part sets what the piece gives, the ore its tier, an essence adds one variation. A weapon fills a tamer slot, an armour is worn by a monster. A piece changes nothing in a battle yet."))
+	into.add_child(HubUi.dim("You see what you get before you forge. The beast part sets what the piece gives, the ore its tier, an essence adds one variation. A weapon fills a tamer slot and is used once per battle; an armour is worn by a monster and gives it one more passive. Not built yet: the tier of the ore and the temper of an essence change nothing."))
 	var ores := _owned("ore")
 	if not ores.has(ore):
 		ore = ores[-1] if not ores.is_empty() else ""

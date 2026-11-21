@@ -64,6 +64,8 @@ var dev_steps := 0
 ## Development level per kit slot (1–3); a missing entry is level 1.
 var slot_levels: Array[int] = []
 var armour: StringName = &""
+## What the armour it wears does in a battle: {"name", "text", "flags"} ({} = none); set when it is put on.
+var armour_passive := {}
 ## Open kit slots (4 at the start, up to 6) and what fills them: ids of skills of the species.
 var slots := START_SLOTS
 var kit: Array[StringName] = []
@@ -511,7 +513,7 @@ func to_dict() -> Dictionary:
 		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "core": core.duplicate(), "current_hp": current_hp,
 		"unspent": unspent, "dev_steps": dev_steps, "slot_levels": slot_levels.duplicate(), "armour": String(armour),
 		"slots": slots, "kit": kit.map(func(k: StringName) -> String: return String(k)), "fresh": fresh, "gifts": gifts.map(func(g: StringName) -> String: return String(g)),
-		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate(), "gift_picks": gift_picks}
+		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate(), "gift_picks": gift_picks, "armour_passive": armour_passive.duplicate(true)}
 
 
 static func from_dict(d: Dictionary) -> MonsterInstance:
@@ -550,6 +552,7 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 		m.gifts.append(StringName(g))
 	m.choice_picks = int(d.get("choice_picks", 0))
 	m.gift_picks = int(d.get("gift_picks", 0))
+	m.armour_passive = (d.get("armour_passive", {}) as Dictionary).duplicate(true)
 	for taken in d.get("choice_taken", []):
 		m.choice_taken.append(String(taken))
 	return m

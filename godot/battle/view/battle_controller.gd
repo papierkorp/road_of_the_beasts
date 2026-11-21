@@ -314,6 +314,15 @@ func _tamer_action() -> Dictionary:
 			if hover == NOWHERE:
 				return {}
 			a["cells"] = [hover]
+		TamerSkillDef.LAY:
+			if hover == NOWHERE:
+				return {}
+			var line: Array = []
+			var along: Vector2i = Board.CARDINAL[rot % Board.CARDINAL.size()]
+			for k in maxi(1, def.lay_count):
+				if battle.board.in_bounds(hover + along * k):
+					line.append(hover + along * k)
+			a["cells"] = line
 		TamerSkillDef.SWAP_PLACES:
 			if picked.is_empty() or target == null:
 				return {}
@@ -668,7 +677,7 @@ func _tamer_highlights(out: Dictionary) -> void:
 	var def := battle.tamer_skill(PLAYER_SIDE, tamer_id)
 	if def == null:
 		return
-	if def.effect == TamerSkillDef.DOMAIN_GLIMPSE or def.effect == TamerSkillDef.SEAL:
+	if def.effect == TamerSkillDef.DOMAIN_GLIMPSE or def.effect == TamerSkillDef.SEAL or def.effect == TamerSkillDef.LAY:
 		var a := _tamer_action()
 		if a.is_empty():
 			return
@@ -766,6 +775,9 @@ func _hint_text() -> String:
 				TamerSkillDef.SEAL:
 					var why := battle.check(_tamer_action()) if hover != NOWHERE else ""
 					return why if why != "" else "Click a square to lay Seal Ground (%d%% at 1 HP)" % def.seal_base
+				TamerSkillDef.LAY:
+					var lay_why := battle.check(_tamer_action()) if hover != NOWHERE else ""
+					return lay_why if lay_why != "" else ("Click a square" + (" · R turns the line" if def.lay_count > 1 else ""))
 				TamerSkillDef.SWAP_PLACES:
 					return "Click the %s monster" % ("first" if picked.is_empty() else "second")
 				TamerSkillDef.BEAST_SWAP:
@@ -826,7 +838,7 @@ func _actions() -> Array:
 		var used: bool = battle.tamer_used[PLAYER_SIDE].has(def.id)
 		out.append({"id": StringName(TAMER_PREFIX + String(def.id)), "group": &"tamer", "text": "%s\n%s" % [def.display_name, "used" if used else "tamer"],
 			"enabled": mine and not used, "selected": mode == &"tamer" and tamer_id == def.id,
-			"card": {"title": def.display_name, "rows": [["", def.description], ["", "seal item · used up when laid" if def.seal_item else "tamer · 1/battle"]]}})
+			"card": {"title": def.display_name, "rows": [["", def.description], ["", def.source_text()]]}})
 	return out
 
 

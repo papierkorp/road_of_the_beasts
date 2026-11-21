@@ -89,10 +89,10 @@ void, 1 breakthrough material for the trial, 30 XP per win against 60 for the fi
 day AP and takes all that are left, a harvest costs 1. The hub shows a day as a year and day AP as AP.
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
-("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour and of a development level, the Kin gifts that
-`data/kins/` gives no flags (they are stored and shown as "not built"), species skills, vows,
-the relearning pill, what a finished game leaves for the next one (the games are only counted), ends of a battle
-other than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
+("Hub Game"). **Not built:** the effect of a development level, of the tier of a forged piece and of its temper, the Kin gifts
+that `data/kins/` gives no flags (stored and shown as "not built"), species skills, the relearning pill, branches
+of the trees, what a finished game leaves for the next one (the games are only counted), ends of a battle other
+than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
 Foundation), an Android export.
 
 **Kin traits in the battle.** A grown monster of the hub game carries the trait of its Kin and its built gifts as
@@ -109,6 +109,13 @@ which the multiplayer battle, the prototype and the tools never see (`GameData.m
 (`KinDef.groups_of`, `MonsterDef.learn_list`); `skills` stays the kit of the multiplayer battle. All lists are
 test content. Creatures of the void are met in the void only, are never caught, and a passed trial leaves an
 egg of one. The hub shows a skill as the battle card does (`GameSession.skill_text`), not its free text.
+
+**Weapons, pills and armour in the battle.** A forged weapon and a pill that acts in a battle are put into a
+tamer slot on the screen that prepares a fight; each is a `TamerSkillDef` in `data/tamer/` (`weapon_*`, `pill_*`)
+with the effects `lay` (ground or a prop on a straight line of squares), `boon` (a timed effect on one own
+monster) or one of the tamer skills. A pill that was taken is used up after the battle, a weapon never. An armour
+gives its wearer a passive without a slot, by flags like a Kin trait (`armour_passives` in `values.tres`). All
+eight weapons, three battle pills and eight armours are test content.
 
 **Vows.** Three are offered at the start and after every breakthrough, in the Cultivation Hall; one or none is
 taken, at most three in a game (`GameState.offer_vows`, `take_vow`). The sixteen vows and what each changes are

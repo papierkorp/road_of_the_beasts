@@ -19,6 +19,8 @@ var wild := true
 var max_team := 1
 var team: Array[MonsterInstance] = []
 var tamer: Array[StringName] = []
+## Loadout entries that come from an item: tamer skill id -> the weapon or pill it stands for.
+var tamer_items := {}
 var roll_seed := 0
 ## What the place needs to read the result: the index of the encounter, the node of the dungeon, the depth.
 var ref := {}

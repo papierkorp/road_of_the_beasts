@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"weapon_ward_staff"
+display_name = "Ward Staff"
+effect = "spirit_shield"
+description = "The next hit on one own monster deals nothing."
+source = "weapon"

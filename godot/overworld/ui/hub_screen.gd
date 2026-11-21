@@ -209,7 +209,7 @@ func _build_prepare() -> void:
 			refresh())
 		mine.add_child(b)
 	var slots := HubUi.card(list)
-	slots.add_child(HubUi.label("Tamer slots: %d of %d, each once in the battle" % [f.tamer.size(), game.tamer_slots()], 20, UiTheme.ACCENT))
+	slots.add_child(HubUi.label("Tamer slots: %d of %d — a tamer skill, a weapon or a pill each, once in the battle" % [f.tamer.size(), game.tamer_slots()], 20, UiTheme.ACCENT))
 	var content := BattleContent.shared()
 	for id in game.tamer_skills:
 		var def := content.tamer_skill(id)
@@ -230,6 +230,28 @@ func _build_prepare() -> void:
 	var why := game.team_problem(f.team)
 	if why != "":
 		_body.add_child(HubUi.label("Not yet: %s." % why, 20, HubUi.WARN))
+	var items := Crafting.battle_items(game)
+	for id: StringName in items:
+		var def := content.tamer_skill(id)
+		if def == null:
+			continue
+		var item: String = items[id]
+		var b := Button.new()
+		b.toggle_mode = true
+		b.button_pressed = f.tamer.has(id)
+		b.disabled = not f.tamer.has(id) and f.tamer.size() >= game.tamer_slots()
+		b.text = "%s ×%d — %s (%s)" % [Materials.display_name(item, game.values), game.count(item), def.description, def.source_text()]
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.custom_minimum_size = Vector2(0, HubUi.TAP)
+		b.toggled.connect(func(on: bool):
+			if on and not f.tamer.has(id):
+				f.tamer.append(id)
+				f.tamer_items[id] = item
+			elif not on:
+				f.tamer.erase(id)
+				f.tamer_items.erase(id)
+			refresh())
+		slots.add_child(b)
 	var go := HubUi.button("Fight", _start_fight, 260)
 	go.disabled = f.team.is_empty() or why != ""
 	_body.add_child(go)

@@ -25,6 +25,8 @@ const TEMPO := "tempo"
 ## round end (it does nothing to monsters).
 const REFRESH := "refresh"
 const ERODE := "erode"
+## A monster with it is not pushed or pulled (a pill of the hub game).
+const ANCHOR := "anchor"
 
 const TAGS: Array[String] = [SLOW, HASTE, DRAIN_PACE, QUICKEN, DRAIN_RANGE, EXTEND, PUSH, PULL, SHIELD, EXPOSE, MEND, VIGOR, SAP, TEMPO, REFRESH, ERODE]
 ## Every effect but `mend` has an opposite; zones are compared by effects, never by name.

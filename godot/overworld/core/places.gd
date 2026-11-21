@@ -10,6 +10,7 @@ static func resolve(game: GameState, f: Fight, result: BattleResult) -> void:
 		result.apply_hp(f.team, 0)
 	for m in f.team:
 		m.fresh = false
+	Crafting.spend_used(game, f, result)
 	match f.place:
 		Fight.WILD:
 			WildArea.resolve(game, f, result, won)

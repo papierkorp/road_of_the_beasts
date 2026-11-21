@@ -130,3 +130,40 @@ func test_a_monster_wears_one_armour() -> void:
 	assert_bool(Crafting.wear(g, m, "")).is_true()
 	assert_str(String(m.armour)).is_equal("")
 	assert_int(g.count("armour:Rooted (Qi Gathering)")).is_equal(1)
+
+
+func test_a_weapon_and_a_battle_pill_fill_tamer_slots_and_the_pill_is_used_up() -> void:
+	var g := _game()
+	g.add_item(Materials.ore(0), 1)
+	g.add_item(Materials.beast_part(0), 1)
+	var weapon := Crafting.forge(g, Crafting.WEAPON, Materials.ore(0), Materials.beast_part(0))
+	g.add_item("pill:warding:0", 2)
+	g.add_item("pill:change:0", 1)
+	var items := Crafting.battle_items(g)
+	assert_str(String(items[&"weapon_ember_brand"])).is_equal(weapon)
+	assert_str(String(items[&"pill_warding"])).is_equal("pill:warding:0")
+	assert_int(items.size()).is_equal(2)                   # the reshape pill acts in no battle
+	for id in items:
+		assert_object(BattleContent.shared().tamer_skill(id)).is_not_null()
+	var f := Fight.new()
+	f.tamer_items = items
+	var r := BattleResult.new()
+	r.used_tamer = [&"weapon_ember_brand", &"pill_warding"]
+	Crafting.spend_used(g, f, r)
+	assert_int(g.count("pill:warding:0")).is_equal(1)
+	assert_int(g.count(weapon)).is_equal(1)                # a weapon is never used up
+
+
+func test_an_armour_gives_its_wearer_a_passive_in_the_battle() -> void:
+	var g := _game()
+	g.add_item(Materials.ore(0), 1)
+	g.add_item(Materials.beast_part(5), 1)
+	var armour := Crafting.forge(g, Crafting.ARMOUR, Materials.ore(0), Materials.beast_part(5))
+	var m := g.roster[0]
+	assert_bool(Crafting.wear(g, m, armour)).is_true()
+	var sheet := UnitSheets.from_instance(m)
+	assert_bool(BattleStats.has_flag(BattleUnit.new(&"x", sheet), &"immovable")).is_true()      # Anchor Plate
+	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(m.to_dict())))
+	assert_bool(BattleStats.has_flag(BattleUnit.new(&"y", UnitSheets.from_instance(copy)), &"immovable")).is_true()
+	Crafting.wear(g, m, "")
+	assert_bool(BattleStats.has_flag(BattleUnit.new(&"z", UnitSheets.from_instance(m)), &"immovable")).is_false()

@@ -21,7 +21,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. Open in the build: ends and board events in the map editor (T46), Seal Ground played by hand (T49), a wild AI that values Seal Ground; then the rebuild (T42).
-- **Tests:** 351 cases, 0 failures, a full run in about 45 s ([implementation.md](todo/implementation.md)).
+- **Tests:** 357 cases, 0 failures, a full run in about 45 s ([implementation.md](todo/implementation.md)).
 
 ## Open Questions for the User
 

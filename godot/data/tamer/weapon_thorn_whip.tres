@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"weapon_thorn_whip"
+display_name = "Thorn Whip"
+effect = "lay"
+description = "Lays Thornbed on a line of up to 3 squares."
+lay_ground = &"thornbed"
+lay_count = 3
+source = "weapon"

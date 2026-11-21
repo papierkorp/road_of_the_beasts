@@ -22,7 +22,7 @@ func test_the_shipped_content_loads_without_problems() -> void:
 		&"stay_damage", &"stay_heal", &"stay_stamina", &"no_prop", &"seal"])   # seal: Seal Ground of the ingame battle
 	assert_int(c.props.size()).is_equal(28)      # catalogue, the simulation-only Reed Screen and the three experiment runes (button squares)
 	assert_str(c.prop(&"reed_screen").content_status).is_equal("simulation")
-	assert_int(c.tamer.size()).is_equal(12)      # the seven tamer skills of battle_ingame §5, Seal and the four seal items (§7)
+	assert_int(c.tamer.size()).is_equal(23)      # the seven tamer skills of battle_ingame §5, Seal, the four seal items (§7), and the eight weapons and three pills of the hub game
 	assert_int(c.fingerprint().length()).is_equal(64)
 	assert_str(c.fingerprint()).is_equal(BattleContent.reload_shared().fingerprint())
 

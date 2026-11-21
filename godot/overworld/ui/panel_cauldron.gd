@@ -71,4 +71,4 @@ func build(into: VBoxContainer) -> void:
 	if PillUse.add_rows(use, self, false) > 0:
 		pills.add_child(HubUi.label("Use here:", 18, UiTheme.DIM))
 		pills.add_child(use)
-	pills.add_child(HubUi.dim("Healing pills are taken between the battles of a dungeon. Pills that act in a battle and the relearning pill can be brewed but not used yet."))
+	pills.add_child(HubUi.dim("Healing pills are taken between the battles of a dungeon. A pill that acts in a battle is put into a tamer slot when you prepare the battle and is used up when taken. The relearning pill can be brewed but not used yet."))

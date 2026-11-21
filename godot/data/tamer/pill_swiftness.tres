@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"pill_swiftness"
+display_name = "Swiftness Pill"
+effect = "boon"
+description = "One own monster has 3 more Pace points until the end of the next round."
+boon = "swift"
+boon_value = 3
+source = "pill"

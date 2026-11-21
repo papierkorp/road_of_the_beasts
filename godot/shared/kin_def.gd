@@ -99,6 +99,11 @@ func passives(gift_ids: Array[StringName]) -> Array[BattleSkillDef]:
 	return out
 
 
+## A passive without a slot from a name, a text and flags (fields of BattleSkillDef): traits, gifts, armour.
+static func make_passive(p_id: StringName, p_name: String, text: String, flags: Dictionary) -> BattleSkillDef:
+	return _passive(p_id, p_name, text, flags)
+
+
 static func _passive(p_id: StringName, p_name: String, text: String, flags: Dictionary) -> BattleSkillDef:
 	var s := BattleSkillDef.new()
 	s.id = p_id

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="TamerSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/tamer_skill_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"weapon_gale_fan"
+display_name = "Gale Fan"
+effect = "urgent_order"
+description = "One own monster that has not acted this round acts next."
+source = "weapon"

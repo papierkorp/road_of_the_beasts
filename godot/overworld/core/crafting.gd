@@ -181,4 +181,51 @@ static func wear(game: GameState, m: MonsterInstance, armour: String) -> bool:
 	if armour != "":
 		game.take_item(armour)
 	m.armour = StringName(armour)
+	m.armour_passive = entry_of(game.values.armour_passives, armour) if armour != "" else {}
 	return true
+
+
+## The entry of a list of the values ({"name", …}) whose name a forged piece carries.
+static func entry_of(list: Array, item: String) -> Dictionary:
+	var best := {}
+	for e: Dictionary in list:
+		if item.contains(String(e["name"])) and String(e["name"]).length() > String(best.get("name", "")).length():
+			best = e
+	return best
+
+
+## The tamer skill an item brings into a battle (&"" = none): the skill of a weapon, the effect of a battle pill.
+static func battle_skill_of(game: GameState, item: String) -> StringName:
+	match Materials.form(item):
+		WEAPON:
+			return StringName(entry_of(game.values.weapon_skills, item).get("skill", &"")) if not game.vow_has("no_weapons") else &""
+		"pill":
+			if game.vow_has("no_pills"):
+				return &""
+			for p in pill_properties(item):
+				for def: Dictionary in game.values.properties:
+					if StringName(def["id"]) == StringName(p) and def.has("skill"):
+						return StringName(def["skill"])
+	return &""
+
+
+## The items the player can put into tamer slots: tamer skill id -> item (one item per skill).
+static func battle_items(game: GameState) -> Dictionary:
+	var out := {}
+	var ids: Array = game.items.keys()
+	ids.sort()
+	for item: String in ids:
+		var skill := battle_skill_of(game, item)
+		if skill != &"" and not out.has(skill):
+			out[skill] = item
+	return out
+
+
+## After a battle: every pill that was taken is used up.
+static func spend_used(game: GameState, f: Fight, result: BattleResult) -> void:
+	if result == null:
+		return
+	for id in result.used_tamer:
+		var item := String(f.tamer_items.get(id, ""))
+		if Materials.form(item) == "pill" and game.take_item(item):
+			game.say("%s was used up." % Materials.display_name(item, game.values))

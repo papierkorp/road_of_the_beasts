@@ -67,6 +67,31 @@ static func error(b: Battle, a: Dictionary) -> String:
 		TamerSkillDef.SEAL:
 			var picked: Array = a.get("cells", [])
 			return BattleCatch.lay_error(b, side, picked[0] if picked.size() == 1 else null)
+		TamerSkillDef.BOON:
+			if _own(b, side, a.get("unit", &"")) == null:
+				return "choose one of your own monsters on the field"
+		TamerSkillDef.LAY:
+			return _lay_error(b, def, a.get("cells", []))
+	return ""
+
+
+## Squares for a LAY skill: 1 to `lay_count`, in one straight line without a gap, each able to take what is laid.
+static func _lay_error(b: Battle, def: TamerSkillDef, cells: Array) -> String:
+	if cells.is_empty() or cells.size() > maxi(1, def.lay_count):
+		return "choose up to %d square(s)" % maxi(1, def.lay_count)
+	for i in cells.size():
+		var p = cells[i]
+		if not (p is Vector2i) or not b.board.in_bounds(p):
+			return "choose squares on the board"
+		if i > 0:
+			var step: Vector2i = p - cells[i - 1]
+			if absi(step.x) + absi(step.y) != 1 or (i > 1 and step != cells[1] - cells[0]):
+				return "the squares form a straight line"
+		if def.lay_prop != &"":
+			if not BattleBoardOps.can_place_prop(b, b.content.prop(def.lay_prop), p):
+				return "%s needs a free square" % def.display_name
+		elif BattleBoardOps.ground_outcome(b, b.board.at(p), def.lay_ground) == &"immutable":
+			return "nothing can be laid on this ground"
 	return ""
 
 
@@ -109,6 +134,20 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 			_beast_swap(b, b.units[a["unit"]], b.units[a["other"]])
 		TamerSkillDef.SEAL:
 			BattleCatch.lay(b, side, def, a["cells"][0])
+		TamerSkillDef.BOON:
+			var bearer: BattleUnit = b.units[a["unit"]]
+			if def.boon == TamerSkillDef.BOON_ANCHOR:
+				b.apply_effect(bearer, "boon:%s" % def.id, FieldEffect.ANCHOR, 1, 0)
+			else:
+				b.apply_effect(bearer, "boon:%s" % def.id, FieldEffect.QUICKEN, def.boon_value, 1)
+		TamerSkillDef.LAY:
+			for p: Vector2i in a["cells"]:
+				if def.lay_prop != &"":
+					var made := BattleBoardOps.place_prop(b, b.content.prop(def.lay_prop), p)
+					if made != null:
+						made.until = b.round_number + BoardProp.CREATED_ROUNDS - 1
+				else:
+					BattleBoardOps.lay_ground(b, b.board.at(p), def.lay_ground, def.display_name)
 		TamerSkillDef.DOMAIN_GLIMPSE:
 			for p: Vector2i in a["cells"]:
 				var cell := b.board.at(p)

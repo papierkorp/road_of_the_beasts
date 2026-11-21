@@ -175,3 +175,49 @@ func test_beast_swap_takes_square_and_queue_entry_and_leaves_its_traps_set() -> 
 	# the swapped-out monster does not count as fallen
 	var r := BattleSetup.make_result(b)
 	assert_int(r.survivors(0)).is_equal(4)
+
+
+# ---------- weapons and pills of the hub game ----------
+
+func test_a_weapon_lays_ground_on_a_straight_line() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"weapon_ember_brand"])
+	b.begin()
+	var a := {"type": &"tamer", "side": 0, "skill": &"weapon_ember_brand"}
+	a["cells"] = [Vector2i(1, 1), Vector2i(2, 1), Vector2i(2, 2)]
+	assert_str(b.check(a)).contains("straight line")
+	a["cells"] = [Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 1)]
+	assert_str(b.check(a)).contains("up to 3")
+	a["cells"] = [Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1)]
+	assert_bool(b.apply(a)).is_true()
+	for p: Vector2i in a["cells"]:
+		assert_str(String(b.board.at(p).ground)).is_equal("lava")
+	assert_str(b.check(a)).contains("already used")
+
+
+func test_a_weapon_sets_a_prop_that_lapses_like_a_created_one() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"weapon_stone_seal"])
+	b.begin()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"weapon_stone_seal", "cells": [Vector2i(3, 3)]})).contains("free square")
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"weapon_stone_seal", "cells": [Vector2i(3, 2)]})).is_true()
+	var wall := b.board.prop_at(Vector2i(3, 2), Board.GROUND)
+	assert_object(wall).is_not_null()
+	assert_int(wall.until).is_equal(b.round_number + BoardProp.CREATED_ROUNDS - 1)
+
+
+func test_an_anchoring_pill_holds_a_monster_until_the_round_ends() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9, "ap": 4, "skills": [H.strike()]}], [0, Vector2i(3, 2), {"pace": 1.1}],
+		[1, Vector2i(6, 6), {"pace": 1.0}]], [&"pill_anchoring"])
+	b.begin()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_anchoring", "unit": &"u1"})).is_true()
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 2))
+	H.until_turn_of(b, &"u0")                              # the next round: the pill has worn off
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 1))
+
+
+func test_a_swiftness_pill_raises_the_pace() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.5}], [1, Vector2i(6, 6)]], [&"pill_swiftness"])
+	b.begin()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_swiftness", "unit": &"u0"})).is_true()
+	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(1.8, 0.001)
