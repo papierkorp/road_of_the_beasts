@@ -8,6 +8,8 @@ static func resolve(game: GameState, f: Fight, result: BattleResult) -> void:
 	var won := result != null and result.over and result.player_won()
 	if result != null and result.over:
 		result.apply_hp(f.team, 0)
+	for m in f.team:
+		m.fresh = false
 	match f.place:
 		Fight.WILD:
 			WildArea.resolve(game, f, result, won)

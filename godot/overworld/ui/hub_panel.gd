@@ -4,6 +4,8 @@ extends RefCounted
 ## calls `hub.refresh()` and is built anew.
 
 var hub: HubScreen
+## The id of the building this panel was opened as.
+var id: StringName = &""
 var game: GameState
 
 

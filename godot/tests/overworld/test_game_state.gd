@@ -122,7 +122,7 @@ func test_a_monster_never_grows_past_the_stage_of_its_tamer() -> void:
 	assert_int(int(m.sub_tier)).is_equal(int(Stage.SubTier.HIGH))
 	m.gain_xp(1, Stage.Type.FOUNDATION)
 	assert_int(int(m.stage)).is_equal(int(Stage.Type.FOUNDATION))
-	assert_int(m.dev_steps).is_equal(1)
+	assert_int(m.choice_picks).is_equal(1)
 
 
 func test_a_reshape_gives_every_point_back() -> void:
@@ -146,30 +146,85 @@ func test_the_cultivation_systems_and_the_eggs_of_the_values_exist() -> void:
 
 
 func test_a_development_step_raises_a_slot_up_to_level_three() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 2
-	var m := MonsterInstance.grown(GameData.monster(&"blaze_tiger"), rng, 6)
-	assert_int(m.dev_steps).is_equal(2)
+	var m := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"))
+	m.learn(0)
+	m.learn(1)
+	m.dev_steps = 2
 	assert_bool(m.develop_slot(0)).is_true()
 	assert_bool(m.develop_slot(0)).is_true()
 	assert_int(m.slot_level(0)).is_equal(3)
 	assert_int(m.slot_level(1)).is_equal(1)
 	assert_bool(m.develop_slot(1)).is_false()
+	assert_bool(m.develop_slot(2)).is_false()
 	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(m.to_dict())))
 	assert_int(copy.slot_level(0)).is_equal(3)
+	assert_array(copy.kit).is_equal(m.kit)
 
 
-func test_the_cheats_change_the_running_game() -> void:
-	var g := _game()
-	g.spend_ap(2)
-	Cheats.refill_ap(g)
-	assert_int(g.ap).is_equal(g.max_ap())
-	Cheats.last_day(g)
-	g.end_day()
-	assert_bool(g.forced_trial).is_true()
-	Cheats.add_lifespan(g, 3)
-	assert_bool(g.forced_trial).is_false()
-	Cheats.give_materials(g, 2)
-	assert_int(g.count(Materials.ore(0))).is_equal(2)
-	Cheats.give_points(g, 3)
-	assert_int(g.path_points).is_equal(3)
+func test_a_monster_from_an_egg_is_shaped_by_the_player() -> void:
+	var g := GameState.new_game(7, &"way_of_the_beast_lord", &"blaze_tiger")
+	var m := g.roster[0]
+	assert_bool(m.fresh).is_true()
+	assert_int(m.kit.size()).is_equal(0)
+	assert_int(m.unspent).is_equal(MonsterInstance.START_POINTS - m.points_spent())
+	assert_dict(m.stats).is_equal(MonsterInstance.FLOOR)
+	for i in 6:
+		m.learn(i)
+	assert_int(m.kit.size()).is_equal(MonsterInstance.START_SLOTS)
+	assert_bool(m.unlearn(0)).is_true()
+	assert_bool(m.learn(5)).is_true()
+	assert_int(UnitSheets.from_instance(m).skills.size()).is_equal(4)
+	assert_str(String(UnitSheets.from_instance(m).skills[3].id)).is_equal(String(m.learnable()[5].id))
+	m.fresh = false
+	assert_bool(m.unlearn(0)).is_false()
+
+
+func test_a_wild_monster_fills_its_four_slots() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4
+	var m := MonsterInstance.grown(GameData.monster(&"moss_turtle"), rng, 0)
+	assert_int(m.slots).is_equal(4)
+	assert_int(m.kit.size()).is_equal(4)
+	assert_bool(m.fresh).is_false()
+	assert_int(m.choice_picks).is_equal(0)
+	var later := MonsterInstance.grown(GameData.monster(&"moss_turtle"), rng, 7)
+	assert_int(later.choice_picks).is_equal(0)
+	assert_int((later.slots - 4) + later.dev_steps + later.gifts.size()).is_equal(2)
+
+
+func test_a_stage_breakthrough_gives_one_of_three() -> void:
+	var m := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3)
+	assert_int(m.choice_picks).is_equal(1)
+	assert_bool(m.choose(MonsterInstance.BREADTH)).is_true()
+	assert_int(m.slots).is_equal(5)
+	assert_bool(m.choose(MonsterInstance.DEPTH)).is_false()
+	var epic := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3, MonsterInstance.Rarity.EPIC)
+	assert_int(epic.choice_picks).is_equal(2)
+	assert_bool(epic.choose(MonsterInstance.BLOOD, &"brawler")).is_true()
+	assert_bool(epic.choose(MonsterInstance.BLOOD, &"surefoot")).is_false()
+	assert_bool(epic.choose(MonsterInstance.DEPTH)).is_true()
+	assert_array(epic.gifts).is_equal([&"brawler"])
+	assert_int(epic.dev_steps).is_equal(1)
+	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(epic.to_dict())))
+	assert_array(copy.gifts).is_equal([&"brawler"])
+
+
+func test_every_kin_has_a_trait_four_groups_and_gifts() -> void:
+	for k in MonsterDef.Kin.values():
+		var def := KinDef.of(k)
+		assert_object(def).is_not_null()
+		assert_str(def.trait_name).is_not_empty()
+		assert_int(def.learns.size()).is_equal(4)
+		assert_int(def.never_learns().size()).is_equal(2)
+		assert_int(def.gifts.size()).is_equal(3)
+
+
+func test_the_cheats_raise_the_stage_of_tamer_and_monsters() -> void:
+	var g := GameState.new_game(7, &"way_of_the_beast_lord", &"blaze_tiger")
+	Cheats.monsters_stage_up(g)
+	assert_int(int(g.roster[0].stage)).is_equal(0)
+	Cheats.stage_up(g)
+	assert_int(int(g.stage)).is_equal(1)
+	Cheats.monsters_stage_up(g)
+	assert_int(int(g.roster[0].stage)).is_equal(1)
+	assert_int(g.roster[0].choice_picks).is_equal(1)

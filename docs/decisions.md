@@ -256,6 +256,7 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-21 | Crafting stays | Alchemy and smithing stay as they were; materials come from battles | crafting reduced to recipes; pills, weapons and armour as loot only | only the way to the materials changes | [vision.md §7](vision.md#7-making-things) |
 | 2026-11-21 | Eggs | The player spends the stat points and chooses the skills of every monster from an egg; a caught monster comes as it is; a game starts with one monster | free shaping for the first egg only; rolled hatching | an egg hatches for the player, and egg and catch differ | [overworld.md §4.1](overworld.md#41-obtaining-monsters) |
 | 2026-11-21 | Choices of the tamer | Branches of a tree exclude each other; vows: a strong benefit with a lasting restriction, at most one per stage, may shut out a Kin | — | decisions that make games differ | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
+| 2026-11-21 | Buildings of the hub | Everything about the monsters in one building with parts; everything that costs day AP in one building with parts; an inventory that shows all the player owns | nest, training ground and scripture hall as three buildings; a gate per place | three buildings for one monster were confusing in play | [vision.md §6](vision.md#6-the-hub) |
 
 ## Way of Working
 

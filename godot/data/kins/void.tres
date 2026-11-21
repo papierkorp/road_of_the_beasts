@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="KinDef" format=3]
+
+[ext_resource type="Script" path="res://shared/kin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"void"
+display_name = "Void"
+trait_name = "Unmoored"
+trait_text = "Push and pull zones do not move it."
+learns = PackedStringArray("strike", "movement", "ground", "zone")
+gifts = Array[Dictionary]([{"id": &"rift_walker", "name": "Rift Walker", "text": "its straight-line movement may go diagonally"}, {"id": &"hollow", "name": "Hollow", "text": "stat changes of props do not act on it"}, {"id": &"unravel", "name": "Unravel", "text": "a zone it ends its turn in loses 1 round"}])

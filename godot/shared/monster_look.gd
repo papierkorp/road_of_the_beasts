@@ -35,7 +35,7 @@ static func kin_mesh(kin: MonsterDef.Kin) -> Mesh:
 			sp2.radius = 0.3
 			sp2.height = 0.6
 			return sp2
-		MonsterDef.Kin.ANCIENT:
+		MonsterDef.Kin.STONE:
 			var big := BoxMesh.new()
 			big.size = Vector3(0.62, 0.8, 0.62)
 			return big

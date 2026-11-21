@@ -42,7 +42,7 @@ func _build() -> void:
 		var def := GameData.monster(id)
 		if def == null:
 			continue
-		eggs.add_child(_choice("%s (%s)\n%s\n\nKit: %s" % [def.display_name, MonsterDef.kin_name(def.kin), def.blurb, def.kit_text()], _egg == id, func():
+		eggs.add_child(_choice("%s (%s)\n%s\n\nCan learn: %s\n\n%s" % [def.display_name, MonsterDef.kin_name(def.kin), def.blurb, def.kit_text(), KinDef.of(def.kin).trait_line() if KinDef.of(def.kin) != null else ""], _egg == id, func():
 			_egg = id
 			_build()))
 	var bottom := HubUi.row()
@@ -61,7 +61,7 @@ func _choice(text: String, picked: bool, action: Callable) -> Button:
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-	b.custom_minimum_size = Vector2(380, 230)
+	b.custom_minimum_size = Vector2(380, 270)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.pressed.connect(action)
 	return b
@@ -72,6 +72,7 @@ func _begin() -> void:
 	rng.randomize()
 	GameSession.game = GameState.new_game(rng.randi_range(1, 1 << 30), _system, _egg)
 	GameSession.fight = null
-	GameSession.hub_panel = &""
+	GameSession.hub_panel = &"monsters"
+	GameSession.hub_tabs = {&"monsters": &"stats"}
 	SaveGame.save(GameSession.game)
 	get_tree().change_scene_to_file(HUB_SCENE)

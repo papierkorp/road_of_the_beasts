@@ -40,7 +40,9 @@ const KIN_LEAN := {
 	MonsterDef.Kin.SCALED: {Id.ANVIL: 5, Id.BALANCED: 2, Id.BERSERKER: 1},
 	MonsterDef.Kin.SWARM: {Id.FRAGILE: 5, Id.BERSERKER: 2, Id.SKIRMISHER: 1, Id.GLASS_CANNON: 1},
 	MonsterDef.Kin.SPIRIT: {Id.SKIRMISHER: 3, Id.FRAGILE: 3, Id.GLASS_CANNON: 2, Id.BALANCED: 1},
-	MonsterDef.Kin.ANCIENT: {Id.ANVIL: 6, Id.BALANCED: 2, Id.BERSERKER: 1},
+	MonsterDef.Kin.STONE: {Id.ANVIL: 6, Id.BALANCED: 2, Id.BERSERKER: 1},
+	MonsterDef.Kin.FLORA: {Id.ANVIL: 3, Id.BALANCED: 3},
+	MonsterDef.Kin.VOID: {Id.BALANCED: 1},
 }
 
 

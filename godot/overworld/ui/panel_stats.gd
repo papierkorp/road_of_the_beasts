@@ -1,22 +1,10 @@
-class_name TrainingPanel
+class_name StatsPanel
 extends HubPanel
-## Training Ground (docs/vision.md §6, docs/monsters.md §2.2): the player spends the stat points of each step.
-
-
-func title() -> String:
-	return "Training Ground"
-
-
-func pillar() -> String:
-	return "Monster: growth"
-
-
-func hint() -> String:
-	return "Spend stat points"
+## The stat points of each monster (docs/monsters.md §2.2): every step of growth gives points the player spends.
 
 
 func build(into: VBoxContainer) -> void:
-	into.add_child(HubUi.dim("Every step of growth gives %d stat points. A monster grows by the XP of the battles it fought and never past your stage." % MonsterInstance.STEP_POINTS))
+	into.add_child(HubUi.dim("Every step of growth gives %d stat points. A monster fresh from the egg can take its points back until its first battle." % MonsterInstance.STEP_POINTS))
 	var list := HubUi.scroll(into)
 	for m in game.roster:
 		var card := HubUi.card(list)
@@ -32,3 +20,8 @@ func build(into: VBoxContainer) -> void:
 				hub.refresh(), 210)
 			b.disabled = not m.can_buy(stat)
 			row.add_child(b)
+		if m.fresh:
+			row.add_child(HubUi.button("Take all points back", func():
+				m.refund_points()
+				m.heal_full()
+				hub.refresh(), 260))

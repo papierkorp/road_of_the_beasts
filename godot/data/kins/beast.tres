@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="KinDef" format=3]
+
+[ext_resource type="Script" path="res://shared/kin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"beast"
+display_name = "Beast"
+trait_name = "Follow-up"
+trait_text = "After its Strike pushed a monster, it may enter the square that monster left, free of AP and Stamina."
+learns = PackedStringArray("strike", "movement", "self", "ground")
+gifts = Array[Dictionary]([{"id": &"tireless", "name": "Tireless", "text": "a movement skill costs it 1 Stamina less per use, at least 1"}, {"id": &"surefoot", "name": "Surefoot", "text": "Rubble costs it 1"}, {"id": &"brawler", "name": "Brawler", "text": "Basic Jab twice per turn"}])

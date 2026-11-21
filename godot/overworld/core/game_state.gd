@@ -68,7 +68,8 @@ static func new_game(p_seed: int, p_system: StringName, egg_species: StringName,
 	g.battleground = g.values.bg_start_map.duplicate(true)
 	var def := GameData.monster(egg_species)
 	if def != null:
-		g.roster.append(MonsterInstance.grown(def, g.rng_for("egg")))
+		g.roster.append(MonsterInstance.hatched(def))
+		g.say("Your egg hatched: %s. Shape it under Monsters: spend its stat points and choose its skills." % def.display_name)
 	return g
 
 
@@ -124,9 +125,8 @@ func end_day() -> bool:
 		if int(e["nights"]) <= 0 and roster.size() < values.roster_cap:
 			eggs.erase(e)
 			var def := GameData.monster(StringName(e["species"]))
-			var m := MonsterInstance.grown(def, rng_for("hatch%d" % roster.size(), true), int(stage) * 3)
-			roster.append(m)
-			say("An egg hatched: %s." % def.display_name)
+			roster.append(MonsterInstance.hatched(def, int(stage) * 3))
+			say("An egg hatched: %s. Shape it under Monsters." % def.display_name)
 	if lifespan <= 0:
 		lifespan = 0
 		forced_trial = true
@@ -222,8 +222,8 @@ func award_xp(team: Array[MonsterInstance], place_stage: int) -> Array[String]:
 			continue
 		var ups := m.gain_xp(amount, stage)
 		if ups > 0:
-			lines.append("%s grew to %s %s: +%d stat points." % [m.species().display_name, Stage.stage_name(m.stage),
-				Stage.sub_tier_name(m.sub_tier), ups * MonsterInstance.STEP_POINTS])
+			lines.append("%s grew to %s %s: +%d stat points%s." % [m.species().display_name, Stage.stage_name(m.stage),
+				Stage.sub_tier_name(m.sub_tier), ups * MonsterInstance.STEP_POINTS, " and a breakthrough choice" if m.choice_picks > 0 else ""])
 	return lines
 
 

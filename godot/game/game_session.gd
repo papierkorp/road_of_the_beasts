@@ -24,6 +24,8 @@ const BATTLE_SCENE := "res://battle/battle.tscn"
 var game: GameState = null
 var fight: Fight = null
 var hub_panel: StringName = &""
+## The open tab of a building with several parts: building id -> tab id.
+var hub_tabs := {}
 ## What the map editor edits when the hub opened it (BattlegroundJob); null = the editor of the prototype.
 var editor_job: BattlegroundJob = null
 

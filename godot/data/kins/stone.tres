@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="KinDef" format=3]
+
+[ext_resource type="Script" path="res://shared/kin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"stone"
+display_name = "Stone"
+trait_name = "Bulwark"
+trait_text = "Gives cover like a solid prop: a Strike that hits it does not strike the square behind it."
+learns = PackedStringArray("strike", "self", "zone", "prop")
+gifts = Array[Dictionary]([{"id": &"keystone", "name": "Keystone", "text": "allies orthogonally next to it cannot be pushed or pulled"}, {"id": &"hard_shell", "name": "Hard Shell", "text": "takes no damage from props"}, {"id": &"monolith", "name": "Monolith", "text": "surrounding it takes three enemies"}])

@@ -4,7 +4,8 @@ extends Resource
 ## Everything here is test data: no kit or learn list is approved (temp_todo T10–T12).
 ## The stats are the Core Formation High reference individual of gdd_monsters §4.1.
 
-enum Kin { BEAST, WINGED, SCALED, SWARM, SPIRIT, ANCIENT }
+## docs/monsters.md §3 (a working list). Stone took the place of Ancient.
+enum Kin { BEAST, WINGED, SCALED, SWARM, SPIRIT, STONE, FLORA, VOID }
 
 @export var id: StringName
 @export var display_name: String

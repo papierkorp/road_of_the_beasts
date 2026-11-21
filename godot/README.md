@@ -69,16 +69,17 @@ one screen (battleground, opponents, team, tamer slots) and fought in the battle
 
 | Building | What works |
 |---|---|
-| Nest | the roster and its order, release, eggs with their nights |
-| Wild Gate | today's encounters per zone (one zone per stage reached), a battle for day AP at full HP, XP, a beast part per monster killed, catching on Seal Ground, eggs, a rare encounter that is announced and stays |
-| Dungeon Gate | a run for all day AP of a full day: a generated map of nodes with forks and a rest node, HP stay, healing pills between battles, leaving keeps the loot, a defeat keeps a share, the last battle gives the breakthrough material and an essence; a challenge per dungeon, then the harvest without a battle |
-| Training Ground | spending the stat points of each step (the prices of docs/monsters.md §2.2) |
-| Scripture Hall | the kit and the development level of each slot (a level has no effect in a battle) |
+| Monsters · Roster and eggs | the roster and its order, release, eggs with their nights; the Kin trait and the gifts of each monster |
+| Monsters · Stats | spending the stat points of each step (the prices of docs/monsters.md §2.2); a monster fresh from the egg takes its points back until its first battle |
+| Monsters · Skills and growth | the kit of each monster: 4 slots at the start, filled from what it can learn; the development level of each slot; the choice at a stage breakthrough (a new slot, a development step, a gift of its Kin) |
+| Gates · Wild area | today's encounters per zone (one zone per stage reached), a battle for day AP at full HP, XP, a beast part per monster killed, catching on Seal Ground, eggs, a rare encounter that is announced and stays |
+| Gates · Dungeon | a run for all day AP of a full day: a generated map of nodes with forks and a rest node, HP stay, healing pills between battles, leaving keeps the loot, a defeat keeps a share, the last battle gives the breakthrough material and an essence; a challenge per dungeon, then the harvest without a battle |
 | Cauldron | brewing two or three plants, properties drawn per game and found by trying; pills that reshape, raise the rarity or heal in a dungeon |
 | Forge | forging a weapon or an armour from ore, a beast part and an optional essence; an armour is worn by a monster (no effect in a battle) |
-| Void Gate | the depths of the stage on the player's own battleground, a path point per depth, the last depth as the breakthrough trial; forced at the end of the lifespan, and lost then the game is lost |
+| Gates · Void | the depths of the stage on the player's own battleground, a path point per depth, the last depth as the breakthrough trial; forced at the end of the lifespan, and lost then the game is lost |
 | Cultivation Hall | the tree of the system, a tree per stage: tamer skills and blueprints for path points |
 | Battleground Workshop | building parts from blueprints and materials; the map editor on the own battleground with owned parts, a budget, a size range and a reachable start area of the opponent |
+| Inventory | everything the player owns in one list: stage and path points, monsters, materials, pills, forged pieces, parts and blueprints |
 
 **Test values.** Every number of the hub game lies in `data/game/values.tres` (class `GameValues`, one comment per
 field), the systems in `data/cultivation/`. None is a rule: the rule files say "not defined" for each (tasks T54–T60).
@@ -87,13 +88,15 @@ first stage, 4 encounters a day, a dungeon of 6 battle nodes and a rest of which
 void, 1 breakthrough material for the trial, 30 XP per win against 60 for the first step.
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
-("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour and of a development level,
+("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour, of a development level, of a Kin trait and of
+a Kin gift (they are stored and shown), the skill groups of a Kin (a monster learns the skills of its species file),
+species of the Kins Flora and Void, vows,
 the relearning pill, what a finished game leaves for the next one (the games are only counted), ends of a battle
 other than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
 Foundation), an Android export.
 
 **Cheat menu:** the action `toggle_cheats` or the button in the bottom-right corner: refill day AP, change the
-lifespan, XP, path points, materials.
+lifespan, XP, path points, materials; the next stage for the tamer and for the monsters.
 
 ## Battle architecture
 

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="KinDef" format=3]
+
+[ext_resource type="Script" path="res://shared/kin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"flora"
+display_name = "Flora"
+trait_name = "Rooted Growth"
+trait_text = "Ground it lays lasts 3 rounds."
+learns = PackedStringArray("strike", "ground", "zone", "prop")
+gifts = Array[Dictionary]([{"id": &"thornwalker", "name": "Thornwalker", "text": "damage from ground on entering does not hit it"}, {"id": &"deep_roots", "name": "Deep Roots", "text": "props it creates last 3 rounds"}, {"id": &"sap", "name": "Sap", "text": "healing ground heals it 1 more, never above its maximum"}])

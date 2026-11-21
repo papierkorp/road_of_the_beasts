@@ -38,7 +38,7 @@ func build(into: VBoxContainer) -> void:
 	var problems := GameSession.battleground_problems()
 	if not problems.is_empty():
 		ground.add_child(HubUi.label("Not legal: %s" % "; ".join(problems), 20, HubUi.WARN))
-	ground.add_child(HubUi.button("To the Battleground Workshop", hub.open.bind(&"workshop"), 360))
+	ground.add_child(HubUi.button("To the Battleground Workshop", hub.open.bind(&"workshop", &""), 360))
 	var why := VoidPlace.problem(game)
 	if why != "":
 		list.add_child(HubUi.label("You cannot enter: %s." % why, 20, HubUi.WARN))

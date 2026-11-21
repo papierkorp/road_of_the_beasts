@@ -64,6 +64,8 @@ func _ready() -> void:
 	_add("+3 days of lifespan", func(g): return Cheats.add_lifespan(g, 3))
 	_add("Last day of the lifespan", func(g): return Cheats.last_day(g))
 	_add("+100 XP for all monsters", func(g): return Cheats.give_xp(g, 100))
+	_add("Tamer: next stage", func(g): return Cheats.stage_up(g))
+	_add("Monsters: next stage", func(g): return Cheats.monsters_stage_up(g))
 	_add("Heal all monsters", func(g): return Cheats.heal_all(g))
 	_add("+3 path points", func(g): return Cheats.give_points(g, 3))
 	_add("+3 of every material", func(g): return Cheats.give_materials(g, 3))

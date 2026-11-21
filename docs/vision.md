@@ -117,15 +117,12 @@ One screen with buildings; a tap opens a building and its actions. Which buildin
 
 | Building | Pillar | What the player does there |
 |---|---|---|
-| Nest | Monster: roster | hatch eggs, see and order the monsters |
-| Wild gate | Monster: roster | enter a wild area |
-| Dungeon gate | all | start a dungeon |
-| Training ground | Monster: growth | spend stat points |
-| Scripture hall | Monster: kit | teach and develop skills, set the kits |
+| Monsters | Monster | in one place: hatch and shape eggs, see and order the roster; spend stat points; teach and develop skills, take the choice of a stage breakthrough |
+| Gates | all | in one place, everything that costs day AP: enter a wild area, start a dungeon, enter a depth of the void and take the breakthrough trial |
 | Cauldron | Tamer | make pills |
 | Forge | Tamer, Monster: kit | make weapons and armour |
-| Void gate | Tamer, Board | enter a depth of the void, take the breakthrough trial |
 | Cultivation hall | Tamer, Board | spend path points in the tree of the cultivation system |
+| Inventory | — | see everything the player owns |
 | Battleground workshop | Board | build and shape the battlegrounds for the void |
 
 What the hub is in the world of the game is not defined.

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="KinDef" format=3]
+
+[ext_resource type="Script" path="res://shared/kin_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"scaled"
+display_name = "Scaled"
+trait_name = "Armoured"
+trait_text = "Takes no collision damage when it is the one moved."
+learns = PackedStringArray("strike", "self", "ground", "prop")
+gifts = Array[Dictionary]([{"id": &"anchored", "name": "Anchored", "text": "cannot be pulled"}, {"id": &"spined", "name": "Spined", "text": "a monster moved into it takes 2 collision damage"}, {"id": &"heatproof", "name": "Heatproof", "text": "end-of-turn ground does not act on it"}])

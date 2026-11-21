@@ -46,24 +46,29 @@ func _ready() -> void:
 	_log = HubUi.dim("")
 	main.add_child(_log)
 	GameSession.state_changed.connect(refresh)
-	_panel_id = GameSession.hub_panel
+	_panel_id = GameSession.hub_panel if panels().has(GameSession.hub_panel) else &""
 	refresh()
 
 
 func panels() -> Dictionary:
-	return {&"nest": NestPanel, &"wild": WildPanel, &"dungeon": DungeonPanel, &"training": TrainingPanel,
-		&"scripture": ScripturePanel, &"cauldron": CauldronPanel, &"forge": ForgePanel, &"void": VoidPanel,
-		&"cultivation": CultivationPanel, &"workshop": WorkshopPanel}
+	return {&"monsters": MonstersPanel, &"gates": GatesPanel, &"cultivation": CultivationPanel, &"workshop": WorkshopPanel,
+		&"cauldron": CauldronPanel, &"forge": ForgePanel, &"inventory": InventoryPanel}
 
 
 func _make_panel(id: StringName) -> HubPanel:
 	var p: HubPanel = panels()[id].new()
 	p.hub = self
 	p.game = game
+	p.id = id
 	return p
 
 
-func open(id: StringName) -> void:
+## Opens a building (&"" = the hub itself), and one of its tabs when `tab` names one.
+func open(id: StringName, tab: StringName = &"") -> void:
+	if id != &"" and not panels().has(id):
+		id = &""
+	if tab != &"":
+		GameSession.hub_tabs[id] = tab
 	_panel_id = id
 	_preparing = null
 	GameSession.hub_panel = id
@@ -117,9 +122,9 @@ func _build_head() -> void:
 
 func _build_buildings() -> void:
 	if game.forced_trial:
-		_body.add_child(HubUi.label("Your lifespan has run out. Only the Void Gate is open: take the breakthrough trial.", 22, HubUi.WARN))
+		_body.add_child(HubUi.label("Your lifespan has run out. Only the void is open (Gates): take the breakthrough trial.", 22, HubUi.WARN))
 	var grid := GridContainer.new()
-	grid.columns = 5
+	grid.columns = 4
 	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 14)
 	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -130,7 +135,7 @@ func _build_buildings() -> void:
 		b.custom_minimum_size = Vector2(0, 190)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		b.disabled = game.forced_trial and id != &"void"
+		b.disabled = game.forced_trial and id != &"gates" and id != &"inventory"
 		b.pressed.connect(open.bind(id))
 		grid.add_child(b)
 		var inner := HubUi.col(6)
@@ -188,7 +193,7 @@ func _build_prepare() -> void:
 		b.toggle_mode = true
 		b.button_pressed = f.team.has(m)
 		b.disabled = m.current_hp <= 0 or (not f.team.has(m) and f.team.size() >= f.max_team)
-		b.text = HubUi.monster_lines(m, false)
+		b.text = HubUi.monster_lines(m, false) + "\nKit: %s%s" % [m.kit_text(), "\n" + HubUi.todo_text(m) if HubUi.todo_text(m) != "" else ""]
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.custom_minimum_size = Vector2(0, HubUi.TAP + 16)
 		b.toggled.connect(func(on: bool):

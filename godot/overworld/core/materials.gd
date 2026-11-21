@@ -4,7 +4,7 @@ extends RefCounted
 ##   plant:<plant id>:<tier> · ore:<tier> · essence:<tier> · part:<kin> · break:<tier>
 ## Pills are items too: pill:<property id>[+<property id>]:<tier>.
 
-const KIN_PARTS := ["Fang", "Feather", "Scale", "Chitin", "Wisp", "Core"]
+const KIN_PARTS: Array[String] = ["Fang", "Feather", "Scale", "Chitin", "Wisp", "Core", "Bark", "Dust"]
 
 
 static func plant(id: StringName, tier: int) -> String:

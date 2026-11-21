@@ -39,8 +39,17 @@ const START_POINTS := 25
 const STEPS := 18
 ## XP from one step to the next (docs/monsters.md §5, working values).
 const XP_STEPS: Array[int] = [60, 120, 200, 150, 300, 500, 400, 800, 1300, 1000, 2000, 3200, 2500, 5000, 8000, 6000, 12000]
-## Steps (0-based, the step reached) that give a development step.
-const DEV_STEP_AT: Array[int] = [3, 6, 9, 12, 13, 14, 15, 16, 17]
+## Steps (0-based, the step reached) that give a development step outright. The first step of a stage gives a
+## choice instead (docs/monsters.md §5).
+const DEV_STEP_AT: Array[int] = [13, 14, 16, 17]
+const START_SLOTS := 4
+const MAX_SLOTS := 6
+## The three things a monster chooses from at a stage breakthrough.
+const BREADTH := "slot"
+const DEPTH := "depth"
+const BLOOD := "gift"
+const CHOICES: Array[String] = [BREADTH, DEPTH, BLOOD]
+const CHOICE_NAMES := {BREADTH: "Breadth: a new slot", DEPTH: "Depth: a development step", BLOOD: "Blood: a gift of its Kin"}
 ## What a grown monster has before any point is spent, so that it can use a kit; and the top of each stat.
 const FLOOR := {"hp": 3, "pace": 1.0, "move": 2, "reach": 2, "tpr": 1, "ap": 2}
 ## Reach ends at 4 here: the unit sheet of the battle takes 2–4 (UnitSheet.problems).
@@ -55,6 +64,16 @@ var dev_steps := 0
 ## Development level per kit slot (1–3); a missing entry is level 1.
 var slot_levels: Array[int] = []
 var armour: StringName = &""
+## Open kit slots (4 at the start, up to 6) and what fills them: indexes into the learnable list of the species.
+var slots := START_SLOTS
+var kit: Array[int] = []
+## Hatched and not yet in a battle: the player still shapes it freely (docs/overworld.md §4.1).
+var fresh := false
+var gifts: Array[StringName] = []
+## Picks left at a stage breakthrough, and what was already picked in the running one (Epic and Legendary take
+## two different ones).
+var choice_picks := 0
+var choice_taken: Array[String] = []
 
 
 ## The species' own numbers, unrolled: the "reference individual" of gdd_battle §6.2.
@@ -94,12 +113,151 @@ static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0, p_rari
 	m.sub_tier = (step % 3) as Stage.SubTier
 	m.stats = FLOOR.duplicate()
 	m.unspent = START_POINTS + STEP_POINTS * step - m.points_spent()
-	for i in step + 1:
-		if DEV_STEP_AT.has(i):
-			m.dev_steps += m.steps_per_gain()
+	m._gains_up_to(step)
 	m.spend_at_random(rng)
+	while m.choice_picks > 0:
+		var open: Array[String] = []
+		for c in CHOICES:
+			if m.can_choose(c):
+				open.append(c)
+		if open.is_empty():
+			m.choice_picks = 0
+			break
+		m.choose(open[rng.randi_range(0, open.size() - 1)], &"", rng)
+	var list: Array[int] = []
+	for i in m.learnable().size():
+		list.append(i)
+	while m.kit.size() < m.slots and not list.is_empty():
+		var at := rng.randi_range(0, list.size() - 1)
+		m.kit.append(list[at])
+		list.remove_at(at)
+	m.kit.sort()
 	m.current_hp = m.max_hp()
 	return m
+
+
+## A monster from an egg (docs/overworld.md §4.1): nothing is spent and no skill is chosen; the player shapes it.
+static func hatched(def: MonsterDef, step := 0, p_rarity := Rarity.NORMAL) -> MonsterInstance:
+	var m := MonsterInstance.new()
+	m.species_id = def.id
+	m.rarity = p_rarity
+	step = clampi(step, 0, STEPS - 1)
+	m.stage = (step / 3) as Stage.Type
+	m.sub_tier = (step % 3) as Stage.SubTier
+	m.stats = FLOOR.duplicate()
+	m.unspent = START_POINTS + STEP_POINTS * step - m.points_spent()
+	m._gains_up_to(step)
+	m.fresh = true
+	m.current_hp = m.max_hp()
+	return m
+
+
+## What the steps up to `step` gave besides points: development steps and breakthrough choices.
+func _gains_up_to(step: int) -> void:
+	for i in range(1, step + 1):
+		if DEV_STEP_AT.has(i):
+			dev_steps += 1
+		if i % 3 == 0:
+			choice_picks += steps_per_gain()
+
+
+## The skills this monster can learn. Test value: the species' list of the data, no Kin groups yet.
+func learnable() -> Array[BattleSkillDef]:
+	var out: Array[BattleSkillDef] = []
+	for s in species().skills:
+		if s != null:
+			out.append(s)
+	return out
+
+
+## The skills in its slots, in slot order.
+func kit_skills() -> Array[BattleSkillDef]:
+	var list := learnable()
+	if not uses_points():
+		return list
+	var out: Array[BattleSkillDef] = []
+	for i in kit:
+		if i >= 0 and i < list.size():
+			out.append(list[i])
+	return out
+
+
+func kit_text() -> String:
+	var names: PackedStringArray = []
+	for s in kit_skills():
+		names.append(s.display_name)
+	return " · ".join(names) if not names.is_empty() else "no skill yet"
+
+
+## Puts a learnable skill into a free slot.
+func learn(index: int) -> bool:
+	if kit.size() >= slots or kit.has(index) or index < 0 or index >= learnable().size():
+		return false
+	kit.append(index)
+	return true
+
+
+## Takes the skill out of a slot: only while the monster is fresh from the egg. The slots behind move up.
+func unlearn(slot: int) -> bool:
+	if not fresh or slot < 0 or slot >= kit.size():
+		return false
+	kit.remove_at(slot)
+	if slot < slot_levels.size():
+		slot_levels.remove_at(slot)
+	return true
+
+
+## Another skill in a slot (the relearning pill, docs/skills.md §8): the slot keeps its level.
+func relearn(slot: int, index: int) -> bool:
+	if slot < 0 or slot >= kit.size() or kit.has(index) or index < 0 or index >= learnable().size():
+		return false
+	kit[slot] = index
+	return true
+
+
+func can_choose(choice: String) -> bool:
+	if choice_picks <= 0 or choice_taken.has(choice):
+		return false
+	match choice:
+		BREADTH:
+			return slots < MAX_SLOTS
+		BLOOD:
+			return not open_gifts().is_empty()
+	return true
+
+
+## The gifts of its Kin it does not have yet.
+func open_gifts() -> Array[StringName]:
+	var out: Array[StringName] = []
+	var kin := KinDef.of(species().kin)
+	if kin != null:
+		for g: Dictionary in kin.gifts:
+			if not gifts.has(StringName(g["id"])):
+				out.append(StringName(g["id"]))
+	return out
+
+
+## Takes one of the three at a stage breakthrough. `gift` names the gift for BLOOD; without one it is drawn.
+func choose(choice: String, gift: StringName = &"", rng: RandomNumberGenerator = null) -> bool:
+	if not can_choose(choice):
+		return false
+	match choice:
+		BREADTH:
+			slots += 1
+		DEPTH:
+			dev_steps += 1
+		BLOOD:
+			var open := open_gifts()
+			if gift == &"":
+				gift = open[rng.randi_range(0, open.size() - 1) if rng != null else 0]
+			if not open.has(gift):
+				return false
+			gifts.append(gift)
+	choice_picks -= 1
+	choice_taken.append(choice)
+	if choice_picks % steps_per_gain() == 0:
+		choice_taken.clear()
+	return true
 
 
 func uses_points() -> bool:
@@ -191,7 +349,9 @@ func gain_xp(amount: int, tamer_stage: Stage.Type) -> int:
 			sub_tier = (int(sub_tier) + 1) as Stage.SubTier
 		unspent += STEP_POINTS
 		if DEV_STEP_AT.has(step()):
-			dev_steps += steps_per_gain()
+			dev_steps += 1
+		if sub_tier == Stage.SubTier.LOWER:
+			choice_picks += steps_per_gain()
 		ups += 1
 	return ups
 
@@ -209,7 +369,7 @@ func slot_level(slot: int) -> int:
 ## Spends a development step on a kit slot (levels 1–3). The options of a skill are not defined, so a level
 ## changes nothing in a battle yet.
 func develop_slot(slot: int) -> bool:
-	if dev_steps <= 0 or slot < 0 or slot >= species().skills.size() or slot_level(slot) >= 3:
+	if dev_steps <= 0 or slot < 0 or slot >= kit.size() or slot_level(slot) >= 3:
 		return false
 	while slot_levels.size() <= slot:
 		slot_levels.append(1)
@@ -325,7 +485,9 @@ func sheet_text(with_kit := true) -> String:
 func to_dict() -> Dictionary:
 	return {"species": String(species_id), "shape": int(shape), "rarity": int(rarity), "stage": int(stage),
 		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "core": core.duplicate(), "current_hp": current_hp,
-		"unspent": unspent, "dev_steps": dev_steps, "slot_levels": slot_levels.duplicate(), "armour": String(armour)}
+		"unspent": unspent, "dev_steps": dev_steps, "slot_levels": slot_levels.duplicate(), "armour": String(armour),
+		"slots": slots, "kit": kit.duplicate(), "fresh": fresh, "gifts": gifts.map(func(g: StringName) -> String: return String(g)),
+		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate()}
 
 
 static func from_dict(d: Dictionary) -> MonsterInstance:
@@ -353,4 +515,13 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 	for l in d.get("slot_levels", []):
 		m.slot_levels.append(int(l))
 	m.armour = StringName(d.get("armour", ""))
+	m.slots = int(d.get("slots", START_SLOTS))
+	for i in d.get("kit", []):
+		m.kit.append(int(i))
+	m.fresh = bool(d.get("fresh", false))
+	for g in d.get("gifts", []):
+		m.gifts.append(StringName(g))
+	m.choice_picks = int(d.get("choice_picks", 0))
+	for taken in d.get("choice_taken", []):
+		m.choice_taken.append(String(taken))
 	return m

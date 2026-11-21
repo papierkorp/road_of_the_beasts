@@ -138,7 +138,7 @@ Stats read HP / Pace / Stamina / turns / Reach / AP. Every monster costs exactly
 | **Blaze Tiger** | Beast | flame, hunting | 5 / 2.2 / 5 / 1 / 2 / 3 | Fire Trail · Jab · Thrust · Headbutt · Lava Field · Light Brazier |
 | **Ember Hawk** | Winged | embers, flight | 3 / 2.2 / 5 / 2 / 2 / 2 | Glide · Jab · Shove · Cinder Dive · Gale · Lay Spikes |
 | **Dusk Moth** | Winged | dusk, eclipse | 4 / 2.1 / 3 / 1 / 4 / 3 | Run · Jab · Gloom Rift · Void Pull · Snare · Lay Vortex |
-| **Forge Golem** | Ancient | forge, stone | 8 / 1.0 / 1 / 1 / 3 / 3 | Jab · Thrust · Gale · Lava Field · Set Gong · Earth Wall |
+| **Forge Golem** | Stone | forge, stone | 8 / 1.0 / 1 / 1 / 3 / 3 | Jab · Thrust · Gale · Lava Field · Set Gong · Earth Wall |
 | **Gloom Wolf** | Beast | gloom, pack hunting | 5 / 2.1 / 3 / 1 / 3 / 3 | Run · Thorn Lash · Shove · Gloom Rift · Plant Bamboo · Lay Spikes |
 | **Grove Wisp** | Spirit | grove, wandering light | 4 / 2.2 / 5 / 1 / 3 / 3 | Quake Leap · Jab · Gale · Thornbed · Snare · Set Thorn Idol |
 | **Hollow Serpent** | Scaled | hollow, coils | 6 / 1.4 / 4 / 1 / 3 / 3 | Run · Jab · Shove · Coiling Rift · Thornbed · Lay Vortex |
@@ -148,7 +148,7 @@ Stats read HP / Pace / Stamina / turns / Reach / AP. Every monster costs exactly
 - **Kit rule for these nine:** every kit holds a Strike, a skill that moves others, one that creates ground and one that creates a prop; every monster but the Forge Golem has a movement skill.
 - **The kits ignore Kin access;** learnable lists do not exist yet.
 
-**Ideas for further species:** Vine Panther (Beast) · Gale Crane (Winged) · Magma Drake (Scaled) · Cinder Wasps, Grave Rats (Swarm) · War Echo, Wailing Shade (Spirit) · Elder Treant, Bone Colossus (Ancient).
+**Ideas for further species:** Vine Panther (Beast) · Gale Crane (Winged) · Magma Drake (Scaled) · Cinder Wasps, Grave Rats (Swarm) · War Echo, Wailing Shade (Spirit) · Bone Colossus (Stone) · Elder Treant (Flora).
 
 ## 6. Example Monsters per Stage
 
@@ -196,4 +196,4 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 | Flora | **Thornwalker** (damage from ground on entering does not hit it) · **Deep Roots** (props it creates last 3 rounds) · **Sap** (healing ground heals it 1 more, never above its maximum) |
 | Void | **Rift Walker** (its straight-line movement may go diagonally) · **Hollow** (stat changes of props do not act on it) · **Unravel** (a zone it ends its turn in loses 1 round) |
 
-The nine monsters of [§5](#5-the-nine-monsters) and the build still carry Ancient and ignore the groups.
+The nine monsters of [§5](#5-the-nine-monsters) ignore the groups; Flora and Void have no species yet.

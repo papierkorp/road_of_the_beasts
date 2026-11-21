@@ -108,5 +108,35 @@ static func scroll(parent: Control) -> VBoxContainer:
 static func monster_lines(m: MonsterInstance, with_kit := true) -> String:
 	var text := "%s\n%s" % [m.title(), m.stats_text()]
 	if with_kit:
-		text += "\nKit: %s" % m.species().kit_text()
+		text += "\nKit: %s" % m.kit_text()
 	return text
+
+
+## The Kin of a monster: its trait, what it never learns, its gifts.
+static func kin_lines(m: MonsterInstance) -> String:
+	var kin := KinDef.of(m.species().kin)
+	if kin == null:
+		return ""
+	var text := "%s trait — %s Never learns: %s." % [kin.display_name, kin.trait_line(), ", ".join(kin.never_learns())]
+	if not m.gifts.is_empty():
+		var names: PackedStringArray = []
+		for g in m.gifts:
+			names.append(KinDef.gift_line(m.species().kin, g))
+		text += "\nGifts: %s" % ", ".join(names)
+	return text
+
+
+## What waits for a decision of the player on this monster ("" = nothing).
+static func todo_text(m: MonsterInstance) -> String:
+	var parts: PackedStringArray = []
+	if m.fresh:
+		parts.append("fresh from the egg: shape it under Stats and Skills")
+	if m.unspent > 0:
+		parts.append("%d stat points to spend" % m.unspent)
+	if m.kit.size() < m.slots and m.kit.size() < m.learnable().size():
+		parts.append("%d free slot(s)" % (m.slots - m.kit.size()))
+	if m.choice_picks > 0:
+		parts.append("a breakthrough choice waits")
+	if m.dev_steps > 0:
+		parts.append("%d development step(s)" % m.dev_steps)
+	return "To decide: %s." % "; ".join(parts) if not parts.is_empty() else ""
