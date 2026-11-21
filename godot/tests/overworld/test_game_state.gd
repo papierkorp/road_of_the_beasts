@@ -143,3 +143,33 @@ func test_the_cultivation_systems_and_the_eggs_of_the_values_exist() -> void:
 		for n: Dictionary in CultivationDef.of(sid).nodes:
 			if n["kind"] == "tamer":
 				assert_object(content.tamer_skill(n["ref"])).is_not_null()
+
+
+func test_a_development_step_raises_a_slot_up_to_level_three() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2
+	var m := MonsterInstance.grown(GameData.monster(&"blaze_tiger"), rng, 6)
+	assert_int(m.dev_steps).is_equal(2)
+	assert_bool(m.develop_slot(0)).is_true()
+	assert_bool(m.develop_slot(0)).is_true()
+	assert_int(m.slot_level(0)).is_equal(3)
+	assert_int(m.slot_level(1)).is_equal(1)
+	assert_bool(m.develop_slot(1)).is_false()
+	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(m.to_dict())))
+	assert_int(copy.slot_level(0)).is_equal(3)
+
+
+func test_the_cheats_change_the_running_game() -> void:
+	var g := _game()
+	g.spend_ap(2)
+	Cheats.refill_ap(g)
+	assert_int(g.ap).is_equal(g.max_ap())
+	Cheats.last_day(g)
+	g.end_day()
+	assert_bool(g.forced_trial).is_true()
+	Cheats.add_lifespan(g, 3)
+	assert_bool(g.forced_trial).is_false()
+	Cheats.give_materials(g, 2)
+	assert_int(g.count(Materials.ore(0))).is_equal(2)
+	Cheats.give_points(g, 3)
+	assert_int(g.path_points).is_equal(3)
