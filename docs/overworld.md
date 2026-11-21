@@ -53,8 +53,8 @@ The hub prepares a closed fight and reads its result (rules: [battle.md](battle.
 |---|---|---|
 | Look at a place, an encounter, a sheet; plan; order the monsters | free | — |
 | A battle in a wild area | 1 AP | an encounter of today |
-| A run through a dungeon | all AP of the day | a full day |
-| Harvest a dungeon | all AP of the day | its challenge met |
+| A run through a dungeon | all AP left | a least number of AP left; the number is not defined |
+| Harvest a dungeon | fewer than a run; not defined | its challenge met |
 | A depth of the void · the breakthrough trial | not defined | the trial: the breakthrough materials of the stage |
 | Use a tamer skill, a weapon or a pill in battle | its tamer slot | [§6.5](#65-loadout) |
 | Lay Seal Ground | 1 Binding Seal, or free with the Seal skill | [§4.1](#41-obtaining-monsters) |
@@ -236,7 +236,7 @@ How many of each form there are and what each sets: [vision.md §7](vision.md#7-
 | Core | a beast part | which skill (weapon) or passive (armour), by the Kin of the monster |
 | Temper | an essence; may be left out | one variation in the vocabulary of [skills.md §8](skills.md#8-development) |
 
-- **What a part gives is unknown until the player has forged with it;** the same parts always give the same piece.
+- **What the parts give is known before forging:** the forge shows every piece that exists, what it does and what it needs; the same parts always give the same piece. The choice is which piece to make for which battleground.
 - **No crafting is a minigame.**
 
 | Piece | Worn by | Gives | Slots |

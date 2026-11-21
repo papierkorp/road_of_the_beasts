@@ -8,15 +8,15 @@ func title() -> String:
 
 
 func pillar() -> String:
-	return "Battles: where day AP go"
+	return "Battles: where the AP of a year go"
 
 
 func hint() -> String:
-	return "Wild area · Dungeon · Void\n%d day AP left" % game.ap
+	return "Wild area · Dungeon · Void\n%d AP left" % game.ap
 
 
 func tabs() -> Array:
-	return [[&"wild", "Wild area (%d AP)" % game.values.wild_ap, WildPanel], [&"dungeon", "Dungeon (all AP)", DungeonPanel],
+	return [[&"wild", "Wild area (%d AP)" % game.values.wild_ap, WildPanel], [&"dungeon", "Dungeon (all AP left, min %d)" % game.values.dungeon_min_ap, DungeonPanel],
 		[&"void", "Void (%d AP)" % game.values.void_ap, VoidPanel]]
 
 

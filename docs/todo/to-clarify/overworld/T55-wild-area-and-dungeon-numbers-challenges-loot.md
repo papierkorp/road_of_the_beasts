@@ -16,6 +16,6 @@
 | Boards | Where the battlegrounds of the places come from: written by hand in the map editor, generated, or both; how a generated one stays a puzzle with ends and board events |
 | One-time realms | Dropped with the frame unless the user wants them beside the dungeon |
 
-- **From the first play (user, 2026-11-21):** day AP have only battles to go to, and after one AP in the wild area the dungeon is closed for the day, so the rest must be spent there too. Open: what else day AP may buy (a deed that is no battle), whether the dungeon may cost less than a full day, and whether each resource has one source or some have two.
+- **From the first play (user, 2026-11-21):** day AP have only battles to go to, and after one AP in the wild area the dungeon is closed for the day, so the rest must be spent there too. Decided: a run takes all day AP left with a least number, a harvest costs fewer; no deed without a battle. Open: the numbers (build: 2 and 1), and whether each resource has one source (recommended) or some have two.
 
 - **Done when:** every row is decided and written into [vision.md](../../../vision.md), [overworld.md](../../../overworld.md) or [battle_ingame.md](../../../battle_ingame.md), with lines in [decisions.md](../../../decisions.md).

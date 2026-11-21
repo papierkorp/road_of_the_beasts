@@ -109,9 +109,11 @@ func test_the_same_parts_always_give_the_same_piece() -> void:
 	assert_str(b).is_equal(a)
 	assert_int(g.count(a)).is_equal(2)
 	assert_int(g.count(Materials.ore(0))).is_equal(1)
-	assert_str(String(g.known["core:armour:2"])).is_not_empty()
+	assert_str(a).is_equal(Crafting.piece_name(g, Crafting.ARMOUR, Materials.ore(0), Materials.beast_part(2)))      # known before
+	assert_str(a).contains(String(Crafting.core_of(g, Crafting.ARMOUR, 2)["name"]))
 	var c := Crafting.forge(g, Crafting.WEAPON, Materials.ore(0), Materials.beast_part(2), Materials.essence(0))
 	assert_str(c).starts_with("weapon:")
+	assert_str(c).contains(String(Crafting.temper_of(g, 0)["name"]))
 	assert_int(g.count(Materials.essence(0))).is_equal(0)
 	assert_str(Crafting.forge(g, Crafting.WEAPON, Materials.ore(0), Materials.beast_part(2))).is_equal("")     # no ore left
 

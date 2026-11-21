@@ -104,17 +104,17 @@ func _build_head() -> void:
 	for c in _head.get_children():
 		_head.remove_child(c)
 		c.queue_free()
-	_head.add_child(HubUi.label("Day %d" % game.day, 22, UiTheme.TEXT, false))
-	_head.add_child(HubUi.label("Day AP %d / %d" % [game.ap, game.max_ap()], 22, UiTheme.ACCENT, false))
+	_head.add_child(HubUi.label("Year %d" % game.day, 22, UiTheme.TEXT, false))
+	_head.add_child(HubUi.label("AP %d / %d" % [game.ap, game.max_ap()], 22, UiTheme.ACCENT, false))
 	_head.add_child(HubUi.label(Stage.stage_name(game.stage), 22, UiTheme.TEXT, false))
-	var left := "Lifespan: %d days" % game.lifespan if not game.forced_trial else "Lifespan over: take the trial"
+	var left := "%d %s left to live" % [game.lifespan, "year" if game.lifespan == 1 else "years"] if not game.forced_trial else "Lifespan over: take the trial"
 	_head.add_child(HubUi.label(left, 22, HubUi.WARN if game.lifespan <= 2 else UiTheme.TEXT, false))
 	var system := CultivationDef.of(game.system)
 	_head.add_child(HubUi.label(system.display_name if system != null else "", 18, UiTheme.DIM, false))
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_head.add_child(gap)
-	var end := HubUi.button("End day", _end_day, 160)
+	var end := HubUi.button("End year", _end_day, 160)
 	end.disabled = not game.can_end_day()
 	_head.add_child(end)
 	_head.add_child(HubUi.button("Menu", func(): get_tree().change_scene_to_file(MENU_SCENE), 110))

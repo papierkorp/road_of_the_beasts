@@ -145,7 +145,7 @@ func break_through() -> void:
 		return
 	lifespan = GameValues.at(values.lifespan_days, int(stage))
 	ap = max_ap()
-	say("Breakthrough: you are now at %s. Lifespan: %d days." % [Stage.stage_name(stage), lifespan])
+	say("Breakthrough: you are now at %s. Lifespan: %d years." % [Stage.stage_name(stage), lifespan])
 
 
 func lose() -> void:

@@ -17,7 +17,7 @@ func hint() -> String:
 
 func build(into: VBoxContainer) -> void:
 	var n := VoidPlace.depths(game)
-	into.add_child(HubUi.dim("The void has no ground: every battle here is fought on your own battleground. A depth costs %d day AP and is won once; each gives a path point. Depth %d is the breakthrough trial." % [game.values.void_ap, n]))
+	into.add_child(HubUi.dim("The void has no ground: every battle here is fought on your own battleground. A depth costs %d AP and is won once; each gives a path point. Depth %d is the breakthrough trial." % [game.values.void_ap, n]))
 	var list := HubUi.scroll(into)
 	var ladder := HubUi.card(list)
 	var steps: PackedStringArray = []

@@ -32,4 +32,4 @@ func build(into: VBoxContainer) -> void:
 	for e in game.eggs:
 		var card := HubUi.card(list)
 		var def := GameData.monster(StringName(e["species"]))
-		card.add_child(HubUi.label("Egg: %s — hatches in %d night(s). You shape what hatches: its stat points and its skills." % [def.display_name if def != null else e["species"], int(e["nights"])]))
+		card.add_child(HubUi.label("Egg: %s — hatches in %d year(s). You shape what hatches: its stat points and its skills." % [def.display_name if def != null else e["species"], int(e["nights"])]))

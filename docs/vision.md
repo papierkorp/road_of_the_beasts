@@ -50,6 +50,7 @@ A battle is made of three things, and every resource of the game feeds one of th
 
 - **A day is one turn:** the player spends day AP in the hub, the night resolves everything at once.
 - **The lifespan:** the tamer has a number of days to live. Each stage has its lifespan, and only a breakthrough lengthens it. The days left are always shown.
+- **A day of play is a year of the tamer's life:** the game shows years ("year 3", "5 years left"); the rules keep the word day for the unit and day AP for what it gives.
 - **The trial comes at the end:** the breakthrough trial is the last depth of the void ([§4](#4-where-battles-happen)); the player may take it on any day before. When the lifespan ends, the trial must be taken, ready or not; who loses that one has lost the game. A game is lost on the board, never to a counter.
 - **What this asks of the player:** day AP go to the monsters or to the tamer. Who tends only the monsters runs out of time; who tends only the tamer meets the trial with a weak team.
 - **The end:** Sovereign is the last stage, and reaching it wins the game.
@@ -63,7 +64,7 @@ A battle is made of three things, and every resource of the game feeds one of th
 | Place | What it is | Cost | Feeds | What it gives |
 |---|---|---|---|---|
 | **Wild area** | wild monsters on battlegrounds; the place to catch on Seal Ground ([battle_ingame.md §7](battle_ingame.md#7-catching)) | day AP per battle | the monsters | monster XP, caught monsters, beast parts |
-| **Dungeon** | a run through a row of battles in the manner of a roguelike | all day AP of the day | the tamer and the kits | breakthrough materials, plants, ore, essences |
+| **Dungeon** | a run through a row of battles in the manner of a roguelike | all day AP left, with a least number | the tamer and the kits | breakthrough materials, plants, ore, essences |
 | **Void** | a ladder of battles against void monsters, fought on the player's own battleground; its last depth is the breakthrough trial | not defined | the tamer and the board | a path point per depth ([§8](#8-growth)); from the trial the stage, and with it lifespan |
 
 - **Day AP go to places of battle.** Where the player spends them decides which pillar grows; the tamer does not cultivate in the hub.
@@ -90,7 +91,7 @@ A battle is made of three things, and every resource of the game feeds one of th
 - **A defeat** ends the run and costs a part of the loot. It does not end the game, and no monster is injured by it.
 - **The last battle** holds the best loot, such as breakthrough materials.
 - **One dungeon per stage:** each stage opens a new one, harder and with better materials.
-- **The challenge:** every dungeon names one, such as three runs won in a row or a battle won within a number of rounds. Once it is met, the dungeon can be **harvested** for its day AP without a battle.
+- **The challenge:** every dungeon names one, such as three runs won in a row or a battle won within a number of rounds. Once it is met, the dungeon can be **harvested** without a battle, for fewer day AP than a run.
 - **A harvest gives less:** a fixed base yield, safe. A run that is played gives more and can fail. Breakthrough materials and monster XP never come from a harvest.
 
 **The void:**

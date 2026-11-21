@@ -120,6 +120,6 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 		if (f.ref.has("rare") or roll <= game.values.egg_chance) and not f.enemies.is_empty() and game.add_egg(f.enemies[0].species_id):
 			game.say("You found an egg: %s." % f.enemies[0].species().display_name)
 	else:
-		game.say("%s lost. The day AP are spent." % f.title)
+		game.say("%s lost. The AP are spent." % f.title)
 	for m in game.roster:                    # every battle of the wild area starts at full HP
 		m.heal_full()

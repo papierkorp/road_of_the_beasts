@@ -23,7 +23,7 @@ func build(into: VBoxContainer) -> void:
 	var you := HubUi.card(list)
 	you.add_child(HubUi.label("You", 22, UiTheme.ACCENT))
 	var system := CultivationDef.of(game.system)
-	you.add_child(HubUi.label("%s · %s · day %d · lifespan %d days · %d path points · %d tamer slot(s)" % [Stage.stage_name(game.stage),
+	you.add_child(HubUi.label("%s · %s · year %d · %d years left to live · %d path points · %d tamer slot(s)" % [Stage.stage_name(game.stage),
 		system.display_name if system != null else "no system", game.day, game.lifespan, game.path_points, game.tamer_slots()]))
 	you.add_child(HubUi.dim("You rise a stage only by the breakthrough trial, the last depth of the void. Path points come from the depths of the void and buy the nodes of your cultivation system."))
 	var content := BattleContent.shared()

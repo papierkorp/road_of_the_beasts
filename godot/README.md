@@ -75,7 +75,7 @@ one screen (battleground, opponents, team, tamer slots) and fought in the battle
 | Gates · Wild area | today's encounters per zone (one zone per stage reached), a battle for day AP at full HP, XP, a beast part per monster killed, catching on Seal Ground, eggs, a rare encounter that is announced and stays |
 | Gates · Dungeon | a run for all day AP of a full day: a generated map of nodes with forks and a rest node, HP stay, healing pills between battles, leaving keeps the loot, a defeat keeps a share, the last battle gives the breakthrough material and an essence; a challenge per dungeon, then the harvest without a battle |
 | Cauldron | brewing two or three plants, properties drawn per game and found by trying; pills that reshape, raise the rarity or heal in a dungeon |
-| Forge | forging a weapon or an armour from ore, a beast part and an optional essence; an armour is worn by a monster (no effect in a battle) |
+| Forge | a list of every weapon and armour with what it does and needs (nothing is found by trying); forging one from ore, a beast part and an optional essence; an armour is worn by a monster (no effect in a battle) |
 | Gates · Void | the depths of the stage on the player's own battleground, a path point per depth, the last depth as the breakthrough trial; forced at the end of the lifespan, and lost then the game is lost |
 | Cultivation Hall | the tree of the system, a tree per stage: tamer skills and blueprints for path points |
 | Battleground Workshop | building parts from blueprints and materials; the map editor on the own battleground with owned parts, a budget, a size range and a reachable start area of the opponent |
@@ -85,7 +85,8 @@ one screen (battleground, opponents, team, tamer slots) and fought in the battle
 field), the systems in `data/cultivation/`. None is a rule: the rule files say "not defined" for each (tasks T54–T60).
 The values are chosen so that one stage can be played in about half an hour: 3 day AP and 8 days of lifespan at the
 first stage, 4 encounters a day, a dungeon of 6 battle nodes and a rest of which a run passes 4, 3 depths of the
-void, 1 breakthrough material for the trial, 30 XP per win against 60 for the first step.
+void, 1 breakthrough material for the trial, 30 XP per win against 60 for the first step. A dungeon run needs 2
+day AP and takes all that are left, a harvest costs 1. The hub shows a day as a year and day AP as AP.
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
 ("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour and of a development level, the Kin gifts that

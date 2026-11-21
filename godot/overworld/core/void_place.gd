@@ -29,7 +29,7 @@ static func problem(game: GameState) -> String:
 	if game.forced_trial:
 		return ""                                   # ready or not
 	if game.ap < game.values.void_ap:
-		return "needs %d day AP" % game.values.void_ap
+		return "needs %d AP" % game.values.void_ap
 	if is_trial(game) and not has_materials(game):
 		return "the trial needs %d breakthrough material(s) of this stage, from the last battle of its dungeon" % game.values.trial_materials
 	return ""
@@ -74,7 +74,7 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 			game.say("You lost the trial at the end of your lifespan.")
 			game.lose()
 		else:
-			game.say("%s lost. The day AP are spent; the depth waits." % f.title)
+			game.say("%s lost. The AP are spent; the depth waits." % f.title)
 		return
 	game.path_points += 1
 	for line in game.award_xp(f.team, f.stage):

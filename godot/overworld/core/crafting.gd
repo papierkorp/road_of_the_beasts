@@ -125,25 +125,25 @@ static func use(game: GameState, pill: String, m: MonsterInstance, in_dungeon :=
 
 # ---------- smithing ----------
 
-## What the core of a piece gives in this game: the skill of a weapon or the passive of an armour, by the Kin.
-static func core_of(game: GameState, kind: String, kin: int) -> String:
+## What the core of a piece gives: the skill of a weapon or the passive of an armour, by the Kin of the beast part.
+## Known from the start: {"name", "text"}.
+static func core_of(game: GameState, kind: String, kin: int) -> Dictionary:
 	var list: Array = game.values.weapon_skills if kind == WEAPON else game.values.armour_passives
-	if list.is_empty():
-		return "?"
-	var order := list.duplicate()
-	var rng := game.rng_for("core_%s" % kind)
-	var out: Array = []
-	while not order.is_empty():
-		out.append(order.pop_at(rng.randi_range(0, order.size() - 1)))
-	return String(out[kin % out.size()])
+	return list[kin % list.size()] if not list.is_empty() else {"name": "?", "text": ""}
 
 
-## The variation an essence of a tier gives in this game.
-static func temper_of(game: GameState, tier: int) -> String:
+## The variation an essence of a tier gives: {"name", "text"}.
+static func temper_of(game: GameState, tier: int) -> Dictionary:
 	var list: Array = game.values.tempers
-	if list.is_empty():
-		return "?"
-	return String(list[(game.rng_for("temper").randi_range(0, list.size() - 1) + tier) % list.size()])
+	return list[tier % list.size()] if not list.is_empty() else {"name": "?", "text": ""}
+
+
+## The name of the piece these parts give, before it is forged.
+static func piece_name(game: GameState, kind: String, ore: String, part: String, essence := "") -> String:
+	var name := String(core_of(game, kind, int(part.get_slice(":", 1)))["name"])
+	if essence != "":
+		name = "%s %s" % [temper_of(game, Materials.tier(essence))["name"], name]
+	return "%s:%s (%s)" % [kind, name, Stage.stage_name(Materials.tier(ore) as Stage.Type)]
 
 
 static func can_forge(game: GameState, kind: String, ore: String, part: String, essence := "") -> bool:
@@ -153,22 +153,16 @@ static func can_forge(game: GameState, kind: String, ore: String, part: String, 
 
 
 ## Forges a piece: a body of ore (the tier), a core of a beast part (what it gives), a temper of an essence (optional).
+## What comes out is known before (`piece_name`).
 ## Returns the item. A piece has no effect in a battle yet.
 static func forge(game: GameState, kind: String, ore: String, part: String, essence := "") -> String:
 	if not can_forge(game, kind, ore, part, essence):
 		return ""
-	var kin := int(part.get_slice(":", 1))
-	var core := core_of(game, kind, kin)
-	game.known["core:%s:%d" % [kind, kin]] = core
-	var name := core
+	var item := piece_name(game, kind, ore, part, essence)
 	if essence != "":
-		var temper := temper_of(game, Materials.tier(essence))
-		game.known["temper:%d" % Materials.tier(essence)] = temper
-		name = "%s %s" % [temper, core]
 		game.take_item(essence)
 	game.take_item(ore)
 	game.take_item(part)
-	var item := "%s:%s (%s)" % [kind, name, Stage.stage_name(Materials.tier(ore) as Stage.Type)]
 	game.add_item(item)
 	game.say("Forged: %s." % Materials.display_name(item, game.values))
 	return item

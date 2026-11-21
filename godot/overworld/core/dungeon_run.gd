@@ -25,7 +25,7 @@ static func running(game: GameState) -> bool:
 
 
 static func can_start(game: GameState) -> bool:
-	return not running(game) and not game.forced_trial and not game.is_over() and game.ap >= game.max_ap() and game.ap > 0
+	return not running(game) and not game.forced_trial and not game.is_over() and game.ap >= maxi(1, game.values.dungeon_min_ap)
 
 
 static func start(game: GameState, stage: int) -> bool:
@@ -236,14 +236,14 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 
 
 static func can_harvest(game: GameState, stage: int) -> bool:
-	return mastered(game, stage) and can_start(game)
+	return mastered(game, stage) and not running(game) and not game.forced_trial and not game.is_over() and game.ap >= game.values.harvest_ap
 
 
-## A harvest (docs/vision.md §4): all day AP for a fixed, lower yield; no breakthrough material, no XP.
+## A harvest (docs/vision.md §4): a few day AP for a fixed, lower yield; no breakthrough material, no XP.
 static func harvest(game: GameState, stage: int) -> Dictionary:
 	if not can_harvest(game, stage):
 		return {}
-	game.ap = 0
+	game.spend_ap(game.values.harvest_ap)
 	game.dungeon_runs += 1
 	var loot := _loot(game, game.rng_for("harvest%d" % game.dungeon_runs), stage, game.values.harvest_yield)
 	for id in loot:

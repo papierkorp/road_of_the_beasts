@@ -100,6 +100,9 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | I103 | The battle is fought with the skills in the monster's slots; a development level is stored per slot and changes nothing | slot development (I24) | T05 |
 | I104 | Sixteen test species, two per Kin; each has a list of eight learnable skills inside the groups of its Kin; no species has a species skill. A skill that only lays things needs every group of what it creates (Coiling Rift: ground and zone) | learnable lists, species skills, how a skill with two creations is grouped | T12 |
 | I111 | Every passed trial leaves one void egg (one of the two void species, drawn); a void monster caught on Seal Ground in the void is removed from the battle and not added to the roster | which trials give a void egg; whether a seal works on a void monster | T12, T56 |
+| I112 | A dungeon run needs 2 day AP and takes all that are left; a harvest costs 1 | the numbers of a run and a harvest | T55 |
+| I113 | The forge lists one weapon and one armour per Kin of the beast part and one temper per tier of the essence, with a name and a text each; all sixteen pieces and four tempers are invented test content and have no effect in a battle | weapons, armour passives and tempers | T58 |
+| I114 | The hub says "year" and "AP" where the rules say day and day AP; an egg hatches after a year | — | T54 |
 | I105 | A wild or caught monster fills its four slots at random from that list and takes its breakthrough choices at random; a monster from an egg hatches with nothing spent and no skill, and may be reshaped freely until its first battle | how a wild monster is rolled; until when an egg is shaped | T03, T59 |
 | I106 | A skill put into a free slot later is final; the relearning pill is still without use | when a kit may change | T05 |
 | I107 | For Blood the player picks any gift of the Kin not yet owned (three per Kin); nothing is drawn | how many gifts are offered | T12 |

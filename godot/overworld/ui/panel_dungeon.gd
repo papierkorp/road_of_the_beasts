@@ -12,14 +12,14 @@ func pillar() -> String:
 
 
 func hint() -> String:
-	return "A run for the whole day"
+	return "A run for the rest of the year"
 
 
 func build(into: VBoxContainer) -> void:
 	if DungeonRun.running(game):
 		_build_run(into)
 		return
-	into.add_child(HubUi.dim("A run costs all day AP of a full day. HP stay from battle to battle; leaving keeps the loot, a defeat keeps %d%% of it. The last battle holds the breakthrough material." % game.values.dungeon_defeat_keeps))
+	into.add_child(HubUi.dim("A run costs every AP you have left this year, and needs at least %d. A harvest costs %d AP. HP stay from battle to battle; leaving keeps the loot, a defeat keeps %d%% of it. The last battle holds the breakthrough material." % [game.values.dungeon_min_ap, game.values.harvest_ap, game.values.dungeon_defeat_keeps]))
 	var list := HubUi.scroll(into)
 	for s in DungeonRun.stages(game):
 		var card := HubUi.card(list)
@@ -28,18 +28,18 @@ func build(into: VBoxContainer) -> void:
 		card.add_child(HubUi.label("Challenge: %s — %s" % [DungeonRun.challenge_text(game, s), "met" if done else "open"], 20, HubUi.GOOD if done else UiTheme.TEXT))
 		var row := HubUi.row()
 		card.add_child(row)
-		var go := HubUi.button("Start a run (all day AP)", func():
+		var go := HubUi.button("Start a run (all %d AP left)" % game.ap, func():
 			DungeonRun.start(game, s)
 			hub.refresh(), 320)
 		go.disabled = not DungeonRun.can_start(game)
 		row.add_child(go)
-		var harvest := HubUi.button("Harvest without a battle (all day AP)", func():
+		var harvest := HubUi.button("Harvest without a battle (%d AP)" % game.values.harvest_ap, func():
 			DungeonRun.harvest(game, s)
 			hub.refresh(), 420)
 		harvest.disabled = not DungeonRun.can_harvest(game, s)
 		row.add_child(harvest)
 		if not DungeonRun.can_start(game):
-			card.add_child(HubUi.dim("Needs a day with all its day AP left."))
+			card.add_child(HubUi.dim("A run needs at least %d AP." % game.values.dungeon_min_ap))
 
 
 func _build_run(into: VBoxContainer) -> void:

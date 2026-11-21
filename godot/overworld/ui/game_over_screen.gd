@@ -18,8 +18,8 @@ func _ready() -> void:
 	var won := game != null and game.outcome == GameState.WON
 	col.add_child(HubUi.title("SOVEREIGN" if won else "YOUR LIFESPAN HAS ENDED"))
 	if game != null:
-		var text := "You reached Sovereign on day %d. The game is won." % game.day if won else \
-			"You lost the breakthrough trial at the end of your lifespan, on day %d at %s. The game is lost." % [game.day, Stage.stage_name(game.stage)]
+		var text := "You reached Sovereign in year %d. The game is won." % game.day if won else \
+			"You lost the breakthrough trial at the end of your lifespan, in year %d at %s. The game is lost." % [game.day, Stage.stage_name(game.stage)]
 		col.add_child(HubUi.label(text, 22))
 		var names: PackedStringArray = []
 		for m in game.roster:

@@ -5,18 +5,18 @@ extends RefCounted
 
 static func refill_ap(g: GameState) -> String:
 	g.ap = g.max_ap()
-	return "Day AP refilled."
+	return "AP refilled."
 
 
 static func add_lifespan(g: GameState, days: int) -> String:
 	g.lifespan = maxi(1, g.lifespan + days)
 	g.forced_trial = false
-	return "Lifespan: %d days." % g.lifespan
+	return "Lifespan: %d years." % g.lifespan
 
 
 static func last_day(g: GameState) -> String:
 	g.lifespan = 1
-	return "Lifespan set to 1 day: the next night forces the trial."
+	return "Lifespan set to 1 year: the end of this year forces the trial."
 
 
 static func give_xp(g: GameState, amount: int) -> String:

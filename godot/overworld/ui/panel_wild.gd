@@ -14,7 +14,7 @@ func pillar() -> String:
 
 
 func hint() -> String:
-	return "Single battles for day AP; catch monsters"
+	return "Single battles for AP; catch monsters"
 
 
 func build(into: VBoxContainer) -> void:
@@ -31,14 +31,14 @@ func build(into: VBoxContainer) -> void:
 		b.toggle_mode = true
 		b.button_pressed = z == zone
 		pick.add_child(b)
-	into.add_child(HubUi.dim("A battle costs %d day AP and starts at full HP. The list is drawn anew every night." % game.values.wild_ap))
+	into.add_child(HubUi.dim("A battle costs %d AP and starts at full HP. The list is drawn anew every year." % game.values.wild_ap))
 	var list := HubUi.scroll(into)
 	for e in WildArea.encounters(game, zone):
 		var card := HubUi.card(list)
 		var f := e.fight
 		var head := f.title
 		if e.rare:
-			head += " — appears in %d day(s)" % e.appears_in if e.appears_in > 0 else " — stays %d more day(s)" % e.stays
+			head += " — appears in %d year(s)" % e.appears_in if e.appears_in > 0 else " — stays %d more year(s)" % e.stays
 		card.add_child(HubUi.label(head, 22, UiTheme.ACCENT if not e.rare else HubUi.GOOD))
 		card.add_child(HubUi.label("Battleground: %s" % GameSession.map_summary(f)))
 		for m in f.enemies:

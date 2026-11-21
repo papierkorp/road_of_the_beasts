@@ -50,6 +50,9 @@ const PATH := "res://data/game/values.tres"
 @export var dungeon_challenges: Array = []
 ## Materials a harvest gives.
 @export var harvest_yield := 0
+## A run costs every day AP left, and needs at least this many; a harvest costs this many.
+@export var dungeon_min_ap := 0
+@export var harvest_ap := 0
 
 @export_group("Void and trial (T56)")
 @export var void_depths := 0
@@ -88,8 +91,9 @@ const PATH := "res://data/game/values.tres"
 @export var properties: Array = []
 @export var properties_per_plant := 0
 ## Variations an essence can give a forged piece (names only; a piece has no effect in a battle yet).
-@export var tempers: Array = []
-## What the core of a forged piece can give, by name only: the skill of a weapon, the passive of an armour.
+@export var tempers: Array = []      # {"name", "text"}, by the tier of the essence
+## What the core of a forged piece gives, by the Kin of the beast part (one entry per Kin): {"name", "text"}.
+## The skill of a weapon, the passive of an armour; names and texts only, a piece has no effect in a battle yet.
 @export var weapon_skills: Array = []
 @export var armour_passives: Array = []
 

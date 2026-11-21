@@ -257,6 +257,9 @@ What the user decided, what was rejected for it and why. Git knows what changed;
 | 2026-11-21 | Eggs | The player spends the stat points and chooses the skills of every monster from an egg; a caught monster comes as it is; a game starts with one monster | free shaping for the first egg only; rolled hatching | an egg hatches for the player, and egg and catch differ | [overworld.md §4.1](overworld.md#41-obtaining-monsters) |
 | 2026-11-21 | Choices of the tamer | Branches of a tree exclude each other; vows: a strong benefit with a lasting restriction, at most one per stage, may shut out a Kin | — | decisions that make games differ | [overworld.md §5.3](overworld.md#53-the-cultivation-system) |
 | 2026-11-21 | Buildings of the hub | Everything about the monsters in one building with parts; everything that costs day AP in one building with parts; an inventory that shows all the player owns | nest, training ground and scripture hall as three buildings; a gate per place | three buildings for one monster were confusing in play | [vision.md §6](vision.md#6-the-hub) |
+| 2026-11-21 | Unit of time shown | A day of play is shown as a year of the tamer's life | a lifespan shown in days | eight days read as no life | [vision.md §3](vision.md#3-the-day-and-the-lifespan) |
+| 2026-11-21 | Cost of a dungeon | A run costs all day AP left and needs a least number; a harvest costs fewer | a run and a harvest for all day AP of a full day | after one battle in the wild area the rest of the day had only one place to go | [overworld.md §2.3](overworld.md#23-action-catalog) |
+| 2026-11-21 | Forging | What the parts give is known before forging | properties of the parts drawn per game and found by trying | guessing at the forge was no fun; the cauldron keeps its drawn properties | [overworld.md §6.3](overworld.md#63-smithing-weapons-and-armour) |
 
 ## Way of Working
 

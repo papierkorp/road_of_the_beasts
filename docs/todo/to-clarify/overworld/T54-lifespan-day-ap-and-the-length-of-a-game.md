@@ -14,6 +14,6 @@
 | Monster XP | The XP table of [monsters.md §5](../../../monsters.md#5-growth) against the lifespan: can a team reach the cap of a stage within it, and should it? Whether a pill gives XP |
 | What a game leaves behind | How further cultivation systems and eggs are opened for later games; whether a won game leaves more than a lost one |
 
-- **From the first play (user, 2026-11-21):** a lifespan counted in days reads wrong ("8 days" is no life). Open: the unit of time (a day of play as a year or a season of the world, or the day AP as years), and what the head of the hub shows.
+- **From the first play (user, 2026-11-21):** a lifespan counted in days reads wrong ("8 days" is no life). Decided: a day of play is shown as a year. Open: whether the numbers of a lifespan fit that reading.
 
 - **Done when:** every row is decided and written into [vision.md](../../../vision.md), [overworld.md](../../../overworld.md) or [monsters.md](../../../monsters.md), with lines in [decisions.md](../../../decisions.md).

@@ -31,11 +31,12 @@ func _advance(g: GameState, battles := 99, rounds := 4) -> void:
 		battles -= 1
 
 
-func test_a_run_costs_all_day_ap_of_a_full_day() -> void:
+func test_a_run_costs_all_day_ap_left_and_needs_two() -> void:
 	var g := _game()
-	g.spend_ap(1)
-	assert_bool(DungeonRun.start(g, 0)).is_false()
+	g.spend_ap(g.max_ap() - 1)
+	assert_bool(DungeonRun.start(g, 0)).is_false()      # one AP left is not enough
 	g.end_day()
+	g.spend_ap(g.max_ap() - g.values.dungeon_min_ap)
 	assert_bool(DungeonRun.start(g, 0)).is_true()
 	assert_int(g.ap).is_equal(0)
 	assert_bool(g.can_end_day()).is_false()
@@ -149,10 +150,11 @@ func test_a_harvest_gives_materials_without_a_battle_but_no_breakthrough_materia
 		n += int(loot[id])
 		assert_bool(Materials.form(id) in ["plant", "ore"]).is_true()
 	assert_int(n).is_equal(g.values.harvest_yield)
-	assert_int(g.ap).is_equal(0)
+	assert_int(g.ap).is_equal(g.max_ap() - g.values.harvest_ap)
 	assert_int(g.roster[0].xp).is_equal(xp)
 	assert_int(g.count(Materials.breakthrough(0))).is_equal(0)
-	assert_bool(DungeonRun.harvest(g, 0).is_empty()).is_true()
+	g.ap = 0
+	assert_bool(DungeonRun.harvest(g, 0).is_empty()).is_true()      # no AP, no harvest
 
 
 func test_a_running_dungeon_survives_a_save() -> void:
