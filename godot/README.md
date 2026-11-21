@@ -24,21 +24,22 @@ battle/      the deterministic grid battle (docs/battle.md, skills.md, monsters.
   view/      PRESENTATION — 3D board (BattleView) and the input controller
   ui/        battle HUD, BattleText (datasheets, log, previews), the draft sandbox and ShapeEditor (free shapes before a battle)
   battle.tscn, draft.tscn
-overworld/   days, AP, night phase, economy, Internal World (docs/overworld.md). New Game starts in a hub
-             (`CityAreas`, a test layout): every district of the ten groups, the two wild areas, the Realm Gate
-             and the Internal World stand side by side as teleporters. A district is a room of tall buildings;
-             a building opens what is built (trader, request board, the three old factions) or says what it is
-             meant for. A wild area has three zones by stage; a resource costs 1 day AP in any
-             zone and returns after its nights (`GameState.taken`); its monsters only wander. The Realm Gate
-             starts the old dungeon run, which stands in for a one-time realm. No persons yet. Every walkable
-             area has a follow camera: hold the action `world_look` or `camera_drag` to turn, the zoom
-             actions to zoom
-game/        glue: main menu, settings, SaveGame, autoloads (GameSettings, GameSession), Overview (debug tables
-             of content with an optional in-game-only filter, reached from the main menu), Growth Preview
-             (test screen from the main menu: click through the growth of docs/vision.md §8 and see what a step
-             gives, where the player chooses and where the rules have a gap; `GrowthModel` holds its draft
-             tables, of which the insights, the numbers of the Internal World and the weight are placeholders)
+overworld/   the hub game around the battle (docs/vision.md, docs/overworld.md): see "The hub game" below
+  core/      headless logic: GameState (day, day AP, lifespan, stage, roster, items; saved as a dictionary),
+             GameValues + CultivationDef (the classes of the data under data/game and data/cultivation),
+             WildArea, DungeonRun, VoidPlace (the three places), Places (reads a result back), Fight (a battle
+             the hub asks for, as plain data), Cultivation (the tree, building parts), Crafting (alchemy and
+             smithing), Materials (item ids and names), Cheats
+  ui/        HubScreen (head, buildings, the screen that prepares a fight), one panel per building
+             (panel_*.gd), NewGameScreen, GameOverScreen, HubUi (builders sized for a finger)
+  hub.tscn, new_game.tscn, game_over.tscn
+game/        glue: main menu, settings, SaveGame (one slot; what a finished game leaves is kept apart),
+             autoloads (GameSettings, GameSession, CheatMenu), FightBridge (a Fight → BattleRequest), MapData
+             (a battleground as plain data for the save), Overview (debug tables of content with an optional
+             in-game-only filter, reached from the main menu)
 data/        ALL content as Resource files, one folder per kind (a new file = new content)
+             game/values.tres (every test value of the hub game), cultivation/ (the systems and their trees),
+             maps/ (battlegrounds: six test battlegrounds of the places)
              monsters/ skills/ zones/ grounds/ props/ tamer/  — the game's content and, with the status
                                                                "simulation", test monsters of the tools; every
                                                                skill/ground/zone/prop carries an internal_calc_cost authoring note
@@ -54,9 +55,45 @@ tools/       headless tools (tools/README.md): sim.gd (AI-vs-AI runs), compare.g
 ## Dependency rule
 
 `shared` ← `battle` ← `game`, and `shared` ← `overworld` ← `game`.
-Battle and overworld **never import each other**: the overworld builds a `BattleRequest`, the battle
-returns a `BattleResult` (overworld.md) — both classes live in `shared/`. `game/` is the only place
+Battle and overworld **never import each other**: the overworld describes a battle as a `Fight` (plain data),
+`game/FightBridge` turns it into a `BattleRequest`, the battle returns a `BattleResult` — request and result
+live in `shared/`. The overworld reaches battlegrounds, the map editor and the names of board parts only through
+the autoload `GameSession`. `game/` is the only place
 that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends on `battle/core`.
+
+## The hub game
+
+Main menu → New Game: choose a cultivation system and one of three eggs, then the hub. Continue loads the one save.
+The hub shows the day, the day AP, the stage and the lifespan; a building opens its panel. A fight is prepared on
+one screen (battleground, opponents, team, tamer slots) and fought in the battle scene; the hub reads the result.
+
+| Building | What works |
+|---|---|
+| Nest | the roster and its order, release, eggs with their nights |
+| Wild Gate | today's encounters per zone (one zone per stage reached), a battle for day AP at full HP, XP, a beast part per monster killed, catching on Seal Ground, eggs, a rare encounter that is announced and stays |
+| Dungeon Gate | a run for all day AP of a full day: a generated map of nodes with forks and a rest node, HP stay, healing pills between battles, leaving keeps the loot, a defeat keeps a share, the last battle gives the breakthrough material and an essence; a challenge per dungeon, then the harvest without a battle |
+| Training Ground | spending the stat points of each step (the prices of docs/monsters.md §2.2) |
+| Scripture Hall | the kit and the development level of each slot (a level has no effect in a battle) |
+| Cauldron | brewing two or three plants, properties drawn per game and found by trying; pills that reshape, raise the rarity or heal in a dungeon |
+| Forge | forging a weapon or an armour from ore, a beast part and an optional essence; an armour is worn by a monster (no effect in a battle) |
+| Void Gate | the depths of the stage on the player's own battleground, a path point per depth, the last depth as the breakthrough trial; forced at the end of the lifespan, and lost then the game is lost |
+| Cultivation Hall | the tree of the system, a tree per stage: tamer skills and blueprints for path points |
+| Battleground Workshop | building parts from blueprints and materials; the map editor on the own battleground with owned parts, a budget, a size range and a reachable start area of the opponent |
+
+**Test values.** Every number of the hub game lies in `data/game/values.tres` (class `GameValues`, one comment per
+field), the systems in `data/cultivation/`. None is a rule: the rule files say "not defined" for each (tasks T54–T60).
+The values are chosen so that one stage can be played in about half an hour: 3 day AP and 8 days of lifespan at the
+first stage, 4 encounters a day, a dungeon of 6 battle nodes and a rest of which a run passes 4, 3 depths of the
+void, 1 breakthrough material for the trial, 30 XP per win against 60 for the first step.
+
+**Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
+("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour and of a development level,
+the relearning pill, what a finished game leaves for the next one (the games are only counted), ends of a battle
+other than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
+Foundation), an Android export.
+
+**Cheat menu:** the action `toggle_cheats` or the button in the bottom-right corner: refill day AP, change the
+lifespan, XP, path points, materials.
 
 ## Battle architecture
 

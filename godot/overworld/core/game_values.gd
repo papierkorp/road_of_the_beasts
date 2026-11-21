@@ -89,6 +89,9 @@ const PATH := "res://data/game/values.tres"
 @export var properties_per_plant := 0
 ## Variations an essence can give a forged piece (names only; a piece has no effect in a battle yet).
 @export var tempers: Array = []
+## What the core of a forged piece can give, by name only: the skill of a weapon, the passive of an armour.
+@export var weapon_skills: Array = []
+@export var armour_passives: Array = []
 
 
 static var _shared: GameValues

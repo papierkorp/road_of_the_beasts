@@ -70,20 +70,34 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | I54 | Dragon Vein choice: human choice, AI rule and preview are built (2026-11-14, preview not seen by a human); open: a “who is hit next” hint in the view; Dragon Veins for 1v1, 2v2 and 5v5 | T39 | roster order; the owner is shown (tile tinted in the side colour, label, log line; not yet seen by a human) |
 | I55 | Squares that act once and vanish: built as walkable props (Spike Trap, Vortex Trap, the button runes); an “array” form is not built | Battle §4.9 · T41 | `PropDef.solid`, `BattleProps.enter` |
 
-## Overworld Follow-ups
+## Hub Game
 
-**Status:** Queued after the Battle gate (meta integration); the overworld code is unchanged and still runs the pre-revision monster model. The battle maps its data strictly to the GDD (user decision 2026-11-11).
-**Done when:** the overworld adopts the current monster/skill model and the adapter rule of the row can be deleted.
+**Status:** Open — the hub game was built on 2026-11-21 as a first version to click through (prompt "Hub-Spiel umsetzen", [T61](open/project/T61-align-the-build-and-the-architecture-with-the-frame.md)). Every number is a test value in `godot/data/game/values.tres` ([godot/README.md](../../godot/README.md), "The hub game"); the rows below are the solutions the build chose where the rules say "not defined". None is a decision.
+**Done when:** every row is decided in its task and the build follows the decision.
 
-| ID | Gap | Current battle behaviour | Owner / task |
-|----|-----|--------------------------|--------------|
-| I32 | The monster model has no AP stat | every rolled individual fights with AP 2, the GDD base value (`UnitSheets.BASE_AP`); reference individuals use the Monsters §4.1 sheet stored in their monster file | Monsters §2 · T03 |
-| I33 | Reach 1–3 and the stage ceilings in `shared/stage.gd` / `stat_shape.gd` are pre-revision | Reach below 2 is raised to 2; other stats are taken as they are | Monsters §2.3 · T03 |
-| I34 | No slot development: the legacy evolution system was deleted with the legacy skill model (2026-11-12) | the Evolution Pillar is a structure without function; old saves lose their evolution picks | Skills §6 · T05 |
-| I35 | The dungeon screen still announces an ambush bonus | `BattleRequest.ambush_side` is ignored; `Battle.AMBUSH_BONUS` exists only for that text | Overworld §2.2 · T35 |
-| I36 | A Draw has no overworld meaning | reported as a fact; the overworld treats it like any non-win | T19 |
-| I37 | Aspects remain in species data, materials and structures | ignored by the rules; the 3D view uses the aspect colour as a look hint only | T01 (removed) · T35 |
-| I39 | The overworld never fills the loadout, bench, start-square or board-seed fields of the request | only the draft sandbox does (test loadout) | T19/T55 |
+| ID | Solution in the build | Rule that is missing | Task |
+|----|-----------------------|----------------------|------|
+| I83 | A new individual starts at HP 3, Pace 1.0, Stamina 2, Reach 2, AP 2, one turn (22 of 25 points) and spends the rest at random; wild monsters spend every point at random. Reach ends at 4 (the unit sheet takes 2–4) | how a stat shape splits the points; the stat shapes of the old model (`StatShape`, `MonsterInstance.roll`) are left for the old tests only | T03 |
+| I84 | A monster breaks through by itself when its bar is full and its tamer is a stage above; no trial, no material | how a monster breaks through | T56 |
+| I85 | A breakthrough sets the lifespan to the days of the new stage; days left over are lost | whether a breakthrough adds to or replaces the lifespan | T54 |
+| I86 | A trial or a depth lost before the end of the lifespan costs only its day AP; it can be tried again at once | what a lost depth costs | T56 |
+| I87 | The forced trial asks for no breakthrough material and no day AP; the chosen trial asks for the material and uses it up on a win | what the forced trial asks for | T54, T56 |
+| I88 | A lost battle in a wild area costs only its day AP; leaving a battle through the pause menu counts as a defeat everywhere | what a lost battle costs | T55 |
+| I89 | Wild, dungeon and void opponents are all wild monsters: they die at 0 HP and can be caught wherever the tamer brought a seal | whether monsters are caught outside the wild area; whether a void monster can be caught | T49, T56 |
+| I90 | A zone and a dungeon of every stage reached stay open; an older one gives its old loot and XP | whether an older place stays worth a visit | T55 |
+| I91 | A dungeon map has the layers of the values with one rest node; a node shows its battleground, opponents and loot; the last battle also gives one essence | nodes without a battle, what a rest does | T55 |
+| I92 | Two kinds of challenge: runs won in a row, or the last battle within a number of rounds; one per dungeon | the list of challenges | T55 |
+| I93 | A harvest gives plants and ore only | the yield of a harvest | T55 |
+| I94 | A part of the battleground is built unit by unit (1 ore each) and placed freely; the player starts with a plain 5×5 battleground, one Dragon Vein and two Earth Walls; both start areas are drawn by the player; one battleground, changed in the editor | the limits and costs of a battleground, what exists before the first blueprint | T56 |
+| I95 | Void monsters stand 1 to 3 steps of growth above the High sub-tier of the stage; a void battle gives monster XP | what makes a void monster stronger | T56 |
+| I96 | The trees hold tamer skills and blueprints only, for the first two stages; a development step of a tamer skill is no node (upgrades of tamer skills are not built) | the systems and their trees | T57 |
+| I97 | Properties: each plant draws 3 of 7; the core of a piece is drawn per Kin from six names, the temper per essence tier from four; a piece and an armour change nothing in a battle | lists of pills, weapon skills, armour passives | T58 |
+| I98 | Pills: reshape (every point back), bloodline (rarity +1 up to Epic), healing (2 HP, between the battles of a dungeon). Pills for a battle and the relearning pill can be brewed and not used | pills in the battle loadout (I22), learn lists (I25) | T58, T19 |
+| I99 | An egg hatches after one night at the first sub-tier of the tamer's stage; a won wild battle gives an egg with a chance, a rare encounter always; the roster holds 8, eggs included | where eggs come from, the roster cap | T59 |
+| I100 | A finished game is counted in `user://legacy.json` and its save removed; nothing is opened for the next game | what a game leaves behind | T54 |
+| I101 | The Binding Seal item is not in the hub game: the Seal skill is the only seal | how a Binding Seal is made | T58 |
+| I102 | A Draw counts as not won | Draw consequences (I29) | T19 |
+| I103 | The battle is fought with the species' kit as written; a development level is stored per slot and changes nothing | slot development (I24) | T05 |
 
 ## Verification and Code Follow-ups
 
@@ -97,7 +111,7 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | I43 | 5v5 is not offered in the draft sandbox (nine species cannot fill both sides); board and setup exist and are tested |
 | I44 | `UnitSheet.problems()` is checked in tests but `BattleSetup` does not refuse an illegal sheet |
 | I45 | `BattleContent.VERSION` is bumped by hand (not bumped for the reshape); only `fingerprint()` is derived from the definitions |
-| I46 | Latest Godot 4.7.2 normal/full-CPU full suite (2026-11-15, working tree with the decisions of that day): 355 cases with **2 known failed cases** outside Battle (battle suite 210 cases, `tests/game` 7, 0 failures in both). `test_a_roamer_wanders_and_never_leaves_free_ground` — `res://tests/overworld/test_dungeon_rooms.gd:69`, **958 failed assertions**; `test_reference_individuals_keep_their_fixed_stats` — `res://tests/shared/test_items_and_progression.gd:73`, **1 failed assertion**. Total 959 failed assertions is not 959 failed cases. All battle cases pass. Later runs up to 332 cases show the same two failures (T13). Failures remain open; no audit has investigated or fixed them |
+| I46 | **Superseded on 2026-11-21:** the two failing tests and the suites of the old overworld are removed; a full run of `res://tests` has 326 cases, 0 failures, in about 45 s, and the run that did not finish within 30 minutes is gone with them. Earlier note: Latest Godot 4.7.2 normal/full-CPU full suite (2026-11-15, working tree with the decisions of that day): 355 cases with **2 known failed cases** outside Battle (battle suite 210 cases, `tests/game` 7, 0 failures in both). `test_a_roamer_wanders_and_never_leaves_free_ground` — `res://tests/overworld/test_dungeon_rooms.gd:69`, **958 failed assertions**; `test_reference_individuals_keep_their_fixed_stats` — `res://tests/shared/test_items_and_progression.gd:73`, **1 failed assertion**. Total 959 failed assertions is not 959 failed cases. All battle cases pass. Later runs up to 332 cases show the same two failures (T13). Failures remain open; no audit has investigated or fixed them |
 | I48 | No planned T13 scenario has been played on the build (the user's free play exists, I40); bot runs: [simulation_log.md](../simulation_log.md) |
 | I56 | **Dead code of the removed mechanics** (T40): height and Mountains (`BoardCell.height`, climbing, fall, collapse, Raise Ground, Mountain destruction), the air layer (`Board.AIR`, flyers, air props), Surges and traps (`PendingSurge`, timers, `spring_traps`, the Surge fields of `BattleSkillDef`), the shield, `mend` and `expose` effects, and their texts, view parts and AI terms. Nothing of the game reaches them; the tests that build them by hand still pass and go with them |
 | I57 | Left over from the rules of 2026-11-17, unused: the levels of ground and zones (`BoardCell.level`, `GroundDef.max_level`, `BoardZone.level`, `FieldEffect.value_at`), the self retreat of a Strike (`self_retreat`), the opposites of stat effects, the price entries of archived records in `skill_calc.gd`; the switches of the removed mechanics are gone, their `sim.gd` variants `alltraps`, `alltimed`, `turns`, `surgedmg`, `shield`, `shieldap` still parse: remove with I56. A solid prop springs a trap, a walkable prop does not; a trap of the Surge kind keeps one per skill and monster |
