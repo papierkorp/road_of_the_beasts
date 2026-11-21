@@ -30,6 +30,35 @@ static func of(kin: MonsterDef.Kin) -> KinDef:
 	return _cache[key]
 
 
+## The groups a skill belongs to: what it is (a Strike, a movement, an effect on its user) or, for a skill that
+## only lays something, everything it creates (ground, zone, prop). A monster learns it if its Kin learns them all.
+static func groups_of(s: BattleSkillDef) -> PackedStringArray:
+	match s.kind:
+		BattleSkillDef.STRIKE:
+			return ["strike"]
+		BattleSkillDef.MOVE:
+			return ["movement"]
+		BattleSkillDef.BUFF, BattleSkillDef.PASSIVE:
+			return ["self"]
+		BattleSkillDef.ZONE:
+			return ["zone"]
+		BattleSkillDef.TRAP:
+			return ["prop"]
+	var out: PackedStringArray = []
+	for op in s.board_ops:
+		for pair: Array in [[op.prop, "prop"], [op.zone, "zone"], [op.ground, "ground"]]:
+			if pair[0] != &"" and not out.has(pair[1]):
+				out.append(pair[1])
+	return out if not out.is_empty() else PackedStringArray(["ground"])
+
+
+func can_learn(s: BattleSkillDef) -> bool:
+	for g in groups_of(s):
+		if not learns.has(g):
+			return false
+	return true
+
+
 func gift(gift_id: StringName) -> Dictionary:
 	for g: Dictionary in gifts:
 		if StringName(g["id"]) == gift_id:

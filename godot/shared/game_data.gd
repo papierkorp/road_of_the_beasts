@@ -61,7 +61,7 @@ static func monster_ids() -> Array[StringName]:
 	_ensure()
 	var ids: Array[StringName] = []
 	for id in _monsters:
-		if ContentStatus.in_game(_monsters[id]):      # no test-only or simulation-only monsters
+		if ContentStatus.in_game(_monsters[id]) and not _monsters[id].hub_only:      # no test-only or simulation-only monsters
 			ids.append(id)
 	ids.sort_custom(func(a: StringName, b: StringName) -> bool:
 		var da: MonsterDef = _monsters[a]
@@ -87,6 +87,19 @@ static func register(def: MonsterDef) -> void:
 static func reload() -> void:
 	_loaded = false
 	_ensure()
+
+
+## The species of the hub game: those of `monster_ids` and the hub-only ones. `void_kin` picks the creatures of
+## the void (true) or everything else (false).
+static func species_ids(void_kin := false) -> Array[StringName]:
+	_ensure()
+	var ids: Array[StringName] = []
+	for id in _monsters:
+		var m: MonsterDef = _monsters[id]
+		if ContentStatus.in_game(m) and (m.kin == MonsterDef.Kin.VOID) == void_kin:
+			ids.append(id)
+	ids.sort()
+	return ids
 
 
 static func _validate_all() -> void:

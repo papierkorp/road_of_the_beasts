@@ -19,7 +19,6 @@ id = &"eclipse"
 display_name = "Eclipse"
 content_status = "archived"
 kind = "surge"
-description = "Rift on 4 squares: 3 damage, destroys Mountains, leaves Blight I."
 status = "test data (Skills §10 prior draft, decided mechanics only)"
 footprint = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)])
 board_ops = Array[ExtResource("1_qdoi2")]([SubResource("Resource_cemww"), SubResource("Resource_3acav")])

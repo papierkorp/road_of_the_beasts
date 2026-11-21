@@ -20,7 +20,6 @@ display_name = "Ambush Rift"
 surge_damage = 2
 content_status = "archived"
 kind = "trap"
-description = "Rift: 2 damage, destroys Mountains, leaves Blight I. As a trap only a monster springs it."
 status = "test data (T38 experiment, no GDD rule)"
 footprint = Array[Vector2i]([Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1)])
 board_ops = Array[ExtResource("1_soasc")]([SubResource("Resource_8cdxh"), SubResource("Resource_2ws8c")])

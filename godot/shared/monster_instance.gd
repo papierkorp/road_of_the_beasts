@@ -64,9 +64,9 @@ var dev_steps := 0
 ## Development level per kit slot (1–3); a missing entry is level 1.
 var slot_levels: Array[int] = []
 var armour: StringName = &""
-## Open kit slots (4 at the start, up to 6) and what fills them: indexes into the learnable list of the species.
+## Open kit slots (4 at the start, up to 6) and what fills them: ids of skills of the species.
 var slots := START_SLOTS
-var kit: Array[int] = []
+var kit: Array[StringName] = []
 ## Hatched and not yet in a battle: the player still shapes it freely (docs/overworld.md §4.1).
 var fresh := false
 var gifts: Array[StringName] = []
@@ -124,14 +124,11 @@ static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0, p_rari
 			m.choice_picks = 0
 			break
 		m.choose(open[rng.randi_range(0, open.size() - 1)], &"", rng)
-	var list: Array[int] = []
-	for i in m.learnable().size():
-		list.append(i)
+	var list := m.learnable()
 	while m.kit.size() < m.slots and not list.is_empty():
 		var at := rng.randi_range(0, list.size() - 1)
-		m.kit.append(list[at])
+		m.kit.append(list[at].id)
 		list.remove_at(at)
-	m.kit.sort()
 	m.current_hp = m.max_hp()
 	return m
 
@@ -161,24 +158,38 @@ func _gains_up_to(step: int) -> void:
 			choice_picks += steps_per_gain()
 
 
-## The skills this monster can learn. Test value: the species' list of the data, no Kin groups yet.
+## The skills this monster can learn: the list of its species within the groups of its Kin.
 func learnable() -> Array[BattleSkillDef]:
-	var out: Array[BattleSkillDef] = []
-	for s in species().skills:
-		if s != null:
-			out.append(s)
-	return out
+	return species().learn_list()
+
+
+func _skill(skill_id: StringName) -> BattleSkillDef:
+	var def := species()
+	for s in def.learnable + def.skills:
+		if s != null and s.id == skill_id:
+			return s
+	return null
+
+
+func can_learn(skill_id: StringName) -> bool:
+	for s in learnable():
+		if s.id == skill_id:
+			return not kit.has(skill_id)
+	return false
 
 
 ## The skills in its slots, in slot order.
 func kit_skills() -> Array[BattleSkillDef]:
-	var list := learnable()
-	if not uses_points():
-		return list
 	var out: Array[BattleSkillDef] = []
-	for i in kit:
-		if i >= 0 and i < list.size():
-			out.append(list[i])
+	if not uses_points():
+		for s in species().skills:
+			if s != null:
+				out.append(s)
+		return out
+	for skill_id in kit:
+		var s := _skill(skill_id)
+		if s != null:
+			out.append(s)
 	return out
 
 
@@ -190,10 +201,10 @@ func kit_text() -> String:
 
 
 ## Puts a learnable skill into a free slot.
-func learn(index: int) -> bool:
-	if kit.size() >= slots or kit.has(index) or index < 0 or index >= learnable().size():
+func learn(skill_id: StringName) -> bool:
+	if kit.size() >= slots or not can_learn(skill_id):
 		return false
-	kit.append(index)
+	kit.append(skill_id)
 	return true
 
 
@@ -208,10 +219,10 @@ func unlearn(slot: int) -> bool:
 
 
 ## Another skill in a slot (the relearning pill, docs/skills.md §8): the slot keeps its level.
-func relearn(slot: int, index: int) -> bool:
-	if slot < 0 or slot >= kit.size() or kit.has(index) or index < 0 or index >= learnable().size():
+func relearn(slot: int, skill_id: StringName) -> bool:
+	if slot < 0 or slot >= kit.size() or not can_learn(skill_id):
 		return false
-	kit[slot] = index
+	kit[slot] = skill_id
 	return true
 
 
@@ -486,7 +497,7 @@ func to_dict() -> Dictionary:
 	return {"species": String(species_id), "shape": int(shape), "rarity": int(rarity), "stage": int(stage),
 		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "core": core.duplicate(), "current_hp": current_hp,
 		"unspent": unspent, "dev_steps": dev_steps, "slot_levels": slot_levels.duplicate(), "armour": String(armour),
-		"slots": slots, "kit": kit.duplicate(), "fresh": fresh, "gifts": gifts.map(func(g: StringName) -> String: return String(g)),
+		"slots": slots, "kit": kit.map(func(k: StringName) -> String: return String(k)), "fresh": fresh, "gifts": gifts.map(func(g: StringName) -> String: return String(g)),
 		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate()}
 
 
@@ -516,8 +527,11 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 		m.slot_levels.append(int(l))
 	m.armour = StringName(d.get("armour", ""))
 	m.slots = int(d.get("slots", START_SLOTS))
-	for i in d.get("kit", []):
-		m.kit.append(int(i))
+	for k in d.get("kit", []):
+		if k is String:
+			m.kit.append(StringName(k))
+		elif int(k) >= 0 and int(k) < m.species().skills.size():      # a save from before skill ids
+			m.kit.append(m.species().skills[int(k)].id)
 	m.fresh = bool(d.get("fresh", false))
 	for g in d.get("gifts", []):
 		m.gifts.append(StringName(g))

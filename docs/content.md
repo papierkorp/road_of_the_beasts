@@ -196,4 +196,4 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 | Flora | **Thornwalker** (damage from ground on entering does not hit it) · **Deep Roots** (props it creates last 3 rounds) · **Sap** (healing ground heals it 1 more, never above its maximum) |
 | Void | **Rift Walker** (its straight-line movement may go diagonally) · **Hollow** (stat changes of props do not act on it) · **Unravel** (a zone it ends its turn in loses 1 round) |
 
-The nine monsters of [§5](#5-the-nine-monsters) ignore the groups; Flora and Void have no species yet.
+The kits of the nine monsters of [§5](#5-the-nine-monsters) ignore the groups; the test species and learnable lists of the build are no content drafts.

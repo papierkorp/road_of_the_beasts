@@ -42,8 +42,11 @@ static func pick_map(values: GameValues, rng: RandomNumberGenerator, stage: int)
 
 
 ## `n` wild individuals of random species at a step of growth.
-static func monsters(rng: RandomNumberGenerator, n: int, step: int, rarity := MonsterInstance.Rarity.NORMAL) -> Array[MonsterInstance]:
-	var ids := GameData.monster_ids()
+## `of_void`: creatures of the void (they live there only) instead of the monsters of the world.
+static func monsters(rng: RandomNumberGenerator, n: int, step: int, rarity := MonsterInstance.Rarity.NORMAL, of_void := false) -> Array[MonsterInstance]:
+	var ids := GameData.species_ids(of_void)
+	if ids.is_empty():
+		ids = GameData.species_ids(false)
 	var out: Array[MonsterInstance] = []
 	for i in n:
 		out.append(MonsterInstance.grown(GameData.monster(ids[rng.randi_range(0, ids.size() - 1)]), rng, step, rarity))

@@ -14,7 +14,6 @@ script = ExtResource("3_sd")
 id = &"light_brazier"
 display_name = "Light Brazier"
 kind = "ground"
-description = "Places an Ember Brazier on a free square within Reach: at every round end monsters on its 4 cardinal neighbours take 1."
 status = "test data (prop rework 2026-11-14, no GDD record)"
 ap_cost = 2
 footprint = Array[Vector2i]([Vector2i(0, 0)])

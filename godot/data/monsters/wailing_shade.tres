@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="MonsterDef" format=3]
+
+[ext_resource type="Script" path="res://shared/monster_def.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="2"]
+[ext_resource type="Resource" path="res://data/skills/run.tres" id="l1"]
+[ext_resource type="Resource" path="res://data/skills/leap.tres" id="l2"]
+[ext_resource type="Resource" path="res://data/skills/void_pull.tres" id="l3"]
+[ext_resource type="Resource" path="res://data/skills/gale.tres" id="l4"]
+[ext_resource type="Resource" path="res://data/skills/lay_vortex.tres" id="l5"]
+[ext_resource type="Resource" path="res://data/skills/set_drum.tres" id="l6"]
+[ext_resource type="Resource" path="res://data/skills/battle_trance.tres" id="l7"]
+[ext_resource type="Resource" path="res://data/skills/headbutt.tres" id="l8"]
+
+[resource]
+script = ExtResource("1")
+id = &"wailing_shade"
+display_name = "Wailing Shade"
+kin = 4
+aspect = 2
+hp = 4
+pace = 2.0
+move = 6
+tpr = 1
+reach = 3
+ap = 3
+skills = Array[ExtResource("2")]([ExtResource("l1"), ExtResource("l2"), ExtResource("l3"), ExtResource("l4"), ExtResource("l5"), ExtResource("l6")])
+learnable = Array[ExtResource("2")]([ExtResource("l1"), ExtResource("l2"), ExtResource("l3"), ExtResource("l4"), ExtResource("l5"), ExtResource("l6"), ExtResource("l7"), ExtResource("l8")])
+hub_only = true
+blurb = "Drifts through the enemy line and pulls it apart with currents and traps."
+notes = "Test species of the hub game (2026-11-21): one of two per Kin; its list is not approved content."

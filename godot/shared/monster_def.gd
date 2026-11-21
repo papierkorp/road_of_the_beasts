@@ -30,6 +30,10 @@ enum Kin { BEAST, WINGED, SCALED, SWARM, SPIRIT, STONE, FLORA, VOID }
 @export_group("Kit")
 ## Up to 6 slots, active or passive, at least one active (user decision 2026-11-14; gdd_skills §1: the multiplayer mode plays with all six open). Step needs no slot.
 @export var skills: Array[BattleSkillDef] = []
+## What an individual of the hub game can learn (docs/monsters.md §3); empty = the kit above. Test content.
+@export var learnable: Array[BattleSkillDef] = []
+## A species of the hub game only: the multiplayer battle, the prototype and the tools never offer it.
+@export var hub_only: bool = false
 
 @export_multiline var blurb: String = ""
 @export_multiline var notes: String = ""
@@ -37,6 +41,23 @@ enum Kin { BEAST, WINGED, SCALED, SWARM, SPIRIT, STONE, FLORA, VOID }
 
 static func kin_name(k: Kin) -> String:
 	return Kin.keys()[k].capitalize()
+
+
+## The skills an individual may learn: the learnable list as far as the groups of its Kin allow.
+func learn_list() -> Array[BattleSkillDef]:
+	var kin_def := KinDef.of(kin)
+	var out: Array[BattleSkillDef] = []
+	for s in (learnable if not learnable.is_empty() else skills):
+		if s != null and (kin_def == null or kin_def.can_learn(s)) and not out.has(s):
+			out.append(s)
+	return out
+
+
+func learn_text() -> String:
+	var names: PackedStringArray = []
+	for s in learn_list():
+		names.append(s.display_name)
+	return " · ".join(names)
 
 
 ## "Skill · Skill · Skill" for datasheets.

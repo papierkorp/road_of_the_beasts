@@ -8,6 +8,14 @@
 [ext_resource type="Resource" path="res://data/skills/void_pull.tres" id="k4"]
 [ext_resource type="Resource" path="res://data/skills/snare.tres" id="k5"]
 [ext_resource type="Resource" path="res://data/skills/lay_vortex.tres" id="k6"]
+[ext_resource type="Resource" path="res://data/skills/glide.tres" id="l1"]
+[ext_resource type="Resource" path="res://data/skills/run.tres" id="l2"]
+[ext_resource type="Resource" path="res://data/skills/gloom_rift.tres" id="l3"]
+[ext_resource type="Resource" path="res://data/skills/snare.tres" id="l4"]
+[ext_resource type="Resource" path="res://data/skills/void_pull.tres" id="l5"]
+[ext_resource type="Resource" path="res://data/skills/gale.tres" id="l6"]
+[ext_resource type="Resource" path="res://data/skills/time_split.tres" id="l7"]
+[ext_resource type="Resource" path="res://data/skills/coiling_rift.tres" id="l8"]
 
 [resource]
 script = ExtResource("1")
@@ -23,5 +31,6 @@ tpr = 1
 reach = 4
 ap = 3
 skills = Array[ExtResource("2")]([ExtResource("k1"), ExtResource("k2"), ExtResource("k3"), ExtResource("k4"), ExtResource("k5"), ExtResource("k6")])
+learnable = Array[ExtResource("2")]([ExtResource("l1"), ExtResource("l2"), ExtResource("l3"), ExtResource("l4"), ExtResource("l5"), ExtResource("l6"), ExtResource("l7"), ExtResource("l8")])
 blurb = "Works from long Reach: pins a monster with Binding Vines, lays dulling Blight under it and pulls others in."
 notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

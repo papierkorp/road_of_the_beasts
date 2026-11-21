@@ -19,7 +19,7 @@ func build(into: VBoxContainer) -> void:
 			var s := skills[slot]
 			var row := HubUi.row()
 			card.add_child(row)
-			row.add_child(HubUi.label("Slot %d: %s (%s) · level %d\n%s" % [slot + 1, s.display_name, _kind(s), m.slot_level(slot), s.description]))
+			row.add_child(HubUi.label("Slot %d: %s (%s) · level %d\n%s" % [slot + 1, s.display_name, _kind(s), m.slot_level(slot), GameSession.skill_text(s)]))
 			var b := HubUi.button("Develop", func():
 				m.develop_slot(slot)
 				hub.refresh(), 150)
@@ -31,16 +31,14 @@ func build(into: VBoxContainer) -> void:
 					hub.refresh(), 150))
 		if m.kit.size() < m.slots:
 			card.add_child(HubUi.label("%d free slot(s): choose from what it can learn.%s" % [m.slots - m.kit.size(), "" if m.fresh else " A choice is final."], 20, HubUi.GOOD))
-			var all := m.learnable()
-			for i in all.size():
-				if m.kit.has(i):
+			for s in m.learnable():
+				if m.kit.has(s.id):
 					continue
-				var s := all[i]
 				var row := HubUi.row()
 				card.add_child(row)
-				row.add_child(HubUi.label("%s (%s)\n%s" % [s.display_name, _kind(s), s.description]))
+				row.add_child(HubUi.label("%s (%s)\n%s" % [s.display_name, _kind(s), GameSession.skill_text(s)]))
 				row.add_child(HubUi.button("Learn", func():
-					m.learn(i)
+					m.learn(s.id)
 					hub.refresh(), 150))
 
 

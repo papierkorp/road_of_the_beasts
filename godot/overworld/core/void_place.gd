@@ -47,7 +47,7 @@ static func fight(game: GameState) -> Fight:
 	f.own_map = game.battleground
 	f.max_team = maxi(1, (game.battleground.get("start_a", []) as Array).size())
 	var step := GameState.step_of(int(game.stage), 2) + GameValues.at(v.void_steps_above, d)
-	f.enemies = Places.monsters(rng, maxi(1, GameValues.at(v.void_enemies, d)), step)
+	f.enemies = Places.monsters(rng, maxi(1, GameValues.at(v.void_enemies, d)), step, MonsterInstance.Rarity.NORMAL, true)
 	f.wild = true
 	f.roll_seed = rng.randi_range(1, 1 << 30)
 	f.ref = {"depth": d, "trial": is_trial(game), "forced": game.forced_trial}
@@ -63,7 +63,9 @@ static func pay(game: GameState) -> bool:
 
 static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) -> void:
 	for m in Places.caught(f, result):
-		if game.add_monster(m):
+		if m.species().kin == MonsterDef.Kin.VOID:      # a creature of the void is never bound (docs/monsters.md §3)
+			game.say("%s slipped back into the void: its kind cannot be bound." % m.species().display_name)
+		elif game.add_monster(m):
 			game.say("Caught: %s." % m.title())
 	for m in game.roster:
 		m.heal_full()
@@ -81,6 +83,10 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 		game.take_item(Materials.breakthrough(f.stage), mini(game.values.trial_materials, game.count(Materials.breakthrough(f.stage))))
 		game.say("The trial is won: +1 path point.")
 		game.break_through()
+		var eggs := GameData.species_ids(true)              # the trophy of the trial: an egg of the void
+		if not eggs.is_empty() and not game.is_over():
+			var egg: StringName = eggs[game.rng_for("void_egg%d" % f.stage).randi_range(0, eggs.size() - 1)]
+			game.say("The void left an egg: %s." % GameData.monster(egg).display_name if game.add_egg(egg) else "The void left an egg, but your nest is full.")
 	else:
 		game.void_depth += 1
 		game.say("%s won: +1 path point." % f.title)

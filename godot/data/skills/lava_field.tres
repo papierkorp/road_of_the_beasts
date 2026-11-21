@@ -14,7 +14,6 @@ script = ExtResource("3_v5qrm")
 id = &"lava_field"
 display_name = "Lava Field"
 kind = "ground"
-description = "Field: lays Lava I on its squares, also on Mountains. Needs prop-free squares."
 status = "test data (Skills §10 prior draft, decided mechanics only)"
 footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)])
 board_ops = Array[ExtResource("1_0we8l")]([SubResource("Resource_5p17m")])

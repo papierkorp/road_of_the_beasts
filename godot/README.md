@@ -89,8 +89,7 @@ void, 1 breakthrough material for the trial, 30 XP per win against 60 for the fi
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
 ("Hub Game"). **Not built:** pills and weapons in a battle, the effect of an armour and of a development level, the Kin gifts that
-`data/kins/` gives no flags (they are stored and shown as "not built"), the skill groups of a Kin (a monster learns the skills of its species file),
-species of the Kins Flora and Void, vows,
+`data/kins/` gives no flags (they are stored and shown as "not built"), species skills, vows,
 the relearning pill, what a finished game leaves for the next one (the games are only counted), ends of a battle
 other than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
 Foundation), an Android export.
@@ -101,6 +100,14 @@ the flags are fields of `BattleSkillDef`). All eight traits act: Follow-up (a St
 cleared costs no AP until its next other action), Aloft, Armoured, Scatter, Bodiless, Bulwark, Rooted Growth,
 Unmoored. Built gifts: Updraft, Phase, Heatproof, Keystone, Spined. The multiplayer battle and reference
 individuals carry none. The AI plays with them through the same rules but does not plan for them.
+
+**Species of the hub game.** Sixteen, two per Kin: the nine of the multiplayer battle and seven with
+`hub_only = true` (Cinder Wasps, Wailing Shade, Bone Colossus, Elder Treant, Spore Cap, Rift Stalker, Void Maw),
+which the multiplayer battle, the prototype and the tools never see (`GameData.monster_ids`; the hub uses
+`GameData.species_ids`). Each has a `learnable` list of eight skills inside the four groups of its Kin
+(`KinDef.groups_of`, `MonsterDef.learn_list`); `skills` stays the kit of the multiplayer battle. All lists are
+test content. Creatures of the void are met in the void only, are never caught, and a passed trial leaves an
+egg of one. The hub shows a skill as the battle card does (`GameSession.skill_text`), not its free text.
 
 **Cheat menu:** the action `toggle_cheats` or the button in the bottom-right corner: refill day AP, change the
 lifespan, XP, path points, materials; the next stage for the tamer and for the monsters.

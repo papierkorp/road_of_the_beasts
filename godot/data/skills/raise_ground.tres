@@ -14,7 +14,6 @@ id = &"raise_ground"
 display_name = "Raise Ground"
 content_status = "archived"
 kind = "ground"
-description = "Raises a Mountain on its squares and resets their ground to Plain (not Voidscar)."
 status = "test data (Skills §10 prior draft, decided mechanics only)"
 footprint = Array[Vector2i]([Vector2i(0, 0), Vector2i(0, 1)])
 board_ops = Array[ExtResource("1_02snt")]([SubResource("Resource_14n0b")])

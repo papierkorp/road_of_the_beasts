@@ -8,6 +8,14 @@
 [ext_resource type="Resource" path="res://data/skills/headbutt.tres" id="k4"]
 [ext_resource type="Resource" path="res://data/skills/lava_field.tres" id="k5"]
 [ext_resource type="Resource" path="res://data/skills/light_brazier.tres" id="k6"]
+[ext_resource type="Resource" path="res://data/skills/fire_trail.tres" id="l1"]
+[ext_resource type="Resource" path="res://data/skills/headbutt.tres" id="l2"]
+[ext_resource type="Resource" path="res://data/skills/strike_jab.tres" id="l3"]
+[ext_resource type="Resource" path="res://data/skills/strike_thrust.tres" id="l4"]
+[ext_resource type="Resource" path="res://data/skills/lava_field.tres" id="l5"]
+[ext_resource type="Resource" path="res://data/skills/cinder_dive.tres" id="l6"]
+[ext_resource type="Resource" path="res://data/skills/battle_trance.tres" id="l7"]
+[ext_resource type="Resource" path="res://data/skills/run.tres" id="l8"]
 
 [resource]
 script = ExtResource("1")
@@ -18,5 +26,6 @@ pace = 2.2
 move = 5
 ap = 3
 skills = Array[ExtResource("2")]([ExtResource("k1"), ExtResource("k2"), ExtResource("k3"), ExtResource("k4"), ExtResource("k5"), ExtResource("k6")])
+learnable = Array[ExtResource("2")]([ExtResource("l1"), ExtResource("l2"), ExtResource("l3"), ExtResource("l4"), ExtResource("l5"), ExtResource("l6"), ExtResource("l7"), ExtResource("l8")])
 blurb = "Charges in, burns the ground it runs over and the squares around its target."
 notes = "Reshape 2026-11-13 (T40): working draft kit from the new skill list and spread test stats (S016 set wide); no price or budget was checked."

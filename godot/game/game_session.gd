@@ -93,6 +93,15 @@ func part_name(part: String) -> String:
 	return "%s (%s)" % [def.get("display_name") if def != null else String(id), kind]
 
 
+## What a skill does, as the battle shows it on its card: generated from the record, never from its free text
+## (the description fields of the data are partly older than the rules).
+func skill_text(s: BattleSkillDef) -> String:
+	var parts: PackedStringArray = []
+	for r: Array in BattleText.skill_rows(BattleContent.shared(), s):
+		parts.append("%s: %s" % [r[0], r[1]] if String(r[0]) != "" else String(r[1]))
+	return "   ·   ".join(parts)
+
+
 ## Sends a fight into the battle scene; the hub reads `last_result` when the scene comes back.
 func start_fight(f: Fight) -> void:
 	BattleExperiment.reset()                 # the ingame battle plays none of the switches of the multiplayer draft

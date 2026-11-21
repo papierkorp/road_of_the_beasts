@@ -81,7 +81,7 @@ func monster(species_id: StringName) -> MonsterDef:
 func game_monster_ids() -> Array:
 	var out := []
 	for id in sorted_ids(monsters):
-		if ContentStatus.in_game(monsters[id]):
+		if ContentStatus.in_game(monsters[id]) and not monsters[id].hub_only:
 			out.append(id)
 	return out
 

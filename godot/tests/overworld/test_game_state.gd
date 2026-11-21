@@ -147,8 +147,8 @@ func test_the_cultivation_systems_and_the_eggs_of_the_values_exist() -> void:
 
 func test_a_development_step_raises_a_slot_up_to_level_three() -> void:
 	var m := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"))
-	m.learn(0)
-	m.learn(1)
+	m.learn(&"fire_trail")
+	m.learn(&"strike_jab")
 	m.dev_steps = 2
 	assert_bool(m.develop_slot(0)).is_true()
 	assert_bool(m.develop_slot(0)).is_true()
@@ -168,13 +168,16 @@ func test_a_monster_from_an_egg_is_shaped_by_the_player() -> void:
 	assert_int(m.kit.size()).is_equal(0)
 	assert_int(m.unspent).is_equal(MonsterInstance.START_POINTS - m.points_spent())
 	assert_dict(m.stats).is_equal(MonsterInstance.FLOOR)
-	for i in 6:
-		m.learn(i)
+	assert_int(m.learnable().size()).is_equal(8)
+	for s in m.learnable():
+		m.learn(s.id)
 	assert_int(m.kit.size()).is_equal(MonsterInstance.START_SLOTS)
 	assert_bool(m.unlearn(0)).is_true()
-	assert_bool(m.learn(5)).is_true()
+	assert_bool(m.learn(&"run")).is_true()
+	assert_bool(m.learn(&"run")).is_false()
+	assert_bool(m.learn(&"light_brazier")).is_false()      # a Beast learns no prop skill
 	assert_int(UnitSheets.from_instance(m).skills.size()).is_equal(4)
-	assert_str(String(UnitSheets.from_instance(m).skills[3].id)).is_equal(String(m.learnable()[5].id))
+	assert_str(String(UnitSheets.from_instance(m).skills[3].id)).is_equal("run")
 	m.fresh = false
 	assert_bool(m.unlearn(0)).is_false()
 
@@ -228,3 +231,34 @@ func test_the_cheats_raise_the_stage_of_tamer_and_monsters() -> void:
 	Cheats.monsters_stage_up(g)
 	assert_int(int(g.roster[0].stage)).is_equal(1)
 	assert_int(g.roster[0].choice_picks).is_equal(1)
+
+
+func test_every_species_learns_eight_skills_within_the_groups_of_its_kin() -> void:
+	var per_kin := {}
+	for void_kin in [false, true]:
+		for id in GameData.species_ids(void_kin):
+			var def := GameData.monster(id)
+			per_kin[def.kin] = int(per_kin.get(def.kin, 0)) + 1
+			assert_int(def.learnable.size()).is_equal(8)
+			assert_int(def.learn_list().size()).is_equal(8)      # nothing in the list lies outside the groups
+	for k in MonsterDef.Kin.values():
+		assert_int(int(per_kin.get(k, 0))).is_equal(2)
+	assert_int(GameData.monster_ids().size()).is_equal(9)      # the multiplayer battle keeps its nine
+
+
+func test_void_monsters_live_in_the_void_only_and_come_as_an_egg_of_the_trial() -> void:
+	var g := GameState.new_game(21, &"way_of_the_beast_lord", &"moss_turtle")
+	for e in WildArea.encounters(g, 0):
+		for m in e.fight.enemies:
+			assert_int(int(m.species().kin)).is_not_equal(int(MonsterDef.Kin.VOID))
+	var f := VoidPlace.fight(g)
+	for m in f.enemies:
+		assert_int(int(m.species().kin)).is_equal(int(MonsterDef.Kin.VOID))
+	g.void_depth = VoidPlace.depths(g) - 1
+	g.add_item(Materials.breakthrough(0), g.values.trial_materials)
+	var trial := VoidPlace.fight(g)
+	trial.team = g.default_team(1)
+	VoidPlace.resolve(g, trial, null, true)
+	assert_int(int(g.stage)).is_equal(1)
+	assert_int(g.eggs.size()).is_equal(1)
+	assert_int(int(GameData.monster(StringName(g.eggs[0]["species"])).kin)).is_equal(int(MonsterDef.Kin.VOID))

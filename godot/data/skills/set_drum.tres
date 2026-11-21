@@ -14,7 +14,6 @@ script = ExtResource("3_sd")
 id = &"set_drum"
 display_name = "Set Storm Drum"
 kind = "ground"
-description = "Places a Storm Drum on a free square within Reach: at every round end monsters on its 4 cardinal neighbours are pushed 1 square away."
 status = "test data (prop rework 2026-11-14, no GDD record)"
 ap_cost = 1
 footprint = Array[Vector2i]([Vector2i(0, 0)])
