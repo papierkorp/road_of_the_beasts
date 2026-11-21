@@ -2,7 +2,8 @@
 
 **Status:** Open — relative references are checked (all resolve, 2026-11-15). Part of the K batch was worked on 2026-11-15 together with the decisions of that day; the rows below remain. Whole-project synchronization closes last, not from this refresh alone.
 **Prerequisites:** none for the K batch; the waiting points need the named decision; overall completion after the other tasks.
-**Sources:** [battle.md §7](../../../battle.md#7-technical-requirements), [monsters.md §5](../../../monsters.md#5-growth), [overworld.md §6.3](../../../overworld.md#63-stage-unlock-table), [overworld.md §8](../../../overworld.md#8-technical-notes); the sections named per row.
+**Sources:** [battle.md §7](../../../battle.md#7-technical-requirements), [monsters.md §5](../../../monsters.md#5-growth), [overworld.md §5.1](../../../overworld.md#51-stages), [overworld.md §7](../../../overworld.md#7-technical-notes); the sections named per row.
+- **Archived task numbers in open tasks:** the frame of [vision.md](../../../vision.md) archived T15–T18, T20–T31, T51 and T52. Where an open task still names one, its successor is: T16, T17, T18 → T58; T20 → T57; T21, T22 → T55; T24 → T59; T29, T31 → T54; T30 → T56; the others have none. Reword those mentions when the task is next worked on.
 - **K batch — text behind decisions already taken; no user decision needed (each row re-verified against the text on 2026-11-15):**
 
 | Where | Stale or inconsistent text | Correct against |

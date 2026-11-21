@@ -30,8 +30,8 @@
 | [`docs/skills.md`](docs/skills.md) | Regeln der Skills: Kit, Skill-Karte, Formen, Bewegungsarten, Passives, Slots | 20 000 |
 | [`docs/monsters.md`](docs/monsters.md) | Regeln der Monster: Stats, Kalkulation, Kins, Seltenheit, Wachstum | 15 000 |
 | [`docs/content.md`](docs/content.md) | Alle Inhaltsentwürfe: Böden, Zonen, Props, Skills, Kits, Monster | 20 000 |
-| [`docs/vision.md`](docs/vision.md) | Rahmen des Spiels (Overworld und Ingame-Kampf) mit Diagrammen; geht den Regeldateien vor | 15 000 |
-| [`docs/overworld.md`](docs/overworld.md) | Welt, Expeditionen, Wirtschaft, Fortschritt, Tamer-Skills | 60 000 |
+| [`docs/vision.md`](docs/vision.md) | Rahmen des Spiels (Hub und Ingame-Kampf) mit Diagrammen; geht den Regeldateien vor | 15 000 |
+| [`docs/overworld.md`](docs/overworld.md) | Das Spiel um den Kampf: Tag, Kosten, Monster erhalten, Fortschritt, Kultivierungssystem, Tamer-Skills, Güter | 25 000 |
 | [`docs/architecture.md`](docs/architecture.md) | Technische Zielstruktur | — |
 | [`docs/contract.md`](docs/contract.md) | Vertrag des neu gebauten Kampfs: Formate, Aktionen, Events, lesbarer Zustand | eingefrorener Entwurf |
 | [`docs/decisions.md`](docs/decisions.md) | Entscheidungsprotokoll: Entscheidung, Verworfenes, Grund | wächst nur zeilenweise |

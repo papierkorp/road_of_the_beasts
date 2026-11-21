@@ -8,7 +8,7 @@
 
 | Topic | Questions |
 |---|---|
-| Battlegrounds | Decided and built as a map editor: outline, ground, Dragon Veins, props, zones with rounds, start areas ([battle_ingame.md §3](../../../battle_ingame.md#3-battlegrounds)). Open: how one is built in the overworld and what it costs; which content a player may use; whose battleground a battle is fought on and what the opponent brings; what a monster gains on its own; where the opponent stands in its area; size limits (3–12 is a working value) |
+| Battlegrounds | Decided and built as a map editor: outline, ground, Dragon Veins, props, zones with rounds, start areas ([battle_ingame.md §3](../../../battle_ingame.md#3-battlegrounds)). Decided: every place brings its battlegrounds, the player's own counts in the void only and is built from blueprints and materials; its limits and costs: T56. Open here: where the opponent stands in its area; size limits (3–12 is a working value) |
 | Board events | Decided: scheduled, announced or switched, nothing hidden; each names its step of the round end, else the very end ([battle_ingame.md §4](../../../battle_ingame.md#4-board-events)). Open: build them in the map editor |
 | Skills and functions | Which exist only ingame? May a skill of one battle appear in the other? |
 | Goals | Decided: a tactics puzzle that may be unfair. Open: a length target |

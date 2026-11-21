@@ -1,7 +1,7 @@
 # Skill Rules
 
 - **This file owns** what a monster skill is: the kit, the skill card, shapes, movement kinds, passives, pricing principles and slot development.
-- **Elsewhere:** what ground, zones and props do and how a battle resolves ([battle.md](battle.md)); every concrete skill and kit ([content.md](content.md)); tamer skills ([overworld.md](overworld.md)).
+- **Elsewhere:** what ground, zones and props do and how a battle resolves ([battle.md](battle.md)); every concrete skill and kit ([content.md](content.md)); tamer skills ([overworld.md §5.4](overworld.md#54-tamer-skills)).
 - **Status:** the form of a skill is decided. Every number is a working value; no skill has a price.
 
 ## 1. The Kit
@@ -196,16 +196,16 @@ Principles:
 
 ## 8. Development
 
-**One pattern develops monster skills and tamer skills.** A monster skill is developed on the slot of one monster; a tamer skill on the skill the player learned ([overworld.md §6.4](overworld.md#64-tamer-skills)). Development is permanent, there is no experience currency and no physical evolution.
+**One pattern develops monster skills and tamer skills.** A monster skill is developed on the slot of one monster; a tamer skill on the skill the player learned ([overworld.md §5.4](overworld.md#54-tamer-skills)). Development is permanent, there is no experience currency and no physical evolution.
 
-- **Levels 1–3.** Level 1 is the skill as written; levels 2 and 3 cost one **development step** each. Monsters gain steps at advancement steps ([monsters.md §5](monsters.md#5-growth)), tamers at breakthroughs and from scrolls ([overworld.md §6.4](overworld.md#64-tamer-skills)).
+- **Levels 1–3.** Level 1 is the skill as written; levels 2 and 3 cost one **development step** each. Monsters gain steps at advancement steps ([monsters.md §5](monsters.md#5-growth)), tamers as nodes of their cultivation system ([overworld.md §5.3](overworld.md#53-the-cultivation-system)).
 - **One option per level** from the list written for that skill, each option once; level 3 combines two options. No free components.
 - **Option vocabulary:** every option is one of **Area** (one more square or a larger shape), **Number** (one effect value changed within the caps), **Duration** (more rounds), **Addition** (what the skill creates also does something an existing ground, zone or prop does), **Condition** (a requirement loosened), **Count** (one more use per turn). Count exists for monster skills only.
 - **Never by development:** more damage than the maxima of [battle.md §6.1](battle.md#61-damage), lower AP, more Reach, more uses of a tamer skill.
 - **AP policy:** every skill has a complete path at its original AP; a bigger option may cost more AP, shown before selection, and is never the only path.
 - **Useful from the start:** development expands an already viable kit, with several useful routes and no compulsory first upgrade.
-- **Replacement:** outside expeditions a slot may take another skill of the species' learnable list with a **relearning pill**; the slot keeps its level, and its options are chosen anew from the new skill's list.
-- The options of each skill: not defined. Where and when a choice is made: [overworld.md §6.3](overworld.md#63-stage-unlock-table).
+- **Replacement:** outside a battle a slot may take another skill of the species' learnable list with a **relearning pill**; the slot keeps its level, and its options are chosen anew from the new skill's list.
+- The options of each skill: not defined. Where and when a choice is made: [overworld.md §5.5](overworld.md#55-development-of-monster-skills).
 
 ## 9. Data
 

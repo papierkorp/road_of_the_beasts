@@ -412,7 +412,7 @@ deliberately restricts CPU availability. Permission does not imply automatic par
 matched teams with complete side swaps and source/completion guards. These are harness safeguards, not approval
 of starts, upgrades, content, prices or fun. A usable active skill or budget fit does not establish viable starting
 monsters or meaningful upgrade alternatives; owners are [monsters.md §2.2](../docs/monsters.md#22-prices-and-points)
-and [skills.md §7](../docs/skills.md#7-value-and-prices)/[skills.md §8](../docs/skills.md#8-slot-development), with validation under [T13](../docs/temp_todo.md).
+and [skills.md §7](../docs/skills.md#7-value-and-prices)/[skills.md §8](../docs/skills.md#8-development), with validation under [T13](../docs/temp_todo.md).
 
 Latest executed checks (2026-11-15, normal CPU settings, on a copy of the working tree): the full suite ran
 **355 cases**, including all **210 passing Battle cases** and the 7 of `tests/game`. Two known non-Battle cases

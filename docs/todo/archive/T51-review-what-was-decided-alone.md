@@ -1,14 +1,16 @@
 # T51 · Review What Was Decided Alone
 
-**Status:** To clarify — while the user was away (2026-11-19) the overworld rules were rewritten along the frame and a first world was built. Every row below was decided without the user and stands as a working draft; the user confirms, changes or drops it. The user went through rows 1–5, 7–16, 20 and 27 on 2026-11-19 and replaced rows 17–19 on 2026-11-20 by the frame of persons ([decisions.md](../../../decisions.md)); they are gone from the tables. Next to ask: rows 6 and 21, then the build rows 22–26 and 28.
+**Archived (2026-11-21):** lost its object: the rows reviewed the walked city, which is dropped, by the frame of [vision.md](../../vision.md). The text below is the state before it.
+
+**Status:** To clarify — while the user was away (2026-11-19) the overworld rules were rewritten along the frame and a first world was built. Every row below was decided without the user and stands as a working draft; the user confirms, changes or drops it. The user went through rows 1–5, 7–16, 20 and 27 on 2026-11-19 and replaced rows 17–19 on 2026-11-20 by the frame of persons ([decisions.md](../../decisions.md)); they are gone from the tables. Next to ask: rows 6 and 21, then the build rows 22–26 and 28.
 **Prerequisites:** none.
-**Sources:** [overworld.md](../../../overworld.md), [vision.md](../../../vision.md), [godot/README.md](../../../../godot/README.md).
+**Sources:** [overworld.md](../../overworld.md), [vision.md](../../vision.md), [godot/README.md](../../../godot/README.md).
 
 **Rules written into overworld.md:**
 
 | # | Topic | What was written | Where |
 |---|---|---|---|
-| 6 | Buildings per district | A list of buildings for every group | [§3.1](../../../overworld.md#31-the-city) |
+| 6 | Buildings per district | A list of buildings for every group | [§3.1](../../overworld.md#31-the-city) |
 | 21 | Dropped without a successor | Arena tournaments, beasts for hire, the Business District, staff model B as written, the Trial and Evolution Pillars, Hive Nest, Qi Spring | — |
 
 **In the build:**
@@ -26,4 +28,4 @@
 
 **Not touched, though the frame changes it:** the capacity of the Internal World (still 1 / 3 / 5 by the tamer's stage), the stage of the Internal World, team size by battleground, tamer slots for weapon and pill, alchemy by properties, smithing, the house, weight, the growth preview's open points (T50).
 
-- **Done when:** the user has gone through every row; what is confirmed gets a line in [decisions.md](../../../decisions.md), what is changed is rewritten in its section, and this file moves to `done/`.
+- **Done when:** the user has gone through every row; what is confirmed gets a line in [decisions.md](../../decisions.md), what is changed is rewritten in its section, and this file moves to `done/`.

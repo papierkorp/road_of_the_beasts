@@ -1,7 +1,7 @@
 # Monster Rules
 
 - **This file owns** what a monster is: species and individual, stats and their calculation, Kins, rarity and growth.
-- **Elsewhere:** what a monster can do ([skills.md](skills.md)); how a fight runs ([battle.md](battle.md)); the nine monsters, their stats and kits ([content.md](content.md)); catching, housing and the world ([overworld.md](overworld.md)).
+- **Elsewhere:** what a monster can do ([skills.md](skills.md)); how a fight runs ([battle.md](battle.md)); the nine monsters, their stats and kits ([content.md](content.md)); obtaining monsters and the game around the battle ([overworld.md](overworld.md)).
 - **Status:** the system is decided. **Every number is an untested starting value.** The game checks no price and no point total.
 
 ## 1. Species and Individual
@@ -17,7 +17,7 @@ INDIVIDUAL  stat shape · stats · rarity · stage + sub-tier + XP
 - **The battle only ever sees the finished sheet:** name, Kin, the six stats and the kit (Step plus up to 6 slots).
 - **Stat shape is individual, not species-wide:** two individuals of one species can play differently with the same kit.
 - Wild and newly caught monsters roll a shape weighted by their **Kin lean** ([§3](#3-kins)); rare off-lean rolls are prized finds.
-- **Current HP** persists between the battles of an expedition.
+- **Current HP** persists between the battles of a dungeon run ([vision.md §4](vision.md#4-where-battles-happen)).
 - Every monster is 1×1 and stands on the ground.
 
 **What makes a monster:**
@@ -97,8 +97,8 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 | Caster | weak body, long Reach; works from behind the others |
 
 - **Viable from the start:** the points of the first step must pay for a monster that works with its starter kit. Progression expands a viable build rather than repairs it; several routes must be useful.
-- **Reshape:** pool all points and reroll by the new shape at the same number of points. Spending level-up points never changes the shape label. Item: [overworld.md §6.6](overworld.md#66-pills--medicines).
-- **Stage rule:** a monster cannot exceed the player's **stage** (not the exact sub-tier): the spatial space sustains only what the tamer's qi can feed.
+- **Reshape:** pool all points and reroll by the new shape at the same number of points. Spending level-up points never changes the shape label. Item: [overworld.md §6.2](overworld.md#62-alchemy-and-pills).
+- **Stage rule:** a monster cannot exceed the player's **stage** (not the exact sub-tier).
 - How a shape splits the points at the roll is not defined.
 
 ## 3. Kins
@@ -128,13 +128,13 @@ The **species learnable list** sets concrete skill access. Neither learnable lis
 
 - **No stat bonus from rarity:** rarity buys development steps and a higher last stage, never numbers.
 - Rarity does not decide the stat shape.
-- **Ascension** is a major event, not a grind: one **Bloodline pill** (a Rare+ beast part of this Kin and a next-tier herb) plus a ritual ([overworld.md §6.6](overworld.md#66-pills--medicines)). The monster gains the new rarity's steps and last stage and keeps everything else. **Normal can climb to Epic, never to Legendary.**
+- **Ascension** is a major event, not a grind: one **Bloodline pill** ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)). The monster gains the new rarity's steps and last stage and keeps everything else. **Normal can climb to Epic, never to Legendary.**
 
 *Working values:* the step counts per rarity.
 
 ## 5. Growth
 
-**18 steps:** six stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills, never a stat value; what the tamer gains per stage stands in [overworld.md §6.3](overworld.md#63-stage-unlock-table). A monster exceeds neither the player's stage nor its rarity's last stage.
+**18 steps:** six stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills, never a stat value; what the tamer gains per stage stands in [overworld.md §5.1](overworld.md#51-stages). A monster exceeds neither the player's stage nor its rarity's last stage.
 
 | # | Stage · sub-tier | Points | Also gained | XP to the next step |
 |---|---|---|---|---|
@@ -159,6 +159,6 @@ The **species learnable list** sets concrete skill access. Neither learnable lis
 
 - **Slot-development step:** the monster may develop one skill slot ([skills.md §8](skills.md#8-development)): 1 per step for Normal and Rare, 2 for Epic and Legendary.
 - **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
-- Breakthrough trials: [overworld.md §6.3.1](overworld.md#631-breakthrough-trials).
+- Breakthrough trials: [overworld.md §5.2](overworld.md#52-the-breakthrough-trial).
 
-*Working values (XP):* bars grow about ×2.5 per stage; a sub-tier takes roughly 3–6 focused days at the right stage. A cultivation pill gives about half its tier's Lower bar (Qi +30, Foundation +80, Core +200, Soul +500, Immortal +1200). A win gives 10 XP at Qi Gathering, ×2.5 per stage. A night at a cultivation spot gives a small gain (Meditation Stone about one tenth of a win, Qi Spring double).
+*Working values (XP):* bars grow about ×2.5 per stage; a sub-tier takes roughly 3–6 focused days at the right stage. A win gives 10 XP at Qi Gathering, ×2.5 per stage. XP comes from the battles a monster fought ([vision.md §2](vision.md#2-the-pillars)).

@@ -17,7 +17,7 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | I09 | A prop reduced to 0 HP by a collision of the Gong push is removed in a further removal step with its own aftermath | Battle §4.10/§6.2 · T04 | `BattlePayload._phase_board` (removal loop) |
 | I10 | Late-round pressure is no rule any more (2026-11-18) but still in the code: `pressure_mode` “idle” / “always”, Voidscar spreading, the start rounds per mode, `soft_pressure`; the older rule tests play it through `BattleExperiment.pack(false)`. Remove with I56, or keep for a mode without Dragon Veins (T39) | Battle §4.2 · T39 | `BattleTurn._late_pressure`, `BattleBoards.MODES` |
 | I11 | "Total Pace" of the first tie = sum of the effective Pace of each side's living monsters; extra-turn entries are not counted | Battle §2.2 · T04 | `BattleQueue.build` |
-| I13 | Beast Swap cannot swap out the monster whose turn is running | Battle §5.2 · T20 | `BattleTamer.error` |
+| I13 | Beast Swap cannot swap out the monster whose turn is running | Battle §5.2 · T57 | `BattleTamer.error` |
 | I16 | A monster that falls during its own turn ends that turn at once, without end-of-turn effects | Battle §2.4 · T04 | `Battle.apply` |
 | I17 | The player picks a movement destination; the route is chosen automatically (least net harm from entering and leaving, then cheapest) | Skills §3 · T04 | `BattleMoves._walk` |
 | I51 | A leaving effect fires before the monster moves, an entry effect after; a blocked push fires neither | Battle §6.3 · T04 | `BattleMoves.execute`, `BattleDisplace.shove` |
@@ -57,15 +57,15 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | ID | Not implemented | Blocked by | Already in place |
 |----|-----------------|------------|------------------|
 | I19 | Signature skills | T32 | the `once_per_battle` use limit |
-| I20 | Tamer skill Qi Suppression (Spatial Pull dropped 2026-11-14); a new Spirit Shield | T20 | one resolver per effect in `BattleTamer` (Spirit Shield still nullifies Surge damage, which no longer occurs) |
-| I21 | Tamer skills Double Bind and Seal Mastery | T24 (catching) | — |
-| I22 | Medicines and arrays in the battle loadout | T18/T19 | the request carries tamer skills, bench, start squares and a board seed only |
-| I23 | Artifacts (extra passive or +1 stat) | T17 | passives are ordinary kit skills; the unit sheet has no artifact slot |
+| I20 | Tamer skill Qi Suppression (Spatial Pull dropped 2026-11-14); a new Spirit Shield | T57 | one resolver per effect in `BattleTamer` (Spirit Shield still nullifies Surge damage, which no longer occurs) |
+| I21 | Tamer skills Double Bind and Seal Mastery | T49 (catching) | — |
+| I22 | Medicines and arrays in the battle loadout | T58/T19 | the request carries tamer skills, bench, start squares and a board seed only |
+| I23 | Artifacts (extra passive or +1 stat) | T58 | passives are ordinary kit skills; the unit sheet has no artifact slot |
 | I24 | Slot development and upgrade choices on battle sheets | T05 | nothing: every individual fights with its species kit |
 | I25 | Learn lists, Kin access and approved kits and passives | T06/T10/T11/T12 | nine draft kits inside the monster files; the skill builder writes kit slots; one passive (Immovable) |
 | I26 | Event-driven passives beyond one event | T04/T11 | the reaction order of Battle §2.4 with one event type (prop destroyed within Reach → heal) |
-| I28 | Board generator contract; start-square choice of the enemy side | T21 | fixed test layouts (seed 0) and a seeded draft generator under the symmetry rules; enemy starts are the mirrored default squares |
-| I29 | Draw consequences and the final result schema (kill attribution, used-up items) | T19/T23 | `BattleResult.draw`, HP and alive per monster, used tamer skills |
+| I28 | Board generator contract; start-square choice of the enemy side | T55 | fixed test layouts (seed 0) and a seeded draft generator under the symmetry rules; enemy starts are the mirrored default squares |
+| I29 | Draw consequences and the final result schema (kill attribution, used-up items) | T19 | `BattleResult.draw`, HP and alive per monster, used tamer skills |
 | I30 | 2×2 bodies are out of scope (T09, decided 2026-11-14); the rules, tests and fields stay until clean-up | T09 · T40 clean-up (I56) | rules and tests; no kit fields a 2×2 |
 | I54 | Dragon Vein choice: human choice, AI rule and preview are built (2026-11-14, preview not seen by a human); open: a “who is hit next” hint in the view; Dragon Veins for 1v1, 2v2 and 5v5 | T39 | roster order; the owner is shown (tile tinted in the side colour, label, log line; not yet seen by a human) |
 | I55 | Squares that act once and vanish: built as walkable props (Spike Trap, Vortex Trap, the button runes); an “array” form is not built | Battle §4.9 · T41 | `PropDef.solid`, `BattleProps.enter` |
@@ -81,9 +81,9 @@ Open points of the Godot battle implementation (`godot/battle`, rebuilt 2026-11-
 | I33 | Reach 1–3 and the stage ceilings in `shared/stage.gd` / `stat_shape.gd` are pre-revision | Reach below 2 is raised to 2; other stats are taken as they are | Monsters §2.3 · T03 |
 | I34 | No slot development: the legacy evolution system was deleted with the legacy skill model (2026-11-12) | the Evolution Pillar is a structure without function; old saves lose their evolution picks | Skills §6 · T05 |
 | I35 | The dungeon screen still announces an ambush bonus | `BattleRequest.ambush_side` is ignored; `Battle.AMBUSH_BONUS` exists only for that text | Overworld §2.2 · T35 |
-| I36 | A Draw has no overworld meaning | reported as a fact; the overworld treats it like any non-win | T19/T23 |
+| I36 | A Draw has no overworld meaning | reported as a fact; the overworld treats it like any non-win | T19 |
 | I37 | Aspects remain in species data, materials and structures | ignored by the rules; the 3D view uses the aspect colour as a look hint only | T01 (removed) · T35 |
-| I39 | The overworld never fills the loadout, bench, start-square or board-seed fields of the request | only the draft sandbox does (test loadout) | T19/T21 |
+| I39 | The overworld never fills the loadout, bench, start-square or board-seed fields of the request | only the draft sandbox does (test loadout) | T19/T55 |
 
 ## Verification and Code Follow-ups
 
