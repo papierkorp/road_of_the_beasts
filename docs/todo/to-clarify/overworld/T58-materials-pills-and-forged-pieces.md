@@ -2,7 +2,7 @@
 
 **Status:** To clarify — alchemy, smithing, materials with a tier and no grade, and properties drawn per game are decided ([vision.md §7](../../../vision.md#7-making-things), [overworld.md §6](../../../overworld.md#6-goods)); every list is open. Takes the place of T16, T17 and T18.
 **Prerequisites:** T56 for the limits of the own battleground.
-**Sources:** [vision.md §7](../../../vision.md#7-making-things); [overworld.md §6](../../../overworld.md#6-goods); [skills.md §6](../../../skills.md#6-passives); [monsters.md §4](../../../monsters.md#4-bloodline).
+**Sources:** [vision.md §7](../../../vision.md#7-making-things); [overworld.md §6](../../../overworld.md#6-goods); [skills.md §6](../../../skills.md#6-passives); [monsters.md §4](../../../monsters.md#4-no-bloodline).
 
 **Open for the user:**
 

@@ -182,7 +182,7 @@ A movement may leave ground or a zone on the squares it left. Concrete movement 
 
 - A passive occupies a normal kit slot, costs no AP and is an effect on its bearer. One active skill and passives in every other slot is legal but weak.
 - **Passives that lower AP costs are allowed; no action ever costs less than 1 AP.** The rule “development never lowers AP” ([§8](#8-development)) applies to skill development, not to these passives.
-- **A passive holds against one kind of push at most.** Push and pull come from a Strike or another skill, from a zone or from a prop; a passive (a slot passive, a Kin trait, a Kin gift) may stop one of the three for its bearer, never all of them. A monster that nothing can move off a Dragon Vein leaves the other side no answer.
+- **No passive stops a push or a pull:** no slot passive and no Kin trait makes its bearer or an ally immovable. Holding a square is a **self buff**: it costs AP, lasts until the round ends and is used anew every round, so the other side can wait it out or pay for the square another way. The Void trait Unmoored (zones do not move it, [content.md §7](content.md#7-kins)) stays for now.
 - Passives of the game and candidates: [content.md §4](content.md#4-skills).
 
 ## 7. Value and Prices
@@ -200,13 +200,25 @@ Principles:
 **One pattern develops monster skills and tamer skills.** A monster skill is developed on the slot of one monster; a tamer skill on the skill the player learned ([overworld.md §5.4](overworld.md#54-tamer-skills)). Development is permanent, there is no experience currency and no physical evolution.
 
 - **Levels 1–3.** Level 1 is the skill as written; levels 2 and 3 cost one **development step** each. Monsters gain steps as a choice at a stage breakthrough and at late advancement steps ([monsters.md §5](monsters.md#5-growth)), tamers as nodes of their Way ([overworld.md §5.3](overworld.md#53-the-way)).
-- **One option per level** from the list written for that skill, each option once; level 3 combines two options. No free components.
+- **A slot is developed, not a skill:** the level belongs to the slot of one monster and stays when the slot takes another skill; the options are then chosen anew.
+- **One option per level** from the list of the skill's kind (below), each option once; level 3 combines two options. No free components and no list written per skill.
 - **Option vocabulary:** every option is one of **Area** (one more square or a larger shape), **Number** (one effect value changed within the caps), **Duration** (more rounds), **Addition** (what the skill creates also does something an existing ground, zone or prop does), **Condition** (a requirement loosened), **Count** (one more use per turn). Count exists for monster skills only.
 - **Never by development:** more damage than the maxima of [battle.md §6.1](battle.md#61-damage), lower AP, more Reach, more uses of a tamer skill.
 - **AP policy:** every skill has a complete path at its original AP; a bigger option may cost more AP, shown before selection, and is never the only path.
 - **Useful from the start:** development expands an already viable kit, with several useful routes and no compulsory first upgrade.
-- **Replacement:** outside a battle a slot may take another skill of the species' learnable list with a **relearning pill**; the slot keeps its level, and its options are chosen anew from the new skill's list.
-- The options of each skill: not defined. Where and when a choice is made: [overworld.md §5.5](overworld.md#55-development-of-monster-skills).
+- **Replacement:** outside a battle a slot may take another skill of the species' learnable list with a **relearning pill** of the Alchemist ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)).
+- Where and when a choice is made: [overworld.md §5.5](overworld.md#55-development-of-monster-skills).
+
+**Options by kind** *(draft; an option a skill already has, or that its card cannot take, is not offered)*:
+
+| Kind | Options |
+|---|---|
+| Strike | **Area:** its shape is extended once ([§4](#4-shapes)) · **Addition:** it also damages the props in its shape · **Addition:** it leaves ground on the struck squares |
+| Movement | **Area:** 1 square further · **Condition:** it passes over props · **Condition:** it passes over monsters · **Condition:** ground on its way does not act on it · **Addition:** it pushes on landing |
+| Ground · zone · prop | **Area:** 1 square more · **Duration:** 1 round longer |
+| Effect on the user | **Duration:** 1 round longer · **Number:** its value +1 within the caps |
+
+Which ground a Strike leaves and the options of tamer skills besides Seal ([overworld.md §5.4](overworld.md#54-tamer-skills)) are not defined.
 
 ## 9. Data
 

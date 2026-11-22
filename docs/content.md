@@ -21,7 +21,7 @@
 | **Plain** | — | movement cost 1 |
 | **Rubble** | on entering | movement cost 2; left by several destroyed props |
 | **Voidscar** | end of the occupant's turn | 1 damage; permanent; nothing creates it at present |
-| **Dragon Vein** | end of the round | nothing to whoever stands on it; damages the nearest enemy of its owner; permanent |
+| **Dragon Vein** | end of the round | 1 damage to the monster or prop on it; damages the nearest enemy of its owner; permanent |
 
 **Ingame battle:**
 
@@ -40,10 +40,8 @@
 |---|---|---|
 | Multiplayer | **Push Zone** | `push` |
 | Multiplayer | **Pull Zone** | `pull` |
-| Multiplayer | **Prop Damage Zone** | 1 damage to every prop in it at the round end |
 | Ingame | **Gale** | `push`; its own skill |
 | Ingame | **Void Pull** | `pull`; its own skill, Coiling Rift |
-| Ingame | **Erosion** *(experiment)* | 1 damage to every prop in it at the round end |
 
 Every zone a skill creates lasts 2 rounds.
 
@@ -68,7 +66,8 @@ Every zone a skill creates lasts 2 rounds.
 | Pagoda Column | 3 | — | destroyed | creates a Beam on every free neighbour · leaves Rubble | the 4 neighbours · own square |
 | Beam | 1 | board only | — | nothing | — |
 | **Spike Trap** | 1 | walkable | entered | 2 damage to the monster that entered | own square |
-| **Vortex Trap** | 1 | walkable | entered | pulls 1 square toward its square; who is pulled into the monster on it collides | the 8 squares around it |
+| **Burst Trap** | 1 | walkable | entered | 1 damage; nothing to the monster that entered | the 8 squares around it |
+| **Vortex Trap** | 1 | walkable | entered | pulls 1 square toward its square; who is pulled into the monster on it collides, every collision counts | the 4 neighbours |
 | Moss Rune | 1 | walkable, board only | entered | lays Mossbed | the 3×3 block around and under it |
 | Bog Rune | 1 | walkable, board only | entered | creates the zone Void Pull | the 8 squares around it |
 | Wall Rune | 1 | walkable, board only | entered | creates an Earth Wall on every free square | the 4 neighbours |
@@ -111,7 +110,6 @@ Every zone a skill creates lasts 2 rounds.
 | Set Clay Urn | 1 AP | Reach, 1 free square | — | — | — | — | — | Clay Urn |
 | Lay Spikes | 1 AP | Reach, 1 square | — | — | — | — | — | Spike Trap |
 | Lay Vortex | 1 AP | Reach, 1 square | — | — | — | — | — | Vortex Trap |
-| Immovable | — | self | — | — | always: ignores push and pull | — | — | — |
 | Battle Trance *(experiment)* | 1 AP, once per battle | self | — | — | AP +1 for 2 rounds | — | — | — |
 | Time Split *(experiment)* | 3 AP, once per battle | self | — | — | one more turn in the next round | — | — | — |
 
@@ -125,7 +123,7 @@ Every zone a skill creates lasts 2 rounds.
 | Arc | 3 | | Cross +1 | 5 |
 | Arc +1 | 5 | | Storm | 4 |
 
-**Passive candidates** (no numbers, not in the game): Counterweight (allies orthogonally next to it cannot be pushed or pulled) · Thick Hide and Crashlander (collision damage it takes −1) · Heatproof / Thornwalker (ignores Lava / Thornbed) · Scavenger (heals 1 when a prop within its Reach is destroyed) · Purifier (enemy zones next to it lose 1 round at the round end) · Turret (cannot move, Reach +1) · Pack Hunter and First Blood (lower AP costs) · Frenzy (+1 shape square at 1–2 HP).
+**Passive candidates** (no numbers, not in the game): Thick Hide and Crashlander (collision damage it takes −1) · Heatproof / Thornwalker (ignores Lava / Thornbed) · Scavenger (heals 1 when a prop within its Reach is destroyed) · Purifier (enemy zones next to it lose 1 round at the round end) · Turret (cannot move, Reach +1) · Pack Hunter and First Blood (lower AP costs) · Frenzy (+1 shape square at 1–2 HP).
 
 **Candidates for what a slot development may change:** one more extension of a base shape or one more square of a free shape, a longer zone, a longer range or a movement that passes over more, a second thing created, one more use per turn.
 
@@ -161,11 +159,10 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 | Core Formation (55) | 8 / 1.3 / 2 / 1 / 3 / 2 | 5 / 1.1 / 3 / 2 / 2 / 2 | 4 / 2.1 / 3 / 1 / 3 / 3 |
 | Nascent Soul (70) | 10 / 1.0 / 1 / 1 / 3 / 3 | 4 / 1.1 / 3 / 2 / 3 / 3 | 5 / 2.7 / 5 / 1 / 3 / 3 |
 | Immortal (85) | 10 / 1.9 / 4 / 1 / 3 / 3 | 7 / 1.1 / 3 / 2 / 3 / 3 | 6 / 2.4 / 4 / 1 / 3 / 4 |
-| Sovereign (100) | 10 / 1.1 / 3 / 2 / 3 / 3 | 5 / 1.1 / 3 / 3 / 3 / 2 | 6 / 1.9 / 4 / 1 / 3 / 5 |
 
 ## 7. Kins
 
-**Draft, not played.** The traits and some gifts are built ([godot/README.md](../godot/README.md), "Kin traits in the battle"). The rules: [monsters.md §3](monsters.md#3-kins). A trait and a gift are passives that take no slot; each uses only moments and effects the battle already has, and is shown on the monster's sheet.
+**Draft, not played.** The traits are built ([godot/README.md](../godot/README.md), "Kin traits in the battle"). The rules: [monsters.md §3](monsters.md#3-kins). A trait is a passive that takes no slot; it uses only moments and effects the battle already has, and is shown on the monster's sheet. A Kin has no further passives.
 
 **Trait and skill groups** (every Kin learns four of the six groups; Step and Basic Jab stay with every monster):
 
@@ -182,31 +179,5 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 
 - A movement skill that pushes on landing counts as movement, a Strike that leaves ground as a Strike: the group is what the skill is, not what it creates besides.
 - The group “self” holds few skills so far ([§4](#4-skills)).
-
-**Gifts** (a pool holds six, so that a Divine monster with three awakened gifts still has a choice; [monsters.md §4](monsters.md#4-bloodline)):
-
-| Kin | Gifts |
-|---|---|
-| Beast | **Tireless** (a movement skill costs it 1 Stamina less per use, at least 1) · **Surefoot** (Rubble costs it 1) · **Brawler** (Basic Jab twice per turn) |
-| Winged | **Updraft** (its movement passes over props) · **Dive** (in a turn in which it moved 3 or more squares its Basic Jab also pushes 1) · **Featherlight** (no collision damage from the board edge) |
-| Scaled | **Anchored** (cannot be pulled) · **Spined** (a monster moved into it takes 2 collision damage) · **Heatproof** (end-of-turn ground does not act on it) |
-| Swarm | **Overrun** (counts as two enemies for surrounding) · **Skitter** (its Step may go diagonally) · **Many Bodies** (Heal costs it 2 Stamina) |
-| Spirit | **Phase** (its movement passes over solid props too) · **Weightless** (springs no trap) · **Fleeting** (one more Wait per battle) |
-| Stone | **Keystone** (allies orthogonally next to it cannot be pushed or pulled) · **Hard Shell** (takes no damage from props) · **Monolith** (surrounding it takes three enemies) |
-| Flora | **Thornwalker** (damage from ground on entering does not hit it) · **Deep Roots** (props it creates last 3 rounds) · **Sap** (healing ground heals it 1 more, never above its maximum) |
-| Void | **Rift Walker** (its straight-line movement may go diagonally) · **Hollow** (stat changes of props do not act on it) · **Unravel** (a zone it ends its turn in loses 1 round) |
-
-**Further gifts** *(proposals to fill the pools to six; not checked against every rule and not built)*:
-
-| Kin | Gifts |
-|---|---|
-| Beast | **Second Breath** (recovers 1 more Stamina per round) · **Thick Hide** (takes no collision damage from props) · **Lunge** (Follow-up also works when its Strike defeated the monster) |
-| Winged | **Glide** (its straight-line movement reaches 1 square further) · **Slipstream** (pull zones do not move it) · **Tailwind** (a push zone moves it 1 square further) |
-| Scaled | **Tail Lash** (its Basic Jab also pushes 1) · **Wedged** (a Strike does not push it while it stands next to a solid prop or the board edge) · **Shed** (the first damage from ground in a battle does not hit it) |
-| Swarm | **Gnaw** (its Basic Jab deals 2 damage to a prop) · **Close Ranks** (moved into an ally, neither takes collision damage) · **Spread** (cannot be surrounded while an ally stands orthogonally next to it) |
-| Spirit | **Linger** (zones it creates last 1 more round) · **Insubstantial** (a monster moved into it takes no collision damage, and neither does it) · **Thin Air** (push zones do not move it) |
-| Stone | **Braced** (a Strike or another skill does not push or pull it) · **Crumble** (leaves Rubble on its square when it is defeated) · **Grinding** (its Basic Jab deals 2 damage to a prop) |
-| Flora | **Overgrowth** (zones it creates last 1 more round) · **Stubborn** (the ground under it cannot be replaced while it stands there) · **Bark** (takes no collision damage from the board edge) |
-| Void | **Erase** (the square it leaves by its own movement is reset to Plain) · **Deep Pull** (pull zones it creates pull 1 square further) · **Out of Reach** (a push moves it 1 square less) |
 
 The kits of the nine monsters of [§5](#5-the-nine-monsters) ignore the groups; the test species and learnable lists of the build are no content drafts.

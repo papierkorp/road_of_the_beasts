@@ -9,7 +9,6 @@
 | Idea still open | Built as | Reading chosen while building (to confirm) |
 |---|---|---|
 | Ground that allows no props | ground **Shifting Sand** (experiment) | no prop can be placed on it; a prop that already stands there, or is pushed onto it, stays |
-| A zone that damages props | zone **Erosion** (experiment) | every prop in it takes 1 at the round end; monsters are not touched |
 | Stamina recovery from the board and as a self buff | ground **Springwater** (experiment): +1 Stamina on entering; skill **Deep Breath** (experiment): +1 recovery for its duration | Stamina never rises above the pool. The zone Updraft is archived: a zone changes no stat |
 
 - **Open for the user:** keep, change or drop each row; for those that stay, the rule text and the values.

@@ -14,29 +14,29 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 ## Current State
 
 - **Read first:** [vision.md](vision.md), the frame of the game. It holds over the rule files.
-- **The frame:** the battle is the game; a hub of buildings; three pillars (monster, tamer, board); a lifespan per stage with the trial forced at its end; wild area, dungeon and the void on the player's own battleground.
+- **The frame (reworked 2026-11-22, T64):** the battle is the game; three Ways that shut each other out (board, tamer, monsters); a day is one dungeon run or one attack on the void; a lifespan per stage with the trial forced at its end; won by defeating the Sovereign beast.
+- **Rules ahead of the build:** the build still plays wild area, day AP, weapons and bloodlines (T64).
 - **Not aligned yet:** [architecture.md](architecture.md) still describes dialogue, story and faction requests (T61).
 - **The build follows the frame (T61):** the hub game is a first version to click through, with test values in `godot/data/game/values.tres` ([godot/README.md](../godot/README.md), "The hub game"; solutions without a rule: [implementation.md](todo/implementation.md) I83–I120). Sixteen test species (two per Kin); the boards of the places are six fixed test battlegrounds, no generator yet.
-- **Decided after the review (2026-11-21 and 22; [decisions.md](decisions.md)):** three to four hours, the Sovereign beast, a forge of two beast parts, flaws of plants, bloodlines, a passive against one kind of push only; the build follows.
-- **Next:** the user plays the hub game; then the open rows of T54 to T60: the numbers of a game (T54), the generator of the boards (T55), the limits of the own battleground (T56), the lists of the forge (T58).
+- **Next:** the open points of T64 (Kin traits, the Artificer in the dungeon, Insight for two Ways), then its build, starting with the development of skill slots.
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Every measurement so far is multiplayer ([S040–S045](simulation_log.md)).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. Open in the build: ends and board events in the map editor (T46), Seal Ground played by hand (T49), a wild AI that values Seal Ground; then the rebuild (T42).
-- **Tests:** 374 cases, 0 failures, a full run in about 45 s ([implementation.md](todo/implementation.md)).
+- **Tests:** 385 cases, 0 failures ([implementation.md](todo/implementation.md)).
 
 ## Open Questions for the User
 
 | # | Question | Task |
 |---|---|---|
-| 0 | Days and day AP per stage for three to four hours; what a lost depth costs; what a game leaves behind | T54 |
-| 0 | Wild area and dungeon: numbers, challenges, loot; the generator of the boards | T55 |
+| 0 | The three Ways: Kin traits, the Artificer's parts in the dungeon, what Insight buys, Seal Ground per Way, stat pills, vows | T64 |
+| 0 | Days per stage for three to four hours; what a game leaves behind | T54 |
+| 0 | The dungeon: numbers, loot; the generator of the boards | T55 |
 | 0 | The void: limits of the own battleground, depths, the pools of void monsters and Sovereign beasts | T56 |
-| 0 | Ways: the nodes of the branches, which tamer skills, the list of vows | T57 |
-| 0 | The lists of the forge (what, how), of properties and pills; a currency | T58 |
+| 0 | The lists of the forge (what, how), of properties and pills | T58 |
 | 0 | The pool of eggs, the roster, further eggs | T59 |
-| 0 | Kins: traits, skill groups, gift pools of six ([content.md §7](content.md#7-kins)); Keystone and Anchored hold against every push: narrow them? | T12 |
+| 0 | Kins: skill groups ([content.md §7](content.md#7-kins)) | T12 |
 | 0 | The hub's buildings, 3D or 2D board, the phone | T60 |
-| 1 | How does a stat shape split the points at the roll? Does the growth table end at step 15, since no monster reaches Sovereign? | T03 |
+| 1 | How does a stat shape split the points at the roll? | T03 |
 | 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills | T46 |
 | 3 | Which props of the catalogue stay, and do aura props return? | T41 |
 | 4 | Square control: do the current means suffice, or does it need more? | T39 |
@@ -47,19 +47,22 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | 10 | Does the kit rule of the nine monsters also bind kits a player composes? | T11 |
 | 11 | Skill prices: is “10 points = 1 AP” the form? Ground, zone and prop skills all come out below 1 AP. What does “damages props” cost on a Strike? | T02 |
 | 12 | Multiplayer: a Strike that pulls (new mechanic)? Function names for the props too? The draft: pools, number of skills, saved creations | T48 |
-| 12 | Which of the ideas that are left stay: Erosion, Shifting Sand, Stamina recovery from ground and as a self buff? | T43 |
+| 12 | Which of the ideas that are left stay: Shifting Sand, Stamina recovery from ground and as a self buff? | T43 |
 
 ## Tasks
 
 | ID | Task | Status | Epic |
 |---|---|---|---|
+| T62 | [Build the Board Rules of 2026-11-22](todo/to-clarify/battle/T62-build-the-board-rules-of-2026-11-22.md) | to clarify | battle |
 | T04 | [Make Resolution Rules and Edge Cases Consistent](todo/to-clarify/battle/T04-make-resolution-rules-and-edge-cases-consistent.md) | to clarify | battle |
 | T39 | [Dragon Veins: Square Control as the Way to Win by Defeat](todo/to-clarify/battle/T39-dragon-veins-square-control-as-the-way-to-win-by.md) | to clarify | battle |
 | T41 | [Bring the Props, Slots and Stamina of the Build into the GDDs, or Drop Them](todo/to-clarify/battle/T41-bring-the-props-slots-and-stamina-of-the-build-i.md) | to clarify | battle |
 | T43 | [Try the Ideas of 2026-11-16](todo/to-clarify/battle/T43-try-the-ideas-of-2026-11-16.md) | to clarify | battle |
 | T46 | [Define the Ingame Battle](todo/to-clarify/battle/T46-define-the-ingame-battle.md) | to clarify | battle |
 | T48 | [Define the Draft of the Multiplayer Battle](todo/to-clarify/battle/T48-define-the-draft-of-the-multiplayer-battle.md) | to clarify | battle |
+| T63 | [The Look: Ink on Paper](todo/to-clarify/project/T63-the-look-ink-on-paper.md) | to clarify | project |
 | T03 | [Review Stat Budgets, Frames and Progression Limits](todo/to-clarify/monsters/T03-review-stat-budgets-frames-and-progression-limit.md) | to clarify | monsters |
+| T64 | [The Three Ways and the Day Without AP](todo/to-clarify/overworld/T64-the-three-ways-and-the-day.md) | to clarify | overworld |
 | T49 | [Catching on the Board](todo/to-clarify/overworld/T49-catching-on-the-board.md) | to clarify | overworld |
 | T50 | [Set the Frame of the Game](todo/to-clarify/overworld/T50-set-the-frame-of-the-game.md) | to clarify | overworld |
 | T54 | [Lifespan, Day AP and the Length of a Game](todo/to-clarify/overworld/T54-lifespan-day-ap-and-the-length-of-a-game.md) | to clarify | overworld |

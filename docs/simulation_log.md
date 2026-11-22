@@ -54,6 +54,57 @@ Kit sets of the entries below (S019 and later). Entries S001–S018 measured rul
 
 # Entries
 
+## S046 · 2026-11-22 · Multiplayer battle with the board rules of 2026-11-22: zones on arriving, Dragon Veins on their own square, ground on props
+
+**State:** main, base `6a33379` dirty (the board rules of [T62](todo/to-clarify/battle/T62-build-the-board-rules-of-2026-11-22.md) and the look of the screens uncommitted); content `2026-11-15.5`; Godot 4.7.2, runs in parallel on frozen copies of the working tree. Full suite on the new state: 385 cases, 0 failures.
+
+**Runs:** multiplayer battle, one process per battle (`sim.gd -- 1 3v3 <seed> --variant x.random_monsters=1,x.fresh_skills=1,x.kit_seed=<seed>`), 7×7 with three Dragon Veins, the same bot on both sides, not side-swapped; every other switch at the build default (damage from round 1, extra turns from round 2, veins deal 2 from round 3, Heal). Three states:
+
+- *old rules:* the commit `6a33379` (kit set of seed 7: `30c927afc38b`).
+- *old rules, new content:* the same code with the content of the new state: without the Prop Damage Zone and Erosion, with the Burst Trap and the Vortex Trap on its 4 neighbours (kit set of seed 7: `d1ad20885688`).
+- *new rules:* the working tree (kit set of seed 7: `d1ad20885688`).
+
+Battle *n* has the same board, monsters and kits in the second and third state; the first differs in the kits the generator draws, because its pool of zones and props differs. `greedy`: seeds 1–320. `tactic`: seeds 1–160, the second and third state only. No battle timed out.
+
+| Bot | State | Battles | Side 0 / 1 / Draw / timeout | Mean rounds | Under 3 rounds | Over 5 rounds | Over 7 | Longest | First defeat (round) | Jab | Ground | Collision | Prop | Vein | of it on its own square | Flank | Total damage / battle | Defeats / battle | Props destroyed / battle |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| greedy | old rules | 320 | 164 / 155 / 1 / 0 | 3.76 | 15 (5 %) | 15 (5 %) | 0 | 7 | 2.02 | 4.5 | 1.4 | 10.5 | 3.1 | 10.8 | — | 2.0 | 32.4 | 3.95 | 8.2 |
+| greedy | old rules, new content | 320 | 175 / 145 / 0 / 0 | 3.83 | 13 (4 %) | 16 (5 %) | 1 | 9 | 2.00 | 4.4 | 1.5 | 10.8 | 3.4 | 10.8 | — | 1.9 | 32.8 | 3.95 | 7.8 |
+| greedy | new rules | 320 | 172 / 148 / 0 / 0 | 3.54 | 24 (8 %) | 5 (2 %) | 0 | 6 | 1.82 | 3.6 | 1.7 | 10.3 | 3.0 | 12.7 | 2.89 | 1.8 | 33.0 | 4.08 | 8.8 |
+| tactic | old rules, new content | 160 | 83 / 76 / 1 / 0 | 4.04 | 6 (4 %) | 15 (9 %) | 0 | 7 | 2.21 | 2.0 | 1.9 | 11.3 | 3.9 | 12.4 | — | 1.7 | 33.2 | 4.00 | 8.6 |
+| tactic | new rules | 160 | 80 / 80 / 0 / 0 | 3.81 | 5 (3 %) | 7 (4 %) | 0 | 7 | 1.96 | 1.6 | 2.1 | 11.1 | 3.4 | 14.1 | 2.75 | 1.7 | 34.1 | 4.13 | 9.0 |
+
+**Battles by the round they ended in:**
+
+| Bot | State | 2 | 3 | 4 | 5 | 6 | 7 | 9 |
+|---|---|---|---|---|---|---|---|---|
+| greedy | old rules | 15 | 129 | 112 | 49 | 12 | 3 | — |
+| greedy | old rules, new content | 13 | 120 | 122 | 49 | 9 | 6 | 1 |
+| greedy | new rules | 24 | 140 | 121 | 30 | 5 | — | — |
+| tactic | old rules, new content | 6 | 45 | 63 | 31 | 12 | 3 | — |
+| tactic | new rules | 5 | 56 | 72 | 20 | 6 | 1 | — |
+
+**Skill uses per battle by kind (greedy; the kits field 10.2 Strike, 8.1 movement, 7.0 prop, 6.1 ground and 5.0 zone slots per battle in every state):**
+
+| State | Strike | Move | Prop | Ground | Zone | Step | Heal |
+|---|---|---|---|---|---|---|---|
+| old rules | 14.76 | 23.76 | 14.94 | 8.04 | 4.52 | 4.66 | 2.70 |
+| old rules, new content | 14.90 | 24.06 | 14.84 | 8.23 | 4.42 | 4.67 | 2.72 |
+| new rules | 13.14 | 23.52 | 13.71 | 7.54 | 4.22 | 4.96 | 2.44 |
+
+Monsters defeated before their own first turn: 0.003, 0.006 and 0.000 per battle (greedy, in the order of the table), 0.006 and 0.006 (tactic).
+
+**Observations** (indications; bots on both sides; about ±0.1 rounds on a row of 320 battles, more on 160; the matched rows differ in the rules only):
+
+- *Shorter by a quarter of a round under both bots:* 3.54 against 3.83 rounds (greedy), 3.81 against 4.04 (tactic). The battles over 5 rounds fall from 16 to 5 of 320 and from 15 to 7 of 160; the battles under 3 rounds rise from 13 to 24 under greedy and stay at 5 to 6 under tactic.
+- *The same damage, earlier:* the total per battle stays (33.0 against 32.8; 34.1 against 33.2) and the first defeat comes about 0.2 rounds sooner. The veins deal 1.7 to 1.9 more per battle, 2.8 to 2.9 of their damage on their own square: both bots keep standing on veins. The new cost in the evaluation of the opponent AI did not stop that; the simulation bots were not changed.
+- *The content alone moves little:* without the two zones and with the new traps the old rules read 3.83 against 3.76 rounds, inside the noise.
+- *Zones are not used more:* 4.2 against 4.4 zone skills per battle. Whether a bot uses a zone as a conveyor or a lock is not measured; no column counts the moves a zone made.
+- *No helpless defeat in sight:* next to no monster falls before its own first turn in any row.
+- *Not measured:* what each of the three rules does by itself (no switch separates them), and a prop destroyed by ground or a vein.
+
+**Follow-up:** [T62](todo/to-clarify/battle/T62-build-the-board-rules-of-2026-11-22.md) (the readings to confirm), T39 (the length target and the number of veins), T13.
+
 ## S045 · 2026-11-18 · Heal (the action called Mend up to S044) for 1 AP and 3 Stamina: 2 HP against 1 HP
 
 **State:** main, base `66ece96` dirty (the Heal switches of [T47](todo/done/battle/T47-heal-spend-stamina-to-heal.md) and the entries S040–S044 uncommitted); content `2026-11-15.5`, kit set `93e3f45f139d`; Godot 4.7.2, runs in parallel on a frozen copy of the working tree. Full suite on that state: 388 cases, the two known non-battle failures. The action and its switches were renamed before this run: `mend_spend` is `heal_spend`, `stamina_mend` is `heal_burn`.

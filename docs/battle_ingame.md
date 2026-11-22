@@ -14,7 +14,7 @@ Both battles share the goals of [battle.md §1](battle.md#1-goals-and-pillars): 
 | Character | a fair match | **a tactics puzzle; it may be unfair** |
 | Monsters and skills | none fixed: generated or drafted, the same points for every monster ([monsters.md §2.2](monsters.md#22-prices-and-points)) | the fixed monsters, kits and skills of the game ([content.md](content.md)); grown monsters ([monsters.md §5](monsters.md#5-growth)); the sides may differ in strength |
 | Team size | always 3v3 | any, also unequal ([§2](#2-team-sizes-and-the-end-of-a-battle)) |
-| Board | generated, point-symmetric 7×7 ([battle.md §4.1](battle.md#41-board-generation)) | battlegrounds that differ completely: the one of the place, and in the void the one the player built ([§3](#3-battlegrounds)) |
+| Board | generated, point-symmetric 7×7 ([battle.md §4.1](battle.md#41-board-generation)) | battlegrounds that differ completely, generated for the battle; the Artificer lays parts on them or builds the own one ([§3](#3-battlegrounds)) |
 | End of a battle | every monster of one side at 0 HP | not always that ([§2](#2-team-sizes-and-the-end-of-a-battle)) |
 | Defeats | no monster falls without a turn of its own | no such promise; a wild monster at 0 HP dies, a contracted one never ([§7](#7-catching)) |
 | Chance | none | one roll: the catch ([§7](#7-catching)) |
@@ -48,9 +48,9 @@ Not defined: the numbers of the ends (how many goal squares, how long they are h
 
 ## 3. Battlegrounds
 
-- **Every place brings its battlegrounds:** an encounter of a wild area and a node of a dungeon name theirs. They are generated, not written by hand; the generator is not defined.
-- **The player's own battleground counts in the void only** ([vision.md §4](vision.md#4-where-battles-happen)): the player builds it in the hub, shaped to the own team and to the opponent shown ahead, and may change it before every battle there.
-- **A part is forged:** a ground, a zone or a prop for the own battleground is made in the forge from crafting materials ([overworld.md §6.3](overworld.md#63-smithing-weapons-and-parts-of-a-battleground)); the player places it freely in the editor.
+- **Every battle has its battleground:** a node of the dungeon and a depth of the void name theirs. It is generated, point-mirrored, not written by hand; the generator is not defined.
+- **The Artificer changes the board** ([overworld.md §5.3](overworld.md#53-the-way)), no other Way does. **In the dungeon** they lay parts of their own on the generated battleground before each battle; the parts stay for the battle like ground and props of the board. **In the void** the battle is fought on the battleground they built in the hub, shaped to the own team and to the opponent shown ahead; it may be changed before every battle there.
+- **A part is forged:** a ground, a zone or a prop is made in the forge from beast parts ([overworld.md §6.3](overworld.md#63-smithing-parts-of-a-battleground)).
 - **Limits:** a budget per stage; the start area of the opponent stays reachable.
 
 **What a battleground is** *(the map editor of the build; sizes are working values):*
@@ -83,7 +83,7 @@ Not defined: what an event may do beyond the vocabulary of the board.
 
 Tamer skills exist in the ingame battle only.
 
-Battle resolves what the tamer brought in the tamer slots deterministically and with previews: a tamer skill, a weapon or a pill per slot, each once per battle ([overworld.md §6.5](overworld.md#65-loadout)). Wild monsters and void monsters have no tamer. Definitions and access: [overworld.md §5.4](overworld.md#54-tamer-skills); what a weapon's skill or a pill does on the board is not defined.
+Battle resolves what the tamer brought in the tamer slots deterministically and with previews: a tamer skill (Way of the Formation) or a pill (Way of the Alchemist) per slot, each once per battle ([overworld.md §6.5](overworld.md#65-loadout)). Wild monsters and void monsters have no tamer. Definitions and access: [overworld.md §5.4](overworld.md#54-tamer-skills); the pills: [overworld.md §6.2](overworld.md#62-alchemy-and-pills).
 
 - **Window:** what a tamer slot holds (once per battle) may be used during the turn of one of the tamer's own monsters, never inside a payload resolution or during an enemy turn. It costs no AP and no turn.
 - **Swap Places:** two own monsters trade squares; no range. Each counts as leaving its square and entering the new one.
@@ -91,9 +91,6 @@ Battle resolves what the tamer brought in the tamer slots deterministically and 
 - **Second Wind:** one own monster on the field regains 1 HP, never above its maximum.
 - **Life Thread:** set on one own monster: the first time it would fall, from any damage source, its HP becomes 1 and the effect is consumed; further simultaneous damage of that step changes nothing.
 - **Beast Swap:** the incoming monster takes the square and queue entry of the swapped-out monster (it acts this round only if that entry is still pending) and arrives with its current HP. The swapped-out monster is not defeated and may be swapped back later; what it created stays.
-- **Whetstone · Second Dose:** every weapon (every pill) of the loadout that was used in this battle may be used once more; a pill is still used up only once. Not usable while none was used.
-- **Long Reach:** the next weapon used in this battle lays 1 square more, in the same straight line.
-- **Shared Dose:** the next pill taken in this battle also acts on every own monster orthogonally next to the one that takes it; a flaw of the pill hits the taker alone.
 
 ## 6. Skills and Functions
 
@@ -101,12 +98,12 @@ The ingame battle offers more and other skills and functions than the multiplaye
 
 ## 7. Catching
 
-Monsters are caught on the board, during the battle, and nowhere else.
+Monsters are caught on the board, during a battle of the dungeon, and nowhere else.
 
 - **Contract:** a monster with a tamer (the player's or an enemy tamer's) never dies: at 0 HP it is defeated ([overworld.md §4.2](overworld.md#42-defeat)). A **wild monster** has no contract: at 0 HP it dies, unless it stands on a Seal Zone.
-- **Seal Ground:** the tamer lays it on a square of their choice in the window of tamer skills ([§5](#5-tamer-skills)). It is a ground ([battle.md §4](battle.md#4-the-board)) that **cannot be destroyed:** it replaces the ground of its square, no other ground replaces it, no reset removes it, and it does not lapse; it lies until the battle ends or it catches. It cannot be laid on a Dragon Vein. Zones and props on its square stay and act as usual. **One Seal Ground at a time** per tamer.
-- **One source:** the **Seal tamer skill**, from the start of the game, once per battle and upgradable ([overworld.md §5.4](overworld.md#54-tamer-skills)). It catches a monster of at most the tamer's stage. There is no seal item.
-- **The catch:** a wild monster that **ends its turn** on Seal Ground is caught with a chance of **its base at 1 HP, 10 points less for every further HP.** The base is **50 %** for the Seal skill without upgrades. A wild monster that reaches **0 HP on Seal Ground is caught, always.** The roll is the only chance in a battle; before the turn ends the player sees the chance on the square.
+- **Seal Ground:** it is a ground ([battle.md §4](battle.md#4-the-board)) that **cannot be destroyed:** it replaces the ground of its square, no other ground replaces it, no reset removes it, and it does not lapse; it lies until the battle ends or it catches. It cannot be laid on a Dragon Vein. Zones and props on its square stay and act as usual. **One Seal Ground at a time** per tamer.
+- **One source per Way,** from the start of a game ([overworld.md §4.1](overworld.md#41-obtaining-monsters)): the **Artificer** lays it as a part before the battle; the **Formation** lays it with the Seal tamer skill in the window of tamer skills ([§5](#5-tamer-skills)), once per battle and upgradable; the **Alchemist** uses a pill from a tamer slot in the same window, and the pill is used up. It catches a monster of at most the tamer's stage.
+- **The catch:** a wild monster that **ends its turn** on Seal Ground is caught with a chance of **its base at 1 HP, 10 points less for every further HP.** The base is **50 %** without upgrades. A wild monster that reaches **0 HP on Seal Ground is caught, always.** The roll is the only chance in a battle; before the turn ends the player sees the chance on the square.
 - **Caught:** the monster leaves the board and counts as defeated for the end of the battle; the Seal Ground is used up. A failed roll changes nothing; the battle goes on and the ground stays.
 - **Against tamers:** nothing is caught, no monster dies.
 

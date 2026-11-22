@@ -33,11 +33,11 @@ The goals of the ingame battle: [battle_ingame.md §1](battle_ingame.md#1-the-tw
 
 1. **Control squares, not just units.** A skill acts through a Strike, movement, an effect on its user, or by creating ground, a zone or a prop. The board is the weapon.
 2. **Deterministic and readable.** Before confirming, the player sees which squares a skill takes, what it creates there and where every pushed monster lands.
-3. **A square has two layers with one role each.** Ground acts at a moment; a zone acts while a monster stands in it. A monster or a prop occupies the square. There is no height, no air layer and no delayed area attack.
+3. **A square has two layers with one role each.** Ground acts at a moment; a zone moves whoever arrives in it or ends a turn in it. A monster or a prop occupies the square. There is no height, no air layer and no delayed area attack.
 4. **A skill only delivers.** What a ground, a zone or a prop does, and when, is written once in its own definition; a skill names what it creates.
-5. **Fair damage.** Damage from a distance never hits a monster that has had no turn of its own since the cast ([§6.1](#61-damage)).
+5. **Fair damage.** Damage from a distance never hits a monster that has had no turn of its own since the cast; the round end is the one exception ([§6.1](#61-damage)).
 6. **Small HP, small hits.** The highest single hit is 2 *(working value)* and HP ends at 10. A monster with 3 or more HP never falls to one hit; HP 1 and 2 exist and are a risk their owner chose.
-7. **Hold the Dragon Veins.** Square control is the way to the win condition: a Dragon Vein works for the side that touched it last, and whoever waits loses HP.
+7. **Take the Dragon Veins.** Square control is the way to the win condition: a Dragon Vein works for the side that touched it last and wears down whoever stays on it; whoever waits loses HP.
 8. **Being moved is movement.** Every effect that reacts to entering or leaving a square also reacts to a push or pull.
 9. **One skill source.** No aspects, no element triangle, no attunement.
 
@@ -94,8 +94,9 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 | Moment | When | What acts |
 |---|---|---|
 | now | when the skill is used | a Strike; the user's own movement; the creation of ground, a zone or a prop (a push or pull zone moves nobody when it is cast) |
-| on entering | a monster enters the square by walking, a push or a pull | ground with an entry effect; a walkable prop on the square; a Dragon Vein changes its owner |
-| on leaving | a monster leaves the square by walking, a push or a pull | ground with a leaving effect |
+| on entering | a monster enters the square by walking, a push or a pull; a prop by a push or a pull | ground with an entry effect; for a monster also a walkable prop on the square and the owner of a Dragon Vein |
+| on arriving | a monster's move ends on the square: a Step, the landing of a movement skill, a push or a pull | a push or pull zone ([§4.6](#46-zones)) |
+| on leaving | a monster leaves the square by walking, a push or a pull; a prop by a push or a pull | ground with a leaving effect |
 | end of the occupant's turn | when the monster's turn ends | 1. zone push or pull → 2. end-of-turn ground on the square it now stands on → 3. the damage of a prop in whose shape it now stands |
 | end of the round | after the last turn of the round | see below |
 | on an event | when it happens | collision damage; a prop that is hit and still stands; a prop that is destroyed |
@@ -103,13 +104,13 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 **The round end: first everything moves, then everything acts, then all clocks tick.**
 
 1. Push and pull zones move the props standing in them.
-2. Props that push or pull at the round end act, in one step. What reacts to entering or leaving fires at the move. Zones that damage props act.
-3. Surround damage in one step, then the Dragon Veins one after another ([§4.2](#42-dragon-veins-surrounding-and-late-round-pressure)).
+2. Props that push or pull at the round end act, in one step. What reacts to entering, arriving or leaving fires at the move. Then end-of-turn ground damages the props standing on it.
+3. Surround damage in one step; then every Dragon Vein damages its own square, in one step; then the owned Dragon Veins one after another ([§4.2](#42-dragon-veins-surrounding-and-late-round-pressure)).
 4. Stamina recovery by the current Pace.
 5. All clocks: zones lose a round, timed effects on monsters expire, ground laid in battle fades, props a skill created lapse ([§4.4](#44-lifetimes)).
 6. The queue is built anew.
 
-- **Nothing but Dragon Veins and surrounding deals damage at the round end:** no ground and no prop does. A monster pushed onto end-of-turn ground or next to a damaging prop at the round end takes nothing then and can still leave in its next turn; ground that acts on entering fires at the push.
+- **By themselves only Dragon Veins and surrounding damage a monster at the round end.** A monster pushed onto end-of-turn ground or next to a damaging prop there takes nothing then and can leave in its next turn.
 - **Clocks last:** a thing that lasts N rounds still counts at its N-th round end. An effect in its last round still counts for the Stamina recovery.
 - **Inside a turn:** every action resolves completely, including the pushes, entries and departures it causes ([§6.2](#62-payload-resolution)); then the end effects.
 - **Placing ground under a monster is not entering:** it acts at its next moment, not at once.
@@ -135,6 +136,7 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 
 - **Dragon Vein:** a ground type that nothing changes. Otherwise it is ordinary ground: a prop may stand on it and a zone may lie on it; only no ground is laid on it.
 - **Ownership by last touch:** a Dragon Vein belongs to the side whose monster touched it last (walked onto or across it, was pushed or pulled onto it, or stands on it). It stays with that side until a monster of the other side touches it. At the start nobody owns one. A prop touches nothing: a solid prop on a vein blocks the square, and the vein keeps working for its owner.
+- **Damage on its own square:** at the round end every Dragon Vein, owned or not, deals **1 damage to the monster or prop on its square**, in every round.
 - **Dragon Vein damage:** at the round end every owned Dragon Vein deals **1 damage, from round 3 on 2, to the nearest enemy of its owner** (board distance). Ties: the enemy with more HP, then with more Pace, then **the owning side chooses**.
 - **The veins act one after another,** the vein of the faster taker first: the taker is the monster that took the vein for its side (a later touch by an ally does not change it); its current Pace counts, then the queue order. A vein whose taker has fallen acts last. Each vein picks its target on the board as it then stands, defeats are resolved after each, and the battle ends as soon as one side is gone.
 - **Surrounding:** at the round end a monster with **two or more enemies on its eight neighbour squares** takes 1 damage, all in one step before the veins.
@@ -145,7 +147,7 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 
 ```
 [ OCCUPANT ]  one monster | one solid prop | a walkable prop, alone or under a monster | empty
-[ ZONE     ]  ONE timed zone | empty — pushes or pulls who ends a turn inside
+[ ZONE     ]  ONE timed zone | empty — pushes or pulls who arrives or ends a turn inside
 [ GROUND   ]  ONE ground type — acts at a moment
 ```
 
@@ -174,21 +176,24 @@ What a skill lays is temporary: permanent hazards fill the board and make waitin
 
 - **Made by:** a skill, on its squares (a placed shape, the square a Strike hit, the squares a movement left; also under a prop), or a destroyed prop that leaves ground. Never on Voidscar or a Dragon Vein.
 - **Same type on the square:** its clock restarts. **Different type:** the new ground replaces the old one.
-- Ground works for **everyone** on it.
+- Ground works for **everyone** on it, monsters and props.
+- **A prop takes only the damage of ground:** when a push or pull moves it onto or off the square, and from end-of-turn ground at the round end. Healing and Stamina do nothing to it. A prop created on ground has not entered it.
 - Ground types: [content.md §1](content.md#1-ground).
 
 ### 4.6 Zones
 
-**A zone pushes or pulls:** a monster that ends its turn inside is moved 1 square. A third kind damages the props standing in it at the round end (1 damage) and does nothing to monsters. A zone changes no stat, never damages or heals a monster and has one level.
+**A zone pushes or pulls:** a monster that arrives inside or ends its turn inside is moved 1 square. A zone changes no stat, never damages or heals and has one level.
 
 | Effect | When | Action | Opposite |
 |---|---|---|---|
-| `push` | end of the occupant's turn | move 1 in the zone's direction | `pull` |
-| `pull` | end of the occupant's turn | move 1 toward the zone's anchor square | `push` |
+| `push` | on arriving · end of the occupant's turn | move 1 in the zone's direction | `pull` |
+| `pull` | on arriving · end of the occupant's turn | move 1 toward the zone's anchor square | `push` |
 
 - A zone moves **everyone** on the square: allies, enemies and the caster.
+- **Arriving:** a move that ends on the square ([§3](#3-timing)) is followed at once by the zone's move. Squares a movement skill passes over do not count. A blocked zone move is a collision.
+- **Once per action:** a monster a zone has moved is not moved by a zone again in that action. The move at the end of its turn comes on top.
 - **Direction of a push zone:** cast alone, the direction is chosen with the cast. Left by a skill that also creates something else, it points where the placement is turned; left by a Strike, in the Strike's direction; left on the path of a movement, the way the monster went.
-- **Counterplay:** do not end your turn in a current.
+- **Counterplay:** do not end a move or your turn in a current; a movement skill crosses it.
 
 **A zone lands on a square that already holds one:**
 
@@ -199,7 +204,7 @@ What a skill lays is temporary: permanent hazards fill the board and make waitin
 | an opposite | both cancel and the square is empty |
 | anything else | replaced |
 
-A square always shows exactly one zone. Zone types: [content.md §2](content.md#2-zones).
+Zone types: [content.md §2](content.md#2-zones).
 
 ### 4.7 Props
 
@@ -216,9 +221,8 @@ A square always shows exactly one zone. Zone types: [content.md §2](content.md#
 - **Moments of a prop:** when destroyed, when hit (it lost HP and still stands), when entered (walkable props), at the end of the turn of a monster in its shape (damage), at the round end (push or pull).
 - **Fixed, previewed effects:** what a prop does is fixed by its type, independent of who or what set it off and from which direction. **No chain reactions:** prop damage hits monsters only, never props.
 - **No indestructible prop.**
-- **What damages a prop:** a Strike whose card names damage deals 2 to every prop in its shape, the Basic Jab 1, a collision 1. A Strike without damage moves a prop but does not damage it. Ground, zones and movement do not damage props.
+- **What damages a prop:** a Strike whose card names damage deals 2 to every prop in its shape, the Basic Jab 1, a collision 1. A Strike without damage moves a prop but does not damage it. Ground and a Dragon Vein damage the prop on their square ([§4.5](#45-ground)); zones and movement do not.
 - **Tags:** `heavy` (cannot be displaced and takes no collision damage) and `spiky` (deals 2 instead of 1 collision damage to a monster displaced into it) *(working values)*.
-- **Zones and props:** a push or pull zone moves a prop standing in it at the round end.
 - **Created by a skill:** on a square that can take it. A created prop needs a square free of props and monsters. Board generation may pre-place any prop type.
 
 **Resolution:**
@@ -239,7 +243,7 @@ Every ground, zone and prop reads as a head plus lines of **when · what · how 
 |---|---|---|---|
 | Lies as | ground layer | zone layer | occupant: solid, or walkable under a monster |
 | Ends by | 2 rounds when laid in battle; other ground replaces it | the rounds its skill names; an opposite zone | 0 HP; 2 rounds when a skill created it; a trap when it is entered |
-| Acts on | who stands on the square | who stands on the square | the squares of its shape; a trap: who entered it |
+| Acts on | the monster or prop on the square | who stands on the square | the squares of its shape; a trap: who entered it |
 | Numbers | movement cost 1–2 | — | HP 1–3 |
 
 | Line part | Vocabulary |
@@ -254,10 +258,11 @@ Every ground, zone and prop reads as a head plus lines of **when · what · how 
 | | Ground | Zone | Prop |
 |---|---|---|---|
 | on entering | yes | — | walkable props only |
+| on arriving | — | push, pull | — |
 | on leaving | yes | — | — |
 | while inside | — | — | on its shape |
 | end of the occupant's turn | yes | push, pull | damage |
-| end of the round | — | — | push, pull |
+| end of the round | damage to props | — | push, pull |
 | when hit, when destroyed | — | — | yes |
 | damage | yes | **never** | yes |
 | healing | yes | **never** | — |
@@ -298,11 +303,11 @@ Tamer skills exist in the ingame battle only ([battle_ingame.md §5](battle_inga
 - **Ground:** 1–2, each at its moment.
 - **Collision:** 1; 2 for the moved monster at a `spiky` prop.
 - **Prop:** 1–2 at its moment.
-- **Dragon Vein and surrounding:** 1 each at the round end.
+- **Dragon Vein and surrounding:** [§4.2](#42-dragon-veins-surrounding-and-late-round-pressure).
 - **Zones never deal damage.** Nothing but the Basic Jab damages a monster the instant it is used.
 - **Damage never scales by stage.**
 
-**Fair damage at range:** damage from a distance never hits a monster that has had no turn of its own since the cast. At range a skill can only create ground or a prop; ground acts when a monster enters or leaves it or at the end of that monster's own turn.
+**Fair damage at range:** damage from a distance never hits a monster that has had no turn of its own since the cast. At range a skill can only create ground or a prop; ground acts when a monster enters or leaves it or at the end of that monster's own turn. **The round end is the exception:** a Dragon Vein damages whoever stands on it, and a prop destroyed there acts on the monsters in its shape.
 
 **Calculation:**
 
@@ -317,7 +322,7 @@ Tamer skills exist in the ingame battle only ([battle_ingame.md §5](battle_inga
 
 1. **Damage** to all struck props, and to the monster the Basic Jab struck, simultaneously. A solid prop takes the hit for the square behind it.
 2. **Defeat:** units at 0 HP are removed before anything else resolves.
-3. **Displacement** of the survivors, one unit at a time, **the unit furthest along the movement direction first** (for a pull: nearest the anchor first). Collision, leaving and entry effects fire at each move.
+3. **Displacement** of the survivors, one unit at a time, **the unit furthest along the movement direction first** (for a pull: nearest the anchor first). Collision, leaving and entry effects fire at each move; a zone the unit arrives in moves it once more ([§4.6](#46-zones)).
 4. **Board changes**, in fixed order: (a) **removals:** every prop at 0 HP is removed with what it does when destroyed; monsters reduced to 0 HP by it are then defeated; (b) **prop placement**; (c) **ground:** what destroyed props leave, then what the skill creates; (d) **zones** the skill creates.
 
 - What a payload creates lands after its displacement: a monster pushed by a Strike does not end in the ground that Strike leaves unless it stands there afterwards.
@@ -335,7 +340,7 @@ Tamer skills exist in the ingame battle only ([battle_ingame.md §5](battle_inga
 
 ### 6.4 Displacement
 
-**One square per trigger**, with a previewed landing. Being pushed or pulled is movement: the monster leaves its square and enters the next one with every ground effect of both, springs a trap it is moved onto and takes a Dragon Vein it is moved onto. It costs no Stamina.
+**One square per trigger**, with a previewed landing. Being pushed or pulled is movement: the monster leaves its square and enters the next one with every ground effect of both, springs a trap it is moved onto and takes a Dragon Vein it is moved onto.
 
 | Source | Direction |
 |---|---|
@@ -345,8 +350,8 @@ Tamer skills exist in the ingame battle only ([battle_ingame.md §5](battle_inga
 | a push zone | its direction: **cardinal** |
 | a pull zone | toward its anchor: cardinal. On an exact diagonal (`|dx| = |dy|`) the pull does not move the target |
 
-- **Props are displaced too:** every push or pull that moves a monster also moves a prop on the affected square by one square. A prop in a push or pull zone is moved once, at the round end. Props resolve after all monsters of the same step; the furthest along goes first. A blocked prop does not move and takes 1 damage; a monster in its way takes 1 (2 from a `spiky` prop), another prop in its way takes 1. Ground and zones do not act on a prop.
-- Passives may make a monster immovable ([skills.md §6](skills.md#6-passives)).
+- **Props are displaced too:** every push or pull that moves a monster also moves a prop on the affected square by one square. A prop in a push or pull zone is moved once, at the round end. Props resolve after all monsters of the same step; the furthest along goes first. A blocked prop does not move and takes 1 damage; a monster in its way takes 1 (2 from a `spiky` prop), another prop in its way takes 1. Ground damages a moved prop ([§4.5](#45-ground)).
+- No passive makes a monster immovable ([skills.md §6](skills.md#6-passives)).
 
 ## 7. Technical Requirements
 
