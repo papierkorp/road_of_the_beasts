@@ -62,7 +62,7 @@ func test_a_save_holds_the_whole_game() -> void:
 	var g := _game()
 	g.end_day()
 	g.spend_ap(1)
-	g.add_item(Materials.ore(0), 3)
+	g.add_item(Materials.beast_part(0), 3)
 	g.add_egg(&"moss_turtle")
 	g.path_points = 2
 	g.roster[0].gain_xp(70, g.stage)
@@ -70,7 +70,7 @@ func test_a_save_holds_the_whole_game() -> void:
 	var h := GameState.from_dict(data)
 	assert_int(h.day).is_equal(2)
 	assert_int(h.ap).is_equal(g.ap)
-	assert_int(h.count(Materials.ore(0))).is_equal(3)
+	assert_int(h.count(Materials.beast_part(0))).is_equal(3)
 	assert_int(h.eggs.size()).is_equal(1)
 	assert_int(h.path_points).is_equal(2)
 	assert_dict(h.roster[0].stats).is_equal(g.roster[0].stats)
@@ -217,8 +217,9 @@ func test_a_stage_breakthrough_gives_one_of_three() -> void:
 	assert_bool(m.choose(MonsterInstance.BREADTH)).is_true()
 	assert_int(m.slots).is_equal(5)
 	assert_bool(m.choose(MonsterInstance.DEPTH)).is_false()
-	var epic := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3, MonsterInstance.Rarity.EPIC)
-	assert_int(epic.choice_picks).is_equal(2)
+	var epic := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3, MonsterInstance.Bloodline.ANCIENT)
+	assert_int(epic.choice_picks).is_equal(2)                 # Ancient and Divine take two of the offer
+	epic.gift_picks = 0                                       # the gifts of its bloodline are tested below
 	assert_bool(epic.choose(MonsterInstance.BLOOD, &"brawler")).is_true()
 	assert_bool(epic.choose(MonsterInstance.BLOOD, &"surefoot")).is_false()
 	assert_bool(epic.choose(MonsterInstance.DEPTH)).is_true()
@@ -226,6 +227,52 @@ func test_a_stage_breakthrough_gives_one_of_three() -> void:
 	assert_int(epic.dev_steps).is_equal(1)
 	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(epic.to_dict())))
 	assert_array(copy.gifts).is_equal([&"brawler"])
+
+
+func test_a_wider_bloodline_is_offered_lore_and_reshape() -> void:
+	var def := GameData.monster(&"blaze_tiger")
+	var mortal := MonsterInstance.hatched(def, 3)
+	assert_array(mortal.offered()).is_equal([MonsterInstance.BREADTH, MonsterInstance.DEPTH, MonsterInstance.BLOOD])
+	assert_bool(mortal.can_choose(MonsterInstance.LORE)).is_false()
+	var spirit := MonsterInstance.hatched(def, 3, MonsterInstance.Bloodline.SPIRIT)
+	assert_int(spirit.offered().size()).is_equal(4)
+	assert_int(spirit.choice_picks).is_equal(1)
+	var options := spirit.lore_options()
+	assert_array(options).is_not_empty()                       # skills of the other species of its Kin
+	var before := spirit.learnable().size()
+	assert_bool(spirit.can_learn(options[0].id)).is_false()
+	assert_bool(spirit.choose(MonsterInstance.LORE, options[0].id)).is_true()
+	assert_int(spirit.learnable().size()).is_equal(before + 1)
+	assert_bool(spirit.learn(options[0].id)).is_true()
+	assert_str(String(spirit.kit_skills()[0].id)).is_equal(String(options[0].id))
+	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(spirit.to_dict())))
+	assert_str(String(copy.kit_skills()[0].id)).is_equal(String(options[0].id))
+	var divine := MonsterInstance.hatched(def, 3, MonsterInstance.Bloodline.DIVINE)
+	assert_int(divine.offered().size()).is_equal(5)
+	assert_int(divine.choice_picks).is_equal(2)
+	divine.buy("hp")
+	assert_bool(divine.choose(MonsterInstance.RESHAPE)).is_true()
+	assert_dict(divine.stats).is_equal(MonsterInstance.FLOOR)
+	assert_bool(divine.choose(MonsterInstance.RESHAPE)).is_false()      # nothing twice in one breakthrough
+	assert_bool(divine.choose(MonsterInstance.DEPTH)).is_true()
+
+
+func test_a_bloodline_awakens_gifts_from_the_start_and_caps_no_stage() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var def := GameData.monster(&"blaze_tiger")
+	for grade in MonsterInstance.Bloodline.size():
+		var wild := MonsterInstance.grown(def, rng, 0, grade as MonsterInstance.Bloodline)
+		assert_int(wild.gifts.size()).is_equal(grade)            # a wild monster comes with them
+		var egg := MonsterInstance.hatched(def, 0, grade as MonsterInstance.Bloodline)
+		assert_int(egg.gifts.size()).is_equal(0)
+		assert_int(egg.gift_picks).is_equal(grade)               # from an egg the player chooses them
+	var mortal := MonsterInstance.grown(def, rng, 8)             # Core Formation High
+	mortal.gain_xp(MonsterInstance.XP_STEPS[8], Stage.Type.IMMORTAL)
+	assert_int(int(mortal.stage)).is_equal(int(Stage.Type.SOUL))       # a Mortal bloodline passes Core Formation
+	for i in 4:
+		mortal.gain_xp(MonsterInstance.XP_STEPS[11], Stage.Type.SOUL)
+	assert_int(mortal.step()).is_equal(11)                        # only the stage of its tamer holds it
 
 
 func test_every_kin_has_a_trait_four_groups_and_gifts() -> void:
@@ -271,7 +318,6 @@ func test_void_monsters_live_in_the_void_only_and_come_as_an_egg_of_the_trial() 
 	for m in f.enemies:
 		assert_int(int(m.species().kin)).is_equal(int(MonsterDef.Kin.VOID))
 	g.void_depth = VoidPlace.depths(g) - 1
-	g.add_item(Materials.breakthrough(0), g.values.trial_materials)
 	var trial := VoidPlace.fight(g)
 	trial.team = g.default_team(1)
 	VoidPlace.resolve(g, trial, null, true)

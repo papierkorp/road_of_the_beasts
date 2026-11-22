@@ -98,15 +98,16 @@ static func resolve(b: Battle, entries: Array) -> void:
 				var pr := prop_by_uid(b, int(item["prop"]))
 				if pr == null or not shove_prop(b, pr, item["dir"], item.get("cause", "push")):
 					break
-			elif not shove(b, b.units[item["unit"]], item["dir"], item.get("cause", "push")):
+			elif not shove(b, b.units[item["unit"]], item["dir"], item.get("cause", "push"), item.get("kind", "strike")):
 				break
 
 
-## Moves `u` one square by force. Returns true if it moved.
-static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String) -> bool:
+## Moves `u` one square by force. Returns true if it moved. `kind` is where the force comes from: "strike" (a
+## Strike or another skill), "zone" or "prop"; a passive may hold against one of them.
+static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String, kind := "strike") -> bool:
 	if u == null or not u.is_alive() or dir == Vector2i.ZERO:
 		return false
-	if BattleStats.is_immovable(b, u):
+	if BattleStats.is_immovable(b, u, kind):
 		b.emit(&"unmoved", {"who": u.id, "reason": "immovable"})
 		return false
 	var board := b.board

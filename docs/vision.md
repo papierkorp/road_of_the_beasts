@@ -49,9 +49,9 @@ A battle is made of three things, and every resource of the game feeds one of th
 *Status: set. Numbers are not defined.*
 
 - **A day is one turn:** the player spends day AP in the hub, the night resolves everything at once.
-- **The lifespan:** the tamer has a number of days to live. Each stage has its lifespan, and only a breakthrough lengthens it. The days left are always shown.
+- **The lifespan:** the tamer has a number of days to live. Each stage has its lifespan, and only a breakthrough lengthens it. The days left are always shown. A breakthrough replaces the lifespan: the years left over are lost.
 - **A day of play is a year of the tamer's life:** the game shows years ("year 3", "5 years left"); the rules keep the word day for the unit and day AP for what it gives.
-- **The trial comes at the end:** the breakthrough trial is the last depth of the void ([§4](#4-where-battles-happen)); the player may take it on any day before. When the lifespan ends, the trial must be taken, ready or not; who loses that one has lost the game. A game is lost on the board, never to a counter.
+- **The trial comes at the end:** the breakthrough trial is the last depth of the void ([§4](#4-where-battles-happen)); the player may take it on any day before. When the lifespan ends, the trial must be taken, ready or not; who loses that one has lost the game. A game is lost on the board, never to a counter. The forced trial skips the depths not won yet.
 - **What this asks of the player:** day AP go to the monsters or to the tamer. Who tends only the monsters runs out of time; who tends only the tamer meets the trial with a weak team.
 - **The end:** the Sovereign beast is the last depth of the void. It is drawn from a pool when a game starts, and its sheet is shown from the first day. Defeating it makes the tamer Sovereign and wins the game. It may be attacked on any day for day AP; a defeat costs nothing else until the last lifespan ends.
 - **A game is short and the next one differs:** a lost game starts anew from the nest. Its length is meant to be about three to four hours *(working value)*.
@@ -100,6 +100,7 @@ A battle is made of three things, and every resource of the game feeds one of th
 - **The void has no ground, so the player brings it:** every battle there is fought on a battleground the player built. Everywhere else the board belongs to the place.
 - **The board is the answer:** the opponent is shown ahead, and the player builds or changes the battleground before the battle.
 - **Void monsters are stronger** than anything else of the stage; the home board is what lets the player meet them.
+- **Monster XP:** a battle in the void gives it, like one in the wild area.
 - **Drawn for the game:** the void monsters of each depth are drawn from a pool when a game starts.
 - **A few depths per stage,** three to five *(working value)*, each won once. The last depth is the breakthrough trial.
 - **Every depth won gives one Insight** ([§8](#8-growth)). The depths before the trial also show how far the team and the board are from it.

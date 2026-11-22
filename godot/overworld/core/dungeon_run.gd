@@ -1,8 +1,8 @@
 class_name DungeonRun
 extends RefCounted
-## The dungeon (docs/vision.md §4): a run through a generated map of nodes with forks, for all day AP of the day.
+## The dungeon (docs/vision.md §4): a run through a generated map of nodes with forks, for a fixed number of day AP.
 ## HP stay from battle to battle; leaving keeps the loot, a defeat costs a part of it; the last battle holds the
-## breakthrough material. A dungeon whose challenge is met can be harvested without a battle.
+## best loot. No battle here gives monster XP. A dungeon whose challenge is met can be harvested without a battle.
 ##
 ## The run lives in `GameState.dungeon` as plain data: {"stage", "run" (its number, the seed of its map),
 ## "path": cleared node ids in order, "loot": item -> number}. The nodes are generated from the game's seed.
@@ -25,13 +25,13 @@ static func running(game: GameState) -> bool:
 
 
 static func can_start(game: GameState) -> bool:
-	return not running(game) and not game.forced_trial and not game.is_over() and game.ap >= maxi(1, game.values.dungeon_min_ap)
+	return not running(game) and not game.forced_trial and not game.is_over() and game.ap >= game.values.dungeon_ap
 
 
 static func start(game: GameState, stage: int) -> bool:
 	if not can_start(game) or not stages(game).has(stage):
 		return false
-	game.ap = 0
+	game.spend_ap(game.values.dungeon_ap)
 	game.dungeon_runs += 1
 	game.dungeon = {"stage": stage, "run": game.dungeon_runs, "path": [], "loot": {}}
 	game.say("You enter the dungeon of %s. HP stay from battle to battle." % Stage.stage_name(stage as Stage.Type))
@@ -42,13 +42,14 @@ static func stage_of(game: GameState) -> int:
 	return int(game.dungeon.get("stage", 0))
 
 
+## `n` plants of the dungeon of a stage.
 static func _loot(game: GameState, rng: RandomNumberGenerator, stage: int, n: int) -> Dictionary:
 	var out := {}
 	var plants := Materials.plants_of(game.values, stage)
 	for i in n:
-		var item := Materials.ore(stage)
-		if not plants.is_empty() and rng.randi_range(0, 2) > 0:
-			item = Materials.plant(plants[rng.randi_range(0, plants.size() - 1)], stage)
+		if plants.is_empty():
+			break
+		var item := Materials.plant(plants[rng.randi_range(0, plants.size() - 1)], stage)
 		out[item] = int(out.get(item, 0)) + 1
 	return out
 
@@ -77,10 +78,7 @@ static func nodes(game: GameState) -> Array[Dictionary]:
 				n["mine"] = int(map["mine"])
 				var enemies := Places.enemy_count(v.dungeon_enemies, stage, rng, int(map["theirs"]), 1 if is_last else 0)
 				n["enemies"] = Places.monsters(rng, enemies, GameState.step_of(stage, 2 if is_last else rng.randi_range(0, 2)))
-				n["loot"] = _loot(game, rng, stage, v.dungeon_node_loot)
-				if is_last:
-					n["loot"][Materials.breakthrough(stage)] = 1
-					n["loot"][Materials.essence(stage)] = 1
+				n["loot"] = _loot(game, rng, stage, v.dungeon_node_loot + (v.dungeon_last_loot if is_last else 0))
 			row.append(n["id"])
 			out.append(n)
 		layers.append(row)
@@ -144,7 +142,7 @@ static func fight_for(game: GameState, node_id: int) -> Fight:
 	f.wild = true
 	f.roll_seed = hash([game.game_seed, "dungeon_roll", game.dungeon["run"], node_id]) & 0x3FFFFFFF
 	f.ref = {"node": node_id, "last": n["kind"] == LAST}
-	f.loot_text = "monster XP, %s" % Materials.list_text(n["loot"], game.values)
+	f.loot_text = "%s, a beast part per monster defeated; no monster XP" % Materials.list_text(n["loot"], game.values)
 	return f
 
 
@@ -216,13 +214,14 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 		return
 	var node_id := int(f.ref["node"])
 	var n := nodes(game)[node_id]
+	var won_loot: Dictionary = (n["loot"] as Dictionary).duplicate()
+	for part in Places.beast_parts(f, result):         # every wild monster defeated leaves its beast part
+		won_loot[part] = int(won_loot.get(part, 0)) + 1
 	var loot: Dictionary = game.dungeon["loot"]
-	for id in n["loot"]:
-		loot[id] = int(loot.get(id, 0)) + int(n["loot"][id])
+	for id in won_loot:
+		loot[id] = int(loot.get(id, 0)) + int(won_loot[id])
 	(game.dungeon["path"] as Array).append(node_id)
-	game.say("Battle won. Gathered: %s." % Materials.list_text(n["loot"], game.values))
-	for line in game.award_xp(f.team, stage):
-		game.say(line)
+	game.say("Battle won. Gathered: %s." % Materials.list_text(won_loot, game.values))
 	for m in f.team:                              # a vow: HP back after a battle won
 		if m.current_hp > 0:
 			m.current_hp = mini(m.max_hp(), m.current_hp + game.vow_sum("dungeon_heal"))
@@ -242,13 +241,13 @@ static func can_harvest(game: GameState, stage: int) -> bool:
 	return mastered(game, stage) and not running(game) and not game.forced_trial and not game.is_over() and game.ap >= game.values.harvest_ap
 
 
-## A harvest (docs/vision.md §4): a few day AP for a fixed, lower yield; no breakthrough material, no XP.
+## A harvest (docs/vision.md §4): a few day AP for a fixed, lower yield of plants.
 static func harvest(game: GameState, stage: int) -> Dictionary:
 	if not can_harvest(game, stage):
 		return {}
 	game.spend_ap(game.values.harvest_ap)
 	game.dungeon_runs += 1
-	var loot := _loot(game, game.rng_for("harvest%d" % game.dungeon_runs), stage, game.values.harvest_yield + game.vow_sum("harvest"))
+	var loot := _loot(game, game.rng_for("harvest%d" % game.dungeon_runs), stage, game.values.harvest_yield)
 	for id in loot:
 		game.add_item(String(id), int(loot[id]))
 	game.say("Harvest of the dungeon of %s: %s." % [Stage.stage_name(stage as Stage.Type), Materials.list_text(loot, game.values)])

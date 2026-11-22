@@ -1,7 +1,7 @@
 class_name GameState
 extends RefCounted
 ## The whole state of one game of the hub game (docs/vision.md): the day and its day AP, the lifespan, the tamer's
-## stage and cultivation system, the roster and what the player owns. Headless: no nodes, no battle rules. The places
+## stage and Way, the roster and what the player owns. Headless: no nodes, no battle rules. The places
 ## (WildArea, DungeonRun, VoidPlace), the tree (Cultivation) and crafting (Crafting) work on it.
 ##
 ## Everything drawn is drawn from `game_seed` (`rng_for`), so a save holds no generator state and the same game
@@ -25,20 +25,19 @@ var outcome: StringName = &""
 
 var system: StringName = &""
 var path_points := 0
-## Bought nodes of the cultivation system.
+## Bought nodes of the Way.
 var nodes: Array[StringName] = []
 var tamer_skills: Array[StringName] = [SEAL]
 ## Vows taken (docs/overworld.md §5.3), and the vows offered right now ([] = no offer open).
 var vows: Array[StringName] = []
 var vow_offer: Array[StringName] = []
-var blueprints: Array[StringName] = []
-## Built parts of the battleground: part id -> number owned.
+## Forged parts of the battleground: part id -> number owned.
 var parts := {}
 ## The player's own battleground as plain data ({} = none built yet); the format is that of `MapData`.
 var battleground := {}
 
 var roster: Array[MonsterInstance] = []
-## Eggs in the nest: {"species": id, "nights": nights left}.
+## Eggs in the nest: {"species": id, "nights": nights left, "bloodline": grade}.
 var eggs: Array[Dictionary] = []
 ## Materials and pills: item id -> number.
 var items := {}
@@ -122,19 +121,13 @@ func vow_def(id: StringName) -> Dictionary:
 	return {}
 
 
-## The sum of an effect over the vows taken and the perks bought in the tree (a flag counts 1).
+## The sum of an effect over the vows taken (a flag counts 1).
 func vow_sum(key: String) -> int:
 	var sum := 0
 	for id in vows:
 		var e: Dictionary = vow_def(id).get("effects", {})
 		if e.has(key):
 			sum += int(e[key])
-	var def := CultivationDef.of(system)
-	if def != null:
-		for id in nodes:
-			var perk: Dictionary = def.node(id).get("effects", {})
-			if perk.has(key):
-				sum += int(perk[key])
 	return sum
 
 
@@ -149,17 +142,9 @@ func _vow_names(key: String) -> bool:
 	return false
 
 
-## Whether a loadout fits the tamer slots: a slot of the stage takes anything, a rack only a weapon, a pouch only
-## a pill. `items`: tamer skill id -> the item it stands for.
-func loadout_fits(loadout: Array[StringName], items: Dictionary) -> bool:
-	var weapons := 0
-	var pills := 0
-	for id in loadout:
-		var form := Materials.form(String(items.get(id, "")))
-		weapons += 1 if form == "weapon" else 0
-		pills += 1 if form == "pill" else 0
-	var need := loadout.size() - mini(weapons, vow_sum("weapon_slot")) - mini(pills, vow_sum("pill_slot"))
-	return need <= tamer_slots()
+## Whether a loadout fits the tamer slots: every entry takes one.
+func loadout_fits(loadout: Array[StringName]) -> bool:
+	return loadout.size() <= tamer_slots()
 
 
 ## The values of an effect over the vows taken (the Kins of `ban_kin`, of `kin_choice`).
@@ -263,6 +248,7 @@ func end_day() -> bool:
 	lifespan -= 1
 	ap = max_ap()
 	wild_gone.clear()
+	Crafting.spoil(self)
 	for m in roster:
 		m.heal_full()
 	for e in eggs.duplicate():
@@ -270,7 +256,7 @@ func end_day() -> bool:
 		if int(e["nights"]) <= 0 and roster.size() < roster_cap():
 			eggs.erase(e)
 			var def := GameData.monster(StringName(e["species"]))
-			_join(MonsterInstance.hatched(def, int(stage) * 3))
+			_join(MonsterInstance.hatched(def, int(stage) * 3, int(e.get("bloodline", 0)) as MonsterInstance.Bloodline))
 			say("An egg hatched: %s. Shape it under Monsters." % def.display_name)
 	if lifespan <= 0:
 		lifespan = 0
@@ -279,12 +265,13 @@ func end_day() -> bool:
 	return true
 
 
-## The breakthrough (docs/vision.md §3): the next stage, its lifespan, a new ladder of depths. Sovereign wins the game.
+## The breakthrough (docs/vision.md §3): the next stage, its lifespan, a new ladder of depths. The trial of the
+## last stage is the Sovereign beast: who defeats it is Sovereign and has won.
 func break_through() -> void:
 	stage = (int(stage) + 1) as Stage.Type
 	forced_trial = false
 	void_depth = 0
-	if stage == Stage.Type.SOVEREIGN:
+	if stage == Stage.Type.SOVEREIGN:          # only the Sovereign beast leads here (VoidPlace); kept for the cheat
 		outcome = WON
 		say("You have reached Sovereign.")
 		return
@@ -296,6 +283,14 @@ func break_through() -> void:
 
 func lose() -> void:
 	outcome = LOST
+
+
+## The Sovereign beast fell (docs/vision.md §3): the tamer is Sovereign, at whatever stage they stood.
+func win() -> void:
+	stage = Stage.Type.SOVEREIGN
+	forced_trial = false
+	outcome = WON
+	say("The Sovereign beast has fallen. You are Sovereign.")
 
 
 # ---------- what the player owns ----------
@@ -319,7 +314,7 @@ func take_item(item: String, n := 1) -> bool:
 
 
 func roster_cap() -> int:
-	return values.roster_cap + vow_sum("roster")
+	return values.roster_cap
 
 
 func has_room() -> bool:
@@ -339,11 +334,11 @@ func _join(m: MonsterInstance) -> void:
 	roster.append(m)
 
 
-func add_egg(species: StringName) -> bool:
+func add_egg(species: StringName, bloodline := 0) -> bool:
 	var egg_def := GameData.monster(species)
 	if not has_room() or (egg_def != null and kin_banned(int(egg_def.kin))):
 		return false
-	eggs.append({"species": String(species), "nights": values.egg_nights})
+	eggs.append({"species": String(species), "nights": values.egg_nights, "bloodline": bloodline})
 	return true
 
 
@@ -370,18 +365,11 @@ static func step_of(place_stage: int, sub_tier := 1) -> int:
 	return clampi(place_stage * 3 + sub_tier, 0, MonsterInstance.STEPS - 1)
 
 
-## Gives XP for a won battle to the monsters that fought and still stand. Returns the lines to show.
+## Gives XP for a won battle to the monsters that fought and still stand, each the full amount; the bench gets
+## none (docs/vision.md §2). Returns the lines to show.
 func award_xp(team: Array[MonsterInstance], place_stage: int) -> Array[String]:
 	var lines: Array[String] = []
 	var amount := GameValues.at(values.xp_per_win, place_stage)
-	var fought := team.filter(func(m: MonsterInstance) -> bool: return m.current_hp > 0)
-	if fought.size() == 1 and team.size() == 1:
-		amount += amount * vow_sum("solo_xp") / 100
-	var bench := amount * vow_sum("bench_xp") / 100
-	if bench > 0:
-		for m in roster:
-			if not team.has(m):
-				m.gain_xp(bench, stage)
 	for m in team:
 		if m.current_hp <= 0:
 			continue
@@ -401,9 +389,9 @@ func to_dict() -> Dictionary:
 	var r: Array = []
 	for m in roster:
 		r.append(m.to_dict())
-	return {"version": 2, "seed": game_seed, "day": day, "ap": ap, "stage": int(stage), "lifespan": lifespan,
+	return {"version": 3, "seed": game_seed, "day": day, "ap": ap, "stage": int(stage), "lifespan": lifespan,
 		"forced_trial": forced_trial, "outcome": String(outcome), "system": String(system), "path_points": path_points,
-		"nodes": _strings(nodes), "vows": _strings(vows), "vow_offer": _strings(vow_offer), "tamer_skills": _strings(tamer_skills), "blueprints": _strings(blueprints),
+		"nodes": _strings(nodes), "vows": _strings(vows), "vow_offer": _strings(vow_offer), "tamer_skills": _strings(tamer_skills),
 		"parts": parts.duplicate(), "battleground": battleground.duplicate(true), "roster": r, "eggs": eggs.duplicate(true),
 		"items": items.duplicate(), "wild_gone": wild_gone.duplicate(), "rare_gone": rare_gone.duplicate(),
 		"dungeon": dungeon.duplicate(true), "dungeon_runs": dungeon_runs, "dungeon_mastered": dungeon_mastered.duplicate(),
@@ -412,7 +400,7 @@ func to_dict() -> Dictionary:
 
 
 static func from_dict(d: Dictionary, p_values: GameValues = null) -> GameState:
-	if int(d.get("version", 0)) != 2:
+	if int(d.get("version", 0)) != 3:
 		return null
 	var g := GameState.new()
 	g.values = p_values if p_values != null else GameValues.shared()
@@ -429,14 +417,13 @@ static func from_dict(d: Dictionary, p_values: GameValues = null) -> GameState:
 	g.tamer_skills = _names(d["tamer_skills"])
 	g.vows = _names(d.get("vows", []))
 	g.vow_offer = _names(d.get("vow_offer", []))
-	g.blueprints = _names(d["blueprints"])
 	for k in d["parts"]:
 		g.parts[String(k)] = int(d["parts"][k])
 	g.battleground = (d["battleground"] as Dictionary).duplicate(true)
 	for m in d["roster"]:
 		g.roster.append(MonsterInstance.from_dict(m))
 	for e in d["eggs"]:
-		g.eggs.append({"species": String(e["species"]), "nights": int(e["nights"])})
+		g.eggs.append({"species": String(e["species"]), "nights": int(e["nights"]), "bloodline": int(e.get("bloodline", 0))})
 	for k in d["items"]:
 		g.items[String(k)] = int(d["items"][k])
 	g.wild_gone = _ints(d["wild_gone"])

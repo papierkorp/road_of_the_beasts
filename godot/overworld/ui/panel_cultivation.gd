@@ -1,6 +1,6 @@
 class_name CultivationPanel
 extends HubPanel
-## Cultivation Hall (docs/vision.md §8): the tree of the cultivation system, a tree per stage.
+## Cultivation Hall (docs/vision.md §8): the tree of the Way, a tree per stage.
 
 
 func title() -> String:
@@ -8,20 +8,20 @@ func title() -> String:
 
 
 func pillar() -> String:
-	return "Tamer and board"
+	return "Tamer"
 
 
 func hint() -> String:
-	return "Spend path points in your tree"
+	return "Spend Insight in the tree of your Way"
 
 
 func build(into: VBoxContainer) -> void:
 	var def := Cultivation.system(game)
-	into.add_child(HubUi.label("%s — %d path point(s). A depth of the void won gives one; a stage gives about enough for one branch." % [def.display_name, game.path_points], 22, UiTheme.ACCENT))
+	into.add_child(HubUi.label("%s — %d Insight. A depth of the void won gives one; a stage gives about enough for one branch." % [def.display_name, game.path_points], 22, UiTheme.ACCENT))
 	into.add_child(HubUi.dim(def.blurb))
 	var list := HubUi.scroll(into)
 	_vows(list)
-	var content := BattleContent.shared()
+	var content := GameSession.battle_content()
 	for s in Stage.Type.size():
 		var nodes := def.nodes_of(s)
 		if nodes.is_empty():
@@ -38,16 +38,8 @@ func build(into: VBoxContainer) -> void:
 				var card := HubUi.card(row, 440)
 				var id := StringName(n["id"])
 				card.add_child(HubUi.label("%s (%d)" % [n["name"], int(n["cost"])], 20, UiTheme.ACCENT))
-				var what := ""
-				match String(n["kind"]):
-					"tamer":
-						var t := content.tamer_skill(n["ref"])
-						what = "Tamer skill: %s" % (t.description if t != null else "?")
-					"blueprint":
-						what = "Lets you build %s in the workshop." % GameSession.part_name(String(n["ref"]))
-					_:
-						what = String(n.get("text", ""))
-				card.add_child(HubUi.label(what))
+				var t := content.tamer_skill(n["ref"])
+				card.add_child(HubUi.label("Tamer skill: %s" % (t.description if t != null else "?")))
 				var why := Cultivation.problem(game, id)
 				var b := HubUi.button("Buy" if why == "" else why.capitalize(), func():
 					Cultivation.buy(game, id)

@@ -15,7 +15,7 @@ func build(into: VBoxContainer) -> void:
 		if m.choice_picks > 0:
 			_choice(card, m)
 		if m.gift_picks > 0 and not m.open_gifts().is_empty():
-			card.add_child(HubUi.label("Your vow: choose %d gift(s) of its Kin." % m.gift_picks, 20, HubUi.GOOD))
+			card.add_child(HubUi.label("Its blood awakens: choose %d gift(s) of its Kin." % m.gift_picks, 20, HubUi.GOOD))
 			var gifts := HubUi.flow()
 			card.add_child(gifts)
 			for g in m.open_gifts():
@@ -55,10 +55,12 @@ func _kind(s: BattleSkillDef) -> String:
 
 
 func _choice(card: VBoxContainer, m: MonsterInstance) -> void:
-	card.add_child(HubUi.label("Stage breakthrough: choose %d of the three." % m.choice_picks, 20, HubUi.GOOD))
+	card.add_child(HubUi.label("Stage breakthrough: choose %d of the %d its %s bloodline is offered." % [m.choice_picks, m.offered().size(), m.bloodline_name()], 20, HubUi.GOOD))
 	var row := HubUi.flow()
 	card.add_child(row)
-	for c in [MonsterInstance.BREADTH, MonsterInstance.DEPTH]:
+	for c in [MonsterInstance.BREADTH, MonsterInstance.DEPTH, MonsterInstance.RESHAPE]:
+		if not m.offered().has(c):
+			continue
 		var b := HubUi.button(MonsterInstance.CHOICE_NAMES[c], func():
 			m.choose(c)
 			hub.refresh(), 330)
@@ -69,4 +71,9 @@ func _choice(card: VBoxContainer, m: MonsterInstance) -> void:
 		for g in m.open_gifts():
 			row.add_child(HubUi.button("Blood: %s" % KinDef.gift_line(kin, g), func():
 				m.choose(MonsterInstance.BLOOD, g)
+				hub.refresh(), 330))
+	if m.can_choose(MonsterInstance.LORE):
+		for s in m.lore_options():
+			row.add_child(HubUi.button("Lore: %s" % s.display_name, func():
+				m.choose(MonsterInstance.LORE, s.id)
 				hub.refresh(), 330))

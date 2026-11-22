@@ -12,14 +12,14 @@ func pillar() -> String:
 
 
 func hint() -> String:
-	return "A run for the rest of the year"
+	return "A run, or a harvest"
 
 
 func build(into: VBoxContainer) -> void:
 	if DungeonRun.running(game):
 		_build_run(into)
 		return
-	into.add_child(HubUi.dim("A run costs every AP you have left this year, and needs at least %d. A harvest costs %d AP. HP stay from battle to battle; leaving keeps the loot, a defeat keeps %d%% of it. The last battle holds the breakthrough material." % [game.values.dungeon_min_ap, game.values.harvest_ap, game.values.dungeon_defeat_keeps]))
+	into.add_child(HubUi.dim("A run costs %d AP, a harvest %d AP. HP stay from battle to battle; leaving keeps the loot, a defeat keeps %d%% of it. A battle here gives plants and a beast part per monster defeated, but no monster XP; the last battle holds the most." % [game.values.dungeon_ap, game.values.harvest_ap, game.values.dungeon_defeat_keeps]))
 	var list := HubUi.scroll(into)
 	for s in DungeonRun.stages(game):
 		var card := HubUi.card(list)
@@ -28,7 +28,7 @@ func build(into: VBoxContainer) -> void:
 		card.add_child(HubUi.label("Challenge: %s — %s" % [DungeonRun.challenge_text(game, s), "met" if done else "open"], 20, HubUi.GOOD if done else UiTheme.TEXT))
 		var row := HubUi.row()
 		card.add_child(row)
-		var go := HubUi.button("Start a run (all %d AP left)" % game.ap, func():
+		var go := HubUi.button("Start a run (%d AP)" % game.values.dungeon_ap, func():
 			DungeonRun.start(game, s)
 			hub.refresh(), 320)
 		go.disabled = not DungeonRun.can_start(game)
@@ -39,7 +39,7 @@ func build(into: VBoxContainer) -> void:
 		harvest.disabled = not DungeonRun.can_harvest(game, s)
 		row.add_child(harvest)
 		if not DungeonRun.can_start(game):
-			card.add_child(HubUi.dim("A run needs at least %d AP." % game.values.dungeon_min_ap))
+			card.add_child(HubUi.dim("A run needs %d AP." % game.values.dungeon_ap))
 
 
 func _build_run(into: VBoxContainer) -> void:
@@ -84,7 +84,7 @@ func _build_run(into: VBoxContainer) -> void:
 		card.add_child(HubUi.label("Battleground: %s" % GameSession.map_summary(f)))
 		for e: MonsterInstance in n["enemies"]:
 			card.add_child(HubUi.label(HubUi.monster_lines(e, false)))
-		card.add_child(HubUi.dim("Loot: %s" % Materials.list_text(n["loot"], game.values)))
+		card.add_child(HubUi.dim("Loot: %s, and a beast part per monster defeated" % Materials.list_text(n["loot"], game.values)))
 		if state == "open":
 			var go := HubUi.button("Prepare the battle", func(): hub.prepare(DungeonRun.fight_for(game, id), func(_f: Fight) -> bool: return true))
 			go.disabled = not DungeonRun.team_stands(game)

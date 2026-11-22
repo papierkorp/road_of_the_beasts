@@ -57,7 +57,7 @@ The hub prepares a closed fight and reads its result (rules: [battle.md](battle.
 | Harvest a dungeon | fewer than a run; not defined | its challenge met |
 | A depth of the void · the breakthrough trial | not defined | — |
 | Use a tamer skill, a weapon or a pill in battle | its tamer slot | [§6.5](#65-loadout) |
-| Lay Seal Ground | 1 Binding Seal, or free with the Seal skill | [§4.1](#41-obtaining-monsters) |
+| Lay Seal Ground | the tamer slot of the Seal skill | [§4.1](#41-obtaining-monsters) |
 | Spend stat points · develop a skill slot | free | points or a step |
 | Buy a node of the Way | Insight | the tree of the stage is open |
 | Brew · forge | materials | the building |
@@ -87,7 +87,7 @@ Every way yields an **individual** ([monsters.md §1](monsters.md#1-species-and-
 | **Eggs** | hatched in the Nest. An egg fixes species and bloodline; the player spends its stat points and chooses its four skills from the learnable list ([monsters.md §1](monsters.md#1-species-and-individual)). This holds for every egg, the first one too. Where further eggs come from is not defined |
 
 - **Void monsters** are never caught: a void egg is the trophy of a passed breakthrough trial ([monsters.md §3](monsters.md#3-kins)). Which trials give one is not defined.
-- **Two sources of Seal Ground,** both from the start: the Binding Seal item, used up when laid, and the Seal tamer skill, which costs nothing per battle but a tamer slot ([§5.4](#54-tamer-skills)). What limits a seal and its chances: [battle_ingame.md §7](battle_ingame.md#7-catching). How a Binding Seal is made is not defined.
+- **Seal Ground comes from the Seal tamer skill alone,** from the start; it costs nothing per battle but a tamer slot ([§5.4](#54-tamer-skills)). What limits a seal and its chance: [battle_ingame.md §7](battle_ingame.md#7-catching).
 - Breeding is not defined.
 
 ### 4.2 Defeat
@@ -130,7 +130,7 @@ STAGES      Qi Gathering → Foundation → Core Formation → Nascent Soul → 
 ### 5.2 The Breakthrough Trial
 
 - **The last depth of the void of a stage** ([vision.md §4](vision.md#4-where-battles-happen)): a battle on the player's own battleground. It asks for no material.
-- **Forced at the end of the lifespan;** losing that one loses the game ([vision.md §3](vision.md#3-the-day-and-the-lifespan)).
+- **Forced at the end of the lifespan;** losing that one loses the game ([vision.md §3](vision.md#3-the-day-and-the-lifespan)). The forced trial skips the depths not won yet, and with them their Insight.
 - What a trial lost earlier costs, the opponents of the five trials and how a monster breaks through to its next stage are not defined.
 
 ### 5.3 The Way
@@ -141,7 +141,7 @@ The outline: [vision.md §8](vision.md#8-growth).
 - **A tree per stage;** a breakthrough opens the next one. The trees of earlier stages stay open.
 - **Insight** comes from the depths of the void, one per depth won, and from nowhere else.
 - **A node** is one of: a tamer skill ([§5.4](#54-tamer-skills)), a development step for a tamer skill the player has.
-- **Branches exclude each other:** a tree has two branches, and the Insight of a stage buy about one of them. The Way of the Beast Lord: a pack (fight wide) and a champion (carry one monster). The Way of the Formation: hazard (ground and traps that harm) and bulwark (walls, props and Dragon Veins that take room). The Way of the Artificer: blade (the weapons of the forge) and cauldron (pills taken in the battle). Each system carries one pillar: the monsters, the board, the tamer.
+- **Branches exclude each other:** a tree has two branches, and the Insight of a stage buy about one of them. The Way of the Beast Lord: a pack (fight wide) and a champion (carry one monster). The Way of the Formation: hazard (ground and traps that harm) and bulwark (walls, props and Dragon Veins that take room). The Way of the Artificer: blade (the weapons of the forge) and cauldron (pills taken in the battle); its tamer skills work with what the tamer carries and do nothing by themselves. Each system carries one pillar: the monsters, the board, the tamer.
 - **Vows:** at the start of a game and after every breakthrough three vows are drawn; the player takes one or none, and at most three in a game. A vow is a strong benefit with a lasting restriction and holds for the rest of the game. It may shut out a Kin: the player binds no monster of that Kin again, and those in the roster stay. A benefit for the monsters "owned" means the roster at the moment of the vow.
 - The systems, their trees, the price of a node, the vows and what tells one system from another are not defined.
 
@@ -163,6 +163,10 @@ Tamer skills are **learned for good** and then brought into a battle in a tamer 
 | Second Wind | Core Formation | an own monster regains 1 HP |
 | Life Thread | Core Formation | the next time an own monster would fall it stays at 1 HP |
 | Beast Swap | Nascent Soul | exchange an active monster with one of the roster that is not in the battle |
+| Whetstone | Qi Gathering, Way of the Artificer | every weapon used in this battle may be used once more |
+| Shared Dose | Qi Gathering, Way of the Artificer | the next pill also acts on the own monsters next to the one that takes it |
+| Long Reach | Foundation, Way of the Artificer | the next weapon lays 1 square more |
+| Second Dose | Foundation, Way of the Artificer | every pill taken in this battle acts once more |
 
 - **Learning:** a tamer skill is a node of the Way. Which system offers which skill is not defined; Immortal and Sovereign list none yet.
 - **Use:** once per battle, free of battle AP, never used up; visible before the battle.
@@ -211,7 +215,7 @@ How many of each form there are and what each sets: [vision.md §7](vision.md#7-
 ### 6.2 Alchemy and Pills
 
 - **Every plant has three or four properties** of the list below, and exactly one flaw besides.
-- **A flaw is a property with a bad effect** and follows the same rule: a pill whose plants share a flaw has it. Two or three flaws exist *(working value)*; their list is not defined.
+- **A flaw is a property with a bad effect** and follows the same rule: a pill whose plants share a flaw has it. Two flaws *(working values)*: **Volatile** (the pill spoils in the night after it was brewed) and **Bitter** (the monster that takes it loses 1 HP, never its last: in a battle at once, outside a battle for its next one).
 - **Two or three plants that share a property give a pill with that effect;** the lowest tier among them is the pill's tier.
 - **A property is unknown until the player has made a pill with it.** The same plants always give the same pill; plants that share nothing give nothing and are lost.
 - A pill with two shared properties has both effects.
@@ -249,17 +253,17 @@ How many of each form there are and what each sets: [vision.md §7](vision.md#7-
 - **A weapon's skill** is fixed by its parts and does not develop.
 - **A weapon is a tamer skill paid with materials** instead of Insight ([§5.4](#54-tamer-skills)). There is no armour.
 - **One pair, two forms:** the same two parts give a weapon or a part of a battleground; the player chooses the form at the forge. A weapon lays its piece once per battle from a tamer slot; a part lies on the own battleground from the start. Every "what" is therefore something that lies on the board (a ground, a zone or a prop); effects on monsters stay tamer skills of the Way. No mineral is needed.
-- What each Kin gives as the first and as the second part is not defined.
+- **Drawn for the game:** which Kin gives which "what" and which "how" is drawn when a game starts ([§6.1](#61-materials)) and shown in the forge from the first day. The lists of what and how are not defined.
 - What a part costs and what the player can place before the first forged part are not defined.
 
 ### 6.4 Item Schema
 
 ```
 ITEM
- kind:   Material | Pill | Weapon | Seal | Egg | Battleground part
+ kind:   Material | Pill | Weapon | Egg | Battleground part
  tier:   a cultivation stage
  effect: none (materials) | on use (pills) | while carried (weapon)
-         | binds (seals) | hatches (eggs) | placed (battleground parts)
+         | hatches (eggs) | placed (battleground parts)
 ```
 
 ### 6.5 Loadout

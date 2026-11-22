@@ -56,9 +56,6 @@ static func from_instance(inst: MonsterInstance, _content: BattleContent = null)
 		var kin := KinDef.of(def.kin)
 		if kin != null:
 			s.innate = kin.passives(inst.gifts)
-		var worn: Dictionary = inst.armour_passive.get("flags", {})
-		if not worn.is_empty():                    # the passive of the armour it wears
-			s.innate.append(KinDef.make_passive(&"armour", String(inst.armour_passive.get("name", "Armour")), String(inst.armour_passive.get("text", "")), worn))
 	var kit := inst.kit_skills()
 	if kit.is_empty():
 		s.notes.append("no kit: Step only")

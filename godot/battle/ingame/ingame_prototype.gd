@@ -26,8 +26,7 @@ const GENERATED := "— generated board —"
 ## Catching (docs/battle_ingame.md §7): the enemy side is wild, and the seal of the player's loadout ("" = none).
 static var enemy_wild := true
 static var seal: StringName = &"seal"
-const SEALS: Array = [[&"", "no seal"], [&"seal", "Seal skill (50%)"], [&"seal_normal", "Normal Seal item (20%)"],
-	[&"seal_rare", "Rare Seal item (35%)"], [&"seal_epic", "Epic Seal item (50%)"], [&"seal_legendary", "Legendary Seal item (65%)"]]
+const SEALS: Array = [[&"", "no seal"], [&"seal", "Seal skill (50%)"]]
 
 var _points: Array[SpinBox] = []
 var _stage: Array[Label] = []

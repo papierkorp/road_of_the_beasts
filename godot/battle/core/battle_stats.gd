@@ -206,13 +206,14 @@ static func ignores_ground(u: BattleUnit, ground: StringName) -> bool:
 	return false
 
 
-## Push and pull do not move this unit: its own passive or an anchoring ally next to it.
-static func is_immovable(b: Battle, u: BattleUnit) -> bool:
+## Push and pull of `kind` ("strike": a Strike or another skill, "zone", "prop") do not move this unit: a timed
+## anchor, its own passive against that kind, or an anchoring ally next to it.
+static func is_immovable(b: Battle, u: BattleUnit, kind := "strike") -> bool:
 	for fx in u.effects:
 		if fx["tag"] == FieldEffect.ANCHOR:
 			return true
 	for s in u.passives():
-		if s.immovable:
+		if s.immovable or (s.unmoved_by != "" and s.unmoved_by == kind):
 			return true
 	for other in b.living(u.side):
 		if other.id == u.id:

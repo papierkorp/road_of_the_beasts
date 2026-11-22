@@ -156,7 +156,7 @@ static func end_turn(b: Battle) -> void:
 		# 1. push / pull
 		var d := zone_step(b, u) if not BattleStats.has_flag(u, &"ignores_zones") else Vector2i.ZERO
 		if d != Vector2i.ZERO:
-			BattleDisplace.shove(b, u, d, "zone")
+			BattleDisplace.shove(b, u, d, "zone", "zone")
 			BattlePayload.settle(b)
 			spring_traps(b)
 			if b.over:

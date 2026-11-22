@@ -164,7 +164,7 @@ func test_the_monster_builder_builds_and_checks_a_monster() -> void:
 	assert_array(m.skills.map(func(s): return s.id)).is_equal([&"glide", &"strike_jab", &"snare"])      # empty slots drop out
 	assert_str(MonsterBuilder.problem(c, m, true)).is_empty()
 	# values outside the ranges are pulled in; a kit needs an active skill; an existing id is refused for a new monster
-	var wild := MonsterBuilder.build(c, {"name": "Too Much", "hp": 99, "ap": 9, "reach": 0, "skills": ["immovable"]})
+	var wild := MonsterBuilder.build(c, {"name": "Too Much", "hp": 99, "ap": 9, "reach": 0, "skills": ["braced"]})
 	assert_array([wild.hp, wild.ap, wild.reach]).is_equal([10, 5, 1])        # ranges of gdd_monsters §2.1
 	assert_str(MonsterBuilder.problem(c, wild, true)).contains("active")
 	assert_str(MonsterBuilder.problem(c, MonsterBuilder.build(c, {"name": "Nothing"}), true)).contains("at least one skill")

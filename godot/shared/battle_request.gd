@@ -44,6 +44,9 @@ var player_starts: Array[Vector2i] = []
 var player_tamer: Array[StringName] = []
 ## Uses per battle of a loadout entry of the player that has more than one: tamer skill id -> uses.
 var player_tamer_uses := {}
+## Loadout entries of the player that are bitter pills (docs/overworld.md §6.2): the monster one is given to loses
+## 1 HP, never its last.
+var player_tamer_bitter: Array[StringName] = []
 var enemy_tamer: Array[StringName] = []
 ## Ingame battle (docs/battle_ingame.md §7): the enemy side has no tamer. Its monsters die at 0 HP and can be caught on
 ## Seal Ground. `roll_seed` seeds the catch rolls (the battle replays the same with the same seed).

@@ -8,7 +8,7 @@
 
 | Topic | Questions |
 |---|---|
-| The systems | How many to choose from in a first game; what tells one from another (its tamer skills, a way to play); what the branches of the Way of the Formation hold now that parts are forged |
+| The systems | How many to choose from in a first game; what tells one from another (its tamer skills, a way to play); what the branches of the Way of the Formation hold now that parts are forged. Decided: the Way of the Artificer holds tamer skills that work with the weapons and pills carried (four built as test content) |
 | A tree | How many nodes per stage; the price of a node; whether a game can buy every node of its tree or must choose |
 | Tamer skills | Which of the nine listed stay and which system offers which; Spirit Shield has no effect yet; Immortal and Sovereign list none; options for every skill besides Seal |
 | Beast Swap | Never played; it needs a monster of the roster outside the battle |

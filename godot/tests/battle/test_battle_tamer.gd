@@ -180,9 +180,9 @@ func test_beast_swap_takes_square_and_queue_entry_and_leaves_its_traps_set() -> 
 # ---------- weapons and pills of the hub game ----------
 
 func test_a_weapon_lays_ground_on_a_straight_line() -> void:
-	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"weapon_ember_brand"])
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"ember_line"])
 	b.begin()
-	var a := {"type": &"tamer", "side": 0, "skill": &"weapon_ember_brand"}
+	var a := {"type": &"tamer", "side": 0, "skill": &"ember_line"}
 	a["cells"] = [Vector2i(1, 1), Vector2i(2, 1), Vector2i(2, 2)]
 	assert_str(b.check(a)).contains("straight line")
 	a["cells"] = [Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 1)]
@@ -195,10 +195,10 @@ func test_a_weapon_lays_ground_on_a_straight_line() -> void:
 
 
 func test_a_weapon_sets_a_prop_that_lapses_like_a_created_one() -> void:
-	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"weapon_stone_seal"])
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"stone_wall"])
 	b.begin()
-	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"weapon_stone_seal", "cells": [Vector2i(3, 3)]})).contains("free square")
-	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"weapon_stone_seal", "cells": [Vector2i(3, 2)]})).is_true()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"stone_wall", "cells": [Vector2i(3, 3)]})).contains("free square")
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"stone_wall", "cells": [Vector2i(3, 2)]})).is_true()
 	var wall := b.board.prop_at(Vector2i(3, 2), Board.GROUND)
 	assert_object(wall).is_not_null()
 	assert_int(wall.until).is_equal(b.round_number + BoardProp.CREATED_ROUNDS - 1)
@@ -224,10 +224,95 @@ func test_a_swiftness_pill_raises_the_pace() -> void:
 
 
 func test_a_loadout_entry_with_two_uses_is_spent_after_the_second() -> void:
-	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"weapon_root_chain"])
-	b.tamer_uses[0][&"weapon_root_chain"] = 2
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"root_snare"])
+	b.tamer_uses[0][&"root_snare"] = 2
 	b.begin()
-	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"weapon_root_chain", "cells": [Vector2i(1, 1)]})).is_true()
-	assert_bool(b.tamer_spent(0, &"weapon_root_chain")).is_false()
-	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"weapon_root_chain", "cells": [Vector2i(2, 2)]})).is_true()
-	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"weapon_root_chain", "cells": [Vector2i(4, 4)]})).contains("already used")
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"root_snare", "cells": [Vector2i(1, 1)]})).is_true()
+	assert_bool(b.tamer_spent(0, &"root_snare")).is_false()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"root_snare", "cells": [Vector2i(2, 2)]})).is_true()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"root_snare", "cells": [Vector2i(4, 4)]})).contains("already used")
+
+
+func test_a_bitter_pill_costs_the_monster_it_is_given_to_one_hp_but_never_its_last() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9, "hp": 3}], [1, Vector2i(6, 6)]], [&"pill_swiftness", &"pill_anchoring"])
+	b.tamer_bitter[0] = [&"pill_swiftness", &"pill_anchoring"]
+	b.begin()
+	var u: BattleUnit = H.unit(b, 0)
+	u.hp = 2
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_swiftness", "unit": u.id})).is_true()
+	assert_int(u.hp).is_equal(1)
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_anchoring", "unit": u.id})).is_true()
+	assert_int(u.hp).is_equal(1)                           # never its last HP
+	assert_bool(u.is_alive()).is_true()
+
+
+func test_a_passive_holds_against_one_kind_of_push_only() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9, "ap": 4, "skills": [H.strike()]}], [0, Vector2i(3, 2), {"pace": 1.1, "skills": ["braced"]}],
+		[0, Vector2i(5, 2), {"pace": 1.0, "skills": ["grounded"]}], [1, Vector2i(6, 6), {"pace": 1.0}]], [])
+	b.begin()
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 2))             # Braced: a Strike does not move it
+	assert_bool(BattleStats.is_immovable(b, H.unit(b, 1), "zone")).is_false()
+	assert_bool(BattleDisplace.shove(b, H.unit(b, 1), H.UP, "zone", "zone")).is_true()      # a zone does
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(3, 1))
+	assert_bool(BattleDisplace.shove(b, H.unit(b, 2), H.UP, "zone", "zone")).is_false()     # Grounded: no zone moves it
+	assert_bool(BattleDisplace.shove(b, H.unit(b, 2), H.UP, "a prop", "prop")).is_true()    # a prop does
+	for id: StringName in [&"braced", &"grounded", &"weighted"]:
+		assert_bool(H.content().skill(id).immovable).is_false()        # no passive of the game holds against every push
+
+
+## A forged weapon for the tests: a tamer skill of the source "weapon" that lays Snare on one square.
+func _weapon(b: Battle) -> TamerSkillDef:
+	var w: TamerSkillDef = H.content().tamer_skill(&"root_snare").duplicate()
+	w.id = &"test_weapon"
+	w.source = "weapon"
+	b.tamer_loadout[0].append(w)
+	return w
+
+
+func test_whetstone_gives_every_used_weapon_one_more_use_and_second_dose_every_pill() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"whetstone", &"second_dose", &"pill_swiftness"])
+	var w := _weapon(b)
+	b.begin()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"whetstone", "unit": &"u0"})).contains("no weapon was used")
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": w.id, "cells": [Vector2i(1, 1)]})).is_true()
+	assert_bool(b.tamer_spent(0, w.id)).is_true()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"whetstone", "unit": &"u0"})).is_true()
+	assert_bool(b.tamer_spent(0, w.id)).is_false()
+	assert_bool(b.tamer_spent(0, &"whetstone")).is_true()                  # the skill itself is used once
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": w.id, "cells": [Vector2i(2, 2)]})).is_true()
+	assert_bool(b.tamer_spent(0, w.id)).is_true()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"second_dose", "unit": &"u0"})).contains("no pill was used")
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_swiftness", "unit": &"u0"})).is_true()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"second_dose", "unit": &"u0"})).is_true()
+	assert_bool(b.tamer_spent(0, &"pill_swiftness")).is_false()
+	assert_bool(b.tamer_spent(0, w.id)).is_true()                          # Second Dose renews pills, not weapons
+
+
+func test_long_reach_lets_the_next_weapon_lay_one_square_more() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [1, Vector2i(6, 6)]], [&"long_reach", &"root_snare"])
+	var w := _weapon(b)
+	b.tamer_uses[0][w.id] = 2
+	b.begin()
+	var two := {"type": &"tamer", "side": 0, "skill": w.id, "cells": [Vector2i(1, 1), Vector2i(1, 2)]}
+	assert_str(b.check(two)).contains("up to 1")
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"long_reach", "unit": &"u0"})).is_true()
+	assert_int(b.lay_count(0, w)).is_equal(2)
+	assert_int(b.lay_count(0, H.content().tamer_skill(&"root_snare"))).is_equal(1)      # a tamer skill is no weapon
+	assert_bool(b.apply(two)).is_true()
+	assert_str(String(b.board.at(Vector2i(1, 2)).ground)).is_equal("snare")
+	assert_int(b.lay_count(0, w)).is_equal(1)                              # spent on that weapon
+
+
+func test_shared_dose_spreads_the_next_pill_to_the_own_monsters_next_to_its_taker() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9}], [0, Vector2i(3, 2), {"pace": 1.1}], [0, Vector2i(5, 5), {"pace": 1.0}],
+		[1, Vector2i(6, 6), {"pace": 0.9}]], [&"shared_dose", &"pill_anchoring", &"pill_warding"])
+	b.begin()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"shared_dose", "unit": &"u0"})).is_true()
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_anchoring", "unit": &"u0"})).is_true()
+	assert_bool(BattleStats.is_immovable(b, H.unit(b, 0))).is_true()
+	assert_bool(BattleStats.is_immovable(b, H.unit(b, 1))).is_true()       # next to the taker
+	assert_bool(BattleStats.is_immovable(b, H.unit(b, 2))).is_false()      # too far
+	assert_bool(b.apply({"type": &"tamer", "side": 0, "skill": &"pill_warding", "unit": &"u0"})).is_true()
+	assert_bool(H.unit(b, 0).nullify).is_true()
+	assert_bool(H.unit(b, 1).nullify).is_false()                           # only the next pill spreads

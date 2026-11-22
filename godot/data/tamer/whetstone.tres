@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1")
-id = &"weapon_gale_fan"
-display_name = "Gale Fan"
-effect = "urgent_order"
-description = "One own monster that has not acted this round acts next."
-source = "weapon"
+id = &"whetstone"
+display_name = "Whetstone"
+effect = "renew"
+description = "Every weapon you used in this battle may be used once more."
+renew_source = "weapon"

@@ -11,7 +11,7 @@ func build(into: VBoxContainer) -> void:
 		var card := HubUi.card(list)
 		card.add_child(HubUi.label(HubUi.monster_lines(m)))
 		card.add_child(HubUi.dim(HubUi.kin_lines(m)))
-		card.add_child(HubUi.dim("%s · %s · %d stat points and %d development steps unspent" % [MonsterInstance.Rarity.keys()[m.rarity].capitalize(), m.xp_text(), m.unspent, m.dev_steps]))
+		card.add_child(HubUi.dim("%s · %s · %d stat points and %d development steps unspent" % ["%s bloodline" % m.bloodline_name(), m.xp_text(), m.unspent, m.dev_steps]))
 		var todo := HubUi.todo_text(m)
 		if todo != "":
 			card.add_child(HubUi.label(todo, 20, HubUi.GOOD))

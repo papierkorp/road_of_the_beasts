@@ -23,11 +23,12 @@ func _known_text(plant: StringName) -> String:
 		names.append(String(Crafting.property(game.values, StringName(p)).get("name", p)))
 	for i in game.values.properties_per_plant - names.size():
 		names.append("?")
-	return ", ".join(names)
+	var flaw := Crafting.flaw_def(game.values, Crafting.known_flaw(game, plant))
+	return "%s · flaw: %s" % [", ".join(names), flaw.get("name", "?")]
 
 
 func build(into: VBoxContainer) -> void:
-	into.add_child(HubUi.dim("Every plant has %d properties, drawn anew for every game. Two or three different plants that share a property give a pill with that effect; plants that share nothing are lost. A property is unknown until you made a pill with it." % game.values.properties_per_plant))
+	into.add_child(HubUi.dim("Every plant has %d properties and one flaw, drawn anew for every game. Two or three different plants that share a property give a pill with that effect; plants that share nothing are lost. A flaw follows the same rule: if every plant in the pill has it, so has the pill. A property or a flaw is unknown until you made a pill with it." % game.values.properties_per_plant))
 	picked = picked.filter(func(item: String) -> bool: return game.count(item) > 0)
 	var list := HubUi.scroll(into)
 	var plants := HubUi.card(list)
@@ -64,6 +65,9 @@ func build(into: VBoxContainer) -> void:
 		var uses: PackedStringArray = []
 		for p in Crafting.pill_properties(pill):
 			uses.append(String(Crafting.property(game.values, StringName(p)).get("pill", p)))
+		var flaw := Crafting.flaw_def(game.values, Materials.flaw(pill))
+		if not flaw.is_empty():
+			uses.append("flaw: %s" % flaw["text"])
 		pills.add_child(HubUi.label("%s ×%d — %s" % [Materials.display_name(pill, game.values), game.count(pill), "; ".join(uses)]))
 	if PillUse.pills(game).is_empty():
 		pills.add_child(HubUi.dim("None yet."))

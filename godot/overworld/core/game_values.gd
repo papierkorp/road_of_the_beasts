@@ -52,8 +52,9 @@ const PATH := "res://data/game/values.tres"
 @export var dungeon_layers: PackedInt32Array
 ## Enemies per node, per stage: [least, most]; the last battle fields one more.
 @export var dungeon_enemies: Array = []
-## Materials a won node gives.
+## Plants a won node gives; the last battle gives `dungeon_last_loot` more.
 @export var dungeon_node_loot := 0
+@export var dungeon_last_loot := 0
 ## Share of the loot kept after a defeat, in percent.
 @export var dungeon_defeat_keeps := 0
 ## Layers (0-based) that hold a rest node beside the battles; a rest heals `rest_heal` HP per monster.
@@ -61,10 +62,10 @@ const PATH := "res://data/game/values.tres"
 @export var rest_heal := 0
 ## The challenge per stage: {"kind": "streak" (runs won in a row) | "rounds" (the last battle won within n rounds), "n": int}.
 @export var dungeon_challenges: Array = []
-## Materials a harvest gives.
+## Plants a harvest gives.
 @export var harvest_yield := 0
-## A run costs every day AP left, and needs at least this many; a harvest costs this many.
-@export var dungeon_min_ap := 0
+## A run costs this many day AP, a harvest `harvest_ap`.
+@export var dungeon_ap := 0
 @export var harvest_ap := 0
 
 @export_group("Void and trial (T56)")
@@ -74,8 +75,9 @@ const PATH := "res://data/game/values.tres"
 @export var void_enemies: PackedInt32Array
 ## Steps of growth a void monster stands above the High sub-tier of the stage, per depth.
 @export var void_steps_above: PackedInt32Array
-## Breakthrough materials the trial asks for.
-@export var trial_materials := 0
+## The Sovereign beast, the last depth of the void: how many void monsters and their step of growth (0–17).
+@export var sovereign_enemies := 1
+@export var sovereign_step := 17
 
 @export_group("The player's battleground (T56)")
 @export var bg_min_side := 0
@@ -90,8 +92,6 @@ const PATH := "res://data/game/values.tres"
 @export var bg_start_parts: Dictionary = {}
 ## The battleground the player starts with, in the format of MapData ({} = none).
 @export var bg_start_map: Dictionary = {}
-## Materials one unit of a part costs to build: form -> number (the tier is the tamer's stage or below).
-@export var bg_part_cost: Dictionary = {}
 
 @export_group("Battlegrounds of the places (T55)")
 ## {"id": map id, "stage": first stage it appears in, "mine": free squares of the player's start area, "theirs": of the enemy's}.
@@ -103,12 +103,13 @@ const PATH := "res://data/game/values.tres"
 ## Properties a plant can have: {"id", "name", "pill", "use": "battle" | "hub" | "dungeon"}.
 @export var properties: Array = []
 @export var properties_per_plant := 0
-## Variations an essence can give a forged piece (names only; a piece has no effect in a battle yet).
-@export var tempers: Array = []      # {"name", "text"}, by the tier of the essence
-## What the core of a forged piece gives, by the Kin of the beast part (one entry per Kin): {"name", "text"}.
-## The skill of a weapon, the passive of an armour; names and texts only, a piece has no effect in a battle yet.
-@export var weapon_skills: Array = []
-@export var armour_passives: Array = []
+## Flaws a plant can have, one each: {"id", "name", "text"}. The build reads the ids volatile and bitter.
+@export var flaws: Array = []
+## The forge (docs/overworld.md §6.3), one entry per Kin of the beast part. What the first part makes:
+## {"name", "text", "ground": id} or {"name", "text", "prop": id}.
+@export var forge_what: Array = []
+## How the piece acts, by the second part: {"name", "text", "count": squares in a straight line, "uses": per battle}.
+@export var forge_how: Array = []
 
 
 static var _shared: GameValues

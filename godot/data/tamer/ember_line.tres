@@ -4,9 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = &"weapon_stone_seal"
-display_name = "Stone Seal"
+id = &"ember_line"
+display_name = "Ember Line"
 effect = "lay"
-description = "Sets an Earth Wall on a free square; it stands 2 rounds."
-lay_prop = &"earth_wall"
-source = "weapon"
+description = "Lays Lava on a line of up to 3 squares."
+lay_ground = &"lava"
+lay_count = 3
+source = "skill"

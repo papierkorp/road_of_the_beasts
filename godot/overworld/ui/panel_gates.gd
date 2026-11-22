@@ -16,7 +16,7 @@ func hint() -> String:
 
 
 func tabs() -> Array:
-	return [[&"wild", "Wild area (%d AP)" % game.values.wild_ap, WildPanel], [&"dungeon", "Dungeon (all AP left, min %d)" % game.values.dungeon_min_ap, DungeonPanel],
+	return [[&"wild", "Wild area (%d AP)" % game.values.wild_ap, WildPanel], [&"dungeon", "Dungeon (%d AP)" % game.values.dungeon_ap, DungeonPanel],
 		[&"void", "Void (%d AP)" % game.values.void_ap, VoidPanel]]
 
 

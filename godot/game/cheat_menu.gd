@@ -67,7 +67,7 @@ func _ready() -> void:
 	_add("Tamer: next stage", func(g): return Cheats.stage_up(g))
 	_add("Monsters: next stage", func(g): return Cheats.monsters_stage_up(g))
 	_add("Heal all monsters", func(g): return Cheats.heal_all(g))
-	_add("+3 path points", func(g): return Cheats.give_points(g, 3))
+	_add("+3 Insight", func(g): return Cheats.give_points(g, 3))
 	_add("+3 of every material", func(g): return Cheats.give_materials(g, 3))
 
 

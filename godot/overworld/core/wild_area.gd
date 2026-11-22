@@ -37,8 +37,8 @@ static func _fight(game: GameState, zone: int, tag: String, with_day: bool, rare
 	f.wild = true
 	f.roll_seed = rng.randi_range(1, 1 << 30)
 	if rare:
-		f.enemies = Places.monsters(rng, 1, GameState.step_of(zone, 2), MonsterInstance.Rarity.RARE)
-		f.loot_text = "monster XP, a beast part, an egg of this species; it can be caught (Rare)"
+		f.enemies = Places.monsters(rng, 1, GameState.step_of(zone, 2), MonsterInstance.Bloodline.SPIRIT)
+		f.loot_text = "monster XP, a beast part, an egg of this species; it can be caught (Spirit bloodline)"
 	else:
 		var n := Places.enemy_count(game.values.wild_enemies, zone, rng, int(map["theirs"]))
 		f.enemies = Places.monsters(rng, n, GameState.step_of(zone, rng.randi_range(0, 2)))
@@ -106,13 +106,8 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 			game.say("%s was caught, but %s: it went free." % [m.species().display_name, "your vow forbids its Kin" if game.kin_banned(int(m.species().kin)) else "the roster is full"])
 	if won:
 		var loot := {}
-		for e in result.enemy:
-			var i: int = e["index"]
-			if bool(e.get("died", false)) and i < f.enemies.size():
-				var part := Materials.beast_part(int(f.enemies[i].species().kin))
-				loot[part] = int(loot.get(part, 0)) + 1
-		if game.vow_sum("wild_ore") > 0:
-			loot[Materials.ore(f.stage)] = game.vow_sum("wild_ore")
+		for part in Places.beast_parts(f, result):
+			loot[part] = int(loot.get(part, 0)) + 1
 		for id in loot:
 			game.add_item(id, int(loot[id]))
 		game.say("%s won. Loot: %s." % [f.title, Materials.list_text(loot, game.values)])
@@ -120,7 +115,7 @@ static func resolve(game: GameState, f: Fight, result: BattleResult, won: bool) 
 			game.say(line)
 		var roll := game.rng_for("egg%d_%s" % [game.day, f.ref]).randi_range(1, 100)
 		var egg := (f.ref.has("rare") or roll <= game.values.egg_chance or game.vow_has("wild_egg")) and not game.vow_has("no_wild_eggs")
-		if egg and not f.enemies.is_empty() and game.add_egg(f.enemies[0].species_id):
+		if egg and not f.enemies.is_empty() and game.add_egg(f.enemies[0].species_id, int(f.enemies[0].bloodline)):
 			game.say("You found an egg: %s." % f.enemies[0].species().display_name)
 	else:
 		game.say("%s lost. The AP are spent." % f.title)

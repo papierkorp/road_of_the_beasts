@@ -30,6 +30,12 @@ var hub_tabs := {}
 var editor_job: BattlegroundJob = null
 
 
+## The battle content with the forged weapons of the running game in it (the screen that prepares a fight).
+func battle_content() -> BattleContent:
+	Forged.ensure(game.values if game != null else GameValues.shared())
+	return BattleContent.shared()
+
+
 func map_summary(f: Fight) -> String:
 	return MapData.summary(FightBridge.map_of(f), BattleContent.shared())
 

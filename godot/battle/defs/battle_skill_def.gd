@@ -143,8 +143,12 @@ const PASSIVE := "passive"
 ## (collision_self = only when it is the one pushed or pulled).
 @export var reduces_damage: Array[String] = []
 @export var reduction: int = 1
-## Ignores push and pull.
+## Ignores push and pull of every source. No passive of the game may have it (docs/skills.md §6): it is left for
+## the skill builder of the tools.
 @export var immovable: bool = false
+## Is not pushed or pulled by one source (docs/skills.md §6): "strike" (a Strike or another skill), "zone" or
+## "prop". A passive names one at most.
+@export var unmoved_by: String = ""
 ## Cannot move voluntarily (Step and movement skills).
 @export var rooted: bool = false
 ## Allies orthogonally adjacent cannot be pushed or pulled.

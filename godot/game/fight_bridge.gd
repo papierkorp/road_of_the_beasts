@@ -11,6 +11,7 @@ static func map_of(f: Fight) -> MapDef:
 
 ## An ingame battle on a battleground with the monsters as they are (their stats, their current HP).
 static func request_of(f: Fight) -> BattleRequest:
+	Forged.ensure(GameValues.shared())          # a forged weapon in the loadout is a tamer skill the battle must know
 	var r := BattleRequest.new()
 	r.battle_kind = BattleRequest.INGAME
 	r.map = map_of(f)
@@ -18,6 +19,7 @@ static func request_of(f: Fight) -> BattleRequest:
 	r.enemy_team = f.enemies
 	r.player_tamer = f.tamer.duplicate()
 	r.player_tamer_uses = f.tamer_uses.duplicate()
+	r.player_tamer_bitter = Crafting.bitter_entries(f)
 	r.enemy_wild = f.wild
 	r.roll_seed = f.roll_seed
 	return r

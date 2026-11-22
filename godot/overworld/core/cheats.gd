@@ -33,7 +33,7 @@ static func heal_all(g: GameState) -> String:
 
 static func give_points(g: GameState, n: int) -> String:
 	g.path_points += n
-	return "+%d path points." % n
+	return "+%d Insight." % n
 
 
 static func give_materials(g: GameState, n: int) -> String:
@@ -50,7 +50,7 @@ static func stage_up(g: GameState) -> String:
 	return "You are now at %s." % Stage.stage_name(g.stage)
 
 
-## Every monster grows to the first step of the next stage, as far as the tamer's stage and its rarity allow.
+## Every monster grows to the first step of the next stage, as far as the tamer's stage allows.
 static func monsters_stage_up(g: GameState) -> String:
 	var n := 0
 	for m in g.roster:
@@ -60,4 +60,4 @@ static func monsters_stage_up(g: GameState) -> String:
 				m.gain_xp(MonsterInstance.XP_STEPS[m.step()] - m.xp, g.stage)
 		if int(m.stage) > before:
 			n += 1
-	return "%d monster(s) rose a stage." % n if n > 0 else "No monster can rise: they never pass your stage or the last stage of their rarity."
+	return "%d monster(s) rose a stage." % n if n > 0 else "No monster can rise: they never pass your stage."

@@ -98,10 +98,12 @@ func test_a_rare_encounter_is_announced_stays_and_leaves() -> void:
 	e = WildArea.rare_entry(g, 0)
 	assert_int(e.appears_in).is_equal(0)
 	assert_int(e.stays).is_equal(v.rare_stays)
-	assert_int(int(e.fight.enemies[0].rarity)).is_equal(int(MonsterInstance.Rarity.RARE))
+	assert_int(int(e.fight.enemies[0].bloodline)).is_equal(int(MonsterInstance.Bloodline.SPIRIT))
+	assert_int(e.fight.enemies[0].gifts.size()).is_equal(1)
 	e.fight.team = g.default_team(1)
 	Places.resolve(g, e.fight, _result(e.fight, true))
 	assert_bool(WildArea.rare_entry(g, 0).gone).is_true()
 	assert_int(g.eggs.size()).is_equal(1)
+	assert_int(int(g.eggs[0]["bloodline"])).is_equal(int(MonsterInstance.Bloodline.SPIRIT))      # an egg fixes the bloodline
 	g.day = v.rare_every + v.rare_stays
 	assert_object(WildArea.rare_entry(g, 0)).is_null()

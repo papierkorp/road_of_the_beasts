@@ -1,7 +1,7 @@
 class_name WorkshopPanel
 extends HubPanel
-## Battleground Workshop (docs/battle_ingame.md §3): build parts from blueprints and materials, and shape the
-## battleground for the void in the map editor.
+## Battleground Workshop (docs/battle_ingame.md §3): shape the battleground for the void in the map editor, from the
+## parts the forge made.
 
 
 func title() -> String:
@@ -13,7 +13,7 @@ func pillar() -> String:
 
 
 func hint() -> String:
-	return "Build and shape your battleground"
+	return "Shape your battleground"
 
 
 func build(into: VBoxContainer) -> void:
@@ -30,30 +30,13 @@ func build(into: VBoxContainer) -> void:
 	var weights: PackedStringArray = []
 	for k in v.bg_weights:
 		weights.append("%s %d" % [String(k).replace("_", " "), int(v.bg_weights[k])])
-	parts.add_child(HubUi.dim("A placed part counts toward the budget: %s. One unit costs: %s." % [", ".join(weights), _cost_text()]))
+	parts.add_child(HubUi.dim("A placed part counts toward the budget: %s. Parts are forged from two beast parts." % ", ".join(weights)))
 	var ids: Array[String] = []
 	for p: String in game.parts:
 		ids.append(p)
-	for b in game.blueprints:
-		if not ids.has(String(b)):
-			ids.append(String(b))
 	ids.sort()
 	for part in ids:
-		var row := HubUi.row()
-		parts.add_child(row)
-		var known := game.blueprints.has(StringName(part))
-		row.add_child(HubUi.label("%s — owned: %d%s" % [GameSession.part_name(part), int(game.parts.get(part, 0)), "" if known else " (no blueprint)"]))
-		var b := HubUi.button("Build one", func():
-			Cultivation.build_part(game, part)
-			hub.refresh(), 200)
-		b.disabled = not Cultivation.can_build(game, part)
-		row.add_child(b)
-	if game.blueprints.is_empty():
-		parts.add_child(HubUi.dim("Blueprints come from the tree in the Cultivation Hall."))
-
-
-func _cost_text() -> String:
-	var out: PackedStringArray = []
-	for form: String in game.values.bg_part_cost:
-		out.append("%d %s" % [int(game.values.bg_part_cost[form]), form])
-	return ", ".join(out)
+		parts.add_child(HubUi.label("%s — owned: %d" % [GameSession.part_name(part), int(game.parts.get(part, 0))]))
+	if ids.is_empty():
+		parts.add_child(HubUi.dim("None yet."))
+	parts.add_child(HubUi.button("To the Forge", hub.open.bind(&"forge", &""), 240))

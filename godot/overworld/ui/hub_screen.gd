@@ -209,9 +209,8 @@ func _build_prepare() -> void:
 			refresh())
 		mine.add_child(b)
 	var slots := HubUi.card(list)
-	slots.add_child(HubUi.label("Tamer slots: %d filled; %d for anything%s%s — a tamer skill, a weapon or a pill each, once in the battle" % [f.tamer.size(), game.tamer_slots(),
-		", %d for a weapon only" % game.vow_sum("weapon_slot") if game.vow_sum("weapon_slot") > 0 else "", ", %d for a pill only" % game.vow_sum("pill_slot") if game.vow_sum("pill_slot") > 0 else ""], 20, UiTheme.ACCENT))
-	var content := BattleContent.shared()
+	slots.add_child(HubUi.label("Tamer slots: %d of %d filled — a tamer skill, a weapon or a pill each, once in the battle" % [f.tamer.size(), game.tamer_slots()], 20, UiTheme.ACCENT))
+	var content := GameSession.battle_content()
 	for id in game.tamer_skills:
 		var def := content.tamer_skill(id)
 		var b := Button.new()
@@ -241,15 +240,18 @@ func _build_prepare() -> void:
 		b.toggle_mode = true
 		b.button_pressed = f.tamer.has(id)
 		b.disabled = not f.tamer.has(id) and not _fits(f, id, item)
-		b.text = "%s ×%d — %s (%s)" % [Materials.display_name(item, game.values), game.count(item), def.description, def.source_text()]
+		var uses := Crafting.battle_uses(game, item)
+		var flaw := Crafting.flaw_def(game.values, Materials.flaw(item))
+		b.text = "%s ×%d — %s (%s%s)%s" % [Materials.display_name(item, game.values), game.count(item), def.description, def.source_text(),
+			", %d uses" % uses if uses > 1 else "", " — flaw: %s" % flaw["text"] if not flaw.is_empty() else ""]
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.custom_minimum_size = Vector2(0, HubUi.TAP)
 		b.toggled.connect(func(on: bool):
 			if on and not f.tamer.has(id):
 				f.tamer.append(id)
 				f.tamer_items[id] = item
-				if Materials.form(item) == "weapon" and game.vow_sum("weapon_uses") > 1:
-					f.tamer_uses[id] = game.vow_sum("weapon_uses")
+				if uses > 1:
+					f.tamer_uses[id] = uses
 			elif not on:
 				f.tamer.erase(id)
 				f.tamer_items.erase(id)
@@ -261,14 +263,11 @@ func _build_prepare() -> void:
 	_body.add_child(go)
 
 
-## Whether one more loadout entry fits the tamer slots (`item` = the weapon or pill it stands for, "" = a skill).
-func _fits(f: Fight, id: StringName, item: String) -> bool:
+## Whether one more loadout entry fits the tamer slots.
+func _fits(f: Fight, id: StringName, _item: String) -> bool:
 	var loadout := f.tamer.duplicate()
 	loadout.append(id)
-	var items := f.tamer_items.duplicate()
-	if item != "":
-		items[id] = item
-	return game.loadout_fits(loadout, items)
+	return game.loadout_fits(loadout)
 
 
 func _start_fight() -> void:

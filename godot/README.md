@@ -63,33 +63,33 @@ that knows both halves (menu, `GameSession`, saves). `shared/` no longer depends
 
 ## The hub game
 
-Main menu → New Game: choose a cultivation system and one of three eggs, then the hub. Continue loads the one save.
+Main menu → New Game: choose a Way and one of three eggs, then the hub. Continue loads the one save.
 The hub shows the day, the day AP, the stage and the lifespan; a building opens its panel. A fight is prepared on
 one screen (battleground, opponents, team, tamer slots) and fought in the battle scene; the hub reads the result.
 
 | Building | What works |
 |---|---|
-| Monsters · Roster and eggs | the roster and its order, release, eggs with their nights; the Kin trait and the gifts of each monster |
+| Monsters · Roster and eggs | the roster and its order, release, eggs with their nights; the bloodline, the Kin trait and the gifts of each monster |
 | Monsters · Stats | spending the stat points of each step (the prices of docs/monsters.md §2.2); a monster fresh from the egg takes its points back until its first battle |
-| Monsters · Skills and growth | the kit of each monster: 4 slots at the start, filled from what it can learn; the development level of each slot; the choice at a stage breakthrough (a new slot, a development step, a gift of its Kin) |
-| Gates · Wild area | today's encounters per zone (one zone per stage reached), a battle for day AP at full HP, XP, a beast part per monster killed, catching on Seal Ground, eggs, a rare encounter that is announced and stays |
-| Gates · Dungeon | a run for all day AP of a full day: a generated map of nodes with forks and a rest node, HP stay, healing pills between battles, leaving keeps the loot, a defeat keeps a share, the last battle gives the breakthrough material and an essence; a challenge per dungeon, then the harvest without a battle |
-| Cauldron | brewing two or three plants, properties drawn per game and found by trying; pills that reshape, raise the rarity or heal in a dungeon |
-| Forge | a list of every weapon and armour with what it does and needs (nothing is found by trying); forging one from ore, a beast part and an optional essence; an armour is worn by a monster (no effect in a battle) |
-| Gates · Void | the depths of the stage on the player's own battleground, a path point per depth, the last depth as the breakthrough trial; forced at the end of the lifespan, and lost then the game is lost |
-| Cultivation Hall | the tree of the system, a tree per stage: tamer skills and blueprints for path points |
-| Battleground Workshop | building parts from blueprints and materials; the map editor on the own battleground with owned parts, a budget, a size range and a reachable start area of the opponent |
-| Inventory | everything the player owns in one list: stage and path points, monsters, materials, pills, forged pieces, parts and blueprints |
+| Monsters · Skills and growth | the kit of each monster: 4 slots at the start, filled from what it can learn; the development level of each slot; the choice at a stage breakthrough (a new slot, a development step, a gift of its Kin; for a higher bloodline also Lore and Reshape); the gifts its bloodline awakens |
+| Gates · Wild area | today's encounters per zone (one zone per stage reached), a battle for day AP at full HP, XP, a beast part per monster killed, catching on Seal Ground, eggs, a rare encounter of the Spirit bloodline that is announced and stays |
+| Gates · Dungeon | a run for a fixed number of day AP: a generated map of nodes with forks and a rest node, HP stay, healing pills between battles, leaving keeps the loot, a defeat keeps a share; plants per node and a beast part per monster killed, no monster XP; a challenge per dungeon, then the harvest of plants without a battle |
+| Cauldron | brewing two or three plants; properties and one flaw per plant (Volatile: spoils in the night; Bitter: 1 HP of the monster that takes it), drawn per game and found by trying; pills that reshape, raise the bloodline, lift a monster that lags behind or heal in a dungeon |
+| Forge | two beast parts make a piece: the first says what it lays, the second how; which Kin gives what is drawn per game and shown before forging; the same pair as a weapon for a tamer slot or as parts of the own battleground |
+| Gates · Void | the depths of the stage on the player's own battleground, one Insight per depth, the last depth as the breakthrough trial; forced at the end of the lifespan, and lost then the game is lost. The Sovereign beast: shown from the first day, open to an attack in any year, the trial of the last stage; who defeats it has won |
+| Cultivation Hall | the tree of the Way, a tree per stage: tamer skills for Insight; the vows |
+| Battleground Workshop | the map editor on the own battleground with the forged parts, a budget, a size range and a reachable start area of the opponent |
+| Inventory | everything the player owns in one list: stage and Insight, monsters, materials, pills, weapons and parts |
 
 **Test values.** Every number of the hub game lies in `data/game/values.tres` (class `GameValues`, one comment per
 field), the systems in `data/cultivation/`. None is a rule: the rule files say "not defined" for each (tasks T54–T60).
 The values are chosen so that one stage can be played in about half an hour: 3 day AP and 8 days of lifespan at the
 first stage, 4 encounters a day, a dungeon of 6 battle nodes and a rest of which a run passes 4, 3 depths of the
-void, 1 breakthrough material for the trial, 30 XP per win against 60 for the first step. A dungeon run needs 2
-day AP and takes all that are left, a harvest costs 1. The hub shows a day as a year and day AP as AP.
+void, 30 XP per win against 60 for the first step. A dungeon run costs 2 day AP, a harvest 1. The hub shows a day
+as a year and day AP as AP. The lifespans are not yet set for a game of three to four hours (T54).
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
-("Hub Game"). **Not built:** the effect of a development level, of the tier of a forged piece and of its temper, the Kin gifts
+("Hub Game"). **Not built:** the effect of a development level, the Kin gifts
 that `data/kins/` gives no flags (stored and shown as "not built"), species skills, the relearning pill,
 anything a finished game leaves besides more species to draw eggs from, ends of a battle other
 than 0 HP, board events, content beyond the first two stages (later stages reuse it; the trees end at
@@ -110,24 +110,27 @@ which the multiplayer battle, the prototype and the tools never see (`GameData.m
 test content. Creatures of the void are met in the void only, are never caught, and a passed trial leaves an
 egg of one. The hub shows a skill as the battle card does (`GameSession.skill_text`), not its free text.
 
-**Weapons, pills and armour in the battle.** A forged weapon and a pill that acts in a battle are put into a
-tamer slot on the screen that prepares a fight; each is a `TamerSkillDef` in `data/tamer/` (`weapon_*`, `pill_*`)
-with the effects `lay` (ground or a prop on a straight line of squares), `boon` (a timed effect on one own
-monster) or one of the tamer skills. A pill that was taken is used up after the battle, a weapon never. An armour
-gives its wearer a passive without a slot, by flags like a Kin trait (`armour_passives` in `values.tres`). All
-eight weapons, three battle pills and eight armours are test content.
+**Weapons and pills in the battle.** A forged weapon and a pill that acts in a battle are put into a tamer slot on
+the screen that prepares a fight. A pill is a `TamerSkillDef` in `data/tamer/` (`pill_*`) with the effect `boon` (a
+timed effect on one own monster) or one of the tamer skills; it is used up after the battle. A weapon is a
+`TamerSkillDef` with the effect `lay` (ground or a prop on a straight line of squares) that `game/forged.gd` builds
+at run time from the two beast parts it was forged from (`forge_what`, `forge_how` in `values.tres`: eight times
+eight weapons; which Kin gives which entry is shuffled per game); one whose second part says so is used twice per
+battle (`BattleRequest.player_tamer_uses`). A bitter pill costs the monster it is given to 1 HP, never its last
+(`BattleRequest.player_tamer_bitter`). All of it is test content.
 
 **Vows.** Three are offered at the start and after every breakthrough, in the Cultivation Hall; one or none is
 taken, at most three in a game (`GameState.offer_vows`, `take_vow`). The sixteen vows and what each changes are
 data (`vows` in `values.tres`: a text for gain and price and two effect keys the code reads).
 
-**Systems.** Three in `data/cultivation/`: Beast Lord (pack, champion), Formation (hazard, bulwark), Artificer
-(blade, cauldron). A node is a tamer skill, a blueprint or a perk (a text and one effect key, read through
-`GameState.vow_sum` like a vow). A rack or a pouch is a tamer slot that only a weapon or a pill fills
-(`GameState.loadout_fits`); Twin Grip gives a weapon two uses (`BattleRequest.player_tamer_uses`).
+**Ways.** Three in `data/cultivation/`: Beast Lord (pack, champion), Formation (hazard, bulwark), Artificer
+(blade, cauldron). A node is a tamer skill; there are no perks and no blueprints. The Artificer holds four skills
+that work with what the tamer carries (`whetstone`, `long_reach`, `shared_dose`, `second_dose`; the effects `renew`,
+`extend` and `spread` of `TamerSkillDef`). The Formation holds four skills
+that lay ground or a wall in any battle (`data/tamer/thorn_field`, `root_snare`, `ember_line`, `stone_wall`).
 
 **Cheat menu:** the action `toggle_cheats` or the button in the bottom-right corner: refill day AP, change the
-lifespan, XP, path points, materials; the next stage for the tamer and for the monsters.
+lifespan, XP, Insight, materials; the next stage for the tamer and for the monsters.
 
 ## Battle architecture
 
@@ -302,9 +305,9 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   tamer at a time, `Battle.seals`). A wild monster that ends its turn on enemy Seal Ground is rolled for
   (`seal_base` − `BattleExperiment.seal_step` × (HP − 1)); one that falls to 0 HP there is caught; a wild monster
   falling elsewhere dies (`BattleUnit.caught` / `died`, also in `BattleResult`). The square label and the unit card
-  show the chance; the log shows the roll. Records: `data/tamer/seal.tres`, `seal_normal … seal_legendary.tres`
-  (`TamerSkillDef.seal_base`, `seal_item`). Not built: upgrades of the Seal skill, a wild AI that avoids Seal Ground,
-  items as a loadout of their own (an item is a loadout entry like a tamer skill). Tests:
+  show the chance; the log shows the roll. Record: `data/tamer/seal.tres`
+  (`TamerSkillDef.seal_base`); there is no seal item. Not built: upgrades of the Seal skill, a wild AI that avoids Seal Ground,
+  . Tests:
   `tests/battle/test_battle_catch.gd`.
 - **Map editor and custom maps** (`battle/ingame/map_editor.gd`, scene `map_editor.tscn`, reached from the ingame
   prototype; docs/battle_ingame.md §3): makes a battleground and saves it as a `MapDef`

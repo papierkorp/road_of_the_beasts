@@ -8,12 +8,11 @@
 
 | Topic | Questions |
 |---|---|
-| Plants and pills | Decided: every plant has one flaw besides its properties. Open: the list of flaws; the list of properties (seven are drafted in [overworld.md §6.2](../../../overworld.md#62-alchemy-and-pills)); decided: Kindling as a catch-up pill, no other XP by pill; whether a pill eases a trial; where the pills that reshape a monster get their ingredients |
+| Plants and pills | Decided: every plant has one flaw besides its properties, Volatile or Bitter. Open: the list of properties (seven are drafted in [overworld.md §6.2](../../../overworld.md#62-alchemy-and-pills)); decided: Kindling as a catch-up pill, no other XP by pill; whether a pill eases a trial; where the pills that reshape a monster get their ingredients |
 | Drawing per game | What exactly is drawn anew: the properties of plants, what a beast part gives, what an essence does; how a draw is kept fair |
-| Forge | Decided: a piece is forged from two beast parts, what it makes and how it acts; ore and essence are dropped. The same pair gives a weapon or a part of a battleground, without a mineral. Open: what each Kin gives as the first and as the second part |
+| Forge | Decided: a piece is forged from two beast parts, what it makes and how it acts; ore and essence are dropped. The same pair gives a weapon or a part of a battleground, without a mineral. Which Kin gives what is drawn per game and shown. Open: the lists of what and how |
 | Parts of a battleground | Decided: forged, no armour. Open: what a part costs (with T56) |
 | Parts of a battleground | Decided: forged, no armour. Open: what a part costs (with T56) |
-| Seal item | How a Binding Seal is made; it keeps a grade although materials have none ([battle_ingame.md §7](../../../battle_ingame.md#7-catching), T49) |
 | Currency | Whether Spirit Stones exist without a market |
 | Growing | Whether plants are grown in the hub or come from battles and harvests alone |
 

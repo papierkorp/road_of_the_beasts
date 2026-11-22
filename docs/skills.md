@@ -182,6 +182,7 @@ A movement may leave ground or a zone on the squares it left. Concrete movement 
 
 - A passive occupies a normal kit slot, costs no AP and is an effect on its bearer. One active skill and passives in every other slot is legal but weak.
 - **Passives that lower AP costs are allowed; no action ever costs less than 1 AP.** The rule “development never lowers AP” ([§8](#8-development)) applies to skill development, not to these passives.
+- **A passive holds against one kind of push at most.** Push and pull come from a Strike or another skill, from a zone or from a prop; a passive (a slot passive, a Kin trait, a Kin gift) may stop one of the three for its bearer, never all of them. A monster that nothing can move off a Dragon Vein leaves the other side no answer.
 - Passives of the game and candidates: [content.md §4](content.md#4-skills).
 
 ## 7. Value and Prices

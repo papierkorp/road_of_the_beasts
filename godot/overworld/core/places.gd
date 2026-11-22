@@ -10,6 +10,7 @@ static func resolve(game: GameState, f: Fight, result: BattleResult) -> void:
 		result.apply_hp(f.team, 0)
 	for m in f.team:
 		m.fresh = false
+		m.hp_debt = 0                              # the HP a bitter pill cost it were missing in this battle
 	Crafting.spend_used(game, f, result)
 	match f.place:
 		Fight.WILD:
@@ -18,6 +19,18 @@ static func resolve(game: GameState, f: Fight, result: BattleResult) -> void:
 			DungeonRun.resolve(game, f, result, won)
 		Fight.VOID:
 			VoidPlace.resolve(game, f, result, won)
+
+
+## The beast parts a won battle leaves: one per wild monster that died (docs/overworld.md §6.1).
+static func beast_parts(f: Fight, result: BattleResult) -> Array[String]:
+	var out: Array[String] = []
+	if result == null:
+		return out
+	for e in result.enemy:
+		var i: int = e["index"]
+		if bool(e.get("died", false)) and i >= 0 and i < f.enemies.size():
+			out.append(Materials.beast_part(int(f.enemies[i].species().kin)))
+	return out
 
 
 ## The monsters of the enemy side that were caught, as individuals for the roster.
@@ -44,13 +57,13 @@ static func pick_map(values: GameValues, rng: RandomNumberGenerator, stage: int)
 
 ## `n` wild individuals of random species at a step of growth.
 ## `of_void`: creatures of the void (they live there only) instead of the monsters of the world.
-static func monsters(rng: RandomNumberGenerator, n: int, step: int, rarity := MonsterInstance.Rarity.NORMAL, of_void := false) -> Array[MonsterInstance]:
+static func monsters(rng: RandomNumberGenerator, n: int, step: int, bloodline := MonsterInstance.Bloodline.MORTAL, of_void := false) -> Array[MonsterInstance]:
 	var ids := GameData.species_ids(of_void)
 	if ids.is_empty():
 		ids = GameData.species_ids(false)
 	var out: Array[MonsterInstance] = []
 	for i in n:
-		out.append(MonsterInstance.grown(GameData.monster(ids[rng.randi_range(0, ids.size() - 1)]), rng, step, rarity))
+		out.append(MonsterInstance.grown(GameData.monster(ids[rng.randi_range(0, ids.size() - 1)]), rng, step, bloodline))
 	return out
 
 

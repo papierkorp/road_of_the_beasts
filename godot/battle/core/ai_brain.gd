@@ -290,7 +290,7 @@ static func _prop_threat(b: Battle, side: int) -> float:
 ## on the opposite neighbour square (a Strike pushes straight away from the striker), one within
 ## two squares of it; with none near it counts nothing.
 static func _exposure(b: Battle, u: BattleUnit, pushers: Array) -> float:
-	if u.size != 1 or u.layer != Board.GROUND or BattleStats.is_immovable(b, u):
+	if u.size != 1 or u.layer != Board.GROUND or BattleStats.is_immovable(b, u, "strike"):
 		return 0.0
 	var total := 0.0
 	var here := b.board.at(u.pos)

@@ -14,30 +14,30 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 ## Current State
 
 - **Read first:** [vision.md](vision.md), the frame of the game. It holds over the rule files.
-- **The frame (2026-11-21):** the battle is the game; a hub of buildings; offline single player, phone in landscape and PC; three pillars (monster, tamer, board); day AP and a lifespan per stage with the trial forced at its end; wild area, roguelike dungeon (harvest once its challenge is met) and the void (own battleground, last depth is the trial); a Way chosen at the start; crafting with materials drawn per game.
-- **Rule files follow the frame:** [overworld.md](overworld.md) is rewritten; [battle_ingame.md](battle_ingame.md), [monsters.md](monsters.md) and [skills.md](skills.md) are aligned. The city, persons, the Internal World, injury, scrolls and grades of materials are gone.
-- **The build follows the frame (T61):** the hub game is built as a first version to click through, with test values in `godot/data/game/values.tres` ([godot/README.md](../godot/README.md), "The hub game"; solutions without a rule: [implementation.md](todo/implementation.md) I83–I110). Played once by the user; monsters now have their own kit of 4 slots, shaped eggs and the choice at a stage breakthrough, the eight Kin traits act in the ingame battle, and sixteen test species (two per Kin) learn inside the groups of their Kin; most gifts are not built. [architecture.md](architecture.md) still describes dialogue, story and faction requests; earlier rows of [decisions.md](decisions.md) link to sections that no longer exist.
-- **Next:** the user plays the hub game; then the questions of T54 to T60 in the chat, the rough shape before details: the limits of the own battleground (T56), the Ways (T57), the numbers of day and lifespan (T54).
-- **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Everything measured so far is multiplayer ([S040–S045](simulation_log.md), indications).
+- **The frame:** the battle is the game; a hub of buildings; three pillars (monster, tamer, board); a lifespan per stage with the trial forced at its end; wild area, dungeon and the void on the player's own battleground.
+- **Not aligned yet:** [architecture.md](architecture.md) still describes dialogue, story and faction requests (T61).
+- **The build follows the frame (T61):** the hub game is a first version to click through, with test values in `godot/data/game/values.tres` ([godot/README.md](../godot/README.md), "The hub game"; solutions without a rule: [implementation.md](todo/implementation.md) I83–I120). Sixteen test species (two per Kin); the boards of the places are six fixed test battlegrounds, no generator yet.
+- **Decided after the review (2026-11-21 and 22; [decisions.md](decisions.md)):** three to four hours, the Sovereign beast, a forge of two beast parts, flaws of plants, bloodlines, a passive against one kind of push only; the build follows.
+- **Next:** the user plays the hub game; then the open rows of T54 to T60: the numbers of a game (T54), the generator of the boards (T55), the limits of the own battleground (T56), the lists of the forge (T58).
+- **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Every measurement so far is multiplayer ([S040–S045](simulation_log.md)).
 - **Multiplayer battle, settled for now:** 3v3 on a generated symmetric 7×7 board, monsters drawn for 60 points, kits of generated skills ([content.md §1](content.md#1-ground)). All content is temporary.
 - **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. Open in the build: ends and board events in the map editor (T46), Seal Ground played by hand (T49), a wild AI that values Seal Ground; then the rebuild (T42).
-- **Tests:** 360 cases, 0 failures, a full run in about 45 s ([implementation.md](todo/implementation.md)).
+- **Tests:** 374 cases, 0 failures, a full run in about 45 s ([implementation.md](todo/implementation.md)).
 
 ## Open Questions for the User
 
 | # | Question | Task |
 |---|---|---|
-| 0 | Lifespan, day AP, length of a game, what a game leaves behind | T54 |
-| 0 | Wild area and dungeon: numbers, challenges, loot, where the boards come from | T55 |
-| 0 | The void: limits of the own battleground, depths, void monsters, the five trials | T56 |
+| 0 | Days and day AP per stage for three to four hours; what a lost depth costs; what a game leaves behind | T54 |
+| 0 | Wild area and dungeon: numbers, challenges, loot; the generator of the boards | T55 |
+| 0 | The void: limits of the own battleground, depths, the pools of void monsters and Sovereign beasts | T56 |
 | 0 | Ways: the nodes of the branches, which tamer skills, the list of vows | T57 |
-| 0 | Materials, pills, weapons, parts of a battleground, the seal item, a currency | T58 |
-| 0 | The three eggs, the roster, further eggs | T59 |
-| 0 | Kins: the drafts of traits, skill groups and gifts ([content.md §7](content.md#7-kins)); species per Kin | T12 |
+| 0 | The lists of the forge (what, how), of properties and pills; a currency | T58 |
+| 0 | The pool of eggs, the roster, further eggs | T59 |
+| 0 | Kins: traits, skill groups, gift pools of six ([content.md §7](content.md#7-kins)); Keystone and Anchored hold against every push: narrow them? | T12 |
 | 0 | The hub's buildings, 3D or 2D board, the phone | T60 |
-| 1 | How does a stat shape split the points at the roll? | T03 |
+| 1 | How does a stat shape split the points at the roll? Does the growth table end at step 15, since no monster reaches Sovereign? | T03 |
 | 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills | T46 |
-| 13 | Seal: item and skill Seal Ground together? | T49 |
 | 3 | Which props of the catalogue stay, and do aura props return? | T41 |
 | 4 | Square control: do the current means suffice, or does it need more? | T39 |
 | 6 | Which pushes are cardinal, which use eight directions? | T04 |

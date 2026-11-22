@@ -4,9 +4,10 @@
 
 [resource]
 script = ExtResource("1")
-id = &"weapon_root_chain"
-display_name = "Root Chain"
+id = &"thorn_field"
+display_name = "Thorn Field"
 effect = "lay"
-description = "Lays Binding Vines on one square, also under a monster."
-lay_ground = &"snare"
-source = "weapon"
+description = "Lays Thornbed on a line of up to 3 squares."
+lay_ground = &"thornbed"
+lay_count = 3
+source = "skill"

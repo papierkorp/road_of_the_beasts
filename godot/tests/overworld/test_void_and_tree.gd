@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## The void, the breakthrough trial and the cultivation tree (docs/vision.md §3, §4, §8).
+## The void, the breakthrough trial, the Sovereign beast and the tree of the Way (docs/vision.md §3, §4, §8).
 
 
 func _game() -> GameState:
@@ -37,7 +37,17 @@ func test_void_monsters_stand_above_the_stage_and_fight_on_the_players_battlegro
 		assert_int(e.step()).is_greater(GameState.step_of(0, 2))
 
 
-func test_a_depth_won_gives_a_path_point_and_opens_the_next_one() -> void:
+func test_the_void_monsters_of_a_depth_are_drawn_per_game() -> void:
+	var seen := {}
+	for seed_value in [51, 52, 53, 54, 55, 56]:
+		var g := GameState.new_game(seed_value, &"way_of_the_formation", &"blaze_tiger")
+		var f := VoidPlace.fight(g)
+		assert_str(f.enemy_text()).is_equal(VoidPlace.fight(g).enemy_text())      # the same within a game
+		seen[f.enemies[0].species_id] = true
+	assert_int(seen.size()).is_greater(1)
+
+
+func test_a_depth_won_gives_one_insight_and_opens_the_next_one() -> void:
 	var g := _game()
 	_fight(g, true)
 	assert_int(g.void_depth).is_equal(1)
@@ -50,18 +60,14 @@ func test_a_depth_won_gives_a_path_point_and_opens_the_next_one() -> void:
 	assert_int(g.roster[0].current_hp).is_equal(g.roster[0].max_hp())
 
 
-func test_the_last_depth_is_the_trial_and_needs_the_breakthrough_material() -> void:
+func test_the_last_depth_is_the_trial_and_asks_for_no_material() -> void:
 	var g := _game()
 	g.void_depth = g.values.void_depths - 1
 	assert_bool(VoidPlace.is_trial(g)).is_true()
-	assert_str(VoidPlace.problem(g)).is_not_empty()
-	assert_bool(VoidPlace.pay(g)).is_false()
-	g.add_item(Materials.breakthrough(0), g.values.trial_materials)
 	assert_str(VoidPlace.problem(g)).is_empty()
 	_fight(g, true)
 	assert_int(int(g.stage)).is_equal(int(Stage.Type.FOUNDATION))
 	assert_int(g.void_depth).is_equal(0)
-	assert_int(g.count(Materials.breakthrough(0))).is_equal(0)
 	assert_int(g.path_points).is_equal(1)
 
 
@@ -71,7 +77,7 @@ func test_at_the_end_of_the_lifespan_the_trial_is_forced_and_losing_it_loses_the
 	g.end_day()
 	assert_bool(g.forced_trial).is_true()
 	assert_bool(VoidPlace.is_trial(g)).is_true()
-	assert_str(VoidPlace.problem(g)).is_empty()           # ready or not: no material, no day AP asked
+	assert_str(VoidPlace.problem(g)).is_empty()           # ready or not: no day AP asked
 	var f := VoidPlace.fight(g)
 	assert_bool(bool(f.ref["forced"])).is_true()
 	_fight(g, false)
@@ -89,37 +95,73 @@ func test_a_forced_trial_that_is_won_is_a_breakthrough() -> void:
 	assert_bool(g.can_end_day()).is_true()
 
 
-func test_a_node_is_bought_with_path_points_and_gives_its_skill_or_blueprint() -> void:
+func test_the_sovereign_beast_waits_from_the_first_day_and_may_be_attacked_early() -> void:
 	var g := _game()
-	assert_str(Cultivation.problem(g, &"dragon_vein")).is_not_empty()
+	var beast := VoidPlace.sovereign(g)
+	assert_int(beast.enemies.size()).is_equal(g.values.sovereign_enemies)
+	for e in beast.enemies:
+		assert_int(int(e.species().kin)).is_equal(int(MonsterDef.Kin.VOID))
+		assert_int(e.step()).is_equal(g.values.sovereign_step)
+		assert_int(int(e.bloodline)).is_equal(int(MonsterInstance.Bloodline.DIVINE))
+	g.end_day()
+	g.end_day()
+	assert_str(VoidPlace.sovereign(g).enemy_text()).is_equal(beast.enemy_text())      # the same beast for the whole game
+	assert_bool(VoidPlace.trial_is_sovereign(g)).is_false()
+	var f := VoidPlace.sovereign(g)
+	f.team = g.default_team(f.max_team)
+	assert_bool(VoidPlace.pay_sovereign(g)).is_true()
+	assert_int(g.ap).is_equal(g.max_ap() - g.values.void_ap)
+	Places.resolve(g, f, _result(f, false))
+	assert_str(String(g.outcome)).is_equal("")            # an early defeat costs the day AP and nothing else
+	assert_int(g.void_depth).is_equal(0)
+	var again := VoidPlace.sovereign(g)
+	again.team = g.default_team(again.max_team)
+	assert_bool(VoidPlace.pay_sovereign(g)).is_true()
+	Places.resolve(g, again, _result(again, true))
+	assert_str(String(g.outcome)).is_equal(String(GameState.WON))
+	assert_int(int(g.stage)).is_equal(int(Stage.Type.SOVEREIGN))
+
+
+func test_the_trial_of_the_last_stage_is_the_sovereign_beast() -> void:
+	var g := _game()
+	g.stage = VoidPlace.LAST_STAGE
+	g.ap = g.max_ap()
+	assert_bool(VoidPlace.fight(g).ref.has("sovereign")).is_false()      # the depths before it are depths
+	g.void_depth = g.values.void_depths - 1
+	var f := VoidPlace.fight(g)
+	assert_bool(f.ref.has("sovereign")).is_true()
+	assert_str(f.enemy_text()).is_equal(VoidPlace.sovereign(g).enemy_text())
+	g.lifespan = 1
+	g.end_day()
+	assert_bool(g.forced_trial).is_true()
+	var forced := VoidPlace.fight(g)
+	assert_bool(bool(forced.ref["forced"])).is_true()
+	forced.team = g.default_team(forced.max_team)
+	assert_bool(VoidPlace.pay(g)).is_true()
+	Places.resolve(g, forced, _result(forced, false))
+	assert_str(String(g.outcome)).is_equal(String(GameState.LOST))
+
+
+func test_a_node_is_bought_with_insight_and_gives_its_tamer_skill() -> void:
+	var g := _game()
+	assert_str(Cultivation.problem(g, &"stone_wall")).is_not_empty()
 	g.path_points = 2
-	assert_bool(Cultivation.buy(g, &"dragon_vein")).is_true()
-	assert_array(g.blueprints).contains([&"ground:dragon_vein"])
+	assert_bool(Cultivation.buy(g, &"stone_wall")).is_true()
+	assert_array(g.tamer_skills).contains([&"stone_wall"])
 	assert_int(g.path_points).is_equal(1)
-	assert_bool(Cultivation.buy(g, &"dragon_vein")).is_false()
+	assert_bool(Cultivation.buy(g, &"stone_wall")).is_false()
 	assert_str(Cultivation.problem(g, &"domain_glimpse")).contains("Foundation")       # the tree of the next stage
 	g.stage = Stage.Type.FOUNDATION
 	assert_bool(Cultivation.buy(g, &"domain_glimpse")).is_true()
 	assert_array(g.tamer_skills).contains([&"domain_glimpse"])
 	g.path_points = 5
-	assert_str(Cultivation.problem(g, &"lava")).contains("Spike Trap")                 # a node may need another
-	Cultivation.buy(g, &"spike_trap")
-	assert_bool(Cultivation.buy(g, &"lava")).is_true()
+	assert_str(Cultivation.problem(g, &"ember_line")).contains("Thorn Field")           # a node may need another
+	Cultivation.buy(g, &"thorn_field")
+	assert_bool(Cultivation.buy(g, &"ember_line")).is_true()
 
 
-func test_a_part_is_built_from_a_blueprint_and_materials() -> void:
-	var g := _game()
-	var part := "ground:springwater"
-	g.add_item(Materials.ore(0), 1)
-	assert_bool(Cultivation.build_part(g, part)).is_false()          # no blueprint
-	g.blueprints.append(StringName(part))
-	assert_bool(Cultivation.build_part(g, part)).is_true()
-	assert_int(int(g.parts[part])).is_equal(1)
-	assert_int(g.count(Materials.ore(0))).is_equal(0)
-	assert_bool(Cultivation.build_part(g, part)).is_false()          # no ore left
-
-
-func test_every_system_has_two_branches_and_every_node_belongs_to_one() -> void:
+func test_every_way_has_two_branches_of_tamer_skills_the_battle_knows() -> void:
+	var content := BattleContent.shared()
 	for sid in CultivationDef.ids():
 		var def := CultivationDef.of(sid)
 		assert_int(def.branches.size()).is_equal(2)
@@ -129,40 +171,7 @@ func test_every_system_has_two_branches_and_every_node_belongs_to_one() -> void:
 			for n: Dictionary in def.nodes_of(stage):
 				assert_bool(ids.has(String(n["branch"]))).is_true()
 				cost[String(n["branch"])] += int(n["cost"])
-				if n["kind"] == "perk":
-					assert_int((n["effects"] as Dictionary).size()).is_equal(1)
-			for b: String in ids:                               # a stage gives 3 path points: about one branch
-				assert_bool(int(cost[b]) >= 2 and int(cost[b]) <= 4).is_true()
-
-
-func test_a_perk_of_the_tree_changes_what_it_names() -> void:
-	var g := GameState.new_game(71, &"way_of_the_artificer", &"blaze_tiger")
-	g.path_points = 9
-	g.stage = Stage.Type.FOUNDATION
-	g.add_item("weapon:Ember Brand (Qi Gathering)", 1)
-	g.add_item("weapon:Thorn Whip (Qi Gathering)", 1)
-	g.add_item("pill:warding:0", 2)
-	var items := Crafting.battle_items(g)
-	var both: Array[StringName] = [&"seal", &"weapon_ember_brand", &"weapon_thorn_whip"]
-	assert_int(g.tamer_slots()).is_equal(2)
-	assert_bool(g.loadout_fits(both, items)).is_false()
-	assert_bool(Cultivation.buy(g, &"weapon_rack")).is_true()
-	assert_bool(g.loadout_fits(both, items)).is_true()         # the rack takes one weapon
-	both.append(&"pill_warding")
-	assert_bool(g.loadout_fits(both, items)).is_false()        # a rack takes no pill
-	assert_bool(Cultivation.buy(g, &"pill_pouch")).is_true()
-	assert_bool(g.loadout_fits(both, items)).is_true()
-	assert_bool(Cultivation.buy(g, &"lasting_dose")).is_true()
-	var f := Fight.new()
-	f.tamer_items = items
-	var r := BattleResult.new()
-	r.used_tamer = [&"pill_warding"]
-	Crafting.spend_used(g, f, r)
-	assert_int(g.count("pill:warding:0")).is_equal(2)          # the first pill of a battle is not used up
-	assert_bool(Cultivation.buy(g, &"twin_grip")).is_true()
-	assert_int(g.vow_sum("weapon_uses")).is_equal(2)
-	var lord := GameState.new_game(72, &"way_of_the_beast_lord", &"blaze_tiger")
-	lord.path_points = 1
-	var cap := lord.roster_cap()
-	Cultivation.buy(lord, &"wider_nest")
-	assert_int(lord.roster_cap()).is_equal(cap + 2)
+				assert_str(String(n["kind"])).is_equal("tamer")       # no perks, no blueprints
+				assert_object(content.tamer_skill(StringName(n["ref"]))).is_not_null()
+			for b: String in ids:                               # a stage gives 3 Insight: about one branch
+				assert_bool(int(cost[b]) >= 1 and int(cost[b]) <= 4).is_true()

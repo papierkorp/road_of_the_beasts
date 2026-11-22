@@ -1,5 +1,6 @@
 extends GdUnitTestSuite
-## The dungeon (docs/vision.md §4): the run, leaving, a defeat, the last battle, the challenge and the harvest.
+## The dungeon (docs/vision.md §4): the run and its fixed price, leaving, a defeat, the last battle, the challenge
+## and the harvest; plants and beast parts as loot, no monster XP.
 
 
 func _game(seed_value := 41) -> GameState:
@@ -31,16 +32,32 @@ func _advance(g: GameState, battles := 99, rounds := 4) -> void:
 		battles -= 1
 
 
-func test_a_run_costs_all_day_ap_left_and_needs_two() -> void:
+func test_a_run_costs_a_fixed_number_of_day_ap() -> void:
 	var g := _game()
-	g.spend_ap(g.max_ap() - 1)
-	assert_bool(DungeonRun.start(g, 0)).is_false()      # one AP left is not enough
+	g.spend_ap(g.max_ap() - g.values.dungeon_ap + 1)
+	assert_bool(DungeonRun.start(g, 0)).is_false()      # one AP short
 	g.end_day()
-	g.spend_ap(g.max_ap() - g.values.dungeon_min_ap)
 	assert_bool(DungeonRun.start(g, 0)).is_true()
-	assert_int(g.ap).is_equal(0)
+	assert_int(g.ap).is_equal(g.max_ap() - g.values.dungeon_ap)      # what is left stays for the wild area or the void
 	assert_bool(g.can_end_day()).is_false()
 	assert_bool(DungeonRun.start(g, 0)).is_false()
+
+
+func test_a_battle_in_a_dungeon_gives_no_monster_xp_but_a_beast_part_per_monster_defeated() -> void:
+	var g := _game()
+	DungeonRun.start(g, 0)
+	var f := DungeonRun.fight_for(g, DungeonRun.choices(g)[0])
+	f.team = g.default_team(f.max_team)
+	var xp := g.roster[0].xp
+	var step := g.roster[0].step()
+	Places.resolve(g, f, _result(f, true))
+	assert_int(g.roster[0].xp).is_equal(xp)
+	assert_int(g.roster[0].step()).is_equal(step)
+	var parts := 0
+	for id in g.dungeon["loot"]:
+		if Materials.form(id) == "part":
+			parts += int(g.dungeon["loot"][id])
+	assert_int(parts).is_equal(f.enemies.size())
 
 
 func test_the_map_has_forks_and_every_node_can_be_reached() -> void:
@@ -60,7 +77,11 @@ func test_the_map_has_forks_and_every_node_can_be_reached() -> void:
 				reached[int(t)] = true
 		assert_int(reached.size()).is_equal(total)
 		assert_str(String(all[-1]["kind"])).is_equal(String(DungeonRun.LAST))
-		assert_int(int(all[-1]["loot"][Materials.breakthrough(0)])).is_equal(1)
+		var last := 0
+		for id in all[-1]["loot"]:
+			assert_str(Materials.form(id)).is_equal("plant")
+			last += int(all[-1]["loot"][id])
+		assert_int(last).is_equal(g.values.dungeon_node_loot + g.values.dungeon_last_loot)      # the last battle holds the most
 		assert_str(DungeonRun.nodes(g)[0]["enemies"][0].title()).is_equal(all[0]["enemies"][0].title())
 
 
@@ -90,9 +111,11 @@ func test_leaving_keeps_the_loot_and_a_defeat_keeps_a_part() -> void:
 	DungeonRun.start(g, 0)
 	_advance(g, 1)
 	var gathered := 0
+	var plants := 0
 	for id in g.dungeon["loot"]:
 		gathered += int(g.dungeon["loot"][id])
-	assert_int(gathered).is_equal(g.values.dungeon_node_loot)
+		plants += int(g.dungeon["loot"][id]) if Materials.form(id) == "plant" else 0
+	assert_int(plants).is_equal(g.values.dungeon_node_loot)
 	DungeonRun.leave(g)
 	assert_bool(DungeonRun.running(g)).is_false()
 	var owned := 0
@@ -103,25 +126,28 @@ func test_leaving_keeps_the_loot_and_a_defeat_keeps_a_part() -> void:
 
 	var h := _game()
 	DungeonRun.start(h, 0)
-	h.dungeon["loot"] = {Materials.ore(0): 4, Materials.essence(0): 1}
+	h.dungeon["loot"] = {Materials.beast_part(0): 4, Materials.beast_part(1): 1}
 	var f := DungeonRun.fight_for(h, DungeonRun.choices(h)[0])
 	f.team = h.default_team(f.max_team)
 	Places.resolve(h, f, _result(f, false))
 	assert_bool(DungeonRun.running(h)).is_false()
-	assert_int(h.count(Materials.ore(0))).is_equal(4 * h.values.dungeon_defeat_keeps / 100)
-	assert_int(h.count(Materials.essence(0))).is_equal(0)
+	assert_int(h.count(Materials.beast_part(0))).is_equal(4 * h.values.dungeon_defeat_keeps / 100)
+	assert_int(h.count(Materials.beast_part(1))).is_equal(0)
 	assert_str(String(h.outcome)).is_equal("")
 	assert_int(h.roster[0].current_hp).is_equal(h.roster[0].max_hp())
 
 
-func test_the_last_battle_gives_the_breakthrough_material_and_meets_the_challenge() -> void:
+func test_the_last_battle_ends_the_run_and_meets_the_challenge() -> void:
 	var g := _game()
 	assert_bool(DungeonRun.mastered(g, 0)).is_false()
 	assert_bool(DungeonRun.can_harvest(g, 0)).is_false()
 	DungeonRun.start(g, 0)
 	_advance(g)
 	assert_bool(DungeonRun.running(g)).is_false()
-	assert_int(g.count(Materials.breakthrough(0))).is_equal(1)
+	var owned := 0
+	for id in g.items:
+		owned += g.count(id)
+	assert_int(owned).is_greater(0)
 	assert_bool(DungeonRun.mastered(g, 0)).is_true()         # the test value of the first dungeon: one run won
 
 
@@ -140,7 +166,7 @@ func test_a_rounds_challenge_is_met_only_by_a_fast_last_battle() -> void:
 	assert_bool(DungeonRun.mastered(g, 1)).is_true()
 
 
-func test_a_harvest_gives_materials_without_a_battle_but_no_breakthrough_material_and_no_xp() -> void:
+func test_a_harvest_gives_plants_without_a_battle_and_no_xp() -> void:
 	var g := _game()
 	g.dungeon_mastered.append(0)
 	var xp := g.roster[0].xp
@@ -148,11 +174,10 @@ func test_a_harvest_gives_materials_without_a_battle_but_no_breakthrough_materia
 	var n := 0
 	for id in loot:
 		n += int(loot[id])
-		assert_bool(Materials.form(id) in ["plant", "ore"]).is_true()
+		assert_str(Materials.form(id)).is_equal("plant")
 	assert_int(n).is_equal(g.values.harvest_yield)
 	assert_int(g.ap).is_equal(g.max_ap() - g.values.harvest_ap)
 	assert_int(g.roster[0].xp).is_equal(xp)
-	assert_int(g.count(Materials.breakthrough(0))).is_equal(0)
 	g.ap = 0
 	assert_bool(DungeonRun.harvest(g, 0).is_empty()).is_true()      # no AP, no harvest
 

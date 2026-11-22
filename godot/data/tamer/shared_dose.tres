@@ -4,8 +4,7 @@
 
 [resource]
 script = ExtResource("1")
-id = &"weapon_rift_mirror"
-display_name = "Rift Mirror"
-effect = "domain_glimpse"
-description = "Clears zones and ground on four connected squares."
-source = "weapon"
+id = &"shared_dose"
+display_name = "Shared Dose"
+effect = "spread"
+description = "The next pill also acts on your monsters next to the one that takes it."

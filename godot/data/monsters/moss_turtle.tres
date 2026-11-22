@@ -14,7 +14,7 @@
 [ext_resource type="Resource" path="res://data/skills/thornbed.tres" id="l4"]
 [ext_resource type="Resource" path="res://data/skills/raise_wall.tres" id="l5"]
 [ext_resource type="Resource" path="res://data/skills/set_gong.tres" id="l6"]
-[ext_resource type="Resource" path="res://data/skills/immovable.tres" id="l7"]
+[ext_resource type="Resource" path="res://data/skills/braced.tres" id="l7"]
 [ext_resource type="Resource" path="res://data/skills/deep_breath.tres" id="l8"]
 
 [resource]

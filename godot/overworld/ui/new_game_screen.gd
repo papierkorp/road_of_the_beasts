@@ -1,6 +1,6 @@
 class_name NewGameScreen
 extends Control
-## The start of a game (docs/vision.md §5): the player chooses a cultivation system and one of three eggs.
+## The start of a game (docs/vision.md §5): the player chooses a Way and one of three eggs.
 
 const HUB_SCENE := "res://overworld/hub.tscn"
 const MENU_SCENE := "res://game/menu.tscn"
@@ -29,7 +29,7 @@ func _build() -> void:
 	_body.add_child(HubUi.title("A NEW GAME"))
 	_body.add_child(HubUi.label("You are an orphan. Choose the way you cultivate, then one of the three eggs of the nest you found."))
 	var list := HubUi.scroll(_body)
-	list.add_child(HubUi.label("Cultivation system", 22, UiTheme.ACCENT))
+	list.add_child(HubUi.label("Your Way", 22, UiTheme.ACCENT))
 	var systems := HubUi.row()
 	list.add_child(systems)
 	for id in CultivationDef.ids():
@@ -39,7 +39,7 @@ func _build() -> void:
 			var names: PackedStringArray = []
 			for n: Dictionary in def.nodes:
 				if String(n.get("branch", "")) == String(br["id"]):
-					names.append(String(n["name"]).trim_prefix("Blueprint: "))
+					names.append(String(n["name"]))
 			lines.append("%s: %s" % [br["name"], ", ".join(names)])
 		systems.add_child(_choice("%s\n%s\n\n%s" % [def.display_name, def.blurb, "\n".join(lines)], _system == id, func():
 			_system = id

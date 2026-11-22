@@ -139,7 +139,7 @@ The **species learnable list** sets concrete skill access within the groups of i
 - **No stat bonus and no ceiling of stage:** a bloodline buys gifts and choices, never numbers; every grade reaches every stage.
 - Bloodline does not decide the stat shape.
 - **Ascension** is a major event, not a grind: one **Bloodline pill** ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)). The monster gains the choices of the new grade, awakens one Kin gift the player chooses from the pool of its Kin, and keeps everything else. **Mortal can climb to Ancient, never to Divine.**
-- Not defined: what the fourth and fifth offer of a breakthrough are; when a Divine monster gains its Signature skill.
+- Not defined: when a Divine monster gains its Signature skill.
 
 *Working values:* the four grades, the gifts and the choices per grade.
 
@@ -168,7 +168,7 @@ The **species learnable list** sets concrete skill access within the groups of i
 | 17 | Sovereign Middle | 105 | +1 slot-development step | 12000 |
 | 18 | Sovereign High | 110 | +1 slot-development step | — |
 
-- **The choice at a stage breakthrough:** the monster takes one of three: **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)) or **Blood** (a Kin gift drawn from the pool of its Kin, [§3](#3-kins)). How many are offered and how many are taken follows the bloodline ([§4](#4-bloodline)).
+- **The choice at a stage breakthrough:** the offer holds, in this order, **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)), **Blood** (a Kin gift from the pool of its Kin, [§3](#3-kins)), **Lore** (one skill of another species of its Kin joins what it can learn) and **Reshape** (its stat points are spent anew, [§2.3](#23-shapes-and-spending)). How many of them are offered and how many are taken follows the bloodline ([§4](#4-bloodline)); nothing is taken twice in one breakthrough.
 - **Slot-development step** (steps 14, 15, 17 and 18): the monster develops one skill slot.
 - **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
 - Breakthrough trials: [overworld.md §5.2](overworld.md#52-the-breakthrough-trial).

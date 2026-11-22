@@ -13,12 +13,25 @@ func after_test() -> void:
 
 
 ## u0: the player's monster (acts first), u1: an enemy at (3, 3). The enemy side is wild unless told otherwise.
+## A second seal for the tests: the Seal skill with a base of 65 %, as an upgrade would give it.
+const STRONG := &"seal_strong"
+
+
+func _seal_def(id: StringName) -> TamerSkillDef:
+	if id != STRONG:
+		return H.content().tamer_skill(id)
+	var def: TamerSkillDef = H.content().tamer_skill(&"seal").duplicate()
+	def.id = STRONG
+	def.seal_base = 65
+	return def
+
+
 func _battle(enemy: Dictionary = {}, seals: Array = [&"seal"], wild := true) -> Battle:
 	var o := {"pace": 1.5, "hp": 5}
 	o.merge(enemy, true)
 	var b := H.battle([[0, Vector2i(0, 6), {"pace": 1.9}], [1, Vector2i(3, 3), o]])
 	for id: StringName in seals:
-		b.tamer_loadout[0].append(H.content().tamer_skill(id))
+		b.tamer_loadout[0].append(_seal_def(id))
 	b.wild[1] = wild
 	return b
 
@@ -50,11 +63,11 @@ func test_seal_ground_cannot_be_changed_and_lies_until_it_catches() -> void:
 	assert_str(cell.ground).is_equal("seal")
 
 
-func test_one_seal_ground_at_a_time_counts_skill_and_item_together() -> void:
-	var b := _battle({}, [&"seal", &"seal_rare"])
+func test_one_seal_ground_at_a_time() -> void:
+	var b := _battle({}, [&"seal", STRONG])
 	b.begin()
 	assert_bool(_seal(b, Vector2i(2, 2))).is_true()
-	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"seal_rare", "cells": [Vector2i(4, 4)]})).contains("one at a time")
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": STRONG, "cells": [Vector2i(4, 4)]})).contains("one at a time")
 
 
 func test_a_wild_monster_at_zero_hp_on_seal_ground_is_caught_and_the_seal_is_used_up() -> void:
@@ -98,12 +111,11 @@ func test_the_chance_falls_by_the_step_for_every_hp_above_one() -> void:
 	assert_int(BattleCatch.chance_at(20, 4)).is_equal(0)
 	BattleExperiment.seal_step = 5
 	assert_int(BattleCatch.chance_at(50, 6)).is_equal(25)
-	for pair: Array in [[&"seal", 50], [&"seal_normal", 20], [&"seal_rare", 35], [&"seal_epic", 50], [&"seal_legendary", 65]]:
-		assert_int(H.content().tamer_skill(pair[0]).seal_base).is_equal(pair[1])
+	assert_int(H.content().tamer_skill(&"seal").seal_base).is_equal(50)
 
 
 ## The enemy ends its turn on Seal Ground with `hp` HP; returns the battle after that turn end.
-func _turn_end_on_seal(hp: int, seed: int, seal := &"seal_legendary") -> Battle:
+func _turn_end_on_seal(hp: int, seed: int, seal := STRONG) -> Battle:
 	var b := _battle({"hp": maxi(5, hp), "current_hp": hp}, [seal])
 	b.roll_seed = seed
 	b.begin()
@@ -135,9 +147,9 @@ func test_a_wild_monster_ending_its_turn_on_seal_ground_is_rolled_for_and_the_ro
 
 
 func test_a_dry_run_never_rolls() -> void:
-	var b := _battle({"current_hp": 1}, [&"seal_legendary"])
+	var b := _battle({"current_hp": 1}, [STRONG])
 	b.begin()
-	_seal(b, Vector2i(3, 3), &"seal_legendary")
+	_seal(b, Vector2i(3, 3), STRONG)
 	b.end_turn()
 	var p := b.preview({"type": &"end_turn"})
 	var types: Array = (p["events"] as Array).map(func(e): return e["type"])
@@ -151,13 +163,13 @@ func test_the_ingame_prototype_adds_a_wild_enemy_and_the_seal() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
 	var r := IngamePrototype.request(&"1v1", [40, 40], rng)
-	IngamePrototype.add_catching(r, true, &"seal_rare", rng)
+	IngamePrototype.add_catching(r, true, &"seal", rng)
 	r.enemy_tamer.append(&"second_wind")
 	var b := BattleSetup.build(r)
 	assert_bool(b.wild[1]).is_true()
 	assert_bool(b.wild[0]).is_false()
 	assert_array(b.tamer_loadout[1]).is_empty()                    # a wild side has no tamer
-	assert_str(b.tamer_loadout[0][0].id).is_equal("seal_rare")
+	assert_str(b.tamer_loadout[0][0].id).is_equal("seal")
 	assert_int(b.roll_seed).is_not_equal(0)
 	r.battle_kind = BattleRequest.MULTIPLAYER                      # catching is the ingame battle's only
 	assert_bool(BattleSetup.build(r).wild[1]).is_false()

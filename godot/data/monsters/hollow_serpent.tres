@@ -15,7 +15,7 @@
 [ext_resource type="Resource" path="res://data/skills/snare.tres" id="l5"]
 [ext_resource type="Resource" path="res://data/skills/lay_vortex.tres" id="l6"]
 [ext_resource type="Resource" path="res://data/skills/lay_spikes.tres" id="l7"]
-[ext_resource type="Resource" path="res://data/skills/immovable.tres" id="l8"]
+[ext_resource type="Resource" path="res://data/skills/grounded.tres" id="l8"]
 
 [resource]
 script = ExtResource("1")

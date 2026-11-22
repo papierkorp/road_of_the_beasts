@@ -4,10 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-id = &"weapon_ember_brand"
-display_name = "Ember Brand"
+id = &"root_snare"
+display_name = "Root Snare"
 effect = "lay"
-description = "Lays Lava on a line of up to 3 squares."
-lay_ground = &"lava"
-lay_count = 3
-source = "weapon"
+description = "Lays Binding Vines on one square, also under a monster."
+lay_ground = &"snare"
+source = "skill"

@@ -12,7 +12,7 @@
 | Before the first forged part | What the player can place at the start |
 | One or several | One battleground changed before each battle, or several saved ones |
 | Depths | The number per stage (three to five is a working value); day AP per attempt; what a lost depth costs; whether a depth can be tried again at once |
-| Void monsters | Decided: drawn per game from a pool. Open: the pool; what makes them stronger (stage, numbers, skills of their own); whether one can be caught; the ends of a battle in the void |
+| Void monsters | Decided: drawn per game from a pool; a battle in the void gives monster XP. Open: the pool; what makes them stronger (stage, numbers, skills of their own); whether one can be caught; the ends of a battle in the void |
 | The five trials | Their opponents; how a monster breaks through to its next stage; the pool of Sovereign beasts; what the Sovereign stage still holds for monsters (steps 16 to 18 of [monsters.md §5](../../../monsters.md#5-growth)) |
 
 - **Done when:** every row is decided and written into [vision.md](../../../vision.md), [battle_ingame.md](../../../battle_ingame.md) or [overworld.md](../../../overworld.md), with lines in [decisions.md](../../../decisions.md).

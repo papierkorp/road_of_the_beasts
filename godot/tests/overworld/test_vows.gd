@@ -97,10 +97,9 @@ func test_the_other_vows_change_what_they_name() -> void:
 	var slots := g.tamer_slots()
 	_swear(g, &"bare_hand")
 	assert_int(g.tamer_slots()).is_equal(slots + 1)
-	g.add_item(Materials.ore(0), 2)
 	g.add_item(Materials.beast_part(0), 2)
-	assert_bool(Crafting.can_forge(g, Crafting.WEAPON, Materials.ore(0), Materials.beast_part(0))).is_false()
-	assert_bool(Crafting.can_forge(g, Crafting.ARMOUR, Materials.ore(0), Materials.beast_part(0))).is_true()
+	assert_bool(Crafting.can_forge(g, Crafting.WEAPON, 0, 0)).is_false()
+	assert_bool(Crafting.can_forge(g, Crafting.PART, 0, 0)).is_true()       # the vow forbids weapons, not the board
 	var h := _game()
 	_swear(h, &"loner")
 	assert_int(h.roster[0].slots).is_equal(5)

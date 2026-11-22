@@ -1,8 +1,8 @@
 class_name Materials
 extends RefCounted
 ## Ids and names of the materials (docs/overworld.md §6.1): a form and a tier (a stage), no grade.
-##   plant:<plant id>:<tier> · ore:<tier> · essence:<tier> · part:<kin> · break:<tier>
-## Pills are items too: pill:<property id>[+<property id>]:<tier>.
+##   plant:<plant id>:<tier> · part:<kin>
+## Pills and weapons are items too: pill:<property id>[+<property id>]:<tier>[:<flaw id>] · weapon:<kin of what>:<kin of how>.
 
 const KIN_PARTS: Array[String] = ["Fang", "Feather", "Scale", "Chitin", "Wisp", "Core", "Bark", "Dust"]
 
@@ -11,20 +11,12 @@ static func plant(id: StringName, tier: int) -> String:
 	return "plant:%s:%d" % [id, tier]
 
 
-static func ore(tier: int) -> String:
-	return "ore:%d" % tier
-
-
-static func essence(tier: int) -> String:
-	return "essence:%d" % tier
-
-
 static func beast_part(kin: int) -> String:
 	return "part:%d" % kin
 
 
-static func breakthrough(tier: int) -> String:
-	return "break:%d" % tier
+static func weapon(what_kin: int, how_kin: int) -> String:
+	return "weapon:%d:%d" % [what_kin, how_kin]
 
 
 static func form(item: String) -> String:
@@ -36,9 +28,13 @@ static func tier(item: String) -> int:
 	match parts[0]:
 		"plant", "pill":
 			return int(parts[2])
-		"ore", "essence", "break":
-			return int(parts[1])
 	return 0
+
+
+## The flaw a pill carries ("" = none).
+static func flaw(item: String) -> String:
+	var parts := item.split(":")
+	return parts[3] if parts[0] == "pill" and parts.size() > 3 else ""
 
 
 static func display_name(item: String, values: GameValues) -> String:
@@ -48,23 +44,21 @@ static func display_name(item: String, values: GameValues) -> String:
 			for p: Dictionary in values.plants:
 				if String(p["id"]) == parts[1]:
 					return "%s (%s)" % [p["name"], Stage.stage_name(int(parts[2]) as Stage.Type)]
-		"ore":
-			return "Ore (%s)" % Stage.stage_name(int(parts[1]) as Stage.Type)
-		"essence":
-			return "Essence (%s)" % Stage.stage_name(int(parts[1]) as Stage.Type)
 		"part":
 			return "%s %s" % [MonsterDef.kin_name(int(parts[1]) as MonsterDef.Kin), KIN_PARTS[int(parts[1])]]
-		"break":
-			return "Breakthrough material (%s)" % Stage.stage_name(int(parts[1]) as Stage.Type)
 		"pill":
 			var names: PackedStringArray = []
 			for prop in parts[1].split("+"):
 				for p: Dictionary in values.properties:
 					if String(p["id"]) == prop:
 						names.append(String(p["name"]))
-			return "%s pill (%s)" % [" and ".join(names), Stage.stage_name(int(parts[2]) as Stage.Type)]
-		"weapon", "armour":
-			return "%s: %s" % [parts[0].capitalize(), parts[1]]
+			var text := "%s pill (%s)" % [" and ".join(names), Stage.stage_name(int(parts[2]) as Stage.Type)]
+			for f: Dictionary in values.flaws:
+				if String(f["id"]) == flaw(item):
+					text += " — %s" % f["name"]
+			return text
+		"weapon":
+			return "Weapon: %s" % Crafting.piece_name(values, int(parts[1]), int(parts[2]))
 	return item
 
 
@@ -84,15 +78,12 @@ static func all_ids(values: GameValues, stage: int) -> Array[String]:
 		for id in plants_of(values, t):
 			if not out.has(plant(id, t)):
 				out.append(plant(id, t))
-		out.append(ore(t))
-		out.append(essence(t))
-		out.append(breakthrough(t))
 	for k in MonsterDef.Kin.size():
 		out.append(beast_part(k))
 	return out
 
 
-## "Ore (Qi Gathering) ×2, Moonleaf ×1" for a dictionary of item -> number.
+## "Moonleaf ×2, Beast Fang ×1" for a dictionary of item -> number.
 static func list_text(loot: Dictionary, values: GameValues) -> String:
 	var parts: PackedStringArray = []
 	for id in loot:

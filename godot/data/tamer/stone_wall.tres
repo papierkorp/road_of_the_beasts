@@ -4,8 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-id = &"weapon_mist_bell"
-display_name = "Mist Bell"
-effect = "swap_places"
-description = "Two own monsters swap places."
-source = "weapon"
+id = &"stone_wall"
+display_name = "Stone Wall"
+effect = "lay"
+description = "Sets an Earth Wall on a free square; it stands 2 rounds."
+lay_prop = &"earth_wall"
+source = "skill"

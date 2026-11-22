@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1")
-id = &"weapon_ward_staff"
-display_name = "Ward Staff"
-effect = "spirit_shield"
-description = "The next hit on one own monster deals nothing."
-source = "weapon"
+id = &"second_dose"
+display_name = "Second Dose"
+effect = "renew"
+description = "Every pill you took in this battle acts once more."
+renew_source = "pill"

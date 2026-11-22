@@ -91,6 +91,9 @@ Battle resolves what the tamer brought in the tamer slots deterministically and 
 - **Second Wind:** one own monster on the field regains 1 HP, never above its maximum.
 - **Life Thread:** set on one own monster: the first time it would fall, from any damage source, its HP becomes 1 and the effect is consumed; further simultaneous damage of that step changes nothing.
 - **Beast Swap:** the incoming monster takes the square and queue entry of the swapped-out monster (it acts this round only if that entry is still pending) and arrives with its current HP. The swapped-out monster is not defeated and may be swapped back later; what it created stays.
+- **Whetstone · Second Dose:** every weapon (every pill) of the loadout that was used in this battle may be used once more; a pill is still used up only once. Not usable while none was used.
+- **Long Reach:** the next weapon used in this battle lays 1 square more, in the same straight line.
+- **Shared Dose:** the next pill taken in this battle also acts on every own monster orthogonally next to the one that takes it; a flaw of the pill hits the taker alone.
 
 ## 6. Skills and Functions
 
@@ -102,9 +105,9 @@ Monsters are caught on the board, during the battle, and nowhere else.
 
 - **Contract:** a monster with a tamer (the player's or an enemy tamer's) never dies: at 0 HP it is defeated ([overworld.md §4.2](overworld.md#42-defeat)). A **wild monster** has no contract: at 0 HP it dies, unless it stands on a Seal Zone.
 - **Seal Ground:** the tamer lays it on a square of their choice in the window of tamer skills ([§5](#5-tamer-skills)). It is a ground ([battle.md §4](battle.md#4-the-board)) that **cannot be destroyed:** it replaces the ground of its square, no other ground replaces it, no reset removes it, and it does not lapse; it lies until the battle ends or it catches. It cannot be laid on a Dragon Vein. Zones and props on its square stay and act as usual. **One Seal Ground at a time** per tamer.
-- **Two sources,** both available from the start of the game: the **Binding Seal item**, consumed when laid, and the **Seal tamer skill**, once per battle and upgradable ([overworld.md §5.4](overworld.md#54-tamer-skills)). A seal item has a tier (a stage) and a grade (a bloodline) and catches a monster of at most both; the tamer's stage is a ceiling as well.
-- **The catch:** a wild monster that **ends its turn** on Seal Ground is caught with a chance of **its base at 1 HP, 10 points less for every further HP.** The base is **50 %** for the Seal skill without upgrades and **20 / 35 / 50 / 65 %** for a Mortal / Spirit / Ancient / Divine seal item. A wild monster that reaches **0 HP on Seal Ground is caught, always.** The roll is the only chance in a battle; before the turn ends the player sees the chance on the square.
+- **One source:** the **Seal tamer skill**, from the start of the game, once per battle and upgradable ([overworld.md §5.4](overworld.md#54-tamer-skills)). It catches a monster of at most the tamer's stage. There is no seal item.
+- **The catch:** a wild monster that **ends its turn** on Seal Ground is caught with a chance of **its base at 1 HP, 10 points less for every further HP.** The base is **50 %** for the Seal skill without upgrades. A wild monster that reaches **0 HP on Seal Ground is caught, always.** The roll is the only chance in a battle; before the turn ends the player sees the chance on the square.
 - **Caught:** the monster leaves the board and counts as defeated for the end of the battle; the Seal Ground is used up. A failed roll changes nothing; the battle goes on and the ground stays.
 - **Against tamers:** nothing is caught, no monster dies.
 
-*Working values:* the bases and the step per HP. Not defined: whether a void monster can be caught; how the wild side plays around Seal Ground.
+*Working values:* the base and the step per HP. Not defined: whether a void monster can be caught; how the wild side plays around Seal Ground.

@@ -68,9 +68,9 @@ static func collect(b: Battle, prop: BoardProp, when: String, step: Dictionary, 
 			if a.op == "damage":
 				step["hits"].append({"unit": id, "base": a.amount, "type": BattleDamage.AFTERMATH, "source": prop.def.display_name})
 			elif a.op == "push":
-				step["pushes"].append({"unit": id, "dir": BattlePayload._eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
+				step["pushes"].append({"unit": id, "dir": BattlePayload._eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name, "kind": "prop"})
 			elif a.op == "pull":
-				step["pushes"].append({"unit": id, "dir": -BattlePayload._eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name})
+				step["pushes"].append({"unit": id, "dir": -BattlePayload._eight_dir(per_unit[id]), "key": 0, "cause": prop.def.display_name, "kind": "prop"})
 	return lines
 
 

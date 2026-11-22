@@ -8,7 +8,7 @@ func title() -> String:
 
 
 func pillar() -> String:
-	return "Tamer and board"
+	return "Tamer"
 
 
 func hint() -> String:
@@ -17,7 +17,7 @@ func hint() -> String:
 
 func build(into: VBoxContainer) -> void:
 	var n := VoidPlace.depths(game)
-	into.add_child(HubUi.dim("The void has no ground: every battle here is fought on your own battleground. A depth costs %d AP and is won once; each gives a path point. Depth %d is the breakthrough trial." % [game.values.void_ap, n]))
+	into.add_child(HubUi.dim("The void has no ground: every battle here is fought on your own battleground. A depth costs %d AP and is won once; each gives one Insight. Depth %d is the breakthrough trial." % [game.values.void_ap, n]))
 	var list := HubUi.scroll(into)
 	var ladder := HubUi.card(list)
 	var steps: PackedStringArray = []
@@ -39,6 +39,16 @@ func build(into: VBoxContainer) -> void:
 	if not problems.is_empty():
 		ground.add_child(HubUi.label("Not legal: %s" % "; ".join(problems), 20, HubUi.WARN))
 	ground.add_child(HubUi.button("To the Battleground Workshop", hub.open.bind(&"workshop", &""), 360))
+	var beast := VoidPlace.sovereign(game)
+	var last := HubUi.card(list)
+	last.add_child(HubUi.label("The Sovereign beast — the last depth of the void", 22, UiTheme.ACCENT))
+	last.add_child(HubUi.dim("It waits from your first year on. Defeating it makes you Sovereign and wins the game. It is the trial of %s; before that you may attack it in any year for %d AP, and a defeat costs nothing else." % [Stage.stage_name(VoidPlace.LAST_STAGE), game.values.void_ap]))
+	for m in beast.enemies:
+		last.add_child(HubUi.label(HubUi.monster_lines(m)))
+	if not (VoidPlace.trial_is_sovereign(game) and VoidPlace.is_trial(game)):
+		var early := HubUi.button("Prepare: attack the Sovereign beast now", hub.prepare.bind(beast, func(_f: Fight) -> bool: return VoidPlace.pay_sovereign(game)), 480)
+		early.disabled = VoidPlace.problem(game) != "" or game.forced_trial or not problems.is_empty()
+		last.add_child(early)
 	var why := VoidPlace.problem(game)
 	if why != "":
 		list.add_child(HubUi.label("You cannot enter: %s." % why, 20, HubUi.WARN))

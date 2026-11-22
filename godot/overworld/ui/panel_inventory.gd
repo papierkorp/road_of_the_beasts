@@ -23,10 +23,10 @@ func build(into: VBoxContainer) -> void:
 	var you := HubUi.card(list)
 	you.add_child(HubUi.label("You", 22, UiTheme.ACCENT))
 	var system := CultivationDef.of(game.system)
-	you.add_child(HubUi.label("%s · %s · year %d · %d years left to live · %d path points · %d tamer slot(s)" % [Stage.stage_name(game.stage),
-		system.display_name if system != null else "no system", game.day, game.lifespan, game.path_points, game.tamer_slots()]))
-	you.add_child(HubUi.dim("You rise a stage only by the breakthrough trial, the last depth of the void. Path points come from the depths of the void and buy the nodes of your cultivation system."))
-	var content := BattleContent.shared()
+	you.add_child(HubUi.label("%s · %s · year %d · %d years left to live · %d Insight · %d tamer slot(s)" % [Stage.stage_name(game.stage),
+		system.display_name if system != null else "no Way", game.day, game.lifespan, game.path_points, game.tamer_slots()]))
+	you.add_child(HubUi.dim("You rise a stage only by the breakthrough trial, the last depth of the void. Insight comes from the depths of the void and buys the nodes of your Way."))
+	var content := GameSession.battle_content()
 	var names: PackedStringArray = []
 	for id in game.tamer_skills:
 		var def := content.tamer_skill(id)
@@ -36,14 +36,14 @@ func build(into: VBoxContainer) -> void:
 	var mons := HubUi.card(list)
 	mons.add_child(HubUi.label("Monsters: %d, eggs: %d (room for %d)" % [game.roster.size(), game.eggs.size(), game.roster_cap()], 22, UiTheme.ACCENT))
 	for m in game.roster:
-		mons.add_child(HubUi.label("%s · %s" % [m.title(), m.xp_text()]))
+		mons.add_child(HubUi.label("%s · %s bloodline · %s" % [m.title(), m.bloodline_name(), m.xp_text()]))
 
-	var groups := {"Materials": [], "Pills": [], "Forged pieces": []}
+	var groups := {"Materials": [], "Pills": [], "Weapons": []}
 	var ids: Array = game.items.keys()
 	ids.sort()
 	for id: String in ids:
 		var line := "%d × %s" % [int(game.items[id]), Materials.display_name(id, game.values)]
-		var key := "Pills" if id.begins_with("pill:") else ("Forged pieces" if id.begins_with("weapon:") or id.begins_with("armour:") else "Materials")
+		var key := "Pills" if id.begins_with("pill:") else ("Weapons" if id.begins_with("weapon:") else "Materials")
 		groups[key].append(line)
 	for key: String in groups:
 		var card := HubUi.card(list)
@@ -58,7 +58,3 @@ func build(into: VBoxContainer) -> void:
 	for id: String in game.parts:
 		parts.append("%d × %s" % [int(game.parts[id]), GameSession.part_name(id)])
 	ground.add_child(HubUi.label("Parts: %s" % (", ".join(parts) if not parts.is_empty() else "none")))
-	var prints: PackedStringArray = []
-	for id in game.blueprints:
-		prints.append(GameSession.part_name(String(id)))
-	ground.add_child(HubUi.label("Blueprints: %s" % (", ".join(prints) if not prints.is_empty() else "none")))
