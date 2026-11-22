@@ -28,7 +28,7 @@ func test_the_generator_uses_no_record_of_the_ingame_battle() -> void:
 	for id in grounds:
 		assert_str(c.ground(id).battle).is_not_equal("ingame")
 	var zones: Array = SkillGen.zone_ids(c)
-	assert_array(zones[0]).contains_exactly_in_any_order([&"push_zone", &"pull_zone", &"prop_damage_zone"])
+	assert_array(zones[0]).contains_exactly_in_any_order([&"push_zone", &"pull_zone"])
 	for old: StringName in [&"lava", &"thornbed", &"mossbed", &"snare"]:
 		assert_bool(grounds.has(old)).is_false()
 		assert_object(c.ground(old)).is_not_null()            # still content of the ingame battle

@@ -36,7 +36,7 @@ func test_skill_cards_say_what_matters() -> void:
 	assert_array(BattleText.skill_rows(c, c.skill(&"lava_field"))).is_equal([["Cost", "1 AP"], ["Where", "4 sq · within Reach · ■■/■■"],
 		["Creates", "ground Lava · 2 rd"], ["", "1 dmg at turn end"]])
 	# two things are two blocks
-	assert_array(_values(BattleText.skill_rows(c, c.skill(&"coiling_rift")))).contains(["ground Lava · 2 rd", "zone Void Pull · 2 rd", "turn end: pull 1 to centre"])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"coiling_rift")))).contains(["ground Lava · 2 rd", "zone Void Pull · 2 rd", "on arriving, turn end: pull 1 to centre"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"plant_bamboo")))).is_equal(["1 AP", "1 sq · within Reach", "prop Bamboo Stand",
 		"2 HP · spiky · destroyed: 1 dmg next to it"])
 	# a Strike and a movement that leave something

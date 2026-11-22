@@ -49,7 +49,8 @@ func _ready() -> void:
 		theme.default_font_size = 20
 		theme.set_font_size("font_size", "Button", 20)
 	var bg := ColorRect.new()
-	bg.color = Color(0.075, 0.082, 0.094)
+	bg.color = UiTheme.BG
+	bg.material = UiTheme.paper_material()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var margin := MarginContainer.new()
@@ -308,12 +309,13 @@ func _show_all() -> void:
 ## The look of one square: the colour of its ground, and short marks for what lies on it.
 func _show(p: Vector2i) -> void:
 	var b: Button = _buttons[p]
-	var colour := Color(0.1, 0.1, 0.11)
+	var colour := Color(UiTheme.INK, 0.10)        # no square: a faint shadow on the paper
 	var lines: PackedStringArray = []
 	var tip: PackedStringArray = ["%d, %d" % [p.x, p.y]]
 	if map.has_square(p):
 		var g := _content.ground(map.grounds.get(p, GroundDef.PLAIN))
-		colour = g.color if g != null else Color(0.42, 0.44, 0.4)
+		# the paper of the board with a wash of the ground, as in the battle
+		colour = BattleView.TILE_PAPER.lerp(g.color, 0.62) if g != null and g.id != GroundDef.PLAIN else BattleView.TILE_PAPER
 		if g != null and g.id != GroundDef.PLAIN:
 			tip.append(g.display_name)
 			if g.id == GroundDef.WELL:
@@ -336,10 +338,13 @@ func _show(p: Vector2i) -> void:
 		tip.append("no square")
 	var box := StyleBoxFlat.new()
 	box.bg_color = colour
-	box.set_corner_radius_all(3)
+	box.set_corner_radius_all(2)
+	if map.has_square(p):
+		box.set_border_width_all(1)
+		box.border_color = Color(UiTheme.INK, 0.75)
 	if map.start_a.has(p) or map.start_b.has(p):
-		box.set_border_width_all(3)
-		box.border_color = Color(0.35, 0.65, 1.0) if map.start_a.has(p) else Color(1.0, 0.45, 0.4)
+		box.set_border_width_all(4)
+		box.border_color = UiTheme.SIDE[0] if map.start_a.has(p) else UiTheme.SIDE[1]
 	for state in ["normal", "hover", "pressed", "focus"]:
 		b.add_theme_stylebox_override(state, box)
 	b.text = "\n".join(lines)
@@ -351,7 +356,7 @@ func _status() -> void:
 		_job_status()
 		return
 	var problems := map.problems(_content)
-	_message.add_theme_color_override("font_color", Color(0.85, 0.63, 0.3) if not problems.is_empty() else UiTheme.DIM)
+	_message.add_theme_color_override("font_color", UiTheme.WARN if not problems.is_empty() else UiTheme.DIM)
 	_message.text = "Not playable yet: " + "; ".join(problems) if not problems.is_empty() else \
 		"Playable: up to %d of your monsters against up to %d." % [map.free_starts(_content, 0).size(), map.free_starts(_content, 1).size()]
 
@@ -364,7 +369,7 @@ func _job_status() -> void:
 	for part: String in _job.parts:
 		parts.append("%s %d/%d" % [part.get_slice(":", 1).capitalize(), int(used.get(part, 0)), int(_job.parts[part])])
 	var text := "Budget %d / %d\nParts placed / owned: %s\n" % [_job.cost(map), _job.budget, ", ".join(parts) if not parts.is_empty() else "none"]
-	_message.add_theme_color_override("font_color", Color(0.85, 0.63, 0.3) if not problems.is_empty() else UiTheme.DIM)
+	_message.add_theme_color_override("font_color", UiTheme.WARN if not problems.is_empty() else UiTheme.DIM)
 	_message.text = text + ("Not legal yet: " + "; ".join(problems) if not problems.is_empty() else
 		"Legal: up to %d of your monsters against up to %d." % [map.free_starts(_content, 0).size(), map.free_starts(_content, 1).size()])
 

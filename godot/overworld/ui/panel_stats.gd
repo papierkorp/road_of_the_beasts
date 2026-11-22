@@ -3,13 +3,17 @@ extends HubPanel
 ## The stat points of each monster (docs/monsters.md §2.2): every step of growth gives points the player spends.
 
 
+## The sign of each stat (assets/icons).
+const STAT_ICONS := {"hp": "stat_hp", "pace": "stat_pace", "move": "stat_stamina", "reach": "stat_reach", "ap": "stat_ap", "tpr": "stat_turns"}
+
+
 func build(into: VBoxContainer) -> void:
 	into.add_child(HubUi.dim("Every step of growth gives %d stat points. A monster fresh from the egg can take its points back until its first battle." % MonsterInstance.STEP_POINTS))
 	var list := HubUi.scroll(into)
 	for m in game.roster:
 		var card := HubUi.card(list)
-		card.add_child(HubUi.label(m.title(), 22, UiTheme.ACCENT))
-		card.add_child(HubUi.label("%s\n%s · %d stat points unspent" % [m.stats_text(), m.xp_text(), m.unspent]))
+		card.add_child(HubUi.monster_head(m))
+		card.add_child(HubUi.label("%s · %d stat points unspent" % [m.xp_text(), m.unspent], 18, HubUi.GOOD if m.unspent > 0 else UiTheme.DIM))
 		var row := HubUi.flow()
 		card.add_child(row)
 		for stat in MonsterInstance.STAT_ORDER:
@@ -19,6 +23,8 @@ func build(into: VBoxContainer) -> void:
 				m.buy(stat)
 				hub.refresh(), 210)
 			b.disabled = not m.can_buy(stat)
+			b.icon = UiTheme.icon(STAT_ICONS.get(stat, ""))
+			b.add_theme_constant_override("icon_max_width", 22)
 			row.add_child(b)
 		if m.fresh:
 			row.add_child(HubUi.button("Take all points back", func():

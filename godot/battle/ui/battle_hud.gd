@@ -270,6 +270,12 @@ func _kind_stripe(b: Button, color: Variant) -> void:
 	if color == null or b.has_meta("kind_color") and b.get_meta("kind_color") == color:
 		return
 	b.set_meta("kind_color", color)
+	for kind: String in BattleText.KINDS:             # the sign of the kind beside the name (assets/icons)
+		if BattleText.KINDS[kind][1] == color:
+			b.icon = UiTheme.icon("kind_" + kind)
+			b.add_theme_constant_override("icon_max_width", 30)
+			for state in ["icon_normal_color", "icon_hover_color", "icon_focus_color"]:
+				b.add_theme_color_override(state, color)
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		var sb := b.get_theme_stylebox(state)
 		if not (sb is StyleBoxFlat):
@@ -421,7 +427,7 @@ func _build_preview(root: Control) -> void:
 
 func _build_banner(root: Control) -> void:
 	var dim := ColorRect.new()
-	dim.color = Color(0.05, 0.055, 0.065, 0.8)
+	dim.color = Color(UiTheme.PAPER, 0.88)            # a veil of paper over the board
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.visible = false
 	root.add_child(dim)
@@ -433,8 +439,10 @@ func _build_banner(root: Control) -> void:
 	col.add_theme_constant_override("separation", 14)
 	center.add_child(col)
 	_banner_text = Label.new()
-	_banner_text.add_theme_font_size_override("font_size", 56)
-	_banner_text.add_theme_color_override("font_color", UiTheme.ACCENT)
+	_banner_text.add_theme_font_size_override("font_size", 72)
+	_banner_text.add_theme_color_override("font_color", UiTheme.INK)
+	if UiTheme.title_font() != null:
+		_banner_text.add_theme_font_override("font", UiTheme.title_font())
 	_banner_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(_banner_text)
 	_banner_restart = _menu_button("Fight Again", func(): restart_pressed.emit())
@@ -445,7 +453,7 @@ func _build_banner(root: Control) -> void:
 
 func _build_pause(root: Control) -> void:
 	var dim := ColorRect.new()
-	dim.color = Color(0.05, 0.055, 0.065, 0.75)
+	dim.color = Color(UiTheme.PAPER, 0.8)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dim.visible = false
 	root.add_child(dim)
@@ -459,9 +467,11 @@ func _build_pause(root: Control) -> void:
 	col.add_theme_constant_override("separation", 14)
 	panel.add_child(col)
 	var title := Label.new()
-	title.text = "PAUSED"
-	title.add_theme_font_size_override("font_size", 32)
-	title.add_theme_color_override("font_color", UiTheme.ACCENT)
+	title.text = "Paused"
+	title.add_theme_font_size_override("font_size", 36)
+	title.add_theme_color_override("font_color", UiTheme.INK)
+	if UiTheme.title_font() != null:
+		title.add_theme_font_override("font", UiTheme.title_font())
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(title)
 	col.add_child(_menu_button("Resume", func(): resume_pressed.emit()))
@@ -526,7 +536,7 @@ func update(order_text: String, portrait: String, ap_text: String, hint: String,
 		b.text = a.get("text", "")
 		_kind_stripe(b, a.get("color", null))
 		b.tooltip_text = a.get("tooltip", "")
-		b.modulate = UiTheme.ACCENT if a.get("selected", false) else Color.WHITE
+		b.modulate = Color(1.0, 0.84, 0.55) if a.get("selected", false) else Color.WHITE      # the chosen action: a wash of ochre
 		if a.has("card"):
 			_cards[a["id"]] = a["card"]
 	_even_widths(_skill_grid)

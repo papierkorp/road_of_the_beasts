@@ -36,23 +36,32 @@ func build(into: VBoxContainer) -> void:
 	var mons := HubUi.card(list)
 	mons.add_child(HubUi.label("Monsters: %d, eggs: %d (room for %d)" % [game.roster.size(), game.eggs.size(), game.roster_cap()], 22, UiTheme.ACCENT))
 	for m in game.roster:
-		mons.add_child(HubUi.label("%s · %s bloodline · %s" % [m.title(), m.bloodline_name(), m.xp_text()]))
+		mons.add_child(HubUi.monster_line(m))
+		mons.add_child(HubUi.dim("%s bloodline · %s" % [m.bloodline_name(), m.xp_text()]))
 
 	var groups := {"Materials": [], "Pills": [], "Weapons": []}
 	var ids: Array = game.items.keys()
 	ids.sort()
 	for id: String in ids:
-		var line := "%d × %s" % [int(game.items[id]), Materials.display_name(id, game.values)]
 		var key := "Pills" if id.begins_with("pill:") else ("Weapons" if id.begins_with("weapon:") else "Materials")
-		groups[key].append(line)
+		groups[key].append(id)
 	for key: String in groups:
 		var card := HubUi.card(list)
 		card.add_child(HubUi.label(key, 22, UiTheme.ACCENT))
-		var lines: Array = groups[key]
-		card.add_child(HubUi.label("\n".join(PackedStringArray(lines)) if not lines.is_empty() else "none"))
+		var owned: Array = groups[key]
+		var flow := HubUi.flow(18)
+		card.add_child(flow)
+		for id: String in owned:
+			var line := HubUi.signed(HubUi.item_sign(id), "%s ×%d" % [Materials.display_name(id, game.values), int(game.items[id])])
+			line.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+			line.custom_minimum_size.x = 330
+			flow.add_child(line)
+		if owned.is_empty():
+			card.add_child(HubUi.dim("none"))
 
 	var ground := HubUi.card(list)
 	ground.add_child(HubUi.label("Battleground", 22, UiTheme.ACCENT))
+	ground.add_child(MiniBoard.of(MapData.from_dict(game.battleground), 22.0))
 	ground.add_child(HubUi.label(GameSession.battleground_summary()))
 	var parts: PackedStringArray = []
 	for id: String in game.parts:

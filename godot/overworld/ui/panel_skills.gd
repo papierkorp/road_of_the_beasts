@@ -10,7 +10,8 @@ func build(into: VBoxContainer) -> void:
 	var list := HubUi.scroll(into)
 	for m in game.roster:
 		var card := HubUi.card(list)
-		card.add_child(HubUi.label("%s — %d of %d slots filled, %d development step(s) unspent" % [m.title(), m.kit.size(), m.slots, m.dev_steps], 22, UiTheme.ACCENT))
+		card.add_child(HubUi.monster_head(m))
+		card.add_child(HubUi.label("%d of %d slots filled · %d development step(s) unspent" % [m.kit.size(), m.slots, m.dev_steps], 18, UiTheme.ACCENT))
 		card.add_child(HubUi.dim(HubUi.kin_lines(m)))
 		if m.choice_picks > 0:
 			_choice(card, m)
@@ -27,7 +28,7 @@ func build(into: VBoxContainer) -> void:
 			var s := skills[slot]
 			var row := HubUi.row()
 			card.add_child(row)
-			row.add_child(HubUi.label("Slot %d: %s (%s) · level %d\n%s" % [slot + 1, s.display_name, _kind(s), m.slot_level(slot), GameSession.skill_text(s)]))
+			row.add_child(HubUi.skill_line(s, "Slot %d: %s · %s · level %d" % [slot + 1, s.display_name, _kind(s), m.slot_level(slot)], GameSession.skill_text(s)))
 			var b := HubUi.button("Develop", func():
 				m.develop_slot(slot)
 				hub.refresh(), 150)
@@ -44,7 +45,7 @@ func build(into: VBoxContainer) -> void:
 					continue
 				var row := HubUi.row()
 				card.add_child(row)
-				row.add_child(HubUi.label("%s (%s)\n%s" % [s.display_name, _kind(s), GameSession.skill_text(s)]))
+				row.add_child(HubUi.skill_line(s, "%s · %s" % [s.display_name, _kind(s)], GameSession.skill_text(s)))
 				row.add_child(HubUi.button("Learn", func():
 					m.learn(s.id)
 					hub.refresh(), 150))

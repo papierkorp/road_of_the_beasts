@@ -268,6 +268,7 @@ static func _swap(b: Battle, u: BattleUnit, ally: BattleUnit, label: String) -> 
 	BattleDamage.ground_triggers(b, u, Moment.ENTER, [to] as Array[Vector2i])
 	if ally.is_alive():
 		BattleDamage.ground_triggers(b, ally, Moment.ENTER, [from] as Array[Vector2i])
+		BattleTurn.arrive(b, ally)
 	return true
 
 
@@ -335,4 +336,5 @@ static func retreat(b: Battle, u: BattleUnit, dir: Vector2i) -> bool:
 	b.emit(&"retreated", {"who": u.id, "from": from, "to": to})
 	if u.layer == Board.GROUND:
 		BattleDamage.ground_triggers(b, u, Moment.ENTER, fresh)
+	BattleTurn.arrive(b, u)
 	return true

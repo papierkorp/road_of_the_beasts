@@ -8,6 +8,7 @@
 script = ExtResource("1_am")
 when = "enter"
 op = "pull"
+shape = "whirl"
 amount = 1
 [resource]
 script = ExtResource("3_pd")
@@ -20,4 +21,4 @@ solid = false
 aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
 ground_left = &""
 color = Color(0.5, 0.4, 0.75, 1)
-description = "Walkable trap. Entered: monsters on the 8 neighbouring squares are pulled 1 square toward it (they collide with the monster on it); the trap is used up."
+description = "Walkable trap. Entered: monsters and props on the 4 neighbouring squares are pulled 1 square toward it (each collides with the monster on it); the trap is used up."

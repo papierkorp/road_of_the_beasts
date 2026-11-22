@@ -81,12 +81,13 @@ func _build_run(into: VBoxContainer) -> void:
 			continue
 		var f := Fight.new()
 		f.map_id = n["map"]
-		card.add_child(HubUi.label("Battleground: %s" % GameSession.map_summary(f)))
-		for e: MonsterInstance in n["enemies"]:
-			card.add_child(HubUi.label(HubUi.monster_lines(e, false)))
+		var foes: Array[MonsterInstance] = []
+		foes.assign(n["enemies"])
+		f.enemies = foes
+		card.add_child(HubUi.fight_view(f, false, 14.0))
 		card.add_child(HubUi.dim("Loot: %s, and a beast part per monster defeated" % Materials.list_text(n["loot"], game.values)))
 		if state == "open":
-			var go := HubUi.button("Prepare the battle", func(): hub.prepare(DungeonRun.fight_for(game, id), func(_f: Fight) -> bool: return true))
+			var go := HubUi.primary("Prepare the battle", func(): hub.prepare(DungeonRun.fight_for(game, id), func(_f: Fight) -> bool: return true))
 			go.disabled = not DungeonRun.team_stands(game)
 			card.add_child(go)
 		var leads: PackedStringArray = []

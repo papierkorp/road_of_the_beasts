@@ -30,8 +30,7 @@ func build(into: VBoxContainer) -> void:
 	var f := VoidPlace.fight(game)
 	var foe := HubUi.card(list)
 	foe.add_child(HubUi.label(f.title, 22, UiTheme.ACCENT))
-	for m in f.enemies:
-		foe.add_child(HubUi.label(HubUi.monster_lines(m)))
+	foe.add_child(HubUi.fight_view(f))
 	foe.add_child(HubUi.dim("A win gives: %s" % f.loot_text))
 	var ground := HubUi.card(list)
 	ground.add_child(HubUi.label("Your battleground: %s" % GameSession.battleground_summary()))
@@ -44,7 +43,7 @@ func build(into: VBoxContainer) -> void:
 	last.add_child(HubUi.label("The Sovereign beast — the last depth of the void", 22, UiTheme.ACCENT))
 	last.add_child(HubUi.dim("It waits from your first year on. Defeating it makes you Sovereign and wins the game. It is the trial of %s; before that you may attack it in any year for %d AP, and a defeat costs nothing else." % [Stage.stage_name(VoidPlace.LAST_STAGE), game.values.void_ap]))
 	for m in beast.enemies:
-		last.add_child(HubUi.label(HubUi.monster_lines(m)))
+		last.add_child(HubUi.monster_line(m))
 	if not (VoidPlace.trial_is_sovereign(game) and VoidPlace.is_trial(game)):
 		var early := HubUi.button("Prepare: attack the Sovereign beast now", hub.prepare.bind(beast, func(_f: Fight) -> bool: return VoidPlace.pay_sovereign(game)), 480)
 		early.disabled = VoidPlace.problem(game) != "" or game.forced_trial or not problems.is_empty()
@@ -52,6 +51,6 @@ func build(into: VBoxContainer) -> void:
 	var why := VoidPlace.problem(game)
 	if why != "":
 		list.add_child(HubUi.label("You cannot enter: %s." % why, 20, HubUi.WARN))
-	var go := HubUi.button("Prepare: %s" % f.title, hub.prepare.bind(f, func(_f: Fight) -> bool: return VoidPlace.pay(game)), 480)
+	var go := HubUi.primary("Prepare: %s" % f.title, hub.prepare.bind(f, func(_f: Fight) -> bool: return VoidPlace.pay(game)), 480)
 	go.disabled = why != "" or not problems.is_empty()
 	into.add_child(go)

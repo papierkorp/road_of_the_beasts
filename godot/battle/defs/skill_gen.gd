@@ -75,7 +75,7 @@ static func draw(content: BattleContent, rng: RandomNumberGenerator, index: int)
 	return draw_kind(content, rng, KINDS[index % KINDS.size()], index)
 
 
-## Zones a skill may create: [those that move a monster or wear props down, those that only change stats]. A zone that only
+## Zones a skill may create: [those that move a monster, those that only change stats]. A zone that only
 ## changes stats is never a skill of its own (gdd_skills §2); it comes with ground, a Strike or a movement.
 static func zone_ids(content: BattleContent) -> Array:
 	var moving: Array[StringName] = []
@@ -84,7 +84,7 @@ static func zone_ids(content: BattleContent) -> Array:
 		var z: BattleZoneDef = content.zones[id]
 		if not ContentStatus.in_game(z) or z.battle == "ingame":
 			continue
-		if z.has_tag(FieldEffect.PUSH) or z.has_tag(FieldEffect.PULL) or z.has_tag(FieldEffect.ERODE):
+		if z.has_tag(FieldEffect.PUSH) or z.has_tag(FieldEffect.PULL):
 			moving.append(id)
 		else:
 			stats.append(id)

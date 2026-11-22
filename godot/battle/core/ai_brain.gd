@@ -220,8 +220,9 @@ static func _vein_score(b: Battle, side: int) -> float:
 			var sgn := 1.0 if s == side else -1.0
 			if cell.owner_side == s:
 				var v := VEIN_OWNED
-				if b.board.solid_at(p, Board.GROUND) != null:
-					v += VEIN_LOCK + VEIN_GUARD * VEIN_GUARD_CAP
+				var lock := b.board.solid_at(p, Board.GROUND)
+				if lock != null:                      # the vein wears the prop down by 1 a round: a lock of 1 HP is half a lock
+					v += (VEIN_LOCK + VEIN_GUARD * VEIN_GUARD_CAP) * minf(1.0, lock.hp / 2.0)
 				else:
 					var foe := int(reach[1 - s].get(p, VEIN_GUARD_CAP + 1))
 					v += VEIN_GUARD * clampi(foe - 1, 0, VEIN_GUARD_CAP)
@@ -275,6 +276,8 @@ static func _prop_threat(b: Battle, side: int) -> float:
 			if a == null or a.op != "damage":
 				continue
 			var weight := PROP_ROUND_END if a.when == Moment.ROUND_END else (PROP_TRAP if a.when == Moment.ENTER else PROP_BURST)
+			if a.when == Moment.DESTROYED and _wears_down(b, prop):
+				weight *= 2.0                         # ground or a Dragon Vein destroys it by itself: a bomb with a clock
 			var offsets: Array[Vector2i] = BattleShapes.ALL8 if a.when == Moment.ENTER else a.offsets()
 			for o in offsets:
 				var t := b.unit_at(prop.pos + o, Board.GROUND)
@@ -282,6 +285,22 @@ static func _prop_threat(b: Battle, side: int) -> float:
 					var w := weight * float(mini(a.amount, t.hp))
 					total += w if t.side != side else -w
 	return total
+
+
+## A prop that loses HP at every round end where it stands: on a Dragon Vein or on end-of-turn damage ground.
+static func _wears_down(b: Battle, prop: BoardProp) -> bool:
+	var cell := b.board.at(prop.pos)
+	if cell == null:
+		return false
+	if cell.ground == GroundDef.WELL and BattleExperiment.wells > 0:
+		return true
+	var g := b.content.ground(cell.ground)
+	if g == null:
+		return false
+	for t in g.triggers:
+		if t.kind == "damage" and (t.timing == Moment.TURN_END or t.timing == Moment.ROUND_END):
+			return true
+	return false
 
 
 ## Score points for how exposed `u` is to being pushed into harm by one of `pushers`: for each
@@ -364,6 +383,8 @@ static func _standing_cost(b: Battle, u: BattleUnit) -> float:
 		return cost
 	var cell := b.board.at(u.pos)
 	var g := b.content.ground(cell.ground)
+	if cell.ground == GroundDef.WELL and BattleExperiment.wells > 0:
+		cost += 3.0                               # a Dragon Vein deals 1 to whoever stands on it at the round end
 	if g != null and not BattleStats.ignores_ground(u, cell.ground):
 		for t in g.triggers:
 			if t.timing == Moment.LEAVE:

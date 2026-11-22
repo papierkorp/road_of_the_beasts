@@ -42,13 +42,13 @@ static func unit_name(b: Battle, id: StringName) -> String:
 ## What kind of skill it is, for the action bar and the card: a word, its colour and one line that says what
 ## skills of that kind do. Kinds: strike · move · ground · zone · prop · self · passive.
 const KINDS := {
-	"strike": ["Strike", Color(0.93, 0.42, 0.38), "acts now on the squares of its shape, next to the user"],
-	"move": ["Move", Color(0.40, 0.68, 0.98), "moves the user; costs Stamina per square"],
-	"ground": ["Ground", Color(0.93, 0.62, 0.25), "lays ground on squares within Reach; ground acts at its moment"],
-	"zone": ["Zone", Color(0.70, 0.52, 0.95), "lays a zone within Reach; it moves a monster that ends its turn inside"],
-	"prop": ["Prop", Color(0.86, 0.86, 0.80), "creates a prop on free squares within Reach"],
-	"self": ["Self", Color(0.45, 0.85, 0.55), "an effect on the user"],
-	"passive": ["Passive", Color(0.45, 0.85, 0.55), "always on, costs nothing"],
+	"strike": ["Strike", Color(0.71, 0.21, 0.17), "acts now on the squares of its shape, next to the user"],
+	"move": ["Move", Color(0.20, 0.36, 0.56), "moves the user; costs Stamina per square"],
+	"ground": ["Ground", Color(0.66, 0.44, 0.10), "lays ground on squares within Reach; ground acts at its moment"],
+	"zone": ["Zone", Color(0.45, 0.28, 0.60), "lays a zone within Reach; it moves a monster that arrives or ends its turn inside"],
+	"prop": ["Prop", Color(0.38, 0.36, 0.33), "creates a prop on free squares within Reach"],
+	"self": ["Self", Color(0.20, 0.50, 0.42), "an effect on the user"],
+	"passive": ["Passive", Color(0.20, 0.50, 0.42), "always on, costs nothing"],
 }
 
 
@@ -126,7 +126,7 @@ const GLOSSARY := [
 	["Strike", "acts now on the squares of its shape, next to the user: pushes, and damages if the card says so"],
 	["Move", "moves the user; costs AP and 1 Stamina per square (Step: no Stamina)"],
 	["Ground", "lays ground on squares within Reach; ground acts at its moment and lasts 2 rounds"],
-	["Zone", "lays a zone within Reach; it moves a monster that ends its turn inside"],
+	["Zone", "lays a zone within Reach; it moves a monster that arrives or ends its turn inside"],
 	["Prop", "creates a prop on free squares within Reach"],
 	["Self", "an effect on the user for some rounds"],
 	["Passive", "always on, costs nothing"],
@@ -150,8 +150,8 @@ const GLOSSARY := [
 	["lapses", "a prop a skill created goes away without effect at the end of that round"],
 	["next to it / diagonal / around it", "the 4 neighbour squares / the 4 diagonal squares / all 8 squares"],
 	["ZONES", ""],
-	["push 1", "a monster that ends its turn inside is moved 1 square in the zone's direction (arrow)"],
-	["pull 1 to centre", "a monster that ends its turn inside is moved 1 square toward the zone's centre square; on the centre it stays"],
+	["push 1", "a monster whose move ends inside, or that ends its turn inside, is moved 1 square in the zone's direction (arrow)"],
+	["pull 1 to centre", "a monster whose move ends inside, or that ends its turn inside, is moved 1 square toward the zone's centre square; on the centre it stays"],
 	["BOARD", ""],
 	["collision", "a pushed monster that cannot move takes 1 (board edge, prop, monster); a monster in the way takes 1 too"],
 	["Dragon Vein", "belongs to the side that touched it last; at the round end it hits the nearest enemy of its owner"],
@@ -288,8 +288,6 @@ static func effect_words(e: FieldEffect, level := 1) -> String:
 			return "+%d turn next round" % v
 		FieldEffect.REFRESH:
 			return "Stamina +%d at the round end" % v
-		FieldEffect.ERODE:
-			return "props take %d at the round end" % v
 	return e.text(level)
 
 
@@ -300,9 +298,9 @@ static func zone_brief(z: BattleZoneDef, level := 1, full := false) -> String:
 	var moves: PackedStringArray = []
 	for e: FieldEffect in z.effects:
 		if e.tag == FieldEffect.PUSH:
-			moves.append("a monster that ends its turn inside is pushed 1 square in the zone's direction (arrow)" if full else "turn end: push 1")
+			moves.append("a monster whose move ends inside, or that ends its turn inside, is pushed 1 square in the zone's direction (arrow)" if full else "on arriving, turn end: push 1")
 		elif e.tag == FieldEffect.PULL:
-			moves.append("a monster that ends its turn inside is pulled 1 square toward the zone's centre square (arrow); on the centre it stays" if full else "turn end: pull 1 to centre")
+			moves.append("a monster whose move ends inside, or that ends its turn inside, is pulled 1 square toward the zone's centre square (arrow); on the centre it stays" if full else "on arriving, turn end: pull 1 to centre")
 	var parts: PackedStringArray = []
 	if not inside.is_empty():
 		parts.append("while inside: " + ", ".join(inside))
@@ -536,7 +534,7 @@ static func prop_rows(c: BattleContent, prop: BoardProp) -> Array:
 	return rows
 
 
-## Where a push or pull zone moves a monster that ends its turn on square `p`, with the compass direction:
+## Where a push or pull zone moves a monster that arrives or ends its turn on square `p`, with the compass direction:
 ## "here: push north", "here: pull east (to centre)", "here: no pull (diagonal to the centre)". "" for other zones.
 static func zone_way(z: BoardZone, p: Vector2i) -> String:
 	var parts: PackedStringArray = []
@@ -749,7 +747,7 @@ static func brief(b: Battle, e: Dictionary) -> String:
 			if e.has("from"):                         # the compass direction of the move
 				var step: Vector2i = e["to"] - e["from"]
 				way = " %s" % dir_name(Vector2i(signi(step.x), signi(step.y)))
-			return "%s%s → %s" % [unit_name(b, e["who"]), way, pos(e["to"])]
+			return "%s%s → %s%s" % [unit_name(b, e["who"]), way, pos(e["to"]), " (zone)" if String(e.get("cause", "")) == "zone" else ""]
 		&"retreat_failed":
 			return "%s cannot retreat" % unit_name(b, e["who"])
 		&"collision":

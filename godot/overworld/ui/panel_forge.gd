@@ -3,6 +3,7 @@ extends HubPanel
 ## Forge (docs/vision.md §7, docs/overworld.md §6.3): a piece is forged from two beast parts. The first says what it
 ## makes, the second how it acts. The same pair gives a weapon for a tamer slot or parts of the own battleground.
 ## Everything is shown before it is forged; which Kin gives what is drawn per game.
+## The screen reads left to right: what it makes · how it acts · the piece.
 
 ## The Kin of the first part (what) and of the second (how) the player has picked.
 static var what := 0
@@ -21,52 +22,96 @@ func hint() -> String:
 	return "Forge weapons and parts of your battleground"
 
 
-## A row of toggles, one per Kin, with what its beast part gives in this place of the pair.
-func _pick(into: Control, label: String, current: int, set_it: Callable, entry_of: Callable) -> void:
-	into.add_child(HubUi.label(label, 20, UiTheme.ACCENT))
-	var row := HubUi.flow()
-	into.add_child(row)
+## The colour of what a piece lays: the colour of its ground or prop on the board.
+func _what_color(index: int) -> Color:
+	var w := Crafting.what_of(game.values, index)
+	var content := GameSession.battle_content()
+	if w.has("prop"):
+		var p := content.prop(w["prop"])
+		return p.color if p != null else UiTheme.INK_SOFT
+	var g := content.ground(w.get("ground", &"plain"))
+	return g.color if g != null else UiTheme.INK_SOFT
+
+
+func _owned(kin: int) -> String:
+	return "%s ×%d" % [Materials.display_name(Materials.beast_part(kin), game.values), game.count(Materials.beast_part(kin))]
+
+
+## A card with one tile per Kin, two in a row.
+func _column(into: Control, head: String, current: int, set_it: Callable, tile_of: Callable) -> void:
+	var card := HubUi.card(into, 624)
+	card.add_child(HubUi.label(head, 20, UiTheme.ACCENT))
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	card.add_child(grid)
 	for kin in MonsterDef.Kin.size():
-		var e: Dictionary = entry_of.call(kin)
-		var have := game.count(Materials.beast_part(kin))
-		var b := HubUi.button("%s ×%d\n%s: %s" % [Materials.display_name(Materials.beast_part(kin), game.values), have, e["name"], e["text"]], func():
+		var b: Button = tile_of.call(kin, current == kin, func():
 			set_it.call(kin)
-			hub.refresh(), 400)
-		b.custom_minimum_size.y = HubUi.TAP + 24
-		b.toggle_mode = true
-		b.button_pressed = current == kin
-		row.add_child(b)
+			hub.refresh())
+		grid.add_child(b)
 
 
 func build(into: VBoxContainer) -> void:
 	var v := game.values
-	into.add_child(HubUi.dim("A piece takes two beast parts: the first says what it makes, the second how it acts. What each Kin gives differs from game to game; you see what you get before you forge. Beast parts come from every wild monster you defeat, in the dungeon and in the wild area."))
+	into.add_child(HubUi.dim("Two beast parts make a piece: the first says what it makes, the second how it acts. What each Kin gives differs from game to game. Beast parts come from every wild monster you defeat."))
 	var list := HubUi.scroll(into)
-	var pick := HubUi.card(list)
-	_pick(pick, "First part — what it makes", what, func(k: int): what = k, func(k: int) -> Dictionary: return Crafting.what_of(v, Crafting.what_index(game, k)))
-	_pick(pick, "Second part — how it acts", how, func(k: int): how = k, func(k: int) -> Dictionary: return Crafting.how_of(v, Crafting.how_index(game, k)))
+	var cols := HubUi.row(14)
+	list.add_child(cols)
+	_column(cols, "First part — what it makes", what, func(k: int): what = k, func(kin: int, picked: bool, action: Callable) -> Button:
+		var e := Crafting.what_of(v, Crafting.what_index(game, kin))
+		var lacking := game.count(Materials.beast_part(kin)) <= 0
+		var sign := HubUi.row(6)
+		sign.add_child(HubUi.sign("part_%d" % kin, picked, 40))
+		sign.add_child(HubUi.swatch(_what_color(Crafting.what_index(game, kin)), 20, UiTheme.PAPER_LIGHT if picked else UiTheme.INK))
+		return HubUi.tile(sign, e["name"], e["text"], _owned(kin), picked, action, 290, lacking))
+	_column(cols, "Second part — how it acts", how, func(k: int): how = k, func(kin: int, picked: bool, action: Callable) -> Button:
+		var e := Crafting.how_of(v, Crafting.how_index(game, kin))
+		var lacking := game.count(Materials.beast_part(kin)) <= (1 if kin == what else 0)
+		var sign := HubUi.row(6)
+		sign.add_child(HubUi.sign("part_%d" % kin, picked, 40))
+		sign.add_child(HubUi.squares(int(e.get("count", 1)), int(e.get("uses", 1)), UiTheme.PAPER_LIGHT if picked else UiTheme.INK, 9, UiTheme.PAPER_LIGHT if picked else UiTheme.INK))
+		return HubUi.tile(sign, e["name"], e["text"], _owned(kin), picked, action, 290, lacking))
+
+	# the piece: what the two parts give, as it will lie on the board
 	var wi := Crafting.what_index(game, what)
 	var hi := Crafting.how_index(game, how)
-	var piece := HubUi.card(list)
-	piece.add_child(HubUi.label("%s — %s" % [Crafting.piece_name(v, wi, hi), Crafting.piece_text(v, wi, hi)], 22, UiTheme.ACCENT))
-	piece.add_child(HubUi.label("Costs: %s" % Materials.list_text(Crafting.forge_cost(what, how), v)))
-	var row := HubUi.row()
-	piece.add_child(row)
-	var uses := int(Crafting.how_of(v, hi).get("uses", 1))
-	var weapon := HubUi.button("Forge as a weapon\nlaid from a tamer slot, %s" % ("%d times per battle" % uses if uses > 1 else "once per battle"), func():
+	var h := Crafting.how_of(v, hi)
+	var uses := int(h.get("uses", 1))
+	var piece := HubUi.card(cols)
+	piece.add_child(HubUi.label("The piece", 20, UiTheme.ACCENT))
+	piece.add_child(HubUi.title(Crafting.piece_name(v, wi, hi), 30))
+	var shown := HubUi.row(10)
+	shown.add_child(HubUi.squares(int(h.get("count", 1)), uses, _what_color(wi), 26))
+	piece.add_child(shown)
+	piece.add_child(HubUi.label(Crafting.piece_text(v, wi, hi), 17))
+	var cost := HubUi.row(8)
+	cost.add_child(HubUi.label("Costs", 16, UiTheme.DIM, false))
+	var need: Dictionary = Crafting.forge_cost(what, how)
+	for kin in MonsterDef.Kin.size():
+		var item := Materials.beast_part(kin)
+		if not need.has(item):
+			continue
+		var enough := game.count(item) >= int(need[item])
+		cost.add_child(UiTheme.icon_rect("part_%d" % kin, 26, UiTheme.INK if enough else UiTheme.WARN))
+		cost.add_child(HubUi.label("%s ×%d" % [Materials.display_name(item, v), int(need[item])], 16, UiTheme.TEXT if enough else UiTheme.WARN, false))
+	piece.add_child(cost)
+	var weapon := HubUi.primary("Forge as a weapon\nfrom a tamer slot, %s" % ("%d times per battle" % uses if uses > 1 else "once per battle"), func():
 		Crafting.forge(game, Crafting.WEAPON, what, how)
-		hub.refresh(), 420)
+		hub.refresh(), 0)
 	weapon.custom_minimum_size.y = HubUi.TAP + 24
 	weapon.disabled = not Crafting.can_forge(game, Crafting.WEAPON, what, how)
-	row.add_child(weapon)
-	var part := HubUi.button("Forge for your battleground\n%d × %s to place in the workshop" % [Crafting.part_units(v, hi), GameSession.part_name(Crafting.board_part(v, wi))], func():
+	piece.add_child(weapon)
+	var part := HubUi.button("Forge for your battleground\n%d × %s for the workshop" % [Crafting.part_units(v, hi), GameSession.part_name(Crafting.board_part(v, wi))], func():
 		Crafting.forge(game, Crafting.PART, what, how)
-		hub.refresh(), 520)
+		hub.refresh(), 0)
 	part.custom_minimum_size.y = HubUi.TAP + 24
 	part.disabled = not Crafting.can_forge(game, Crafting.PART, what, how)
-	row.add_child(part)
+	piece.add_child(part)
 	if game.vow_has("no_weapons"):
 		piece.add_child(HubUi.dim("Your vow forbids weapons."))
+
 	var pieces := HubUi.card(list)
 	pieces.add_child(HubUi.label("Your weapons", 20, UiTheme.ACCENT))
 	var ids: Array = game.items.keys()
@@ -76,8 +121,13 @@ func build(into: VBoxContainer) -> void:
 		if Materials.form(item) != Crafting.WEAPON:
 			continue
 		any = true
-		pieces.add_child(HubUi.label("%s ×%d — lays %s" % [Materials.display_name(item, v), game.count(item),
-			Crafting.piece_text(v, int(item.get_slice(":", 1)), int(item.get_slice(":", 2)))]))
+		var w_index := int(item.get_slice(":", 1))
+		var h_index := int(item.get_slice(":", 2))
+		var hw := Crafting.how_of(v, h_index)
+		var line := HubUi.row(10)
+		line.add_child(HubUi.squares(int(hw.get("count", 1)), int(hw.get("uses", 1)), _what_color(w_index), 14))
+		line.add_child(HubUi.label("%s ×%d — lays %s" % [Materials.display_name(item, v), game.count(item), Crafting.piece_text(v, w_index, h_index)]))
+		pieces.add_child(line)
 	if not any:
 		pieces.add_child(HubUi.dim("None yet. A weapon is put into a tamer slot when you prepare a battle."))
 	var parts: PackedStringArray = []

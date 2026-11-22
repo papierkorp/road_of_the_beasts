@@ -178,14 +178,17 @@ static func shove(b: Battle, u: BattleUnit, dir: Vector2i, cause: String, kind :
 		BattleDamage.defeat_step(b)
 	if u.is_alive():
 		BattleDamage.ground_triggers(b, u, Moment.ENTER, fresh)
+	if u.pos == to:
+		BattleTurn.arrive(b, u)                   # its move ended in a zone: the zone moves it on, once per action
 	return true
 
 
 ## Moves a prop one square by force (user decision 2026-11-14: push and pull count for props).
 ## A `heavy` prop cannot be moved. A blocked move (board edge, monster, other prop) is no move and
 ## is one collision: the prop takes 1, a monster in the way takes 1 (2 from a `spiky` prop; with
-## another prop in the way takes 1 (heavy none). Ground and zones never act on a
-## prop and nothing triggers when it is entered. Returns true if it moved.
+## another prop in the way takes 1 (heavy none). Ground damages a moved prop like a monster: the ground it
+## leaves and the ground it enters (docs/battle.md §4.5); a prop that falls to 0 HP on leaving stays where it
+## stood. A zone never acts on a prop here (it moves props at the round end). Returns true if the push took.
 static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String) -> bool:
 	if prop == null or prop.hp <= 0 or dir == Vector2i.ZERO:
 		return false
@@ -215,10 +218,16 @@ static func shove_prop(b: Battle, prop: BoardProp, dir: Vector2i, cause: String)
 		BattleDamage.defeat_step(b)
 		return false
 	var from := prop.pos
+	BattleDamage.ground_on_prop(b, prop, Moment.LEAVE)
+	if prop.hp <= 0:
+		if not BattleProps.is_empty(sprung):
+			BattleProps.run(b, sprung)
+		return true
 	b.board.remove_prop(prop)
 	prop.pos = to
 	b.board.put_prop(prop)
 	b.emit(&"prop_moved", {"from": from, "to": to, "prop": prop.def.id, "cause": cause})
+	BattleDamage.ground_on_prop(b, prop, Moment.ENTER)
 	if not BattleProps.is_empty(sprung):
 		BattleProps.run(b, sprung)
 	return true

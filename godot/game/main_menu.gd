@@ -15,7 +15,8 @@ func _ready() -> void:
 	theme = UiTheme.create()
 
 	var bg := ColorRect.new()
-	bg.color = Color(0.075, 0.082, 0.094)
+	bg.color = UiTheme.BG
+	bg.material = UiTheme.paper_material()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 
@@ -26,12 +27,20 @@ func _ready() -> void:
 	col.add_theme_constant_override("separation", 14)
 	center.add_child(col)
 
+	# the name in the title font, signed with a cinnabar seal
+	var head := HBoxContainer.new()
+	head.alignment = BoxContainer.ALIGNMENT_CENTER
+	head.add_theme_constant_override("separation", 22)
+	col.add_child(head)
 	var title := Label.new()
-	title.text = "ROAD OF THE BEASTS"
-	title.add_theme_font_size_override("font_size", 52)
-	title.add_theme_color_override("font_color", UiTheme.ACCENT)
+	title.text = "Road of the Beasts"
+	title.add_theme_font_size_override("font_size", 84)
+	title.add_theme_color_override("font_color", UiTheme.INK)
+	if UiTheme.title_font() != null:
+		title.add_theme_font_override("font", UiTheme.title_font())
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	col.add_child(title)
+	head.add_child(title)
+	head.add_child(UiTheme.icon_rect("seal", 78, UiTheme.CINNABAR))
 	var sub := Label.new()
 	sub.text = "Phase 1 prototype"
 	sub.add_theme_color_override("font_color", UiTheme.DIM)

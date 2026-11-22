@@ -32,7 +32,7 @@ static func kind_of(content: BattleContent, s: BattleSkillDef) -> String:
 				return "prop"
 			for op in s.ops_of(BoardOp.CREATE_ZONE):
 				var z := content.zone(op.zone)
-				if z != null and (z.has_tag(FieldEffect.PUSH) or z.has_tag(FieldEffect.PULL) or z.has_tag(FieldEffect.ERODE)):
+				if z != null and (z.has_tag(FieldEffect.PUSH) or z.has_tag(FieldEffect.PULL)):
 					return "zone"
 			return "ground" if s.has_op(BoardOp.GROUND) else ("zone" if s.has_op(BoardOp.CREATE_ZONE) else "")
 	return ""

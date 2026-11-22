@@ -4,7 +4,7 @@ extends RefCounted
 ## three may act when and how: the roles of gdd_battle §4.3 as a permission table. Ground triggers and
 ## prop operations name their moment with these values.
 
-const ENTER := "enter"              # a monster enters the square: by walking, by a push or by a pull
+const ENTER := "enter"              # a monster enters the square: by walking, by a push or by a pull (a prop: by a push or a pull)
 const LEAVE := "leave"              # a monster leaves the square
 const INSIDE := "inside"            # as long as a monster stands on it (a prop: as long as the prop stands)
 const TURN_END := "turn_end"        # at the end of the occupant's turn
@@ -26,11 +26,11 @@ const MOMENTS := {
 	"prop": [INSIDE, ENTER, ROUND_END, HIT, DESTROYED],
 }
 ## What each kind may do (effect words of BoardSheet). `experiment` effects (AP, turns per round on
-## others) are in the vocabulary but in no content of the game. `stamina`, `refresh` and `erode` are the ideas of
-## 2026-11-16 (Stamina recovery; a zone that wears props down): experiment content only.
+## others) are in the vocabulary but in no content of the game. `stamina` and `refresh` are the ideas of
+## 2026-11-16 (Stamina recovery): experiment content only.
 const EFFECTS := {
 	"ground": ["damage", "heal", "stamina", "refresh"],
-	"zone": ["slow", "haste", "drain_pace", "quicken", "drain_range", "extend", "push", "pull", "sap", "vigor", "tempo", "refresh", "erode"],
+	"zone": ["slow", "haste", "drain_pace", "quicken", "drain_range", "extend", "push", "pull", "sap", "vigor", "tempo", "refresh"],
 	"prop": ["damage", "push", "pull", "ground", "zone", "prop", "slow", "haste", "drain_pace", "quicken", "drain_range", "extend"],
 }
 

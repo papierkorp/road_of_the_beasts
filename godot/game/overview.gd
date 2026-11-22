@@ -278,7 +278,7 @@ static func generator_rows(c: BattleContent) -> Array[Dictionary]:
 	add.call("Self buff", "Value and rounds", "%s for %s rounds" % [nums.call(SkillGen.SELF_VALUES), nums.call(SkillGen.SELF_ROUNDS)])
 	add.call("Self buff", "In random kits", "no: no kit template counts self buffs; only the measuring runs draw them")
 
-	add.call("Zone skill", "Zone", "one that pushes, pulls or wears props down, for %s rounds" % nums.call(SkillGen.ZONE_ROUNDS))
+	add.call("Zone skill", "Zone", "one that pushes or pulls, for %s rounds" % nums.call(SkillGen.ZONE_ROUNDS))
 	add.call("Zone skill", "Where", free)
 	add.call("Zone skill", "Also lays ground", "yes or no (about one in %d)" % roundi(1.0 / SkillGen.ZONE_WITH_GROUND))
 
@@ -487,7 +487,8 @@ func _ready() -> void:
 		"zones": zone_rows(content), "sheets": sheet_rows(content), "props": prop_rows(content)}
 
 	var bg := ColorRect.new()
-	bg.color = Color(0.075, 0.082, 0.094)
+	bg.color = UiTheme.BG
+	bg.material = UiTheme.paper_material()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 

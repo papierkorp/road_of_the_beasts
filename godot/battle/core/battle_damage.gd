@@ -180,3 +180,22 @@ static func ground_triggers(b: Battle, u: BattleUnit, timing: String, cells: Arr
 					b.emit(&"stamina_recovered", {"who": u.id, "amount": gain, "source": g.display_name})
 	if timing == Moment.ENTER:
 		BattleProps.enter(b, u, over)         # a trap on the entered squares springs
+
+
+## Ground damages the prop standing on it like a monster (docs/battle.md §4.5): at `timing` enter or leave when a
+## push or pull moves it, and with `turn_end` at the round end (a prop has no turn). Healing and Stamina do
+## nothing to a prop. Returns the damage dealt; the caller settles the board.
+static func ground_on_prop(b: Battle, prop: BoardProp, timing: String) -> int:
+	if prop == null or prop.hp <= 0 or not prop.def.occupies(Board.GROUND):
+		return 0
+	var cell := b.board.at(prop.pos)
+	var g := b.content.ground(cell.ground) if cell != null else null
+	if g == null:
+		return 0
+	var total := 0
+	for t in _triggers(g, timing):
+		if t.kind == "damage":
+			total += t.value_at(cell.level)
+	if total > 0:
+		BattleBoardOps.damage_prop(b, prop, total)
+	return total

@@ -26,15 +26,15 @@ const PRICES := {
 	"kind:strike": -29.0, "kind:zone": -30.5, "leaves:move": -12.0, "leaves:strike": -12.5, "path:free": -5.0, "path:diagonal": 5.0,
 	"path:line": 0.5, "prop:ancestor_tablet": 17.0, "prop:bamboo_stand": 21.0, "prop:bronze_gong": 16.0, "prop:clay_urn": 23.5,
 	"prop:earth_wall": 16.0, "prop:ember_brazier": 21.5, "prop:pagoda_column": 17.0, "prop:paper_lantern": 15.5, "prop:peach_tree": 13.0,
-	"prop:spike_trap": 17.5, "prop:stone_lion": 13.0, "prop:storm_drum": 14.0, "prop:thorn_idol": 22.0, "prop:vortex_trap": 14.0,
+	"prop:spike_trap": 17.5, "prop:burst_trap": 16.0, "prop:stone_lion": 13.0, "prop:storm_drum": 14.0, "prop:thorn_idol": 22.0, "prop:vortex_trap": 14.0,
 	"prop:vortex_urn": 15.0, "prop×extra": 0.5, "push": 9.5, "push×extra": 0.0, "range+": 2.0,
 	"rounds+": 1.0, "shape:arc": 6.0, "shape:arc+1": 9.5, "shape:cross": -21.5, "shape:jab+1": 6.0,
 	"shape:jab+2": 7.0, "shape:pincer": -3.5, "shape:storm": 5.0, "shape:whirl": -5.0, "use:battle": -6.0,
 	"use:round": 1.0, "use:twice": 2.0, "zone:bog": 11.5, "zone:gale": 11.5, "zone:mire": 5.5,
 	"zone:shockwave": 11.5, "zone:slowing": 7.0, "zone:tailwind": 8.0, "zone:void_pull": 11.5, "zone×extra": 0.0,
-	"ground:shifting_sand": 13.5, "ground:springwater": 8.5, "zone:erosion": 8.5, "zone:updraft": 6.5,
+	"ground:shifting_sand": 13.5, "ground:springwater": 8.5, "zone:updraft": 6.5,
 	"ground:entry_damage": 7.5, "ground:stay_damage": 10.0, "ground:exit_damage": 16.5, "ground:entry_heal": 16.5,
-	"ground:entry_stamina": 8.5, "ground:no_prop": 13.5, "zone:push_zone": 11.5, "zone:pull_zone": 11.5, "zone:prop_damage_zone": 8.5,
+	"ground:entry_stamina": 8.5, "ground:no_prop": 13.5, "zone:push_zone": 11.5, "zone:pull_zone": 11.5,
 	"kind:self": -12.0, "self:extend": -4.5, "self:haste": -2.0, "self:quicken": -4.5, "self:refresh": -0.5,
 }
 ## Points of one square of a ground, zone or prop not named in PRICES.

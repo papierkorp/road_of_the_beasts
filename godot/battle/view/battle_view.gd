@@ -18,7 +18,14 @@ const PITCH := 40.0
 const ZOOM_MIN := 5.0
 const ZOOM_MAX := 20.0
 
-const SIDE_COLORS := [Color(0.35, 0.62, 1.0), Color(1.0, 0.38, 0.35)]
+## Ink blue for the player, cinnabar for the opponent (UiTheme.SIDE).
+const SIDE_COLORS := UiTheme.SIDE
+const TILE_SHADER := "res://assets/shaders/tile.gdshader"
+const ZONE_SHADER := "res://assets/shaders/zone.gdshader"
+## Bodies and props stand on paper: their colours are taken a step toward a warm grey so they sit in the picture.
+const MUTE := Color(0.5, 0.45, 0.38)
+## A plain square: paper a shade darker than the ground of the screen, so the board reads as one sheet.
+const TILE_PAPER := Color(0.80, 0.75, 0.64)
 const SURGE_COLOR := Color(1.0, 0.62, 0.2)
 
 var battle: Battle
@@ -59,24 +66,28 @@ func build(p_battle: Battle) -> void:
 
 func _build_environment() -> void:
 	get_viewport().msaa_3d = Viewport.MSAA_4X
+	# the paper ground of the screens lies behind the board: a canvas layer below the 3D world
+	var back := CanvasLayer.new()
+	back.layer = -1
+	back.add_child(UiTheme.paper_rect())
+	add_child(back)
 	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.075, 0.082, 0.094)
+	env.background_mode = Environment.BG_CANVAS
+	env.background_canvas_max_layer = -1
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.75, 0.78, 0.9)
+	env.ambient_light_color = Color(1.0, 0.97, 0.92)
 	env.ambient_light_energy = 0.5
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = true
-	env.glow_intensity = 0.7
-	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52, 30, 0)
-	sun.light_energy = 1.0
+	sun.light_energy = 0.36
+	sun.light_color = Color(1.0, 0.96, 0.9)
 	sun.shadow_enabled = true
+	sun.shadow_opacity = 0.55
 	sun.directional_shadow_max_distance = 40.0
 	add_child(sun)
 
@@ -102,8 +113,8 @@ func _build_base() -> void:
 	box.size = Vector3(s, 0.4, s)
 	plate.mesh = box
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.09, 0.085, 0.085)
-	mat.roughness = 0.95
+	mat.albedo_color = UiTheme.INK
+	mat.roughness = 1.0
 	plate.material_override = mat
 	plate.position.y = -0.2
 	add_child(plate)
@@ -215,6 +226,9 @@ func floating_text(p: Vector2i, text: String, color: Color) -> void:
 	var l := _make_label(self, 44)
 	l.text = text
 	l.modulate = color
+	l.outline_size = 14
+	if UiTheme.title_font() != null:
+		l.font = UiTheme.title_font()
 	var start := _cell_pos(p) + Vector3(0, _top(battle.board.at(p)) + 1.4, 0)
 	if battle.board.unit_id_at(p, Board.GROUND) == &"" and battle.board.unit_id_at(p, Board.AIR) != &"":
 		start.y += AIR_H
@@ -250,6 +264,21 @@ func _make_overlay(parent: Node3D) -> Dictionary:
 	return {"node": mi, "mat": m}
 
 
+## The overlay of a zone: a painted wash with a brush arrow (assets/shaders/zone.gdshader).
+func _make_zone(parent: Node3D) -> Dictionary:
+	var mi := MeshInstance3D.new()
+	var pm := PlaneMesh.new()
+	pm.size = Vector2(TILE * 0.96, TILE * 0.96)
+	mi.mesh = pm
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var m := ShaderMaterial.new()
+	m.shader = load(ZONE_SHADER)
+	mi.material_override = m
+	mi.visible = false
+	parent.add_child(mi)
+	return {"node": mi, "mat": m}
+
+
 func _make_arrow(parent: Node3D) -> Dictionary:
 	var mi := MeshInstance3D.new()
 	var cone := CylinderMesh.new()
@@ -272,6 +301,10 @@ func _make_label(parent: Node3D, size_px: int = 26) -> Label3D:
 	l.pixel_size = 0.006
 	l.font_size = size_px
 	l.outline_size = 10
+	l.modulate = UiTheme.INK
+	l.outline_modulate = Color(UiTheme.PAPER_LIGHT, 0.92)
+	if UiTheme.text_font() != null:
+		l.font = UiTheme.text_font()
 	l.no_depth_test = true
 	l.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(l)
@@ -291,8 +324,10 @@ func _make_compass() -> void:
 		add_child(root)
 		var l := _make_label(root, 28)                # quiet: grey, no strong outline (user, 2026-11-17)
 		l.text = entry[0]
-		l.modulate = Color(0.72, 0.76, 0.82, 0.8)
-		l.outline_modulate = Color(0, 0, 0, 0.35)
+		l.modulate = Color(UiTheme.INK_SOFT, 0.85)
+		l.outline_modulate = Color(UiTheme.PAPER_LIGHT, 0.0)
+		if UiTheme.title_font() != null:
+			l.font = UiTheme.title_font()
 
 
 func _make_tile(p: Vector2i) -> Dictionary:
@@ -302,14 +337,15 @@ func _make_tile(p: Vector2i) -> Dictionary:
 	var body := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	body.mesh = mesh
-	var mat := StandardMaterial3D.new()
-	mat.roughness = 0.9
+	var mat := ShaderMaterial.new()
+	mat.shader = load(TILE_SHADER)
+	mat.set_shader_parameter("tile", TILE)
 	body.material_override = mat
 	root.add_child(body)
 	var label := _make_label(root, 20)
 	return {
 		"root": root, "body": body, "mesh": mesh, "mat": mat, "label": label,
-		"zone": _make_overlay(root), "surge": _make_overlay(root), "hl": _make_overlay(root),
+		"zone": _make_zone(root), "surge": _make_overlay(root), "hl": _make_overlay(root),
 		"arrow": _make_arrow(root),
 		"surge_on": false, "surge_col": Color.WHITE,
 		"prop_key": "", "prop_node": null, "air_prop_key": "", "air_prop_node": null,
@@ -327,7 +363,7 @@ func _make_monster(u: BattleUnit) -> Node3D:
 	mi.position.y = 0.4
 	mi.scale = Vector3.ONE * (1.0 if u.size == 1 else 1.7)
 	var mat := StandardMaterial3D.new()
-	mat.albedo_color = MonsterLook.aspect_color(u.sheet.look.aspect) if u.sheet.look != null else Color(0.62, 0.62, 0.66)
+	mat.albedo_color = (MonsterLook.aspect_color(u.sheet.look.aspect) if u.sheet.look != null else Color(0.62, 0.62, 0.66)).lerp(MUTE, 0.28)
 	mat.roughness = 0.55
 	if u.kin() == MonsterDef.Kin.SPIRIT:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -361,14 +397,14 @@ func _make_monster(u: BattleUnit) -> Node3D:
 	torus.outer_radius = 0.48 * scale_f
 	ring.mesh = torus
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	ring.material_override = _unshaded(Color(1.0, 0.85, 0.45), false)
+	ring.material_override = _unshaded(Color(0.93, 0.68, 0.16), false)
 	ring.position.y = 0.04
 	root.add_child(ring)
 
 	var label := _make_label(root, 26)
 	label.name = "Label"
 	label.position.y = 1.25 + 0.5 * (scale_f - 1.0)
-	label.modulate = SIDE_COLORS[u.side].lerp(Color.WHITE, 0.6)
+	label.modulate = SIDE_COLORS[u.side].darkened(0.35)
 	add_child(root)
 	return root
 
@@ -405,15 +441,31 @@ func refresh() -> void:
 
 func _ground_color(cell: BoardCell) -> Color:
 	var g := battle.content.ground(cell.ground)
-	var base := g.color if g != null else Color(0.3, 0.3, 0.3)
-	base = base.darkened(0.45)
-	if g != null and g.max_level > 1 and cell.level > 1:
-		base = base.lightened(0.18)
+	# a wash of the ground's colour on the paper of the board; Plain is the bare paper
+	var base := TILE_PAPER
+	if g != null and cell.ground != GroundDef.PLAIN:
+		base = TILE_PAPER.lerp(g.color, 0.62 if cell.level <= 1 else 0.8)
 	if _vein_owned(cell):                              # a Dragon Vein shows the colour of the side that owns it
-		base = base.lerp(SIDE_COLORS[cell.owner_side], 0.6)
+		base = TILE_PAPER.lerp(SIDE_COLORS[cell.owner_side], 0.6)
 	if cell.is_mountain():
 		base = base.lerp(Color(0.18, 0.35, 0.41), 0.55 if cell.ground == GroundDef.PLAIN else 0.3)
 	return base
+
+
+## The ink sign of a square (assets/shaders/tile.gdshader): 1 a Dragon Vein, 2 ground that acts on entering,
+## 3 on leaving, 4 at the end of a turn; 0 none.
+func _ground_mark(cell: BoardCell) -> int:
+	if cell.ground == GroundDef.WELL:
+		return 1
+	var g := battle.content.ground(cell.ground)
+	if g == null or g.triggers.is_empty():
+		return 0
+	match g.triggers[0].timing:
+		Moment.ENTER:
+			return 2
+		Moment.LEAVE:
+			return 3
+	return 4
 
 
 ## Last touch owns (`vein_touch`): the side a Dragon Vein belongs to at the moment, if any.
@@ -457,19 +509,23 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 	var h := _top(cell)
 	(t["mesh"] as BoxMesh).size = Vector3(TILE, h, TILE)
 	(t["body"] as MeshInstance3D).position.y = h / 2.0
-	var mat := t["mat"] as StandardMaterial3D
-	mat.albedo_color = _ground_color(cell)
+	var mat := t["mat"] as ShaderMaterial
+	var wash := _ground_color(cell)
+	mat.set_shader_parameter("wash", wash)
+	mat.set_shader_parameter("mark", _ground_mark(cell))
+	mat.set_shader_parameter("mark_color", wash.darkened(0.62))
 	var g := battle.content.ground(cell.ground)
-	mat.emission_enabled = g != null and g.is_hazard()
-	if mat.emission_enabled:
-		mat.emission = g.color
-		mat.emission_energy_multiplier = 0.18 * cell.level
 
-	var zc := Color(1, 1, 1, 0)
+	var zone_node: MeshInstance3D = t["zone"]["node"]
+	zone_node.visible = cell.zone != null
+	zone_node.position.y = h + 0.012
 	if cell.zone != null:
-		zc = cell.zone.def.color
-		zc.a = 0.3 + 0.1 * cell.zone.level
-	_set_overlay(t["zone"], h + 0.01, zc, cell.zone != null)
+		var zmat := t["zone"]["mat"] as ShaderMaterial
+		var zd := _zone_arrow(cell)
+		zmat.set_shader_parameter("color", cell.zone.def.color.darkened(0.45))
+		zmat.set_shader_parameter("dir", Vector2(zd.x, zd.y))
+		# a pull zone has no arrow on its centre and none on a diagonal: only the centre shows the rings
+		zmat.set_shader_parameter("strength", 1.0 if zd != Vector2i.ZERO or cell.zone.anchor == cell.pos or not cell.zone.def.has_tag(FieldEffect.PULL) else 0.55)
 
 	t["surge_on"] = cell.surge >= 0
 	var sc := Color(1, 1, 1, 0)
@@ -482,12 +538,9 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 	_set_overlay(t["hl"], h + 0.03, highlights.get(p, Color(1, 1, 1, 0)), highlights.has(p))
 
 	if preview_arrows.has(p):
-		_set_arrow(t["arrow"], h + 0.12, preview_arrows[p], Color(1.0, 0.9, 0.55, 0.95))
+		_set_arrow(t["arrow"], h + 0.12, preview_arrows[p], Color(UiTheme.CINNABAR, 0.95))
 	else:
-		var zc2 := Color(1, 1, 1, 0.85)
-		if cell.zone != null:
-			zc2 = cell.zone.def.color.lightened(0.4)
-		_set_arrow(t["arrow"], h + 0.12, _zone_arrow(cell), zc2)
+		_set_arrow(t["arrow"], h + 0.12, Vector2i.ZERO, Color.WHITE)      # a zone paints its own arrow on the square
 
 	var lines := ""
 	if cell.surge >= 0:
@@ -511,7 +564,7 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 		if cell.owner_side >= 0 and taker != null and taker.is_alive():
 			lines += "%s · Pace %.1f\n" % [taker.display_name(), BattleStats.pace(battle, taker)]
 	var label: Label3D = t["label"]
-	label.modulate = SIDE_COLORS[cell.owner_side].lerp(Color.WHITE, 0.5) if _vein_owned(cell) else Color.WHITE
+	label.modulate = SIDE_COLORS[cell.owner_side].darkened(0.45) if _vein_owned(cell) else UiTheme.INK
 	label.text = lines.strip_edges()
 	label.position.y = h + 0.12
 	_update_prop(t, "prop", cell.prop, h)
@@ -536,7 +589,7 @@ func _update_prop(t: Dictionary, slot: String, prop: BoardProp, y: float) -> voi
 	var mi := MeshInstance3D.new()
 	var mat := StandardMaterial3D.new()
 	mat.roughness = 0.85
-	mat.albedo_color = def.color.darkened(0.35) if prop.hp <= 0 else def.color
+	mat.albedo_color = (def.color.darkened(0.35) if prop.hp <= 0 else def.color).lerp(MUTE, 0.25)
 	var height := 0.6
 	match def.prop_class if def.solid else "walkable":
 		"walkable":                           # a flat plate a monster can stand on

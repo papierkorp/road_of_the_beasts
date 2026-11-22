@@ -336,9 +336,9 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
 - **Content of the multiplayer battle** (docs/content.md §1, §2): `GroundDef.battle` and `BattleZoneDef.battle` say
   whether a record belongs to both battles, to the multiplayer battle or to the ingame battle. The multiplayer
   records are named by what they do: `data/grounds/entry_damage … stay_stamina` (three moments × damage, heal,
-  Stamina), `no_prop`, and `data/zones/push_zone`, `pull_zone`, `prop_damage_zone`. `SkillGen.ground_ids` and
+  Stamina), `no_prop`, and `data/zones/push_zone` and `pull_zone`. `SkillGen.ground_ids` and
   `zone_ids` (generated skills, skill builder, overview tab Generator) use no record of the ingame battle; Lava,
-  Thornbed, Mossbed, Binding Vines, Springwater, Shifting Sand, Gale, Void Pull and Erosion are ingame records.
+  Thornbed, Mossbed, Binding Vines, Springwater, Shifting Sand, Gale and Void Pull are ingame records.
   Generated Strikes are called “<shape> Push Strike”, “<shape> Prop Strike” or “<shape> Touch”, and the generator
   makes no Strike that does nothing. Drawn monsters are called Random Alpha, Beta, … (`MonsterDraw.LETTERS`). The
   draft prices of the new records copy those of the old ones with the same effect; the others use the default.
@@ -385,7 +385,17 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
       `BattleBoardOps.zone_outcome`). The zones Mire, Slowing, Tailwind, Updraft, Bog and Shockwave are `archived`.
     - *Ground:* one level; laying it again restarts its clock (result `refresh`). Blight is `archived`; Gloom Rift
       and Coiling Rift lay Lava instead.
-    - *Round end:* nothing but Dragon Veins and surrounding deals damage there. The damage line of a prop (Ember
+    - *Board rules of 2026-11-22* (docs/battle.md §4.2, §4.5, §4.6; tests `tests/battle/test_board_rules.gd`):
+      a push or pull zone moves a monster whose move ends in it (`BattleTurn.arrive`, called after a Step, the
+      landing of a movement skill, a push, a pull, a retreat and a swap), once per action (`Battle.zone_moved`), and
+      still at the end of its turn. Every Dragon Vein deals 1 to the monster or prop on its square at the round end,
+      in one step after surrounding (`BattleTurn._veins_wear`). Ground damages props: the ground a pushed or pulled
+      prop leaves and enters (`BattleDisplace.shove_prop`), end-of-turn ground at the round end
+      (`BattleTurn._ground_wears_props`, `BattleDamage.ground_on_prop`); healing and Stamina do nothing to a prop.
+      The zones that damaged props (Prop Damage Zone, Erosion, `FieldEffect.ERODE`) are gone. New prop **Burst
+      Trap** (skill `lay_burst`); the Vortex Trap pulls its 4 neighbours. The AI counts the cost of standing on a
+      vein, a lock of a vein by the HP the prop has left, and a prop that ground or a vein wears down as a bomb.
+    - *Round end:* by themselves only Dragon Veins and surrounding damage a monster there. The damage line of a prop (Ember
       Brazier) hits a monster that ends its turn inside the prop's shape (`BattleProps.turn_end_hits`); pushes of
       round-end props (Storm Drum) stay at the round end.
     - *Created props:* a prop a skill creates lapses without effect after two rounds (`BoardProp.CREATED_ROUNDS`,
@@ -420,9 +430,33 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     - **Round-end forecast** (no switch): under the queue the HUD always shows what the round end would do on the
       board as it stands, who is hit by what and who falls (`BattleTurn.round_end_forecast`, a dry run on a copy).
     - *Experiment content* (status `experiment`, in no kit; the skill builder and the generated skills can use it):
-      ground **Shifting Sand** (`GroundDef.no_props`), ground **Springwater** (+1 Stamina on entering), zone
-      **Erosion** (`FieldEffect.ERODE`: props in it take 1 at the round end) and the self buff **Deep Breath**
+      ground **Shifting Sand** (`GroundDef.no_props`), ground **Springwater** (+1 Stamina on entering) and the self buff **Deep Breath**
       (`FieldEffect.REFRESH`: more Stamina recovered at the round end).
+- **Look: ink on paper** (user decision 2026-11-22; no rule; open points in docs/todo T63).
+    - *Theme:* `shared/ui_theme.gd` holds the palette (paper, ink, ochre accent, cinnabar, jade, the two side
+      colours `UiTheme.SIDE`), the theme of every control and the fonts (`assets/fonts`: Shippori Mincho for titles,
+      cut down to Latin glyphs, and Source Sans 3 for text, both under the SIL Open Font License, licence files
+      beside them). `PrimaryButton` (`HubUi.primary`) is the one cinnabar button of a screen. No colour of the look is
+      written anywhere else: screens take them from `UiTheme`.
+    - *Paper:* `assets/shaders/paper.gdshader` paints the ground of every screen (`UiTheme.paper_rect`,
+      `UiTheme.paper_material`), in the battle on a canvas layer behind the 3D board.
+    - *Signs:* `assets/icons/*.svg`, drawn in white and tinted with `UiTheme.icon_rect`: the buildings
+      (`building_*`), the skill kinds (`kind_*`, on the action bar and in skill lists), the stats (`stat_*`), the
+      eight beast parts (`part_<kin>`; a Kin is shown by the part its beasts leave, `HubUi.kin_sign`), the three Ways
+      (`way_of_the_*`), a tamer skill, a vow, a plant, a pill, an egg, the seal of the title, and the marks of check
+      boxes and switches (drawn in ink, set in the theme).
+    - *Board:* `assets/shaders/tile.gdshader` paints a square: a wash of the ground's colour, an ink edge and one
+      sign for what the ground does (rings: a Dragon Vein; points inward: acts on entering; points outward: on
+      leaving; a ring: at the end of a turn; `BattleView._ground_mark`). `assets/shaders/zone.gdshader` paints a zone
+      as a hatched wash with a brush arrow in its direction (rings on the centre of a pull). Bodies and props keep
+      their simple shapes; their colours are taken a step toward a warm grey (`BattleView.MUTE`).
+    - *Builders of the hub (`overworld/ui/hub_ui.gd`):* `monster_head` (Kin sign, name, stats with signs),
+      `monster_line` (the same in one line), `fight_view` (a battleground painted small by
+      `overworld/ui/mini_board.gd` beside its opponents), `tile` (a tile to pick with a sign), `squares` (the line of
+      squares a forged piece lays), `swatch`, `chip`, `skill_line`, `signed`, `item_sign`. The forge reads left to
+      right (what · how · the piece), the cauldron too (plants · cauldron · pills); the cauldron names what the
+      picked plants are known to share, from what the player has found only.
+    - *Not drawn:* the 3D bodies of monsters and props, a picture per species, backgrounds per building, sounds.
 - **Rules of this battle** (pause menu of the battle screen, `BattleHud._show_rules`): a window with every switch
   of `BattleExperiment`, first what differs from the build default, then the defaults in use
   (`BattleExperiment.settings_lines`); the text can be copied. `sim.gd` prints the same two lists with every run block.

@@ -124,9 +124,10 @@ func test_the_round_end_forecast_names_who_is_hit_and_changes_nothing() -> void:
 	b.begin()
 	var before := b.state_hash()
 	var f := BattleTurn.round_end_forecast(b)
-	assert_int(f["hits"].size()).is_equal(1)
-	assert_that(f["hits"][0]["unit"]).is_equal(H.unit(b, 1).id)
-	assert_str(f["hits"][0]["source"]).is_equal("Dragon Vein")
+	assert_int(f["hits"].size()).is_equal(2)                       # the vein hits its own square and the nearest enemy
+	assert_that(f["hits"][0]["unit"]).is_equal(H.unit(b, 0).id)
+	assert_that(f["hits"][1]["unit"]).is_equal(H.unit(b, 1).id)
+	assert_str(f["hits"][1]["source"]).is_equal("Dragon Vein")
 	assert_array(f["falls"]).contains([H.unit(b, 1).id])
 	assert_that(b.state_hash()).is_equal(before)
 	assert_int(b.round_number).is_equal(1)
@@ -149,7 +150,8 @@ func test_the_whole_number_of_pace_above_one_is_the_number_of_waits_in_a_battle(
 
 
 func _vein_duel() -> Battle:
-	var b := H.battle([[0, Vector2i(1, 3), {"pace": 1.9, "hp": 1}], [1, Vector2i(5, 3), {"pace": 1.2, "hp": 1}]])
+	# 2 HP each: the vein a monster stands on costs it 1 first, then the veins act in the order of their takers
+	var b := H.battle([[0, Vector2i(1, 3), {"pace": 1.9, "hp": 2}], [1, Vector2i(5, 3), {"pace": 1.2, "hp": 2}]])
 	b.board.at(Vector2i(1, 3)).ground = GroundDef.WELL
 	b.board.at(Vector2i(5, 3)).ground = GroundDef.WELL
 	BattleExperiment.flank = false

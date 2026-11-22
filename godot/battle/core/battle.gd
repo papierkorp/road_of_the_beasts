@@ -77,6 +77,9 @@ var wild: Array[bool] = [false, false]
 var seals := {}
 var roll_seed := 0
 var rolls := 0
+## Monsters a zone has moved in the running action (docs/battle.md §4.6: once per action). Cleared with every
+## action and at the round end; the zone move at the end of a turn marks its monster too.
+var zone_moved := {}
 ## Events collected for event-driven passives during a payload (gdd_battle §2.4).
 var reaction_events: Array[Dictionary] = []
 var events: Array[Dictionary] = []
@@ -483,6 +486,7 @@ func apply(a: Dictionary, trusted := false) -> bool:
 	if not trusted and check(a) != "":
 		return false
 	actions.append(a.duplicate(true))
+	zone_moved.clear()
 	var type: StringName = a["type"]
 	if type == &"choose_target":
 		BattleTurn.choose(self, a["unit"])
@@ -504,6 +508,7 @@ func apply(a: Dictionary, trusted := false) -> bool:
 			ap -= step_cost(u, a["to"])
 			follow = {}
 			BattleMoves.execute(self, u, BattleMoves.step_profile(), a["to"], "Step", a.get("path", []) if trusted else [])
+			BattleTurn.arrive(self, u)
 		elif type == &"heal":
 			_use_heal(u)
 		else:
@@ -548,6 +553,7 @@ func _use_skill(u: BattleUnit, a: Dictionary, trusted := false) -> void:
 			BattleMoves.execute(self, u, BattleMoves.profile_of(s), a["to"], s.display_name, a.get("path", []) if trusted else [])
 			u.stamina = maxi(0, u.stamina - tired)
 			BattleMoves.impact(self, u, s, started, a["to"])
+			BattleTurn.arrive(self, u)                # the landing square counts, not the squares passed over
 			if not trail.is_empty() and u.is_alive():
 				var left: Array[Vector2i] = []
 				for c in trail:

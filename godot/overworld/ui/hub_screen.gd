@@ -114,7 +114,7 @@ func _build_head() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_head.add_child(gap)
-	var end := HubUi.button("End year", _end_day, 160)
+	var end := HubUi.primary("End year", _end_day, 160)
 	end.disabled = not game.can_end_day()
 	_head.add_child(end)
 	_head.add_child(HubUi.button("Menu", func(): get_tree().change_scene_to_file(MENU_SCENE), 110))
@@ -145,7 +145,11 @@ func _build_buildings() -> void:
 		inner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		inner.alignment = BoxContainer.ALIGNMENT_CENTER
 		b.add_child(inner)
-		for l: Label in [HubUi.label(p.title(), 24, UiTheme.ACCENT), HubUi.label(p.pillar(), 16, UiTheme.DIM), HubUi.label(p.hint(), 18)]:
+		var sign := CenterContainer.new()
+		sign.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sign.add_child(UiTheme.icon_rect("building_%s" % id, 84, Color(UiTheme.INK, 0.35) if b.disabled else UiTheme.INK))
+		inner.add_child(sign)
+		for l: Label in [HubUi.title(p.title(), 28), HubUi.label(p.pillar(), 15, UiTheme.ACCENT), HubUi.label(p.hint(), 17, UiTheme.DIM)]:
 			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			inner.add_child(l)
@@ -184,30 +188,27 @@ func _build_prepare() -> void:
 	_body.add_child(top)
 	var list := HubUi.scroll(_body)
 	var place := HubUi.card(list)
-	place.add_child(HubUi.label("Battleground: %s" % GameSession.map_summary(f)))
+	place.add_child(HubUi.fight_view(f, true, 26.0))
+	place.add_child(HubUi.dim("Battleground: %s" % GameSession.map_summary(f)))
 	if f.loot_text != "":
 		place.add_child(HubUi.label("A win gives: %s" % f.loot_text))
-	var foes := HubUi.card(list)
-	foes.add_child(HubUi.label("Opponents%s" % (" (wild: they can be caught on Seal Ground)" if f.wild else ""), 20, UiTheme.ACCENT))
-	for e in f.enemies:
-		foes.add_child(HubUi.label(HubUi.monster_lines(e)))
+	if f.wild:
+		place.add_child(HubUi.dim("Wild monsters: they can be caught on Seal Ground."))
 	var mine := HubUi.card(list)
 	mine.add_child(HubUi.label("Your team: %d of at most %d" % [f.team.size(), f.max_team], 20, UiTheme.ACCENT))
+	var team := HubUi.flow(10)
+	mine.add_child(team)
 	for m in game.roster:
-		var b := Button.new()
-		b.toggle_mode = true
-		b.button_pressed = f.team.has(m)
-		b.disabled = m.current_hp <= 0 or (not f.team.has(m) and f.team.size() >= f.max_team)
-		b.text = HubUi.monster_lines(m, false) + "\nKit: %s%s" % [m.kit_text(), "\n" + HubUi.todo_text(m) if HubUi.todo_text(m) != "" else ""]
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.custom_minimum_size = Vector2(0, HubUi.TAP + 16)
-		b.toggled.connect(func(on: bool):
-			if on and not f.team.has(m):
-				f.team.append(m)
-			elif not on:
+		var on := f.team.has(m)
+		var b := HubUi.tile(HubUi.sign("part_%d" % m.species().kin, on, 44), m.species().display_name, "%s\nKit: %s" % [m.stats_text(), m.kit_text()], HubUi.todo_text(m), on, func():
+			if f.team.has(m):
 				f.team.erase(m)
-			refresh())
-		mine.add_child(b)
+			else:
+				f.team.append(m)
+			refresh(), 500)
+		b.custom_minimum_size.y = 132
+		b.disabled = m.current_hp <= 0 or (not on and f.team.size() >= f.max_team)
+		team.add_child(b)
 	var slots := HubUi.card(list)
 	slots.add_child(HubUi.label("Tamer slots: %d of %d filled — a tamer skill, a weapon or a pill each, once in the battle" % [f.tamer.size(), game.tamer_slots()], 20, UiTheme.ACCENT))
 	var content := GameSession.battle_content()
@@ -258,7 +259,7 @@ func _build_prepare() -> void:
 				f.tamer_uses.erase(id)
 			refresh())
 		slots.add_child(b)
-	var go := HubUi.button("Fight", _start_fight, 260)
+	var go := HubUi.primary("Fight", _start_fight, 260)
 	go.disabled = f.team.is_empty() or why != ""
 	_body.add_child(go)
 

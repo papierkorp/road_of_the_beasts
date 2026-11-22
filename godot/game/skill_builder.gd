@@ -99,7 +99,8 @@ func _ready() -> void:
 	_content = BattleContent.shared()
 	_rng.randomize()
 	var bg := ColorRect.new()
-	bg.color = Color(0.075, 0.082, 0.094)
+	bg.color = UiTheme.BG
+	bg.material = UiTheme.paper_material()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
 	var margin := MarginContainer.new()

@@ -17,8 +17,13 @@ func hint() -> String:
 
 func build(into: VBoxContainer) -> void:
 	var def := Cultivation.system(game)
-	into.add_child(HubUi.label("%s — %d Insight. A depth of the void won gives one; a stage gives about enough for one branch." % [def.display_name, game.path_points], 22, UiTheme.ACCENT))
-	into.add_child(HubUi.dim(def.blurb))
+	var head := HubUi.row(14)
+	head.add_child(UiTheme.icon_rect(String(def.id), 56))
+	var words := HubUi.col(2)
+	words.add_child(HubUi.label("%s — %d Insight. A depth of the void won gives one; a stage gives about enough for one branch." % [def.display_name, game.path_points], 22, UiTheme.ACCENT))
+	words.add_child(HubUi.dim(def.blurb))
+	head.add_child(words)
+	into.add_child(head)
 	var list := HubUi.scroll(into)
 	_vows(list)
 	var content := GameSession.battle_content()
@@ -37,7 +42,8 @@ func build(into: VBoxContainer) -> void:
 					continue
 				var card := HubUi.card(row, 440)
 				var id := StringName(n["id"])
-				card.add_child(HubUi.label("%s (%d)" % [n["name"], int(n["cost"])], 20, UiTheme.ACCENT))
+				var owned := game.tamer_skills.has(StringName(n["ref"]))
+				card.add_child(HubUi.signed(UiTheme.icon_rect("tamer", 34, UiTheme.JADE if owned else UiTheme.INK), "%s · %d Insight" % [n["name"], int(n["cost"])], 20, UiTheme.ACCENT))
 				var t := content.tamer_skill(n["ref"])
 				card.add_child(HubUi.label("Tamer skill: %s" % (t.description if t != null else "?")))
 				var why := Cultivation.problem(game, id)
@@ -55,7 +61,7 @@ func _vows(list: VBoxContainer) -> void:
 	card.add_child(HubUi.dim("A vow gives something strong and takes something for the rest of the game. Three are offered at the start and after every breakthrough; you take one or none."))
 	for id in game.vows:
 		var v := game.vow_def(id)
-		card.add_child(HubUi.label("%s — %s Price: %s" % [v["name"], v["gain"], v["price"]]))
+		card.add_child(HubUi.signed(UiTheme.icon_rect("vow", 30, UiTheme.CINNABAR), "%s — %s Price: %s" % [v["name"], v["gain"], v["price"]]))
 	if game.vow_offer.is_empty():
 		return
 	card.add_child(HubUi.label("Offered now:", 20, HubUi.GOOD))
@@ -63,7 +69,14 @@ func _vows(list: VBoxContainer) -> void:
 		var v := game.vow_def(id)
 		var row := HubUi.row()
 		card.add_child(row)
-		row.add_child(HubUi.label("%s\nYou gain: %s\nThe price: %s" % [v["name"], v["gain"], v["price"]]))
+		var seal := UiTheme.icon_rect("vow", 40, Color(UiTheme.CINNABAR, 0.55))
+		seal.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(seal)
+		var text := HubUi.col(0)
+		text.add_child(HubUi.title(String(v["name"]), 21))
+		text.add_child(HubUi.label("You gain: %s" % v["gain"], 17, HubUi.GOOD))
+		text.add_child(HubUi.label("The price: %s" % v["price"], 17, HubUi.WARN))
+		row.add_child(text)
 		row.add_child(HubUi.button("Swear", func():
 			game.take_vow(id)
 			hub.refresh(), 160))

@@ -108,7 +108,7 @@ func test_a_held_wellspring_damages_the_nearest_enemy_at_the_end_of_the_round() 
 	_end_round(b)
 	assert_int(H.unit(b, 1).hp).is_equal(4)        # 3 squares away
 	assert_int(H.unit(b, 2).hp).is_equal(5)        # 3 squares away and the same HP, but less pace
-	assert_int(H.unit(b, 0).hp).is_equal(H.unit(b, 0).max_hp)
+	assert_int(H.unit(b, 0).hp).is_equal(H.unit(b, 0).max_hp - 1)      # the vein costs whoever stands on it 1
 
 
 func test_dragon_vein_damage_uses_actual_fields_outside_the_default_row() -> void:

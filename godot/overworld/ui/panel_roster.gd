@@ -9,7 +9,8 @@ func build(into: VBoxContainer) -> void:
 	for i in game.roster.size():
 		var m := game.roster[i]
 		var card := HubUi.card(list)
-		card.add_child(HubUi.label(HubUi.monster_lines(m)))
+		card.add_child(HubUi.monster_head(m))
+		card.add_child(HubUi.label("Kit: %s" % m.kit_text()))
 		card.add_child(HubUi.dim(HubUi.kin_lines(m)))
 		card.add_child(HubUi.dim("%s · %s · %d stat points and %d development steps unspent" % ["%s bloodline" % m.bloodline_name(), m.xp_text(), m.unspent, m.dev_steps]))
 		var todo := HubUi.todo_text(m)

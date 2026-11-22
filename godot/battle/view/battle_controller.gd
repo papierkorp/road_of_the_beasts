@@ -913,10 +913,10 @@ func _on_event(e: Dictionary) -> void:
 		&"damage":
 			var t: BattleUnit = battle.units[e["target"]]
 			view.floating_text(t.pos, "-%d" % e["amount"] if int(e["amount"]) > 0 else "blocked",
-				Color(1.0, 0.45, 0.4) if int(e["amount"]) > 0 else Color(0.6, 0.85, 1.0))
+				UiTheme.CINNABAR if int(e["amount"]) > 0 else UiTheme.SIDE[0])
 		&"healed":
 			var t2: BattleUnit = battle.units[e["target"]]
-			view.floating_text(t2.pos, "+%d" % e["amount"], Color(0.5, 0.95, 0.6))
+			view.floating_text(t2.pos, "+%d" % e["amount"], UiTheme.JADE)
 		&"defeated":
 			hud.add_fallen(BattleText.unit_name(battle, e["who"]), BattleText.hp_history_lines(battle, e["who"]))
 		&"battle_over":

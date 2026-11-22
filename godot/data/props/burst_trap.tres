@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="PropDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/prop_aftermath.gd" id="1_am"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2_fe"]
+[ext_resource type="Script" path="res://battle/defs/prop_def.gd" id="3_pd"]
+
+[sub_resource type="Resource" id="Resource_act"]
+script = ExtResource("1_am")
+when = "enter"
+op = "damage"
+shape = "storm"
+amount = 1
+[resource]
+script = ExtResource("3_pd")
+id = &"burst_trap"
+display_name = "Burst Trap"
+content_status = "draft"
+prop_class = "burst"
+hp = 1
+solid = false
+aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
+ground_left = &""
+color = Color(0.85, 0.5, 0.3, 1)
+description = "Walkable trap. Entered: 1 damage to every monster on the 8 squares around it, nothing to the monster that came onto it; the trap is used up."

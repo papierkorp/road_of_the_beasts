@@ -40,10 +40,9 @@ func build(into: VBoxContainer) -> void:
 		if e.rare:
 			head += " — appears in %d year(s)" % e.appears_in if e.appears_in > 0 else " — stays %d more year(s)" % e.stays
 		card.add_child(HubUi.label(head, 22, UiTheme.ACCENT if not e.rare else HubUi.GOOD))
-		card.add_child(HubUi.label("Battleground: %s" % GameSession.map_summary(f)))
-		for m in f.enemies:
-			card.add_child(HubUi.label(HubUi.monster_lines(m)))
+		card.add_child(HubUi.fight_view(f))
+		card.add_child(HubUi.dim("Battleground: %s" % GameSession.map_summary(f)))
 		card.add_child(HubUi.dim("A win gives: %s" % f.loot_text))
-		var go := HubUi.button("Gone" if e.gone else "Prepare the battle (%d AP)" % game.values.wild_ap, hub.prepare.bind(f, func(_f: Fight) -> bool: return WildArea.pay(game)), 320)
+		var go := HubUi.primary("Gone" if e.gone else "Prepare the battle (%d AP)" % game.values.wild_ap, hub.prepare.bind(f, func(_f: Fight) -> bool: return WildArea.pay(game)), 320)
 		go.disabled = e.gone or e.appears_in > 0 or game.ap < game.values.wild_ap or game.forced_trial
 		card.add_child(go)

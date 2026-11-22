@@ -58,7 +58,7 @@ func test_a_generated_skill_is_legal_and_of_the_kind_asked_for() -> void:
 				var zones := s.ops_of(BoardOp.CREATE_ZONE).map(func(op: BoardOp) -> StringName: return op.zone)
 				if s.zone != null:
 					zones.append(s.zone.id)
-				assert_bool(zones.any(func(z: StringName) -> bool: return c.zone(z).has_tag(FieldEffect.PUSH) or c.zone(z).has_tag(FieldEffect.PULL) or c.zone(z).has_tag(FieldEffect.ERODE))).is_true()
+				assert_bool(zones.any(func(z: StringName) -> bool: return c.zone(z).has_tag(FieldEffect.PUSH) or c.zone(z).has_tag(FieldEffect.PULL))).is_true()
 
 
 func test_a_fresh_kit_holds_generated_skills_only() -> void:
@@ -227,19 +227,6 @@ func test_a_solid_prop_springs_a_trap_and_takes_its_square() -> void:
 	assert_str(String(b.board.prop_at(Vector2i(1, 4), Board.GROUND).def.id)).is_equal("bronze_gong")   # pushed onto the trap
 	assert_int(H.unit(b, 3).hp).is_equal(H.unit(b, 3).max_hp)                 # the Spike Trap hits only who stands on it: nobody
 	assert_int(H.events_of(b, &"trap_sprung").size()).is_equal(2)
-
-
-func test_an_erosion_zone_wears_props_down_at_the_round_end() -> void:
-	var b := H.battle([[0, Vector2i(3, 6), {}], [1, Vector2i(3, 0), {}]])
-	var wall := b.add_prop(&"earth_wall", Vector2i(3, 3))
-	H.zone_on(b, Vector2i(3, 3), H.content().zone(&"erosion"))
-	b.begin()
-	var hp := wall.hp
-	b.end_turn()
-	b.end_turn()
-	assert_int(b.round_number).is_equal(2)
-	assert_int(wall.hp).is_equal(hp - 1)
-	assert_int(H.unit(b, 0).hp).is_equal(H.unit(b, 0).max_hp)
 
 
 func test_springwater_and_deep_breath_give_stamina_back() -> void:

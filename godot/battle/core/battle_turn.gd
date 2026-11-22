@@ -145,6 +145,21 @@ static func zone_step(b: Battle, u: BattleUnit) -> Vector2i:
 	return d if (d.x == 0) != (d.y == 0) else Vector2i.ZERO
 
 
+## A move of `u` has ended on its square (a Step, the landing of a movement skill, a push or a pull): a push or
+## pull zone there moves it on at once (docs/battle.md §4.6). Zones move a monster once per action.
+static func arrive(b: Battle, u: BattleUnit) -> void:
+	if b.over or u == null or not u.is_alive() or not u.on_field or b.zone_moved.has(u.id):
+		return
+	if BattleStats.has_flag(u, &"ignores_zones"):
+		return
+	var d := zone_step(b, u)
+	if d == Vector2i.ZERO:
+		return
+	b.zone_moved[u.id] = true
+	BattleDisplace.shove(b, u, d, "zone", "zone")
+	BattlePayload.settle(b)
+
+
 static func end_turn(b: Battle) -> void:
 	if b.over:
 		return
@@ -156,6 +171,7 @@ static func end_turn(b: Battle) -> void:
 		# 1. push / pull
 		var d := zone_step(b, u) if not BattleStats.has_flag(u, &"ignores_zones") else Vector2i.ZERO
 		if d != Vector2i.ZERO:
+			b.zone_moved[u.id] = true             # the move at the end of the turn is one zone move, not a chain
 			BattleDisplace.shove(b, u, d, "zone", "zone")
 			BattlePayload.settle(b)
 			spring_traps(b)
@@ -216,6 +232,7 @@ static func round_end_forecast(b: Battle) -> Dictionary:
 ## The round end moves first, acts afterwards and ticks its clocks last (user decisions 2026-11-15, gdd_battle §2.4).
 static func _end_round(b: Battle) -> void:
 	var ended := b.round_number
+	b.zone_moved.clear()
 	# 1. everything that moves: push and pull zones move the props standing in them (user decision 2026-11-14),
 	#    then the props that push or pull (Storm Drum). What reacts to entering or leaving a square fires as always.
 	_zones_move_props(b)
@@ -232,7 +249,7 @@ static func _end_round(b: Battle) -> void:
 			BattleDamage.ground_triggers(b, ru, Moment.ROUND_END)
 	if b.check_over():
 		return
-	_zones_wear_props(b)
+	_ground_wears_props(b)
 	BattleProps.round_end(b, false)
 	if b.check_over():
 		return
@@ -303,8 +320,33 @@ static func _positional(b: Battle) -> int:
 	if not hits.is_empty():
 		BattleDamage.apply_round(b, hits)
 		BattleDamage.defeat_step(b)
+	_veins_wear(b)
 	_veins_in_order(b, ordered)
 	return held[0] + held[1]
+
+
+## Every Dragon Vein, owned or not, deals 1 to the monster or prop on its square, all of them in one step
+## (docs/battle.md §4.2). Nothing reduces it and it stays 1 in every round.
+static func _veins_wear(b: Battle) -> void:
+	if BattleExperiment.wells <= 0 or b.check_over():
+		return
+	var hits: Array = []
+	var worn := false
+	for vein in b.board.cells:
+		if vein.ground != GroundDef.WELL:
+			continue
+		var on := b.unit_at(vein.pos, Board.GROUND)
+		if on != null and on.is_alive():
+			hits.append({"unit": on.id, "base": 1, "type": BattleDamage.WELL, "source": "Dragon Vein (its own square)"})
+		var prop := b.board.prop_at(vein.pos, Board.GROUND)
+		if prop != null and prop.hp > 0:
+			BattleBoardOps.damage_prop(b, prop, 1)
+			worn = true
+	if not hits.is_empty():
+		BattleDamage.apply_round(b, hits)
+		BattleDamage.defeat_step(b)
+	if worn:
+		BattlePayload.settle(b)
 
 
 ## The owned veins act one at a time, the vein of the faster taker first (current
@@ -572,23 +614,18 @@ static func _soft_pressure(b: Battle, ended_round: int) -> void:
 	spring_traps(b)
 
 
-## A prop has no turn, so the push and pull zones move the props standing in them once, at the end
-## of the round, after the round-end ground and before the round-end operations of props.
-## Experiment (FieldEffect.ERODE): a zone that wears props down deals its damage to every prop standing in it.
-static func _zones_wear_props(b: Battle) -> void:
+## End-of-turn ground damages the props standing on it at the round end: a prop has no turn (docs/battle.md §4.5).
+static func _ground_wears_props(b: Battle) -> void:
 	var worn := false
 	for prop in b.board.props():
-		var cell := b.board.at(prop.pos)
-		if prop.hp <= 0 or cell == null or cell.zone == null:
-			continue
-		var e := cell.zone.def.effect(FieldEffect.ERODE)
-		if e != null:
-			BattleBoardOps.damage_prop(b, prop, e.value_at(cell.zone.level))
+		if BattleDamage.ground_on_prop(b, prop, Moment.TURN_END) > 0:
 			worn = true
 	if worn:
 		BattlePayload.settle(b)
 
 
+## A prop has no turn, so the push and pull zones move the props standing in them once, at the end
+## of the round, before the round-end operations of props.
 static func _zones_move_props(b: Battle) -> void:
 	var entries: Array = []
 	for prop in b.board.props():

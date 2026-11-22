@@ -22,9 +22,10 @@ func build(into: VBoxContainer) -> void:
 	var list := HubUi.scroll(into)
 	var ground := HubUi.card(list)
 	ground.add_child(HubUi.label("Your battleground: %s" % GameSession.battleground_summary(), 20, UiTheme.ACCENT))
+	ground.add_child(MiniBoard.of(MapData.from_dict(game.battleground), 34.0))
 	var problems := GameSession.battleground_problems()
 	ground.add_child(HubUi.label("Legal." if problems.is_empty() else "Not legal: %s" % "; ".join(problems), 20, HubUi.GOOD if problems.is_empty() else HubUi.WARN))
-	ground.add_child(HubUi.button("Shape the battleground", func(): GameSession.edit_battleground(), 320))
+	ground.add_child(HubUi.primary("Shape the battleground", func(): GameSession.edit_battleground(), 320))
 	var parts := HubUi.card(list)
 	parts.add_child(HubUi.label("Parts", 20, UiTheme.ACCENT))
 	var weights: PackedStringArray = []
@@ -36,7 +37,7 @@ func build(into: VBoxContainer) -> void:
 		ids.append(p)
 	ids.sort()
 	for part in ids:
-		parts.add_child(HubUi.label("%s — owned: %d" % [GameSession.part_name(part), int(game.parts.get(part, 0))]))
+		parts.add_child(HubUi.signed(HubUi.swatch(HubUi.part_color(part), 24), "%s — owned: %d" % [GameSession.part_name(part), int(game.parts.get(part, 0))]))
 	if ids.is_empty():
 		parts.add_child(HubUi.dim("None yet."))
 	parts.add_child(HubUi.button("To the Forge", hub.open.bind(&"forge", &""), 240))
