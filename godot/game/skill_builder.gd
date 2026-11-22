@@ -52,7 +52,7 @@ static func choices(c: BattleContent, key: String) -> Array:
 			return [["none", "nothing"], ["ahead", "pushes the monster ahead"], ["ring", "pushes all neighbours"]]
 		"self":
 			return [["", "no"], ["quicken", "Pace +0.1 for 2 rounds"], ["haste", "movement skills −1 Stamina for 2 rounds"], ["extend", "Reach +1 for 2 rounds"],
-				["vigor", "AP +1 for 2 rounds (experiment)"], ["tempo", "one more turn (experiment)"], ["immovable", "passive: ignores push and pull"]]
+				["vigor", "AP +1 for 2 rounds (experiment)"], ["tempo", "one more turn (experiment)"], ["anchor", "cannot be pushed or pulled until the round ends"]]
 		"shape":
 			return [["one", "1 square"], ["line2", "line of 2"], ["line3", "line of 3"], ["block", "block 2×2"], ["angle", "angle (3)"], ["cross", "cross (5)"]]
 		"ground":
@@ -86,8 +86,6 @@ static func fields_of(spec: Dictionary) -> Array:
 		return ["ap", "use", "strike", "damage", "push", "ground", "zone"]
 	if String(spec.get("path", "")) != "":
 		return ["ap", "use", "strike", "path", "impact", "ground", "zone"]
-	if String(spec.get("self", "")) == "immovable":
-		return ["strike", "path", "self"]
 	if String(spec.get("self", "")) != "":
 		return ["ap", "use", "strike", "path", "self"]
 	return ["ap", "use", "strike", "path", "self", "shape", "ground", "zone", "prop"]

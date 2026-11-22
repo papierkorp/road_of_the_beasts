@@ -249,7 +249,8 @@ static func _phase_displacement(b: Battle, payloads: Array) -> void:
 ## Rounds the ground of a payload lasts longer (Rooted Growth of its owner).
 static func _ground_bonus(b: Battle, p: Dictionary) -> int:
 	var owner: BattleUnit = b.units.get(p.get("owner", &""))
-	return BattleStats.ground_rounds_bonus(owner) if owner != null else 0
+	var skill: BattleSkillDef = p.get("skill")
+	return (BattleStats.ground_rounds_bonus(owner) if owner != null else 0) + (skill.lays_longer if skill != null else 0)
 
 
 # ---------- 4: board operations ----------
@@ -287,7 +288,7 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 			for cell: Vector2i in p["cells"]:
 				var made := BattleBoardOps.place_prop(b, b.content.prop(op.prop), cell)
 				if made != null:                  # a prop a skill creates lasts like ground laid in battle
-					made.until = b.round_number + BoardProp.CREATED_ROUNDS - 1
+					made.until = b.round_number + BoardProp.CREATED_ROUNDS - 1 + p["skill"].lays_longer
 	# (e) ground: what destroyed props leave behind, then authored ground / residue
 	for prop in removed:
 		if prop.def.ground_left == &"" or prop.def.ground_left == GroundDef.PLAIN:
@@ -313,7 +314,7 @@ static func _phase_board(b: Battle, payloads: Array) -> void:
 			for cell: Vector2i in p["cells"]:
 				var zc := b.board.at(cell)
 				if zc != null:
-					BattleBoardOps.land_zone(b, zc, zdef, b._next_gid, p["owner"], op.zone_rounds, p.get("dir", Vector2i.ZERO), p.get("anchor", cell))
+					BattleBoardOps.land_zone(b, zc, zdef, b._next_gid, p["owner"], op.zone_rounds + p["skill"].lays_longer, p.get("dir", Vector2i.ZERO), p.get("anchor", cell))
 	if _has_dead_props(b):                        # experiment: ground that takes no prop broke the props standing on it
 		_phase_board(b, [])
 

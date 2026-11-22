@@ -60,15 +60,14 @@ func _ready() -> void:
 	_buttons = VBoxContainer.new()
 	_buttons.add_theme_constant_override("separation", 4)
 	col.add_child(_buttons)
-	_add("Refill AP", func(g): return Cheats.refill_ap(g))
 	_add("+3 years of lifespan", func(g): return Cheats.add_lifespan(g, 3))
 	_add("Last year of the lifespan", func(g): return Cheats.last_day(g))
-	_add("+100 XP for all monsters", func(g): return Cheats.give_xp(g, 100))
+	_add("Monsters: one step up", func(g): return Cheats.rise_all(g))
 	_add("Tamer: next stage", func(g): return Cheats.stage_up(g))
 	_add("Monsters: next stage", func(g): return Cheats.monsters_stage_up(g))
 	_add("Heal all monsters", func(g): return Cheats.heal_all(g))
 	_add("+3 Insight", func(g): return Cheats.give_points(g, 3))
-	_add("+3 of every material", func(g): return Cheats.give_materials(g, 3))
+	_add("The drop of a wild battle against 3", func(g): return Cheats.give_drop(g, 3))
 
 
 ## The key is the input action "toggle_cheats" (Project Settings → Input Map): F10 and ` by default.

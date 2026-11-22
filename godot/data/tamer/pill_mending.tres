@@ -4,8 +4,9 @@
 
 [resource]
 script = ExtResource("1")
-id = &"second_dose"
-display_name = "Second Dose"
-effect = "renew"
-description = "Every pill you took in this battle acts once more."
-renew_source = "pill"
+id = &"pill_mending"
+display_name = "Mending Pill"
+effect = "second_wind"
+description = "One own monster +2 HP."
+boon_value = 2
+source = "pill"

@@ -9,10 +9,6 @@ extends RefCounted
 ##
 ## Not yet modelled (later steps): artifacts, extra passives, 2nd utility slot.
 
-## The bloodline (docs/monsters.md §4): its grade is the number of Kin gifts awakened from the start.
-enum Bloodline { MORTAL, SPIRIT, ANCIENT, DIVINE }
-const BLOODLINE_NAMES: Array[String] = ["Mortal", "Spirit", "Ancient", "Divine"]
-
 ## XP needed to reach the next sub-tier (prototype values, tuning: gdd_overworld §12). The High
 ## bar can fill but only a breakthrough trial (not built yet) leads to the next stage.
 const XP_TO_NEXT := {Stage.SubTier.LOWER: 60, Stage.SubTier.MIDDLE: 120}
@@ -20,7 +16,6 @@ const HIGH_BAR := 200
 
 var species_id: StringName
 var shape: StatShape.Id = StatShape.Id.NONE
-var bloodline: Bloodline = Bloodline.MORTAL
 var stage: Stage.Type = Stage.Type.CORE_FORMATION
 var sub_tier: Stage.SubTier = Stage.SubTier.HIGH
 var xp := 0
@@ -29,7 +24,7 @@ var xp := 0
 var core := {}
 ## Resolved stats: hp, pace, move, tpr, reach.
 var stats := {}
-## Persists between the battles of a dungeon run (docs/vision.md §4).
+## Full at the start of every battle (docs/vision.md §4).
 var current_hp := 1
 
 ## ---- The points model of the hub game (docs/monsters.md §2.2, §5) ----
@@ -38,26 +33,20 @@ var current_hp := 1
 ## steps for its skill slots (`dev_steps`, `slot_levels`; docs/skills.md §8).
 const STEP_POINTS := 5
 const START_POINTS := 25
-const STEPS := 18
-## XP from one step to the next (docs/monsters.md §5, working values).
-const XP_STEPS: Array[int] = [60, 120, 200, 150, 300, 500, 400, 800, 1300, 1000, 2000, 3200, 2500, 5000, 8000, 6000, 12000]
+const STEPS := 15
 ## Steps (0-based, the step reached) that give a development step outright. The first step of a stage gives a
 ## choice instead (docs/monsters.md §5).
-const DEV_STEP_AT: Array[int] = [13, 14, 16, 17]
+const DEV_STEP_AT: Array[int] = [13, 14]
 const START_SLOTS := 4
 const MAX_SLOTS := 6
-## What a monster chooses from at a stage breakthrough, in the order of the offer (docs/monsters.md §5); its
-## bloodline says how many of them it is offered and how many it takes (§4).
+## What a monster chooses from at a stage breakthrough (docs/monsters.md §5): every monster the same, one of them.
 const BREADTH := "slot"
 const DEPTH := "depth"
-const BLOOD := "gift"
 const LORE := "lore"
 const RESHAPE := "reshape"
-const CHOICES: Array[String] = [BREADTH, DEPTH, BLOOD, LORE, RESHAPE]
-const CHOICE_NAMES := {BREADTH: "Breadth: a new slot", DEPTH: "Depth: a development step", BLOOD: "Blood: a gift of its Kin",
+const CHOICES: Array[String] = [BREADTH, DEPTH, LORE, RESHAPE]
+const CHOICE_NAMES := {BREADTH: "Breadth: a new slot", DEPTH: "Depth: a development step",
 	LORE: "Lore: a skill of another species of its Kin", RESHAPE: "Reshape: spend its stat points anew"}
-## Offers per bloodline, Mortal to Divine.
-const OFFERED: Array[int] = [3, 4, 4, 5]
 ## What a grown monster has before any point is spent, so that it can use a kit; and the top of each stat.
 const FLOOR := {"hp": 3, "pace": 1.0, "move": 2, "reach": 2, "tpr": 1, "ap": 2}
 ## Reach ends at 4 here: the unit sheet of the battle takes 2–4 (UnitSheet.problems).
@@ -68,22 +57,23 @@ var unspent := 0
 var dev_steps := 0
 ## Development level per kit slot (1–3); a missing entry is level 1.
 var slot_levels: Array[int] = []
+## The options chosen per kit slot (SkillDev): one per level above the first. Fewer than that means a choice is
+## open: after a development step taken without one, or after the slot took another skill.
+var slot_opts: Array = []
+## Stat points it gained from pills, beyond the points of its step (docs/overworld.md §6.2).
+var bonus_points := 0
 ## Open kit slots (4 at the start, up to 6) and what fills them: ids of skills of the species.
 var slots := START_SLOTS
 var kit: Array[StringName] = []
 ## Hatched and not yet in a battle: the player still shapes it freely (docs/overworld.md §4.1).
 var fresh := false
-var gifts: Array[StringName] = []
-## Picks left at a stage breakthrough, and what was already picked in the running one (Ancient and Divine take
-## two different ones).
+## It fought in the last wild battle won and still stood: the player may give it a rise that battle left.
+var may_rise := false
+## Picks left at a stage breakthrough, and what was already picked in the running one (a vow may give two).
 var choice_picks := 0
 var choice_taken: Array[String] = []
-## Gifts of its Kin it may still take outright (its bloodline from the egg, an ascension, a vow).
-var gift_picks := 0
 ## Skills of other species of its Kin it took as Lore: they join what it can learn.
 var lore: Array[StringName] = []
-## HP it lacks in its next battle (a bitter pill taken outside a battle); the battle clears it.
-var hp_debt := 0
 
 
 ## The species' own numbers, unrolled: the "reference individual" of gdd_battle §6.2.
@@ -99,11 +89,10 @@ static func of_species(def: MonsterDef) -> MonsterInstance:
 ## A new individual: shape rolled inside its ranges, snapped to the stage ceilings.
 ## `shape` NONE picks one by the species' Kin lean.
 static func roll(def: MonsterDef, rng: RandomNumberGenerator, p_shape := StatShape.Id.NONE,
-		p_stage := Stage.Type.QI_GATHERING, p_sub_tier := Stage.SubTier.LOWER, p_bloodline := Bloodline.MORTAL) -> MonsterInstance:
+		p_stage := Stage.Type.QI_GATHERING, p_sub_tier := Stage.SubTier.LOWER) -> MonsterInstance:
 	var m := MonsterInstance.new()
 	m.species_id = def.id
 	m.shape = p_shape if p_shape != StatShape.Id.NONE else StatShape.pick_for_kin(def.kin, rng)
-	m.bloodline = p_bloodline
 	m.stage = p_stage
 	m.sub_tier = p_sub_tier
 	m.core = StatShape.roll_core(m.shape, rng)
@@ -112,12 +101,11 @@ static func roll(def: MonsterDef, rng: RandomNumberGenerator, p_shape := StatSha
 	return m
 
 
-## A new individual of the points model at `step` (0 = Qi Gathering Lower … 17 = Sovereign High): the floor, then
+## A new individual of the points model at `step` (0 = Qi Gathering Lower … 14 = Immortal High): the floor, then
 ## the points of its step spent at random. How a stat shape splits the points is not defined (T03).
-static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0, p_bloodline := Bloodline.MORTAL) -> MonsterInstance:
+static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0) -> MonsterInstance:
 	var m := MonsterInstance.new()
 	m.species_id = def.id
-	m.bloodline = p_bloodline
 	step = clampi(step, 0, STEPS - 1)
 	m.stage = (step / 3) as Stage.Type
 	m.sub_tier = (step % 3) as Stage.SubTier
@@ -125,10 +113,6 @@ static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0, p_bloo
 	m.unspent = START_POINTS + STEP_POINTS * step - m.points_spent()
 	m._gains_up_to(step)
 	m.spend_at_random(rng)
-	for i in int(p_bloodline):                    # its bloodline: Kin gifts awakened from the start
-		var born := m.open_gifts()
-		if not born.is_empty():
-			m.gifts.append(born[rng.randi_range(0, born.size() - 1)])
 	while m.choice_picks > 0:
 		var open: Array[String] = []
 		for c in CHOICES:
@@ -143,22 +127,27 @@ static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0, p_bloo
 		var at := rng.randi_range(0, list.size() - 1)
 		m.kit.append(list[at].id)
 		list.remove_at(at)
+	var guard := 0
+	while m.dev_steps > 0 and guard < 32:         # a wild monster has developed its slots
+		guard += 1
+		var slot := rng.randi_range(0, maxi(0, m.kit.size() - 1))
+		var open := m.open_options(slot)
+		if not m.kit.is_empty() and m.slot_level(slot) < SkillDev.MAX_LEVEL and not open.is_empty():
+			m.develop_slot(slot, open[rng.randi_range(0, open.size() - 1)])
 	m.current_hp = m.max_hp()
 	return m
 
 
 ## A monster from an egg (docs/overworld.md §4.1): nothing is spent and no skill is chosen; the player shapes it.
-static func hatched(def: MonsterDef, step := 0, p_bloodline := Bloodline.MORTAL) -> MonsterInstance:
+static func hatched(def: MonsterDef, step := 0) -> MonsterInstance:
 	var m := MonsterInstance.new()
 	m.species_id = def.id
-	m.bloodline = p_bloodline
 	step = clampi(step, 0, STEPS - 1)
 	m.stage = (step / 3) as Stage.Type
 	m.sub_tier = (step % 3) as Stage.SubTier
 	m.stats = FLOOR.duplicate()
 	m.unspent = START_POINTS + STEP_POINTS * step - m.points_spent()
 	m._gains_up_to(step)
-	m.gift_picks = mini(int(p_bloodline), m.open_gifts().size())      # the player chooses the gifts of its bloodline
 	m.fresh = true
 	m.current_hp = m.max_hp()
 	return m
@@ -170,7 +159,7 @@ func _gains_up_to(step: int) -> void:
 		if DEV_STEP_AT.has(i):
 			dev_steps += 1
 		if i % 3 == 0:
-			choice_picks += steps_per_gain()
+			choice_picks += 1
 
 
 ## The skills this monster can learn: the list of its species within the groups of its Kin, and what it took as Lore.
@@ -266,27 +255,68 @@ func unlearn(slot: int) -> bool:
 	kit.remove_at(slot)
 	if slot < slot_levels.size():
 		slot_levels.remove_at(slot)
+	if slot < slot_opts.size():
+		slot_opts.remove_at(slot)
 	return true
 
 
-## Another skill in a slot (the relearning pill, docs/skills.md §8): the slot keeps its level.
+## Another skill in a slot (the relearning pill, docs/skills.md §8): the slot keeps its level, and its options are
+## chosen anew from the new skill.
 func relearn(slot: int, skill_id: StringName) -> bool:
 	if slot < 0 or slot >= kit.size() or not can_learn(skill_id):
 		return false
 	kit[slot] = skill_id
+	if slot < slot_opts.size():
+		slot_opts[slot] = []
+	return true
+
+
+## The skills it brings into a battle: those of its slots with the options of each slot applied (SkillDev).
+func battle_skills() -> Array[BattleSkillDef]:
+	var out: Array[BattleSkillDef] = []
+	var raw := kit_skills()
+	for slot in raw.size():
+		out.append(SkillDev.developed(raw[slot], slot_options(slot)) if uses_points() else raw[slot])
+	return out
+
+
+## The options chosen for a slot.
+func slot_options(slot: int) -> Array:
+	return slot_opts[slot] if slot >= 0 and slot < slot_opts.size() else []
+
+
+## The options the skill of a slot can still take.
+func open_options(slot: int) -> Array[String]:
+	var raw := kit_skills()
+	if slot < 0 or slot >= raw.size():
+		return [] as Array[String]
+	return SkillDev.open_options(raw[slot], slot_options(slot))
+
+
+## Options the player may still choose for a slot without a development step: its level allows more than it has
+## (the slot took another skill, or a step was taken while the skill had nothing to offer).
+func open_picks(slot: int) -> int:
+	return mini(slot_level(slot) - 1 - slot_options(slot).size(), open_options(slot).size())
+
+
+## Chooses an option for a slot whose level already allows one.
+func pick_option(slot: int, option: String) -> bool:
+	if open_picks(slot) <= 0 or not open_options(slot).has(option):
+		return false
+	while slot_opts.size() <= slot:
+		slot_opts.append([])
+	(slot_opts[slot] as Array).append(option)
 	return true
 
 
 func can_choose(choice: String) -> bool:
 	if choice_taken.size() >= CHOICES.size():
 		choice_taken.clear()
-	if choice_picks <= 0 or choice_taken.has(choice) or not offered().has(choice):
+	if choice_picks <= 0 or choice_taken.has(choice) or not CHOICES.has(choice):
 		return false
 	match choice:
 		BREADTH:
 			return slots < MAX_SLOTS
-		BLOOD:
-			return not open_gifts().is_empty()
 		LORE:
 			return not lore_options().is_empty()
 		RESHAPE:
@@ -294,24 +324,12 @@ func can_choose(choice: String) -> bool:
 	return true
 
 
-## What its bloodline offers it at a stage breakthrough.
+## What it is offered at a stage breakthrough: the same for every monster.
 func offered() -> Array[String]:
-	return CHOICES.slice(0, OFFERED[clampi(int(bloodline), 0, OFFERED.size() - 1)])
+	return CHOICES.duplicate()
 
 
-## The gifts of its Kin it does not have yet.
-func open_gifts() -> Array[StringName]:
-	var out: Array[StringName] = []
-	var kin := KinDef.of(species().kin)
-	if kin != null:
-		for g: Dictionary in kin.gifts:
-			if not gifts.has(StringName(g["id"])):
-				out.append(StringName(g["id"]))
-	return out
-
-
-## Takes one of the offer at a stage breakthrough. `gift` names the gift for BLOOD or the skill for LORE; without
-## one it is drawn. RESHAPE gives every point back; with `rng` (a wild monster) they are spent at once.
+## Takes one of the offer at a stage breakthrough. `gift` names the skill for LORE; without one it is drawn. RESHAPE gives every point back; with `rng` (a wild monster) they are spent at once.
 func choose(choice: String, gift: StringName = &"", rng: RandomNumberGenerator = null) -> bool:
 	if not can_choose(choice):
 		return false
@@ -320,13 +338,6 @@ func choose(choice: String, gift: StringName = &"", rng: RandomNumberGenerator =
 			slots += 1
 		DEPTH:
 			dev_steps += 1
-		BLOOD:
-			var open := open_gifts()
-			if gift == &"":
-				gift = open[rng.randi_range(0, open.size() - 1) if rng != null else 0]
-			if not open.has(gift):
-				return false
-			gifts.append(gift)
 		LORE:
 			var options := lore_options()
 			if gift == &"":
@@ -350,15 +361,6 @@ func choose(choice: String, gift: StringName = &"", rng: RandomNumberGenerator =
 	return true
 
 
-## Takes a gift of its Kin outright (a vow gave the pick).
-func take_gift(gift: StringName) -> bool:
-	if gift_picks <= 0 or not open_gifts().has(gift):
-		return false
-	gifts.append(gift)
-	gift_picks -= 1
-	return true
-
-
 func uses_points() -> bool:
 	return stats.has("ap")
 
@@ -367,8 +369,6 @@ func step() -> int:
 	return int(stage) * 3 + int(sub_tier)
 
 
-func steps_per_gain() -> int:
-	return 2 if bloodline >= Bloodline.ANCIENT else 1
 
 
 func points_spent() -> int:
@@ -426,74 +426,59 @@ func refund_points() -> void:
 	if not uses_points():
 		return
 	stats = FLOOR.duplicate()
-	unspent = START_POINTS + STEP_POINTS * step() - points_spent()
+	unspent = START_POINTS + STEP_POINTS * step() + bonus_points - points_spent()
 	current_hp = mini(current_hp, max_hp())
 
 
-## XP of the points model: a full bar is the next step (+5 points). At High the monster breaks through by itself
-## while it stays at or below `tamer_stage`; no bloodline caps the stage. Returns the steps gained.
-func gain_xp(amount: int, tamer_stage: Stage.Type) -> int:
-	var ups := 0
-	xp += amount
-	while step() < STEPS - 1 and xp >= XP_STEPS[step()]:
-		var top := int(tamer_stage)
-		if sub_tier == Stage.SubTier.HIGH and int(stage) >= top:
-			xp = XP_STEPS[step()]
-			break
-		xp -= XP_STEPS[step()]
-		if sub_tier == Stage.SubTier.HIGH:
-			stage = (int(stage) + 1) as Stage.Type
-			sub_tier = Stage.SubTier.LOWER
-		else:
-			sub_tier = (int(sub_tier) + 1) as Stage.SubTier
-		unspent += STEP_POINTS
-		if DEV_STEP_AT.has(step()):
-			dev_steps += 1
-		if sub_tier == Stage.SubTier.LOWER:
-			choice_picks += steps_per_gain()
-		ups += 1
-	return ups
+## Growth of the points model (docs/monsters.md §2.3): a rise is the next step (+5 points). Within a stage every
+## rise is open; from High a monster rises into the next stage only while that stage is at or below `tamer_stage`.
+## Returns whether it rose.
+func rise(tamer_stage: Stage.Type) -> bool:
+	if not can_step(tamer_stage):
+		return false
+	if sub_tier == Stage.SubTier.HIGH:
+		stage = (int(stage) + 1) as Stage.Type
+		sub_tier = Stage.SubTier.LOWER
+		choice_picks += 1
+	else:
+		sub_tier = (int(sub_tier) + 1) as Stage.SubTier
+	unspent += STEP_POINTS
+	if DEV_STEP_AT.has(step()):
+		dev_steps += 1
+	return true
 
 
-## Whether a full bar would lift it a step now: it is not at the top and not held at High by its tamer's stage.
+## Whether a rise would lift it a step now: it is not at the top and not held at High by its tamer's stage.
 func can_step(tamer_stage: Stage.Type) -> bool:
 	return step() < STEPS - 1 and not (sub_tier == Stage.SubTier.HIGH and int(stage) >= int(tamer_stage))
 
 
-## A bloodline ascension (docs/monsters.md §4): the next grade and one gift of its Kin to choose. Mortal climbs
-## to Ancient, never to Divine.
-func ascend() -> bool:
-	if bloodline >= Bloodline.ANCIENT:
-		return false
-	bloodline = (int(bloodline) + 1) as Bloodline
-	if gift_picks < open_gifts().size():
-		gift_picks += 1
-	return true
-
-
-func bloodline_name() -> String:
-	return BLOODLINE_NAMES[int(bloodline)]
-
-
-func xp_text() -> String:
+## Where it stands and what lifts it next.
+func growth_text() -> String:
 	if step() >= STEPS - 1:
 		return "at the top"
-	return "XP %d / %d" % [xp, XP_STEPS[step()]]
+	return "rises by a battle won in the void" if sub_tier == Stage.SubTier.HIGH else "rises by a wild battle won against a monster of its step or above"
 
 
 func slot_level(slot: int) -> int:
 	return slot_levels[slot] if slot < slot_levels.size() else 1
 
 
-## Spends a development step on a kit slot (levels 1–3). The options of a skill are not defined, so a level
-## changes nothing in a battle yet.
-func develop_slot(slot: int) -> bool:
-	if dev_steps <= 0 or slot < 0 or slot >= kit.size() or slot_level(slot) >= 3:
+## Spends a development step on a kit slot (levels 1–3) and takes an option of the skill's kind for it
+## (docs/skills.md §8). Without `option` the level rises and the choice stays open (`open_picks`).
+func develop_slot(slot: int, option := "") -> bool:
+	if dev_steps <= 0 or slot < 0 or slot >= kit.size() or slot_level(slot) >= SkillDev.MAX_LEVEL:
+		return false
+	if option != "" and not open_options(slot).has(option):
 		return false
 	while slot_levels.size() <= slot:
 		slot_levels.append(1)
 	slot_levels[slot] += 1
 	dev_steps -= 1
+	if option != "":
+		while slot_opts.size() <= slot:
+			slot_opts.append([])
+		(slot_opts[slot] as Array).append(option)
 	return true
 
 
@@ -572,7 +557,7 @@ func progress_text() -> String:
 
 
 func heal_full() -> void:
-	current_hp = maxi(1, max_hp() - hp_debt)
+	current_hp = max_hp()
 
 
 ## The finished unit sheet the battle works with: the species with this individual's stats.
@@ -602,19 +587,18 @@ func sheet_text(with_kit := true) -> String:
 
 
 func to_dict() -> Dictionary:
-	return {"species": String(species_id), "shape": int(shape), "rarity": int(bloodline), "stage": int(stage),
+	return {"species": String(species_id), "shape": int(shape), "stage": int(stage),
 		"sub_tier": int(sub_tier), "xp": xp, "stats": stats.duplicate(), "core": core.duplicate(), "current_hp": current_hp,
 		"unspent": unspent, "dev_steps": dev_steps, "slot_levels": slot_levels.duplicate(),
-		"slots": slots, "kit": kit.map(func(k: StringName) -> String: return String(k)), "fresh": fresh, "gifts": gifts.map(func(g: StringName) -> String: return String(g)),
-		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate(), "gift_picks": gift_picks,
-		"lore": lore.map(func(s: StringName) -> String: return String(s)), "hp_debt": hp_debt}
+		"slots": slots, "kit": kit.map(func(k: StringName) -> String: return String(k)), "fresh": fresh,
+		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate(), "slot_opts": slot_opts.duplicate(true), "bonus_points": bonus_points,
+		"lore": lore.map(func(s: StringName) -> String: return String(s)), "may_rise": may_rise}
 
 
 static func from_dict(d: Dictionary) -> MonsterInstance:
 	var m := MonsterInstance.new()
 	m.species_id = StringName(d["species"])
 	m.shape = int(d["shape"]) as StatShape.Id
-	m.bloodline = int(d["rarity"]) as Bloodline
 	m.stage = int(d["stage"]) as Stage.Type
 	m.sub_tier = int(d["sub_tier"]) as Stage.SubTier
 	m.xp = int(d["xp"])
@@ -641,11 +625,14 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 		elif int(k) >= 0 and int(k) < m.species().skills.size():      # a save from before skill ids
 			m.kit.append(m.species().skills[int(k)].id)
 	m.fresh = bool(d.get("fresh", false))
-	for g in d.get("gifts", []):
-		m.gifts.append(StringName(g))
+	m.may_rise = bool(d.get("may_rise", false))
 	m.choice_picks = int(d.get("choice_picks", 0))
-	m.gift_picks = int(d.get("gift_picks", 0))
-	m.hp_debt = int(d.get("hp_debt", 0))
+	m.bonus_points = int(d.get("bonus_points", 0))
+	for opts in d.get("slot_opts", []):
+		var list: Array = []
+		for o in opts:
+			list.append(String(o))
+		m.slot_opts.append(list)
 	for s in d.get("lore", []):
 		m.lore.append(StringName(s))
 	for taken in d.get("choice_taken", []):

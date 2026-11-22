@@ -13,7 +13,7 @@ func build(into: VBoxContainer) -> void:
 	for m in game.roster:
 		var card := HubUi.card(list)
 		card.add_child(HubUi.monster_head(m))
-		card.add_child(HubUi.label("%s · %d stat points unspent" % [m.xp_text(), m.unspent], 18, HubUi.GOOD if m.unspent > 0 else UiTheme.DIM))
+		card.add_child(HubUi.label("%s · %d stat points unspent" % [m.growth_text(), m.unspent], 18, HubUi.GOOD if m.unspent > 0 else UiTheme.DIM))
 		var row := HubUi.flow()
 		card.add_child(row)
 		for stat in MonsterInstance.STAT_ORDER:

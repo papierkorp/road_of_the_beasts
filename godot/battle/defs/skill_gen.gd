@@ -263,7 +263,7 @@ static func place_words(s: BattleSkillDef) -> String:
 		return "line from the user · %d sq" % s.shape_squares()
 	return "%s around the user · %d sq" % [s.shape_label(), s.shape_squares()]
 const PATHS := {"walk": "walks", "line": "straight line", "free": "any path", "teleport": "any free square"}
-const SELF_EFFECTS := {"quicken": "Pace +0.1", "haste": "movement skills −1 Stamina", "extend": "Reach +1", "refresh": "Stamina +1 at the round end", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)"}
+const SELF_EFFECTS := {"quicken": "Pace +0.1", "haste": "movement skills −1 Stamina", "extend": "Reach +1", "refresh": "Stamina +1 at the round end", "vigor": "AP +1 (experiment)", "tempo": "one more turn (experiment)", "anchor": "cannot be pushed or pulled"}
 const NO := "—"
 
 
@@ -314,7 +314,7 @@ static func card(c: BattleContent, s: BattleSkillDef) -> Dictionary:
 		BattleSkillDef.BUFF:
 			var fx: PackedStringArray = []
 			for e in s.buff_effects:
-				fx.append("%s · %d rd" % [SELF_EFFECTS.get(e.tag, "%s %d" % [e.tag, e.value_at(1)]), s.duration])
+				fx.append("%s · %s" % [SELF_EFFECTS.get(e.tag, "%s %d" % [e.tag, e.value_at(1)]), "%d rd" % s.duration if s.duration > 0 else "this round"])
 			out["self"] = ", ".join(fx)
 		BattleSkillDef.PASSIVE:
 			out["self"] = "always: %s" % s.description
@@ -355,7 +355,7 @@ static func line(c: BattleContent, s: BattleSkillDef) -> String:
 
 ## A skill from chosen parts. `spec`: name, ap, use (repeatable | once_per_round | once_per_battle),
 ## strike ("" | a base shape of BattleShapes, extended as "jab+1") with damage (0–2) and push ("yes" | "no"), path ("" | walk | line | free) with impact
-## (none | ahead | ring), self ("" | quicken | haste | extend | vigor | tempo | immovable), shape (key
+## (none | ahead | ring), self ("" | quicken | haste | extend | vigor | tempo | anchor), shape (key
 ## of SHAPES), ground / zone / prop (an id or ""). The kind follows from the parts: a Strike, else a
 ## movement, else an effect on the user, else a skill that only creates (a zone alone is a zone
 ## skill, so that a push zone gets its direction).
@@ -396,17 +396,12 @@ static func build(c: BattleContent, spec: Dictionary) -> BattleSkillDef:
 			s.ground_costs = false
 		s.impact_push = String(spec.get("impact", "none")) if path == "line" else "none"
 		prop = ""
-	elif own == "immovable":
-		s.kind = BattleSkillDef.PASSIVE
-		s.immovable = true
-		s.description = "Ignores push and pull."
-		return s
 	elif own != "":
 		s.kind = BattleSkillDef.BUFF
 		var fx := FieldEffect.new()
 		fx.tag = own
 		s.buff_effects.append(fx)
-		s.duration = 2
+		s.duration = 0 if own == FieldEffect.ANCHOR else 2      # holding a square lasts until the round ends
 		s.description = line(c, s)
 		return s
 	elif zone != "" and ground == "" and prop == "":

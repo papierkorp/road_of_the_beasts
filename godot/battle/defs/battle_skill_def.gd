@@ -107,6 +107,8 @@ const PASSIVE := "passive"
 
 @export_group("Board changes")
 @export var board_ops: Array[BoardOp] = []
+## Rounds what this skill lays (ground, a prop, a zone) lasts longer than the rule says (skill development, SkillDev).
+@export var lays_longer: int = 0
 
 @export_group("Movement")
 @export_enum("walk", "line", "free", "teleport") var move_path: String = "walk"
@@ -143,23 +145,15 @@ const PASSIVE := "passive"
 ## (collision_self = only when it is the one pushed or pulled).
 @export var reduces_damage: Array[String] = []
 @export var reduction: int = 1
-## Ignores push and pull of every source. No passive of the game may have it (docs/skills.md §6): it is left for
-## the skill builder of the tools.
-@export var immovable: bool = false
-## Is not pushed or pulled by one source (docs/skills.md §6): "strike" (a Strike or another skill), "zone" or
-## "prop". A passive names one at most.
-@export var unmoved_by: String = ""
 ## Cannot move voluntarily (Step and movement skills).
 @export var rooted: bool = false
-## Allies orthogonally adjacent cannot be pushed or pulled.
-@export var anchors_adjacent_allies: bool = false
 ## Allies orthogonally adjacent take this much less Surge damage.
 @export var guards_adjacent_allies: int = 0
 ## May rotate its own fixed footprints in battle (rule modifier, gdd_skills §11 Adaptive).
 @export var rotate_shapes: bool = false
 ## Moves through solid props (may not stop on them).
 @export var phasing: bool = false
-## ---- Kin traits and gifts (docs/content.md §7); a monster has them without a slot (UnitSheet.innate) ----
+## ---- Kin traits (docs/content.md §7); a monster has its trait without a slot (UnitSheet.innate) ----
 ## Moments (Moment.ENTER, LEAVE, TURN_END) at which ground does not act on this monster.
 @export var ignores_ground_moments: Array[String] = []
 ## Its movement passes over monsters (it never ends on one).
@@ -174,8 +168,6 @@ const PASSIVE := "passive"
 @export var swaps_allies: bool = false
 ## After its Strike pushed a monster away, its next Step onto the square that monster left costs no AP.
 @export var follows_push: bool = false
-## A monster moved into it takes the collision damage of a spiky prop.
-@export var spiky_body: bool = false
 ## Event-driven reaction (gdd_battle §2.4): at most once per triggering event.
 @export_enum("none", "prop_destroyed_in_reach") var react_event: String = "none"
 @export var react_heal: int = 0

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CultivationDef" format=3]
+
+[ext_resource type="Script" path="res://overworld/core/cultivation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"way_of_the_alchemist"
+display_name = "Way of the Alchemist"
+blurb = "Your monsters are the way. The battles of the wild drop pills: some make a monster grow, some change its kit, some you carry into a battle. You have no tamer skills and no battleground of your own."
+branches = [{"id": "body", "name": "Body", "text": "more pills, and more of them carried into a battle"}, {"id": "kit", "name": "Kit", "text": "monsters that take more of the pills that strengthen them"}]
+nodes = [{"id": &"rich_brew_0", "stage": 0, "name": "Rich Find", "kind": "perk", "text": "A wild battle won drops one pill more.", "effects": {"drop": 1}, "cost": 2, "needs": &"", "branch": "body"}, {"id": &"deep_pouch_1", "stage": 1, "name": "Deep Pouch", "kind": "perk", "text": "One more tamer slot for pills.", "effects": {"tamer_slots": 1}, "cost": 2, "needs": &"", "branch": "body"}, {"id": &"rich_brew_2", "stage": 2, "name": "Richer Find", "kind": "perk", "text": "A wild battle won drops one pill more.", "effects": {"drop": 1}, "cost": 3, "needs": &"rich_brew_0", "branch": "body"}, {"id": &"deep_pouch_3", "stage": 3, "name": "Deeper Pouch", "kind": "perk", "text": "One more tamer slot for pills.", "effects": {"tamer_slots": 1}, "cost": 3, "needs": &"deep_pouch_1", "branch": "body"}, {"id": &"keen_nose_0", "stage": 0, "name": "Open Meridians", "kind": "perk", "text": "Every monster takes 2 more Tempering pills.", "effects": {"pill_cap": 2}, "cost": 1, "needs": &"", "branch": "kit"}, {"id": &"keen_nose_2", "stage": 2, "name": "Wide Meridians", "kind": "perk", "text": "Every monster takes 2 more Tempering pills.", "effects": {"pill_cap": 2}, "cost": 2, "needs": &"keen_nose_0", "branch": "kit"}]

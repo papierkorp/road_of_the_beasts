@@ -206,25 +206,16 @@ static func ignores_ground(u: BattleUnit, ground: StringName) -> bool:
 	return false
 
 
-## Push and pull of `kind` ("strike": a Strike or another skill, "zone", "prop") do not move this unit: a timed
-## anchor, its own passive against that kind, or an anchoring ally next to it.
-static func is_immovable(b: Battle, u: BattleUnit, kind := "strike") -> bool:
+## Push and pull do not move this unit while a timed anchor holds it: a self buff or a pill (docs/skills.md §6: no
+## passive stops a push or a pull). `_kind` names where the force comes from ("strike", "zone", "prop").
+static func is_immovable(_b: Battle, u: BattleUnit, _kind := "strike") -> bool:
 	for fx in u.effects:
 		if fx["tag"] == FieldEffect.ANCHOR:
 			return true
-	for s in u.passives():
-		if s.immovable or (s.unmoved_by != "" and s.unmoved_by == kind):
-			return true
-	for other in b.living(u.side):
-		if other.id == u.id:
-			continue
-		for s in other.passives():
-			if s.anchors_adjacent_allies and _bodies_orth_adjacent(u, other):
-				return true
 	return false
 
 
-## Whether a passive of the unit (kit, Kin trait or gift) sets the flag `name` of BattleSkillDef.
+## Whether a passive of the unit (kit or Kin trait) sets the flag `name` of BattleSkillDef.
 static func has_flag(u: BattleUnit, name: StringName) -> bool:
 	for s in u.passives():
 		if bool(s.get(name)):

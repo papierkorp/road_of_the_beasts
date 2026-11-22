@@ -1,100 +1,130 @@
 extends GdUnitTestSuite
-## The day, the lifespan and the growth of the hub game (docs/vision.md §3, docs/monsters.md §2.2, §5).
+## The game state (docs/vision.md §3, §5; docs/monsters.md §5): the day without day AP, the lifespan, the stages,
+## the save, eggs, and the monsters: points, growth, the breakthrough choice and the development of slots.
+
+const H := preload("res://tests/overworld/helpers.gd")
 
 
-func _game(seed_value := 7) -> GameState:
-	return GameState.new_game(seed_value, &"way_of_the_formation", &"blaze_tiger")
+func test_a_new_game_starts_with_one_monster_and_what_its_way_brings() -> void:
+	for way: StringName in [H.ARTIFICER, H.FORMATION, H.ALCHEMIST]:
+		var g := H.game(way)
+		assert_int(g.roster.size()).is_equal(1)
+		assert_int(int(g.stage)).is_equal(0)
+		assert_int(g.lifespan).is_equal(g.values.lifespan_years[0])
+	var smith := H.game(H.ARTIFICER)
+	assert_bool(smith.battleground.is_empty()).is_false()             # the board is the Artificer's alone
+	assert_int(smith.tamer_slots()).is_equal(0)
+	assert_int(smith.carry()).is_equal(smith.values.carry_base)
+	assert_array(smith.tamer_skills).is_empty()
+	var tamer := H.game(H.FORMATION)
+	assert_array(tamer.tamer_skills).is_equal([GameState.SEAL])
+	assert_bool(tamer.battleground.is_empty()).is_true()
+	assert_dict(tamer.parts).is_empty()
+	assert_int(tamer.carry()).is_equal(0)
+	var brewer := H.game(H.ALCHEMIST)
+	assert_array(brewer.tamer_skills).is_empty()
+	assert_int(brewer.count("pill:binding")).is_equal(brewer.values.alchemist_start_pills)
 
 
-func test_a_new_game_starts_with_one_monster_and_the_values_of_the_first_stage() -> void:
-	var g := _game()
-	assert_int(g.roster.size()).is_equal(1)
-	assert_str(String(g.roster[0].species_id)).is_equal("blaze_tiger")
-	assert_int(g.ap).is_equal(g.values.day_ap[0])
-	assert_int(g.lifespan).is_equal(g.values.lifespan_days[0])
-	assert_array(g.tamer_skills).contains([GameState.SEAL])
-	assert_int(g.tamer_slots()).is_equal(1)
+func test_the_lifespan_is_the_one_clock_and_every_deed_costs_a_year() -> void:
+	var g := H.game()
+	var years := g.lifespan
+	assert_int(years).is_equal(g.values.lifespan_years[0])
+	H.wild_fight(g, 0, false)                                         # lost: the year is spent all the same
+	assert_int(g.lifespan).is_equal(years - 1)
+	H.wild_fight(g, 0, true)
+	assert_int(g.lifespan).is_equal(years - 2)
+	assert_bool(Wild.reroll(g)).is_true()                             # a new look costs a year too
+	assert_int(g.lifespan).is_equal(years - 3)
 
 
-func test_the_night_shrinks_the_lifespan_and_refills_the_day_ap() -> void:
-	var g := _game()
-	assert_bool(g.spend_ap(2)).is_true()
-	assert_bool(g.spend_ap(5)).is_false()
-	var before := g.lifespan
-	assert_bool(g.end_day()).is_true()
-	assert_int(g.day).is_equal(2)
-	assert_int(g.lifespan).is_equal(before - 1)
-	assert_int(g.ap).is_equal(g.max_ap())
-
-
-func test_the_end_of_the_lifespan_forces_the_trial_and_stops_the_days() -> void:
-	var g := _game()
-	for i in g.values.lifespan_days[0]:
-		assert_bool(g.forced_trial).is_false()
-		g.end_day()
+func test_the_end_of_the_lifespan_forces_the_trial_and_closes_the_wild() -> void:
+	var g := H.game()
+	g.spend(g.lifespan)
 	assert_bool(g.forced_trial).is_true()
-	assert_int(g.lifespan).is_equal(0)
-	assert_bool(g.can_end_day()).is_false()
-	assert_bool(g.end_day()).is_false()
+	assert_bool(Wild.can_fight(g)).is_false()
+	assert_bool(Wild.reroll(g)).is_false()
+	assert_object(Wild.fight_for(g, 0)).is_null()
 
 
-func test_a_breakthrough_gives_the_next_stage_and_its_lifespan() -> void:
-	var g := _game()
-	g.void_depth = 2
-	g.forced_trial = true
+func test_a_breakthrough_gives_the_next_stage_a_whole_lifespan_and_a_boon() -> void:
+	var g := H.game()
+	g.spend(4)
 	g.break_through()
-	assert_int(int(g.stage)).is_equal(int(Stage.Type.FOUNDATION))
-	assert_int(g.lifespan).is_equal(g.values.lifespan_days[1])
-	assert_int(g.void_depth).is_equal(0)
-	assert_bool(g.forced_trial).is_false()
-	assert_int(g.tamer_slots()).is_equal(2)
-
-
-func test_sovereign_wins_the_game() -> void:
-	var g := _game()
-	g.stage = Stage.Type.IMMORTAL
+	assert_int(int(g.stage)).is_equal(1)
+	assert_int(g.lifespan).is_equal(g.values.lifespan_years[1])       # the years left over are lost
+	assert_bool(g.boon_pick).is_true()
+	assert_bool(g.take_boon(&"no such boon")).is_false()
+	assert_bool(g.take_boon(&"long_life")).is_true()
+	assert_int(g.lifespan).is_equal(g.values.lifespan_years[1] + 3)   # this lifespan too
+	assert_bool(g.take_boon(&"long_life")).is_false()                 # one boon per breakthrough
 	g.break_through()
-	assert_str(String(g.outcome)).is_equal(String(GameState.WON))
-	assert_bool(g.can_end_day()).is_false()
+	assert_int(g.lifespan).is_equal(g.values.lifespan_years[2] + 3)   # and every one after it
+	var slots := g.tamer_slots()
+	var shown := Wild.shown(g)
+	assert_bool(g.take_boon(&"wide_hand")).is_true()
+	assert_int(g.tamer_slots()).is_equal(slots + 1)
+	g.break_through()
+	assert_bool(g.take_boon(&"keen_eye")).is_true()
+	assert_int(Wild.shown(g)).is_equal(shown + 1)
+	assert_int(Wild.offers(g).size()).is_equal(shown + 1)
+
+
+func test_nobody_rises_past_immortal_and_the_sovereign_beast_wins_the_game() -> void:
+	var g := H.game()
+	for i in 9:
+		g.break_through()
+	assert_int(int(g.stage)).is_equal(int(Stage.Type.IMMORTAL))
+	assert_bool(g.is_over()).is_false()
+	g.win()
+	assert_that(g.outcome).is_equal(GameState.WON)
+	assert_int(int(g.stage)).is_equal(int(Stage.Type.IMMORTAL))
 
 
 func test_a_save_holds_the_whole_game() -> void:
-	var g := _game()
-	g.end_day()
-	g.spend_ap(1)
-	g.add_item(Materials.beast_part(0), 3)
+	var g := H.game(H.ARTIFICER)
 	g.add_egg(&"moss_turtle")
 	g.path_points = 2
-	g.roster[0].gain_xp(70, g.stage)
-	var data = JSON.parse_string(JSON.stringify(g.to_dict()))
-	var h := GameState.from_dict(data)
-	assert_int(h.day).is_equal(2)
-	assert_int(h.ap).is_equal(g.ap)
-	assert_int(h.count(Materials.beast_part(0))).is_equal(3)
-	assert_int(h.eggs.size()).is_equal(1)
-	assert_int(h.path_points).is_equal(2)
-	assert_dict(h.roster[0].stats).is_equal(g.roster[0].stats)
-	assert_int(h.roster[0].unspent).is_equal(g.roster[0].unspent)
-	assert_int(h.roster[0].step()).is_equal(1)
-	assert_int(h.rng_for("x").randi()).is_equal(g.rng_for("x").randi())
+	H.wild_fight(g, 1, true)
+	g.break_through()
+	g.take_boon(&"keen_eye")
+	g.rises = [2, 4]
+	g.roster[0].may_rise = true
+	var back := GameState.from_dict(JSON.parse_string(JSON.stringify(g.to_dict())))
+	var again := GameState.from_dict(JSON.parse_string(JSON.stringify(back.to_dict())))
+	assert_str(JSON.stringify(again.to_dict())).is_equal(JSON.stringify(back.to_dict()))      # a save read and written again is the same
+	assert_int(back.eggs.size()).is_equal(g.eggs.size())
+	assert_int(back.path_points).is_equal(2)
+	assert_dict(back.parts).is_equal(g.parts)
+	assert_that(back.system).is_equal(H.ARTIFICER)
+	assert_int(back.wild_roll).is_equal(g.wild_roll)
+	assert_array(back.wild_gone).is_equal(g.wild_gone)
+	assert_array(back.rises).is_equal([2, 4])
+	assert_bool(back.roster[0].may_rise).is_true()
+	assert_bool(back.boons.size() == 1 and back.boons[0] == &"keen_eye").is_true()
+	assert_int(back.lifespan).is_equal(g.lifespan)
+	assert_object(GameState.from_dict({"version": 4})).is_null()      # a save of the game before the wild
 
 
-func test_an_egg_hatches_after_its_nights() -> void:
-	var g := _game()
+func test_an_egg_hatches_after_its_battles() -> void:
+	var g := H.game()
 	g.add_egg(&"moss_turtle")
-	for i in g.values.egg_nights:
-		g.end_day()
+	for i in g.values.egg_battles:
+		assert_int(g.eggs.size()).is_equal(1)
+		H.wild_fight(g, 0, false)                                     # a battle lost counts too
 	assert_int(g.eggs.size()).is_equal(0)
 	assert_int(g.roster.size()).is_equal(2)
 
 
-func test_a_grown_monster_never_spends_more_than_its_points() -> void:
+func test_a_grown_monster_never_spends_more_than_its_points_and_ends_at_step_fourteen() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
-	for step in [0, 4, 9, 17]:
+	assert_int(MonsterInstance.STEPS).is_equal(15)
+	for step in [0, 4, 9, 14, 30]:
 		var m := MonsterInstance.grown(GameData.monster(&"moss_turtle"), rng, step)
-		assert_int(m.step()).is_equal(step)
-		assert_int(m.points_spent() + m.unspent).is_equal(MonsterInstance.START_POINTS + MonsterInstance.STEP_POINTS * step)
+		var real := mini(step, 14)
+		assert_int(m.step()).is_equal(real)
+		assert_int(m.points_spent() + m.unspent).is_equal(MonsterInstance.START_POINTS + MonsterInstance.STEP_POINTS * real)
 		assert_bool(m.unspent >= 0).is_true()
 		assert_array(UnitSheets.from_instance(m).problems()).is_empty()
 
@@ -104,7 +134,7 @@ func test_a_step_gives_five_points_and_the_player_spends_them() -> void:
 	rng.seed = 5
 	var m := MonsterInstance.grown(GameData.monster(&"blaze_tiger"), rng, 0)
 	var left := m.unspent
-	assert_int(m.gain_xp(MonsterInstance.XP_STEPS[0], Stage.Type.QI_GATHERING)).is_equal(1)
+	assert_bool(m.rise(Stage.Type.QI_GATHERING)).is_true()
 	assert_int(m.unspent).is_equal(left + 5)
 	var hp := m.max_hp()
 	if m.can_buy("hp"):
@@ -117,12 +147,34 @@ func test_a_monster_never_grows_past_the_stage_of_its_tamer() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 5
 	var m := MonsterInstance.grown(GameData.monster(&"blaze_tiger"), rng, 0)
-	m.gain_xp(100000, Stage.Type.QI_GATHERING)
+	for i in 9:
+		m.rise(Stage.Type.QI_GATHERING)
 	assert_int(int(m.stage)).is_equal(int(Stage.Type.QI_GATHERING))
 	assert_int(int(m.sub_tier)).is_equal(int(Stage.SubTier.HIGH))
-	m.gain_xp(1, Stage.Type.FOUNDATION)
+	assert_bool(m.rise(Stage.Type.FOUNDATION)).is_true()
 	assert_int(int(m.stage)).is_equal(int(Stage.Type.FOUNDATION))
 	assert_int(m.choice_picks).is_equal(1)
+	for i in 30:
+		m.rise(Stage.Type.IMMORTAL)
+	assert_int(m.step()).is_equal(14)                                 # Immortal High is the top: no monster is Sovereign
+
+
+func test_every_monster_has_the_same_choice_at_a_stage_breakthrough() -> void:
+	var m := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3)
+	assert_int(m.choice_picks).is_equal(1)
+	assert_array(m.offered()).is_equal([MonsterInstance.BREADTH, MonsterInstance.DEPTH, MonsterInstance.LORE, MonsterInstance.RESHAPE])
+	assert_bool(m.choose(MonsterInstance.BREADTH)).is_true()
+	assert_int(m.slots).is_equal(5)
+	assert_bool(m.choose(MonsterInstance.DEPTH)).is_false()           # one of them, not two
+	var deep := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3)
+	assert_bool(deep.choose(MonsterInstance.DEPTH)).is_true()
+	assert_int(deep.dev_steps).is_equal(1)
+	var wise := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3)
+	var before := wise.learnable().size()
+	assert_bool(wise.choose(MonsterInstance.LORE)).is_true()
+	assert_int(wise.learnable().size()).is_equal(before + 1)
+	assert_dict(wise.to_dict()).contains_keys(["slot_opts", "bonus_points"])
+	assert_bool(wise.to_dict().has("rarity")).is_false()             # no bloodline, no grade, no gifts
 
 
 func test_a_reshape_gives_every_point_back() -> void:
@@ -134,55 +186,11 @@ func test_a_reshape_gives_every_point_back() -> void:
 	assert_int(m.points_spent() + m.unspent).is_equal(MonsterInstance.START_POINTS + MonsterInstance.STEP_POINTS * 5)
 
 
-func test_the_cultivation_systems_and_the_eggs_of_the_values_exist() -> void:
-	assert_int(CultivationDef.ids().size()).is_equal(3)
-	var v := GameValues.shared()
-	for id in v.egg_pool:
-		assert_object(GameData.monster(id)).is_not_null()
-		assert_int(int(GameData.monster(id).kin)).is_not_equal(int(MonsterDef.Kin.VOID))
-	for seed_value in 30:
-		var offer := GameState.egg_offer(v, seed_value, 0)
-		assert_int(offer.size()).is_equal(3)
-		var kins := {}
-		for id in offer:
-			kins[GameData.monster(id).kin] = true
-			assert_bool(v.egg_pool.find(id) < v.egg_pool_start).is_true()      # only what the first game has open
-		assert_int(kins.size()).is_equal(3)
-		assert_array(GameState.egg_offer(v, seed_value, 0)).is_equal(offer)
-	var seen := {}
-	for seed_value in 60:
-		for id in GameState.egg_offer(v, seed_value, 99):
-			seen[id] = true
-	assert_int(seen.size()).is_equal(v.egg_pool.size())      # finished games open the whole pool
-	var content := BattleContent.shared()
-	for sid in CultivationDef.ids():
-		for n: Dictionary in CultivationDef.of(sid).nodes:
-			if n["kind"] == "tamer":
-				assert_object(content.tamer_skill(n["ref"])).is_not_null()
-
-
-func test_a_development_step_raises_a_slot_up_to_level_three() -> void:
-	var m := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"))
-	m.learn(&"fire_trail")
-	m.learn(&"strike_jab")
-	m.dev_steps = 2
-	assert_bool(m.develop_slot(0)).is_true()
-	assert_bool(m.develop_slot(0)).is_true()
-	assert_int(m.slot_level(0)).is_equal(3)
-	assert_int(m.slot_level(1)).is_equal(1)
-	assert_bool(m.develop_slot(1)).is_false()
-	assert_bool(m.develop_slot(2)).is_false()
-	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(m.to_dict())))
-	assert_int(copy.slot_level(0)).is_equal(3)
-	assert_array(copy.kit).is_equal(m.kit)
-
-
 func test_a_monster_from_an_egg_is_shaped_by_the_player() -> void:
-	var g := GameState.new_game(7, &"way_of_the_beast_lord", &"blaze_tiger")
+	var g := H.game()
 	var m := g.roster[0]
 	assert_bool(m.fresh).is_true()
 	assert_int(m.kit.size()).is_equal(0)
-	assert_int(m.unspent).is_equal(MonsterInstance.START_POINTS - m.points_spent())
 	assert_dict(m.stats).is_equal(MonsterInstance.FLOOR)
 	assert_int(m.learnable().size()).is_equal(8)
 	for s in m.learnable():
@@ -193,107 +201,74 @@ func test_a_monster_from_an_egg_is_shaped_by_the_player() -> void:
 	assert_bool(m.learn(&"run")).is_false()
 	assert_bool(m.learn(&"light_brazier")).is_false()      # a Beast learns no prop skill
 	assert_int(UnitSheets.from_instance(m).skills.size()).is_equal(4)
-	assert_str(String(UnitSheets.from_instance(m).skills[3].id)).is_equal("run")
 	m.fresh = false
 	assert_bool(m.unlearn(0)).is_false()
 
 
-func test_a_wild_monster_fills_its_four_slots() -> void:
+func test_a_wild_monster_fills_its_slots_and_spends_its_development_steps() -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 4
 	var m := MonsterInstance.grown(GameData.monster(&"moss_turtle"), rng, 0)
 	assert_int(m.slots).is_equal(4)
 	assert_int(m.kit.size()).is_equal(4)
 	assert_bool(m.fresh).is_false()
-	assert_int(m.choice_picks).is_equal(0)
-	var later := MonsterInstance.grown(GameData.monster(&"moss_turtle"), rng, 7)
-	assert_int(later.choice_picks).is_equal(0)
-	assert_int((later.slots - 4) + later.dev_steps + later.gifts.size()).is_equal(2)
+	var late := MonsterInstance.grown(GameData.monster(&"moss_turtle"), rng, 14)
+	assert_int(late.choice_picks).is_equal(0)
+	assert_int(late.dev_steps).is_equal(0)
+	var levels := 0
+	for slot in late.kit.size():
+		levels += late.slot_level(slot) - 1
+		assert_int(late.slot_options(slot).size()).is_equal(late.slot_level(slot) - 1)
+	assert_bool(levels >= 2).is_true()                               # the two late steps, and what it chose as Depth
 
 
-func test_a_stage_breakthrough_gives_one_of_three() -> void:
-	var m := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3)
-	assert_int(m.choice_picks).is_equal(1)
-	assert_bool(m.choose(MonsterInstance.BREADTH)).is_true()
-	assert_int(m.slots).is_equal(5)
-	assert_bool(m.choose(MonsterInstance.DEPTH)).is_false()
-	var epic := MonsterInstance.hatched(GameData.monster(&"blaze_tiger"), 3, MonsterInstance.Bloodline.ANCIENT)
-	assert_int(epic.choice_picks).is_equal(2)                 # Ancient and Divine take two of the offer
-	epic.gift_picks = 0                                       # the gifts of its bloodline are tested below
-	assert_bool(epic.choose(MonsterInstance.BLOOD, &"brawler")).is_true()
-	assert_bool(epic.choose(MonsterInstance.BLOOD, &"surefoot")).is_false()
-	assert_bool(epic.choose(MonsterInstance.DEPTH)).is_true()
-	assert_array(epic.gifts).is_equal([&"brawler"])
-	assert_int(epic.dev_steps).is_equal(1)
-	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(epic.to_dict())))
-	assert_array(copy.gifts).is_equal([&"brawler"])
-
-
-func test_a_wider_bloodline_is_offered_lore_and_reshape() -> void:
-	var def := GameData.monster(&"blaze_tiger")
-	var mortal := MonsterInstance.hatched(def, 3)
-	assert_array(mortal.offered()).is_equal([MonsterInstance.BREADTH, MonsterInstance.DEPTH, MonsterInstance.BLOOD])
-	assert_bool(mortal.can_choose(MonsterInstance.LORE)).is_false()
-	var spirit := MonsterInstance.hatched(def, 3, MonsterInstance.Bloodline.SPIRIT)
-	assert_int(spirit.offered().size()).is_equal(4)
-	assert_int(spirit.choice_picks).is_equal(1)
-	var options := spirit.lore_options()
-	assert_array(options).is_not_empty()                       # skills of the other species of its Kin
-	var before := spirit.learnable().size()
-	assert_bool(spirit.can_learn(options[0].id)).is_false()
-	assert_bool(spirit.choose(MonsterInstance.LORE, options[0].id)).is_true()
-	assert_int(spirit.learnable().size()).is_equal(before + 1)
-	assert_bool(spirit.learn(options[0].id)).is_true()
-	assert_str(String(spirit.kit_skills()[0].id)).is_equal(String(options[0].id))
-	var copy := MonsterInstance.from_dict(JSON.parse_string(JSON.stringify(spirit.to_dict())))
-	assert_str(String(copy.kit_skills()[0].id)).is_equal(String(options[0].id))
-	var divine := MonsterInstance.hatched(def, 3, MonsterInstance.Bloodline.DIVINE)
-	assert_int(divine.offered().size()).is_equal(5)
-	assert_int(divine.choice_picks).is_equal(2)
-	divine.buy("hp")
-	assert_bool(divine.choose(MonsterInstance.RESHAPE)).is_true()
-	assert_dict(divine.stats).is_equal(MonsterInstance.FLOOR)
-	assert_bool(divine.choose(MonsterInstance.RESHAPE)).is_false()      # nothing twice in one breakthrough
-	assert_bool(divine.choose(MonsterInstance.DEPTH)).is_true()
-
-
-func test_a_bloodline_awakens_gifts_from_the_start_and_caps_no_stage() -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 3
-	var def := GameData.monster(&"blaze_tiger")
-	for grade in MonsterInstance.Bloodline.size():
-		var wild := MonsterInstance.grown(def, rng, 0, grade as MonsterInstance.Bloodline)
-		assert_int(wild.gifts.size()).is_equal(grade)            # a wild monster comes with them
-		var egg := MonsterInstance.hatched(def, 0, grade as MonsterInstance.Bloodline)
-		assert_int(egg.gifts.size()).is_equal(0)
-		assert_int(egg.gift_picks).is_equal(grade)               # from an egg the player chooses them
-	var mortal := MonsterInstance.grown(def, rng, 8)             # Core Formation High
-	mortal.gain_xp(MonsterInstance.XP_STEPS[8], Stage.Type.IMMORTAL)
-	assert_int(int(mortal.stage)).is_equal(int(Stage.Type.SOUL))       # a Mortal bloodline passes Core Formation
-	for i in 4:
-		mortal.gain_xp(MonsterInstance.XP_STEPS[11], Stage.Type.SOUL)
-	assert_int(mortal.step()).is_equal(11)                        # only the stage of its tamer holds it
-
-
-func test_every_kin_has_a_trait_four_groups_and_gifts() -> void:
+func test_every_kin_has_a_trait_and_four_groups_and_no_further_passives() -> void:
 	for k in MonsterDef.Kin.values():
 		var def := KinDef.of(k)
 		assert_object(def).is_not_null()
 		assert_str(def.trait_name).is_not_empty()
 		assert_int(def.learns.size()).is_equal(4)
 		assert_int(def.never_learns().size()).is_equal(2)
-		assert_int(def.gifts.size()).is_equal(3)
+		assert_int(def.passives().size()).is_less_equal(1)
+		assert_object(def.get("gifts")).is_null()
+
+
+func test_the_ways_and_the_eggs_of_the_values_exist() -> void:
+	assert_array(CultivationDef.ids()).contains_exactly_in_any_order([H.ARTIFICER, H.FORMATION, H.ALCHEMIST])
+	var v := GameValues.shared()
+	for id in v.egg_pool:
+		assert_object(GameData.monster(id)).is_not_null()
+		assert_int(int(GameData.monster(id).kin)).is_not_equal(int(MonsterDef.Kin.VOID))
+	for seed_value in 30:
+		var offer := GameState.egg_offer(v, seed_value, 0)
+		assert_int(offer.size()).is_equal(3)
+		var kins := {}
+		for id in offer:
+			kins[GameData.monster(id).kin] = true
+		assert_int(kins.size()).is_equal(3)
+		assert_array(GameState.egg_offer(v, seed_value, 0)).is_equal(offer)
 
 
 func test_the_cheats_raise_the_stage_of_tamer_and_monsters() -> void:
-	var g := GameState.new_game(7, &"way_of_the_beast_lord", &"blaze_tiger")
+	var g := H.game()
 	Cheats.monsters_stage_up(g)
 	assert_int(int(g.roster[0].stage)).is_equal(0)
+	assert_int(int(g.roster[0].sub_tier)).is_equal(int(Stage.SubTier.HIGH))
 	Cheats.stage_up(g)
 	assert_int(int(g.stage)).is_equal(1)
 	Cheats.monsters_stage_up(g)
 	assert_int(int(g.roster[0].stage)).is_equal(1)
 	assert_int(g.roster[0].choice_picks).is_equal(1)
+	var smith := H.game(H.ARTIFICER)
+	var owned := 0
+	for part in smith.parts:
+		owned += int(smith.parts[part])
+	Cheats.give_drop(smith, 3)
+	var after := 0
+	for part in smith.parts:
+		after += int(smith.parts[part])
+	assert_int(after).is_equal(owned + 3)
+	assert_dict(smith.items).is_empty()
 
 
 func test_every_species_learns_eight_skills_within_the_groups_of_its_kin() -> void:
@@ -306,21 +281,40 @@ func test_every_species_learns_eight_skills_within_the_groups_of_its_kin() -> vo
 			assert_int(def.learn_list().size()).is_equal(8)      # nothing in the list lies outside the groups
 	for k in MonsterDef.Kin.values():
 		assert_int(int(per_kin.get(k, 0))).is_equal(2)
-	assert_int(GameData.monster_ids().size()).is_equal(9)      # the multiplayer battle keeps its nine
 
 
-func test_void_monsters_live_in_the_void_only_and_come_as_an_egg_of_the_trial() -> void:
-	var g := GameState.new_game(21, &"way_of_the_beast_lord", &"moss_turtle")
-	for e in WildArea.encounters(g, 0):
-		for m in e.fight.enemies:
-			assert_int(int(m.species().kin)).is_not_equal(int(MonsterDef.Kin.VOID))
-	var f := VoidPlace.fight(g)
-	for m in f.enemies:
-		assert_int(int(m.species().kin)).is_equal(int(MonsterDef.Kin.VOID))
-	g.void_depth = VoidPlace.depths(g) - 1
-	var trial := VoidPlace.fight(g)
-	trial.team = g.default_team(1)
-	VoidPlace.resolve(g, trial, null, true)
-	assert_int(int(g.stage)).is_equal(1)
-	assert_int(g.eggs.size()).is_equal(1)
-	assert_int(int(GameData.monster(StringName(g.eggs[0]["species"])).kin)).is_equal(int(MonsterDef.Kin.VOID))
+func test_a_new_game_offers_three_gifts_of_its_way_and_gives_the_one_taken() -> void:
+	var v := GameValues.shared()
+	for way: StringName in [H.ARTIFICER, H.FORMATION, H.ALCHEMIST]:
+		var offer := GameState.start_offer(v, 7, way)
+		assert_int(offer.size()).is_equal(3)
+		assert_array(GameState.start_offer(v, 7, way)).is_equal(offer)          # the same game, the same offer
+		var plain := GameState.new_game(7, way, &"blaze_tiger")
+		var g := GameState.new_game(7, way, &"blaze_tiger", null, String(offer[1]["id"]))
+		match way:
+			H.ARTIFICER:
+				var owned := 0
+				for part in g.parts:
+					owned += int(g.parts[part])
+				assert_bool(owned > 1).is_true()                                # more than the Dragon Vein
+			H.FORMATION:
+				assert_int(g.tamer_skills.size()).is_equal(plain.tamer_skills.size() + 1)
+				assert_bool(g.nodes.has(StringName(offer[1]["id"]))).is_true()    # the node is taken, not to be bought again
+				assert_int(g.path_points).is_equal(0)
+			H.ALCHEMIST:
+				assert_int(g.count("pill:" + String(offer[1]["id"]))).is_equal(v.alchemist_start_pills)
+		var none := GameState.new_game(7, way, &"blaze_tiger", null, "not offered")
+		assert_int(none.tamer_skills.size()).is_equal(plain.tamer_skills.size())
+		assert_dict(none.items).is_equal(plain.items)
+
+
+func test_what_catches_takes_no_tamer_slot() -> void:
+	var g := GameState.new_game(7, H.FORMATION, &"blaze_tiger", null, String(GameState.start_offer(GameValues.shared(), 7, H.FORMATION)[0]["id"]))
+	assert_int(g.tamer_slots()).is_equal(1)
+	var loadout := g.default_loadout()
+	assert_int(loadout.size()).is_equal(2)                              # Seal and the skill of the gift
+	assert_bool(loadout.has(GameState.SEAL)).is_true()
+	assert_bool(g.loadout_fits([GameState.SEAL, &"thorn_field", &"stone_wall"] as Array[StringName])).is_false()
+	var brewer := H.game(H.ALCHEMIST)
+	assert_bool(brewer.loadout_fits([&"pill_binding", &"pill_warding"] as Array[StringName])).is_true()
+	assert_bool(brewer.loadout_fits([&"pill_swiftness", &"pill_warding"] as Array[StringName])).is_false()

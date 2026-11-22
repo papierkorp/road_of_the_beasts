@@ -175,7 +175,7 @@ func test_the_calculation_reads_the_parts_of_a_skill() -> void:
 	var trail := SkillCalc.features(c, c.skill(&"fire_trail"))
 	assert_float(trail["leaves:move"]).is_equal(1.0)
 	assert_float(trail["ground×extra"]).is_equal(2.0)                  # range 3: the squares it leaves
-	assert_dict(SkillCalc.features(c, c.skill(&"braced"))).is_empty()   # passives and self buffs are not priced
+	assert_dict(SkillCalc.features(c, c.skill(&"adaptive_reference"))).is_empty()   # passives and self buffs are not priced
 	for id: StringName in BattleContent.sorted_ids(c.skills):
 		var s: BattleSkillDef = c.skills[id]
 		if ContentStatus.in_game(s) and KitDraw.kind_of(c, s) != "":

@@ -3,11 +3,6 @@ extends RefCounted
 ## Developer cheats for testing the hub game. Each returns a short message for the cheat menu.
 
 
-static func refill_ap(g: GameState) -> String:
-	g.ap = g.max_ap()
-	return "AP refilled."
-
-
 static func add_lifespan(g: GameState, days: int) -> String:
 	g.lifespan = maxi(1, g.lifespan + days)
 	g.forced_trial = false
@@ -16,13 +11,16 @@ static func add_lifespan(g: GameState, days: int) -> String:
 
 static func last_day(g: GameState) -> String:
 	g.lifespan = 1
-	return "Lifespan set to 1 year: the end of this year forces the trial."
+	return "Lifespan set to 1 year: the next battle forces the trial."
 
 
-static func give_xp(g: GameState, amount: int) -> String:
+## Every monster rises a step, as far as the tamer's stage allows.
+static func rise_all(g: GameState) -> String:
+	var n := 0
 	for m in g.roster:
-		m.gain_xp(amount, g.stage)
-	return "+%d XP for every monster." % amount
+		if g.lift(m):
+			n += 1
+	return "%d monster(s) rose a step." % n
 
 
 static func heal_all(g: GameState) -> String:
@@ -36,16 +34,16 @@ static func give_points(g: GameState, n: int) -> String:
 	return "+%d Insight." % n
 
 
-static func give_materials(g: GameState, n: int) -> String:
-	for id in Materials.all_ids(g.values, int(g.stage)):
-		g.add_item(id, n)
-	return "+%d of every material up to this stage." % n
+## The reward of the Way as a wild battle against `n` monsters would drop it.
+static func give_drop(g: GameState, n: int) -> String:
+	Wild._hand_out(g, Wild._drop(g, g.rng_for("cheat%d" % g.messages.size()), int(g.stage), n))
+	return g.messages[-1]
 
 
 ## The tamer rises a stage as if the trial were passed.
 static func stage_up(g: GameState) -> String:
-	if int(g.stage) >= int(Stage.Type.SOVEREIGN):
-		return "Already at the last stage."
+	if int(g.stage) >= int(Stage.Type.IMMORTAL):
+		return "Already at the last stage: only the Sovereign beast is left."
 	g.break_through()
 	return "You are now at %s." % Stage.stage_name(g.stage)
 
@@ -56,8 +54,8 @@ static func monsters_stage_up(g: GameState) -> String:
 	for m in g.roster:
 		var before := int(m.stage)
 		for i in 3:
-			if int(m.stage) == before and m.step() < MonsterInstance.STEPS - 1:
-				m.gain_xp(MonsterInstance.XP_STEPS[m.step()] - m.xp, g.stage)
+			if int(m.stage) == before:
+				g.lift(m)
 		if int(m.stage) > before:
 			n += 1
 	return "%d monster(s) rose a stage." % n if n > 0 else "No monster can rise: they never pass your stage."

@@ -1,48 +1,58 @@
 class_name WildPanel
 extends HubPanel
-## Wild Gate (docs/vision.md §4, §6): today's encounters of a zone; a battle costs day AP.
-
-static var zone := -1
+## The wild (docs/vision.md §4): the battles of the look the player has now, each with its battleground, its
+## monsters and what a win drops; a new look for a year of the lifespan.
 
 
 func title() -> String:
-	return "Wild Gate"
+	return "Wild"
 
 
 func pillar() -> String:
-	return "Monster: roster"
+	return "Monsters and your Way"
 
 
 func hint() -> String:
-	return "Single battles for AP; catch monsters"
+	return "Battles for growth and for what your Way uses"
+
+
+## What a battle drops for this Way, in words.
+func _reward() -> String:
+	if game.is_artificer():
+		return "parts of a battleground, one unit per monster"
+	if game.is_alchemist():
+		return "pills, one per monster"
+	return "1 Insight from a battle against %d monsters or more" % game.values.wild_insight_from
 
 
 func build(into: VBoxContainer) -> void:
-	var zones := WildArea.zones(game)
-	if not zones.has(zone):
-		zone = zones[-1]
-	var pick := HubUi.row()
-	into.add_child(pick)
-	pick.add_child(HubUi.label("Zone:", 20, UiTheme.TEXT, false))
-	for z in zones:
-		var b := HubUi.button(Stage.stage_name(z as Stage.Type), func():
-			zone = z
-			hub.refresh(), 200)
-		b.toggle_mode = true
-		b.button_pressed = z == zone
-		pick.add_child(b)
-	into.add_child(HubUi.dim("A battle costs %d AP and starts at full HP. The list is drawn anew every year." % game.values.wild_ap))
+	var v := game.values
+	into.add_child(HubUi.dim("A wild battle costs %d year of your lifespan, won or lost. A win drops: %s. Every wild monster defeated lifts one of your monsters that fought, still stands and is at its step or below — one step, never past High; into the next stage a monster rises only in the void. Every battle starts at full HP. Wild monsters are caught here." % [v.wild_years, _reward()]))
 	var list := HubUi.scroll(into)
-	for e in WildArea.encounters(game, zone):
-		var card := HubUi.card(list)
-		var f := e.fight
-		var head := f.title
-		if e.rare:
-			head += " — appears in %d year(s)" % e.appears_in if e.appears_in > 0 else " — stays %d more year(s)" % e.stays
-		card.add_child(HubUi.label(head, 22, UiTheme.ACCENT if not e.rare else HubUi.GOOD))
-		card.add_child(HubUi.fight_view(f))
-		card.add_child(HubUi.dim("Battleground: %s" % GameSession.map_summary(f)))
-		card.add_child(HubUi.dim("A win gives: %s" % f.loot_text))
-		var go := HubUi.primary("Gone" if e.gone else "Prepare the battle (%d AP)" % game.values.wild_ap, hub.prepare.bind(f, func(_f: Fight) -> bool: return WildArea.pay(game)), 320)
-		go.disabled = e.gone or e.appears_in > 0 or game.ap < game.values.wild_ap or game.forced_trial
+	var row := HubUi.flow()
+	list.add_child(row)
+	var open := Wild.open(game)
+	for o in Wild.offers(game):
+		var id := int(o["id"])
+		var card := HubUi.card(row, 500)
+		var gone := game.wild_gone.has(id)
+		card.add_child(HubUi.label("Battle %d%s" % [id + 1, " — won" if gone else ""], 20, UiTheme.DIM if gone else UiTheme.ACCENT))
+		if gone:
+			continue
+		var f := Fight.new()
+		f.own_map = o["map"]
+		var foes: Array[MonsterInstance] = []
+		foes.assign(o["enemies"])
+		f.enemies = foes
+		card.add_child(HubUi.fight_view(f, false, 14.0))
+		card.add_child(HubUi.dim("Drops: %s" % Wild.drop_text(game, o)))
+		var go := HubUi.primary("Prepare the battle", func(): hub.prepare(Wild.fight_for(game, id), func(_f: Fight) -> bool: return Wild.can_fight(game)))
+		go.disabled = not Wild.can_fight(game)
 		card.add_child(go)
+	var again := HubUi.button("Look for other battles: %d year" % v.reroll_years, func():
+		Wild.reroll(game)
+		hub.refresh(), 360)
+	again.disabled = not Wild.can_fight(game)
+	into.add_child(again)
+	if open.is_empty():
+		into.add_child(HubUi.dim("Nothing is open."))

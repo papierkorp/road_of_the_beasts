@@ -1,23 +1,29 @@
 class_name GameState
 extends RefCounted
-## The whole state of one game of the hub game (docs/vision.md): the day and its day AP, the lifespan, the tamer's
-## stage and Way, the roster and what the player owns. Headless: no nodes, no battle rules. The places
-## (WildArea, DungeonRun, VoidPlace), the tree (Cultivation) and crafting (Crafting) work on it.
+## The whole state of one game of the hub game (docs/vision.md): the lifespan, the tamer's stage and Way, the roster
+## and what the player owns. Headless: no nodes, no battle rules. The places (Wild, VoidPlace), the tree (Cultivation)
+## and the goods (Crafting) work on it. The lifespan is the one clock: every battle and every new look at the wild
+## costs a year of it; a breakthrough gives a new one. There are no days and no nights.
 ##
 ## Everything drawn is drawn from `game_seed` (`rng_for`), so a save holds no generator state and the same game
-## shows the same encounters, dungeon maps and properties again.
+## shows the same wild battles and battlegrounds again.
 
-const TAMER_SLOTS: Array[int] = [1, 2, 3, 3, 4, 4]          # docs/overworld.md §5.1
+const TAMER_SLOTS: Array[int] = [1, 2, 3, 3, 4]             # docs/overworld.md §5.1
 const SEAL := &"seal"
+## What catches takes no tamer slot: the Seal skill of the Formation, the Binding pill of the Alchemist.
+const CATCHING: Array[StringName] = [SEAL, &"pill_binding"]
+## The three Ways (docs/vision.md §2): a game follows one and has nothing of the other two.
+const ARTIFICER := &"way_of_the_artificer"
+const FORMATION := &"way_of_the_formation"
+const ALCHEMIST := &"way_of_the_alchemist"
 const LOST := &"lost"
 const WON := &"won"
 
 var values: GameValues
 var game_seed := 0
 var day := 1
-var ap := 0
 var stage: Stage.Type = Stage.Type.QI_GATHERING
-## Days left to live; at 0 the breakthrough trial is forced (docs/vision.md §3).
+## Years left to live, the stock every deed is paid from; at 0 the breakthrough trial is forced (docs/vision.md §3).
 var lifespan := 0
 var forced_trial := false
 ## "" while the game runs, LOST or WON when it is over.
@@ -27,48 +33,101 @@ var system: StringName = &""
 var path_points := 0
 ## Bought nodes of the Way.
 var nodes: Array[StringName] = []
-var tamer_skills: Array[StringName] = [SEAL]
+var tamer_skills: Array[StringName] = []
 ## Vows taken (docs/overworld.md §5.3), and the vows offered right now ([] = no offer open).
 var vows: Array[StringName] = []
 var vow_offer: Array[StringName] = []
+## Boons taken at the breakthroughs (docs/overworld.md §5.1; one may be taken more than once), and whether a choice is open.
+var boons: Array[StringName] = []
+var boon_pick := false
 ## Forged parts of the battleground: part id -> number owned.
 var parts := {}
 ## The player's own battleground as plain data ({} = none built yet); the format is that of `MapData`.
 var battleground := {}
 
 var roster: Array[MonsterInstance] = []
-## Eggs in the nest: {"species": id, "nights": nights left, "bloodline": grade}.
+## Eggs in the nest: {"species": id, "battles": battles left until it hatches}.
 var eggs: Array[Dictionary] = []
 ## Materials and pills: item id -> number.
 var items := {}
 
-## Indexes of today's wild encounters that were won or whose monster was caught.
+## The wild (see Wild): the number of the look the player has now, and the battles of it already won.
+var wild_roll := 0
 var wild_gone: Array[int] = []
-## Rare encounters (by their number) that are gone.
-var rare_gone: Array[int] = []
-## The running dungeon run as plain data ({} = none), see DungeonRun.
-var dungeon := {}
-var dungeon_runs := 0
-## Stages whose dungeon challenge is met, and the runs won in a row per stage.
-var dungeon_mastered: Array[int] = []
-var dungeon_streak := {}
+## Rises the last wild battle won left to give: the step of each monster defeated (see Wild).
+var rises: Array[int] = []
 ## Depths of the void won in the current stage.
 var void_depth := 0
-## What the player has found out by brewing and forging: key -> result.
-var known := {}
 var messages: Array[String] = []
 
 
-static func new_game(p_seed: int, p_system: StringName, egg_species: StringName, p_values: GameValues = null) -> GameState:
+## The gifts a new game offers its Way (docs/vision.md §5), drawn from the seed: {"id", "name", "text"}. One is taken.
+## The Formation: a tamer skill of its first tree. The Artificer: a pack of parts. The Alchemist: pills for the battle.
+static func start_offer(p_values: GameValues, offer_seed: int, p_system: StringName) -> Array[Dictionary]:
+	var pool: Array[Dictionary] = []
+	match p_system:
+		ARTIFICER:
+			for p: Dictionary in p_values.start_packs:
+				var lines: PackedStringArray = []
+				for part: String in p["parts"]:
+					lines.append("%d × %s" % [int(p["parts"][part]), Materials.part_name(part)])
+				pool.append({"id": String(p["id"]), "name": String(p["name"]), "text": "Parts for the board: " + ", ".join(lines)})
+		FORMATION:
+			var def := CultivationDef.of(p_system)
+			for n: Dictionary in (def.nodes if def != null else []):
+				if int(n["stage"]) == 0 and n["kind"] == "tamer" and StringName(n["needs"]) == &"":
+					var skill := BattleContent.shared().tamer_skill(StringName(n["ref"]))
+					pool.append({"id": String(n["id"]), "name": String(n["name"]), "text": "Tamer skill, once per battle: " + (skill.description if skill != null else "")})
+		ALCHEMIST:
+			for p: Dictionary in p_values.properties:
+				if String(p["use"]) == "battle" and StringName(p["id"]) != Crafting.BINDING:
+					pool.append({"id": String(p["id"]), "name": String(p["name"]), "text": "%d × %s" % [p_values.alchemist_start_pills, p["pill"]]})
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([offer_seed, "gift", p_system])
+	var out: Array[Dictionary] = []
+	while out.size() < p_values.start_offer and not pool.is_empty():
+		out.append(pool.pop_at(rng.randi_range(0, pool.size() - 1)))
+	return out
+
+
+## Hands out the gift of the start; an id that was not offered gives nothing.
+func _take_gift(gift: String) -> void:
+	var offered := false
+	for o in start_offer(values, game_seed, system):
+		offered = offered or o["id"] == gift
+	if not offered:
+		return
+	match system:
+		ARTIFICER:
+			for p: Dictionary in values.start_packs:
+				if String(p["id"]) == gift:
+					for part: String in p["parts"]:
+						parts[part] = int(parts.get(part, 0)) + int(p["parts"][part])
+		FORMATION:
+			var n := CultivationDef.of(system).node(StringName(gift))
+			nodes.append(StringName(gift))
+			tamer_skills.append(StringName(n["ref"]))
+		ALCHEMIST:
+			add_item(Materials.pill(StringName(gift)), values.alchemist_start_pills)
+
+
+## `gift`: the id of one of `start_offer` ("" = none).
+static func new_game(p_seed: int, p_system: StringName, egg_species: StringName, p_values: GameValues = null, gift := "") -> GameState:
 	var g := GameState.new()
 	g.values = p_values if p_values != null else GameValues.shared()
 	g.game_seed = p_seed
 	g.system = p_system
-	g.lifespan = GameValues.at(g.values.lifespan_days, 0)
-	g.ap = g.max_ap()
+	g.lifespan = GameValues.at(g.values.lifespan_years, 0)
 	g.offer_vows()
-	g.parts = g.values.bg_start_parts.duplicate()
-	g.battleground = g.values.bg_start_map.duplicate(true)
+	match p_system:                               # what a Way starts with; each catches by its own means
+		ARTIFICER:
+			g.parts = g.values.bg_start_parts.duplicate()
+			g.battleground = g.values.bg_start_map.duplicate(true)
+		FORMATION:
+			g.tamer_skills.append(SEAL)
+		ALCHEMIST:
+			Crafting.start_alchemist(g)
+	g._take_gift(gift)
 	var def := GameData.monster(egg_species)
 	if def != null:
 		g.roster.append(MonsterInstance.hatched(def))
@@ -97,34 +156,69 @@ static func egg_offer(p_values: GameValues, offer_seed: int, finished_games: int
 	return out
 
 
-## A generator for one purpose: the same game, day and tag always give the same numbers.
-func rng_for(tag: String, with_day := false) -> RandomNumberGenerator:
+## A generator for one purpose: the same game and tag always give the same numbers.
+func rng_for(tag: String) -> RandomNumberGenerator:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([game_seed, tag, day if with_day else 0])
+	rng.seed = hash([game_seed, tag])
 	return rng
 
 
-func max_ap() -> int:
-	return GameValues.at(values.day_ap, int(stage)) + vow_sum("ap")
+## The Way of this game.
+func is_artificer() -> bool:
+	return system == ARTIFICER
 
 
+func is_formation() -> bool:
+	return system == FORMATION
+
+
+func is_alchemist() -> bool:
+	return system == ALCHEMIST
+
+
+## The sum of an effect over the bought nodes of the Way.
+func node_sum(key: String) -> int:
+	var def := CultivationDef.of(system)
+	var sum := 0
+	if def != null:
+		for id in nodes:
+			sum += int((def.node(id).get("effects", {}) as Dictionary).get(key, 0))
+	return sum
+
+
+## Parts the Artificer lays before each battle of the wild (docs/overworld.md §5.3).
+func carry() -> int:
+	if not is_artificer():
+		return 0
+	return values.carry_base + values.carry_per_stage * int(stage) + node_sum("carry") + vow_sum("carry")
+
+
+## Whether the player may lay Seal Ground and catch.
+func can_catch() -> bool:
+	return not vow_has("no_seal")
+
+
+## Tamer slots: tamer skills for the Formation, pills for the Alchemist; the Artificer has none and lays parts.
 func tamer_slots() -> int:
-	return TAMER_SLOTS[clampi(int(stage), 0, TAMER_SLOTS.size() - 1)] + vow_sum("tamer_slots")
+	if is_artificer():
+		return 0
+	return TAMER_SLOTS[clampi(int(stage), 0, TAMER_SLOTS.size() - 1)] + vow_sum("tamer_slots") + node_sum("tamer_slots")
 
 
 # ---------- vows ----------
 
+## A vow or a boon by its id: both are a name and effects.
 func vow_def(id: StringName) -> Dictionary:
-	for v: Dictionary in values.vows:
+	for v: Dictionary in values.vows + values.boons:
 		if StringName(v["id"]) == id:
 			return v
 	return {}
 
 
-## The sum of an effect over the vows taken (a flag counts 1).
+## The sum of an effect over the vows and boons taken (a flag counts 1).
 func vow_sum(key: String) -> int:
 	var sum := 0
-	for id in vows:
+	for id in vows + boons:
 		var e: Dictionary = vow_def(id).get("effects", {})
 		if e.has(key):
 			sum += int(e[key])
@@ -142,9 +236,14 @@ func _vow_names(key: String) -> bool:
 	return false
 
 
-## Whether a loadout fits the tamer slots: every entry takes one.
+## Whether a loadout fits the tamer slots: every entry takes one, but the means of catching (the Seal skill, a Binding
+## pill) rides beside the slots.
 func loadout_fits(loadout: Array[StringName]) -> bool:
-	return loadout.size() <= tamer_slots()
+	var taken := 0
+	for id in loadout:
+		if not CATCHING.has(id):
+			taken += 1
+	return taken <= tamer_slots()
 
 
 ## The values of an effect over the vows taken (the Kins of `ban_kin`, of `kin_choice`).
@@ -157,15 +256,15 @@ func vow_values(key: String) -> Array[int]:
 	return out
 
 
-## Draws a new offer: vows not taken yet, none whose Kin the player's first monster is banned by. No offer once the
-## cap is reached.
+## Draws a new offer: vows not taken yet, of this Way or of every Way. No offer once the cap is reached.
 func offer_vows() -> void:
 	vow_offer.clear()
 	if vows.size() >= values.vow_cap or is_over():
 		return
 	var pool: Array[StringName] = []
 	for v: Dictionary in values.vows:
-		if not vows.has(StringName(v["id"])):
+		var way := String(v.get("way", ""))
+		if not vows.has(StringName(v["id"])) and (way == "" or way == String(system)):
 			pool.append(StringName(v["id"]))
 	var rng := rng_for("vows%d_%d" % [int(stage), vows.size()])
 	while vow_offer.size() < values.vow_offer and not pool.is_empty():
@@ -185,17 +284,11 @@ func take_vow(id: StringName) -> bool:
 	var e: Dictionary = vow_def(id).get("effects", {})
 	if e.has("lifespan") and not forced_trial:
 		lifespan = maxi(1, lifespan + int(e["lifespan"]))
-	if e.has("ap"):
-		ap += int(e["ap"])
 	if e.has("no_seal"):
 		tamer_skills.erase(SEAL)
 	if e.has("slot_all"):
 		for m in roster:
 			m.slots = mini(MonsterInstance.MAX_SLOTS, m.slots + 1)
-	if e.has("gift_all"):
-		for m in roster:
-			if not m.open_gifts().is_empty():
-				m.gift_picks += 1
 	say("You swore: %s." % vow_def(id)["name"])
 	return true
 
@@ -228,69 +321,71 @@ func say(text: String) -> void:
 		messages.pop_front()
 
 
-func spend_ap(n: int) -> bool:
-	if n < 0 or ap < n or is_over():
-		return false
-	ap -= n
-	return true
-
-
-## The night (docs/overworld.md §2.2): the lifespan shrinks by a day, the encounters are drawn anew, eggs progress.
-## A day cannot end while a dungeon run is under way or the forced trial waits.
-func can_end_day() -> bool:
-	return not is_over() and dungeon.is_empty() and not forced_trial
-
-
-func end_day() -> bool:
-	if not can_end_day():
-		return false
-	day += 1
-	lifespan -= 1
-	ap = max_ap()
-	wild_gone.clear()
-	Crafting.spoil(self)
-	for m in roster:
-		m.heal_full()
-	for e in eggs.duplicate():
-		e["nights"] = int(e["nights"]) - 1
-		if int(e["nights"]) <= 0 and roster.size() < roster_cap():
-			eggs.erase(e)
-			var def := GameData.monster(StringName(e["species"]))
-			_join(MonsterInstance.hatched(def, int(stage) * 3, int(e.get("bloodline", 0)) as MonsterInstance.Bloodline))
-			say("An egg hatched: %s. Shape it under Monsters." % def.display_name)
+## Pays `years` of the lifespan for a deed (docs/vision.md §3). When none is left the breakthrough trial is forced.
+func spend(years: int) -> void:
+	if is_over() or forced_trial:
+		return
+	day += years
+	lifespan = maxi(0, lifespan - years)
 	if lifespan <= 0:
-		lifespan = 0
 		forced_trial = true
 		say("Your lifespan has run out. The breakthrough trial waits in the void: you must take it now.")
-	return true
 
 
-## The breakthrough (docs/vision.md §3): the next stage, its lifespan, a new ladder of depths. The trial of the
-## last stage is the Sovereign beast: who defeats it is Sovereign and has won.
+## A battle was fought, won or lost: every egg in the nest comes a battle closer to hatching.
+func battle_fought() -> void:
+	for e in eggs.duplicate():
+		e["battles"] = int(e["battles"]) - 1
+		if int(e["battles"]) <= 0 and roster.size() < roster_cap():
+			eggs.erase(e)
+			var def := GameData.monster(StringName(e["species"]))
+			_join(MonsterInstance.hatched(def, int(stage) * 3))
+			say("An egg hatched: %s. Shape it under Monsters." % def.display_name)
+
+
+## The breakthrough (docs/vision.md §3): the next stage, its lifespan, a new ladder of depths. Immortal is the last
+## stage: its trial is the Sovereign beast, and nobody rises past it.
 func break_through() -> void:
+	if int(stage) >= int(Stage.Type.IMMORTAL):
+		return
 	stage = (int(stage) + 1) as Stage.Type
 	forced_trial = false
 	void_depth = 0
-	if stage == Stage.Type.SOVEREIGN:          # only the Sovereign beast leads here (VoidPlace); kept for the cheat
-		outcome = WON
-		say("You have reached Sovereign.")
-		return
-	lifespan = maxi(1, GameValues.at(values.lifespan_days, int(stage)) + vow_sum("lifespan"))
-	ap = max_ap()
+	wild_roll += 1                                # the wild of the new stage
+	wild_gone.clear()
+	lifespan = maxi(1, GameValues.at(values.lifespan_years, int(stage)) + vow_sum("lifespan"))
 	say("Breakthrough: you are now at %s. Lifespan: %d years." % [Stage.stage_name(stage), lifespan])
+	boon_pick = not values.boons.is_empty()
 	offer_vows()
+
+
+## Takes the boon of a breakthrough (docs/overworld.md §5.1): one of all, also one taken before.
+func take_boon(id: StringName) -> bool:
+	if not boon_pick:
+		return false
+	var found := false
+	for b: Dictionary in values.boons:
+		found = found or StringName(b["id"]) == id
+	if not found:
+		return false
+	boons.append(id)
+	boon_pick = false
+	var e: Dictionary = vow_def(id).get("effects", {})
+	if e.has("lifespan") and not forced_trial:
+		lifespan += int(e["lifespan"])
+	say("You took the boon: %s." % vow_def(id)["name"])
+	return true
 
 
 func lose() -> void:
 	outcome = LOST
 
 
-## The Sovereign beast fell (docs/vision.md §3): the tamer is Sovereign, at whatever stage they stood.
+## The Sovereign beast fell (docs/vision.md §3): the game is won, at whatever stage the tamer stood.
 func win() -> void:
-	stage = Stage.Type.SOVEREIGN
 	forced_trial = false
 	outcome = WON
-	say("The Sovereign beast has fallen. You are Sovereign.")
+	say("The Sovereign beast has fallen. You have won.")
 
 
 # ---------- what the player owns ----------
@@ -334,11 +429,11 @@ func _join(m: MonsterInstance) -> void:
 	roster.append(m)
 
 
-func add_egg(species: StringName, bloodline := 0) -> bool:
+func add_egg(species: StringName) -> bool:
 	var egg_def := GameData.monster(species)
 	if not has_room() or (egg_def != null and kin_banned(int(egg_def.kin))):
 		return false
-	eggs.append({"species": String(species), "nights": values.egg_nights, "bloodline": bloodline})
+	eggs.append({"species": String(species), "battles": values.egg_battles})
 	return true
 
 
@@ -351,11 +446,12 @@ func default_team(size: int) -> Array[MonsterInstance]:
 	return out
 
 
-## The tamer skills brought by default: as many of the learned ones as there are slots.
+## The tamer skills brought by default: as many of the learned ones as there are slots (the Formation; the pills of
+## the Alchemist are chosen by hand).
 func default_loadout() -> Array[StringName]:
 	var out: Array[StringName] = []
 	for id in tamer_skills:
-		if out.size() < tamer_slots():
+		if loadout_fits(out + ([id] as Array[StringName])):
 			out.append(id)
 	return out
 
@@ -365,22 +461,30 @@ static func step_of(place_stage: int, sub_tier := 1) -> int:
 	return clampi(place_stage * 3 + sub_tier, 0, MonsterInstance.STEPS - 1)
 
 
-## Gives XP for a won battle to the monsters that fought and still stand, each the full amount; the bench gets
-## none (docs/vision.md §2). Returns the lines to show.
-func award_xp(team: Array[MonsterInstance], place_stage: int) -> Array[String]:
+## The void lifts (docs/vision.md §8): every monster that fought in a won battle there and still stands rises a
+## step, also from High into the next stage, never past the stage of the tamer. Returns the lines to show.
+func rise_in_void(team: Array[MonsterInstance]) -> Array[String]:
 	var lines: Array[String] = []
-	var amount := GameValues.at(values.xp_per_win, place_stage)
 	for m in team:
-		if m.current_hp <= 0:
-			continue
-		var before := int(m.stage)
-		var ups := m.gain_xp(amount, stage)
-		if int(m.stage) > before and vow_values("kin_choice").has(int(m.species().kin)):
-			m.choice_picks += int(m.stage) - before             # a vow of its Kin: one more of the three
-		if ups > 0:
-			lines.append("%s grew to %s %s: +%d stat points%s." % [m.species().display_name, Stage.stage_name(m.stage),
-				Stage.sub_tier_name(m.sub_tier), ups * MonsterInstance.STEP_POINTS, " and a breakthrough choice" if m.choice_picks > 0 else ""])
+		if m.current_hp > 0 and lift(m):
+			lines.append(rise_line(m))
 	return lines
+
+
+## One rise for a monster, with what a vow adds to it.
+func lift(m: MonsterInstance) -> bool:
+	var before := int(m.stage)
+	if not m.rise(stage):
+		return false
+	if int(m.stage) > before and vow_values("kin_choice").has(int(m.species().kin)):
+		m.choice_picks += 1                           # a vow of its Kin: two of the choices
+	m.heal_full()
+	return true
+
+
+func rise_line(m: MonsterInstance) -> String:
+	return "%s rose to %s %s: +%d stat points%s." % [m.species().display_name, Stage.stage_name(m.stage),
+		Stage.sub_tier_name(m.sub_tier), MonsterInstance.STEP_POINTS, " and a breakthrough choice" if m.choice_picks > 0 else ""]
 
 
 # ---------- save ----------
@@ -389,24 +493,22 @@ func to_dict() -> Dictionary:
 	var r: Array = []
 	for m in roster:
 		r.append(m.to_dict())
-	return {"version": 3, "seed": game_seed, "day": day, "ap": ap, "stage": int(stage), "lifespan": lifespan,
+	return {"version": 5, "seed": game_seed, "day": day, "stage": int(stage), "lifespan": lifespan,
 		"forced_trial": forced_trial, "outcome": String(outcome), "system": String(system), "path_points": path_points,
 		"nodes": _strings(nodes), "vows": _strings(vows), "vow_offer": _strings(vow_offer), "tamer_skills": _strings(tamer_skills),
 		"parts": parts.duplicate(), "battleground": battleground.duplicate(true), "roster": r, "eggs": eggs.duplicate(true),
-		"items": items.duplicate(), "wild_gone": wild_gone.duplicate(), "rare_gone": rare_gone.duplicate(),
-		"dungeon": dungeon.duplicate(true), "dungeon_runs": dungeon_runs, "dungeon_mastered": dungeon_mastered.duplicate(),
-		"dungeon_streak": dungeon_streak.duplicate(), "void_depth": void_depth, "known": known.duplicate(true),
+		"items": items.duplicate(), "wild_roll": wild_roll, "wild_gone": wild_gone.duplicate(), "rises": rises.duplicate(),
+		"boons": _strings(boons), "boon_pick": boon_pick, "void_depth": void_depth,
 		"messages": messages.duplicate()}
 
 
 static func from_dict(d: Dictionary, p_values: GameValues = null) -> GameState:
-	if int(d.get("version", 0)) != 3:
+	if int(d.get("version", 0)) != 5:             # a save of the game before the wild cannot be read
 		return null
 	var g := GameState.new()
 	g.values = p_values if p_values != null else GameValues.shared()
 	g.game_seed = int(d["seed"])
 	g.day = int(d["day"])
-	g.ap = int(d["ap"])
 	g.stage = int(d["stage"]) as Stage.Type
 	g.lifespan = int(d["lifespan"])
 	g.forced_trial = bool(d["forced_trial"])
@@ -423,18 +525,17 @@ static func from_dict(d: Dictionary, p_values: GameValues = null) -> GameState:
 	for m in d["roster"]:
 		g.roster.append(MonsterInstance.from_dict(m))
 	for e in d["eggs"]:
-		g.eggs.append({"species": String(e["species"]), "nights": int(e["nights"]), "bloodline": int(e.get("bloodline", 0))})
+		g.eggs.append({"species": String(e["species"]), "battles": int(e["battles"])})
 	for k in d["items"]:
 		g.items[String(k)] = int(d["items"][k])
-	g.wild_gone = _ints(d["wild_gone"])
-	g.rare_gone = _ints(d["rare_gone"])
-	g.dungeon = (d["dungeon"] as Dictionary).duplicate(true)
-	g.dungeon_runs = int(d["dungeon_runs"])
-	g.dungeon_mastered = _ints(d["dungeon_mastered"])
-	for k in d["dungeon_streak"]:
-		g.dungeon_streak[int(k)] = int(d["dungeon_streak"][k])
+	g.wild_roll = int(d["wild_roll"])
+	for i in d["wild_gone"]:
+		g.wild_gone.append(int(i))
+	for s in d["rises"]:
+		g.rises.append(int(s))
+	g.boons = _names(d["boons"])
+	g.boon_pick = bool(d["boon_pick"])
 	g.void_depth = int(d["void_depth"])
-	g.known = (d["known"] as Dictionary).duplicate(true)
 	for line in d["messages"]:
 		g.messages.append(String(line))
 	return g
@@ -451,11 +552,4 @@ static func _names(list: Array) -> Array[StringName]:
 	var out: Array[StringName] = []
 	for s in list:
 		out.append(StringName(s))
-	return out
-
-
-static func _ints(list: Array) -> Array[int]:
-	var out: Array[int] = []
-	for v in list:
-		out.append(int(v))
 	return out

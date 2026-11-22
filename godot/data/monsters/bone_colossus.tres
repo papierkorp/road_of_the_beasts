@@ -8,7 +8,7 @@
 [ext_resource type="Resource" path="res://data/skills/set_idol.tres" id="l4"]
 [ext_resource type="Resource" path="res://data/skills/set_drum.tres" id="l5"]
 [ext_resource type="Resource" path="res://data/skills/raise_wall.tres" id="l6"]
-[ext_resource type="Resource" path="res://data/skills/grounded.tres" id="l7"]
+[ext_resource type="Resource" path="res://data/skills/brace.tres" id="l7"]
 [ext_resource type="Resource" path="res://data/skills/deep_breath.tres" id="l8"]
 
 [resource]

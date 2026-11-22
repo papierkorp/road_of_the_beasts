@@ -10,4 +10,3 @@ trait_name = "Unmoored"
 trait_text = "Push and pull zones do not move it."
 trait_flags = {"ignores_zones": true}
 learns = PackedStringArray("strike", "movement", "ground", "zone")
-gifts = Array[Dictionary]([{"id": &"rift_walker", "name": "Rift Walker", "text": "its straight-line movement may go diagonally"}, {"id": &"hollow", "name": "Hollow", "text": "stat changes of props do not act on it"}, {"id": &"unravel", "name": "Unravel", "text": "a zone it ends its turn in loses 1 round"}])

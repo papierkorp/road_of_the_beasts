@@ -1,6 +1,6 @@
 class_name GatesPanel
 extends HubTabs
-## Gates (docs/vision.md §4): the three places a battle is fought in, and so the three ways to spend day AP.
+## Gates (docs/vision.md §4): the two places a battle is fought in. Every battle costs a year of the lifespan.
 
 
 func title() -> String:
@@ -8,25 +8,22 @@ func title() -> String:
 
 
 func pillar() -> String:
-	return "Battles: where the AP of a year go"
+	return "Where the years go"
 
 
 func hint() -> String:
-	return "Wild area · Dungeon · Void\n%d AP left" % game.ap
+	return "A battle in the wild, or an attack on the void"
 
 
 func tabs() -> Array:
-	return [[&"wild", "Wild area (%d AP)" % game.values.wild_ap, WildPanel], [&"dungeon", "Dungeon (%d AP)" % game.values.dungeon_ap, DungeonPanel],
-		[&"void", "Void (%d AP)" % game.values.void_ap, VoidPanel]]
+	return [[&"wild", "Wild", WildPanel], [&"void", "Void", VoidPanel]]
 
 
 func tab() -> StringName:
 	if game.forced_trial:
 		return &"void"
-	if not game.dungeon.is_empty():
-		return &"dungeon"
 	return super.tab()
 
 
 func tab_locked(tab_id: StringName) -> bool:
-	return tab_id != tab() and (game.forced_trial or not game.dungeon.is_empty())
+	return tab_id != tab() and game.forced_trial

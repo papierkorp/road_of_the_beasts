@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## The Kin traits and the built Kin gifts of the hub game (docs/content.md §7) in a battle: each is a passive
+## The Kin traits of the hub game (docs/content.md §7) in a battle: each is a passive
 ## without a slot that the unit sheet of a grown monster carries.
 
 const H := preload("res://tests/battle/helpers.gd")
@@ -129,23 +129,11 @@ func test_follow_up_lapses_with_any_other_action() -> void:
 	assert_int(b.step_cost(H.unit(b, 0), Vector2i(3, 3))).is_equal(1)
 
 
-func test_spined_deals_two_to_a_monster_moved_into_it() -> void:
-	var gifts: Array[StringName] = [&"spined"]
-	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "skills": [H.strike()]}], [1, Vector2i(3, 2), {"hp": 9}],
-		[1, Vector2i(3, 1), {"hp": 9, "trait": K.SCALED, "gifts": gifts}]])
-	b.begin()
-	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})
-	assert_int(H.unit(b, 1).hp).is_equal(7)
-	assert_int(H.unit(b, 2).hp).is_equal(8)
-
-
 func test_only_a_grown_monster_carries_the_trait_of_its_kin() -> void:
 	var turtle := GameData.monster(&"moss_turtle")
 	var grown := UnitSheets.from_instance(MonsterInstance.hatched(turtle))
 	assert_int(grown.innate.size()).is_equal(1)
 	assert_int(BattleStats.passive_reduction(BattleUnit.new(&"x", grown), "collision_self")).is_equal(2)
 	assert_int(UnitSheets.from_instance(MonsterInstance.of_species(turtle)).innate.size()).is_equal(0)
-	var gifted := MonsterInstance.hatched(GameData.monster(&"grove_wisp"), 3)
-	gifted.choose(MonsterInstance.BLOOD, &"phase")
-	gifted.choose(MonsterInstance.BLOOD, &"weightless")
-	assert_int(UnitSheets.from_instance(gifted).innate.size()).is_equal(2)      # the trait and Phase; a gift not built adds none
+	var later := MonsterInstance.hatched(GameData.monster(&"grove_wisp"), 3)
+	assert_int(UnitSheets.from_instance(later).innate.size()).is_equal(1)       # the trait and nothing else: a Kin has no further passives

@@ -10,4 +10,3 @@ trait_name = "Rooted Growth"
 trait_text = "Ground it lays lasts 3 rounds."
 trait_flags = {"ground_rounds_bonus": 1}
 learns = PackedStringArray("strike", "ground", "zone", "prop")
-gifts = Array[Dictionary]([{"id": &"thornwalker", "name": "Thornwalker", "text": "damage from ground on entering does not hit it"}, {"id": &"deep_roots", "name": "Deep Roots", "text": "props it creates last 3 rounds"}, {"id": &"sap", "name": "Sap", "text": "healing ground heals it 1 more, never above its maximum"}])

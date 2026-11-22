@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BattleSkillDef" format=3]
+
+[ext_resource type="Script" path="res://battle/defs/board_op.gd" id="1"]
+[ext_resource type="Script" path="res://battle/defs/field_effect.gd" id="2"]
+[ext_resource type="Script" path="res://battle/defs/battle_skill_def.gd" id="3"]
+
+[sub_resource type="Resource" id="f1"]
+script = ExtResource("2")
+tag = "anchor"
+
+[resource]
+script = ExtResource("3")
+id = &"brace"
+display_name = "Brace"
+kind = "buff"
+description = "1 AP · self · now · it cannot be pushed or pulled until this round ends."
+status = "working draft (docs/skills.md §6: holding a square is a self buff)"
+ap_cost = 1
+duration = 0
+buff_effects = Array[ExtResource("2")]([SubResource("f1")])

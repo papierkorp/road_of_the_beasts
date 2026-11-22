@@ -1,7 +1,7 @@
 class_name HubScreen
 extends Control
 ## The hub (docs/vision.md §6): one screen with the buildings; a tap opens a building and its actions. The head
-## shows the day, the day AP, the stage and the lifespan. The hub also reads the result of a fight it sent into the
+## shows the stage and the lifespan. Which buildings stand follows the Way of the game. The hub also reads the result of a fight it sent into the
 ## battle scene (GameSession.fight) and saves the game whenever it is shown.
 
 const MENU_SCENE := "res://game/menu.tscn"
@@ -18,6 +18,8 @@ var _panel_id: StringName = &""
 ## A fight the player is preparing (team and loadout) and what starts it.
 var _preparing: Fight = null
 var _on_start: Callable
+## The part the Artificer is laying before a battle ("" = taking parts up again).
+var _laying := ""
 
 
 func _ready() -> void:
@@ -50,9 +52,13 @@ func _ready() -> void:
 	refresh()
 
 
+## The buildings of this game: those every Way has, and those of its own Way (docs/vision.md §6).
 func panels() -> Dictionary:
-	return {&"monsters": MonstersPanel, &"gates": GatesPanel, &"cultivation": CultivationPanel, &"workshop": WorkshopPanel,
-		&"cauldron": CauldronPanel, &"forge": ForgePanel, &"inventory": InventoryPanel}
+	var out := {&"monsters": MonstersPanel, &"gates": GatesPanel, &"cultivation": CultivationPanel}
+	if game.is_artificer():
+		out[&"workshop"] = WorkshopPanel
+	out[&"inventory"] = InventoryPanel
+	return out
 
 
 func _make_panel(id: StringName) -> HubPanel:
@@ -104,8 +110,6 @@ func _build_head() -> void:
 	for c in _head.get_children():
 		_head.remove_child(c)
 		c.queue_free()
-	_head.add_child(HubUi.label("Year %d" % game.day, 22, UiTheme.TEXT, false))
-	_head.add_child(HubUi.label("AP %d / %d" % [game.ap, game.max_ap()], 22, UiTheme.ACCENT, false))
 	_head.add_child(HubUi.label(Stage.stage_name(game.stage), 22, UiTheme.TEXT, false))
 	var left := "%d %s left to live" % [game.lifespan, "year" if game.lifespan == 1 else "years"] if not game.forced_trial else "Lifespan over: take the trial"
 	_head.add_child(HubUi.label(left, 22, HubUi.WARN if game.lifespan <= 2 else UiTheme.TEXT, false))
@@ -114,15 +118,16 @@ func _build_head() -> void:
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_head.add_child(gap)
-	var end := HubUi.primary("End year", _end_day, 160)
-	end.disabled = not game.can_end_day()
-	_head.add_child(end)
 	_head.add_child(HubUi.button("Menu", func(): get_tree().change_scene_to_file(MENU_SCENE), 110))
 
 
 func _build_buildings() -> void:
 	if game.forced_trial:
 		_body.add_child(HubUi.label("Your lifespan has run out. Only the void is open (Gates): take the breakthrough trial.", 22, HubUi.WARN))
+	if game.boon_pick:
+		_body.add_child(HubUi.button("Your breakthrough offers a boon: choose it in the Cultivation Hall", open.bind(&"cultivation", &""), 720))
+	if not Wild.can_rise(game).is_empty():
+		_body.add_child(HubUi.button("Rises to give: choose who rises under Monsters", open.bind(&"monsters", &"roster"), 620))
 	if not game.vow_offer.is_empty():
 		_body.add_child(HubUi.button("A vow is offered: see it in the Cultivation Hall", open.bind(&"cultivation", &""), 620))
 	var grid := GridContainer.new()
@@ -155,16 +160,10 @@ func _build_buildings() -> void:
 			inner.add_child(l)
 
 
-func _end_day() -> void:
-	if game.end_day():
-		SaveGame.save(game)
-	refresh()
-
-
 # ---------- preparing a fight ----------
 
 ## Shows a fight before it starts: the battleground, the opponents, the team and the tamer slots. `on_start` pays
-## for it (day AP) and returns false when the player cannot afford it.
+## for it (nothing: a battle is paid when it is read back) and returns false when the player cannot afford it.
 func prepare(f: Fight, on_start: Callable) -> void:
 	_preparing = f
 	_on_start = on_start
@@ -173,8 +172,9 @@ func prepare(f: Fight, on_start: Callable) -> void:
 		f.ref["capped"] = true
 	if f.team.is_empty():
 		f.team = game.default_team(f.max_team)
-	if f.tamer.is_empty():
+	if f.tamer.is_empty() and game.is_formation():
 		f.tamer = game.default_loadout()
+	_laying = ""
 	refresh()
 
 
@@ -188,8 +188,11 @@ func _build_prepare() -> void:
 	_body.add_child(top)
 	var list := HubUi.scroll(_body)
 	var place := HubUi.card(list)
-	place.add_child(HubUi.fight_view(f, true, 26.0))
+	var view := HubUi.fight_view(f, true, 34.0 if f.carry > 0 else 26.0)
+	place.add_child(view)
 	place.add_child(HubUi.dim("Battleground: %s" % GameSession.map_summary(f)))
+	if f.carry > 0:
+		_build_parts(place, f, view)
 	if f.loot_text != "":
 		place.add_child(HubUi.label("A win gives: %s" % f.loot_text))
 	if f.wild:
@@ -209,28 +212,44 @@ func _build_prepare() -> void:
 		b.custom_minimum_size.y = 132
 		b.disabled = m.current_hp <= 0 or (not on and f.team.size() >= f.max_team)
 		team.add_child(b)
-	var slots := HubUi.card(list)
-	slots.add_child(HubUi.label("Tamer slots: %d of %d filled — a tamer skill, a weapon or a pill each, once in the battle" % [f.tamer.size(), game.tamer_slots()], 20, UiTheme.ACCENT))
-	var content := GameSession.battle_content()
-	for id in game.tamer_skills:
-		var def := content.tamer_skill(id)
-		var b := Button.new()
-		b.toggle_mode = true
-		b.button_pressed = f.tamer.has(id)
-		b.disabled = not f.tamer.has(id) and not _fits(f, id, "")
-		b.text = "%s: %s" % [def.display_name, def.description] if def != null else String(id)
-		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		b.custom_minimum_size = Vector2(0, HubUi.TAP)
-		b.toggled.connect(func(on: bool):
-			if on and not f.tamer.has(id):
-				f.tamer.append(id)
-			elif not on:
-				f.tamer.erase(id)
-			refresh())
-		slots.add_child(b)
 	var why := game.team_problem(f.team)
 	if why != "":
 		_body.add_child(HubUi.label("Not yet: %s." % why, 20, HubUi.WARN))
+	if game.tamer_slots() > 0:
+		_build_slots(list, f)
+	var go := HubUi.primary("Fight", _start_fight, 260)
+	go.disabled = f.team.is_empty() or why != ""
+	_body.add_child(go)
+
+
+## The tamer slots (docs/overworld.md §6.5): tamer skills for the Formation, pills for the Alchemist.
+func _build_slots(list: VBoxContainer, f: Fight) -> void:
+	var slots := HubUi.card(list)
+	var what := "a tamer skill each, once in the battle" if game.is_formation() else "a pill each: it acts once and is used up"
+	var filled := 0
+	for t in f.tamer:
+		if not GameState.CATCHING.has(t):
+			filled += 1
+	slots.add_child(HubUi.label("Tamer slots: %d of %d filled — %s. %s takes no slot." % [filled, game.tamer_slots(), what, "Seal" if game.is_formation() else "A Binding pill"], 20, UiTheme.ACCENT))
+	var content := GameSession.battle_content()
+	if game.is_formation():
+		for id in game.tamer_skills:
+			var def := content.tamer_skill(id)
+			var b := Button.new()
+			b.toggle_mode = true
+			b.button_pressed = f.tamer.has(id)
+			b.disabled = not f.tamer.has(id) and not _fits(f, id, "")
+			b.text = "%s: %s" % [def.display_name, def.description] if def != null else String(id)
+			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.custom_minimum_size = Vector2(0, HubUi.TAP)
+			b.toggled.connect(func(on: bool):
+				if on and not f.tamer.has(id):
+					f.tamer.append(id)
+				elif not on:
+					f.tamer.erase(id)
+				refresh())
+			slots.add_child(b)
+		return
 	var items := Crafting.battle_items(game)
 	for id: StringName in items:
 		var def := content.tamer_skill(id)
@@ -241,27 +260,53 @@ func _build_prepare() -> void:
 		b.toggle_mode = true
 		b.button_pressed = f.tamer.has(id)
 		b.disabled = not f.tamer.has(id) and not _fits(f, id, item)
-		var uses := Crafting.battle_uses(game, item)
-		var flaw := Crafting.flaw_def(game.values, Materials.flaw(item))
-		b.text = "%s ×%d — %s (%s%s)%s" % [Materials.display_name(item, game.values), game.count(item), def.description, def.source_text(),
-			", %d uses" % uses if uses > 1 else "", " — flaw: %s" % flaw["text"] if not flaw.is_empty() else ""]
+		b.text = "%s ×%d — %s" % [Materials.display_name(item, game.values), game.count(item), def.description]
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.custom_minimum_size = Vector2(0, HubUi.TAP)
 		b.toggled.connect(func(on: bool):
 			if on and not f.tamer.has(id):
 				f.tamer.append(id)
 				f.tamer_items[id] = item
-				if uses > 1:
-					f.tamer_uses[id] = uses
 			elif not on:
 				f.tamer.erase(id)
 				f.tamer_items.erase(id)
-				f.tamer_uses.erase(id)
 			refresh())
 		slots.add_child(b)
-	var go := HubUi.primary("Fight", _start_fight, 260)
-	go.disabled = f.team.is_empty() or why != ""
-	_body.add_child(go)
+	if items.is_empty():
+		slots.add_child(HubUi.dim("No pill for a battle yet: the battles of the wild drop them."))
+
+
+## The parts the Artificer lays before a battle of the wild (docs/overworld.md §5.3): pick a part, tap squares of
+## the board. A part may lie on any square; it is not used up.
+func _build_parts(place: VBoxContainer, f: Fight, view: HBoxContainer) -> void:
+	var board: MiniBoard = view.get_child(0).get_child(0)
+	board.make_clickable()
+	board.square_pressed.connect(func(p: Vector2i):
+		var key := "%d,%d" % [p.x, p.y]
+		if _laying == "" or String(f.parts.get(key, "")) == _laying:
+			Crafting.lay(game, f, key, "")
+		elif not Crafting.lay(game, f, key, _laying):
+			game.say("Not laid: %s." % Crafting.lay_problem(game, f, key, _laying))
+		refresh())
+	place.add_child(HubUi.label("Your parts: %d of %d laid; Seal Ground lies beside them. Pick a part, then tap squares of the board; tap a laid part to take it up." % [f.parts.size() - f.laid(Fight.SEAL_PART), f.carry], 18, UiTheme.ACCENT))
+	var picks := HubUi.flow(8)
+	place.add_child(picks)
+	var ids: Array = game.parts.keys()
+	ids.sort()
+	if game.can_catch():
+		ids.push_front(Fight.SEAL_PART)
+	for part: String in ids:
+		if Crafting.part_banned(game, part):
+			continue
+		var is_seal := part == Fight.SEAL_PART
+		var left := (1 if is_seal else int(game.parts[part])) - f.laid(part)
+		var b := HubUi.button("%s · %d left" % ["Seal Ground" if is_seal else GameSession.part_name(part), left], func():
+			_laying = "" if _laying == part else part
+			refresh(), 300)
+		b.toggle_mode = true
+		b.button_pressed = _laying == part
+		b.disabled = left <= 0 and _laying != part
+		picks.add_child(b)
 
 
 ## Whether one more loadout entry fits the tamer slots.

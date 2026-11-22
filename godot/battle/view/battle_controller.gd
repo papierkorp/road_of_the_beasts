@@ -782,8 +782,6 @@ func _hint_text() -> String:
 					return "Click the %s monster" % ("first" if picked.is_empty() else "second")
 				TamerSkillDef.BEAST_SWAP:
 					return "Click the monster that leaves"
-				TamerSkillDef.RENEW, TamerSkillDef.EXTEND, TamerSkillDef.SPREAD:
-					return "Click one of your monsters to confirm"
 			return "Click one of your monsters"
 	return "%s Step · %s–%s Skills · %s End turn" % [UiTheme.key_text(&"battle_step"), UiTheme.key_text(&"battle_skill_1"),
 		UiTheme.key_text(&"battle_skill_6"), UiTheme.key_text(&"battle_confirm")]

@@ -72,37 +72,7 @@ static func error(b: Battle, a: Dictionary) -> String:
 				return "choose one of your own monsters on the field"
 		TamerSkillDef.LAY:
 			return _lay_error(b, side, def, a.get("cells", []))
-		TamerSkillDef.RENEW:
-			if _used_of(b, side, def.renew_source).is_empty():
-				return "no %s was used yet in this battle" % def.renew_source
 	return ""
-
-
-## The loadout entries of a source ("weapon", "pill") that were used at least once.
-static func _used_of(b: Battle, side: int, source: String) -> Array[StringName]:
-	var out: Array[StringName] = []
-	for def: TamerSkillDef in b.tamer_loadout[side]:
-		if def.source == source and int(b.tamer_used[side].get(def.id, 0)) > 0:
-			out.append(def.id)
-	return out
-
-
-## What a pill does to one monster (the effects a pill can have).
-static func _pill_on(b: Battle, def: TamerSkillDef, u: BattleUnit) -> void:
-	match def.effect:
-		TamerSkillDef.SECOND_WIND:
-			BattleDamage.heal(b, u, 1, def.display_name)
-		TamerSkillDef.LIFE_THREAD:
-			u.life_thread = true
-			b.emit(&"protected", {"target": u.id, "kind": "life_thread"})
-		TamerSkillDef.SPIRIT_SHIELD:
-			u.nullify = true
-			b.emit(&"protected", {"target": u.id, "kind": "nullify"})
-		TamerSkillDef.BOON:
-			if def.boon == TamerSkillDef.BOON_ANCHOR:
-				b.apply_effect(u, "boon:%s" % def.id, FieldEffect.ANCHOR, 1, 0)
-			else:
-				b.apply_effect(u, "boon:%s" % def.id, FieldEffect.QUICKEN, def.boon_value, 1)
 
 
 ## Squares for a LAY skill: 1 to `lay_count`, in one straight line without a gap, each able to take what is laid.
@@ -132,11 +102,6 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 	var def: TamerSkillDef = b.tamer_skill(side, a["skill"])
 	b.tamer_used[side][def.id] = int(b.tamer_used[side].get(def.id, 0)) + 1
 	b.emit(&"tamer_skill", {"side": side, "skill": def.id})
-	if (b.tamer_bitter[side] as Array).has(def.id) and a.has("unit"):      # a bitter pill: 1 HP, never its last
-		var taker: BattleUnit = b.units.get(a["unit"])
-		if taker != null and taker.hp > 1:
-			taker.hp -= 1
-			b.emit(&"damage", {"target": taker.id, "amount": 1, "base": 1, "kind": "bitter", "source": "a bitter pill", "by": &"", "trap": false})
 	match def.effect:
 		TamerSkillDef.SWAP_PLACES:
 			var x: BattleUnit = b.units[a["unit"]]
@@ -158,7 +123,7 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 			b.queue.insert(b.queue_idx + 1, entry)   # directly after the current turn
 			b.emit(&"queue_changed", {"who": a["unit"]})
 		TamerSkillDef.SECOND_WIND:
-			BattleDamage.heal(b, b.units[a["unit"]], 1, def.display_name)
+			BattleDamage.heal(b, b.units[a["unit"]], maxi(1, def.boon_value), def.display_name)
 		TamerSkillDef.LIFE_THREAD:
 			b.units[a["unit"]].life_thread = true
 			b.emit(&"protected", {"target": a["unit"], "kind": "life_thread"})
@@ -183,15 +148,6 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 						made.until = b.round_number + BoardProp.CREATED_ROUNDS - 1
 				else:
 					BattleBoardOps.lay_ground(b, b.board.at(p), def.lay_ground, def.display_name)
-			if def.source == "weapon":
-				b.tamer_extend[side] = 0                 # Long Reach is spent on this weapon
-		TamerSkillDef.RENEW:
-			for id in _used_of(b, side, def.renew_source):
-				b.tamer_used[side][id] = int(b.tamer_used[side][id]) - 1
-		TamerSkillDef.EXTEND:
-			b.tamer_extend[side] = 1
-		TamerSkillDef.SPREAD:
-			b.tamer_spread[side] = true
 		TamerSkillDef.DOMAIN_GLIMPSE:
 			for p: Vector2i in a["cells"]:
 				var cell := b.board.at(p)
@@ -204,12 +160,6 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 					cell.ground_until = 0
 					cell.level = 1
 					b.emit(&"ground_changed", {"pos": p, "ground": cell.ground, "level": 1, "result": &"reset", "source": def.display_name})
-	if def.source == "pill" and b.tamer_spread[side] and a.has("unit"):      # Shared Dose: the own monsters next to it too
-		b.tamer_spread[side] = false
-		var taker: BattleUnit = b.units.get(a["unit"])
-		for other in b.living(side):
-			if taker != null and other.id != taker.id and other.on_field and BattleStats._bodies_orth_adjacent(taker, other):
-				_pill_on(b, def, other)
 	BattlePayload.settle(b)
 	b.check_over()
 	return true

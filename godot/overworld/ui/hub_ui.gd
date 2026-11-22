@@ -127,23 +127,6 @@ static func swatch(color: Color, size := 18, edge := UiTheme.INK) -> Panel:
 	return p
 
 
-## A line of `count` squares, shown once per use: how far and how often a forged piece lays.
-static func squares(count: int, uses: int, color: Color, size := 14, edge := UiTheme.INK) -> VBoxContainer:
-	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 5)
-	box.alignment = BoxContainer.ALIGNMENT_CENTER
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.custom_minimum_size = Vector2(4 * size + 9, 0)
-	for _u in maxi(1, uses):
-		var line := HBoxContainer.new()
-		line.add_theme_constant_override("separation", 3)
-		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		for _i in maxi(1, count):
-			line.add_child(swatch(color, size, edge))
-		box.add_child(line)
-	return box
-
-
 ## A small slip with a word: a property that is known, one that is not ("?"), a flaw.
 static func chip(text: String, ink: Color, filled := false) -> PanelContainer:
 	var p := PanelContainer.new()
@@ -295,25 +278,21 @@ static func part_color(part: String) -> Color:
 
 
 ## A line with a sign in front: for lists of things the player owns.
-static func signed(sign: Control, text: String, size := 18, color := UiTheme.TEXT) -> HBoxContainer:
+## `wrap` false: a short line that keeps its width (in a flow of several).
+static func signed(sign: Control, text: String, size := 18, color := UiTheme.TEXT, wrap := true) -> HBoxContainer:
 	var line := row(10)
-	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL if wrap else Control.SIZE_SHRINK_BEGIN
 	sign.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	line.add_child(sign)
-	line.add_child(label(text, size, color))
+	line.add_child(label(text, size, color, wrap))
 	return line
 
 
-## The sign of an item of the inventory: a beast part, a plant, a pill, a forged weapon.
+## The sign of an item of the inventory: a pill.
 static func item_sign(item: String, size := 28) -> Control:
-	match Materials.form(item):
-		"plant":
-			return UiTheme.icon_rect("plant", size, UiTheme.JADE)
-		"pill":
-			return UiTheme.icon_rect("pill", size, UiTheme.CINNABAR)
-		"part":
-			return UiTheme.icon_rect("part_%d" % int(item.get_slice(":", 1)), size)
-	return UiTheme.icon_rect("building_forge", size)
+	if Materials.form(item) == "pill":
+		return UiTheme.icon_rect("pill", size, UiTheme.CINNABAR)
+	return UiTheme.icon_rect("building_inventory", size)
 
 
 ## A monster in one line for a list of opponents: the sign of its Kin, its name, its stats with their signs, its kit.
@@ -336,8 +315,8 @@ static func monster_line(m: MonsterInstance, with_kit := true) -> HBoxContainer:
 		pair.add_child(label(part[1], 17, part[2], false))
 		top.add_child(pair)
 	text.add_child(top)
-	if with_kit:
-		text.add_child(label("%s · %s %s · %s" % [MonsterDef.kin_name(def.kin), Stage.stage_name(m.stage), Stage.sub_tier_name(m.sub_tier), m.kit_text()], 15, UiTheme.DIM))
+	var rank := "%s · %s %s" % [MonsterDef.kin_name(def.kin), Stage.stage_name(m.stage), Stage.sub_tier_name(m.sub_tier)]
+	text.add_child(label(rank + " · " + m.kit_text() if with_kit else rank, 15, UiTheme.DIM))
 	return line
 
 
@@ -367,18 +346,12 @@ static func monster_lines(m: MonsterInstance, with_kit := true) -> String:
 	return text
 
 
-## The Kin of a monster: its trait, what it never learns, its gifts.
+## The Kin of a monster: its trait and what it never learns.
 static func kin_lines(m: MonsterInstance) -> String:
 	var kin := KinDef.of(m.species().kin)
 	if kin == null:
 		return ""
-	var text := "%s trait — %s Never learns: %s." % [kin.display_name, kin.trait_line(), ", ".join(kin.never_learns())]
-	if not m.gifts.is_empty():
-		var names: PackedStringArray = []
-		for g in m.gifts:
-			names.append(KinDef.gift_line(m.species().kin, g))
-		text += "\nGifts: %s" % ", ".join(names)
-	return text
+	return "%s trait — %s Never learns: %s." % [kin.display_name, kin.trait_line(), ", ".join(kin.never_learns())]
 
 
 ## What waits for a decision of the player on this monster ("" = nothing).
@@ -392,8 +365,11 @@ static func todo_text(m: MonsterInstance) -> String:
 		parts.append("%d free slot(s)" % (m.slots - m.kit.size()))
 	if m.choice_picks > 0:
 		parts.append("a breakthrough choice waits")
-	if m.gift_picks > 0:
-		parts.append("a gift to choose")
+	var picks := 0
+	for slot in m.kit.size():
+		picks += maxi(0, m.open_picks(slot))
+	if picks > 0:
+		parts.append("%d skill option(s) to choose" % picks)
 	if m.dev_steps > 0:
 		parts.append("%d development step(s)" % m.dev_steps)
 	return "To decide: %s." % "; ".join(parts) if not parts.is_empty() else ""

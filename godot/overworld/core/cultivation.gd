@@ -1,7 +1,8 @@
 class_name Cultivation
 extends RefCounted
 ## The tree of the Way (docs/overworld.md §5.3): a tree per stage, opened by the breakthrough; a node is bought with
-## Insight and gives a tamer skill. Parts of the battleground are forged (Crafting), not bought here.
+## Insight. A node of the Formation gives a tamer skill ("tamer"); a node of the Artificer or the Alchemist is a
+## perk ("perk"): its effects are read where they act (`GameState.node_sum`), and "reveal" acts once, when bought.
 
 
 static func system(game: GameState) -> CultivationDef:

@@ -37,7 +37,7 @@ static func sheet(o: Dictionary = {}) -> UnitSheet:
 	for x in o.get("skills", []):
 		s.skills.append(x if x is BattleSkillDef else skill(String(x)))
 	if o.has("trait"):                       # the Kin trait as the hub game gives it, without a slot
-		s.innate = KinDef.of(o["trait"]).passives(o.get("gifts", [] as Array[StringName]))
+		s.innate = KinDef.of(o["trait"]).passives()
 	return s
 
 

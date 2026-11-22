@@ -76,9 +76,9 @@ func test_the_skill_builder_builds_skills_from_the_parts() -> void:
 	var buff := SkillGen.build(c, {"name": "Swift Mind", "self": "quicken"})
 	assert_str(buff.kind).is_equal("buff")
 	assert_str(SkillGen.card(c, buff)["self"]).is_equal("Pace +0.1 · 2 rd")
-	var rock := SkillGen.build(c, {"name": "Rooted", "self": "immovable"})
-	assert_str(rock.kind).is_equal("passive")
-	assert_bool(rock.immovable).is_true()
+	var rock := SkillGen.build(c, {"name": "Rooted", "self": "anchor"})
+	assert_str(rock.kind).is_equal("buff")                       # holding a square is a self buff, never a passive
+	assert_int(rock.duration).is_equal(0)
 	assert_str(SkillGen.build(c, {"name": "Nothing"}).kind).is_equal("ground")      # a skill has to do something: Thornbed
 	# every field of the builder offers choices; archived grounds, zones and props are not among them
 	for field: Array in SkillBuilder.FIELDS:
@@ -164,7 +164,7 @@ func test_the_monster_builder_builds_and_checks_a_monster() -> void:
 	assert_array(m.skills.map(func(s): return s.id)).is_equal([&"glide", &"strike_jab", &"snare"])      # empty slots drop out
 	assert_str(MonsterBuilder.problem(c, m, true)).is_empty()
 	# values outside the ranges are pulled in; a kit needs an active skill; an existing id is refused for a new monster
-	var wild := MonsterBuilder.build(c, {"name": "Too Much", "hp": 99, "ap": 9, "reach": 0, "skills": ["braced"]})
+	var wild := MonsterBuilder.build(c, {"name": "Too Much", "hp": 99, "ap": 9, "reach": 0, "skills": ["adaptive_reference"]})
 	assert_array([wild.hp, wild.ap, wild.reach]).is_equal([10, 5, 1])        # ranges of gdd_monsters §2.1
 	assert_str(MonsterBuilder.problem(c, wild, true)).contains("active")
 	assert_str(MonsterBuilder.problem(c, MonsterBuilder.build(c, {"name": "Nothing"}), true)).contains("at least one skill")

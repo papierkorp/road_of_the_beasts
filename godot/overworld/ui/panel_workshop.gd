@@ -1,7 +1,7 @@
 class_name WorkshopPanel
 extends HubPanel
 ## Battleground Workshop (docs/battle_ingame.md §3): shape the battleground for the void in the map editor, from the
-## parts the forge made.
+## parts the wild dropped.
 
 
 func title() -> String:
@@ -31,7 +31,7 @@ func build(into: VBoxContainer) -> void:
 	var weights: PackedStringArray = []
 	for k in v.bg_weights:
 		weights.append("%s %d" % [String(k).replace("_", " "), int(v.bg_weights[k])])
-	parts.add_child(HubUi.dim("A placed part counts toward the budget: %s. Parts are forged from two beast parts." % ", ".join(weights)))
+	parts.add_child(HubUi.dim("A placed part counts toward the budget: %s. Parts drop from the battles of the wild." % ", ".join(weights)))
 	var ids: Array[String] = []
 	for p: String in game.parts:
 		ids.append(p)
@@ -40,4 +40,3 @@ func build(into: VBoxContainer) -> void:
 		parts.add_child(HubUi.signed(HubUi.swatch(HubUi.part_color(part), 24), "%s — owned: %d" % [GameSession.part_name(part), int(game.parts.get(part, 0))]))
 	if ids.is_empty():
 		parts.add_child(HubUi.dim("None yet."))
-	parts.add_child(HubUi.button("To the Forge", hub.open.bind(&"forge", &""), 240))

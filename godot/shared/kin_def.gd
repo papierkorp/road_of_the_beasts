@@ -1,9 +1,8 @@
 class_name KinDef
 extends Resource
-## What a Kin gives its monsters (docs/monsters.md §3, drafts of docs/content.md §7): one trait no other Kin has,
-## the skill groups it can learn and a pool of gifts. One file per Kin: res://data/kins/<kin>.tres.
-## The trait and the gifts that name `flags` act in the ingame battle as passives without a slot (the flags are
-## fields of BattleSkillDef); a gift without flags is stored and shown only. The groups are not checked yet.
+## What a Kin gives its monsters (docs/monsters.md §3, drafts of docs/content.md §7): one trait no other Kin has
+## and the skill groups it can learn. One file per Kin: res://data/kins/<kin>.tres. The trait acts in the ingame
+## battle as a passive without a slot (its flags are fields of BattleSkillDef). A Kin has no further passives.
 
 const DIR := "res://data/kins/"
 const GROUPS: Array[String] = ["strike", "movement", "self", "ground", "zone", "prop"]
@@ -16,8 +15,6 @@ const GROUPS: Array[String] = ["strike", "movement", "self", "ground", "zone", "
 @export var trait_flags: Dictionary = {}
 ## The skill groups its monsters can learn (four of GROUPS).
 @export var learns: PackedStringArray = []
-## {"id": StringName, "name": String, "text": String, "flags": Dictionary (optional)}
-@export var gifts: Array[Dictionary] = []
 
 static var _cache := {}
 
@@ -59,13 +56,6 @@ func can_learn(s: BattleSkillDef) -> bool:
 	return true
 
 
-func gift(gift_id: StringName) -> Dictionary:
-	for g: Dictionary in gifts:
-		if StringName(g["id"]) == gift_id:
-			return g
-	return {}
-
-
 func trait_line() -> String:
 	return "%s: %s" % [trait_name, trait_text]
 
@@ -78,28 +68,15 @@ func never_learns() -> PackedStringArray:
 	return out
 
 
-static func gift_line(kin: MonsterDef.Kin, gift_id: StringName) -> String:
-	var def := of(kin)
-	var g: Dictionary = def.gift(gift_id) if def != null else {}
-	if g.is_empty():
-		return String(gift_id)
-	return "%s (%s%s)" % [g["name"], g["text"], "" if not (g.get("flags", {}) as Dictionary).is_empty() else "; not built"]
-
-
-## The passives a monster of this Kin has without a slot: its trait and the given gifts, as far as they are built.
-func passives(gift_ids: Array[StringName]) -> Array[BattleSkillDef]:
+## The passives a monster of this Kin has without a slot: its trait.
+func passives() -> Array[BattleSkillDef]:
 	var out: Array[BattleSkillDef] = []
 	if not trait_flags.is_empty():
 		out.append(_passive(StringName("trait_%s" % id), trait_name, trait_text, trait_flags))
-	for gid in gift_ids:
-		var g := gift(gid)
-		var flags: Dictionary = g.get("flags", {})
-		if not flags.is_empty():
-			out.append(_passive(StringName("gift_%s" % gid), g["name"], g["text"], flags))
 	return out
 
 
-## A passive without a slot from a name, a text and flags (fields of BattleSkillDef): traits and gifts.
+## A passive without a slot from a name, a text and flags (fields of BattleSkillDef): traits.
 static func make_passive(p_id: StringName, p_name: String, text: String, flags: Dictionary) -> BattleSkillDef:
 	return _passive(p_id, p_name, text, flags)
 

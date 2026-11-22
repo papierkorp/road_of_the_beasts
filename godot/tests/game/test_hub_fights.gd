@@ -1,17 +1,8 @@
 extends GdUnitTestSuite
 ## The hand-over of the hub game: a fight of a place → BattleRequest → a real battle played by the AI → BattleResult →
-## the game. Also checks the test battlegrounds against the table of the values.
+## the game. Also the limits of the Artificer's own battleground.
 
-
-func test_every_battleground_of_the_values_is_playable_and_holds_what_the_table_says() -> void:
-	var content := BattleContent.shared()
-	for b: Dictionary in GameValues.shared().battlegrounds:
-		var map := MapDef.load_map(b["id"])
-		assert_object(map).is_not_null()
-		assert_array(map.problems(content)).is_empty()
-		assert_int(map.free_starts(content, 0).size()).is_equal(int(b["mine"]))
-		assert_int(map.free_starts(content, 1).size()).is_equal(int(b["theirs"]))
-		assert_bool(BattlegroundJob.enemy_reaches_player(map, content)).is_true()
+const H := preload("res://tests/overworld/helpers.gd")
 
 
 func _play(f: Fight, seed_value: int) -> BattleResult:
@@ -28,18 +19,55 @@ func _play(f: Fight, seed_value: int) -> BattleResult:
 	return BattleSetup.make_result(b)
 
 
-func test_a_wild_encounter_is_fought_and_read_back() -> void:
-	var g := GameState.new_game(33, &"way_of_the_beast_lord", &"moss_turtle")
-	var f := WildArea.encounters(g, 0)[0].fight
+func _shape(g: GameState) -> void:
+	var m := g.roster[0]
+	for s in m.learnable():
+		m.learn(s.id)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	m.spend_at_random(rng)
+	m.heal_full()
+
+
+func test_a_battle_of_the_wild_is_fought_on_its_generated_board_and_read_back() -> void:
+	for way: StringName in [H.FORMATION, H.ALCHEMIST, H.ARTIFICER]:
+		var g := H.game(way, 33, &"moss_turtle")
+		_shape(g)
+		var years := g.lifespan
+		var f := Wild.fight_for(g, 0)
+		f.team = g.default_team(f.max_team)
+		if way == H.FORMATION:
+			f.tamer = g.default_loadout()
+		elif way == H.ALCHEMIST:
+			f.tamer = [&"pill_binding"]
+			f.tamer_items = {&"pill_binding": "pill:binding"}
+		else:
+			assert_bool(Crafting.lay(g, f, "2,2", Fight.SEAL_PART)).is_true()
+		var result := _play(f, 5)
+		assert_int(result.player.size()).is_equal(1)
+		assert_int(result.enemy.size()).is_equal(f.enemies.size())
+		Places.resolve(g, f, result)
+		assert_int(g.lifespan).is_equal(years - 1)
+		assert_bool(g.wild_gone.has(0)).is_equal(result.player_won())      # a battle won leaves the look
+
+
+func test_seal_ground_laid_as_a_part_lies_on_the_board_from_the_start() -> void:
+	var g := H.game(H.ARTIFICER, 12, &"moss_turtle")
+	_shape(g)
+	var f := Wild.fight_for(g, 0)
 	f.team = g.default_team(f.max_team)
-	f.tamer = g.default_loadout()
-	assert_bool(WildArea.pay(g)).is_true()
-	var result := _play(f, 5)
-	assert_int(result.player.size()).is_equal(1)
-	assert_int(result.enemy.size()).is_equal(f.enemies.size())
-	Places.resolve(g, f, result)
-	assert_bool(WildArea.encounters(g, 0)[0].gone).is_equal(result.player_won())
-	assert_int(g.roster[0].current_hp).is_equal(g.roster[0].max_hp())
+	Crafting.lay(g, f, "2,2", Fight.SEAL_PART)
+	g.parts["prop:earth_wall"] = 1
+	Crafting.lay(g, f, "1,2", "prop:earth_wall")
+	BattleExperiment.reset()
+	var b := BattleSetup.build(FightBridge.request_of(f))
+	assert_bool(b.seals.has(Vector2i(2, 2))).is_true()
+	assert_int(int(b.seals[Vector2i(2, 2)]["side"])).is_equal(0)
+	assert_str(String(b.board.at(Vector2i(2, 2)).ground)).is_equal("seal")
+	var wall := b.board.prop_at(Vector2i(1, 2), Board.GROUND)
+	assert_object(wall).is_not_null()
+	assert_int(wall.until).is_equal(0)                                 # a part lies for the whole battle, like a prop of the board
+	assert_array(b.tamer_loadout[0]).is_empty()                        # the Artificer has no tamer slots
 
 
 func _job(g: GameState) -> BattlegroundJob:
@@ -63,8 +91,8 @@ func _own_map() -> MapDef:
 	return m
 
 
-func test_the_limits_of_the_players_battleground() -> void:
-	var g := GameState.new_game(3, &"way_of_the_formation", &"blaze_tiger")
+func test_the_limits_of_the_artificers_battleground() -> void:
+	var g := H.game(H.ARTIFICER, 3)
 	var content := BattleContent.shared()
 	var job := _job(g)
 	var m := _own_map()
@@ -77,17 +105,6 @@ func test_the_limits_of_the_players_battleground() -> void:
 	assert_array(job.problems(m, content)).is_not_empty()
 	m.grounds.erase(Vector2i(0, 2))
 	m.start_b = [Vector2i(1, 0)]                                    # too few start squares for the opponent
-	assert_array(job.problems(m, content)).is_not_empty()
-	m.start_b = [Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
-	job.parts["prop:earth_wall"] = 5                                # walling the opponent in is refused
-	for x in 5:
-		m.props[Vector2i(x, 1)] = &"earth_wall"
-	job.budget = 99
-	assert_bool(BattlegroundJob.enemy_reaches_player(m, content)).is_false()
-	assert_array(job.problems(m, content)).is_not_empty()
-	m.props.erase(Vector2i(4, 1))
-	assert_array(job.problems(m, content)).is_empty()
-	job.budget = 5                                                  # four walls and a vein cost 11
 	assert_array(job.problems(m, content)).is_not_empty()
 
 
@@ -102,24 +119,37 @@ func test_a_battleground_survives_the_save_as_plain_data() -> void:
 	assert_dict(back.props).is_equal(m.props)
 	assert_dict(back.zones).is_equal(m.zones)
 	assert_array(back.start_a).is_equal(m.start_a)
-	assert_array(back.start_b).is_equal(m.start_b)
 	assert_array(back.missing).is_equal(m.missing)
 
 
-func test_a_depth_of_the_void_is_fought_on_the_players_battleground() -> void:
-	var g := GameState.new_game(8, &"way_of_the_formation", &"moss_turtle")
-	g.battleground = MapData.to_dict(_own_map())
-	var f := VoidPlace.fight(g)
-	f.team = g.default_team(f.max_team)
-	f.tamer = g.default_loadout()
-	assert_bool(VoidPlace.pay(g)).is_true()
-	var result := _play(f, 9)
-	Places.resolve(g, f, result)
-	assert_int(g.void_depth).is_equal(1 if result.player_won() else 0)
-	assert_int(g.path_points).is_equal(1 if result.player_won() else 0)
+func test_a_depth_of_the_void_is_fought_and_read_back() -> void:
+	for way: StringName in [H.ARTIFICER, H.FORMATION]:
+		var g := H.game(way, 8, &"moss_turtle")
+		_shape(g)
+		var f := VoidPlace.fight(g)
+		f.team = g.default_team(f.max_team)
+		assert_bool(VoidPlace.pay(g)).is_true()
+		var result := _play(f, 9)
+		Places.resolve(g, f, result)
+		assert_int(g.void_depth).is_equal(1 if result.player_won() else 0)
+		assert_int(g.path_points).is_equal(1 if result.player_won() else 0)
+		assert_int(g.day).is_equal(2)                                  # the attack was the deed of the year
 
 
-func test_the_battleground_a_game_starts_with_is_legal() -> void:
-	var g := GameState.new_game(3, &"way_of_the_formation", &"blaze_tiger")
+func test_the_battleground_the_artificer_starts_with_is_legal() -> void:
+	var g := H.game(H.ARTIFICER, 3)
 	assert_bool(g.battleground.is_empty()).is_false()
 	assert_array(_job(g).problems(MapData.from_dict(g.battleground), BattleContent.shared())).is_empty()
+
+
+func test_a_monster_fights_with_the_stats_the_hub_shows() -> void:
+	var g := H.game()
+	var m := g.roster[0]
+	var s := UnitSheets.from_instance(m)
+	assert_int(s.hp).is_equal(int(m.stats["hp"]))
+	assert_float(s.pace).is_equal_approx(float(m.stats["pace"]), 0.001)
+	assert_int(s.movement).is_equal(int(m.stats["move"]))
+	assert_int(s.reach).is_equal(int(m.stats["reach"]))
+	assert_int(s.ap).is_equal(int(m.stats["ap"]))
+	assert_int(s.tpr).is_equal(int(m.stats["tpr"]))
+	assert_str(s.rank).is_equal("Qi Gathering Lower")

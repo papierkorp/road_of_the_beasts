@@ -91,11 +91,14 @@ static func build(request: BattleRequest) -> Battle:
 				b.tamer_loadout[side].append(def)
 		if side == 0:
 			b.tamer_uses[0] = request.player_tamer_uses.duplicate()
-			b.tamer_bitter[0] = request.player_tamer_bitter.duplicate()
 	if request.battle_kind == BattleRequest.INGAME and request.enemy_wild:
 		b.wild[1] = true                         # a wild side has no tamer (docs/battle_ingame.md §7)
 		b.tamer_loadout[1] = []
 	b.roll_seed = request.roll_seed
+	var seal := content.tamer_skill(&"seal")
+	for p in request.player_seals:                # Seal Ground laid before the battle; one at a time
+		if seal != null and BattleCatch.lay_error(b, 0, p) == "":
+			BattleCatch.lay(b, 0, seal, p)
 	if drawn:
 		if request.battle_kind == BattleRequest.INGAME and request.side_points.size() == 2:
 			MonsterDraw.deal(b, request.draw_seed, request.side_points, MonsterDraw.INGAME_TOP, request.mirror_draw)

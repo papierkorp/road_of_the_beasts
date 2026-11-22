@@ -10,9 +10,10 @@ const DIR := "res://data/cultivation"
 @export_multiline var blurb: String = ""
 ## The two branches of its trees: {"id", "name", "text"}. The Insight of a stage buys about one of them.
 @export var branches: Array = []
-## {"id", "stage" (the tree it belongs to), "branch", "name", "kind": "tamer", "ref": tamer skill id,
-## "cost": Insight, "needs": id of the node that must be bought first, or ""}. A development step of a tamer skill
-## is a node by the rules, but is not built.
+## {"id", "stage" (the tree it belongs to), "branch", "name", "cost": Insight, "needs": id of the node that must be
+## bought first, or "", and either "kind": "tamer", "ref": tamer skill id, or "kind": "perk", "text", "effects":
+## {carry | bg_budget | drop | tamer_slots | pill_cap: number}}. A development step of a tamer
+## skill is a node by the rules, but is not built.
 @export var nodes: Array = []
 
 static var _all := {}

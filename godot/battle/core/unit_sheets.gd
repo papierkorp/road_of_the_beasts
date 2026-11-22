@@ -23,7 +23,9 @@ static func from_instance(inst: MonsterInstance, _content: BattleContent = null)
 	s.display_name = def.display_name
 	s.kin = def.kin
 	s.look = def
-	var is_reference := inst.core.is_empty() and inst.shape == StatShape.Id.NONE
+	var is_reference := not inst.uses_points() and inst.core.is_empty() and inst.shape == StatShape.Id.NONE
+	if not is_reference:
+		s.rank = "%s %s" % [Stage.stage_name(inst.stage), Stage.sub_tier_name(inst.sub_tier)]
 	if is_reference:
 		s.hp = def.hp
 		s.pace = def.pace
@@ -52,11 +54,11 @@ static func from_instance(inst: MonsterInstance, _content: BattleContent = null)
 		if int(inst.stats["reach"]) < MIN_REACH:
 			s.notes.append("Reach raised to %d" % MIN_REACH)
 		# no air layer since the reshape of 2026-11-13: Winged monsters stand on the ground
-	if inst.uses_points():                       # the hub game: the trait of its Kin and its gifts act without a slot
+	if inst.uses_points():                       # the hub game: the trait of its Kin acts without a slot
 		var kin := KinDef.of(def.kin)
 		if kin != null:
-			s.innate = kin.passives(inst.gifts)
-	var kit := inst.kit_skills()
+			s.innate = kin.passives()
+	var kit := inst.battle_skills()               # the skills of its slots with their development applied
 	if kit.is_empty():
 		s.notes.append("no kit: Step only")
 		return s

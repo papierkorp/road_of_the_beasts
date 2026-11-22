@@ -14,7 +14,7 @@
 [ext_resource type="Resource" path="res://data/skills/set_gong.tres" id="l4"]
 [ext_resource type="Resource" path="res://data/skills/raise_wall.tres" id="l5"]
 [ext_resource type="Resource" path="res://data/skills/light_brazier.tres" id="l6"]
-[ext_resource type="Resource" path="res://data/skills/weighted.tres" id="l7"]
+[ext_resource type="Resource" path="res://data/skills/brace.tres" id="l7"]
 [ext_resource type="Resource" path="res://data/skills/battle_trance.tres" id="l8"]
 
 [resource]

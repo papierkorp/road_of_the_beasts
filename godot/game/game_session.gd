@@ -30,9 +30,8 @@ var hub_tabs := {}
 var editor_job: BattlegroundJob = null
 
 
-## The battle content with the forged weapons of the running game in it (the screen that prepares a fight).
+## The battle content the hub reads names and colours from.
 func battle_content() -> BattleContent:
-	Forged.ensure(game.values if game != null else GameValues.shared())
 	return BattleContent.shared()
 
 
@@ -49,7 +48,7 @@ func _job() -> BattlegroundJob:
 	var job := BattlegroundJob.new()
 	job.map = MapData.from_dict(game.battleground)
 	job.parts = game.parts.duplicate()
-	job.budget = GameValues.at(v.bg_budget, int(game.stage)) + game.vow_sum("bg_budget")
+	job.budget = GameValues.at(v.bg_budget, int(game.stage)) + game.vow_sum("bg_budget") + game.node_sum("bg_budget")
 	job.weights = v.bg_weights.duplicate()
 	if game.vow_has("vein_weight"):
 		job.weights["dragon_vein"] = game.vow_sum("vein_weight")
@@ -97,11 +96,7 @@ func battleground_summary() -> String:
 
 ## The name of a part of a battleground ("ground:lava" -> "Lava (ground)").
 func part_name(part: String) -> String:
-	var kind := part.get_slice(":", 0)
-	var id := StringName(part.get_slice(":", 1))
-	var c := BattleContent.shared()
-	var def: Resource = c.ground(id) if kind == "ground" else (c.prop(id) if kind == "prop" else c.zone(id))
-	return "%s (%s)" % [def.get("display_name") if def != null else String(id), kind]
+	return Materials.part_name(part)
 
 
 ## Games that were played to their end, won or lost (what a game leaves behind: the pool of eggs grows).

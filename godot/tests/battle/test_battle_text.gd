@@ -47,7 +47,8 @@ func test_skill_cards_say_what_matters() -> void:
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"leap")))).is_equal(["2 AP · Stamina 1/sq", "straight line · up to 3 sq", "over props, monsters · only the landing sq counts"])
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"headbutt")))).is_equal(["2 AP · Stamina 1/sq", "straight line · up to 3 sq", "over props, monsters · only the landing sq counts", "pushes the monster ahead 1"])
 	assert_array(BattleText.skill_rows(c, c.skill(&"battle_trance"))).is_equal([["Cost", "1 AP · 1/battle"], ["Where", "the user"], ["Does", "AP +1 · 2 rd"]])
-	assert_array(BattleText.skill_rows(c, c.skill(&"braced"))).is_equal([["Passive", "A Strike or another skill does not push or pull it."]])
+	assert_array(BattleText.skill_rows(c, c.skill(&"adaptive_reference"))).is_equal([["Passive", "May rotate its own fixed footprints in battle."]])
+	assert_array(_values(BattleText.skill_rows(c, c.skill(&"brace")))).contains(["cannot be pushed or pulled · this round"])
 	# a Strike deals no damage to monsters
 	assert_array(_values(BattleText.skill_rows(c, c.skill(&"strike_jab")))).is_equal(["2 AP", "Jab · 1 sq next to the user", "push 1 · 2 dmg to props"])
 	var limited: BattleSkillDef = c.skill(&"lava_field").duplicate()

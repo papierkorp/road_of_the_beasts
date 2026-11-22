@@ -67,3 +67,25 @@ func _draw() -> void:
 					draw_rect(inner, ink, false, maxf(1.0, cell * 0.07))
 				elif prop != null:
 					draw_arc(mid, cell * 0.24, 0, TAU, 16, ink, maxf(1.5, cell * 0.09), true)
+
+
+## Emitted when a square of the board is pressed (the Artificer lays parts before a battle).
+signal square_pressed(p: Vector2i)
+
+
+## Makes the board take taps: `square_pressed` names the square.
+func make_clickable() -> void:
+	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+
+func _gui_input(event: InputEvent) -> void:
+	if map == null or mouse_filter != Control.MOUSE_FILTER_STOP:
+		return
+	if not (event is InputEventMouse) or not event.is_action_pressed(&"battle_select"):      # a tap arrives as this action too
+		return
+	var at: Vector2 = event.position
+	var p := Vector2i(int((at.x - 2.0) / cell), int((at.y - 2.0) / cell))
+	if map.has_square(p):
+		accept_event()
+		square_pressed.emit(p)

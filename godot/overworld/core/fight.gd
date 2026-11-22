@@ -1,16 +1,17 @@
 class_name Fight
 extends RefCounted
-## One battle the hub asks for, as plain data: where it comes from, the battleground, both teams and what the tamer
+## One battle the hub asks for, as plain data: where it comes from, the battleground, both teams and what the Way
 ## brings. `game/` turns it into a BattleRequest; the overworld never touches the battle (docs/architecture.md §1).
 
 const WILD := &"wild"
-const DUNGEON := &"dungeon"
 const VOID := &"void"
+## The part that is Seal Ground (docs/battle_ingame.md §7): the Artificer lays it like any other part.
+const SEAL_PART := "seal"
 
 var place: StringName = WILD
 var title := ""
-## A battleground of res://data/maps, or "" when `own_map` holds the player's own battleground (the void).
-var map_id: StringName = &""
+## The battleground as plain data in the format of `MapData`: generated for this battle, or the Artificer's own
+## battleground in the void.
 var own_map := {}
 var enemies: Array[MonsterInstance] = []
 ## A wild side has no tamer: its monsters die at 0 HP and can be caught on Seal Ground.
@@ -18,22 +19,34 @@ var wild := true
 ## How many monsters the player may field (the free squares of the start area).
 var max_team := 1
 var team: Array[MonsterInstance] = []
+## The tamer slots: tamer skills of the Formation, or the skills of the pills the Alchemist carries.
 var tamer: Array[StringName] = []
-## Loadout entries that come from an item: tamer skill id -> the weapon or pill it stands for.
+## Loadout entries that come from an item: tamer skill id -> the pill it stands for.
 var tamer_items := {}
-## Uses per battle of a loadout entry that has more than one: tamer skill id -> uses.
-var tamer_uses := {}
+## Parts the Artificer may lay before this battle (0 = none: another Way, or the void, where the board is their own),
+## and those laid: "x,y" -> part id ("ground:<id>", "prop:<id>", "zone:<id>" or SEAL_PART).
+var carry := 0
+var parts := {}
 var roll_seed := 0
-## What the place needs to read the result: the index of the encounter, the node of the dungeon, the depth.
+## What the place needs to read the result: the battle of the wild, the depth.
 var ref := {}
-## The stage of the place (XP and loot).
+## The stage of the place.
 var stage := 0
 ## What a win gives, as text for the list (the place decides the loot itself).
 var loot_text := ""
 
 
 func enemy_text() -> String:
-	var parts: PackedStringArray = []
+	var names: PackedStringArray = []
 	for e in enemies:
-		parts.append(e.title())
-	return ", ".join(parts)
+		names.append(e.title())
+	return ", ".join(names)
+
+
+## How many of a part are laid.
+func laid(part: String) -> int:
+	var n := 0
+	for key in parts:
+		if String(parts[key]) == part:
+			n += 1
+	return n

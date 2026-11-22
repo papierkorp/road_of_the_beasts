@@ -44,14 +44,14 @@ var player_starts: Array[Vector2i] = []
 var player_tamer: Array[StringName] = []
 ## Uses per battle of a loadout entry of the player that has more than one: tamer skill id -> uses.
 var player_tamer_uses := {}
-## Loadout entries of the player that are bitter pills (docs/overworld.md §6.2): the monster one is given to loses
-## 1 HP, never its last.
-var player_tamer_bitter: Array[StringName] = []
 var enemy_tamer: Array[StringName] = []
 ## Ingame battle (docs/battle_ingame.md §7): the enemy side has no tamer. Its monsters die at 0 HP and can be caught on
 ## Seal Ground. `roll_seed` seeds the catch rolls (the battle replays the same with the same seed).
 var enemy_wild := false
 var roll_seed := 0
+## Squares on which Seal Ground of the player lies from the start (the Way of the Artificer lays it before the battle,
+## docs/battle_ingame.md §7).
+var player_seals: Array[Vector2i] = []
 ## Monsters available to Beast Swap (not on the field at the start).
 var player_bench: Array[MonsterInstance] = []
 var enemy_bench: Array[MonsterInstance] = []

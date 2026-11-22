@@ -288,6 +288,8 @@ static func effect_words(e: FieldEffect, level := 1) -> String:
 			return "+%d turn next round" % v
 		FieldEffect.REFRESH:
 			return "Stamina +%d at the round end" % v
+		FieldEffect.ANCHOR:
+			return "cannot be pushed or pulled"
 	return e.text(level)
 
 
@@ -445,7 +447,7 @@ static func skill_rows(c: BattleContent, s: BattleSkillDef) -> Array:
 			for e in s.buff_effects:
 				fx.append(effect_words(e))
 			rows.append(["Where", "the user"])
-			rows.append(["Does", "%s%s%d rd" % [", ".join(fx), SEP, s.duration]])
+			rows.append(["Does", "%s%s%s" % [", ".join(fx), SEP, "%d rd" % s.duration if s.duration > 0 else "this round"]])
 	return rows
 
 
@@ -460,7 +462,7 @@ static func sheet_rows(_c: BattleContent, s: UnitSheet) -> Array:
 	for k in s.skills:
 		kit.append(k.display_name)
 	return [
-		["", "%s%sHP %d%sPace %.1f%s%s %d%sReach %d%sAP %d%s" % [MonsterDef.kin_name(s.kin), SEP, s.hp, SEP, s.pace, SEP,
+		["", "%s%sHP %d%sPace %.1f%s%s %d%sReach %d%sAP %d%s" % [MonsterDef.kin_name(s.kin) + (SEP + s.rank if s.rank != "" else ""), SEP, s.hp, SEP, s.pace, SEP,
 			"Stamina" if BattleExperiment.stamina else "Move", s.movement, SEP, s.reach, SEP, s.ap, "" if s.tpr <= 1 else SEP + "TPR %d" % s.tpr]],
 		["", SEP.join(kit)],
 	] + innate_rows(s)
@@ -476,7 +478,7 @@ static func move_text(b: Battle, u: BattleUnit) -> String:
 
 
 static func unit_title(u: BattleUnit) -> String:
-	return "%s%s%s%s" % [u.display_name(), SEP + MonsterDef.kin_name(u.kin()), SEP + "2×2" if u.size == 2 else "",
+	return "%s%s%s%s%s" % [u.display_name(), SEP + MonsterDef.kin_name(u.kin()), SEP + u.sheet.rank if u.sheet.rank != "" else "", SEP + "2×2" if u.size == 2 else "",
 		SEP + "air" if u.layer == Board.AIR else ""]
 
 
@@ -513,7 +515,7 @@ static func unit_rows(b: Battle, u: BattleUnit) -> Array:
 	return rows
 
 
-## The Kin trait and the Kin gifts of a monster (passives without a slot): one row each, with what it does.
+## The Kin trait of a monster (a passive without a slot), with what it does.
 static func innate_rows(s: UnitSheet) -> Array:
 	var rows: Array = []
 	for p in s.innate:

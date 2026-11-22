@@ -22,7 +22,7 @@ func test_the_shipped_content_loads_without_problems() -> void:
 		&"stay_damage", &"stay_heal", &"stay_stamina", &"no_prop", &"seal"])   # seal: Seal Ground of the ingame battle
 	assert_int(c.props.size()).is_equal(29)      # catalogue with the Burst Trap, the simulation-only Reed Screen and the three experiment runes (button squares)
 	assert_str(c.prop(&"reed_screen").content_status).is_equal("simulation")
-	assert_int(c.tamer.size()).is_equal(19)      # the seven tamer skills of battle_ingame §5, Seal, four laying skills of the Formation, four of the Artificer and three pills of the hub game; forged weapons are added at run time (Forged)
+	assert_int(c.tamer.size()).is_equal(17)      # the seven tamer skills of battle_ingame §5, Seal, four laying skills of the Formation and five pills of the Alchemist
 	assert_int(c.fingerprint().length()).is_equal(64)
 	assert_str(c.fingerprint()).is_equal(BattleContent.reload_shared().fingerprint())
 

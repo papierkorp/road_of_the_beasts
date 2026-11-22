@@ -66,11 +66,6 @@ var tamer_loadout: Array = [[], []]
 var tamer_used: Array[Dictionary] = [{}, {}]      # id -> times used
 ## Uses per battle of a loadout entry (default 1): id -> uses.
 var tamer_uses: Array[Dictionary] = [{}, {}]
-## Loadout entries that are bitter pills, per side: the monster one is given to loses 1 HP, never its last.
-var tamer_bitter: Array = [[], []]
-## Pending effects of the tamer per side: squares the next weapon lays more, and whether the next pill spreads.
-var tamer_extend: Array[int] = [0, 0]
-var tamer_spread: Array[bool] = [false, false]
 ## Catching (docs/battle_ingame.md §7, BattleCatch): sides without a tamer, the Seal Ground on the board
 ## (pos -> {side, base}) and the seed and count of the catch rolls.
 var wild: Array[bool] = [false, false]
@@ -262,9 +257,9 @@ func min_step_cost(u: BattleUnit) -> int:
 
 
 ## Whether a loadout entry has no use left in this battle.
-## The squares a laying tamer skill may take now: its own, and one more for a weapon after Long Reach.
-func lay_count(side: int, def: TamerSkillDef) -> int:
-	return maxi(1, def.lay_count) + (tamer_extend[side] if def.source == "weapon" else 0)
+## The squares a laying tamer skill may take.
+func lay_count(_side: int, def: TamerSkillDef) -> int:
+	return maxi(1, def.lay_count)
 
 
 func tamer_spent(side: int, id: StringName) -> bool:
@@ -673,9 +668,6 @@ func clone() -> Battle:
 	b.tamer_loadout = [tamer_loadout[0].duplicate(), tamer_loadout[1].duplicate()]
 	b.tamer_used = [tamer_used[0].duplicate(), tamer_used[1].duplicate()]
 	b.tamer_uses = [tamer_uses[0].duplicate(), tamer_uses[1].duplicate()]
-	b.tamer_bitter = [tamer_bitter[0].duplicate(), tamer_bitter[1].duplicate()]
-	b.tamer_extend = tamer_extend.duplicate()
-	b.tamer_spread = tamer_spread.duplicate()
 	b.wild = wild.duplicate()
 	b.seals = seals.duplicate(true)
 	b.roll_seed = roll_seed

@@ -269,7 +269,7 @@ func test_a_monster_that_falls_in_its_own_turn_passes_the_turn_on() -> void:
 
 
 func test_actions_of_the_wrong_monster_or_after_the_end_are_refused() -> void:
-	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "skills": ["braced"]}], [1, Vector2i(6, 0)]])
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "skills": ["adaptive_reference"]}], [1, Vector2i(6, 0)]])
 	assert_str(b.check({"type": &"end_turn"})).is_equal("no turn is running")    # not begun yet
 	b.begin()
 	assert_str(b.check({"type": &"step", "unit": &"u1", "to": Vector2i(6, 1)})).contains("not this monster's turn")

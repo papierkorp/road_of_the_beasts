@@ -23,7 +23,7 @@ const TEMPO := "tempo"
 ## Experiment of 2026-11-16 (user idea, no rule): `refresh` = so much more Stamina recovered at the round end
 ## (zone, ground or self buff).
 const REFRESH := "refresh"
-## A monster with it is not pushed or pulled (a pill of the hub game).
+## A monster with it is not pushed or pulled: a self buff (Brace) or a pill, never a passive (docs/skills.md §6).
 const ANCHOR := "anchor"
 
 const TAGS: Array[String] = [SLOW, HASTE, DRAIN_PACE, QUICKEN, DRAIN_RANGE, EXTEND, PUSH, PULL, SHIELD, EXPOSE, MEND, VIGOR, SAP, TEMPO, REFRESH]
@@ -36,7 +36,7 @@ const OPPOSITE := {
 	SHIELD: EXPOSE, EXPOSE: SHIELD,
 }
 
-@export_enum("slow", "haste", "drain_pace", "quicken", "drain_range", "extend", "push", "pull", "shield", "expose", "mend", "vigor", "sap", "tempo", "refresh")
+@export_enum("slow", "haste", "drain_pace", "quicken", "drain_range", "extend", "push", "pull", "shield", "expose", "mend", "vigor", "sap", "tempo", "refresh", "anchor")
 var tag: String = SLOW
 ## Level-to-value (gdd_battle §4.6): value = min(cap, base + level - 1), min 1.
 ## The definition owns base and cap; level III never implies value 3.
