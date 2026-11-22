@@ -10,14 +10,14 @@ A monster the player owns is two layers: a fixed **species** and a unique **indi
 
 ```
 SPECIES     Kin · descriptive themes · default kit · learnable skills · species skill · blurb · art
-INDIVIDUAL  stat shape · stats · stage + sub-tier + XP
+INDIVIDUAL  stat shape · stats · stage + sub-tier
             open slots · slot development and equipped skill per slot · current HP
 ```
 
 - **The battle only ever sees the finished sheet:** name, Kin, the six stats and the kit (Step plus up to 6 slots).
 - **Stat shape is individual, not species-wide:** two individuals of one species can play differently with the same kit.
 - Wild and newly caught monsters roll a shape weighted by their **Kin lean** ([§3](#3-kins)); rare off-lean rolls are prized finds. A monster from an egg is shaped by the player ([overworld.md §4.1](overworld.md#41-obtaining-monsters)).
-- **Current HP** persists between the battles of a dungeon run ([vision.md §4](vision.md#4-where-battles-happen)).
+- **Current HP** are full at the start of every battle ([vision.md §4](vision.md#4-where-battles-happen)).
 - Every monster is 1×1 and stands on the ground.
 
 **What makes a monster:**
@@ -133,27 +133,32 @@ A monster has no bloodline, no grade and no rank: two monsters of one species di
 
 **15 steps:** five stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills, never a stat value; what the tamer gains per stage stands in [overworld.md §5.1](overworld.md#51-stages). A monster never exceeds the player's stage.
 
-| # | Stage · sub-tier | Points | Also gained | XP to the next step |
-|---|---|---|---|---|
-| 1 | Qi Gathering Lower | 25 | 4 slots | 60 |
-| 2 | Qi Gathering Middle | 30 | | 120 |
-| 3 | Qi Gathering High | 35 | breakthrough trial opens | 200 (+ trial) |
-| 4 | Foundation Lower | 40 | choice · +1 learnable skill | 150 |
-| 5 | Foundation Middle | 45 | | 300 |
-| 6 | Foundation High | 50 | | 500 (+ trial) |
-| 7 | Core Formation Lower | 55 | choice · +1 learnable skill | 400 |
-| 8 | Core Formation Middle | 60 | | 800 |
-| 9 | Core Formation High | 65 | | 1300 (+ trial) |
-| 10 | Nascent Soul Lower | 70 | choice · +1 learnable skill | 1000 |
-| 11 | Nascent Soul Middle | 75 | | 2000 |
-| 12 | Nascent Soul High | 80 | | 3200 (+ trial) |
-| 13 | Immortal Lower | 85 | choice · +1 learnable skill | 2500 |
-| 14 | Immortal Middle | 90 | +1 slot-development step | 5000 |
-| 15 | Immortal High | 95 | +1 slot-development step | — |
+| # | Stage · sub-tier | Points | Also gained |
+|---|---|---|---|
+| 1 | Qi Gathering Lower | 25 | 4 slots |
+| 2 | Qi Gathering Middle | 30 | |
+| 3 | Qi Gathering High | 35 | next: only the void lifts it |
+| 4 | Foundation Lower | 40 | choice · +1 learnable skill |
+| 5 | Foundation Middle | 45 | |
+| 6 | Foundation High | 50 | |
+| 7 | Core Formation Lower | 55 | choice · +1 learnable skill |
+| 8 | Core Formation Middle | 60 | |
+| 9 | Core Formation High | 65 | |
+| 10 | Nascent Soul Lower | 70 | choice · +1 learnable skill |
+| 11 | Nascent Soul Middle | 75 | |
+| 12 | Nascent Soul High | 80 | |
+| 13 | Immortal Lower | 85 | choice · +1 learnable skill |
+| 14 | Immortal Middle | 90 | +1 slot-development step |
+| 15 | Immortal High | 95 | +1 slot-development step |
 
 - **The choice at a stage breakthrough:** the monster takes one of **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)), **Lore** (one skill of another species of its Kin joins what it can learn) and **Reshape** (its stat points are spent anew, [§2.3](#23-shapes-and-spending)). Every monster has the same choice.
 - **Slot-development step** (steps 14 and 15): the monster develops one skill slot.
 - **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
 - Breakthrough trials: [overworld.md §5.2](overworld.md#52-the-breakthrough-trial).
 
-*Working values (XP):* bars grow about ×2.5 per stage; a sub-tier takes roughly 3–6 focused days at the right stage. A win gives 10 XP at Qi Gathering, ×2.5 per stage. XP comes from the battles a monster fought, in the dungeon and in the void ([vision.md §4](vision.md#4-where-battles-happen)); the Alchemist brews more ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)).
+**A monster rises by battles won; there is no XP.**
+
+- **In the wild:** every wild monster defeated in a battle won leaves one rise. A rise lifts one monster of the team that fought and still stands, if the defeated monster was at its step or above. One rise per monster and battle, one step, never past High.
+- **Who rises:** where the rises reach for every monster that could take one, each takes one; where they do not, the player chooses. A rise not given is lost with the next battle.
+- **In the void:** every monster that fought in a battle won there and still stands rises a step, whatever its step: also from High into the next stage, never past the stage of the tamer. The breakthrough trial lifts the tamer first, so the team that won it follows.
+- **By a pill:** a Growth pill of the Alchemist is one rise, never past High ([overworld.md §6.2](overworld.md#62-pills)).

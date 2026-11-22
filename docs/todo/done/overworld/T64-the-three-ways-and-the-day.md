@@ -1,7 +1,7 @@
 # T64 · The Three Ways and the Day Without AP
 
-**Status:** Decided in outline (user, 2026-11-22; [decisions.md](../../../decisions.md)) and written into [vision.md](../../../vision.md), [overworld.md](../../../overworld.md), [monsters.md](../../../monsters.md), [skills.md](../../../skills.md), [battle_ingame.md](../../../battle_ingame.md) and [content.md](../../../content.md). **The build still plays the game before it** (wild area, day AP, weapons, bloodlines, every building in every game).
-**Prerequisites:** the answers below; then the build.
+**Status:** Closed 2026-11-22: the day, the dungeon, the forge and the cauldron were replaced before the Ways were played ([T65](../../to-clarify/overworld/T65-the-wild-and-the-one-clock.md)); what is still to confirm about the Ways moved there. Before that: Decided (user, 2026-11-22; [decisions.md](../../../decisions.md)), written into the rule files and **built** ([godot/README.md](../../../../godot/README.md), "The hub game"; what was chosen while building: [implementation.md](../../implementation.md) I121–I132). Not played by hand.
+**Prerequisites:** the user plays the three Ways.
 **Replaces in part:** T54 (day AP), T55 (wild area, harvest), T57 (the systems), T58 (weapons, tiers).
 
 **Decided:** three Ways that shut each other out (Artificer: board · Formation: tamer skills · Alchemist: monsters, with the branches body and kit); a day is one dungeon run or one attack on the void, no day AP, no wild area, no harvest; the dungeon gives monster XP and the reward of the Way (beast parts · Insight · plants); catching in the dungeon, Seal Ground by the means of the Way; a generated, mirrored battleground unless the Artificer lays parts (dungeon) or brings the own one (void); no weapons; the game is won by defeating the Sovereign beast; no bloodlines, grades or Kin gifts; no passive against pushes, holding a square is a self buff; plants without a tier, known plant by plant; skill slots develop by options of the skill's kind; stat points from pills are to be tried.
@@ -19,12 +19,14 @@
 
 **Build:**
 
-- [ ] The hub: one deed a day, no AP, no wild area, no harvest; buildings by Way; the choice of a Way shuts the others out.
-- [ ] The dungeon gives monster XP and the reward of the Way; catching there; Seal Ground as a part, a skill and a pill.
-- [ ] A generated, mirrored battleground for every battle; parts laid before a dungeon battle (Artificer); the own battleground in the void for the Artificer alone.
-- [ ] Forge without weapons; materials without a tier; the cauldron keeps what is known plant by plant; pills for XP, stat points, a development step.
-- [ ] Monsters: no bloodline, no gifts, 15 steps; remove `Immovable`, Keystone, Anchored and the pill of the same kind as a passive; a self buff instead.
-- [ ] Skill development: levels of a slot with the options of the kind acting in the battle ([skills.md §8](../../../skills.md#8-development)); the choice in the Monsters building.
-- [ ] The win: defeating the Sovereign beast.
+- [x] The hub: one deed a day, no AP, no wild area, no harvest; buildings by Way; the choice of a Way shuts the others out.
+- [x] The dungeon gives monster XP and the reward of the Way; catching there; Seal Ground as a part, a skill and a pill.
+- [x] A generated, mirrored battleground for every battle; parts laid before a dungeon battle (Artificer); the own battleground in the void for the Artificer alone.
+- [x] Forge without weapons; materials without a tier; the cauldron keeps what is known plant by plant; pills for XP, stat points, a development step.
+- [x] Monsters: no bloodline, no gifts, 15 steps; remove `Immovable`, Keystone, Anchored and the pill of the same kind as a passive; a self buff instead.
+- [x] Skill development: levels of a slot with the options of the kind acting in the battle ([skills.md §8](../../../skills.md#8-development)); the choice in the Monsters building.
+- [x] The win: defeating the Sovereign beast.
 
-**Done when:** the user has answered the open points and the build plays the decided game.
+- The second beast part of a pair says how many units it gives; a shape had no meaning left without weapons.
+
+**Done when:** the user has played the three Ways and confirmed or changed the points above.

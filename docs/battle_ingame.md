@@ -48,9 +48,9 @@ Not defined: the numbers of the ends (how many goal squares, how long they are h
 
 ## 3. Battlegrounds
 
-- **Every battle has its battleground:** a node of the dungeon and a depth of the void name theirs. It is generated, point-mirrored, not written by hand; the generator is not defined.
-- **The Artificer changes the board** ([overworld.md §5.3](overworld.md#53-the-way)), no other Way does. **In the dungeon** they lay parts of their own on the generated battleground before each battle; the parts stay for the battle like ground and props of the board. **In the void** the battle is fought on the battleground they built in the hub, shaped to the own team and to the opponent shown ahead; it may be changed before every battle there.
-- **A part is forged:** a ground, a zone or a prop is made in the forge from beast parts ([overworld.md §6.3](overworld.md#63-smithing-parts-of-a-battleground)).
+- **Every battle has its battleground:** a battle of the wild and a depth of the void name theirs. It is generated, point-mirrored, not written by hand; the generator is not defined.
+- **The Artificer changes the board** ([overworld.md §5.3](overworld.md#53-the-way)), no other Way does. **In the wild** they lay parts of their own on the generated battleground before each battle; the parts stay for the battle like ground and props of the board. **In the void** the battle is fought on the battleground they built in the hub, shaped to the own team and to the opponent shown ahead; it may be changed before every battle there.
+- **A part drops from the wild:** a ground, a zone or a prop ([overworld.md §6.3](overworld.md#63-parts-of-a-battleground)).
 - **Limits:** a budget per stage; the start area of the opponent stays reachable.
 
 **What a battleground is** *(the map editor of the build; sizes are working values):*
@@ -63,7 +63,7 @@ Not defined: the numbers of the ends (how many goal squares, how long they are h
 | Zones | one zone per square, with the direction a push zone pushes and the number of rounds it lasts; it may last the whole battle. A pull zone pulls toward the middle of all squares of its kind on the map |
 | Start areas | one per side, any squares. A side fields as many monsters as its area has free squares at most; the sides may differ in number. The player places their monsters inside their area before the battle |
 
-Not defined: the budget and what a part costs; which grounds, props and zones can be forged and what the player can place before the first forged part; whether the player holds one battleground or several; where the monsters of the opponent stand inside their area.
+Not defined: the budget and what a part costs; which grounds, props and zones exist as parts; whether the player holds one battleground or several; where the monsters of the opponent stand inside their area.
 
 ## 4. Board Events
 
@@ -98,7 +98,7 @@ The ingame battle offers more and other skills and functions than the multiplaye
 
 ## 7. Catching
 
-Monsters are caught on the board, during a battle of the dungeon, and nowhere else.
+Monsters are caught on the board, during a battle of the wild, and nowhere else.
 
 - **Contract:** a monster with a tamer (the player's or an enemy tamer's) never dies: at 0 HP it is defeated ([overworld.md §4.2](overworld.md#42-defeat)). A **wild monster** has no contract: at 0 HP it dies, unless it stands on a Seal Zone.
 - **Seal Ground:** it is a ground ([battle.md §4](battle.md#4-the-board)) that **cannot be destroyed:** it replaces the ground of its square, no other ground replaces it, no reset removes it, and it does not lapse; it lies until the battle ends or it catches. It cannot be laid on a Dragon Vein. Zones and props on its square stay and act as usual. **One Seal Ground at a time** per tamer.
