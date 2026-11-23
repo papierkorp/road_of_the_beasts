@@ -16,8 +16,8 @@ const INGAME_TOP := {"hp": 10, "pace": 4.0, "stamina": 8, "reach": 4, "tpr": 3, 
 ## How often a stat is tried: [stat, step, weight].
 const BUYS: Array = [["hp", 1, 6], ["pace", 0.2, 4], ["stamina", 1, 4], ["reach", 1, 2], ["ap", 1, 2], ["tpr", 1, 1]]
 const TRIES := 60
-## Names of drawn monsters: "Random Alpha", "Random Beta", … in roster order (the Kin plays no part in a battle).
-const LETTERS: Array[String] = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa", "Lambda", "Mu"]
+## Names of drawn monsters: "Random" and the drawn Kin ("Random Winged"); a Kin drawn again in the same battle
+## counts on ("Random Winged2", "Random Winged3", …) in roster order.
 
 
 static func cost(s: Dictionary) -> int:
@@ -63,23 +63,24 @@ static func _buy(s: Dictionary, stat: String, step: float, points: int, top: Dic
 static func deal(b: Battle, draw_seed: int, points_by_side: Array[int] = [], top: Dictionary = TOP, mirror := false) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = draw_seed ^ 0x5EED
-	var first := {}                               # slot -> [stats, kin, letter] of side 0
-	var drawn := 0
+	var first := {}                               # slot -> [stats, kin, name] of side 0
+	var times := {}                               # kin -> how often it was drawn
 	for id in b.roster:
 		var u: BattleUnit = b.units[id]
 		var s: Dictionary
 		var kin: int
-		var letter := drawn
+		var title: String
 		if mirror and u.side == 1 and first.has(u.slot):
 			s = first[u.slot][0]
 			kin = first[u.slot][1]
-			letter = first[u.slot][2]                 # the same monster carries the same name on both sides
+			title = first[u.slot][2]                  # the same monster carries the same name on both sides
 		else:
-			drawn += 1
 			s = stats(rng) if points_by_side.size() < 2 else stats(rng, points_by_side[u.side], top)
 			kin = rng.randi_range(0, MonsterDef.Kin.size() - 1)
+			times[kin] = int(times.get(kin, 0)) + 1
+			title = "Random %s%s" % [String(MonsterDef.Kin.keys()[kin]).capitalize(), str(times[kin]) if int(times[kin]) > 1 else ""]
 			if u.side == 0:
-				first[u.slot] = [s, kin, letter]
+				first[u.slot] = [s, kin, title]
 		var sheet := u.sheet
 		sheet.hp = int(s["hp"])
 		sheet.pace = float(s["pace"])
@@ -89,7 +90,7 @@ static func deal(b: Battle, draw_seed: int, points_by_side: Array[int] = [], top
 		sheet.ap = int(s["ap"])
 		sheet.current_hp = -1
 		sheet.kin = kin
-		sheet.display_name = "Random %s" % LETTERS[letter % LETTERS.size()]
+		sheet.display_name = title
 		sheet.notes.append("random monster: %d points" % cost(s))
 		u.max_hp = sheet.hp
 		u.hp = sheet.hp

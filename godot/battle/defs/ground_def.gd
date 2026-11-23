@@ -36,6 +36,9 @@ const WELL := &"dragon_vein"
 ## Effects for whoever stands on it (Hearth: quicken 1, Umbra: extend 1, Hallowed: shield 1).
 @export var effects: Array[FieldEffect] = []
 @export var color: Color = Color(0.42, 0.44, 0.4)
+## The pattern the square is painted with (`BattleView`, assets/shaders/tile.gdshader); look only, no rule reads it.
+## `auto`: by what the ground does first: cracks for damage, petals for healing, ripples for Stamina, else none.
+@export_enum("auto", "none", "cracks", "thorns", "moss", "ripples", "sand", "stones", "void", "loops", "seal", "petals", "bars") var pattern: String = "auto"
 @export_multiline var description: String = ""
 
 

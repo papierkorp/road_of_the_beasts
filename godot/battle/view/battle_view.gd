@@ -23,6 +23,9 @@ const ZOOM_MAX := 20.0
 const SIDE_COLORS := UiTheme.SIDE
 const TILE_SHADER := "res://assets/shaders/tile.gdshader"
 const ZONE_SHADER := "res://assets/shaders/zone.gdshader"
+const ZONE_AIR_SHADER := "res://assets/shaders/zone_air.gdshader"
+## How high the streaks of a zone stand over its square.
+const ZONE_TALL := 0.85
 ## Bodies and props stand on paper: their colours are taken a step toward a warm grey so they sit in the picture.
 const MUTE := Color(0.5, 0.45, 0.38)
 ## A plain square: paper a shade darker than the ground of the screen, so the board reads as one sheet.
@@ -71,6 +74,9 @@ func build(p_battle: Battle) -> void:
 	for id in battle.roster:
 		_pieces[id] = _make_monster(battle.units[id])
 	battle.event_emitted.connect(_on_event)
+	var settings := get_node_or_null("/root/GameSettings")   # by path: tools load this script without the autoloads
+	if settings != null:
+		settings.changed.connect(refresh)         # the setting for the names on the squares
 	refresh()
 	_built = true
 
@@ -271,7 +277,8 @@ func _make_overlay(parent: Node3D) -> Dictionary:
 	return {"node": mi, "mat": m}
 
 
-## The overlay of a zone: a painted wash with a brush arrow (assets/shaders/zone.gdshader).
+## A zone on a square: a painted wash with a brush arrow on the ground (assets/shaders/zone.gdshader) and streaks
+## in the air above it (`air`, assets/shaders/zone_air.gdshader), so the zone fills the square up to ZONE_TALL.
 func _make_zone(parent: Node3D) -> Dictionary:
 	var mi := MeshInstance3D.new()
 	var pm := PlaneMesh.new()
@@ -283,7 +290,18 @@ func _make_zone(parent: Node3D) -> Dictionary:
 	mi.material_override = m
 	mi.visible = false
 	parent.add_child(mi)
-	return {"node": mi, "mat": m}
+	var air := MeshInstance3D.new()
+	var column := BoxMesh.new()
+	column.size = Vector3(TILE * 0.9, ZONE_TALL, TILE * 0.9)
+	air.mesh = column
+	air.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var am := ShaderMaterial.new()
+	am.shader = load(ZONE_AIR_SHADER)
+	am.set_shader_parameter("tall", ZONE_TALL)
+	air.material_override = am
+	air.visible = false
+	parent.add_child(air)
+	return {"node": mi, "mat": m, "air": air, "air_mat": am}
 
 
 func _make_arrow(parent: Node3D) -> Dictionary:
@@ -396,7 +414,7 @@ func _make_monster(u: BattleUnit) -> Node3D:
 
 	var label := _make_label(root, 26)
 	label.name = "Label"
-	label.position.y = 1.25 + 0.5 * (scale_f - 1.0)
+	label.position.y = 1.45 + 0.5 * (scale_f - 1.0)
 	label.modulate = SIDE_COLORS[u.side].darkened(0.35)
 	add_child(root)
 	return root
@@ -523,7 +541,9 @@ func _ground_color(cell: BoardCell) -> Color:
 	# a wash of the ground's colour on the paper of the board; Plain is the bare paper
 	var base := TILE_PAPER
 	if g != null and cell.ground != GroundDef.PLAIN:
-		base = TILE_PAPER.lerp(g.color, 0.62 if cell.level <= 1 else 0.8)
+		# the colours of the data were chosen for a dark screen: on paper they are taken down a step
+		var earth := Color.from_hsv(g.color.h, g.color.s * 0.85, g.color.v * 0.8)
+		base = TILE_PAPER.lerp(earth, 0.62 if cell.level <= 1 else 0.8)
 	if _vein_owned(cell):                              # a Dragon Vein shows the colour of the side that owns it
 		base = TILE_PAPER.lerp(SIDE_COLORS[cell.owner_side], 0.6)
 	if cell.is_mountain():
@@ -545,6 +565,45 @@ func _ground_mark(cell: BoardCell) -> int:
 		Moment.LEAVE:
 			return 3
 	return 4
+
+
+## The pattern a ground is painted with (assets/shaders/tile.gdshader), in the order of the shader.
+const PATTERNS: Array[String] = ["none", "cracks", "thorns", "moss", "ripples", "sand", "stones", "void", "loops", "seal", "petals", "bars"]
+## Patterns painted paler than their square (water, sand, sprouts); the others are darker.
+const PALE_PATTERNS: Array[String] = ["ripples", "sand", "petals"]
+
+
+## The pattern of a ground: what its data names (`GroundDef.pattern`), or by what it does first.
+func _ground_pattern(g: GroundDef) -> String:
+	if g == null or g.id == GroundDef.PLAIN or g.id == GroundDef.WELL:
+		return "none"
+	if g.pattern != "auto":
+		return g.pattern
+	if g.triggers.is_empty():
+		return "none"
+	match g.triggers[0].kind:
+		"heal":
+			return "petals"
+		"stamina":
+			return "ripples"
+	return "cracks"
+
+
+## Sets the pattern of a square: darker or paler than its wash; cracks glow in the colour of the ground.
+func _paint_pattern(mat: ShaderMaterial, cell: BoardCell, wash: Color) -> void:
+	var g := battle.content.ground(cell.ground)
+	var pattern := "none" if cell.is_mountain() else _ground_pattern(g)
+	mat.set_shader_parameter("pattern", maxi(0, PATTERNS.find(pattern)))
+	if pattern == "none":
+		return
+	var tone := wash.lerp(UiTheme.PAPER_LIGHT, 0.7) if pattern in PALE_PATTERNS else wash.darkened(0.45)
+	var glow := 0.0
+	if pattern == "cracks":
+		tone = Color.from_hsv(g.color.h, minf(1.0, g.color.s * 1.3 + 0.15), 1.0)
+		glow = 0.9
+	mat.set_shader_parameter("pattern_color", tone)
+	mat.set_shader_parameter("pattern_strength", 0.95 if cell.level > 1 or pattern == "cracks" else 0.7)
+	mat.set_shader_parameter("glow", glow)
 
 
 ## Last touch owns (`vein_touch`): the side a Dragon Vein belongs to at the moment, if any.
@@ -593,18 +652,26 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 	mat.set_shader_parameter("wash", wash)
 	mat.set_shader_parameter("mark", _ground_mark(cell))
 	mat.set_shader_parameter("mark_color", wash.darkened(0.62))
+	_paint_pattern(mat, cell, wash)
 	var g := battle.content.ground(cell.ground)
 
 	var zone_node: MeshInstance3D = t["zone"]["node"]
 	zone_node.visible = cell.zone != null
 	zone_node.position.y = h + 0.012
+	var air_node: MeshInstance3D = t["zone"]["air"]
+	air_node.visible = cell.zone != null
+	air_node.position.y = h + ZONE_TALL * 0.5
 	if cell.zone != null:
 		var zmat := t["zone"]["mat"] as ShaderMaterial
 		var zd := _zone_arrow(cell)
 		zmat.set_shader_parameter("color", cell.zone.def.color.darkened(0.45))
 		zmat.set_shader_parameter("dir", Vector2(zd.x, zd.y))
+		zmat.set_shader_parameter("swirl", zd == Vector2i.ZERO and cell.zone.anchor == cell.pos and cell.zone.def.has_tag(FieldEffect.PULL))
 		# a pull zone has no arrow on its centre and none on a diagonal: only the centre shows the rings
 		zmat.set_shader_parameter("strength", 1.0 if zd != Vector2i.ZERO or cell.zone.anchor == cell.pos or not cell.zone.def.has_tag(FieldEffect.PULL) else 0.55)
+		var amat := t["zone"]["air_mat"] as ShaderMaterial
+		for key: String in ["color", "dir", "swirl", "strength"]:
+			amat.set_shader_parameter(key, zmat.get_shader_parameter(key))
 
 	t["surge_on"] = cell.surge >= 0
 	var sc := Color(1, 1, 1, 0)
@@ -626,10 +693,23 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 		var surge := battle.surge_by_id(cell.surge)
 		if surge != null:
 			lines += "⚠ %s · %d\n" % [surge.skill.display_name, surge.skill.surge_damage]
+	var settings := get_node_or_null("/root/GameSettings")
+	var named: bool = settings != null and settings.square_labels    # setting: the names of ground and zone stand on the square
 	if cell.zone != null:
-		lines += "%s %s%s%s\n" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1], "" if cell.zone.rounds_text() == "" else " · " + cell.zone.rounds_text(),
-			" · centre" if cell.zone.def.has_tag(FieldEffect.PULL) and cell.zone.anchor == cell.pos else ""]
-	if g != null and cell.ground != GroundDef.PLAIN:
+		# a zone is told by its wash and arrow, a ground by its pattern: without the setting the square only says
+		# what they do not show
+		var zone_bits: PackedStringArray = []
+		if named:
+			zone_bits.append("%s %s" % [cell.zone.def.display_name, ROMAN[cell.zone.level - 1]])
+		elif cell.zone.level > 1:
+			zone_bits.append(ROMAN[cell.zone.level - 1])
+		if cell.zone.rounds_text() != "":
+			zone_bits.append(cell.zone.rounds_text())
+		if named and cell.zone.def.has_tag(FieldEffect.PULL) and cell.zone.anchor == cell.pos:
+			zone_bits.append("centre")
+		if not zone_bits.is_empty():
+			lines += " · ".join(zone_bits) + "\n"
+	if g != null and cell.ground != GroundDef.PLAIN and (named or cell.level > 1):
 		lines += g.label(cell.level) + "\n"
 	if battle != null and battle.seals.has(cell.pos):
 		var seal: Dictionary = battle.seals[cell.pos]

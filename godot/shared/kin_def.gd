@@ -17,14 +17,18 @@ const GROUPS: Array[String] = ["strike", "movement", "self", "ground", "zone", "
 @export var learns: PackedStringArray = []
 
 static var _cache := {}
+static var _lock := Mutex.new()                # the AI of the battle screen thinks on a worker thread
 
 
 static func of(kin: MonsterDef.Kin) -> KinDef:
 	var key := String(MonsterDef.Kin.keys()[kin]).to_lower()
+	_lock.lock()
 	if not _cache.has(key):
 		var path := DIR + key + ".tres"
 		_cache[key] = load(path) if ResourceLoader.exists(path) else null
-	return _cache[key]
+	var found: KinDef = _cache[key]
+	_lock.unlock()
+	return found
 
 
 ## The groups a skill belongs to: what it is (a Strike, a movement, an effect on its user) or, for a skill that

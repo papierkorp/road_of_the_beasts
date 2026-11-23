@@ -9,4 +9,5 @@ display_name = "No-Prop Ground"
 battle = "multiplayer"
 no_props = true
 color = Color(0.78, 0.7, 0.48, 1)
+pattern = "bars"
 description = "No prop can be placed here. A prop that already stands where it is laid, or is pushed onto it, stays. It does nothing to monsters."

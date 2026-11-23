@@ -17,4 +17,5 @@ content_status = "experiment"
 group = "blessed"
 triggers = Array[ExtResource("2")]([SubResource("t1")])
 color = Color(0.45, 0.7, 0.85, 1)
+pattern = "ripples"
 description = "EXPERIMENT · Gives 1 Stamina back when you enter the square, never above the pool. No re-entry limit."

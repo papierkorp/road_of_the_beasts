@@ -300,7 +300,15 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   once. “New skill” opens the skill builder, which returns to the caller (`SkillBuilder.return_scene`). No price, budget
   or Kin access is checked. Changing an existing monster rewrites its file: Git is the way back.
 - **Two battles** (docs/battle_ingame.md §1): the main menu button “Battle” opens `battle/battle_menu.tscn` with
-  “Ingame Prototype” and “Multiplayer” (the draft, `battle/draft.tscn`). The ingame prototype
+  “Ingame Prototype”, “Multiplayer” (the draft, `battle/draft.tscn`) and “Auto Battle”: a battle to watch, the AI
+  plays both sides of a 3v3 of the multiplayer battle with drawn monsters, drawn kits and a generated board, with
+  the test switches as the draft screen last set them (`GameSession.autoplay`, switched off again when the battle menu
+  or the draft opens); the draft screen has the same button. In a watched battle a Pause button stands in the bar in
+  place of End Turn: the AI makes no further move until it is pressed again (`BattleController._hold`,
+  `BattleHud.set_watch`); the game is not paused, so the camera turns, the inspector works and the
+  monsters stay clickable for their story. Two switches of the draft to try (user, 2026-11-23, no
+  rule): “Basic Jab” 0 takes the Basic Jab from every monster (`BattleExperiment.basic_jab`), “Step AP” 2 makes the
+  Step cost 2 AP (`BattleExperiment.step_ap`, read by `BattleMoves.step_ap()`). The ingame prototype
   (`battle/ingame/ingame_prototype.gd`) is a test battle without the overworld: points per side from 25 to 110 in
   steps of 5 with the stage they stand for, a board size, 1v1 / 2v2 / 3v3 on the generated boards of `BattleBoards`
   (1v1 5×5, 2v2 6×6, 3v3 7×7; a test tool only: every board of the game is a battleground, docs/battle_ingame.md §2). It writes a `BattleRequest` with
@@ -353,7 +361,7 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   `zone_ids` (generated skills, skill builder, overview tab Generator) use no record of the ingame battle; Lava,
   Thornbed, Mossbed, Binding Vines, Springwater, Shifting Sand, Gale and Void Pull are ingame records.
   Generated Strikes are called “<shape> Push Strike”, “<shape> Prop Strike” or “<shape> Touch”, and the generator
-  makes no Strike that does nothing. Drawn monsters are called Random Alpha, Beta, … (`MonsterDraw.LETTERS`). The
+  makes no Strike that does nothing. Drawn monsters are called by their drawn Kin, Random Winged, Random Flora, …; a Kin drawn again in the same battle counts on (Random Winged2; `MonsterDraw.deal`). The
   draft prices of the new records copy those of the old ones with the same effect; the others use the default.
   Tests: `tests/battle/test_multiplayer_content.gd`. Not built: a Strike that pulls.
 - **Test switches** (`battle/core/battle_experiment.gd`, set by `sim.gd --variant` and partly in the draft screen;
@@ -384,7 +392,10 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   needs to reach an owned vein (`VEIN_GUARD`, walls and bodies count) and pulls its nearest monster to veins it does
   not own (`VEIN_PULL`); placements on and next to veins are candidates. In the game (`AiBrain.decide` with
   `lookahead`, bot `game` of `tools/sim.gd`) the best first actions are judged with the best second action of the
-  turn (step off a vein, then lock it).
+  turn (step off a vein, then lock it). The battle screen lets the AI think on a worker thread and on its own copy
+  of the battle (`BattleController._decide`, `Battle.clone`), so the board does not stand still meanwhile; a
+  decision took 94 ms in the middle and up to 1.6 s when it ran on the main thread. The caches of `Shapes` and
+  `KinDef` are locked for it. Test: `test_the_ai_decides_the_same_on_a_copy_of_the_battle`.
 - **Rules since 2026-11-17 (user decisions; written into battle.md, skills.md and monsters.md; no switch any more):**
     - *Strikes:* a Strike of the kit deals no damage to monsters (`BattleSkillDef.monster_damage()`, `push_only()`);
       it pushes, and what its card names as damage hits props (`hits_props()`, 2 per prop). Every monster has the
@@ -458,24 +469,46 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
       eight beast parts (`part_<kin>`; a Kin is shown by the part its beasts leave, `HubUi.kin_sign`), the three Ways
       (`way_of_the_*`), a tamer skill, a vow, a plant, a pill, an egg, the seal of the title, and the marks of check
       boxes and switches (drawn in ink, set in the theme).
-    - *Board:* `assets/shaders/tile.gdshader` paints a square: a wash of the ground's colour, an ink edge and one
-      sign for what the ground does (rings: a Dragon Vein; points inward: acts on entering; points outward: on
-      leaving; a ring: at the end of a turn; `BattleView._ground_mark`). `assets/shaders/zone.gdshader` paints a zone
-      as a hatched wash with a brush arrow in its direction (rings on the centre of a pull). The
-      colours of bodies and props are taken a step toward a warm grey (`BattleView.MUTE`).
-    - *Bodies:* `shared/monster_body.gd` builds the body of a monster from code, no model files: simple parts in
-      the colour of its aspect (`MonsterLook.aspect_color`), each part with an ink line
-      (`assets/shaders/ink_outline.gdshader`; materials, parts and the flash are shared with the props in
-      `shared/ink_figure.gd`). Every Kin has two or three bodies (`MonsterBody.BODIES`): Beast tiger, wolf, bear ·
-      Winged hawk, moth · Scaled lizard, turtle, serpent · Swarm wasps, mites · Spirit ghost, wisp, shade · Stone
-      golem, colossus · Flora treant, mushroom · Void eye, stalker, maw. A species names its body in its data
+    - *Board:* `assets/shaders/tile.gdshader` paints a square: a wash of the ground's colour (taken down a step
+      from the data colour, `BattleView._ground_color`), an ink edge, a pattern for what the ground is and one sign
+      for when it acts (rings: a Dragon Vein; points inward: acts on entering; points outward: on leaving; a ring:
+      at the end of a turn; `BattleView._ground_mark`). The pattern is the ground's data (`GroundDef.pattern`, a
+      look and not part of the content fingerprint): cracks (Lava), thorns, moss, ripples, sand, stones (Rubble),
+      void, loops (Snare), seal, petals, bars (No Prop); `auto` takes it from what the ground does first, which
+      gives the grounds of the multiplayer battle three patterns: cracks for damage, petals for healing, ripples
+      for Stamina. Only cracks glow. `assets/shaders/zone.gdshader` paints a zone as a hatched wash that flows in
+      its direction, with a brush arrow (a pull zone lies only where it pulls, so every square of it has one), and
+      `assets/shaders/zone_air.gdshader` paints streaks on the sides of the column above the square
+      (`BattleView.ZONE_TALL`), so a zone fills its square: they run in its direction
+      and rise where a zone moves nobody. By default a square is not labelled
+      with the names of its ground and zone (the inspector names them; the setting “Battle: names of ground and
+      zone on the squares” of the settings panel, `GameSettings.square_labels`, saved with the other settings,
+      turns them on): it shows a surge, the rounds a zone has
+      left, a level above I, a seal and the owner of a Dragon Vein. The colours of bodies and props are taken a
+      step toward a warm grey (`BattleView.MUTE`).
+    - *Bodies:* `shared/monster_body.gd` builds the body of a monster from code, no model files: simple parts,
+      each with an ink line (`assets/shaders/ink_outline.gdshader`; materials, parts and the flash are shared with
+      the props in `shared/ink_figure.gd`). The style is a beast of a hard wuxia world (user, 2026-11-23): the
+      tones of a body (`MonsterBody._tones`) are a deep and a near-black tone of its aspect colour
+      (`MonsterLook.aspect_color`), bone for horns, fangs and claws, bronze and gold for armour, rings and seals,
+      and unlit tones for glowing eyes and flames of qi; the helpers `_eyes`, `_horn`, `_claws`, `_spike`,
+      `_flame` and `_blade` build the recurring parts. Every Kin has two or three bodies (`MonsterBody.BODIES`):
+      Beast tiger (qi mane, sabre fangs), wolf, bear (bronze skull plate) · Winged hawk, moth · Scaled lizard (a
+      horned drake), turtle (the black tortoise with a snake for a tail), serpent · Swarm wasps, mites · Spirit
+      ghost (bone mask with a talisman), wisp (a burning skull), shade (a wraith) · Stone golem (bound in
+      bronze), colossus (of bone) · Flora treant (bound with rope and seals), mushroom (its cap a wanderer's
+      hat) · Void eye, stalker, maw. A species names its body in its data
       (`MonsterDef.body`; `auto` is the first of its Kin); the field is a look and not part of the content
       fingerprint. The body stands, breathes or floats by itself; the battle view
       plays its movements from the events of the battle (`BattleView._on_event`): `moved` walk, `strike` attack,
       `cast` and `surge_declared` cast, `damage` flinch and pale flash, `displaced` lean against the push, `healed`
       jump and jade flash, `defeated` topple and shrink. The rules resolve at once; what an attack causes is shown
       `MonsterBody.strike_time()` later. `tools/body_preview.gd` shows every body and every movement.
-    - *Props:* `battle/view/prop_body.gd` builds the figure of a prop the same way, in the colour of the prop. Which
+    - *Props:* `battle/view/prop_body.gd` builds the figure of a prop the same way: weathered, quieter than the
+      monsters, so that a prop stays scenery (user, 2026-11-23). Its tones (`PropBody._tones`) are a darkened tone
+      of the colour in its data, old wood, stone, bronze and gold, rope and paper seals; a part glows only where
+      a prop acts by itself (rune, trap, fire, lantern, the sign of the Storm Drum, the eyes of the Thorn Idol).
+      Qi fire and horns belong to the monsters. Which
       figure a prop has is its data (`PropDef.figure`: tablet, bamboo, beam, urn, wall, screen, brazier, gong, drum,
       column, lantern, tree, lion, idol, bell, banner, rune, spikes, mine, vortex; `auto` is a plate for a walkable prop
       and a block for any other); the field is a look and not part of the content fingerprint. Flames, flags,
@@ -528,8 +561,11 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
   landing square. Why a skill cannot be used now stands in red over the whole width of the card. The centre square
   of a pull zone is labelled on the board. Layout to try: Step over the Basic Jab, End Turn over Wait.
 - **Battle log:** every damage line names its source (“Jab by Gloom Wolf −2”, “Lava (ground) −1”); the line of a defeat
-  names the hit that did it and what else the monster took in that round (`BattleText.defeat_line`). A fallen monster
-  gets a button above the log that opens everything that changed its HP (`BattleText.hp_history`, `BattleHud.add_fallen`).
+  names the hit that did it and what else the monster took in that round (`BattleText.defeat_line`). Every monster
+  can be clicked for its story at any time: a living one in the turn order at the top left, a fallen one on its button
+  above the log (`BattleHud.unit_pressed`, `show_story`). The story lists, round by round, what the monster used (Step,
+  Heal and skills with their AP; the core records them as `action_used` events) and everything that changed its HP
+  (`BattleText.unit_story_lines`, `hp_history`).
 - **Skill calculation (draft)** (`battle/defs/skill_calc.gd`, [skills.md §7](../docs/skills.md#7-value-and-prices)):
   every part of a skill card has a price in points, 10 points pay for 1 AP. No rule reads it; the skill builder and
   the Points column of the overview show it, and generated skills take their AP from it. The prices are fitted to

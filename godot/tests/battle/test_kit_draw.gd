@@ -345,3 +345,17 @@ func test_step_costs_one_ap_the_basic_jab_two_and_a_line_is_diagonal_only_by_its
 	leap.move_diagonal = true
 	assert_bool(BattleMoves.options(b, H.unit(b, 0), BattleMoves.profile_of(leap)).has(Vector2i(5, 3))).is_true()
 	assert_str(BattleText.rows_to_text(BattleText.skill_rows(b.content, leap))).contains("also diagonal")
+
+
+func test_the_story_of_a_monster_names_what_it_used_and_what_hit_it_round_by_round() -> void:
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 5, "name": "Hitter"}], [1, Vector2i(3, 3), {"hp": 4, "pace": 1.0, "name": "Target"}]])
+	b.begin()
+	b.apply({"type": &"skill", "slot": Battle.BASIC_SLOT, "dir": Vector2i(0, -1)})   # the Basic Jab: 2 AP, 1 damage
+	b.apply({"type": &"step", "to": Vector2i(2, 4)})
+	var mine := "\n".join(BattleText.unit_story_lines(b, H.unit(b, 0).id))
+	assert_str(mine).contains("Round 1")
+	assert_str(mine).contains("used: Basic Jab (2 AP), Step (1 AP)")
+	var theirs := "\n".join(BattleText.unit_story_lines(b, H.unit(b, 1).id))
+	assert_str(theirs).contains("used: nothing")
+	assert_str(theirs).contains("Basic Jab by Hitter −1")
+	assert_str(theirs).contains("3 HP")

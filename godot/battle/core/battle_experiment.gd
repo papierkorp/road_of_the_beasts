@@ -86,6 +86,11 @@ static var seal_step := 10
 static var vein_late_round := 3
 static var vein_late_damage := 2
 
+## Two switches to try (user, 2026-11-23). `basic_jab` false: no monster has the Basic Jab beside its kit.
+## `step_ap`: what the universal Step costs (1 = the rule; 2 to try).
+static var basic_jab := true
+static var step_ap := 1
+
 ## The camera of the battle (user decision 2026-11-18): dragging with the middle mouse button turns it and tilts it
 ## up and down (BattleView). false = the fixed tilt of 40°.
 static var free_camera := true
@@ -147,6 +152,8 @@ static func reset() -> void:
 	random_monsters = false
 	kit_seed = 0
 	seal_step = 10
+	basic_jab = true
+	step_ap = 1
 	pack(true)
 
 

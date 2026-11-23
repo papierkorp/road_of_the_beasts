@@ -21,8 +21,12 @@ static func zone_outcome(cell: BoardCell, def: BattleZoneDef) -> Dictionary:
 	return {"kind": &"replace", "level": 1}
 
 
+## Lays `def` on a square. A pull zone lies only where it pulls (docs/battle.md §4.6): on its anchor square and on
+## a square exactly diagonal to it nothing is laid (&"none").
 static func land_zone(b: Battle, cell: BoardCell, def: BattleZoneDef, gid: int, owner: StringName,
 		duration: int, dir: Vector2i, anchor: Vector2i) -> StringName:
+	if def.has_tag(FieldEffect.PULL) and BattleDisplace.pull_dir_cell(cell.pos, anchor) == Vector2i.ZERO:
+		return &"none"
 	var out := zone_outcome(cell, def)
 	match out["kind"]:
 		&"cancel":

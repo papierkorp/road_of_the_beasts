@@ -9,4 +9,5 @@ display_name = "Seal Ground"
 battle = "ingame"
 immutable = true
 color = Color(0.62, 0.3, 0.78, 1)
+pattern = "seal"
 description = "Laid by a tamer. A wild monster that ends its turn on it may be caught (a chance by its HP); a wild monster that falls to 0 HP on it is caught. Nothing changes this ground; it lies until it catches or the battle ends."

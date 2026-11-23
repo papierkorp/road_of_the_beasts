@@ -17,5 +17,6 @@ battle = "ingame"
 group = "blessed"
 triggers = Array[ExtResource("3_mbbdk")]([SubResource("Resource_57tcu")])
 color = Color(0.5, 0.74, 0.5, 1)
+pattern = "moss"
 description = "Heals 1 when you enter the square, never above max HP. No re-entry limit."
 internal_calc_cost = 6.0

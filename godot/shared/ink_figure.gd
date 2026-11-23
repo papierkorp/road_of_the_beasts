@@ -75,7 +75,7 @@ func _joint(parent: Node3D, pos: Vector3, rot_deg: Vector3 = Vector3.ZERO) -> No
 	return j
 
 
-## A mesh in the material `key`, with the ink line (none for the small ink parts such as eyes).
+## A mesh in the material `key`, with the ink line (none for the small parts in `ink`, `spark` and `eye`, such as eyes).
 func _part(parent: Node3D, mesh: Mesh, key: StringName, pos: Vector3 = Vector3.ZERO,
 		rot_deg: Vector3 = Vector3.ZERO, scl: Vector3 = Vector3.ONE) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
@@ -84,7 +84,7 @@ func _part(parent: Node3D, mesh: Mesh, key: StringName, pos: Vector3 = Vector3.Z
 	mi.rotation_degrees = rot_deg
 	mi.scale = scl
 	mi.material_override = _mats[key]
-	if key == &"ink":
+	if key == &"ink" or key == &"spark" or key == &"eye":
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	else:
 		var line := MeshInstance3D.new()

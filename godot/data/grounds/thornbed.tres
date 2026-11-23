@@ -16,5 +16,6 @@ battle = "ingame"
 group = "hazard"
 triggers = Array[ExtResource("3_co136")]([SubResource("Resource_724xu")])
 color = Color(0.3, 0.55, 0.22, 1)
+pattern = "thorns"
 description = "1 damage when you enter the square. Punishes moving."
 internal_calc_cost = 4.0

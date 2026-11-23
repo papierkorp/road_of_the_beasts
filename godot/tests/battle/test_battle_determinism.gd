@@ -108,3 +108,31 @@ func test_ai_battles_end_in_every_mode() -> void:
 			var b := BattleSetup.build(_request(mode, s))
 			_play(b, s, 600)
 			assert_bool(b.over).is_true()
+
+
+## The battle screen lets the AI think on a copy of the battle (a worker thread): the copy must lead to the same
+## action as the battle itself.
+func test_the_ai_decides_the_same_on_a_copy_of_the_battle() -> void:
+	var r := BattleRequest.from_ids(&"3v3", [&"blaze_tiger", &"ember_hawk", &"dusk_moth"], [&"forge_golem", &"gloom_wolf", &"grove_wisp"])
+	r.battle_kind = BattleRequest.MULTIPLAYER
+	r.draw_seed = 7
+	r.board_seed = 7
+	var b := BattleSetup.build(r)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	b.begin()
+	var decisions := 0
+	while not b.over and decisions < 12:
+		if not b.pending_choice.is_empty():
+			b.apply({"type": &"choose_target", "unit": b.pending_choice["options"][0]})
+			continue
+		var twin := RandomNumberGenerator.new()
+		twin.seed = rng.seed
+		twin.state = rng.state
+		var on_copy := AiBrain.decide(b.clone(), twin, true)
+		var a := AiBrain.decide(b, rng, true)
+		assert_str(var_to_str(on_copy)).is_equal(var_to_str(a))
+		assert_int(twin.state).is_equal(rng.state)
+		decisions += 1
+		if a["type"] == &"end_turn" or not b.apply(a):
+			b.end_turn()

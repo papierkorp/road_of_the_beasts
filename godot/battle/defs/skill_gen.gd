@@ -39,6 +39,15 @@ const FREE_SHAPES := {
 	4: [[Vector2i(0, 0), Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1)], [Vector2i(0, -1), Vector2i(0, 0), Vector2i(0, 1), Vector2i(0, 2)]],
 	5: [[Vector2i(0, 0), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]],
 }
+## The squares of a pull zone by their number: a pull zone lies only where it pulls (docs/battle.md §4.6), so its
+## shape has neither the anchor square (0, 0) nor a square exactly diagonal to it.
+const PULL_SHAPES := {
+	1: [Vector2i(0, -1)],
+	2: [Vector2i(0, -1), Vector2i(0, 1)],
+	3: [Vector2i(0, -1), Vector2i(0, 1), Vector2i(1, 0)],
+	4: [Vector2i(0, -1), Vector2i(0, 1), Vector2i(1, 0), Vector2i(-1, 0)],
+	5: [Vector2i(0, -1), Vector2i(0, 1), Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, -2)],
+}
 ## What a draw chooses from, as data: the overview's Generator table shows exactly these lists (a value that
 ## stands twice is drawn twice as often).
 const STRIKE_DAMAGE := [0, 1, 1, 2, 2, 2]
@@ -143,7 +152,7 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 			if leaves == "ground":
 				ground = _pick(rng, ground_ids(content))
 			elif leaves == "zone":
-				zone = _pick(rng, any_zone)
+				zone = _pick(rng, _no_pull(content, any_zone))    # a Strike has no square to pull toward
 			label = BattleShapes.shape_name(s.shape_id(), s.shape_extension)       # named by what it does
 			label += " Push Strike" if s.strike_push else (" Prop Strike" if s.strike_props == 1 else " Touch")
 		"move":
@@ -162,6 +171,8 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 				ground = _pick(rng, ground_ids(content))
 			elif left == "zone":
 				zone = _pick(rng, any_zone)            # a push zone left behind pushes the way the monster went
+				if content.zone(zone).has_tag(FieldEffect.PULL):
+					s.move_diagonal = false               # a pull zone pulls toward the landing square: not from a diagonal
 			label = "%s %d" % ["Headbutt" if s.impact_push == "ahead" else ("Quake Leap" if s.impact_push == "ring" else MOVE_NAMES[s.move_path]), s.move_range]
 		"zone":
 			s.kind = BattleSkillDef.GROUND
@@ -169,6 +180,10 @@ static func draw_kind(content: BattleContent, rng: RandomNumberGenerator, kind: 
 			if rng.randf() < ZONE_WITH_GROUND:
 				ground = _pick(rng, ground_ids(content))
 			label = _draw_shape(rng, s, FREE_SQUARES_MAX, false)   # a free shape: the player turns it, and with it the push
+			if content.zone(zone).has_tag(FieldEffect.PULL):
+				var pulling: Array[Vector2i] = []
+				pulling.assign(PULL_SHAPES[clampi(s.footprint.size(), 1, 5)])
+				s.footprint = pulling                  # only squares that pull; the anchor is where they pull to
 		"ground":
 			s.kind = BattleSkillDef.GROUND
 			ground = _pick(rng, ground_ids(content))
@@ -454,3 +469,12 @@ static func assign(c: BattleContent, s: BattleSkillDef, monster_id: StringName, 
 	var path := "%s/monsters/%s.tres" % [BattleContent.ROOT, monster_id]
 	var err := ResourceSaver.save(m, path)
 	return "" if err == OK else "could not write %s (error %d)" % [path, err]
+
+
+## The zones of `ids` that do not pull.
+static func _no_pull(content: BattleContent, ids: Array[StringName]) -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id in ids:
+		if not content.zone(id).has_tag(FieldEffect.PULL):
+			out.append(id)
+	return out

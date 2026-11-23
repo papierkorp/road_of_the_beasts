@@ -40,6 +40,8 @@ var hover := NOWHERE
 var placing := false               # pre-battle placement phase (gdd_battle §2.1 step 2)
 var placing_pick: StringName = &""
 var _ai_running := false
+var _ai_task := -1                 # the worker task in which the AI thinks (-1 = none)
+var _held := false                 # a watched battle stands still (Pause button): the AI waits, the board stays live
 var _tetrominoes: Array[Dictionary] = []
 
 
@@ -65,11 +67,16 @@ func _ready() -> void:
 	view.bottom_room = BattleHud.BAR_ROOM         # the board sits in the middle of the room above the bar
 	hud.set_exit_mode(GameSession.return_scene != "")
 	hud.action_pressed.connect(_on_action)
+	hud.unit_pressed.connect(func(id: StringName) -> void:
+		hud.show_story(BattleText.unit_name(battle, id), BattleText.unit_story_lines(battle, id)))
 	hud.end_turn_pressed.connect(_on_end_turn)
 	hud.wait_pressed.connect(_on_wait)
 	hud.heal_pressed.connect(_on_heal)
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	hud.resume_pressed.connect(_toggle_pause)
+	hud.watch_pause_pressed.connect(_toggle_watch_pause)
+	if GameSession.autoplay:
+		hud.set_watch(false)
 	hud.menu_pressed.connect(_to_menu)
 	if request.map != null:
 		hud.log_line("%s (%d×%d), %d against %d" % [request.map.display_name, request.map.width, request.map.height, battle.living(0).size(), battle.living(1).size()])
@@ -121,6 +128,21 @@ func _toggle_pause() -> void:
 		return
 	get_tree().paused = not get_tree().paused
 	hud.show_pause(get_tree().paused)
+
+
+## The Pause button of a watched battle: the AI makes no further move until it is pressed again. The game itself
+## runs on, so the camera turns, squares can be looked at and movements already begun play out.
+func _toggle_watch_pause() -> void:
+	if battle.over:
+		return
+	_held = not _held
+	hud.set_watch(_held)
+
+
+## Waits while a watched battle is held or the game is paused.
+func _hold() -> void:
+	while (_held or get_tree().paused) and not battle.over:
+		await get_tree().process_frame
 
 
 func _to_menu() -> void:
@@ -483,20 +505,45 @@ func _check_ai() -> void:
 		var round_no := battle.round_number
 		_refresh()
 		await get_tree().create_timer(0.6, false).timeout
+		await _hold()
 		var guard := 0
 		while not battle.over and battle.turn_owner == who and battle.queue_idx == entry and battle.round_number == round_no \
 				and guard < AiBrain.MAX_ACTIONS_PER_TURN:
 			guard += 1
-			var a := AiBrain.decide(battle, rng, true)
+			var a: Dictionary = await _decide()
+			await _hold()
+			if battle.over or battle.turn_owner != who or battle.queue_idx != entry or battle.round_number != round_no:
+				break
 			if a["type"] == &"end_turn" or not battle.apply(a):
 				break
 			_refresh()
 			await get_tree().create_timer(0.55, false).timeout
+			await _hold()
 		if not battle.over and battle.turn_owner == who and battle.queue_idx == entry and battle.round_number == round_no:
 			battle.end_turn()
 		_refresh()
 	_ai_running = false
 	_refresh()
+
+
+## The next action of the AI, thought out on a worker thread so the board keeps moving meanwhile. The thread works
+## on its own copy of the battle (`Battle.clone`): it shares nothing with the screen that could change under it.
+func _decide() -> Dictionary:
+	var copy := battle.clone()
+	var out := [{}]
+	_ai_task = WorkerThreadPool.add_task(func() -> void: out[0] = AiBrain.decide(copy, rng, true))
+	while not WorkerThreadPool.is_task_completed(_ai_task):
+		await get_tree().process_frame
+	WorkerThreadPool.wait_for_task_completion(_ai_task)
+	_ai_task = -1
+	return out[0]
+
+
+## The battle is left while the AI still thinks: its task is waited for, so nothing outlives the scene.
+func _exit_tree() -> void:
+	if _ai_task >= 0:
+		WorkerThreadPool.wait_for_task_completion(_ai_task)
+		_ai_task = -1
 
 
 # ---------- refresh ----------
@@ -505,7 +552,7 @@ func _refresh() -> void:
 	var arrows := {}
 	view.set_highlights(_highlights(arrows), arrows)
 	view.refresh()
-	hud.update(_order_text(), _portrait_text(), _ap_text(), _hint_text(), _preview_text(),
+	hud.update(_order(), _portrait_text(), _ap_text(), _hint_text(), _preview_text(),
 			_inspector(), _actions(), _my_turn(), _banner_text())
 	var wait_why := battle.check({"type": &"delay"}) if _my_turn() else ""
 	var wait_unit := battle.active() if _my_turn() else null
@@ -695,18 +742,19 @@ func _side_tag(u: BattleUnit) -> String:
 	return "◆" if u.side == PLAYER_SIDE else "◇"
 
 
-func _order_text() -> String:
+## The round, a row per living monster in turn order and the forecast, for the HUD.
+func _order() -> Dictionary:
 	if placing:
-		return "PLACEMENT"
-	var s := "ROUND %d\n" % battle.round_number
+		return {"title": "PLACEMENT"}
+	var rows: Array = []
 	for i in battle.queue.size():
 		var e: Dictionary = battle.queue[i]
 		var u: BattleUnit = battle.units[e["id"]]
 		if not u.is_alive():
 			continue
 		var mark := "▶ " if i == battle.queue_idx and not battle.over else ("   " if i > battle.queue_idx else " ✓ ")
-		s += "%s%s %s  %.1f  %d/%d\n" % [mark, _side_tag(u), u.display_name(), e["pace"], u.hp, u.max_hp]
-	return s.strip_edges() + _forecast_text()
+		rows.append({"id": u.id, "text": "%s%s %s  %.1f  %d/%d" % [mark, _side_tag(u), u.display_name(), e["pace"], u.hp, u.max_hp]})
+	return {"title": "ROUND %d" % battle.round_number, "rows": rows, "note": _forecast_text().trim_prefix("\n")}
 
 
 ## What the round end would do on the board as it stands (BattleTurn.round_end_forecast): who is hit by what and
@@ -847,6 +895,8 @@ func _banner_text() -> String:
 		return ""
 	if battle.draw:
 		return "Draw"
+	if GameSession.autoplay:                     # a watched battle has no side of the player
+		return "Blue wins" if battle.winner_side == PLAYER_SIDE else "Red wins"
 	return "Victory" if battle.winner_side == PLAYER_SIDE else "Defeat"
 
 
@@ -916,7 +966,7 @@ func _on_event(e: Dictionary) -> void:
 			var t2: BattleUnit = battle.units[e["target"]]
 			view.floating_text(t2.pos, "+%d" % e["amount"], UiTheme.JADE)
 		&"defeated":
-			hud.add_fallen(BattleText.unit_name(battle, e["who"]), BattleText.hp_history_lines(battle, e["who"]))
+			hud.add_fallen(BattleText.unit_name(battle, e["who"]), e["who"])
 		&"battle_over":
 			GameSession.last_result = BattleSetup.make_result(battle)
 	if e["type"] in [&"turn_started", &"turn_ended", &"zone_changed", &"effect_refreshed", &"queue_changed", &"swapped", &"protected"]:

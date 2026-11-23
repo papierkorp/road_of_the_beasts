@@ -16,4 +16,5 @@ display_name = "Voidscar"
 immutable = true
 triggers = Array[ExtResource("3_vhlwm")]([SubResource("Resource_qgmnr")])
 color = Color(0.16, 0.1, 0.22, 1)
+pattern = "void"
 description = "1 damage at the end of your turn. Permanent: nothing changes it."

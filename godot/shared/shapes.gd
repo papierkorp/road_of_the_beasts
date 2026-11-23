@@ -17,6 +17,7 @@ const BASE := {
 }
 
 static var _cache := {}
+static var _lock := Mutex.new()                # the AI of the battle screen thinks on a worker thread
 
 
 ## All distinct orientations for the given families, in a stable order.
@@ -24,8 +25,11 @@ static func orientations(families: Array) -> Array[Dictionary]:
 	var key := ""
 	for f in families:
 		key += str(f) + ","
-	if _cache.has(key):
-		return _cache[key]
+	_lock.lock()
+	var kept: Variant = _cache.get(key)
+	_lock.unlock()
+	if kept != null:
+		return kept
 	var seen := {}
 	var out: Array[Dictionary] = []
 	for family in families:
@@ -44,7 +48,9 @@ static func orientations(families: Array) -> Array[Dictionary]:
 					continue
 				seen[k] = true
 				out.append({"cells": norm, "anchor": _anchor(norm)})
+	_lock.lock()
 	_cache[key] = out
+	_lock.unlock()
 	return out
 
 

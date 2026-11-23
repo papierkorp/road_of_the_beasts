@@ -12,6 +12,10 @@ signal heal_pressed
 signal restart_pressed
 signal resume_pressed
 signal menu_pressed
+## The Pause button of a watched battle (the AI plays both sides) was pressed.
+signal watch_pause_pressed
+## A monster of the turn order or a fallen one was clicked: its story is asked for.
+signal unit_pressed(id: StringName)
 
 const LOG_LINES := 8
 ## Action bar (user layout 2026-11-15): Step stands over both rows, then a small gap, then the kit in columns of
@@ -31,9 +35,12 @@ var _tamer_grid: GridContainer
 var _action_ids: Array = []
 var _portrait: Label
 var _order: Label
+var _order_box: VBoxContainer                  # one button per monster of the round, in turn order
+var _order_note: Label                         # what the round end would do, below the order
 var _hint: Label
 var _ap: Label
 var _end_button: Button
+var _watch_button: Button                      # Pause / Resume of a watched battle
 var _wait_button: Button
 var _heal_button: Button
 var _glossary: AcceptDialog
@@ -66,9 +73,19 @@ func build() -> void:
 	root.theme = UiTheme.create()
 	add_child(root)
 
+	var order_col := VBoxContainer.new()          # the round, the turn order (each monster a button to its story), the forecast
+	order_col.position = Vector2(24, 16)
+	order_col.add_theme_constant_override("separation", 0)
+	order_col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(order_col)
 	_order = Label.new()
-	_order.position = Vector2(24, 16)
-	root.add_child(_order)
+	order_col.add_child(_order)
+	_order_box = VBoxContainer.new()
+	_order_box.add_theme_constant_override("separation", 0)
+	_order_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	order_col.add_child(_order_box)
+	_order_note = Label.new()
+	order_col.add_child(_order_note)
 
 	_hint = Label.new()
 	_hint.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -176,6 +193,14 @@ func _build_bar(root: Control) -> void:
 	_end_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_end_button.pressed.connect(func(): end_turn_pressed.emit())
 	row.add_child(_end_button)
+	_watch_button = Button.new()
+	_watch_button.custom_minimum_size = Vector2(110, BAR_BUTTON.y * 2 + BAR_GAP)
+	_watch_button.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_watch_button.focus_mode = Control.FOCUS_NONE
+	_watch_button.tooltip_text = "Stops the battle where it is: the AI makes no further move. The camera, the squares and the monsters can still be looked at."
+	_watch_button.visible = false
+	_watch_button.pressed.connect(func(): watch_pause_pressed.emit())
+	row.add_child(_watch_button)
 	_tamer_panel = PanelContainer.new()
 	_tamer_panel.visible = false
 	bar.add_child(_tamer_panel)
@@ -503,6 +528,13 @@ func set_heal(shown: bool, enabled: bool, why: String = "") -> void:
 	_heal_button.tooltip_text = why
 
 
+## A watched battle: the Pause button takes the place of End Turn; `paused` sets its text.
+func set_watch(paused: bool) -> void:
+	_watch_button.visible = true
+	_watch_button.text = "Resume" if paused else "Pause"
+	_end_button.visible = false
+
+
 func show_pause(on: bool) -> void:
 	_pause.visible = on
 
@@ -516,13 +548,14 @@ func set_wait(shown: bool, enabled: bool, left: int = -1, why: String = "") -> v
 	_wait_button.tooltip_text = why
 
 
-## One call per refresh. `actions`: [{id, text, enabled, selected, tooltip, group}] (group: step | skill | tamer).
+## One call per refresh. `order`: {title, rows: [{id, text}], note}: the round, a row per monster in turn order (a
+## click on it asks for its story, `unit_pressed`) and the forecast below. `actions`: [{id, text, enabled, selected, tooltip, group}] (group: step | skill | tamer).
 ## An empty `inspector` or `preview` hides that panel.
 ## `inspector`: {title, rows, text} — empty dictionary hides it.
 ## Each action may carry "card": {title, rows} shown while the mouse is over its button.
-func update(order_text: String, portrait: String, ap_text: String, hint: String, preview: String,
+func update(order: Dictionary, portrait: String, ap_text: String, hint: String, preview: String,
 		inspector: Dictionary, actions: Array, can_end: bool, banner: String) -> void:
-	_order.text = order_text
+	_show_order(order)
 	_portrait.text = portrait
 	_ap.text = ap_text
 	_hint.text = hint
@@ -602,23 +635,56 @@ func show_glossary() -> void:
 	dialog.popup_centered()
 
 
-## Adds a fallen monster to the row above the log: a button that opens everything that changed its HP.
-func add_fallen(title: String, lines: PackedStringArray) -> void:
+## The turn order: one flat button per monster; a click asks for its story.
+func _show_order(order: Dictionary) -> void:
+	_order.text = order.get("title", "")
+	_order_note.text = order.get("note", "")
+	var rows: Array = order.get("rows", [])
+	while _order_box.get_child_count() > rows.size():
+		var last := _order_box.get_child(_order_box.get_child_count() - 1)
+		_order_box.remove_child(last)
+		last.queue_free()
+	while _order_box.get_child_count() < rows.size():
+		var b := Button.new()
+		b.flat = true
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.focus_mode = Control.FOCUS_NONE
+		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		b.tooltip_text = "Click: what this monster used in each round and what changed its HP."
+		for state: String in ["normal", "hover", "pressed", "focus"]:
+			b.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+		b.add_theme_color_override("font_color", UiTheme.INK)
+		b.add_theme_color_override("font_hover_color", UiTheme.ACCENT)
+		b.add_theme_color_override("font_pressed_color", UiTheme.ACCENT)
+		b.pressed.connect(func() -> void: unit_pressed.emit(b.get_meta("unit")))
+		_order_box.add_child(b)
+	for i in rows.size():
+		var row: Button = _order_box.get_child(i)
+		row.text = rows[i]["text"]
+		row.set_meta("unit", rows[i]["id"])
+
+
+## Adds a fallen monster to the row above the log: a button that asks for its story.
+func add_fallen(title: String, id: StringName) -> void:
 	var button := Button.new()
 	button.text = "✝ " + title
-	button.tooltip_text = "Why did %s fall? Click for everything that changed its HP." % title
+	button.tooltip_text = "Why did %s fall? Click for what it used in each round and everything that changed its HP." % title
 	button.add_theme_font_size_override("font_size", 13)
 	button.focus_mode = Control.FOCUS_NONE
-	button.pressed.connect(func() -> void:
-		var dialog := AcceptDialog.new()
-		dialog.title = "%s: what happened" % title
-		dialog.dialog_text = "\n".join(lines)
-		dialog.process_mode = Node.PROCESS_MODE_ALWAYS
-		add_child(dialog)
-		dialog.confirmed.connect(dialog.queue_free)
-		dialog.canceled.connect(dialog.queue_free)
-		dialog.popup_centered())
+	button.pressed.connect(func() -> void: unit_pressed.emit(id))
 	_fallen_box.add_child(button)
+
+
+## The story of a monster as a window (BattleText.unit_story_lines).
+func show_story(title: String, lines: PackedStringArray) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "%s: what happened" % title
+	dialog.dialog_text = "\n".join(lines)
+	dialog.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(dialog)
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	dialog.popup_centered()
 
 
 func log_line(text: String) -> void:

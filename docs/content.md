@@ -101,7 +101,7 @@ Every zone a skill creates lasts 2 rounds.
 | Cinder Dive | 1 AP | Jab +2 (line of 3 from the user) | — | — | — | Lava | — | — |
 | Coiling Rift | 2 AP | Reach, 4 squares | — | — | — | Lava | Void Pull | — |
 | Gale | 1 AP | Reach, 3 squares (default: line) | — | — | — | — | Gale | — |
-| Void Pull | 1 AP | Reach, 4 squares | — | — | — | — | Void Pull | — |
+| Void Pull | 1 AP | Reach, 3 squares around the square it pulls to | — | — | — | — | Void Pull | — |
 | Plant Bamboo | 1 AP | Reach, 1 free square | — | — | — | — | — | Bamboo Stand |
 | Set Gong | 1 AP | Reach, 1 free square | — | — | — | — | — | Bronze Gong |
 | Earth Wall | 2 AP | Reach, 3 squares (default: line) | — | — | — | — | — | an Earth Wall on each |

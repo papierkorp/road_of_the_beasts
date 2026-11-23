@@ -192,7 +192,8 @@ What a skill lays is temporary: permanent hazards fill the board and make waitin
 - A zone moves **everyone** on the square: allies, enemies and the caster.
 - **Arriving:** a move that ends on the square ([§3](#3-timing)) is followed at once by the zone's move. Squares a movement skill passes over do not count. A blocked zone move is a collision.
 - **Once per action:** a monster a zone has moved is not moved by a zone again in that action. The move at the end of its turn comes on top.
-- **Direction of a push zone:** cast alone, the direction is chosen with the cast. Left by a skill that also creates something else, it points where the placement is turned; left by a Strike, in the Strike's direction; left on the path of a movement, the way the monster went.
+- **Direction of a push zone:** cast alone, chosen with the cast; with a skill that also creates something else, where the placement is turned; left by a Strike, the Strike's direction; left on the path of a movement, the way the monster went.
+- **A pull zone lies only where it pulls:** not on its anchor square and not on a square exactly diagonal to it. A skill lays nothing there.
 - **Counterplay:** do not end a move or your turn in a current; a movement skill crosses it.
 
 **A zone lands on a square that already holds one:**

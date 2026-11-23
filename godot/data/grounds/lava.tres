@@ -17,5 +17,6 @@ battle = "ingame"
 group = "hazard"
 triggers = Array[ExtResource("3_kwua5")]([SubResource("Resource_ctt75")])
 color = Color(0.86, 0.36, 0.12, 1)
+pattern = "cracks"
 description = "1 damage at the end of your turn. Punishes staying."
 internal_calc_cost = 4.0

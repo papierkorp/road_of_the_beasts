@@ -17,7 +17,7 @@ func _zone(effects: Array, id: String) -> BattleZoneDef:
 
 
 func _land(b: Battle, p: Vector2i, def: BattleZoneDef, gid: int, duration := 2) -> StringName:
-	return BattleBoardOps.land_zone(b, b.board.at(p), def, gid, &"u0", duration, Vector2i.ZERO, Vector2i.ZERO)
+	return BattleBoardOps.land_zone(b, b.board.at(p), def, gid, &"u0", duration, Vector2i.ZERO, p + Vector2i(2, 0))   # an anchor a pull zone pulls toward
 
 
 func test_zone_landing_new_refresh_replace() -> void:

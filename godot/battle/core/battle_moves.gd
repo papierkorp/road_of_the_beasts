@@ -10,13 +10,14 @@ extends RefCounted
 ## Air-layer monsters fly: only air-layer occupants and the board edge block, every square
 ## costs 1 and ground is ignored (gdd_battle §4.3).
 
-## Step and slotted movement cost 1 AP (build rule since 2026-11-12, T38; the GDD drafts said 2).
-const STEP_AP := 1
+## Step and slotted movement cost 1 AP (build rule since 2026-11-12, T38; the GDD drafts said 2). The test switch
+## `BattleExperiment.step_ap` sets another cost for the Step.
+const STEP_AP := 1                           # the rule; in play: step_ap()
 
 
-## Step cost in play.
+## Step cost in play: the rule, or what the test switch says.
 static func step_ap() -> int:
-	return STEP_AP
+	return maxi(1, BattleExperiment.step_ap)
 const WALK_DIRS: Array[Vector2i] = Board.CARDINAL
 
 

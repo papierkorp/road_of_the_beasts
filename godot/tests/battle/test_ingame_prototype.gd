@@ -93,16 +93,24 @@ func test_the_points_name_their_stage() -> void:
 	assert_str(IngamePrototype.stage_name(110)).is_equal("Sovereign High")
 
 
-func test_drawn_monsters_are_named_by_letters_and_a_mirrored_pair_shares_its_name() -> void:
+func test_drawn_monsters_are_named_by_their_kin_and_a_mirrored_pair_shares_its_name() -> void:
 	var r := BattleRequest.from_ids(&"3v3", [&"blaze_tiger", &"ember_hawk", &"dusk_moth"], [&"forge_golem", &"gloom_wolf", &"grove_wisp"])
-	r.draw_seed = 4
-	var apart := BattleSetup.build(r)
-	var names: Array = apart.living().map(func(u: BattleUnit): return u.sheet.display_name)
-	assert_array(names).is_equal(["Random Alpha", "Random Beta", "Random Gamma", "Random Delta", "Random Epsilon", "Random Zeta"])
-	r.mirror_draw = true
-	var same := BattleSetup.build(r)
-	names = same.living().map(func(u: BattleUnit): return u.sheet.display_name)
-	assert_array(names).is_equal(["Random Alpha", "Random Beta", "Random Gamma", "Random Alpha", "Random Beta", "Random Gamma"])
+	for draw_seed in range(1, 13):                # 0 draws nothing
+		r.draw_seed = draw_seed
+		r.mirror_draw = false
+		var apart := BattleSetup.build(r)
+		var times := {}
+		var names: Array = []
+		for u: BattleUnit in apart.living():
+			var kin := String(MonsterDef.Kin.keys()[u.sheet.kin]).capitalize()
+			times[kin] = int(times.get(kin, 0)) + 1
+			assert_str(u.sheet.display_name).is_equal("Random %s%s" % [kin, str(times[kin]) if int(times[kin]) > 1 else ""])
+			assert_bool(names.has(u.sheet.display_name)).is_false()
+			names.append(u.sheet.display_name)
+		r.mirror_draw = true
+		var same := BattleSetup.build(r)
+		for i in 3:
+			assert_str(same.living(1)[i].sheet.display_name).is_equal(same.living(0)[i].sheet.display_name)
 
 
 func test_a_generated_strike_always_does_something() -> void:

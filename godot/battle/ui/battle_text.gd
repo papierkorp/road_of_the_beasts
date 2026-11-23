@@ -653,6 +653,38 @@ static func hp_history_lines(b: Battle, id: StringName) -> PackedStringArray:
 	return out
 
 
+## The story of a monster, round by round: what it used (Step, Heal and skills with their AP, in order) and
+## everything that changed its HP. Rounds in which neither happened are left out.
+static func unit_story_lines(b: Battle, id: StringName) -> PackedStringArray:
+	var used := {}                                # round -> ["Step (1 AP)", ...]
+	var round_no := 1
+	for e: Dictionary in b.events:
+		if e["type"] == &"round_started":
+			round_no = int(e["round"])
+		elif e["type"] == &"action_used" and e["who"] == id:
+			if not used.has(round_no):
+				used[round_no] = []
+			var ap := int(e["ap"])
+			(used[round_no] as Array).append("%s (%s)" % [e["name"], "%d AP" % ap if ap > 0 else "free"])
+	var hits := {}                                # round -> ["Dragon Vein −1 · 4 HP (round end)", ...]
+	for row: Array in hp_history(b, id):
+		if not hits.has(row[0]):
+			hits[row[0]] = []
+		var after := "" if row[2] == "defeated" else "%s%d HP" % [SEP, maxi(0, row[3])]
+		(hits[row[0]] as Array).append("%s%s (%s)" % [row[2], after, row[1]])
+	var out: PackedStringArray = []
+	for r in range(1, b.round_number + 1):
+		if not used.has(r) and not hits.has(r):
+			continue
+		out.append("Round %d" % r)
+		out.append("    used: %s" % (", ".join(PackedStringArray(used[r])) if used.has(r) else "nothing"))
+		for line: String in hits.get(r, []):
+			out.append("    %s" % line)
+	if out.is_empty():
+		out.append("Nothing has happened to it yet, and it has used nothing.")
+	return out
+
+
 ## Why a monster fell: the hit that did it and what else it took in that round.
 ## "Blaze Tiger falls: Lava (ground) −1. Earlier this round: Jab by Gloom Wolf −2, Collision −1."
 static func defeat_line(b: Battle, id: StringName) -> String:

@@ -14,7 +14,7 @@ extends RefCounted
 ## same `state_hash()`. `actions` is the replayable log of everything that was applied.
 ##
 ## Actions are Dictionaries:
-##   {type: &"step", to}                                    universal Step, 2 AP
+##   {type: &"step", to}                                    universal Step (BattleMoves.step_ap)
 ##   {type: &"skill", slot, ...}                            a kit skill of the active monster
 ##        move:   to            strike: dir, origin
 ##        surge / zone / ground: anchor, dir, rot           buff: nothing else
@@ -200,7 +200,7 @@ const BASIC_SLOT := 99
 
 func skill_in_slot(u: BattleUnit, slot: int) -> BattleSkillDef:
 	if slot == BASIC_SLOT:
-		return content.skill(&"basic_jab") if u != null else null
+		return content.skill(&"basic_jab") if u != null and BattleExperiment.basic_jab else null   # test switch: none
 	if u == null or slot < 0 or slot >= u.sheet.skills.size():
 		return null
 	return u.sheet.skills[slot]
@@ -424,6 +424,27 @@ func heal_error(u: BattleUnit) -> String:
 	return ""
 
 
+## What an action of `u` is called in the story of a monster, and the AP it costs.
+func _action_name(u: BattleUnit, a: Dictionary) -> String:
+	match a["type"]:
+		&"step":
+			return "Step"
+		&"heal":
+			return "Heal"
+	var s := skill_in_slot(u, int(a.get("slot", -1)))
+	return s.display_name if s != null else "?"
+
+
+func _action_ap(u: BattleUnit, a: Dictionary) -> int:
+	match a["type"]:
+		&"step":
+			return step_cost(u, a.get("to"))
+		&"heal":
+			return 0
+	var s := skill_in_slot(u, int(a.get("slot", -1)))
+	return s.cost() if s != null else 0
+
+
 func _use_heal(u: BattleUnit) -> void:
 	u.stamina -= HEAL_STAMINA
 	u.used_turn[HEAL_SLOT] = 1
@@ -497,6 +518,7 @@ func apply(a: Dictionary, trusted := false) -> bool:
 	else:
 		entry_acted = true
 		var u := active()
+		emit(&"action_used", {"who": u.id, "name": _action_name(u, a), "ap": _action_ap(u, a)})   # for the story of a monster
 		if type != &"step":
 			follow = {}
 		if type == &"step":

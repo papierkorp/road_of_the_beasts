@@ -93,7 +93,7 @@ func _show_monsters() -> void:
 		for body_name: String in MonsterBody.BODIES[kin]:
 			var color := MonsterLook.aspect_color(aspects[k % 3]).lerp(BattleView.MUTE, 0.28)
 			var body := MonsterBody.create(kin, color, body_name)
-			var across := Vector3(1, 0, -1).normalized() * ((k % 7) * 1.4 - 4.2)
+			var across := Vector3(1, 0, -1).normalized() * ((k % 7) * 1.6 - 4.8)
 			var away := Vector3(1, 0, 1).normalized() * ((k / 7) * 2.3 - 2.3)
 			body.position = across + away
 			body.face(Vector2(1, 0.45), true)

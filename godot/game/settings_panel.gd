@@ -5,6 +5,7 @@ extends VBoxContainer
 signal back_pressed
 
 var _fullscreen: CheckButton
+var _labels: CheckButton
 var _size: OptionButton
 var _volume: HSlider
 
@@ -44,6 +45,12 @@ func _init(with_back: bool = false) -> void:
 	vol_row.add_child(_volume)
 	add_child(vol_row)
 
+	_labels = CheckButton.new()
+	_labels.text = "Battle: names of ground and zone on the squares"
+	_labels.tooltip_text = "Off: a square shows only what its picture does not (rounds left, levels, owners); the inspector names the ground and the zone."
+	_labels.toggled.connect(func(on: bool): GameSettings.set_square_labels(on))
+	add_child(_labels)
+
 	if with_back:
 		var back := Button.new()
 		back.text = "Back"
@@ -58,5 +65,6 @@ func _ready() -> void:
 
 func _sync() -> void:
 	_fullscreen.set_pressed_no_signal(GameSettings.fullscreen)
+	_labels.set_pressed_no_signal(GameSettings.square_labels)
 	_size.select(GameSettings.size_index)
 	_volume.set_value_no_signal(GameSettings.volume)

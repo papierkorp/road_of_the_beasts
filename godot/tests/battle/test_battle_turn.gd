@@ -277,3 +277,26 @@ func test_actions_of_the_wrong_monster_or_after_the_end_are_refused() -> void:
 	assert_str(b.check({"type": &"skill", "slot": 7})).contains("no such skill slot")
 	assert_str(b.check({"type": &"dance"})).is_equal("unknown action")
 	assert_int(b.actions.size()).is_equal(0)     # refused attempts are not logged
+
+
+func test_the_switch_without_basic_jab_takes_it_from_every_monster() -> void:
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "ap": 5}], [1, Vector2i(3, 2), {"hp": 4}]])
+	b.begin()
+	var jab := {"type": &"skill", "slot": Battle.BASIC_SLOT, "dir": H.UP}
+	assert_str(b.check(jab)).is_equal("")
+	BattleExperiment.basic_jab = false
+	assert_object(b.skill_in_slot(b.active(), Battle.BASIC_SLOT)).is_null()
+	assert_str(b.check(jab)).is_equal("no such skill slot")
+	for a: Dictionary in AiBrain.candidates(b):
+		assert_bool(a["type"] == &"skill" and int(a["slot"]) == Battle.BASIC_SLOT).is_false()
+
+
+func test_the_switch_for_the_step_sets_what_a_step_costs() -> void:
+	var b := H.battle([[0, Vector2i(3, 3), {"pace": 1.9, "ap": 3}], [1, Vector2i(0, 0), {}]])
+	b.begin()
+	BattleExperiment.step_ap = 2
+	assert_bool(b.apply({"type": &"step", "to": Vector2i(3, 4)})).is_true()
+	assert_int(b.ap).is_equal(1)
+	assert_str(b.check({"type": &"step", "to": Vector2i(3, 5)})).is_equal("Step needs 2 AP, 1 left")
+	BattleExperiment.reset()
+	assert_int(BattleMoves.step_ap()).is_equal(1)

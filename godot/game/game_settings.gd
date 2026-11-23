@@ -1,5 +1,5 @@
 extends Node
-## Window and audio settings, persisted to user://settings.cfg. F11 toggles fullscreen anywhere.
+## Window, audio and display settings, persisted to user://settings.cfg. F11 toggles fullscreen anywhere.
 
 signal changed
 
@@ -9,6 +9,9 @@ const SIZES: Array[Vector2i] = [Vector2i(1280, 720), Vector2i(1600, 900), Vector
 var fullscreen := false
 var size_index := 1
 var volume := 0.8          # 0..1, master bus
+## Battle: every square is labelled with the names of its ground and zone (off: the patterns tell them, the square
+## shows only rounds left and levels).
+var square_labels := false
 
 
 func _ready() -> void:
@@ -43,6 +46,13 @@ func set_size_index(i: int) -> void:
 	_save()
 
 
+## No window change: the board repaints on `changed`.
+func set_square_labels(on: bool) -> void:
+	square_labels = on
+	changed.emit()
+	_save()
+
+
 func set_volume(v: float) -> void:
 	volume = clampf(v, 0.0, 1.0)
 	apply()
@@ -61,6 +71,7 @@ func _load() -> void:
 	fullscreen = cfg.get_value("window", "fullscreen", fullscreen)
 	size_index = clampi(int(cfg.get_value("window", "size_index", size_index)), 0, SIZES.size() - 1)
 	volume = clampf(float(cfg.get_value("audio", "volume", volume)), 0.0, 1.0)
+	square_labels = bool(cfg.get_value("battle", "square_labels", square_labels))
 
 
 func _save() -> void:
@@ -68,4 +79,5 @@ func _save() -> void:
 	cfg.set_value("window", "fullscreen", fullscreen)
 	cfg.set_value("window", "size_index", size_index)
 	cfg.set_value("audio", "volume", volume)
+	cfg.set_value("battle", "square_labels", square_labels)
 	cfg.save(PATH)

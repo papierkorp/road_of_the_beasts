@@ -20,12 +20,15 @@ const NUMBERS := [
 	["Prop pairs", -1, 8, 0, "Mirrored prop pairs the board starts with: -1 = the fixed test layout (or the random board's own number), 0 = no props, N = that many pairs of random prop types on random squares."],
 	["Stamina per round", 0, 5, 0, "0 = the rule: every monster recovers the whole number of its Pace, at least 1. N = every monster recovers N at the end of a round (to compare, S029)."],
 	["Button pairs", 0, 4, 0, "Mirrored pairs of button squares the board starts with: walkable runes without damage that act on the board when a monster collects them (Moss Rune: Mossbed 3×3 · Bog Rune: Bog zone around it · Wall Rune: Earth Walls on its cardinal neighbours). 0 = none."],
+	["Basic Jab", 0, 1, 0, "1 = the rule: every monster has the Basic Jab beside its kit. 0 = no Basic Jab (to try: is it still needed?)."],
+	["Step AP", 1, 2, 0, "What the universal Step costs: 1 = the rule, 2 to try."],
 ]
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = UiTheme.create()
+	GameSession.autoplay = false                 # a watched battle ends here
 
 	var bg := ColorRect.new()
 	bg.color = UiTheme.BG
@@ -95,6 +98,12 @@ func _ready() -> void:
 	build.tooltip_text = "Create a monster or change one and save it: stats, Kin and skills. New skills are made in the skill builder, reachable from there. A saved monster is not fielded by this screen."
 	build.pressed.connect(func(): get_tree().change_scene_to_file("res://game/monster_builder.tscn"))
 	row.add_child(build)
+	var watch := Button.new()
+	watch.text = "Auto Battle"
+	watch.tooltip_text = "Watch a 3v3: two AIs play random monsters against each other, with the switches set above."
+	watch.custom_minimum_size = Vector2(180, 46)
+	watch.pressed.connect(func(): _start(&"3v3", false, true))
+	row.add_child(watch)
 	_start_same = Button.new()
 	_start_same.text = "Same monsters for both sides"
 	_start_same.tooltip_text = "3v3: monster 1, 2 and 3 of both sides are the same random monsters."
@@ -121,6 +130,10 @@ func _number_now(label: String) -> int:
 			return BattleExperiment.vein_late_round
 		"Prop pairs":
 			return BattleExperiment.map_props
+		"Basic Jab":
+			return 1 if BattleExperiment.basic_jab else 0
+		"Step AP":
+			return BattleExperiment.step_ap
 		"Button pairs":
 			return BattleExperiment.map_buttons
 	return BattleExperiment.stamina_regen
@@ -136,6 +149,8 @@ func _apply_experiments() -> void:
 	BattleExperiment.map_props = int((_numbers["Prop pairs"] as SpinBox).value)
 	BattleExperiment.stamina_regen = int((_numbers["Stamina per round"] as SpinBox).value)
 	BattleExperiment.map_buttons = int((_numbers["Button pairs"] as SpinBox).value)
+	BattleExperiment.basic_jab = int((_numbers["Basic Jab"] as SpinBox).value) != 0
+	BattleExperiment.step_ap = int((_numbers["Step AP"] as SpinBox).value)
 	if _status != null:
 		_update()                                 # the text names the board size
 
@@ -157,9 +172,11 @@ static func request(m: StringName, mirror: bool, rng: RandomNumberGenerator) -> 
 	return r
 
 
-func _start(m: StringName, same := false) -> void:
+## `watch`: the AI plays both sides, and the battle leads back here.
+func _start(m: StringName, same := false, watch := false) -> void:
 	_apply_experiments()
 	var rng := RandomNumberGenerator.new()
 	rng.randomize()
-	GameSession.start_battle(request(m, same, rng))
+	GameSession.autoplay = watch
+	GameSession.start_battle(request(m, same, rng), "res://battle/draft.tscn" if watch else "")
 	get_tree().change_scene_to_file(BATTLE_SCENE)

@@ -155,3 +155,43 @@ func test_a_vortex_trap_pulls_its_four_neighbours_only_and_every_collision_count
 	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp, H.unit(b, 3).hp]).is_equal([4, 4, 4])
 	assert_int(H.unit(b, 4).hp).is_equal(5)                       # the diagonal square is outside the shape
 	assert_that(H.unit(b, 4).pos).is_equal(Vector2i(2, 2))
+
+
+func test_a_pull_zone_lies_only_on_squares_it_pulls_from() -> void:
+	var b := H.battle([[0, Vector2i(0, 6), {}], [1, Vector2i(6, 0), {}]])
+	var pull: BattleZoneDef = b.content.zones[&"pull_zone"]
+	var centre := Vector2i(3, 3)
+	for dx in [-1, 0, 1]:
+		for dy in [-1, 0, 1]:
+			BattleBoardOps.land_zone(b, b.board.at(centre + Vector2i(dx, dy)), pull, 1, &"", 2, Vector2i.ZERO, centre)
+	for dx in [-1, 0, 1]:
+		for dy in [-1, 0, 1]:
+			var lies: bool = b.board.at(centre + Vector2i(dx, dy)).zone != null
+			assert_bool(lies).is_equal((dx == 0) != (dy == 0))      # the four neighbours: not the centre, not the corners
+	# a push zone lies on every square it is laid on
+	BattleBoardOps.land_zone(b, b.board.at(Vector2i(5, 5)), b.content.zones[&"push_zone"], 2, &"", 2, Vector2i(1, 0), Vector2i(5, 5))
+	assert_object(b.board.at(Vector2i(5, 5)).zone).is_not_null()
+
+
+func test_no_skill_of_the_game_and_no_generated_skill_has_a_pull_zone_square_that_does_not_pull() -> void:
+	var c := BattleContent.shared()
+	var skills: Array = []
+	for id in BattleContent.sorted_ids(c.skills):
+		if ContentStatus.in_game(c.skills[id]):
+			skills.append(c.skills[id])
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	for i in 600:
+		skills.append(SkillGen.draw(c, rng, i))
+	var pull_skills := 0
+	for s: BattleSkillDef in skills:
+		if s.kind == BattleSkillDef.ZONE and s.zone != null and s.zone.has_tag(FieldEffect.PULL):
+			pull_skills += 1
+			assert_bool(s.is_free_shape()).is_true()
+			for o: Vector2i in s.footprint:
+				assert_bool(BattleDisplace.pull_dir_cell(o, Vector2i.ZERO) != Vector2i.ZERO).is_true()
+		if s.kind == BattleSkillDef.STRIKE:
+			for op: BoardOp in s.board_ops:
+				if op.op == BoardOp.CREATE_ZONE:
+					assert_bool(c.zone(op.zone).has_tag(FieldEffect.PULL)).is_false()
+	assert_int(pull_skills).is_greater(5)
