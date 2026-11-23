@@ -794,28 +794,27 @@ static func brief(b: Battle, e: Dictionary) -> String:
 
 # ---------- cast preview ----------
 
-## Zone changes of a dry run, grouped: "2 new, 1 levels up → II".
-static func _zone_summary(events: Array) -> String:
-	var counts := {}
-	var order: Array = []
+## Zone changes of a dry run, one line per zone and kind of change; equal lines are merged like ground
+## ("Push Zone ×2", "Mire level up → II").
+static func _zone_lines(b: Battle, events: Array) -> Array[String]:
+	var out: Array[String] = []
 	for e: Dictionary in events:
 		if e["type"] != &"zone_changed":
 			continue
-		var label := String(e["result"])
+		var z := b.content.zone(e["zone"])
+		var zone_name := z.display_name if z != null else "Zone"
 		match e["result"]:
+			&"new":
+				out.append(zone_name)
 			&"level", &"weaken":
-				label = "%s → %s" % ["level up" if e["result"] == &"level" else "weakens", ROMAN[clampi(int(e["level"]), 1, 3) - 1]]
+				out.append("%s %s → %s" % [zone_name, "level up" if e["result"] == &"level" else "weakens", ROMAN[clampi(int(e["level"]), 1, 3) - 1]])
 			&"cancel":
-				label = "cancels"
+				out.append("%s cancels" % zone_name)
 			&"replace":
-				label = "replaces"
-		if not counts.has(label):
-			order.append(label)
-		counts[label] = int(counts.get(label, 0)) + 1
-	var parts: PackedStringArray = []
-	for label: String in order:
-		parts.append("%d %s" % [counts[label], label])
-	return ", ".join(parts)
+				out.append("%s replaces" % zone_name)
+			_:
+				out.append("%s %s" % [zone_name, e["result"]])
+	return _merge(out)
 
 
 static func _briefs(b: Battle, events: Array) -> Array[String]:
@@ -835,9 +834,7 @@ static func preview_lines(b: Battle, p: Dictionary) -> Array[String]:
 		out.append("✗ " + String(p["error"]))
 		return out
 	var after: Battle = p["after"]
-	var zones := _zone_summary(p["events"])
-	if zones != "":
-		out.append(zones)
+	out.append_array(_zone_lines(after, p["events"]))
 	out.append_array(_briefs(after, p["events"]))
 	var fired: Array = p["forecast"]
 	if not fired.is_empty():

@@ -15,6 +15,7 @@
 script = ExtResource("1")
 id = &"elder_treant"
 display_name = "Elder Treant"
+body = "treant"
 kin = 6
 aspect = 1
 hp = 8

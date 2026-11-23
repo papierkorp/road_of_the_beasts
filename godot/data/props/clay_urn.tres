@@ -15,5 +15,6 @@ prop_class = "burst"
 aftermath = Array[ExtResource("1_82kgq")]([SubResource("Resource_g4kdh")])
 ground_left = &"plain"
 color = Color(0.72, 0.5, 0.36, 1)
+figure = "urn"
 description = "Destroyed: 1 damage to monsters on the 8 neighbouring squares. Leaves Plain."
 internal_calc_cost = 12.0

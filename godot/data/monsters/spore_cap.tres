@@ -15,6 +15,7 @@
 script = ExtResource("1")
 id = &"spore_cap"
 display_name = "Spore Cap"
+body = "mushroom"
 kin = 6
 aspect = 1
 hp = 6

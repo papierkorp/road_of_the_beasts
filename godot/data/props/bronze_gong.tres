@@ -17,5 +17,6 @@ hp = 2
 aftermath = Array[ExtResource("1_mvt2v")]([SubResource("Resource_rod65")])
 ground_left = &"plain"
 color = Color(0.76, 0.6, 0.26, 1)
+figure = "gong"
 description = "Destroyed: monsters on the 8 neighbouring squares are pushed 1 square away. Leaves Plain."
 internal_calc_cost = 12.0

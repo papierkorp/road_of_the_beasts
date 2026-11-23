@@ -15,6 +15,7 @@
 script = ExtResource("1")
 id = &"rift_stalker"
 display_name = "Rift Stalker"
+body = "stalker"
 kin = 7
 aspect = 2
 hp = 5

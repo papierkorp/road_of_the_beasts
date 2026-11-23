@@ -35,6 +35,9 @@ extends Resource
 @export var ground_left: StringName = &""
 @export var ground_left_level: int = 1
 @export var color: Color = Color(0.6, 0.58, 0.52)
+## The figure the prop is drawn as (`PropBody`); look only, no rule reads it. `auto`: a plate for a walkable prop,
+## a block for any other.
+@export_enum("auto", "tablet", "bamboo", "beam", "urn", "wall", "screen", "brazier", "gong", "drum", "column", "lantern", "tree", "lion", "idol", "bell", "banner", "rune", "spikes", "mine", "vortex") var figure: String = "auto"
 @export_multiline var description: String = ""
 
 

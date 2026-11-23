@@ -21,6 +21,7 @@
 script = ExtResource("1")
 id = &"blaze_tiger"
 display_name = "Blaze Tiger"
+body = "tiger"
 reference_shape = 3
 pace = 2.2
 move = 5

@@ -21,6 +21,7 @@
 script = ExtResource("1")
 id = &"thorn_mites"
 display_name = "Thorn Mites"
+body = "mites"
 kin = 3
 aspect = 2
 reference_shape = 6

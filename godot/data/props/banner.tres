@@ -18,5 +18,6 @@ hp = 2
 aura = Array[ExtResource("2_rhehm")]([SubResource("Resource_45cyu")])
 ground_left = &"rubble"
 color = Color(0.4, 0.66, 0.9, 1)
+figure = "banner"
 description = "Orthogonal neighbours get haste 1. Leaves Rubble."
 internal_calc_cost = 8.0

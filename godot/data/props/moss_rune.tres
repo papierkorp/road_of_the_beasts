@@ -23,4 +23,5 @@ creatable_by_skill = false
 aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
 ground_left = &""
 color = Color(0.45, 0.78, 0.45, 1)
+figure = "rune"
 description = "Button square (board experiment, 2026-11-15). Walkable; no damage. Collected (a monster enters it): lays Mossbed on the 3×3 block around it; the rune is used up."

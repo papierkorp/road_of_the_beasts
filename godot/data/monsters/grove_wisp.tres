@@ -21,6 +21,7 @@
 script = ExtResource("1")
 id = &"grove_wisp"
 display_name = "Grove Wisp"
+body = "wisp"
 kin = 4
 aspect = 2
 reference_shape = 3

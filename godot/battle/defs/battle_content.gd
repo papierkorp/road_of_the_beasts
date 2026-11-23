@@ -276,7 +276,7 @@ static func _describe(res: Resource) -> String:
 	for p in res.get_property_list():
 		if not (p["usage"] & PROPERTY_USAGE_SCRIPT_VARIABLE) or not (p["usage"] & PROPERTY_USAGE_STORAGE):
 			continue
-		if p["name"] == "content_status" or p["name"] == "internal_calc_cost" or p["name"] == "reference_shape":
+		if p["name"] == "content_status" or p["name"] == "internal_calc_cost" or p["name"] == "reference_shape" or p["name"] == "figure" or p["name"] == "body":
 			continue                          # labels and authoring numbers are not rules
 		var v = res.get(p["name"])
 		parts.append("%s=%s" % [p["name"], _describe_value(v)])

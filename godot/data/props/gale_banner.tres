@@ -20,5 +20,6 @@ layer = "air"
 hp = 2
 aura = Array[ExtResource("2_mc3uq")]([SubResource("Resource_vftcs")])
 color = Color(0.6, 0.9, 0.8, 1)
+figure = "banner"
 description = "Air layer only: air-layer monsters on orthogonal neighbours get quicken 1."
 internal_calc_cost = 10.0

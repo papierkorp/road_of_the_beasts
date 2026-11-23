@@ -14,6 +14,9 @@ enum Kin { BEAST, WINGED, SCALED, SWARM, SPIRIT, STONE, FLORA, VOID }
 @export var kin: Kin = Kin.BEAST
 ## Look and overworld material family only; no battle rule reads it (aspects are removed, T01).
 @export var aspect: Aspect.Type = Aspect.Type.FORCE
+## The body the species is drawn with, one of the bodies of its Kin (`MonsterBody.BODIES`); `auto`: the first of
+## the Kin. Look only: no battle rule reads it.
+@export_enum("auto", "tiger", "wolf", "bear", "hawk", "moth", "lizard", "turtle", "serpent", "wasps", "mites", "ghost", "wisp", "shade", "golem", "colossus", "treant", "mushroom", "eye", "stalker", "maw") var body: String = "auto"
 
 @export_group("Reference individual (gdd_monsters §4.1)")
 ## The stat shape (frame, gdd_monsters §2.2) the reference stats below were built with: an

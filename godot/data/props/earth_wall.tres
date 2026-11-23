@@ -15,4 +15,5 @@ solid = true
 
 ground_left = &""
 color = Color(0.5, 0.42, 0.32, 1)
+figure = "wall"
 description = "Solid: blocks movement and Strike lines. Does nothing else."

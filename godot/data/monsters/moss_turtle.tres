@@ -21,6 +21,7 @@
 script = ExtResource("1")
 id = &"moss_turtle"
 display_name = "Moss Turtle"
+body = "turtle"
 kin = 2
 aspect = 2
 reference_shape = 2

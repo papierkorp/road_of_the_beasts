@@ -17,6 +17,7 @@ hp = 2
 aftermath = Array[ExtResource("1_4q4fx")]([SubResource("Resource_sllox")])
 ground_left = &"plain"
 color = Color(0.56, 0.7, 0.36, 1)
+figure = "bamboo"
 description = "Destroyed: 1 damage to monsters on the 4 cardinal neighbours. Leaves Plain."
 spiky = true
 internal_calc_cost = 8.0

@@ -11,4 +11,5 @@ display_name = "Beam"
 creatable_by_skill = false
 ground_left = &"plain"
 color = Color(0.56, 0.4, 0.28, 1)
+figure = "beam"
 description = "Child prop of the Pagoda Column. Leaves Plain."

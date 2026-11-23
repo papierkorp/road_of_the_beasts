@@ -11,5 +11,6 @@ display_name = "Paper Lantern"
 prop_class = "residue"
 ground_left = &"lava"
 color = Color(0.95, 0.6, 0.3, 1)
+figure = "lantern"
 description = "Destroyed: leaves Lava I."
 internal_calc_cost = 8.0

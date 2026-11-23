@@ -73,6 +73,25 @@ func test_a_thorn_idol_answers_every_hit_it_survives() -> void:
 	assert_array([H.unit(b, 0).hp, H.unit(b, 1).hp]).is_equal([5, 4])
 
 
+func test_a_temple_bell_pushes_its_neighbours_away_at_every_hit_it_survives() -> void:
+	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9, "ap": 5, "skills": [H.strike()]}], [1, Vector2i(2, 1)], [1, Vector2i(4, 2)], [1, Vector2i(6, 6)]])
+	var bell := b.add_prop(&"temple_bell", Vector2i(3, 3))
+	b.begin()
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})                   # 2 damage to the bell, 1 HP left; the Strike pushes it to (3,2)
+	assert_that(bell.pos).is_equal(Vector2i(3, 2))
+	assert_int(bell.hp).is_equal(1)
+	assert_that(H.unit(b, 1).pos).is_equal(Vector2i(1, 0))                # diagonal neighbour of the bell: pushed diagonally away
+	assert_that(H.unit(b, 2).pos).is_equal(Vector2i(5, 2))
+	assert_that(H.unit(b, 0).pos).is_equal(Vector2i(3, 4))                # the striker is out of its shape by then
+	assert_array([H.unit(b, 1).hp, H.unit(b, 2).hp, H.unit(b, 3).hp]).is_equal([5, 5, 5])   # a push, no damage
+	BattleExperiment.once_per_turn = false
+	b.relocate(H.unit(b, 0), Vector2i(3, 3))
+	b.relocate(H.unit(b, 3), Vector2i(4, 1))
+	b.apply({"type": &"skill", "slot": 0, "dir": H.UP})                   # destroyed: it rings no more
+	assert_object(b.board.at(Vector2i(3, 2)).prop).is_null()
+	assert_that(H.unit(b, 3).pos).is_equal(Vector2i(4, 1))
+
+
 func test_a_brazier_burns_its_cardinal_neighbours_at_every_round_end() -> void:
 	var b := H.battle([[0, Vector2i(3, 4), {"pace": 1.9}], [1, Vector2i(4, 2)], [1, Vector2i(2, 3)]])
 	b.add_prop(&"ember_brazier", Vector2i(3, 3))

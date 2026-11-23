@@ -1,7 +1,8 @@
 class_name BattleView
 extends Node3D
 ## 3D presentation of a Battle: orbit camera (orthographic), shadows, glow, tiles, monsters,
-## props, zone/Surge/highlight overlays, direction arrows and small animations.
+## props, zone/Surge/highlight overlays, direction arrows and small animations. The bodies of the monsters
+## (`MonsterBody`) and the figures of the props (`PropBody`) move with the events of the battle (`_on_event`).
 ## It only reads the battle state and never decides a rule (gdd_battle §7.1).
 ##
 ## Camera: Q / E rotate by 90°, mouse wheel zooms, middle-mouse drag orbits freely (left and right turn it; with
@@ -47,6 +48,14 @@ var _zoom_target := 8.5
 ## Screen height (in viewport units) the HUD's bar takes at the bottom edge: the board is centred in the room above it.
 var bottom_room := 0.0
 var _time := 0.0
+## Seconds the answers to an attack (hit, fall) wait in this frame, so the blow lands first.
+var _answer_delay := 0.0
+const MOVE_TIME := 0.28
+## What the events said about props since the last refresh: square -> seconds to wait before the prop there falls
+## apart, and square a prop was moved to -> square it came from.
+var _prop_ends := {}
+var _prop_moves := {}
+var _built := false
 
 
 func build(p_battle: Battle) -> void:
@@ -61,7 +70,9 @@ func build(p_battle: Battle) -> void:
 	_make_compass()
 	for id in battle.roster:
 		_pieces[id] = _make_monster(battle.units[id])
+	battle.event_emitted.connect(_on_event)
 	refresh()
+	_built = true
 
 
 func _build_environment() -> void:
@@ -214,11 +225,7 @@ func _process(delta: float) -> void:
 		if t["surge_on"]:
 			var c: Color = t["surge_col"]
 			(t["surge"]["mat"] as StandardMaterial3D).albedo_color = Color(c.r * 1.5, c.g * 1.5, c.b * 1.5, pulse)
-	var i := 0
-	for id in _pieces:
-		var body: Node3D = (_pieces[id] as Node3D).get_node("Body")
-		body.position.y = 0.4 + 0.03 * sin(_time * 2.0 + i * 1.7)
-		i += 1
+	_answer_delay = 0.0
 
 
 ## A number that rises and fades above a square (damage, blocked, ...).
@@ -348,36 +355,22 @@ func _make_tile(p: Vector2i) -> Dictionary:
 		"zone": _make_zone(root), "surge": _make_overlay(root), "hl": _make_overlay(root),
 		"arrow": _make_arrow(root),
 		"surge_on": false, "surge_col": Color.WHITE,
-		"prop_key": "", "prop_node": null, "air_prop_key": "", "air_prop_node": null,
+		"prop_uid": -1, "prop_node": null, "air_prop_uid": -1, "air_prop_node": null,
 	}
 
 
-## A simple body per Kin; the colour is a look hint of the species, never a rule.
+## A body per Kin (`MonsterBody`); the colour is a look hint of the species, never a rule.
 func _make_monster(u: BattleUnit) -> Node3D:
 	var root := Node3D.new()
 	root.name = str(u.id)
 	var scale_f := float(u.size)
-	var mi := MeshInstance3D.new()
-	mi.name = "Body"
-	mi.mesh = MonsterLook.kin_mesh(u.kin())
-	mi.position.y = 0.4
-	mi.scale = Vector3.ONE * (1.0 if u.size == 1 else 1.7)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = (MonsterLook.aspect_color(u.sheet.look.aspect) if u.sheet.look != null else Color(0.62, 0.62, 0.66)).lerp(MUTE, 0.28)
-	mat.roughness = 0.55
-	if u.kin() == MonsterDef.Kin.SPIRIT:
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color.a = 0.75
-	mi.material_override = mat
-	root.add_child(mi)
-	if u.kin() == MonsterDef.Kin.SWARM:
-		for off in [Vector3(0.22, -0.05, 0.12), Vector3(-0.2, -0.08, 0.16)]:
-			var extra := MeshInstance3D.new()
-			extra.mesh = mi.mesh
-			extra.material_override = mat
-			extra.position = off
-			extra.scale = Vector3.ONE * 0.7
-			mi.add_child(extra)
+	var color := (MonsterLook.aspect_color(u.sheet.look.aspect) if u.sheet.look != null else Color(0.62, 0.62, 0.66)).lerp(MUTE, 0.28)
+	var body := MonsterBody.create(u.kin(), color, u.sheet.look.body if u.sheet.look != null else "auto")
+	body.name = "Body"
+	body.scale = Vector3.ONE * (1.0 if u.size == 1 else 1.7)
+	body.face(-Vector2(_body_pos(u).x, _body_pos(u).z), true)        # toward the middle of the board
+	body.fell.connect(func() -> void: root.visible = false)
+	root.add_child(body)
 
 	var disc := MeshInstance3D.new()
 	var cyl := CylinderMesh.new()
@@ -409,24 +402,110 @@ func _make_monster(u: BattleUnit) -> Node3D:
 	return root
 
 
+# ---------- bodies ----------
+
+func _body(id: Variant) -> MonsterBody:
+	if not _pieces.has(id):
+		return null
+	return (_pieces[id] as Node3D).get_node("Body")
+
+
+## The body turns to the middle of `cells`, unless they are its own squares.
+func _face_cells(u: BattleUnit, body: MonsterBody, cells: Array) -> void:
+	if cells.is_empty():
+		return
+	var mid := Vector2.ZERO
+	for c: Vector2i in cells:
+		mid += Vector2(c)
+	var own := Vector2(u.pos) + Vector2.ONE * (u.size - 1) * 0.5
+	body.face(mid / cells.size() - own)
+
+
+## The bodies of monsters and props answer the events of the battle. Nothing here changes the battle.
+func _on_event(e: Dictionary) -> void:
+	match e["type"]:
+		&"strike":
+			var b := _body(e["who"])
+			if b != null:
+				if e["dir"] != Vector2i.ZERO:
+					b.face(Vector2(e["dir"]))
+				else:
+					_face_cells(battle.units[e["who"]], b, e["cells"])
+				b.attack()
+				_answer_delay = MonsterBody.strike_time()
+		&"cast", &"surge_declared":
+			var b := _body(e["who"])
+			if b != null:
+				_face_cells(battle.units[e["who"]], b, e["cells"])
+				b.cast()
+				_answer_delay = MonsterBody.strike_time()
+		&"moved":
+			var b := _body(e["who"])
+			if b != null:
+				b.face(Vector2(e["to"] - e["from"]))
+				b.walk(MOVE_TIME)
+		&"retreated":
+			var b := _body(e["who"])
+			if b != null:
+				b.walk(MOVE_TIME)
+		&"displaced":
+			var b := _body(e["who"])
+			if b != null:
+				b.pushed(Vector2(e["to"] - e["from"]), MOVE_TIME)
+		&"damage":
+			var b := _body(e["target"])
+			if b != null and int(e["amount"]) > 0:
+				b.hit(_answer_delay)
+		&"healed":
+			var b := _body(e["target"])
+			if b != null:
+				b.healed(_answer_delay)
+		&"defeated":
+			var b := _body(e["who"])
+			if b != null:
+				b.defeated(_answer_delay + 0.12)
+		&"prop_hit":
+			var f := _prop_body(e["pos"], e["prop"])
+			if f != null:
+				f.hit(_answer_delay)
+		&"trap_sprung":
+			var f := _prop_body(e["pos"], e["prop"])
+			if f != null:
+				f.spring(_answer_delay)
+			_prop_ends[e["pos"]] = _answer_delay + 0.2
+		&"prop_destroyed", &"prop_lapsed":
+			if not _prop_ends.has(e["pos"]):
+				_prop_ends[e["pos"]] = _answer_delay + 0.08
+		&"prop_moved":
+			_prop_moves[e["to"]] = e["from"]
+
+
 # ---------- refresh ----------
 
 func refresh() -> void:
 	for p in _tiles:
 		_update_tile(p, _tiles[p], battle.board.at(p))
+	_prop_ends.clear()
+	_prop_moves.clear()
 	for id in _pieces:
 		var u: BattleUnit = battle.units[id]
 		var node: Node3D = _pieces[id]
-		node.visible = u.is_alive()
+		var body: MonsterBody = node.get_node("Body")
 		if not u.is_alive():
 			node.remove_meta("target")
+			if not body.down:                         # a body that falls hides itself when it is done
+				node.visible = false
+			(node.get_node("Label") as Label3D).text = "%s\n0/%d" % [u.display_name(), u.max_hp]
 			continue
+		node.visible = true
+		if body.down:
+			body.stand_up()
 		var target := _body_pos(u) + Vector3(0, _body_top(u), 0)
 		if not node.has_meta("target"):
 			node.position = target
 		elif node.get_meta("target") != target:
 			var tw := create_tween()
-			tw.tween_property(node, "position", target, 0.28).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tw.tween_property(node, "position", target, MOVE_TIME).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		node.set_meta("target", target)
 		var marks := ""
 		if not battle.surges_of(id).is_empty():
@@ -567,84 +646,55 @@ func _update_tile(p: Vector2i, t: Dictionary, cell: BoardCell) -> void:
 	label.modulate = SIDE_COLORS[cell.owner_side].darkened(0.45) if _vein_owned(cell) else UiTheme.INK
 	label.text = lines.strip_edges()
 	label.position.y = h + 0.12
-	_update_prop(t, "prop", cell.prop, h)
-	_update_prop(t, "air_prop", cell.air_prop if cell.air_prop != cell.prop else null, h + AIR_H)
+	_update_prop(p, t, "prop", cell.prop, h)
+	_update_prop(p, t, "air_prop", cell.air_prop if cell.air_prop != cell.prop else null, h + AIR_H)
 
 
-## Rebuilds the node of a prop when its identity or HP changed. The shape follows the prop's
-## catalogue class; a both-layer prop is drawn as a tall column through both layers.
-func _update_prop(t: Dictionary, slot: String, prop: BoardProp, y: float) -> void:
-	var key := "" if prop == null else "%d:%d" % [prop.uid, prop.hp]
-	if key == t[slot + "_key"]:
+## The figure of a prop (`PropBody`) follows the board: a new prop grows out of its square or slides over from
+## the square it was moved from, a destroyed one falls apart; HP and wear are updated in place.
+func _update_prop(p: Vector2i, t: Dictionary, slot: String, prop: BoardProp, y: float) -> void:
+	var uid := -1 if prop == null else prop.uid
+	var node: Node3D = t[slot + "_node"]
+	if uid != t[slot + "_uid"]:
+		t[slot + "_uid"] = uid
+		if node != null:
+			var old: PropBody = node.get_node("Body")
+			(node.get_node("Label") as Label3D).visible = false
+			if _prop_ends.has(p):
+				old.fell.connect(node.queue_free)
+				old.fall(_prop_ends[p])
+			else:
+				node.queue_free()
+			node = null
+		if prop != null:
+			node = Node3D.new()
+			var body := PropBody.create(prop.def, prop.def.color.lerp(MUTE, 0.25))
+			body.name = "Body"
+			node.add_child(body)
+			var l := _make_label(node, 22)
+			l.name = "Label"
+			l.position.y = body.height + 0.25
+			(t["root"] as Node3D).add_child(node)
+			if _prop_moves.has(p):
+				body.slide_from(_cell_pos(_prop_moves[p]) - _cell_pos(p), MOVE_TIME)
+			elif _built:
+				body.appear(_answer_delay)
+		t[slot + "_node"] = node
+	if node == null:
 		return
-	t[slot + "_key"] = key
-	if t[slot + "_node"] != null:
-		(t[slot + "_node"] as Node).queue_free()
-		t[slot + "_node"] = null
-	if prop == null:
-		return
-	var def := prop.def
-	var root := Node3D.new()
-	root.position.y = y
-	var mi := MeshInstance3D.new()
-	var mat := StandardMaterial3D.new()
-	mat.roughness = 0.85
-	mat.albedo_color = (def.color.darkened(0.35) if prop.hp <= 0 else def.color).lerp(MUTE, 0.25)
-	var height := 0.6
-	match def.prop_class if def.solid else "walkable":
-		"walkable":                           # a flat plate a monster can stand on
-			var plate := CylinderMesh.new()
-			plate.top_radius = 0.4
-			plate.bottom_radius = 0.42
-			plate.height = 0.06
-			mi.mesh = plate
-			height = 0.06
-		"aura":
-			var col := CylinderMesh.new()
-			col.top_radius = 0.16
-			col.bottom_radius = 0.26
-			col.height = 0.9
-			mi.mesh = col
-			height = 0.9
-			mat.emission_enabled = true
-			mat.emission = def.color
-			mat.emission_energy_multiplier = 0.5
-		"burst":
-			var sp := SphereMesh.new()
-			sp.radius = 0.3
-			sp.height = 0.6
-			mi.mesh = sp
-		"residue":
-			var cone := CylinderMesh.new()
-			cone.top_radius = 0.0
-			cone.bottom_radius = 0.32
-			cone.height = 0.85
-			mi.mesh = cone
-			height = 0.85
-		"push":
-			var disc := CylinderMesh.new()
-			disc.top_radius = 0.36
-			disc.bottom_radius = 0.36
-			disc.height = 0.3
-			mi.mesh = disc
-			height = 0.3
-		"spawn":
-			var pillar := CylinderMesh.new()
-			pillar.top_radius = 0.25
-			pillar.bottom_radius = 0.28
-			pillar.height = 1.1
-			mi.mesh = pillar
-			height = 1.1
-		_:
-			var box := BoxMesh.new()
-			box.size = Vector3(0.62, 0.52, 0.62) if def.layer != "both" else Vector3(0.7, AIR_H + 0.6, 0.7)
-			mi.mesh = box
-			height = box.size.y
-	mi.position.y = height / 2.0
-	mi.material_override = mat
-	root.add_child(mi)
-	var l := _make_label(root, 22)
-	l.position.y = height + 0.25
-	l.text = "%s %d/%d" % [def.display_name, prop.hp, def.hp]
-	(t["root"] as Node3D).add_child(root)
-	t[slot + "_node"] = root
+	node.position.y = y
+	(node.get_node("Label") as Label3D).text = "%s %d/%d" % [prop.def.display_name, prop.hp, prop.def.hp]
+	(node.get_node("Body") as PropBody).set_worn(prop.hp <= 0)
+
+
+## The figure of the prop `id` on square `p`, or null.
+func _prop_body(p: Vector2i, id: StringName) -> PropBody:
+	if not _tiles.has(p):
+		return null
+	for slot in ["prop", "air_prop"]:
+		var cell := battle.board.at(p)
+		var prop: BoardProp = cell.prop if slot == "prop" else cell.air_prop
+		var node: Node3D = _tiles[p][slot + "_node"]
+		if node != null and prop != null and prop.def.id == id and prop.uid == _tiles[p][slot + "_uid"]:
+			return node.get_node("Body")
+	return null

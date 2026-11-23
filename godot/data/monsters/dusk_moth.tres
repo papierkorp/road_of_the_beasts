@@ -21,6 +21,7 @@
 script = ExtResource("1")
 id = &"dusk_moth"
 display_name = "Dusk Moth"
+body = "moth"
 kin = 1
 aspect = 3
 reference_shape = 1

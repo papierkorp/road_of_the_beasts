@@ -19,4 +19,5 @@ hp = 2
 aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
 ground_left = &"rubble"
 color = Color(0.36, 0.5, 0.72, 1)
+figure = "drum"
 description = "Round end: monsters on the 4 cardinal neighbours are pushed 1 square away. Leaves Rubble."

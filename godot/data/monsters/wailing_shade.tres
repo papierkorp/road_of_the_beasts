@@ -15,6 +15,7 @@
 script = ExtResource("1")
 id = &"wailing_shade"
 display_name = "Wailing Shade"
+body = "shade"
 kin = 4
 aspect = 2
 hp = 4

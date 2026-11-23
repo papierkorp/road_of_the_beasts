@@ -23,4 +23,5 @@ creatable_by_skill = false
 aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
 ground_left = &""
 color = Color(0.6, 0.5, 0.35, 1)
+figure = "rune"
 description = "Button square (board experiment, 2026-11-15). Walkable; no damage. Collected: an Earth Wall on each free cardinal neighbour; the rune is used up."

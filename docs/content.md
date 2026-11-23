@@ -59,6 +59,7 @@ Every zone a skill creates lasts 2 rounds.
 | Ember Brazier | 2 | — | end of the turn of a monster in its shape | 1 damage to that monster | the 4 neighbours |
 | Storm Drum | 2 | — | end of the round · destroyed | pushes 1 square away from it · leaves Rubble | the 4 neighbours · own square |
 | Bronze Gong | 2 | — | destroyed | pushes 1 square away from it | the 8 squares around it |
+| Temple Bell *(experiment, draft values)* | 3 | — | hit | pushes 1 square away from it | the 8 squares around it |
 | Vortex Urn | 1 | — | destroyed | pulls 1 square toward its square | the 8 squares around it |
 | Paper Lantern | 1 | — | destroyed | leaves Lava I | own square |
 | Peach Tree | 2 | — | destroyed | leaves Mossbed | own square |
@@ -73,7 +74,7 @@ Every zone a skill creates lasts 2 rounds.
 | Wall Rune | 1 | walkable, board only | entered | creates an Earth Wall on every free square | the 4 neighbours |
 
 - **Created by skills:** Bamboo Stand, Bronze Gong, Earth Wall, Thorn Idol, Ember Brazier, Storm Drum, Clay Urn, Spike Trap, Vortex Trap.
-- The three runes carry the status `experiment`.
+- The three runes and the Temple Bell carry the status `experiment`; the Temple Bell is placed only by hand (map editor, skill builder).
 
 ## 4. Skills
 

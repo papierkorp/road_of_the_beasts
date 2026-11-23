@@ -16,4 +16,5 @@ prop_class = "push"
 aftermath = Array[ExtResource("1_pa")]([SubResource("Resource_pull")])
 ground_left = &"plain"
 color = Color(0.35, 0.45, 0.7, 1)
+figure = "urn"
 description = "Destroyed: monsters on the 8 neighbouring squares are pulled 1 square toward its square; the first to arrive takes it, the others collide. Leaves Plain."

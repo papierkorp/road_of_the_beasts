@@ -21,6 +21,7 @@
 script = ExtResource("1")
 id = &"ember_hawk"
 display_name = "Ember Hawk"
+body = "hawk"
 kin = 1
 aspect = 1
 reference_shape = 1

@@ -125,7 +125,7 @@ func test_the_cast_preview_is_a_few_merged_lines() -> void:
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 1, "anchor": Vector2i(0, 5)}))).is_equal(["Lava ×3"])
 	# Strike with a push; a zone; an illegal aim
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 2, "dir": H.UP}))).is_equal(["Wolf stays"])
-	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 3, "anchor": Vector2i(3, 4)}))).is_equal(["3 new"])
+	assert_array(BattleText.preview_lines(b, b.preview({"type": &"skill", "slot": 3, "anchor": Vector2i(3, 4)}))).is_equal(["Slowing Zone ×3"])
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"step", "to": Vector2i(2, 5)}))).is_empty()
 	assert_array(BattleText.preview_lines(b, b.preview({"type": &"step", "to": Vector2i(3, 4)}))).is_equal(
 		["✗ Step moves exactly 1 square onto a free, unblocked square"])

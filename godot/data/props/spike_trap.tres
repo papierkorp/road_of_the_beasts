@@ -21,4 +21,5 @@ solid = false
 aftermath = Array[ExtResource("1_am")]([SubResource("Resource_act")])
 ground_left = &""
 color = Color(0.62, 0.62, 0.66, 1)
+figure = "spikes"
 description = "Walkable trap. Entered: 2 damage to the monster that came onto it; the trap is used up."

@@ -461,12 +461,32 @@ pressure in `BattleTurn`. No other module asks for a concrete monster, skill, pr
     - *Board:* `assets/shaders/tile.gdshader` paints a square: a wash of the ground's colour, an ink edge and one
       sign for what the ground does (rings: a Dragon Vein; points inward: acts on entering; points outward: on
       leaving; a ring: at the end of a turn; `BattleView._ground_mark`). `assets/shaders/zone.gdshader` paints a zone
-      as a hatched wash with a brush arrow in its direction (rings on the centre of a pull). Bodies and props keep
-      their simple shapes; their colours are taken a step toward a warm grey (`BattleView.MUTE`).
+      as a hatched wash with a brush arrow in its direction (rings on the centre of a pull). The
+      colours of bodies and props are taken a step toward a warm grey (`BattleView.MUTE`).
+    - *Bodies:* `shared/monster_body.gd` builds the body of a monster from code, no model files: simple parts in
+      the colour of its aspect (`MonsterLook.aspect_color`), each part with an ink line
+      (`assets/shaders/ink_outline.gdshader`; materials, parts and the flash are shared with the props in
+      `shared/ink_figure.gd`). Every Kin has two or three bodies (`MonsterBody.BODIES`): Beast tiger, wolf, bear ·
+      Winged hawk, moth · Scaled lizard, turtle, serpent · Swarm wasps, mites · Spirit ghost, wisp, shade · Stone
+      golem, colossus · Flora treant, mushroom · Void eye, stalker, maw. A species names its body in its data
+      (`MonsterDef.body`; `auto` is the first of its Kin); the field is a look and not part of the content
+      fingerprint. The body stands, breathes or floats by itself; the battle view
+      plays its movements from the events of the battle (`BattleView._on_event`): `moved` walk, `strike` attack,
+      `cast` and `surge_declared` cast, `damage` flinch and pale flash, `displaced` lean against the push, `healed`
+      jump and jade flash, `defeated` topple and shrink. The rules resolve at once; what an attack causes is shown
+      `MonsterBody.strike_time()` later. `tools/body_preview.gd` shows every body and every movement.
+    - *Props:* `battle/view/prop_body.gd` builds the figure of a prop the same way, in the colour of the prop. Which
+      figure a prop has is its data (`PropDef.figure`: tablet, bamboo, beam, urn, wall, screen, brazier, gong, drum,
+      column, lantern, tree, lion, idol, bell, banner, rune, spikes, mine, vortex; `auto` is a plate for a walkable prop
+      and a block for any other); the field is a look and not part of the content fingerprint. Flames, flags,
+      crowns and stalks sway, the rings of a vortex turn. From the events: `prop_placed` the figure grows out of
+      its square, `prop_hit` it shakes and flashes pale, `prop_moved` it slides over from its old square,
+      `trap_sprung` it snaps up in cinnabar, `prop_destroyed` and `prop_lapsed` it falls flat and shrinks; a prop
+      without HP that still stands is darker. `tools/body_preview.gd -- props` shows every prop of the game.
     - *Builders of the hub (`overworld/ui/hub_ui.gd`):* `monster_head` (Kin sign, name, stats with signs),
       `monster_line` (the same in one line), `fight_view` (a battleground painted small by
       `overworld/ui/mini_board.gd` beside its opponents), `tile` (a tile to pick with a sign), `swatch`, `chip`, `skill_line`, `signed`, `item_sign`.
-    - *Not drawn:* the 3D bodies of monsters and props, a picture per species, backgrounds per building, sounds.
+    - *Not drawn:* a picture per species, backgrounds per building, sounds.
 - **Rules of this battle** (pause menu of the battle screen, `BattleHud._show_rules`): a window with every switch
   of `BattleExperiment`, first what differs from the build default, then the defaults in use
   (`BattleExperiment.settings_lines`); the text can be copied. `sim.gd` prints the same two lists with every run block.

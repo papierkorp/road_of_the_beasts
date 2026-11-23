@@ -19,5 +19,6 @@ hp = 3
 aftermath = Array[ExtResource("1_q4nol")]([SubResource("Resource_uw7ex")])
 ground_left = &"rubble"
 color = Color(0.66, 0.3, 0.26, 1)
+figure = "column"
 description = "Destroyed: a Beam appears on each free cardinal neighbour. Leaves Rubble."
 internal_calc_cost = 14.0

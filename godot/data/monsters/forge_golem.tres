@@ -21,6 +21,7 @@
 script = ExtResource("1")
 id = &"forge_golem"
 display_name = "Forge Golem"
+body = "golem"
 kin = 5
 aspect = 1
 reference_shape = 2

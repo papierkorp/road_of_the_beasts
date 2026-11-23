@@ -12,6 +12,7 @@ hp = 3
 heavy = true
 ground_left = &"rubble"
 color = Color(0.6, 0.6, 0.58, 1)
+figure = "lion"
 description = "Heavy: cannot be moved, takes no collision damage. Leaves Rubble."
 spiky = true
 internal_calc_cost = 6.0
