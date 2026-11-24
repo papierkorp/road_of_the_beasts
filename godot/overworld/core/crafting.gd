@@ -102,6 +102,8 @@ static func lay_problem(game: GameState, f: Fight, key: String, part: String) ->
 		return "nothing to lay here"
 	if part_banned(game, part):
 		return "your vow forbids it"
+	if part == Fight.SEAL_PART and not f.allows_seal():
+		return "nothing is caught in the void"
 	var others := f.parts.size() - f.laid(Fight.SEAL_PART) - (1 if f.parts.has(key) and String(f.parts[key]) != Fight.SEAL_PART else 0)
 	if part != Fight.SEAL_PART and others >= f.carry:                # Seal Ground is laid beside the parts carried
 		return "you carry %d part(s) into a battle" % f.carry

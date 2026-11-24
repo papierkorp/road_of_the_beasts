@@ -9,14 +9,14 @@
 A monster the player owns is two layers: a fixed **species** and a unique **individual**.
 
 ```
-SPECIES     Kin · descriptive themes · default kit · learnable skills · species skill · blurb · art
+SPECIES     Kin · descriptive themes · default kit · learnable skills · blurb · art
 INDIVIDUAL  stat shape · stats · stage + sub-tier
             open slots · slot development and equipped skill per slot · current HP
 ```
 
 - **The battle only ever sees the finished sheet:** name, Kin, the six stats and the kit (Step plus up to 6 slots).
 - **Stat shape is individual, not species-wide:** two individuals of one species can play differently with the same kit.
-- Wild and newly caught monsters roll a shape weighted by their **Kin lean** ([§3](#3-kins)); rare off-lean rolls are prized finds. A monster from an egg is shaped by the player ([overworld.md §4.1](overworld.md#41-obtaining-monsters)).
+- Wild and newly caught monsters roll a shape weighted by their **Kin lean** ([§3](#3-kins)); rare off-lean rolls are prized finds. They fill their four slots from the learnable list of their species and take their breakthrough choices and development steps at random. A monster from an egg is shaped by the player ([overworld.md §4.1](overworld.md#41-obtaining-monsters)).
 - **Current HP** are full at the start of every battle ([vision.md §4](vision.md#4-where-battles-happen)).
 - Every monster is 1×1 and stands on the ground.
 
@@ -26,7 +26,7 @@ INDIVIDUAL  stat shape · stats · stage + sub-tier
 |---|---|
 | **Kin** (body) | its Kin trait, the skill groups it can learn, stat lean |
 | **Themes** (description) | free flavour and visual identity; no mechanical type, no eligibility rule |
-| **Species** | its learnable list, its species skill and its default kit |
+| **Species** | its learnable list and its default kit |
 | **Stat shape** (individual) | how its points are spread |
 | **Kit** | 4 slots at the start and up to 6, chosen by the player from the learnable list |
 
@@ -86,7 +86,7 @@ POINTS  every monster of a stage and sub-tier has the same number of points; a s
 
 ### 2.3 Shapes and Spending
 
-A monster **starts** with stats rolled by its stat shape; **afterwards the player decides** where each step's 5 points go (a free action; unspent points are kept).
+A wild or caught monster **starts** with stats rolled by its stat shape; **afterwards the player decides** where each step's 5 points go (a free action; unspent points are kept). A monster from an egg has no shape: the player spends every point ([overworld.md §4.1](overworld.md#41-obtaining-monsters)).
 
 | Shape | Feel |
 |---|---|
@@ -96,17 +96,16 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 | Caster | weak body, long Reach; works from behind the others |
 
 - **Viable from the start:** the points of the first step must pay for a monster that works with its starter kit. Progression expands a viable build rather than repairs it; several routes must be useful.
-- **Reshape:** pool all points and reroll by the new shape at the same number of points. Spending level-up points never changes the shape label. Item: [overworld.md §6.2](overworld.md#62-alchemy-and-pills).
+- **A shape is a table of weights:** the monster spends its points one purchase at a time, each drawn at random from the stats it can still pay for, by the weights of its shape. No stat is bought first and none is guaranteed. The lean of its Kin says how often each shape is rolled. Weights and leans: [content.md §7](content.md#7-kins).
+- **Reshape:** every stat point comes back and the player spends it anew. The shape label stays what the monster came with. Item: [overworld.md §6.2](overworld.md#62-pills).
 - **Stage rule:** a monster cannot exceed the player's **stage** (not the exact sub-tier).
-- How a shape splits the points at the roll is not defined.
 
 ## 3. Kins
 
 **Kin is what kind of creature it is.** It sets a trait, skill access and the stat lean. It changes nothing a skill does: no Strike effect, no damage multiplier. There is no weakness triangle, no element system and no attunement.
 
 - **Kin trait:** one innate property that no other Kin has. It takes no slot and changes how the monster deals with the board, never a damage number.
-- **Skill groups:** the groups are what a skill does or creates ([skills.md §3](skills.md#3-what-a-skill-does-and-creates)): Strike, movement, effect on the user, ground, zone, prop. A Kin can learn only some of them.
-- **Species skill:** every species has one skill or self buff that no other species can learn. It is on the learnable list from the start, fills a slot like any skill and may be left out.
+- **Skill groups:** the groups are what a skill does or creates ([skills.md §3](skills.md#3-what-a-skill-does-and-creates)): Strike, movement, effect on the user, ground, zone, prop. A Kin can learn only some of them. A skill that only lays things needs every group of what it creates.
 
 | Kin | Body fantasy | Stat lean |
 |---|---|---|
@@ -123,7 +122,7 @@ A monster **starts** with stats rolled by its stat shape; **afterwards the playe
 
 - **Void** monsters live in the void only and cannot be caught; the player gains one as an egg ([overworld.md §4.1](overworld.md#41-obtaining-monsters)).
 
-The **species learnable list** sets concrete skill access within the groups of its Kin. Drafts of the traits and the groups of each Kin: [content.md §7](content.md#7-kins); the species skills and the learnable lists are not defined.
+The **species learnable list** sets concrete skill access within the groups of its Kin. Drafts of the traits and the groups of each Kin: [content.md §7](content.md#7-kins); the learnable lists are not defined.
 
 ## 4. No Bloodline
 
@@ -131,34 +130,33 @@ A monster has no bloodline, no grade and no rank: two monsters of one species di
 
 ## 5. Growth
 
-**15 steps:** five stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens skills, never a stat value; what the tamer gains per stage stands in [overworld.md §5.1](overworld.md#51-stages). A monster never exceeds the player's stage.
+**15 steps:** five stages × three sub-tiers. Every step grants 5 freely spent stat points; a stage opens no stat value; what the tamer gains per stage stands in [overworld.md §5.1](overworld.md#51-stages). A monster never exceeds the player's stage.
 
 | # | Stage · sub-tier | Points | Also gained |
 |---|---|---|---|
 | 1 | Qi Gathering Lower | 25 | 4 slots |
 | 2 | Qi Gathering Middle | 30 | |
 | 3 | Qi Gathering High | 35 | next: only the void lifts it |
-| 4 | Foundation Lower | 40 | choice · +1 learnable skill |
+| 4 | Foundation Lower | 40 | choice |
 | 5 | Foundation Middle | 45 | |
 | 6 | Foundation High | 50 | |
-| 7 | Core Formation Lower | 55 | choice · +1 learnable skill |
+| 7 | Core Formation Lower | 55 | choice |
 | 8 | Core Formation Middle | 60 | |
 | 9 | Core Formation High | 65 | |
-| 10 | Nascent Soul Lower | 70 | choice · +1 learnable skill |
+| 10 | Nascent Soul Lower | 70 | choice |
 | 11 | Nascent Soul Middle | 75 | |
 | 12 | Nascent Soul High | 80 | |
-| 13 | Immortal Lower | 85 | choice · +1 learnable skill |
+| 13 | Immortal Lower | 85 | choice |
 | 14 | Immortal Middle | 90 | +1 slot-development step |
 | 15 | Immortal High | 95 | +1 slot-development step |
 
-- **The choice at a stage breakthrough:** the monster takes one of **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)), **Lore** (one skill of another species of its Kin joins what it can learn) and **Reshape** (its stat points are spent anew, [§2.3](#23-shapes-and-spending)). Every monster has the same choice.
+- **The choice at a stage breakthrough:** the monster takes one of **Breadth** (a new slot, up to 6), **Depth** (a development step for one slot, [skills.md §8](skills.md#8-development)), **Lore** (one skill of another species of its Kin joins what it can learn; offered is every skill such a species can learn and this one cannot) and **Reshape** (its stat points are spent anew, [§2.3](#23-shapes-and-spending)). Every monster has the same choice.
 - **Slot-development step** (steps 14 and 15): the monster develops one skill slot.
-- **Learnable skills:** the species list grows by one with each breakthrough from Foundation to Immortal.
 - Breakthrough trials: [overworld.md §5.2](overworld.md#52-the-breakthrough-trial).
 
 **A monster rises by battles won; there is no XP.**
 
-- **In the wild:** every wild monster defeated in a battle won leaves one rise. A rise lifts one monster of the team that fought and still stands, if the defeated monster was at its step or above. One rise per monster and battle, one step, never past High.
+- **In the wild:** every wild monster defeated in a battle won leaves one rise; a caught one leaves one too. A rise lifts one monster of the team that fought and still stands, if the defeated monster was at its step or above. One rise per monster and battle, one step, never past High.
 - **Who rises:** where the rises reach for every monster that could take one, each takes one; where they do not, the player chooses. A rise not given is lost with the next battle.
 - **In the void:** every monster that fought in a battle won there and still stands rises a step, whatever its step: also from High into the next stage, never past the stage of the tamer. The breakthrough trial lifts the tamer first, so the team that won it follows.
 - **By a pill:** a Growth pill of the Alchemist is one rise, never past High ([overworld.md §6.2](overworld.md#62-pills)).

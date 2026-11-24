@@ -26,8 +26,6 @@ func build(into: VBoxContainer) -> void:
 		if m.kit.size() < m.slots:
 			card.add_child(HubUi.label("%d free slot(s): choose from what it can learn.%s" % [m.slots - m.kit.size(), "" if m.fresh else " A choice is final."], 20, HubUi.GOOD))
 			for s in m.learnable():
-				if m.kit.has(s.id):
-					continue
 				var row := HubUi.row()
 				card.add_child(row)
 				row.add_child(HubUi.skill_line(s, "%s · %s" % [s.display_name, _kind(s)], GameSession.skill_text(s)))
@@ -78,7 +76,7 @@ func _slot(card: VBoxContainer, index: int, m: MonsterInstance, slot: int, s: Ba
 	if relearning == [index, slot]:
 		card.add_child(HubUi.label("A relearning pill: slot %d takes another skill. It keeps level %d; its options are chosen anew." % [slot + 1, m.slot_level(slot)], 17, HubUi.GOOD))
 		for other in m.learnable():
-			if m.kit.has(other.id):
+			if m.kit[slot] == other.id:
 				continue
 			var line := HubUi.row()
 			card.add_child(line)

@@ -179,6 +179,9 @@ func test_every_way_has_two_branches_and_nodes_the_build_reads() -> void:
 			if n["kind"] == "tamer":
 				assert_that(sid).is_equal(H.FORMATION)                 # tamer skills belong to the Formation alone
 				assert_object(content.tamer_skill(n["ref"])).is_not_null()
+			elif n["kind"] == "seal":
+				assert_that(sid).is_equal(H.FORMATION)                 # the options of Seal too
+				assert_bool(TamerSkillDef.SEAL_OPTIONS.has(String(n["ref"]))).is_true()
 			else:
 				for key: String in n["effects"]:
 					assert_bool(perks.has(key)).is_true()

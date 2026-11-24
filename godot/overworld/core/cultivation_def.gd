@@ -12,8 +12,8 @@ const DIR := "res://data/cultivation"
 @export var branches: Array = []
 ## {"id", "stage" (the tree it belongs to), "branch", "name", "cost": Insight, "needs": id of the node that must be
 ## bought first, or "", and either "kind": "tamer", "ref": tamer skill id, or "kind": "perk", "text", "effects":
-## {carry | bg_budget | drop | tamer_slots | pill_cap: number}}. A development step of a tamer
-## skill is a node by the rules, but is not built.
+## {carry | bg_budget | drop | tamer_slots | pill_cap: number}}, or "kind": "seal", "ref": an option of Seal
+## (TamerSkillDef.SEAL_OPTIONS), "text". Development steps of the other tamer skills are not built.
 @export var nodes: Array = []
 
 static var _all := {}

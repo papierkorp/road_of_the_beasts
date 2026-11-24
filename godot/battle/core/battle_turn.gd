@@ -468,6 +468,8 @@ static func _well_target(b: Battle, p: Vector2i, side: int) -> BattleUnit:
 ## lose a round, timed unit effects of this round end, ground laid in battle fades. So a thing that lasts
 ## N rounds still counts at its N-th round end.
 static func _tick_clocks(b: Battle, ended: int) -> void:
+	for id in b.units:                            # a shield not used up ends with its round
+		(b.units[id] as BattleUnit).nullify = false
 	var faded := 0
 	for cell in b.board.cells:
 		if cell.zone != null:

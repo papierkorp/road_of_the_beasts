@@ -14,29 +14,61 @@ extends RefCounted
 
 const GROUND := &"seal"
 const NONE := Vector2i(-999, -999)
+## What the options of Seal lay (docs/overworld.md §5.4).
+const WALL := &"earth_wall"
+const PULL_ZONE := &"void_pull"
+const PULL_ROUNDS := 2
 
 
-## Why Seal Ground cannot be laid on `p` by `side` ("" = it can).
-static func lay_error(b: Battle, side: int, p: Variant) -> String:
-	if not (p is Vector2i) or not b.board.in_bounds(p):
-		return "choose one square on the board"
-	var cell := b.board.at(p)
-	var g := b.content.ground(cell.ground)
-	if g != null and g.immutable:
-		return "Seal Ground cannot lie on %s" % g.display_name
+## Why `def` cannot lay Seal Ground on `cells` for `side` ("" = it can): one square, or two adjacent ones for a
+## Wide Seal.
+static func lay_error(b: Battle, side: int, cells: Array, def: TamerSkillDef) -> String:
+	var most := maxi(1, def.seal_squares if def != null else 1)
+	if cells.is_empty() or cells.size() > most:
+		return "choose one square on the board" if most == 1 else "choose one square or two adjacent squares"
+	for p in cells:
+		if not (p is Vector2i) or not b.board.in_bounds(p):
+			return "choose a square on the board"
+		var g := b.content.ground(b.board.at(p).ground)
+		if g != null and g.immutable:
+			return "Seal Ground cannot lie on %s" % g.display_name
+	if cells.size() == 2:
+		var d: Vector2i = cells[1] - cells[0]
+		if absi(d.x) + absi(d.y) != 1:
+			return "the two squares of a Wide Seal must touch over an edge"
 	if seal_of(b, side) != NONE:
 		return "your Seal Ground already lies on the board (one at a time)"
 	return ""
 
 
-static func lay(b: Battle, side: int, def: TamerSkillDef, p: Vector2i) -> void:
-	var cell := b.board.at(p)
-	cell.ground = GROUND
-	cell.level = 1
-	cell.ground_until = 0
-	b.seals[p] = {"side": side, "base": def.seal_base}
-	b.emit(&"ground_changed", {"pos": p, "ground": GROUND, "level": 1, "result": &"new", "source": def.display_name})
-	b.emit(&"seal_laid", {"pos": p, "side": side, "base": def.seal_base})
+static func lay(b: Battle, side: int, def: TamerSkillDef, cells: Array) -> void:
+	var step := def.seal_step if def.seal_step > 0 else BattleExperiment.seal_step
+	for p: Vector2i in cells:
+		var cell := b.board.at(p)
+		cell.ground = GROUND
+		cell.level = 1
+		cell.ground_until = 0
+		b.seals[p] = {"side": side, "base": def.seal_base, "step": step}
+		b.emit(&"ground_changed", {"pos": p, "ground": GROUND, "level": 1, "result": &"new", "source": def.display_name})
+		b.emit(&"seal_laid", {"pos": p, "side": side, "base": def.seal_base})
+	if def.seal_walls:                            # Walled Seal: an Earth Wall on every free square around it
+		var wall := b.content.prop(WALL)
+		for p: Vector2i in cells:
+			for d in Board.RING8:
+				var q: Vector2i = p + d
+				if wall == null or cells.has(q) or not b.board.in_bounds(q) or b.any_unit_at(q) != null:
+					continue
+				var made := BattleBoardOps.place_prop(b, wall, q)
+				if made != null:
+					made.until = b.round_number + BoardProp.CREATED_ROUNDS - 1
+	if def.seal_pull:                             # Drawing Seal: a pull zone toward it on its four neighbours
+		var zone := b.content.zone(PULL_ZONE)
+		for p: Vector2i in cells:
+			for d in Board.CARDINAL:
+				var q: Vector2i = p + d
+				if zone != null and b.board.in_bounds(q) and not cells.has(q):
+					b._next_gid += 1
+					BattleBoardOps.land_zone(b, b.board.at(q), zone, b._next_gid, &"", PULL_ROUNDS, Vector2i.ZERO, p)
 
 
 ## The square of the Seal Ground `side` has on the board, or NONE.
@@ -63,11 +95,11 @@ static func chance(b: Battle, u: BattleUnit) -> int:
 	var p := seal_under(b, u)
 	if p == NONE or not u.is_alive():
 		return -1
-	return chance_at(int(b.seals[p]["base"]), u.hp)
+	return chance_at(int(b.seals[p]["base"]), u.hp, int(b.seals[p].get("step", BattleExperiment.seal_step)))
 
 
-static func chance_at(base: int, hp: int) -> int:
-	return clampi(base - BattleExperiment.seal_step * maxi(0, hp - 1), 0, 100)
+static func chance_at(base: int, hp: int, step := -1) -> int:
+	return clampi(base - (step if step >= 0 else BattleExperiment.seal_step) * maxi(0, hp - 1), 0, 100)
 
 
 ## The end of a wild monster's turn: the roll.
@@ -105,10 +137,15 @@ static func on_defeat(b: Battle, u: BattleUnit) -> void:
 	_use_up(b, p, u)
 
 
+## A catch uses up the whole Seal Ground of its side: both squares of a Wide Seal.
 static func _use_up(b: Battle, p: Vector2i, u: BattleUnit) -> void:
-	b.seals.erase(p)
-	var cell := b.board.at(p)
-	cell.ground = GroundDef.PLAIN
-	cell.level = 1
+	var side := int(b.seals[p]["side"])
 	b.emit(&"caught", {"who": u.id, "pos": p})
-	b.emit(&"ground_changed", {"pos": p, "ground": cell.ground, "level": 1, "result": &"reset", "source": "Seal"})
+	for q: Vector2i in b.seals.keys():
+		if int(b.seals[q]["side"]) != side:
+			continue
+		b.seals.erase(q)
+		var cell := b.board.at(q)
+		cell.ground = GroundDef.PLAIN
+		cell.level = 1
+		b.emit(&"ground_changed", {"pos": q, "ground": cell.ground, "level": 1, "result": &"reset", "source": "Seal"})

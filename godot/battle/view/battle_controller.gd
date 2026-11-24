@@ -455,7 +455,11 @@ func _tamer_action() -> Dictionary:
 		TamerSkillDef.SEAL:
 			if hover == NOWHERE:
 				return {}
-			a["cells"] = [hover]
+			var seal_cells: Array = [hover]
+			var beside: Vector2i = hover + Board.CARDINAL[rot % Board.CARDINAL.size()]
+			if def.seal_squares > 1 and battle.board.in_bounds(beside):   # a Wide Seal: the second square beside it
+				seal_cells.append(beside)
+			a["cells"] = seal_cells
 		TamerSkillDef.LAY:
 			if hover == NOWHERE:
 				return {}
@@ -854,7 +858,7 @@ func _tamer_highlights(out: Dictionary) -> void:
 			if battle.board.in_bounds(c):
 				out[c] = COL_AREA if legal else COL_BAD
 		return
-	for u in battle.living(PLAYER_SIDE):
+	for u in battle.living(1 - PLAYER_SIDE if def.effect == TamerSkillDef.QI_SUPPRESSION else PLAYER_SIDE):
 		for c in u.cells():
 			out[c] = COL_PICK if picked.has(u.id) else COL_MOVE
 
@@ -962,7 +966,7 @@ func _hint_keys() -> String:
 					return "R changes shape · click places"
 				TamerSkillDef.SEAL:
 					var why := battle.check(_tamer_action()) if hover != NOWHERE else ""
-					return why if why != "" else "Click a square to lay Seal Ground (%d%% at 1 HP)" % def.seal_base
+					return why if why != "" else "Click a square to lay Seal Ground (%d%% at 1 HP)%s" % [def.seal_base, " · %s turns the second square" % ("Rotate" if UiTheme.handheld() else UiTheme.key_text(&"battle_rotate")) if def.seal_squares > 1 else ""]
 				TamerSkillDef.LAY:
 					var lay_why := battle.check(_tamer_action()) if hover != NOWHERE else ""
 					return lay_why if lay_why != "" else ("Click a square" + (" · R turns the line" if battle.lay_count(PLAYER_SIDE, def) > 1 else ""))
@@ -970,6 +974,8 @@ func _hint_keys() -> String:
 					return "Click the %s monster" % ("first" if picked.is_empty() else "second")
 				TamerSkillDef.BEAST_SWAP:
 					return "Click the monster that leaves"
+				TamerSkillDef.QI_SUPPRESSION:
+					return "Click an enemy monster"
 			return "Click one of your monsters"
 	return "%s Step · %s–%s Skills · %s End turn" % [UiTheme.key_text(&"battle_step"), UiTheme.key_text(&"battle_skill_1"),
 		UiTheme.key_text(&"battle_skill_6"), UiTheme.key_text(&"battle_confirm")]

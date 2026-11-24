@@ -65,8 +65,11 @@ static func error(b: Battle, a: Dictionary) -> String:
 			if not _is_tetromino(b, cells):
 				return "choose four connected squares on the board (any tetromino)"
 		TamerSkillDef.SEAL:
-			var picked: Array = a.get("cells", [])
-			return BattleCatch.lay_error(b, side, picked[0] if picked.size() == 1 else null)
+			return BattleCatch.lay_error(b, side, a.get("cells", []), def)
+		TamerSkillDef.QI_SUPPRESSION:
+			var foe: BattleUnit = b.units.get(a.get("unit", &""))
+			if foe == null or foe.side == side or not foe.on_field or not foe.is_alive():
+				return "choose an enemy monster on the field"
 		TamerSkillDef.BOON:
 			if _own(b, side, a.get("unit", &"")) == null:
 				return "choose one of your own monsters on the field"
@@ -133,7 +136,9 @@ static func apply(b: Battle, a: Dictionary) -> bool:
 		TamerSkillDef.BEAST_SWAP:
 			_beast_swap(b, b.units[a["unit"]], b.units[a["other"]])
 		TamerSkillDef.SEAL:
-			BattleCatch.lay(b, side, def, a["cells"][0])
+			BattleCatch.lay(b, side, def, a["cells"])
+		TamerSkillDef.QI_SUPPRESSION:               # until the end of the next round, like a timed effect of a skill
+			b.apply_effect(b.units[a["unit"]], "tamer:%s" % def.id, FieldEffect.DRAIN_PACE, maxi(1, def.boon_value), 1)
 		TamerSkillDef.BOON:
 			var bearer: BattleUnit = b.units[a["unit"]]
 			if def.boon == TamerSkillDef.BOON_ANCHOR:

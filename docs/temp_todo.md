@@ -16,13 +16,13 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 - **Read first:** [vision.md](vision.md), the frame of the game. It holds over the rule files.
 - **The frame (reworked 2026-11-22, T65):** the battle is the game, a roguelike; three Ways that shut each other out (board, tamer, monsters); the lifespan is the one clock and every deed costs a year; the wild shows battles to pick from; monsters rise by battles won; parts and pills drop, nothing is made; won by defeating the Sovereign beast.
 - **Built (T65), not played by hand:** wild and void, rises, drops per Way, a gift at the start, a boon at every breakthrough.
-- **Not aligned yet:** [architecture.md](architecture.md) (T61).
-- **The build (T61):** a first version to click through; test values in `godot/data/game/values.tres` ([godot/README.md](../godot/README.md); [implementation.md](todo/implementation.md) I83–I141). Every battleground is generated.
+- **The target structure:** [architecture.md](architecture.md) follows the frame: battle and hub, no story, the multiplayer battle last. The build is not aligned with it (T61).
+- **The build (T61):** a first version to click through; test values in `godot/data/game/values.tres` ([godot/README.md](../godot/README.md); [implementation.md](todo/implementation.md) §3). Every battleground is generated.
 - **Next:** the user plays the three Ways and checks the balance by hand; the answer on Insight (T65); then the numbers of a game (T54).
 - **Two battles on one core** ([battle_ingame.md](battle_ingame.md), [architecture.md §4](architecture.md#4-the-battle)): the multiplayer battle and the ingame battle. Every measurement so far is multiplayer ([S040–S045](simulation_log.md)).
 - **Multiplayer battle, settled for now:** 3v3 on a generated 7×7 board, 60 points, generated kits ([content.md §1](content.md#1-ground)). All content is temporary.
-- **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets team size, ends and board events; catching on Seal Ground is built. Open in the build: ends and board events in the map editor (T46), Seal Ground played by hand (T49), a wild AI that values Seal Ground; then the rebuild (T42).
-- **Tests:** 372 cases, 0 failures ([implementation.md](todo/implementation.md)).
+- **Ingame battle** ([battle_ingame.md](battle_ingame.md)): every board is a battleground that sets the team size; catching on Seal Ground is built. Open in the build: Seal Ground played by hand (T49), a wild AI that values Seal Ground; then the rebuild (T42).
+- **Tests:** 389 cases, 0 failures ([implementation.md](todo/implementation.md)).
 
 ## Open Questions for the User
 
@@ -37,8 +37,7 @@ Folders under `docs/todo/`: `to-clarify/<epic>/` (waits for a decision of the us
 | 0 | The pool of eggs, the roster, further eggs | T59 |
 | 0 | Kins: skill groups ([content.md §7](content.md#7-kins)) | T12 |
 | 0 | The hub's buildings, 3D or 2D board, the phone | T60 |
-| 1 | How does a stat shape split the points at the roll? | T03 |
-| 2 | Ingame battle: numbers of the ends and several ends in one battle, ingame-only skills | T46 |
+| 2 | Ingame battle: ingame-only skills | T46 |
 | 3 | Which props of the catalogue stay, and do aura props return? | T41 |
 | 4 | Square control: do the current means suffice, or does it need more? | T39 |
 | 6 | Which pushes are cardinal, which use eight directions? | T04 |

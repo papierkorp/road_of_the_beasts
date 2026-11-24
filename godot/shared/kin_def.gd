@@ -15,6 +15,9 @@ const GROUPS: Array[String] = ["strike", "movement", "self", "ground", "zone", "
 @export var trait_flags: Dictionary = {}
 ## The skill groups its monsters can learn (four of GROUPS).
 @export var learns: Array[String] = []
+## The stat lean (docs/monsters.md §3): how often a wild monster of this Kin rolls each stat shape
+## (MonsterInstance.SHAPES), as weights; empty = every shape alike. Draft values.
+@export var lean: Dictionary = {}
 
 static var _cache := {}
 static var _lock := Mutex.new()                # the AI of the battle screen thinks on a worker thread

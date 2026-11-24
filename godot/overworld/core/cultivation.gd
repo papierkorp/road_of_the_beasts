@@ -1,7 +1,8 @@
 class_name Cultivation
 extends RefCounted
 ## The tree of the Way (docs/overworld.md §5.3): a tree per stage, opened by the breakthrough; a node is bought with
-## Insight. A node of the Formation gives a tamer skill ("tamer"); a node of the Artificer or the Alchemist is a
+## Insight. A node of the Formation gives a tamer skill ("tamer") or an option of Seal ("seal": a development step,
+## at most two); a node of the Artificer or the Alchemist is a
 ## perk ("perk"): its effects are read where they act (`GameState.node_sum`), and "reveal" acts once, when bought.
 
 
@@ -22,6 +23,11 @@ static func problem(game: GameState, node_id: StringName) -> String:
 	var needs := StringName(n.get("needs", &""))
 	if needs != &"" and not game.nodes.has(needs):
 		return "needs %s" % def.node(needs).get("name", needs)
+	if String(n["kind"]) == "seal":
+		if not game.can_catch():
+			return "your vow forbids the seal"
+		if game.seal_options().size() >= TamerSkillDef.SEAL_MAX_OPTIONS:
+			return "Seal is at level %d" % (TamerSkillDef.SEAL_MAX_OPTIONS + 1)
 	if game.path_points < int(n["cost"]):
 		return "needs %d Insight" % int(n["cost"])
 	return ""

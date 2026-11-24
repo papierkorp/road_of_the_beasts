@@ -10,3 +10,4 @@ trait_name = "Aloft"
 trait_text = "Ground does not act on it on entering or leaving; end-of-turn ground and traps act as usual."
 trait_flags = {"ignores_ground_moments": ["enter", "leave"]}
 learns = Array[String](["movement", "self", "ground", "zone"])
+lean = {"swift": 4, "caster": 4, "skirmisher": 1, "bulwark": 1}

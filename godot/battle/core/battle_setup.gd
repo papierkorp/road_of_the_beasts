@@ -87,6 +87,8 @@ static func build(request: BattleRequest) -> Battle:
 		var loadout: Array[StringName] = request.player_tamer if side == 0 else request.enemy_tamer
 		for id in loadout:
 			var def := content.tamer_skill(id)
+			if def != null and side == 0:
+				def = def.with_seal_options(request.player_seal_options)
 			if def != null and not b.tamer_loadout[side].has(def):
 				b.tamer_loadout[side].append(def)
 		if side == 0:
@@ -97,8 +99,8 @@ static func build(request: BattleRequest) -> Battle:
 	b.roll_seed = request.roll_seed
 	var seal := content.tamer_skill(&"seal")
 	for p in request.player_seals:                # Seal Ground laid before the battle; one at a time
-		if seal != null and BattleCatch.lay_error(b, 0, p) == "":
-			BattleCatch.lay(b, 0, seal, p)
+		if seal != null and BattleCatch.lay_error(b, 0, [p], seal) == "":
+			BattleCatch.lay(b, 0, seal, [p])
 	if drawn:
 		if request.battle_kind == BattleRequest.INGAME and request.side_points.size() == 2:
 			MonsterDraw.deal(b, request.draw_seed, request.side_points, MonsterDraw.INGAME_TOP, request.mirror_draw)

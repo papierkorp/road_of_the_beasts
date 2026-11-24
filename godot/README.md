@@ -119,9 +119,9 @@ battles, 2 parts carried and 1 more per stage, a tempering pill 1 stat point (5 
 a Sovereign beast at Immortal High with 15 points more.
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
-("Hub Game"). **Not built:** development steps of tamer skills, species skills, anything a finished game leaves
-besides more species to draw eggs from, ends of a battle other than 0 HP, board events; the
-trees of the Ways end at Nascent Soul.
+("Hub: Solutions Without a Rule"). **Not built:** development steps of tamer skills other than Seal (its five options are nodes of the Formation,
+two at most), anything a finished game leaves besides more species to draw eggs from; the trees of the Ways end at
+Nascent Soul.
 
 **Kin traits in the battle.** A grown monster of the hub game carries the trait of its Kin as a passive without a
 slot (`UnitSheet.innate`, built by `KinDef.passives` from the flags in `data/kins/<kin>.tres`). All eight act:

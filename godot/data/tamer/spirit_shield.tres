@@ -7,4 +7,4 @@ script = ExtResource("1_tgb2y")
 id = &"spirit_shield"
 display_name = "Spirit Shield"
 effect = "spirit_shield"
-description = "Next Surge damage on one own monster is 0."
+description = "The next hit on one own monster this round deals nothing."

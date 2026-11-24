@@ -153,3 +153,14 @@ func test_a_monster_fights_with_the_stats_the_hub_shows() -> void:
 	assert_int(s.ap).is_equal(int(m.stats["ap"]))
 	assert_int(s.tpr).is_equal(int(m.stats["tpr"]))
 	assert_str(s.rank).is_equal("Qi Gathering Lower")
+
+
+func test_nothing_is_caught_in_the_void() -> void:
+	var g := H.game(H.FORMATION)
+	var f := VoidPlace.fight(g)
+	f.team = g.default_team(f.max_team)
+	f.tamer = [GameState.SEAL] as Array[StringName]
+	assert_bool(f.allows_seal()).is_false()
+	assert_bool(FightBridge.request_of(f).player_tamer.has(GameState.SEAL)).is_false()
+	var wild := Fight.new()
+	assert_bool(wild.allows_seal()).is_true()

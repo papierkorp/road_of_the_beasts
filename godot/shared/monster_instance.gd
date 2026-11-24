@@ -47,12 +47,22 @@ const RESHAPE := "reshape"
 const CHOICES: Array[String] = [BREADTH, DEPTH, LORE, RESHAPE]
 const CHOICE_NAMES := {BREADTH: "Breadth: a new slot", DEPTH: "Depth: a development step",
 	LORE: "Lore: a skill of another species of its Kin", RESHAPE: "Reshape: spend its stat points anew"}
-## What a grown monster has before any point is spent, so that it can use a kit; and the top of each stat.
-const FLOOR := {"hp": 3, "pace": 1.0, "move": 2, "reach": 2, "tpr": 1, "ap": 2}
-## Reach ends at 4 here: the unit sheet of the battle takes 2–4 (UnitSheet.problems).
-const TOP := {"hp": 10, "pace": 10.0, "move": 10, "reach": 4, "tpr": 3, "ap": 5}
+## Every stat starts at the lowest value of its range (docs/monsters.md §2.1); and the top of each stat.
+const FLOOR := {"hp": 1, "pace": 1.0, "move": 1, "reach": 1, "tpr": 1, "ap": 1}
+const TOP := {"hp": 10, "pace": 10.0, "move": 10, "reach": 10, "tpr": 3, "ap": 5}
 const STAT_ORDER: Array[String] = ["hp", "pace", "move", "reach", "ap", "tpr"]
 const STAT_NAMES := {"hp": "HP", "pace": "Pace", "move": "Stamina", "reach": "Reach", "ap": "AP", "tpr": "Turns"}
+## The stat shapes (docs/monsters.md §2.3): each is a table of weights by which a wild or caught monster spends its
+## points at random. Draft values.
+const SHAPES := {
+	"bulwark": {"hp": 10, "pace": 2, "move": 2, "reach": 1, "ap": 3, "tpr": 1},
+	"skirmisher": {"hp": 4, "pace": 7, "move": 6, "reach": 1, "ap": 3, "tpr": 1},
+	"swift": {"hp": 3, "pace": 3, "move": 3, "reach": 1, "ap": 3, "tpr": 8},
+	"caster": {"hp": 3, "pace": 3, "move": 2, "reach": 6, "ap": 4, "tpr": 1},
+}
+const SHAPE_NAMES := {"bulwark": "Bulwark", "skirmisher": "Skirmisher", "swift": "Swift", "caster": "Caster"}
+## The stat shape it rolled ("" = none: a monster from an egg is shaped by the player).
+var stat_shape := ""
 var unspent := 0
 var dev_steps := 0
 ## Development level per kit slot (1–3); a missing entry is level 1.
@@ -101,8 +111,8 @@ static func roll(def: MonsterDef, rng: RandomNumberGenerator, p_shape := StatSha
 	return m
 
 
-## A new individual of the points model at `step` (0 = Qi Gathering Lower … 14 = Immortal High): the floor, then
-## the points of its step spent at random. How a stat shape splits the points is not defined (T03).
+## A new individual of the points model at `step` (0 = Qi Gathering Lower … 14 = Immortal High): the lowest values,
+## then the points of its step spent at random by the weights of a stat shape, which the lean of its Kin picks.
 static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0) -> MonsterInstance:
 	var m := MonsterInstance.new()
 	m.species_id = def.id
@@ -112,6 +122,7 @@ static func grown(def: MonsterDef, rng: RandomNumberGenerator, step := 0) -> Mon
 	m.stats = FLOOR.duplicate()
 	m.unspent = START_POINTS + STEP_POINTS * step - m.points_spent()
 	m._gains_up_to(step)
+	m.stat_shape = roll_shape(def.kin, rng)
 	m.spend_at_random(rng)
 	while m.choice_picks > 0:
 		var open: Array[String] = []
@@ -214,7 +225,7 @@ func _skill(skill_id: StringName) -> BattleSkillDef:
 func can_learn(skill_id: StringName) -> bool:
 	for s in learnable():
 		if s.id == skill_id:
-			return not kit.has(skill_id)
+			return true                              # the same skill may sit in two slots (docs/skills.md §1)
 	return false
 
 
@@ -407,9 +418,20 @@ func buy(stat: String) -> bool:
 	return true
 
 
-## Spends what is left at random (wild monsters, a new individual); what no stat takes stays unspent.
+## A stat shape for a monster of `kin`: drawn by the lean of the Kin (KinDef.lean); a Kin without one draws evenly.
+static func roll_shape(kin: MonsterDef.Kin, rng: RandomNumberGenerator) -> String:
+	var kin_def := KinDef.of(kin)
+	var lean: Dictionary = kin_def.lean if kin_def != null else {}
+	var pool: Array[String] = []
+	for id: String in SHAPES:
+		for k in int(lean.get(id, 1)) if not lean.is_empty() else 1:
+			pool.append(id)
+	return pool[rng.randi_range(0, pool.size() - 1)]
+
+
+## Spends what is left at random by the weights of its stat shape (wild monsters); what no stat takes stays unspent.
 func spend_at_random(rng: RandomNumberGenerator) -> void:
-	var weights := {"hp": 6, "pace": 4, "move": 4, "reach": 1, "ap": 2, "tpr": 1}
+	var weights: Dictionary = SHAPES.get(stat_shape, {"hp": 6, "pace": 4, "move": 4, "reach": 1, "ap": 2, "tpr": 1})
 	for i in 80:
 		var open: Array[String] = []
 		for stat in STAT_ORDER:
@@ -592,7 +614,7 @@ func to_dict() -> Dictionary:
 		"unspent": unspent, "dev_steps": dev_steps, "slot_levels": slot_levels.duplicate(),
 		"slots": slots, "kit": kit.map(func(k: StringName) -> String: return String(k)), "fresh": fresh,
 		"choice_picks": choice_picks, "choice_taken": choice_taken.duplicate(), "slot_opts": slot_opts.duplicate(true), "bonus_points": bonus_points,
-		"lore": lore.map(func(s: StringName) -> String: return String(s)), "may_rise": may_rise}
+		"lore": lore.map(func(s: StringName) -> String: return String(s)), "may_rise": may_rise, "stat_shape": stat_shape}
 
 
 static func from_dict(d: Dictionary) -> MonsterInstance:
@@ -625,6 +647,7 @@ static func from_dict(d: Dictionary) -> MonsterInstance:
 		elif int(k) >= 0 and int(k) < m.species().skills.size():      # a save from before skill ids
 			m.kit.append(m.species().skills[int(k)].id)
 	m.fresh = bool(d.get("fresh", false))
+	m.stat_shape = String(d.get("stat_shape", ""))
 	m.may_rise = bool(d.get("may_rise", false))
 	m.choice_picks = int(d.get("choice_picks", 0))
 	m.bonus_points = int(d.get("bonus_points", 0))

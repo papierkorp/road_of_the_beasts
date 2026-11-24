@@ -10,3 +10,4 @@ trait_name = "Follow-up"
 trait_text = "After its Strike pushed a monster, it may enter the square that monster left, free of AP and Stamina."
 trait_flags = {"follows_push": true}
 learns = Array[String](["strike", "movement", "self", "ground"])
+lean = {"skirmisher": 6, "bulwark": 2, "swift": 1, "caster": 1}

@@ -7,5 +7,5 @@ script = ExtResource("1")
 id = &"pill_warding"
 display_name = "Warding Pill"
 effect = "spirit_shield"
-description = "The next hit on one own monster deals nothing."
+description = "The next hit on one own monster this round deals nothing."
 source = "pill"

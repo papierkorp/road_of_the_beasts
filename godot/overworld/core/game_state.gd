@@ -198,6 +198,18 @@ func can_catch() -> bool:
 	return not vow_has("no_seal")
 
 
+## The options of Seal the Formation bought as nodes of its Way (docs/overworld.md §5.4), in the order bought.
+func seal_options() -> Array:
+	var out: Array = []
+	var def := CultivationDef.of(system)
+	if def != null:
+		for id in nodes:
+			var n := def.node(id)
+			if String(n.get("kind", "")) == "seal":
+				out.append(String(n["ref"]))
+	return out
+
+
 ## Tamer slots: tamer skills for the Formation, pills for the Alchemist; the Artificer has none and lays parts.
 func tamer_slots() -> int:
 	if is_artificer():

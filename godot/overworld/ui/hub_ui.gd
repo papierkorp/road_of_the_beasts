@@ -232,7 +232,7 @@ static func monster_head(m: MonsterInstance) -> HBoxContainer:
 	head.add_child(text)
 	var names := row(12)
 	names.add_child(title(def.display_name, 26))
-	var sub := label("%s · %s %s" % [MonsterDef.kin_name(def.kin), Stage.stage_name(m.stage), Stage.sub_tier_name(m.sub_tier)], 16, UiTheme.ACCENT, false)
+	var sub := label("%s · %s %s%s" % [MonsterDef.kin_name(def.kin), Stage.stage_name(m.stage), Stage.sub_tier_name(m.sub_tier), " · %s" % MonsterInstance.SHAPE_NAMES[m.stat_shape] if MonsterInstance.SHAPE_NAMES.has(m.stat_shape) else ""], 16, UiTheme.ACCENT, false)
 	sub.size_flags_vertical = Control.SIZE_SHRINK_END
 	names.add_child(sub)
 	text.add_child(names)
@@ -361,7 +361,7 @@ static func todo_text(m: MonsterInstance) -> String:
 		parts.append("fresh from the egg: shape it under Stats and Skills")
 	if m.unspent > 0:
 		parts.append("%d stat points to spend" % m.unspent)
-	if m.kit.size() < m.slots and m.kit.size() < m.learnable().size():
+	if m.kit.size() < m.slots and not m.learnable().is_empty():
 		parts.append("%d free slot(s)" % (m.slots - m.kit.size()))
 	if m.choice_picks > 0:
 		parts.append("a breakthrough choice waits")

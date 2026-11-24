@@ -245,3 +245,64 @@ func test_no_passive_holds_a_square_but_the_self_buff_brace_does_until_the_round
 	assert_int(b.round_number).is_equal(2)
 	assert_bool(BattleStats.is_immovable(b, H.unit(b, 0))).is_false()                             # the round is over
 	assert_object(H.content().skill(&"braced")).is_null()                                         # the passives are gone
+
+
+# ---------- Qi Suppression and the options of Seal (docs/overworld.md §5.4) ----------
+
+func test_qi_suppression_drains_the_pace_of_an_enemy_and_refuses_an_own_monster() -> void:
+	var b := _battle([[0, Vector2i(1, 1), {"pace": 2.0}], [1, Vector2i(5, 5), {"pace": 1.5}]], [&"qi_suppression"])
+	b.begin()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"qi_suppression", "unit": &"u0"})).is_not_empty()
+	assert_bool(_use(b, &"qi_suppression", {"unit": &"u1"})).is_true()
+	assert_float(BattleStats.pace(b, H.unit(b, 1))).is_equal_approx(1.3, 0.001)      # a drain point counts double
+	assert_float(BattleStats.pace(b, H.unit(b, 0))).is_equal_approx(2.0, 0.001)
+
+
+func test_the_options_of_seal_change_a_copy_and_never_the_record() -> void:
+	var seal := H.content().tamer_skill(&"seal")
+	var grown := seal.with_seal_options(["strong", "patient", "wide", "drawing", "walled"])
+	assert_int(seal.seal_base).is_equal(50)
+	assert_int(seal.seal_squares).is_equal(1)
+	assert_int(grown.seal_base).is_equal(65)
+	assert_int(grown.seal_step).is_equal(5)
+	assert_int(grown.seal_squares).is_equal(2)
+	assert_bool(grown.seal_pull and grown.seal_walls).is_true()
+	assert_object(seal.with_seal_options([])).is_same(seal)
+	assert_int(BattleCatch.chance_at(65, 3, 5)).is_equal(55)
+	assert_int(BattleCatch.chance_at(50, 3)).is_equal(30)
+
+
+func test_a_wide_walled_drawing_seal_lays_two_squares_walls_and_a_pull() -> void:
+	var b := H.battle([[0, Vector2i(0, 0), {"pace": 1.9}], [1, Vector2i(6, 6), {"pace": 1.5}]])
+	b.wild[1] = true
+	b.tamer_loadout[0].append(H.content().tamer_skill(&"seal").with_seal_options(["wide", "walled", "drawing"]))
+	b.begin()
+	assert_str(b.check({"type": &"tamer", "side": 0, "skill": &"seal", "cells": [Vector2i(3, 3), Vector2i(5, 3)]})).contains("touch")
+	assert_bool(_use(b, &"seal", {"cells": [Vector2i(3, 3), Vector2i(4, 3)]})).is_true()
+	assert_str(String(b.board.at(Vector2i(3, 3)).ground)).is_equal("seal")
+	assert_str(String(b.board.at(Vector2i(4, 3)).ground)).is_equal("seal")
+	assert_object(b.board.prop_at(Vector2i(2, 2), Board.GROUND)).is_not_null()     # a wall around it
+	assert_object(b.board.prop_at(Vector2i(3, 3), Board.GROUND)).is_null()         # never on the seal itself
+	assert_object(b.board.at(Vector2i(3, 2)).zone).is_not_null()                   # the pull lies beside it
+	assert_object(b.board.at(Vector2i(3, 3)).zone).is_null()
+	var foe := H.unit(b, 1)                                                        # a catch uses up both squares
+	b.lift(foe)
+	b.put(foe, Vector2i(3, 3))
+	foe.hp = 0
+	b.defeat(foe)
+	assert_bool(foe.caught).is_true()
+	assert_str(String(b.board.at(Vector2i(4, 3)).ground)).is_equal("plain")
+	assert_bool(b.seals.is_empty()).is_true()
+
+
+func test_spirit_shield_stops_the_next_hit_of_any_source_and_ends_with_the_round() -> void:
+	var b := _battle([[0, Vector2i(3, 3), {"pace": 1.9, "hp": 3}], [1, Vector2i(6, 6), {"pace": 1.5}]], [&"spirit_shield"])
+	b.begin()
+	assert_bool(_use(b, &"spirit_shield", {"unit": &"u0"})).is_true()
+	BattleDamage.apply_round(b, [{"unit": &"u0", "base": 1, "type": BattleDamage.GROUND, "source": "test"}])
+	assert_int(H.unit(b, 0).hp).is_equal(3)                       # the hit dealt nothing
+	BattleDamage.apply_round(b, [{"unit": &"u0", "base": 1, "type": BattleDamage.GROUND, "source": "test"}])
+	assert_int(H.unit(b, 0).hp).is_equal(2)                       # the shield is used up
+	H.unit(b, 0).nullify = true
+	BattleTurn._tick_clocks(b, b.round_number)
+	assert_bool(H.unit(b, 0).nullify).is_false()                  # unused, it ends with the round

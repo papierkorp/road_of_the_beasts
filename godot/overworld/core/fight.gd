@@ -23,6 +23,8 @@ var team: Array[MonsterInstance] = []
 var tamer: Array[StringName] = []
 ## Loadout entries that come from an item: tamer skill id -> the pill it stands for.
 var tamer_items := {}
+## The options of Seal the Formation bought (docs/overworld.md §5.4).
+var seal_options: Array = []
 ## Parts the Artificer may lay before this battle (0 = none: another Way, or the void, where the board is their own),
 ## and those laid: "x,y" -> part id ("ground:<id>", "prop:<id>", "zone:<id>" or SEAL_PART).
 var carry := 0
@@ -34,6 +36,11 @@ var ref := {}
 var stage := 0
 ## What a win gives, as text for the list (the place decides the loot itself).
 var loot_text := ""
+
+
+## Seal Ground lies in the wild alone: nothing is caught in the void (docs/battle_ingame.md §7).
+func allows_seal() -> bool:
+	return place != VOID
 
 
 func enemy_text() -> String:

@@ -41,6 +41,8 @@ The hub prepares a closed fight and reads its result (rules: [battle.md](battle.
 2. **A deed:** a battle in the wild, a new look at the wild or an attack on the void ([vision.md §4](vision.md#4-where-battles-happen)). Each costs a year of the lifespan ([vision.md §3](vision.md#3-the-lifespan)).
 3. The hub reads the result back: the drop, the rises, the eggs.
 
+- **A deed is paid when its result is read back,** not when the battle starts. Leaving a battle counts as a defeat. A Draw counts as not won: no drop and no rise.
+
 - **No day and no night:** the lifespan is the only clock; nothing happens between two deeds.
 - **Every battle starts at full HP.**
 
@@ -73,10 +75,16 @@ The wild and the void, with what each costs and gives: [vision.md §4](vision.md
 
 - **A look shows 3 battles.** The first is the easiest: the fewest monsters of the stage, all at Lower. The others draw their number and the sub-tier of each monster.
 - **Monsters per battle, by the stage of the tamer:** 1–2 · 1–3 · 2–3 · 2–4 · 2–4.
-- **A battle won leaves the look;** the others stay. A battle lost waits. When every battle of a look is won, a new look comes for nothing.
+- **A battle won leaves the look;** the others stay. A battle lost waits. When every battle of a look is won, a new look comes for nothing. A breakthrough brings a new look for nothing too.
 - **The drop** is one unit of the reward of the Way per monster ([§6.1](#61-what-drops)), and the rises ([monsters.md §5](monsters.md#5-growth)).
 - **An egg:** a battle may hold an egg of one of its species, by chance (15 %); it is shown with the drop.
 - **Every opponent is shown with its stage and sub-tier,** in the look, before the battle and in it.
+
+**The void** *(working values)*:
+
+- **Three depths per stage** with 1, 2 and 2 void monsters that stand 1, 2 and 3 steps above the High sub-tier of the stage. A depth keeps its board for every attempt.
+- **The Sovereign beast** is one void monster at Immortal High with 15 stat points more; winning leaves the tamer at the stage they stood.
+- **Nothing is caught in the void** ([battle_ingame.md §7](battle_ingame.md#7-catching)).
 
 ---
 
@@ -92,9 +100,9 @@ Every way yields an **individual** ([monsters.md §1](monsters.md#1-species-and-
 |---|---|
 | **The first egg** | one of three from the nest ([vision.md §5](vision.md#5-the-start)) |
 | **Seal (in battle)** | Seal Ground lies in a battle of the wild; a wild monster that ends its turn on it with few HP, or falls to 0 HP on it, is caught ([battle_ingame.md §7](battle_ingame.md#7-catching)) |
-| **Eggs** | hatched in the Nest. An egg fixes the species; the player spends its stat points and chooses its four skills from the learnable list ([monsters.md §1](monsters.md#1-species-and-individual)). This holds for every egg, the first one too. An egg hatches after 2 battles fought *(working value)*. Further eggs: a battle of the wild may hold one ([§3](#3-places)) |
+| **Eggs** | hatched in the Nest. An egg fixes the species; the player spends its stat points and chooses its four skills from the learnable list ([monsters.md §1](monsters.md#1-species-and-individual)). This holds for every egg, the first one too. An egg hatches after 2 battles fought *(working value)*, at the first sub-tier of the tamer's stage; until its first battle the player may take points and skills back. Further eggs: a battle of the wild may hold one ([§3](#3-places)) |
 
-- **Void monsters** are never caught: a void egg is the trophy of a passed breakthrough trial ([monsters.md §3](monsters.md#3-kins)). Which trials give one is not defined.
+- **Void monsters** are never caught: a void egg is the trophy of a passed breakthrough trial ([monsters.md §3](monsters.md#3-kins)). Every passed trial gives one.
 - **Every Way brings Seal Ground by its own means,** from the start of a game: the Artificer lays it as a part before the battle, the Formation has the Seal tamer skill, the Alchemist carries a Binding pill that turns a square into it and is used up ([§5.3](#53-the-way)). What limits a seal and its chance: [battle_ingame.md §7](battle_ingame.md#7-catching).
 - Breeding is not defined.
 
@@ -109,7 +117,7 @@ Every way yields an **individual** ([monsters.md §1](monsters.md#1-species-and-
 
 - **Roster:** every monster the player owns.
 - **Team:** the monsters of the roster that the player sends into the next battle.
-- How many the roster holds is not defined.
+- The roster holds 8, eggs included *(working value)*.
 
 ---
 
@@ -135,7 +143,7 @@ STAGES      Qi Gathering → Foundation → Core Formation → Nascent Soul → 
 - **Ceiling:** a monster never exceeds the tamer's stage.
 - **No stage opens a team size** ([§2.1](#21-battle-loop)).
 - **Beyond Immortal** stands the Sovereign beast; defeating it wins the game, and nobody reaches a stage after it.
-- **A boon at every breakthrough:** the player takes one of the boons; one may be taken again at a later breakthrough.
+- **A boon at every breakthrough:** the player takes one of the boons; one may be taken again at a later breakthrough. A boon waits until it is taken and blocks nothing.
 
 | Boon *(draft)* | Effect |
 |---|---|
@@ -146,7 +154,7 @@ STAGES      Qi Gathering → Foundation → Core Formation → Nascent Soul → 
 ### 5.2 The Breakthrough Trial
 
 - **The last depth of the void of a stage** ([vision.md §4](vision.md#4-where-battles-happen)). It asks for no material.
-- **Forced at the end of the lifespan;** losing that one loses the game ([vision.md §3](vision.md#3-the-lifespan)). The forced trial skips the depths not won yet, and with them their Insight.
+- **Forced at the end of the lifespan;** losing that one loses the game ([vision.md §3](vision.md#3-the-lifespan)). The forced trial skips the depths not won yet, and with them their Insight. While the forced trial waits, the wild is closed.
 - **A trial lost before its time** costs its year. A trial won lifts the team that fought it with the tamer ([monsters.md §5](monsters.md#5-growth)). The opponents of the trials are not defined.
 
 ### 5.3 The Way
@@ -164,7 +172,7 @@ The outline: [vision.md §2](vision.md#2-the-pillars-and-the-ways) and [§8](vis
 
 - **Before and during:** the Artificer acts on the squares before the battle, and what is laid stays; the Formation acts on them during the battle, once and for a short time.
 - **The gift of the start** *(working values)*: one of three, drawn from the game's seed. Formation: one tamer skill of the first tree that needs no other, free and counted as bought. Artificer: one pack of parts (3 Earth Walls, 2 Spike Traps, 3 Thornbed or 4 Rubble) beside the one Dragon Vein every Artificer owns. Alchemist: 2 pills of one kind for the battle (Mending, Warding, Swiftness or Anchoring) beside the 2 Binding pills.
-- **Parts in the wild:** the Artificer lays owned parts before each battle, as many as they carry: **2 and 1 more per stage** *(working value)*, more by the foundry. A part is not used up. **A part may lie on any square;** no rule keeps a way open, to start with.
+- **Parts in the wild:** the Artificer lays owned parts before each battle, as many as they carry: **2 and 1 more per stage** *(working value)*, more by the foundry. A part is not used up. **A part may lie on any square;** no rule keeps a way open, to start with. A zone laid as a part pushes toward the opponent and lasts the battle.
 - **A tree per stage;** a breakthrough opens the next one. The trees of earlier stages stay open. A tree has two branches.
 - **Insight** comes from the depths of the void, one per depth won; the Formation also gains it in the wild ([§6.1](#61-what-drops)).
 - **A node** *(draft)*: for the Formation a tamer skill or a development step for one. For the Artificer one more part laid before a battle of the wild (foundry) or 3 more budget for the own battleground (domain). For the Alchemist, body: **Rich Find** (a wild battle drops one pill more) and **Deep Pouch** (one more tamer slot for pills); kit: **Open Meridians** (every monster takes 2 more Tempering pills).
@@ -191,8 +199,12 @@ Tamer skills belong to the **Way of the Formation**. They are **learned for good
 | Skill | Tree of the stage *(draft)* | Effect |
 |---|---|---|
 | Seal | from the start | lays Seal Ground ([battle_ingame.md §7](battle_ingame.md#7-catching)) |
-| Qi Suppression | Foundation | an enemy monster −1 Pace point next round |
-| Spirit Shield | Foundation | not defined |
+| Qi Suppression | Foundation | an enemy monster has `drain_pace` 1 until the end of the next round ([battle.md §2.3](battle.md#23-pace-and-the-queue)) |
+| Spirit Shield | Foundation | the next hit on one own monster this round deals nothing |
+| Thorn Field | Qi Gathering | lays Thornbed on a line of up to 3 squares |
+| Stone Wall | Qi Gathering | sets an Earth Wall on a free square for 2 rounds |
+| Root Snare | Foundation | lays Binding Vines on one square, also under a monster |
+| Ember Line | Foundation | lays Lava on a line of up to 3 squares |
 | Swap Places | Foundation | two own monsters trade squares |
 | Domain Glimpse | Core Formation | clear a tetromino of zones and reset its ground |
 | Urgent Order | Core Formation | an own monster that has not acted this round acts next |
@@ -202,17 +214,17 @@ Tamer skills belong to the **Way of the Formation**. They are **learned for good
 
 - **Learning:** a tamer skill is a node of the Way. Its branches are not defined; Immortal lists no skill yet.
 - **Use:** once per battle, free of battle AP, never used up; visible before the battle.
-- **Development:** by the pattern of [skills.md §8](skills.md#8-development), levels 1–3, one option per level, never more uses. A step is a node of the Way.
+- **Development:** by the pattern of [skills.md §8](skills.md#8-development), levels 1–3, one option per level, never more uses. A step is a node of the Way: the node names the option, so a skill takes at most two.
 
 **Options of Seal** *(draft; the other skills have none yet)*:
 
 | Option | Vocabulary | Effect |
 |---|---|---|
-| Wide Seal | Area | Seal Ground on two adjacent squares |
+| Wide Seal | Area | Seal Ground on two squares that touch over an edge; they are one Seal Ground, and a catch uses up both |
 | Strong Seal | Number | base chance 65 % |
 | Patient Seal | Number | 5 points less per HP instead of 10 |
-| Drawing Seal | Addition | Seal Ground also pulls like a pull zone |
-| Walled Seal | Addition | lays Earth Walls on the free squares around it |
+| Drawing Seal | Addition | the four squares next to Seal Ground pull toward it for 2 rounds |
+| Walled Seal | Addition | an Earth Wall on every free square of the eight around it, for 2 rounds |
 
 ### 5.5 Development of Monster Skills
 
@@ -234,12 +246,12 @@ There are no materials, no forge and no cauldron: what a Way uses drops ready fr
 
 | Way | A wild battle won drops *(working values)* |
 |---|---|
-| Artificer | units of one part of a battleground, one per monster of the battle |
-| Alchemist | pills, one per monster of the battle, each of a kind drawn from [§6.2](#62-pills) |
+| Artificer | units of one part of a battleground, one per monster of the battle; the part is drawn from those of the stage |
+| Alchemist | pills, one per monster of the battle, each of a kind drawn evenly from all kinds of [§6.2](#62-pills) |
 | Formation | 1 Insight from a battle against 2 monsters or more |
 
 - **A game holds the goods of its Way alone.**
-- **Parts by stage:** Rubble, Thornbed, Earth Wall and Spike Trap from the start; Shifting Sand, Lava and Umbra from Foundation; Vortex Trap and Dragon Vein from Core Formation; Gale from Nascent Soul.
+- **Parts by stage:** Rubble, Thornbed, Earth Wall and Spike Trap from the start; Shifting Sand and Lava from Foundation; Vortex Trap and Dragon Vein from Core Formation; Gale from Nascent Soul.
 - Nothing is grown, made, bought or sold, and there is no currency.
 
 ### 6.2 Pills
@@ -247,8 +259,7 @@ There are no materials, no forge and no cauldron: what a Way uses drops ready fr
 
 *The Way of the Alchemist.* A pill has one effect and no flaw.
 
-| kind:   Pill | Egg | Battleground part
- effect: on use (pills) | hatches (eggs) | placed (battleground parts)*(draft)* | Effect | Where it acts |
+| Pill *(draft)* | Effect | Where it acts |
 |---|---|---|
 | Mending | one own monster regains 2 HP | in battle |
 | Warding | the next hit on one own monster this round deals nothing | in battle |
@@ -272,14 +283,15 @@ There are no materials, no forge and no cauldron: what a Way uses drops ready fr
 
 - **A part is a ground, a zone or a prop** and nothing else: there are no weapons and no armour. It is placed on the own battleground in the workshop and laid on the generated board of a wild battle ([§5.3](#53-the-way), [battle_ingame.md §3](battle_ingame.md#3-battlegrounds)), within the budget of the stage.
 - **A part is not used up:** it is owned as units, and as many may lie at once as are owned.
+- **The own battleground** *(working values)*: the Artificer holds one and starts with a plain board of 5×5 squares and one Dragon Vein. A side is 4 to 7 squares long. The budget is 8 · 12 · 16 · 20 · 24 by stage; a ground weighs 1, a prop 2, a zone 2 and a Dragon Vein 3. The start area of the opponent stays reachable.
 - **Seal Ground is a part** the Artificer owns from the start ([§4.1](#41-obtaining-monsters)).
 
 ### 6.4 Item Schema
 
 ```
 ITEM
- kind:   Material | Pill | Egg | Battleground part
- effect: none (materials) | on use (pills) | hatches (eggs) | placed (battleground parts)
+ kind:   Pill | Egg | Battleground part
+ effect: on use (pills) | hatches (eggs) | placed (battleground parts)
 ```
 
 ### 6.5 Loadout

@@ -318,3 +318,45 @@ func test_what_catches_takes_no_tamer_slot() -> void:
 	var brewer := H.game(H.ALCHEMIST)
 	assert_bool(brewer.loadout_fits([&"pill_binding", &"pill_warding"] as Array[StringName])).is_true()
 	assert_bool(brewer.loadout_fits([&"pill_swiftness", &"pill_warding"] as Array[StringName])).is_false()
+
+
+func test_every_stat_starts_at_the_lowest_value_of_its_range_and_reach_goes_to_ten() -> void:
+	var m := MonsterInstance.hatched(GameData.monster(&"dusk_moth"), MonsterInstance.STEPS - 1)
+	assert_dict(m.stats).is_equal({"hp": 1, "pace": 1.0, "move": 1, "reach": 1, "tpr": 1, "ap": 1})
+	assert_int(m.unspent).is_equal(MonsterInstance.START_POINTS + MonsterInstance.STEP_POINTS * (MonsterInstance.STEPS - 1))
+	for i in 9:
+		assert_bool(m.buy("reach")).is_true()
+	assert_int(int(m.stats["reach"])).is_equal(10)
+	assert_bool(m.can_buy("reach")).is_false()
+	assert_array(UnitSheets.from_instance(m, BattleContent.shared()).problems()).is_empty()
+
+
+func test_the_same_skill_may_sit_in_two_slots() -> void:
+	var m := MonsterInstance.hatched(GameData.monster(&"dusk_moth"))
+	var first := m.learnable()[0].id
+	assert_bool(m.learn(first)).is_true()
+	assert_bool(m.learn(first)).is_true()
+	assert_int(m.kit.count(first)).is_equal(2)
+	assert_int(m.battle_skills().size()).is_equal(2)
+
+
+func test_a_wild_monster_rolls_a_stat_shape_by_the_lean_of_its_kin() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 3
+	var seen := {}
+	var hp := {"bulwark": 0, "caster": 0}
+	var reach := {"bulwark": 0, "caster": 0}
+	for i in 400:
+		var m := MonsterInstance.grown(GameData.monster(&"forge_golem"), rng, 6)       # Stone: mostly Bulwark, never Swift
+		seen[m.stat_shape] = int(seen.get(m.stat_shape, 0)) + 1
+		assert_int(m.unspent).is_less(5)
+		if hp.has(m.stat_shape):
+			hp[m.stat_shape] += int(m.stats["hp"])
+			reach[m.stat_shape] += int(m.stats["reach"])
+	assert_bool(seen.has("swift")).is_false()
+	assert_int(int(seen["bulwark"])).is_greater(int(seen["caster"]))
+	assert_float(float(hp["bulwark"]) / seen["bulwark"]).is_greater(float(hp["caster"]) / seen["caster"])
+	assert_float(float(reach["caster"]) / seen["caster"]).is_greater(float(reach["bulwark"]) / seen["bulwark"])
+	var m2 := MonsterInstance.grown(GameData.monster(&"forge_golem"), rng, 6)
+	assert_str(MonsterInstance.from_dict(m2.to_dict()).stat_shape).is_equal(m2.stat_shape)
+	assert_str(MonsterInstance.hatched(GameData.monster(&"forge_golem")).stat_shape).is_empty()

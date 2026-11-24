@@ -111,6 +111,7 @@ Every zone a skill creates lasts 2 rounds.
 | Set Clay Urn | 1 AP | Reach, 1 free square | — | — | — | — | — | Clay Urn |
 | Lay Spikes | 1 AP | Reach, 1 square | — | — | — | — | — | Spike Trap |
 | Lay Vortex | 1 AP | Reach, 1 square | — | — | — | — | — | Vortex Trap |
+| Brace | 1 AP | self | — | — | cannot be pushed or pulled until the round ends | — | — | — |
 | Battle Trance *(experiment)* | 1 AP, once per battle | self | — | — | AP +1 for 2 rounds | — | — | — |
 | Time Split *(experiment)* | 3 AP, once per battle | self | — | — | one more turn in the next round | — | — | — |
 
@@ -180,5 +181,24 @@ What the points of [monsters.md §2.2](monsters.md#22-prices-and-points) buy at 
 
 - A movement skill that pushes on landing counts as movement, a Strike that leaves ground as a Strike: the group is what the skill is, not what it creates besides.
 - The group “self” holds few skills so far ([§4](#4-skills)).
+
+**Stat shapes and the lean of each Kin** *(draft)*. A shape gives the weight of each stat when a wild monster spends its points ([monsters.md §2.3](monsters.md#23-shapes-and-spending)); a lean gives how often a Kin rolls each shape.
+
+| Shape | HP | Pace | Stamina | Reach | AP | Turns |
+|---|---|---|---|---|---|---|
+| Bulwark | 10 | 2 | 2 | 1 | 3 | 1 |
+| Skirmisher | 4 | 7 | 6 | 1 | 3 | 1 |
+| Swift | 3 | 3 | 3 | 1 | 3 | 8 |
+| Caster | 3 | 3 | 2 | 6 | 4 | 1 |
+
+| Kin | Bulwark | Skirmisher | Swift | Caster |
+|---|---|---|---|---|
+| Beast | 2 | 6 | 1 | 1 |
+| Winged | 1 | 1 | 4 | 4 |
+| Scaled | 6 | 1 | 1 | 2 |
+| Swarm | 1 | 2 | 6 | 1 |
+| Spirit | 1 | 4 | 1 | 4 |
+| Stone | 7 | 1 | 0 | 2 |
+| Flora · Void | 1 | 1 | 1 | 1 |
 
 The kits of the nine monsters of [§5](#5-the-nine-monsters) ignore the groups; the test species and learnable lists of the build are no content drafts.

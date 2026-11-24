@@ -48,6 +48,8 @@ func build(into: VBoxContainer) -> void:
 				if String(n.get("kind", "")) == "tamer":
 					var t := content.tamer_skill(n["ref"])
 					card.add_child(HubUi.label("Tamer skill: %s" % (t.description if t != null else "?")))
+				elif String(n.get("kind", "")) == "seal":
+					card.add_child(HubUi.label("Seal option (a development step, %d at most): %s" % [TamerSkillDef.SEAL_MAX_OPTIONS, String(n.get("text", ""))]))
 				else:
 					card.add_child(HubUi.label(String(n.get("text", ""))))
 				var why := Cultivation.problem(game, id)

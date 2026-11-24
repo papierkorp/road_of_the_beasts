@@ -70,7 +70,7 @@ A battle is made of three things. **A game follows one Way, and a Way owns one p
 
 - **The hub costs nothing:** looking, planning, spending points and giving pills take no year.
 - **Every battle is a new problem.** The battle is deterministic, so one board has one answer: every battle has a board of its own.
-- **Every board is a battleground** with its team size, its ends and its board events ([battle_ingame.md](battle_ingame.md)).
+- **Every board is a battleground** that sets its team size ([battle_ingame.md](battle_ingame.md)).
 - **Whose board:** a battleground is generated for the battle, point-mirrored. The Artificer alone changes that ([§2](#2-the-pillars-and-the-ways)): in the wild they lay parts of their own on the generated board before each battle; in the void they fight on a battleground they built.
 - **Every battle starts at full HP.**
 
@@ -95,7 +95,7 @@ A battle is made of three things. **A game follows one Way, and a Way owns one p
 
 *Status: set.*
 
-- The player is an orphan and finds a nest with three eggs. The three are drawn anew for every game from a pool of species, each of another Kin and none of the void; every finished game adds species to the pool. The player chooses one; the first monster hatches from it. Every further monster is caught or hatched.
+- The player is an orphan and finds a nest with three eggs. The three are drawn anew for every game from a pool of species, each of another Kin and none of the void; every finished game adds species to the pool. A finished game, won or lost, is counted and its save is gone; the pool holds 14 species, 7 from the first game on and 2 more with every finished game *(working values)*. The player chooses one; the first monster hatches from it. Every further monster is caught or hatched.
 - **The player chooses a Way** ([§2](#2-the-pillars-and-the-ways)) and keeps it for the whole game.
 - **A gift of the Way:** the player takes one of three gifts, drawn anew for every game, so that the first battle already uses the Way: a tamer skill for the Formation, a pack of parts for the Artificer, pills for the battle for the Alchemist ([overworld.md §5.3](overworld.md#53-the-way)).
 
@@ -147,7 +147,7 @@ Qi Gathering → Foundation → Core Formation → Nascent Soul → Immortal. Be
 | **The tamer** | a boon at every breakthrough, a longer life among them ([overworld.md §5.1](overworld.md#51-stages)) | one per breakthrough |
 | **The Way** | Insight | the tamer's stage |
 | **A monster** | rises: stat points, the development of its skills | the tamer's stage |
-| **The roster** | catching and hatching | not defined |
+| **The roster** | catching and hatching | 8, eggs included *(working value)* |
 | **What the Way uses** | the drops of the wild | a budget per stage for parts |
 
 **A monster rises by battles, not by points gathered** ([monsters.md §5](monsters.md#5-growth)):

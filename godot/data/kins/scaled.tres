@@ -10,3 +10,4 @@ trait_name = "Armoured"
 trait_text = "Takes no collision damage when it is the one moved."
 trait_flags = {"reduces_damage": ["collision_self"], "reduction": 2}
 learns = Array[String](["strike", "self", "ground", "prop"])
+lean = {"bulwark": 6, "caster": 2, "skirmisher": 1, "swift": 1}

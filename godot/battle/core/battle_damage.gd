@@ -48,9 +48,9 @@ static func apply_round(b: Battle, hits: Array, heals: Array = []) -> Dictionary
 			continue
 		var type: String = h["type"]
 		var amt := amount(b, u, int(h["base"]), type, bool(h.get("pushed", false)))
-		# Nullify (gdd_battle §6.1): an override after the sum, consumed by the first Surge
-		# damage instance of at least 1; a hit already reduced to 0 consumes nothing.
-		if type == SURGE and amt >= 1 and u.nullify:
+		# The shield (Spirit Shield, the Warding pill; docs/overworld.md §5.4): the next hit of at least 1 this round
+		# deals nothing, whatever its source; a hit already reduced to 0 consumes nothing.
+		if amt >= 1 and u.nullify:
 			u.nullify = false
 			amt = 0
 			b.emit(&"nullified", {"target": u.id, "source": h.get("source", "")})

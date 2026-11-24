@@ -44,6 +44,8 @@ var player_starts: Array[Vector2i] = []
 var player_tamer: Array[StringName] = []
 ## Uses per battle of a loadout entry of the player that has more than one: tamer skill id -> uses.
 var player_tamer_uses := {}
+## The options the player took for Seal (TamerSkillDef.SEAL_OPTIONS): the battle plays a copy of the skill with them.
+var player_seal_options: Array = []
 var enemy_tamer: Array[StringName] = []
 ## Ingame battle (docs/battle_ingame.md §7): the enemy side has no tamer. Its monsters die at 0 HP and can be caught on
 ## Seal Ground. `roll_seed` seeds the catch rolls (the battle replays the same with the same seed).

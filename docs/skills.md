@@ -15,7 +15,7 @@ Monster = Step and Basic Jab (always, no slot)
 - No skill is mandatory, not even a Strike or a movement. The same skill may sit in two slots, each copy with its own usage count.
 - **Slots:** the multiplayer mode plays with all six open; in the game a monster starts with four, and the fifth and sixth are a choice at a stage breakthrough ([monsters.md §5](monsters.md#5-growth)).
 - **The player shapes the kit** within the species' learnable list ([monsters.md §3](monsters.md#3-kins)).
-- **Species skills and Signature skills** are ordinary skills with restricted access, not a kind of their own ([monsters.md §3](monsters.md#3-kins)).
+- **Signature skills** are ordinary skills with restricted access, not a kind of their own. A species has no skill of its own.
 
 ## 2. The Skill Card
 
@@ -82,6 +82,7 @@ Monster = Step and Basic Jab (always, no slot)
 
 - A movement skill moves its user up to its **range** (3 squares unless the card names another) and never further than its Stamina allows. It costs AP and Stamina ([battle.md §2.4](battle.md#24-action-points-and-stamina)): walking pays the movement cost of the ground, the other path kinds 1 per square.
 - **Every square entered and left counts** for ground and traps; a path over other squares touches only the landing square.
+- **Walking:** the player picks the destination and the route is chosen for them: the least net harm from entering and leaving, then the cheapest. The route is found before the move; what an entry effect creates on the rest of it (a wall, a pulled monster) stops the mover on the square before.
 - On landing it may push: the monster ahead, or all eight neighbours ([§5](#5-movement-kinds)).
 - A movement may create ground or a zone on the squares it left.
 
@@ -206,19 +207,19 @@ Principles:
 - **Never by development:** more damage than the maxima of [battle.md §6.1](battle.md#61-damage), lower AP, more Reach, more uses of a tamer skill.
 - **AP policy:** every skill has a complete path at its original AP; a bigger option may cost more AP, shown before selection, and is never the only path.
 - **Useful from the start:** development expands an already viable kit, with several useful routes and no compulsory first upgrade.
-- **Replacement:** outside a battle a slot may take another skill of the species' learnable list with a **relearning pill** of the Alchemist ([overworld.md §6.2](overworld.md#62-alchemy-and-pills)).
+- **Replacement:** outside a battle a slot may take another skill of the species' learnable list with a **relearning pill** of the Alchemist ([overworld.md §6.2](overworld.md#62-pills)).
 - Where and when a choice is made: [overworld.md §5.5](overworld.md#55-development-of-monster-skills).
 
 **Options by kind** *(draft; an option a skill already has, or that its card cannot take, is not offered)*:
 
 | Kind | Options |
 |---|---|
-| Strike | **Area:** its shape is extended once ([§4](#4-shapes)) · **Addition:** it also damages the props in its shape · **Addition:** it leaves ground on the struck squares |
-| Movement | **Area:** 1 square further · **Condition:** it passes over props · **Condition:** it passes over monsters · **Condition:** ground on its way does not act on it · **Addition:** it pushes on landing |
-| Ground · zone · prop | **Area:** 1 square more · **Duration:** 1 round longer |
+| Strike | **Area:** its shape is extended once ([§4](#4-shapes)) · **Addition:** it also damages the props in its shape · **Addition:** it leaves Thornbed on the struck squares |
+| Movement | **Area:** 1 square further · **Condition:** it passes over props · **Condition:** it passes over monsters · **Condition:** ground on its way does not act on it, only the landing square counts · **Addition:** it pushes on landing |
+| Ground · zone · prop | **Area:** 1 square more, on a free shape next to its last square · **Duration:** 1 round longer |
 | Effect on the user | **Duration:** 1 round longer · **Number:** its value +1 within the caps |
 
-Which ground a Strike leaves and the options of tamer skills besides Seal ([overworld.md §5.4](overworld.md#54-tamer-skills)) are not defined.
+The options of tamer skills besides Seal ([overworld.md §5.4](overworld.md#54-tamer-skills)) are not defined.
 
 ## 9. Data
 

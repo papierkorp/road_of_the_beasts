@@ -174,6 +174,10 @@ func prepare(f: Fight, on_start: Callable) -> void:
 		f.team = game.default_team(f.max_team)
 	if f.tamer.is_empty() and game.is_formation():
 		f.tamer = game.default_loadout()
+	f.seal_options = game.seal_options()
+	if not f.allows_seal():
+		for id in GameState.CATCHING:
+			f.tamer.erase(id)
 	_laying = ""
 	refresh()
 
@@ -230,10 +234,13 @@ func _build_slots(list: VBoxContainer, f: Fight) -> void:
 	for t in f.tamer:
 		if not GameState.CATCHING.has(t):
 			filled += 1
-	slots.add_child(HubUi.label("Tamer slots: %d of %d filled — %s. %s takes no slot." % [filled, game.tamer_slots(), what, "Seal" if game.is_formation() else "A Binding pill"], 20, UiTheme.ACCENT))
+	var beside := "%s takes no slot." % ("Seal" if game.is_formation() else "A Binding pill") if f.allows_seal() else "Nothing is caught in the void."
+	slots.add_child(HubUi.label("Tamer slots: %d of %d filled — %s. %s" % [filled, game.tamer_slots(), what, beside], 20, UiTheme.ACCENT))
 	var content := GameSession.battle_content()
 	if game.is_formation():
 		for id in game.tamer_skills:
+			if GameState.CATCHING.has(id) and not f.allows_seal():
+				continue
 			var def := content.tamer_skill(id)
 			var b := Button.new()
 			b.toggle_mode = true
@@ -253,6 +260,8 @@ func _build_slots(list: VBoxContainer, f: Fight) -> void:
 		return
 	var items := Crafting.battle_items(game)
 	for id: StringName in items:
+		if GameState.CATCHING.has(id) and not f.allows_seal():
+			continue
 		var def := content.tamer_skill(id)
 		if def == null:
 			continue
@@ -295,7 +304,7 @@ func _build_parts(place: VBoxContainer, f: Fight, view: HBoxContainer) -> void:
 	place.add_child(picks)
 	var ids: Array = game.parts.keys()
 	ids.sort()
-	if game.can_catch():
+	if game.can_catch() and f.allows_seal():
 		ids.push_front(Fight.SEAL_PART)
 	for part: String in ids:
 		if Crafting.part_banned(game, part):

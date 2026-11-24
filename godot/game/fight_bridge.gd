@@ -46,12 +46,16 @@ static func request_of(f: Fight) -> BattleRequest:
 	var r := BattleRequest.new()
 	r.battle_kind = BattleRequest.INGAME
 	r.map = map_of(f)
-	r.player_seals = seals_of(f)
+	r.player_seals = seals_of(f) if f.allows_seal() else ([] as Array[Vector2i])
 	for p in r.player_seals:                      # the battle lays the seal itself: the map holds plain ground there
 		r.map.grounds.erase(p)
 	r.player_team = f.team
 	r.enemy_team = f.enemies
 	r.player_tamer = f.tamer.duplicate()
+	if not f.allows_seal():                      # nothing is caught in the void
+		for id in GameState.CATCHING:
+			r.player_tamer.erase(id)
+	r.player_seal_options = f.seal_options.duplicate()
 	r.enemy_wild = f.wild
 	r.roll_seed = f.roll_seed
 	return r

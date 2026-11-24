@@ -52,9 +52,9 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 1. The battlefield is generated ([§4.1](#41-board-generation)).
 2. Pre-battle: choose monsters and place them in the start area. The sides place alternately and openly, one monster at a time; which side places first is not defined. Monsters start at their **current HP**.
 3. **Each round:** one queue for all monsters of both sides ([§2.3](#23-pace-and-the-queue)).
-4. **A monster's turn:** it spends AP and Stamina on legal actions ([§2.4](#24-action-points-and-stamina)), then its end-of-turn effects resolve ([§3](#3-timing)).
+4. **A monster's turn:** it spends AP and Stamina on legal actions ([§2.4](#24-action-points-and-stamina)), then its end-of-turn effects resolve ([§3](#3-timing)). A monster that falls during its own turn ends that turn at once, without end-of-turn effects.
 5. The round ends with the round-end events ([§3](#3-timing)).
-6. **End of battle** (when a side has no monsters left; the ingame battle may name other ends): a side may concede during a turn of one of its own monsters, which ends the battle at once as its defeat. Otherwise the end is checked after a payload has fully resolved, including its defeats. The battle then ends at once and anything still pending lapses. If both sides have no monsters left after the same resolution, the result is a **Draw**.
+6. **End of battle** (when a side has no monsters left): a side may concede during a turn of one of its own monsters, which ends the battle at once as its defeat. Otherwise the end is checked after a payload has fully resolved, including its defeats. The battle then ends at once and anything still pending lapses. If both sides have no monsters left after the same resolution, the result is a **Draw**.
 
 ### 2.3 Pace and the Queue
 
@@ -62,7 +62,7 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 
 - **One queue for both sides**, strictly by effective Pace, **recalculated every round**. A side may act several times in a row.
 - **Pace points:** Pace counts in points of 0.1. An effect names points: `quicken 1` raises Pace by 0.1, **a drain point counts double**: `drain_pace 1` lowers it by 0.2. Effective Pace never falls below 0.1.
-- **Ties:** higher base Pace first; still tied, the sides alternate (the first tie of a battle goes to the side with the lower total Pace; if the totals are equal, to the player's side). Tied units of one side act in their start slot order (slot 1 first). An extra-turn entry follows its unit's main entry. Meta state never breaks ties.
+- **Ties:** higher base Pace first; still tied, the sides alternate (the first tie of a battle goes to the side with the lower total Pace; if the totals are equal, to the player's side). The total Pace of a side is the sum of the effective Pace of its living monsters; extra-turn entries do not count. Tied units of one side act in their start slot order (slot 1 first). An extra-turn entry follows its unit's main entry. Meta state never breaks ties.
 - **Extra turns:** a monster with more turns per round gets one extra queue entry per extra turn, each 2 Pace points (0.2) lower than the entry before, minimum 0.1 *(working value)*. **Extra turns count from round 2:** in round 1 every monster has exactly one entry.
 - **Wait:** a monster may postpone its turn to the end of the round, before it has done anything and at most once per round. It has as many Waits per battle as the whole number of its current Pace lies above 1 (2.x: one, 3.x: two). Monsters that waited act in reverse order: the first to wait acts last.
 - **Effects bound to a unit** (buffs, marks) end at once when that unit is defeated or removed. Zones, ground and props stay when their creator is defeated.
@@ -112,7 +112,7 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 
 - **By themselves only Dragon Veins and surrounding damage a monster at the round end.** A monster pushed onto end-of-turn ground or next to a damaging prop there takes nothing then and can leave in its next turn.
 - **Clocks last:** a thing that lasts N rounds still counts at its N-th round end. An effect in its last round still counts for the Stamina recovery.
-- **Inside a turn:** every action resolves completely, including the pushes, entries and departures it causes ([§6.2](#62-payload-resolution)); then the end effects.
+- **Inside a turn:** every action resolves completely, including the pushes, entries and departures it causes ([§6.2](#62-payload-resolution)); then the end effects. A leaving effect acts before the monster moves, an entry effect after.
 - **Placing ground under a monster is not entering:** it acts at its next moment, not at once.
 - **Event-driven reactions** (passives): they collect during a payload and resolve after its last step, one at a time in the queue order of the reacting units, on the board as it then stands. Their consequences apply normally but trigger no further reactions; each passive reacts at most once per triggering event. Defeated units do not react.
 
@@ -137,7 +137,7 @@ The multiplayer battle is always **3v3 on 7×7**. Every other team size, equal o
 - **Dragon Vein:** a ground type that nothing changes. Otherwise it is ordinary ground: a prop may stand on it and a zone may lie on it; only no ground is laid on it.
 - **Ownership by last touch:** a Dragon Vein belongs to the side whose monster touched it last (walked onto or across it, was pushed or pulled onto it, or stands on it). It stays with that side until a monster of the other side touches it. At the start nobody owns one. A prop touches nothing: a solid prop on a vein blocks the square, and the vein keeps working for its owner.
 - **Damage on its own square:** at the round end every Dragon Vein, owned or not, deals **1 damage to the monster or prop on its square**, in every round.
-- **Dragon Vein damage:** at the round end every owned Dragon Vein deals **1 damage, from round 3 on 2, to the nearest enemy of its owner** (board distance). Ties: the enemy with more HP, then with more Pace, then **the owning side chooses**.
+- **Dragon Vein damage:** at the round end every owned Dragon Vein deals **1 damage, from round 3 on 2, to the nearest enemy of its owner** (board distance). Ties: the enemy with more HP, then with more Pace, then **the owning side chooses**. A player is asked once, before any vein acts. A side without a player takes the enemy with the fewest HP, then the highest Pace, then the lowest maximum HP, then the start slot order; a vein whose chosen target has fallen takes that order too.
 - **The veins act one after another,** the vein of the faster taker first: the taker is the monster that took the vein for its side (a later touch by an ally does not change it); its current Pace counts, then the queue order. A vein whose taker has fallen acts last. Each vein picks its target on the board as it then stands, defeats are resolved after each, and the battle ends as soon as one side is gone.
 - **Surrounding:** at the round end a monster with **two or more enemies on its eight neighbour squares** takes 1 damage, all in one step before the veins.
 - No source reduces Dragon Vein or surround damage.
@@ -324,7 +324,7 @@ Tamer skills exist in the ingame battle only ([battle_ingame.md §5](battle_inga
 1. **Damage** to all struck props, and to the monster the Basic Jab struck, simultaneously. A solid prop takes the hit for the square behind it.
 2. **Defeat:** units at 0 HP are removed before anything else resolves.
 3. **Displacement** of the survivors, one unit at a time, **the unit furthest along the movement direction first** (for a pull: nearest the anchor first). Collision, leaving and entry effects fire at each move; a zone the unit arrives in moves it once more ([§4.6](#46-zones)).
-4. **Board changes**, in fixed order: (a) **removals:** every prop at 0 HP is removed with what it does when destroyed; monsters reduced to 0 HP by it are then defeated; (b) **prop placement**; (c) **ground:** what destroyed props leave, then what the skill creates; (d) **zones** the skill creates.
+4. **Board changes**, in fixed order: (a) **removals:** every prop at 0 HP is removed with what it does when destroyed; monsters reduced to 0 HP by it are then defeated, and a prop that a collision of this step brings to 0 HP is removed in a further removal step, with what it does when destroyed; (b) **prop placement**; (c) **ground:** what destroyed props leave, then what the skill creates; (d) **zones** the skill creates.
 
 - What a payload creates lands after its displacement: a monster pushed by a Strike does not end in the ground that Strike leaves unless it stands there afterwards.
 - **Legality at execution:** each square is checked on the board as it stands at that step. A square that is not legal does nothing; everything else resolves. No retargeting and no refund of AP.

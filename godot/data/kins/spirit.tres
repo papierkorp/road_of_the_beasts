@@ -10,3 +10,4 @@ trait_name = "Bodiless"
 trait_text = "Its movement passes over monsters; it cannot end on one."
 trait_flags = {"passes_monsters": true}
 learns = Array[String](["movement", "self", "zone", "prop"])
+lean = {"skirmisher": 4, "caster": 4, "swift": 1, "bulwark": 1}

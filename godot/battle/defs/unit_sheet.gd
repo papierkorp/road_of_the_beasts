@@ -58,12 +58,12 @@ func problems() -> Array[String]:
 		out.append("HP %d outside 1-10" % hp)
 	if pace < 0.1 or pace > 10.0:
 		out.append("Pace %.1f outside 0.1-10.0" % pace)
-	if reach < 2 or reach > 4:
-		out.append("Reach %d outside 2-4" % reach)
+	if reach < 1 or reach > 10:
+		out.append("Reach %d outside 1-10" % reach)
 	if tpr < 1 or tpr > 3:
 		out.append("TPR %d outside 1-3" % tpr)
-	if ap < 2 or ap > 5:
-		out.append("AP %d outside 2-5" % ap)
+	if ap < 1 or ap > 5:
+		out.append("AP %d outside 1-5" % ap)
 	if movement < 1:
 		out.append("Movement %d below 1" % movement)
 	if size != 1 and size != 2:
