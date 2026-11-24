@@ -9,4 +9,4 @@ display_name = "Winged"
 trait_name = "Aloft"
 trait_text = "Ground does not act on it on entering or leaving; end-of-turn ground and traps act as usual."
 trait_flags = {"ignores_ground_moments": ["enter", "leave"]}
-learns = PackedStringArray("movement", "self", "ground", "zone")
+learns = Array[String](["movement", "self", "ground", "zone"])

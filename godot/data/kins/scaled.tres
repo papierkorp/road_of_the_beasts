@@ -9,4 +9,4 @@ display_name = "Scaled"
 trait_name = "Armoured"
 trait_text = "Takes no collision damage when it is the one moved."
 trait_flags = {"reduces_damage": ["collision_self"], "reduction": 2}
-learns = PackedStringArray("strike", "self", "ground", "prop")
+learns = Array[String](["strike", "self", "ground", "prop"])

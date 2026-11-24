@@ -9,4 +9,4 @@ display_name = "Flora"
 trait_name = "Rooted Growth"
 trait_text = "Ground it lays lasts 3 rounds."
 trait_flags = {"ground_rounds_bonus": 1}
-learns = PackedStringArray("strike", "ground", "zone", "prop")
+learns = Array[String](["strike", "ground", "zone", "prop"])

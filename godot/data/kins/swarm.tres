@@ -9,4 +9,4 @@ display_name = "Swarm"
 trait_name = "Scatter"
 trait_text = "Its Step may enter the square of an ally; the two swap places."
 trait_flags = {"swaps_allies": true}
-learns = PackedStringArray("strike", "movement", "ground", "prop")
+learns = Array[String](["strike", "movement", "ground", "prop"])

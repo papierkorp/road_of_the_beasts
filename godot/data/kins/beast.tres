@@ -9,4 +9,4 @@ display_name = "Beast"
 trait_name = "Follow-up"
 trait_text = "After its Strike pushed a monster, it may enter the square that monster left, free of AP and Stamina."
 trait_flags = {"follows_push": true}
-learns = PackedStringArray("strike", "movement", "self", "ground")
+learns = Array[String](["strike", "movement", "self", "ground"])

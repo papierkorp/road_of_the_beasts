@@ -14,7 +14,7 @@ const GROUPS: Array[String] = ["strike", "movement", "self", "ground", "zone", "
 ## Fields of BattleSkillDef the trait sets on its passive.
 @export var trait_flags: Dictionary = {}
 ## The skill groups its monsters can learn (four of GROUPS).
-@export var learns: PackedStringArray = []
+@export var learns: Array[String] = []
 
 static var _cache := {}
 static var _lock := Mutex.new()                # the AI of the battle screen thinks on a worker thread

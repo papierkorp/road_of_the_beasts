@@ -9,4 +9,4 @@ display_name = "Stone"
 trait_name = "Bulwark"
 trait_text = "Gives cover like a solid prop: a Strike that hits it does not strike the square behind it."
 trait_flags = {"gives_cover": true}
-learns = PackedStringArray("strike", "self", "zone", "prop")
+learns = Array[String](["strike", "self", "zone", "prop"])

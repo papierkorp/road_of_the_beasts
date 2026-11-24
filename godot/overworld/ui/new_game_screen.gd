@@ -67,7 +67,7 @@ func _build() -> void:
 		if def == null:
 			continue
 		var kin := KinDef.of(def.kin)
-		var groups := "Learns: %s\nNever learns: %s\n%s" % [" · ".join(kin.learns), " · ".join(kin.never_learns()), kin.trait_line()] if kin != null else ""
+		var groups := "Learns: %s\nNever learns: %s\n%s" % [" · ".join(PackedStringArray(kin.learns)), " · ".join(kin.never_learns()), kin.trait_line()] if kin != null else ""
 		var egg := _choice("%s (%s)\n%s\n\n%s" % [def.display_name, MonsterDef.kin_name(def.kin), def.blurb, groups], _egg == id, func():
 			_egg = id
 			_build())

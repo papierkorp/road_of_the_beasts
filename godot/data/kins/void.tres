@@ -9,4 +9,4 @@ display_name = "Void"
 trait_name = "Unmoored"
 trait_text = "Push and pull zones do not move it."
 trait_flags = {"ignores_zones": true}
-learns = PackedStringArray("strike", "movement", "ground", "zone")
+learns = Array[String](["strike", "movement", "ground", "zone"])
