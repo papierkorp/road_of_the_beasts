@@ -2,7 +2,7 @@
 
 **Status:** Open — the target is [architecture.md](../../../architecture.md); the order of the rebuild is its [§10](../../../architecture.md#10-the-rebuild). Everything is written anew, the rules too.
 **Prerequisite:** the user's go. Before the start every entry of [implementation.md](../../implementation.md) is a rule or dropped, put to the user in bundles. From the start the battle rules rest until the rebuilt battle can be played by hand. Overworld work stays behind the battle.
-**Sources:** [architecture.md](../../../architecture.md); [battle.md §7](../../../battle.md#7-technical-requirements); [godot/README.md](../../../../godot/README.md); [godot/tools/README.md](../../../../godot/tools/README.md); I56/I57, I74.
+**Sources:** [architecture.md](../../../architecture.md); [battle.md §7](../../../battle.md#7-technical-requirements); [godot/README.md](../../../../godot/README.md); [godot/tools/README.md](../../../../godot/tools/README.md); [implementation.md](../../implementation.md) §5.
 
 **Open points:**
 

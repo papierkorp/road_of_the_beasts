@@ -1,15 +1,15 @@
-# T06 · Complete Strike Shapes and Kin Effects
+# T06 · Complete the Shapes
 
-**Status:** Partly decided — one shape vocabulary of six base shapes with extensions (user, 2026-11-15; [skills.md §4](../../../skills.md#4-shapes)); an extended Arc is straight only, Beast Bite has no effect and the Winged Dive retreats (user, 2026-11-11); damage and push of a Strike are both optional and stand on the single skill (user, 2026-11-15; before: every Strike pushes).
-**Prerequisites:** none for D; V with T13.
-**Sources:** [skills.md §3](../../../skills.md#3-what-a-skill-does-and-creates), [skills.md §4](../../../skills.md#4-shapes); [monsters.md §3](../../../monsters.md#3-kins); [battle.md §5.1](../../../battle.md#51-effective-stats), [battle.md §4.7](../../../battle.md#47-props).
-- **Ancient has no Strike effect any more** (it destroyed Mountains): a new one is needed; **the user postponed it (2026-11-14)** until the Kin identity as a whole has been played (T11).
-- **Kins beyond the Strike:** with Surge sizes, movement layers and the air layer gone, the Kin table holds only a stat lean and a Strike effect. What else sets Kins apart (skill access, a passive each) is open, with T11.
-- **Shape coverage:** distinguish draft Jab/Thrust/Shove/Thorn Lash cards from archived shape skills and user-authored experiments, including `new_skill` Arc ([skills.md §4](../../../skills.md#4-shapes)/§10). Decide intended defaults and AP access; an archived reference skill does not mean the shape cannot appear in an experiment.
-- **Open after the shape decision (D):** Storm +1 as the eight lines of 2 (16 squares, the written rule) or as the full ring (24, which the 5×5 block of a prop is); how far a shape may be extended; the AP of Jab +2, Pincer +1 and Storm +1. **Changed by the merge:** Thrust (Jab +1) may now be aimed diagonally (the earlier Diagonal Thrust), and a skill that creates something around its user (Cinder Dive) may be aimed in eight directions instead of four.
-- **Siphon is an effect on another monster (new, K/D):** the Spirit Strike gives its target −1 Pace point (−0.1) next round, which on the 0.1 grid only reorders monsters of equal base Pace (T04). [skills.md §3](../../../skills.md#3-what-a-skill-does-and-creates) says a skill cannot place an effect on another monster and that what reaches others goes through the board, and the Pace row of [battle.md §5.1](../../../battle.md#51-effective-stats) does not list it. Confirm it as the one named exception or change it; then write its duration and stacking under the rules of Battle §3.1 and its order against the tamer skill Qi Suppression (T20).
-- **Strikes and props:** cover is decided (2026-11-15: a solid prop takes the hit and shields the square behind it, [battle.md §4.7](../../../battle.md#47-props)). What a Strike does to a walkable prop (it has HP and can be struck; whether striking a trap sets it off) belongs to T41.
-- **Readings:** board-edge Strike legality (I02), Tail Sweep on multi-cell shapes (I04).
-- **Displacement access (user decision 2026-11-12):** push skills are not bound to Scaled; which species get which displacement tool is T11.
-- **AP per shape:** the AP column of Skills §8.1 is a working value under T02; its sentence “AP 2 is the ceiling until Core, so early Strikes are Jabs” depends on the ceilings of T03.
-- **Done when:** every Kin has its Strike effect and identity, the shape list of the game is decided, and T13 has compared the shapes.
+**Status:** To clarify — one shape vocabulary of six base shapes with extensions is decided ([skills.md §4](../../../skills.md#4-shapes)); a Strike pushes, damages props, or both, and deals no damage to monsters. A Kin has a trait and no Strike effect ([content.md §7](../../../content.md#7-kins)).
+**Prerequisites:** none; the comparison of the shapes with T13.
+**Sources:** [skills.md §3](../../../skills.md#3-what-a-skill-does-and-creates), [§4](../../../skills.md#4-shapes); [content.md §4](../../../content.md#4-skills).
+
+**Open for the user:**
+
+- **How far a shape that is no Strike may be extended.** A Strike is extended at most once.
+- **Storm +1:** the eight lines of 2 (16 squares, the written rule) or the full ring (24, which the 5×5 block of a prop is).
+- **AP of the shapes without a value:** Pincer +1, Storm +1 ([content.md §4](../../../content.md#4-skills)); the whole AP table is a working value under T02.
+- **Which shapes the game uses:** the Strikes of the content are Jab, Thrust, Shove and Thorn Lash; the other shapes exist as archived records only.
+- **A Strike on a walkable prop:** whether striking a trap sets it off (with T41).
+
+**Done when:** the shape list of the game is decided and T13 has compared the shapes.
