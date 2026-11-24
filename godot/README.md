@@ -120,7 +120,7 @@ a Sovereign beast at Immortal High with 15 points more.
 
 **Solutions chosen without a rule** are listed in [docs/todo/implementation.md](../docs/todo/implementation.md)
 ("Hub Game"). **Not built:** development steps of tamer skills, species skills, anything a finished game leaves
-besides more species to draw eggs from, ends of a battle other than 0 HP, board events, an Android export; the
+besides more species to draw eggs from, ends of a battle other than 0 HP, board events; the
 trees of the Ways end at Nascent Soul.
 
 **Kin traits in the battle.** A grown monster of the hub game carries the trait of its Kin as a passive without a
@@ -608,3 +608,18 @@ godot --headless --path godot -s res://tools/compare.gd -- --bot rush           
 ```
 
 Options, test monsters, bots and the limits of these runs: [tools/README.md](tools/README.md). None of them is a balance test.
+
+## Android build
+
+The preset `Android` in `export_presets.cfg` builds a debug APK (arm64, landscape, without `addons/`, `tests/` and
+`reports/`). It needs the export templates of the Godot version, OpenJDK 17 and an Android SDK (platform-tools,
+build-tools); their paths are set in the editor settings (Export → Android).
+
+```
+godot --headless --path godot --export-debug "Android" <path>/road_of_the_beasts-debug.apk
+adb install -r <path>/road_of_the_beasts-debug.apk
+```
+
+With a phone connected (USB debugging on), the Android button of the editor builds, installs and starts the game.
+The game has not been played on a phone: touch arrives as a left click; hover, right click and keys have no touch
+counterpart.
