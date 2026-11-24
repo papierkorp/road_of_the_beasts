@@ -37,16 +37,26 @@ var picked: Array[StringName] = [] # units chosen so far for a tamer skill
 var rot := 0                       # quarter turns (Adaptive) / tetromino index (Domain Glimpse)
 var aim_dir := Vector2i(0, -1)     # cardinal direction of a placed skill that needs one
 var hover := NOWHERE
+## Touch: the square a first tap looked at; a second tap on it acts (a finger has no hover to aim with).
+var _armed := NOWHERE
+var _tap_from := Vector2.ZERO
+var _tap_travel := 0.0
+var _tap_ok := false
+## A finger may wander this far and still tap.
+const TAP_SLACK := 16.0
 var placing := false               # pre-battle placement phase (gdd_battle §2.1 step 2)
 var placing_pick: StringName = &""
 var _ai_running := false
 var _ai_task := -1                 # the worker task in which the AI thinks (-1 = none)
 var _held := false                 # a watched battle stands still (Pause button): the AI waits, the board stays live
 var _tetrominoes: Array[Dictionary] = []
+var _loading: CanvasLayer          # the note a handheld shows while the board is built
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS      # Esc must work while paused
+	if UiTheme.handheld():
+		await _show_loading()
 	rng.randomize()
 	if OS.get_cmdline_user_args().has("--autoplay"):
 		GameSession.autoplay = true
@@ -75,6 +85,7 @@ func _ready() -> void:
 	hud.restart_pressed.connect(func(): get_tree().reload_current_scene())
 	hud.resume_pressed.connect(_toggle_pause)
 	hud.watch_pause_pressed.connect(_toggle_watch_pause)
+	hud.touch_pressed.connect(_on_touch_button)
 	if GameSession.autoplay:
 		hud.set_watch(false)
 	hud.menu_pressed.connect(_to_menu)
@@ -89,12 +100,42 @@ func _ready() -> void:
 		notes.append_array(PackedStringArray(u.sheet.notes))
 		if not notes.is_empty():
 			hud.log_line("%s: %s" % [u.display_name(), BattleText.SEP.join(notes)])
+	_drop_loading()
 	placing = not GameSession.autoplay and _start_squares().size() > battle.living(PLAYER_SIDE).size()
 	if placing:
 		hud.log_line("Place your monsters, then start.")
 		_refresh()
 	else:
 		_begin()
+
+
+## A phone needs several seconds to build the board and to draw it for the first time. Meanwhile a note stands on
+## the screen, so the tap that started the battle has an answer.
+func _show_loading() -> void:
+	_loading = CanvasLayer.new()
+	_loading.layer = 90
+	_loading.add_child(UiTheme.paper_rect())
+	var note := Label.new()
+	note.theme = UiTheme.create()
+	note.text = "Preparing the battle…"
+	note.add_theme_font_size_override("font_size", 28)
+	note.add_theme_color_override("font_color", UiTheme.DIM)
+	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	note.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_loading.add_child(note)
+	add_child(_loading)
+	for i in 2:                                 # the note is on the screen before the building starts
+		await get_tree().process_frame
+
+
+func _drop_loading() -> void:
+	if _loading == null:
+		return
+	for i in 3:                                 # the first frames of the board are the slow ones
+		await get_tree().process_frame
+	_loading.queue_free()
+	_loading = null
 
 
 func _begin() -> void:
@@ -154,9 +195,17 @@ func _to_menu() -> void:
 # ---------- input ----------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if hud == null:                              # the board is still being built
+		return
 	if get_tree().paused:
 		if event.is_action_pressed(&"battle_cancel"):
 			_toggle_pause()
+		return
+	# a finger: its taps are read here; the mouse events the engine makes of it are left aside
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		_touch(event)
+		return
+	if event is InputEventMouse and event.device == InputEvent.DEVICE_ID_EMULATION:
 		return
 	# every key and button is an action of the Input Map (Project Settings), never a key in the code
 	if event is InputEventMouseMotion:
@@ -187,10 +236,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			_on_end_turn()
 	elif event.is_action_pressed(&"battle_cancel"):
-		if mode != &"" or placing_pick != &"":
-			_clear_mode()
-			placing_pick = &""
-			_refresh()
+		if _can_cancel():
+			_cancel()
 		else:
 			_toggle_pause()
 	else:
@@ -200,12 +247,85 @@ func _unhandled_input(event: InputEvent) -> void:
 				return
 
 
+## A tap is a finger put down and lifted again without wandering and without a second finger. On a square it
+## looks at that square (what the mouse does by hovering); a second tap on the same square acts. While the
+## monsters are placed before the battle a single tap acts.
+func _touch(event: InputEvent) -> void:
+	if event is InputEventScreenDrag:
+		if event.index == 0:
+			_tap_travel += event.relative.length()
+		return
+	if event.index != 0:
+		_tap_ok = false
+		return
+	if event.pressed:
+		_tap_from = event.position
+		_tap_travel = 0.0
+		_tap_ok = true
+		return
+	if not _tap_ok or _tap_travel > TAP_SLACK or event.position.distance_to(_tap_from) > TAP_SLACK:
+		return
+	var c = view.cell_at_screen(event.position)
+	var cell: Vector2i = c if c != null else NOWHERE
+	if cell != NOWHERE and (placing or cell == _armed):
+		hover = cell
+		_armed = NOWHERE
+		_click()
+		return
+	hover = cell
+	_armed = cell
+	_refresh()
+
+
+## The buttons a touch screen has for what a keyboard does with keys.
+func _on_touch_button(id: StringName) -> void:
+	match id:
+		&"menu":
+			_toggle_pause()
+		&"cancel":
+			if _can_cancel():
+				_cancel()
+		&"rotate":
+			_rotate()
+		&"aim":
+			aim_dir = Vector2i(-aim_dir.y, aim_dir.x)      # a quarter turn clockwise
+			_refresh()
+
+
+func _can_cancel() -> bool:
+	return mode != &"" or placing_pick != &""
+
+
+func _cancel() -> void:
+	_clear_mode()
+	placing_pick = &""
+	_refresh()
+
+
+## The chosen action has a shape or a line the player turns.
+func _can_rotate() -> bool:
+	if not _my_turn():
+		return false
+	if mode == &"tamer":
+		return true
+	return mode == &"skill" and _skill() != null and _skill().is_placed() and BattleStats.can_rotate(_active())
+
+
+## The chosen skill is placed with a direction of its own.
+func _can_aim() -> bool:
+	if not _my_turn() or mode != &"skill" or _skill() == null:
+		return false
+	var s := _skill()
+	return s.kind != BattleSkillDef.MOVE and s.kind != BattleSkillDef.STRIKE and s.needs_direction()
+
+
 func _set_dir(screen: Vector2i) -> void:
 	aim_dir = view.board_dir_from_screen(screen)
 	_refresh()
 
 
 func _clear_mode() -> void:
+	_armed = NOWHERE
 	mode = &""
 	slot = -1
 	tamer_id = &""
@@ -560,6 +680,7 @@ func _refresh() -> void:
 	var heal_why := battle.check({"type": &"heal"}) if _my_turn() and not placing else ""
 	var heal_text := "Heal: costs %d Stamina and no AP, heals %d HP. Once per turn." % [Battle.HEAL_STAMINA, Battle.HEAL_HP]
 	hud.set_heal(not placing, _my_turn() and not placing and heal_why == "", heal_text if heal_why == "" else "%s\n%s" % [heal_text, heal_why])
+	hud.set_touch(_can_cancel(), _can_rotate(), _can_aim(), not battle.over)
 
 func _ap_text() -> String:
 	var u := _active()
@@ -786,7 +907,26 @@ func _portrait_text() -> String:
 		BattleText.SEP, BattleStats.reach(battle, u)]
 
 
+## The hint in the words of a touch screen: taps and the buttons beside the bar instead of clicks and keys.
 func _hint_text() -> String:
+	if not UiTheme.handheld():
+		return _hint_keys()
+	if placing:
+		return "Tap a monster, then a start square · Start Battle begins" if placing_pick == &"" else "Tap a start square or a monster to swap"
+	var text := _hint_keys()
+	if text == "" or battle.over:
+		return text
+	if _my_turn() and mode == &"" and not _awaiting_choice():
+		return "Choose an action below · tap a square to look at it · one finger turns the board, two zoom and shift it"
+	if not _my_turn() and not _awaiting_choice():
+		return text
+	text = text.replace("Click", "Tap").replace("click", "tap")
+	text = text.replace("R rotates", "Rotate turns the shape").replace("R changes shape", "Rotate changes the shape").replace("R turns the line", "Rotate turns the line")
+	text = text.replace("%s direction" % _aim_keys(), "Aim turns the direction")
+	return text + " · tap the square again to confirm"
+
+
+func _hint_keys() -> String:
 	if placing:
 		return "Click a monster, then a start square · %s starts" % UiTheme.key_text(&"battle_confirm") if placing_pick == &"" else "Click a start square or a monster to swap"
 	if battle.over:
@@ -844,7 +984,7 @@ func _aim_keys() -> String:
 func _actions() -> Array:
 	var out: Array = []
 	if placing:
-		out.append({"id": ACT_START, "group": &"step", "text": "Start Battle\n%s" % UiTheme.key_text(&"battle_confirm"), "enabled": true, "selected": false,
+		out.append({"id": ACT_START, "group": &"step", "text": "Start Battle" if UiTheme.handheld() else "Start Battle\n%s" % UiTheme.key_text(&"battle_confirm"), "enabled": true, "selected": false,
 			"card": {"title": "Start Battle", "rows": []}})
 		return out
 	var u := _active()

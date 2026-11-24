@@ -65,7 +65,10 @@ func _ready() -> void:
 	var form := VBoxContainer.new()
 	form.custom_minimum_size = Vector2(330, 0)
 	form.add_theme_constant_override("separation", 8)
-	split.add_child(form)
+	var form_scroll := ScrollContainer.new()          # a low screen (a phone) scrolls the form instead of cutting it off
+	form_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	form_scroll.add_child(form)
+	split.add_child(form_scroll)
 	var title := Label.new()
 	title.text = "MAP EDITOR" if _job == null else "YOUR BATTLEGROUND"
 	title.add_theme_font_size_override("font_size", 30)

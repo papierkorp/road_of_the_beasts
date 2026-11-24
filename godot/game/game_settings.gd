@@ -1,5 +1,6 @@
 extends Node
 ## Window, audio and display settings, persisted to user://settings.cfg. F11 toggles fullscreen anywhere.
+## On a phone or tablet there is no window: the game always fills the screen.
 
 signal changed
 
@@ -22,7 +23,7 @@ func _ready() -> void:
 
 func apply() -> void:
 	var win := get_window()
-	if fullscreen:
+	if fullscreen or UiTheme.handheld():
 		win.mode = Window.MODE_FULLSCREEN
 	else:
 		win.mode = Window.MODE_WINDOWED

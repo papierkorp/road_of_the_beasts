@@ -6,7 +6,8 @@ extends Node3D
 ## It only reads the battle state and never decides a rule (gdd_battle §7.1).
 ##
 ## Camera: Q / E rotate by 90°, mouse wheel zooms, middle-mouse drag orbits freely (left and right turn it; with
-## the view switch `free_camera` up and down tilt it between 15° and 88°).
+## the view switch `free_camera` up and down tilt it between 15° and 88°). On a touch screen one finger turns it, two
+## fingers zoom (apart, together) and shift it over the board (moved together).
 
 const CELL := 1.0
 const TILE := 0.92
@@ -48,6 +49,14 @@ var _pitch := PITCH
 var _pitch_target := PITCH
 var _zoom := 8.5
 var _zoom_target := 8.5
+## Where the camera looks, as a shift from the middle of the board (two fingers drag it).
+var _pan := Vector3.ZERO
+var _pan_target := Vector3.ZERO
+## Fingers on the board: index -> position. One finger turns the camera, two zoom and shift it.
+var _touches := {}
+var _touch_travel := 0.0
+## A finger turns the camera only after it moved this far, so a tap stays a tap.
+const TOUCH_SLACK := 16.0
 ## Screen height (in viewport units) the HUD's bar takes at the bottom edge: the board is centred in the room above it.
 var bottom_room := 0.0
 var _time := 0.0
@@ -195,7 +204,16 @@ func _unhandled_input(event: InputEvent) -> void:
 	if camera == null:
 		return
 	# keys and buttons are actions of the Input Map (Project Settings)
-	if event.is_action_pressed(&"camera_zoom_in"):
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_touches[event.index] = event.position
+			if _touches.size() == 1:
+				_touch_travel = 0.0
+		else:
+			_touches.erase(event.index)
+	elif event is InputEventScreenDrag:
+		_touch_drag(event)
+	elif event.is_action_pressed(&"camera_zoom_in"):
 		_zoom_target = clampf(_zoom_target - 0.6, ZOOM_MIN, ZOOM_MAX)
 	elif event.is_action_pressed(&"camera_zoom_out"):
 		_zoom_target = clampf(_zoom_target + 0.6, ZOOM_MIN, ZOOM_MAX)
@@ -207,6 +225,40 @@ func _unhandled_input(event: InputEvent) -> void:
 		_yaw_target -= 90.0
 	elif event.is_action_pressed(&"camera_turn_right"):
 		_yaw_target += 90.0
+
+
+## One finger: turns the camera. Two fingers: apart and together zoom, moved together they shift the board.
+func _touch_drag(event: InputEventScreenDrag) -> void:
+	if not _touches.has(event.index):
+		return
+	var before: Vector2 = _touches[event.index]
+	_touches[event.index] = event.position
+	if _touches.size() == 1:
+		_touch_travel += event.relative.length()
+		if _touch_travel > TOUCH_SLACK:
+			_yaw_target -= event.relative.x * 0.3
+			if BattleExperiment.free_camera:
+				_pitch_target = clampf(_pitch_target + event.relative.y * 0.3, PITCH_MIN, PITCH_MAX)
+		return
+	var other := before
+	for i in _touches:
+		if i != event.index:
+			other = _touches[i]
+			break
+	var was := before.distance_to(other)
+	var now := event.position.distance_to(other)
+	if was > 1.0 and now > 1.0:
+		_zoom_target = clampf(_zoom_target * was / now, ZOOM_MIN, ZOOM_MAX)
+	# an orthogonal camera shows `size` world units over the viewport height
+	var unit := _zoom / maxf(1.0, get_viewport().get_visible_rect().size.y)
+	var move := event.relative * 0.5                    # each of the two fingers carries half the shift
+	var right := _pivot.global_basis.x
+	var up := -_pivot.global_basis.z
+	_pan_target += -right * move.x * unit + up * move.y * unit / maxf(0.2, sin(deg_to_rad(_pitch)))
+	var limit := battle.board.size * CELL * 0.5
+	_pan_target.x = clampf(_pan_target.x, -limit, limit)
+	_pan_target.z = clampf(_pan_target.z, -limit, limit)
+	_pan_target.y = 0.0
 
 
 func _process(delta: float) -> void:
@@ -222,6 +274,8 @@ func _process(delta: float) -> void:
 	camera.rotation_degrees = Vector3(-_pitch, 0, 0)
 	_zoom = lerpf(_zoom, _zoom_target, k)
 	_pivot.rotation_degrees.y = _yaw
+	_pan = _pan.lerp(_pan_target, k)
+	_pivot.position = _pan
 	camera.size = _zoom
 	# an orthogonal camera shows `size` world units over the viewport height: lower it by half the bar's share
 	camera.v_offset = -0.5 * _zoom * bottom_room / maxf(1.0, get_viewport().get_visible_rect().size.y)

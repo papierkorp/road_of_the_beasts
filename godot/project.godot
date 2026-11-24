@@ -14,12 +14,14 @@ config/name="road-of-the-beasts"
 run/main_scene="res://game/menu.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
+config/quit_on_go_back=false
 
 [autoload]
 
 GameSettings="*res://game/game_settings.gd"
 GameSession="*res://game/game_session.gd"
 CheatMenu="*res://game/cheat_menu.gd"
+Handheld="*res://game/handheld.gd"
 
 [display]
 

@@ -195,6 +195,12 @@ validates the whole set and shows a new ground, prop and skill built from existi
 Unique mechanics stay local: tamer skills in `BattleTamer`, late-round
 pressure in `BattleTurn`. No other module asks for a concrete monster, skill, prop or ground id.
 
+**Exported fields of a packed array type** (`PackedStringArray`, `PackedInt32Array`, …) never take an array literal
+as default (`= []`, `= ["x"]`): the export of Godot 4.7 then drops the value stored in the `.tres` or `.tscn`, and
+the exported game runs with the default, while the editor and the tests still read the right value. Declare such a
+field as a typed array (`Array[String] = []`), without a default, or with a constructor (`= PackedStringArray()`).
+`tests/shared/test_export_fields.gd` fails on the lossy spelling.
+
 ## Content status and build rules
 
 - **Current content is test data, working drafts or experiments**, not approved content (docs/temp_todo.md T10–T13). Skills, monsters,
@@ -621,5 +627,27 @@ adb install -r <path>/road_of_the_beasts-debug.apk
 ```
 
 With a phone connected (USB debugging on), the Android button of the editor builds, installs and starts the game.
-The game has not been played on a phone: touch arrives as a left click; hover, right click and keys have no touch
-counterpart.
+**On a phone or tablet** (`UiTheme.handheld()`, the export feature `mobile`) the game is the same, with these differences:
+
+- *Size and cutout* (autoload `Handheld`, `game/handheld.gd`): every screen keeps its layout for 1920 × 1080 and is
+  drawn 1.5 times as large, so it has about 720 units of height. A screen (a Control that fills the window) is moved
+  in from the left and right edge by the camera cutout; the paper ground and the opener of the cheat menu stay
+  outside. A screen that is too high for this scrolls (New Game, the hub panels, the forms of the builders and of
+  the map editor).
+- *Lists:* a finger scrolls a ScrollContainer by dragging anything in it; a button in it is still pressed by a tap,
+  an option list opens when the finger lifts.
+- *Window:* always fullscreen (`GameSettings.apply`); the settings leave out the two window rows. The back button of
+  the device presses the action `battle_cancel` and never closes the game (`config/quit_on_go_back`).
+- *Battle, taps* (`BattleController._touch`): a tap looks at a square (what the mouse does by hovering), a second
+  tap on the same square acts; while the monsters are placed a single tap acts. Touch events are read on any
+  device; the mouse events the engine makes of them are left aside.
+- *Battle, camera* (`BattleView._touch_drag`): one finger turns it, two fingers zoom and shift it over the board.
+- *Battle, buttons:* a panel left of the bar with Menu (pause), Cancel, Rotate and Aim (turns the direction of a
+  placed skill a quarter) for what the keys do on a PC (`BattleHud.touch_pressed`); hints name taps and these
+  buttons, button texts name no keys. A long skill name is cut short on its button (the card has it in full), and a
+  bar wider than the screen is drawn smaller (`BattleHud._fit_bar`, on a PC as well).
+- *Battle, start:* a phone builds the board for several seconds; the note "Preparing the battle…" stands on the
+  screen meanwhile (`BattleController._show_loading`).
+- *Not there on a touch screen:* tooltips (why Wait or Heal is not possible, the notes of the overview), hover cards
+  of the action bar before a button is tapped, the small arrows of number fields are hard to hit (tapping the field
+  opens the keyboard).

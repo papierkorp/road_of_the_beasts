@@ -1,6 +1,7 @@
 class_name SettingsPanel
 extends VBoxContainer
-## Fullscreen, window size and volume. Used by the main menu and the pause menu.
+## Fullscreen, window size and volume. Used by the main menu and the pause menu. A handheld has no window: its
+## two rows are left out.
 
 signal back_pressed
 
@@ -17,6 +18,7 @@ func _init(with_back: bool = false) -> void:
 	_fullscreen.text = "Fullscreen (%s)" % UiTheme.key_text(&"toggle_fullscreen")
 	_fullscreen.toggled.connect(func(on: bool): GameSettings.set_fullscreen(on))
 	add_child(_fullscreen)
+	_fullscreen.visible = not UiTheme.handheld()
 
 	var size_row := HBoxContainer.new()
 	var size_label := Label.new()
@@ -29,6 +31,7 @@ func _init(with_back: bool = false) -> void:
 	_size.item_selected.connect(func(i: int): GameSettings.set_size_index(i))
 	size_row.add_child(_size)
 	add_child(size_row)
+	size_row.visible = not UiTheme.handheld()
 
 	var vol_row := HBoxContainer.new()
 	var vol_label := Label.new()

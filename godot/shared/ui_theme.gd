@@ -98,6 +98,11 @@ static func icon_rect(name: String, size := 48, ink := INK) -> TextureRect:
 	return r
 
 
+## A phone or tablet: no window to size, and controls are pressed with a finger.
+static func handheld() -> bool:
+	return OS.has_feature("mobile")
+
+
 static func create() -> Theme:
 	var t := Theme.new()
 	t.default_font_size = 18

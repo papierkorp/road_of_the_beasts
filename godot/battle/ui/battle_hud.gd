@@ -16,6 +16,8 @@ signal menu_pressed
 signal watch_pause_pressed
 ## A monster of the turn order or a fallen one was clicked: its story is asked for.
 signal unit_pressed(id: StringName)
+## A button of the touch panel: menu | cancel | rotate | aim.
+signal touch_pressed(id: StringName)
 
 const LOG_LINES := 8
 ## Action bar (user layout 2026-11-15): Step stands over both rows, then a small gap, then the kit in columns of
@@ -63,6 +65,11 @@ var _banner_text: Label
 var _banner_restart: Button
 var _banner_menu: Button
 var _pause: Control
+var _root: Control
+var _bar: HBoxContainer
+## A handheld shows a long skill name cut short on its button; the card above the bar has it in full.
+const TOUCH_SKILL_WIDTH := 200.0
+var _touch := {}                  # id -> Button of the touch panel (handheld only)
 
 
 func build() -> void:
@@ -72,6 +79,7 @@ func build() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.theme = UiTheme.create()
 	add_child(root)
+	_root = root
 
 	var order_col := VBoxContainer.new()          # the round, the turn order (each monster a button to its story), the forecast
 	order_col.position = Vector2(24, 16)
@@ -154,6 +162,9 @@ func _build_bar(root: Control) -> void:
 	bar.add_theme_constant_override("separation", 24)
 	_ignore(bar)
 	center.add_child(bar)
+	_bar = bar
+	if UiTheme.handheld():
+		_build_touch(bar)
 	var panel := PanelContainer.new()
 	bar.add_child(panel)
 	var row := HBoxContainer.new()
@@ -207,6 +218,48 @@ func _build_bar(root: Control) -> void:
 	_tamer_grid = _bar_grid()
 	_tamer_grid.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_tamer_panel.add_child(_tamer_grid)
+
+
+## What a keyboard does with keys, as buttons left of the bar: the pause menu, cancel, rotate and aim.
+func _build_touch(bar: Control) -> void:
+	var panel := PanelContainer.new()
+	bar.add_child(panel)
+	var grid := _bar_grid()
+	grid.columns = 2
+	panel.add_child(grid)
+	for entry: Array in [[&"menu", "Menu"], [&"cancel", "Cancel"], [&"rotate", "Rotate"], [&"aim", "Aim"]]:
+		var b := Button.new()
+		b.text = entry[1]
+		b.custom_minimum_size = Vector2(88, BAR_BUTTON.y)
+		b.focus_mode = Control.FOCUS_NONE
+		var id: StringName = entry[0]
+		b.pressed.connect(func(): touch_pressed.emit(id))
+		grid.add_child(b)
+		_touch[id] = b
+
+
+## Which buttons of the touch panel do something now.
+func set_touch(cancel: bool, rotate: bool, aim: bool, menu: bool) -> void:
+	if _touch.is_empty():
+		return
+	_touch[&"cancel"].disabled = not cancel
+	_touch[&"rotate"].disabled = not rotate
+	_touch[&"aim"].disabled = not aim
+	_touch[&"menu"].disabled = not menu
+
+
+func _process(_delta: float) -> void:
+	if _bar != null:
+		_fit_bar()
+
+
+## A bar wider than the screen (a large kit, tamer skills, a narrow display) is drawn smaller, so that its last
+## button stays on the screen.
+func _fit_bar() -> void:
+	var room := _root.size.x - (144.0 if UiTheme.handheld() else 16.0)
+	var k := minf(1.0, room / maxf(1.0, _bar.get_combined_minimum_size().x))
+	_bar.pivot_offset = Vector2(_bar.size.x / 2.0, _bar.size.y)
+	_bar.scale = Vector2(k, k)
 
 
 ## A button over all rows of the bar (Step, End Turn).
@@ -285,7 +338,16 @@ func _even_widths(grid: GridContainer) -> void:
 	var widest := BAR_BUTTON.x
 	for c in grid.get_children():
 		if c is Button:
+			if UiTheme.handheld():
+				(c as Button).clip_text = false
+				(c as Button).text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 			widest = maxf(widest, (c as Button).get_minimum_size().x)
+	if UiTheme.handheld() and widest > TOUCH_SKILL_WIDTH:
+		widest = TOUCH_SKILL_WIDTH
+		for c in grid.get_children():
+			if c is Button:
+				(c as Button).clip_text = true
+				(c as Button).text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	for c in grid.get_children():
 		(c as Control).custom_minimum_size.x = widest
 
@@ -419,7 +481,7 @@ func _show_card() -> void:
 ## Right edge, below the monster panel, always fully on screen.
 func _place_inspector() -> void:
 	_inspector_panel.reset_size()
-	var vp := get_viewport().get_visible_rect().size
+	var vp := _root.size
 	var sz := _inspector_panel.get_combined_minimum_size()
 	_inspector_panel.size = sz
 	var top := _portrait.position.y + _portrait.size.y + 12.0
@@ -430,7 +492,7 @@ func _place_inspector() -> void:
 ## Keep the whole card on screen, centred above the action bar.
 func _place_card() -> void:
 	_card_panel.reset_size()
-	var vp := get_viewport().get_visible_rect().size
+	var vp := _root.size
 	var sz := _card_panel.get_combined_minimum_size()
 	_card_panel.size = sz
 	_card_panel.position = Vector2(roundf((vp.x - sz.x) / 2.0), maxf(8.0, vp.y - BAR_ROOM - sz.y))
@@ -502,7 +564,7 @@ func _build_pause(root: Control) -> void:
 	col.add_child(_menu_button("Resume", func(): resume_pressed.emit()))
 	col.add_child(SettingsPanel.new(false))
 	col.add_child(_menu_button("Rules of this battle", _show_rules))
-	col.add_child(_menu_button("Glossary (%s)" % UiTheme.key_text(&"battle_glossary"), show_glossary))
+	col.add_child(_menu_button("Glossary" if UiTheme.handheld() else "Glossary (%s)" % UiTheme.key_text(&"battle_glossary"), show_glossary))
 	col.add_child(_menu_button("Main Menu", func(): menu_pressed.emit()))
 
 
@@ -524,7 +586,7 @@ func set_exit_mode(from_overworld: bool) -> void:
 func set_heal(shown: bool, enabled: bool, why: String = "") -> void:
 	_heal_button.visible = shown
 	_heal_button.disabled = not enabled
-	_heal_button.text = "Heal [%s]" % UiTheme.key_text(&"battle_heal")
+	_heal_button.text = "Heal" if UiTheme.handheld() else "Heal [%s]" % UiTheme.key_text(&"battle_heal")
 	_heal_button.tooltip_text = why
 
 
@@ -589,8 +651,8 @@ func update(order: Dictionary, portrait: String, ap_text: String, hint: String, 
 	_preview_panel.visible = preview != ""
 	_preview.text = preview
 	if preview != "":
-		var vp := get_viewport().get_visible_rect().size
-		var pos := get_viewport().get_mouse_position() + Vector2(24, 24)
+		var vp := _root.size
+		var pos := get_viewport().get_mouse_position() - _root.global_position + Vector2(24, 24)
 		pos.x = minf(pos.x, vp.x - _preview_panel.size.x - 8.0)
 		pos.y = minf(pos.y, vp.y - _preview_panel.size.y - BAR_ROOM - 4.0)
 		_preview_panel.position = pos

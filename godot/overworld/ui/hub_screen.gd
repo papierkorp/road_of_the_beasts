@@ -241,6 +241,7 @@ func _build_slots(list: VBoxContainer, f: Fight) -> void:
 			b.disabled = not f.tamer.has(id) and not _fits(f, id, "")
 			b.text = "%s: %s" % [def.display_name, def.description] if def != null else String(id)
 			b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART    # a long description breaks, the screen stays as wide as it is
 			b.custom_minimum_size = Vector2(0, HubUi.TAP)
 			b.toggled.connect(func(on: bool):
 				if on and not f.tamer.has(id):
@@ -262,6 +263,7 @@ func _build_slots(list: VBoxContainer, f: Fight) -> void:
 		b.disabled = not f.tamer.has(id) and not _fits(f, id, item)
 		b.text = "%s ×%d — %s" % [Materials.display_name(item, game.values), game.count(item), def.description]
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.custom_minimum_size = Vector2(0, HubUi.TAP)
 		b.toggled.connect(func(on: bool):
 			if on and not f.tamer.has(id):
