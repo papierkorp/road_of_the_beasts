@@ -1,10 +1,10 @@
 # T54 · Lifespan, Day AP and the Length of a Game
 
-**Status:** To clarify — the lifespan, the forced trial and the hard loss are decided ([vision.md §3](../../../vision.md#3-the-day-and-the-lifespan)); every number is open. Takes the place of T29 and T31.
+**Decided:** The lifespan, the forced trial and the hard loss are decided ([vision.md §3](../../../vision.md#3-the-lifespan)); every number is open. Takes the place of T29 and T31.
 **Prerequisites:** none for the questions; the numbers need T55 and T56 (how long a day and a stage take).
-**Sources:** [vision.md §3](../../../vision.md#3-the-day-and-the-lifespan); [overworld.md §2.3](../../../overworld.md#23-action-catalog), [§5.1](../../../overworld.md#51-stages); [monsters.md §5](../../../monsters.md#5-growth).
+**Sources:** [vision.md §3](../../../vision.md#3-the-lifespan); [overworld.md §2.3](../../../overworld.md#23-action-catalog), [§5.1](../../../overworld.md#51-stages); [monsters.md §5](../../../monsters.md#5-growth).
 
-**Open for the user:**
+**For the user to decide:**
 
 | Topic | Questions |
 |---|---|

@@ -1,6 +1,7 @@
 # T37 · Editorial Deduplication Pass
 
-**Status:** Open — current thematic documentation and relative references are checked; continue source-ownership and deduplication checks as unresolved content is decided. This is not whole-project gameplay acceptance.
+**Decided:** —
+**Built/Measured:** Current thematic documentation and relative references are checked; continue source-ownership and deduplication checks as unresolved content is decided. This is not whole-project gameplay acceptance.
 **Prerequisites:** none; contradictions go to the owning D task.
 **Sources:** [battle.md §4](../../../battle.md#4-the-board)/[battle.md §6](../../../battle.md#6-damage-and-displacement), [skills.md §2](../../../skills.md#2-the-skill-card); [overworld.md §2.3](../../../overworld.md#23-action-catalog), [overworld.md §5.5](../../../overworld.md#55-development-of-monster-skills).
 - **To check after consolidation:** verify that timing/displacement references point to Battle §2.4/§4/§6, slot development to Skills §6, and stat/stage progression to Monsters §2.2/§5.3. Distinguish necessary interface summaries from duplicate rules; do not revive old duplicate findings without checking current text. Current relative references are checked; rerun that check after future section moves.

@@ -1,6 +1,6 @@
 # T03 · Stat Calculation: Open Points
 
-**Status:** to clarify. The system is decided and written in [monsters.md §2](../../../monsters.md#2-stats); every number is an untested starting value.
+**Decided:** The system is decided and written in [monsters.md §2](../../../monsters.md#2-stats); every number is an untested starting value.
 
 **Open points:**
 
@@ -15,6 +15,6 @@
 
 **Evidence so far** (bot runs with random stats, indications only, [simulation_log.md](../../../simulation_log.md)): an HP was worth about 4 more team wins in 100 battles, a second turn about 11, AP 3 instead of 2 about 9, a Stamina point about 2; Reach and Pace showed nothing measurable.
 
-- **Steps 16 to 18 (2026-11-22):** defeating the Sovereign beast ends the game, so no monster reaches the Sovereign stage ([vision.md §3](../../../vision.md#3-the-day-and-the-lifespan)); open whether the growth table of [monsters.md §5](../../../monsters.md#5-growth) ends at step 15.
+- **Steps 16 to 18 (2026-11-22):** defeating the Sovereign beast ends the game, so no monster reaches the Sovereign stage ([vision.md §3](../../../vision.md#3-the-lifespan)); open whether the growth table of [monsters.md §5](../../../monsters.md#5-growth) ends at step 15.
 
 **Done when:** the shape split is defined, and the prices have been checked in play at the start, at Core and at a high stage.

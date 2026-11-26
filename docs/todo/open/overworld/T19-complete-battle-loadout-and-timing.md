@@ -1,6 +1,7 @@
 # T19 · Complete Battle Loadout and Timing
 
-**Status:** Partly drafted — visibility, pre-battle selection and the result fields exist ([overworld.md §6.5](../../../overworld.md#65-loadout)); what a weapon's skill or a pill does on the board and the full result contract are open.
+**Decided:** —
+**Built/Measured:** Visibility, pre-battle selection and the result fields exist ([overworld.md §6.5](../../../overworld.md#65-loadout)); what a weapon's skill or a pill does on the board and the full result contract are open.
 **Prerequisites:** T58 for the effects of pills and weapons; T57 for the tamer skills. Complete before full-scope T13.
 **Sources:** [battle_ingame.md §5](../../../battle_ingame.md#5-tamer-skills); [overworld.md §2.1](../../../overworld.md#21-battle-loop), [§6.5](../../../overworld.md#65-loadout), [§7](../../../overworld.md#7-technical-notes).
 

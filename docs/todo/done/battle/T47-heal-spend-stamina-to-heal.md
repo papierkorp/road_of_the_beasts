@@ -1,8 +1,9 @@
 # T47 · Heal: Spend or Burn Stamina to Heal
 
-**Status:** Done — decided on 2026-11-18: Heal is a rule of both battles, 1 HP for 3 Stamina and no AP, once per turn ([battle.md §2.4](../../../battle.md#24-action-points-and-stamina)); the switches are removed from the build. The text below is the state before the decision.
+**Closed:** fulfilled ([decisions.md](../../../decisions.md)).
+**State before closing:** Done — decided on 2026-11-18: Heal is a rule of both battles, 1 HP for 3 Stamina and no AP, once per turn ([battle.md §2.4](../../../battle.md#24-action-points-and-stamina)); the switches are removed from the build. The text below is the state before the decision.
 **Prerequisites:** the user's play of the switch.
-**Sources:** [godot/README.md](../../../../godot/README.md) (switch `heal_burn`); [battle.md §2.4](../../../battle.md#24-action-points-and-stamina); [monsters.md §2.2](../../../monsters.md#22-prices-and-points); [simulation_log.md](../../../simulation_log.md) S040–S045 (the action is called Mend up to S044); [T03](../../to-clarify/monsters/T03-review-stat-budgets-frames-and-progression-limit.md), [T40](../../open/battle/T40-reshape-the-square-and-the-skills.md).
+**Sources:** [godot/README.md](../../../../godot/README.md) (switch `heal_burn`); [battle.md §2.4](../../../battle.md#24-action-points-and-stamina); [monsters.md §2.2](../../../monsters.md#22-prices-and-points); [simulation_log.md](../../../simulation_log.md) S040–S045 (the action is called Mend up to S044); T03, T40.
 
 **Why:** at equal points, monsters with more HP won more often in S040 and S041, and Pace and Stamina showed no worth with the bots. The idea gives Stamina a second job: a reserve of HP that costs mobility for the rest of the battle.
 

@@ -1,21 +1,21 @@
 # T50 · Set the Frame of the Game
 
-**Status:** To clarify — the frame stands in [vision.md](../../../vision.md) and the rule files follow it. What is left are the working values and drafts inside vision.md; each topic has a task of its own.
+**Decided:** The frame stands in [vision.md](../../../vision.md) and the rule files follow it. What is left are the working values and drafts inside vision.md; each topic has a task of its own.
 **Prerequisites:** none.
 **Sources:** [vision.md](../../../vision.md).
 
 | Part of the frame | Status in vision.md | Open in |
 |---|---|---|
 | Pillars, resources and their sources (§2) | working values to be tried | T54–T58 |
-| Lifespan and the length of a game (§3) | set; numbers open | [T54](T54-lifespan-day-ap-and-the-length-of-a-game.md) |
-| Wild area and dungeon (§4) | set; numbers open | [T55](T55-wild-area-and-dungeon-numbers-challenges-loot.md) |
-| Void and the own battleground (§4) | set; limits open | [T56](T56-the-void-and-the-players-battleground.md) |
-| The start (§5) | set; the eggs open | [T59](T59-roster-eggs-and-the-start.md) |
-| The hub (§6) | draft | [T60](T60-hub-and-platform.md) |
-| Making things (§7) | set; lists open | [T58](T58-materials-pills-and-forged-pieces.md) |
-| Growth and the Way (§8) | set in outline | [T57](T57-cultivation-systems-and-tamer-skills.md) |
+| Lifespan and the length of a game (§3) | set; numbers open | T54 |
+| Wild area and dungeon (§4) | set; numbers open | T55 |
+| Void and the own battleground (§4) | set; limits open | T56 |
+| The start (§5) | set; the eggs open | T59 |
+| The hub (§6) | draft | T60 |
+| Making things (§7) | set; lists open | T58 |
+| Growth and the Way (§8) | set in outline | T57 |
 
-**Drawn as consequences while the rule files were aligned, without the user; to confirm:**
+**To confirm (chosen without the user):** consequences drawn while the rule files were aligned.
 
 | # | What [overworld.md](../../../overworld.md) now says | Why |
 |---|---|---|

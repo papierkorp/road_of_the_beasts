@@ -36,8 +36,8 @@
 | [`docs/architecture.md`](docs/architecture.md) | Technische Zielstruktur | — |
 | [`docs/contract.md`](docs/contract.md) | Vertrag des neu gebauten Kampfs: Formate, Aktionen, Events, lesbarer Zustand | eingefrorener Entwurf |
 | [`docs/decisions.md`](docs/decisions.md) | Entscheidungsprotokoll: Entscheidung, Verworfenes, Grund | wächst nur zeilenweise |
-| [`docs/temp_todo.md`](docs/temp_todo.md) | Übersicht: Stand, offene Fragen, Aufgabentabelle | 10 000 |
-| [`docs/todo/`](docs/todo/) | Eine Datei je Aufgabe, in Ordnern nach Status und Epic | 6 000 je Aufgabe |
+| [`docs/temp_todo.md`](docs/temp_todo.md) | Einstieg jeder Sitzung: Stand, offene Fragen, worauf gewartet wird, Aufgabentabelle | 10 000 ohne die erzeugte Tabelle |
+| [`docs/todo/`](docs/todo/) | Eine Datei je Aufgabe, in Ordnern nach Status und Epic; der Ordner ist der Status | 6 000 je Aufgabe |
 | [`docs/prompts.md`](docs/prompts.md) | Wiederverwendbare Arbeitsaufträge (deutsch) | — |
 | [`docs/simulation_log.md`](docs/simulation_log.md) | Messreihen, nur anhängen | — |
 
@@ -45,17 +45,44 @@
 
 1. **Nur der aktuelle Stand:** Regel- und Inhaltsdateien enthalten keine Datumsangaben, keine Entscheidungsgeschichte, kein „früher/jetzt“ und keine verworfenen Varianten.
 2. **Ersetzen statt ergänzen:** Eine neue Entscheidung ersetzt den alten Text.
-3. **Nach jeder Nutzerentscheidung:** den zuständigen Abschnitt ersetzen und eine Zeile in `docs/decisions.md` anhängen. Daten und Entscheidungsgeschichte stehen ausschließlich dort.
-4. **Vor einem Vorschlag,** der eine Regel ändert oder ein beschlossenes Thema neu öffnet: `docs/decisions.md` prüfen. Verworfenes nur bei neuem Anlass wieder vorschlagen.
+3. **Nach jeder Nutzerentscheidung,** im selben Schritt: den zuständigen Abschnitt ersetzen; eine Zeile im passenden Abschnitt von `docs/decisions.md` anhängen und eine überholte Zeile dort als ersetzt vermerken; den Punkt aus der Aufgabe und aus der Fragentabelle löschen und die nächste Frage nachrücken lassen; die Aufgabe verschieben, wenn sich ihr Status ändert; Skript „generate“. Daten und Entscheidungsgeschichte stehen ausschließlich in `docs/decisions.md`.
+4. **Vor einem Vorschlag,** der eine Regel ändert oder ein beschlossenes Thema neu öffnet: `docs/decisions.md` nach dem Thema durchsuchen (nicht ganz lesen); als ersetzt vermerkte Zeilen gelten nicht mehr. Verworfenes nur bei neuem Anlass wieder vorschlagen.
 5. **Jede Regel steht genau einmal;** anderswo wird verlinkt. Regeln stehen in den Regeldateien, konkrete Werte und Namen in `content.md`.
 6. **Offene Fragen, Alternativen und Übergaben** stehen ausschließlich in der Aufgabenverwaltung (`docs/temp_todo.md`, `docs/todo/`). Regeldateien nennen eine Lücke höchstens als „not defined“.
-7. **Status einmal je Abschnitt oder Tabelle** kennzeichnen (beschlossen, working value), nicht an jeder Aussage.
+7. **Status einmal je Abschnitt oder Tabelle** kennzeichnen (beschlossen, working value), nicht an jeder Aussage. Ein Arbeitswert darf so in einer Regeldatei stehen; der Punkt, der ihn bestätigt, steht in der Aufgabe.
 8. **Testschalter, Messhinweise und ungenutzter Code** gehören nicht in die Regeldateien, sondern in die Godot-READMEs oder als Aufgabe in `docs/todo/`.
 9. **Umfang:** Überschreitet eine Datei ihren Richtwert, wird zuerst gekürzt oder geteilt, dann erst ergänzt.
-10. **Aufgaben:** eine Datei je Aufgabe; ein Statuswechsel verschiebt die Datei in den passenden Ordner und aktualisiert die Tabelle in `docs/temp_todo.md`. Erledigtes wandert nach `done/`, später nach `archive/`.
+10. **Aufgaben:** eine Datei je Aufgabe, ohne Statuszeile; Ordner, Aufbau der Datei und Abschnitte von `docs/temp_todo.md` stehen unter „Aufgabenverwaltung“. Ein Statuswechsel verschiebt die Datei mit `git mv`; die Aufgabentabelle schreibt nur das Skript.
 11. **Diese `CLAUDE.md`** enthält nur dauerhafte Arbeitsregeln: keine Spielregeln, Zahlen oder Zwischenstände.
 12. **`docs/simulation_log.md`** wird nur angehängt; bestehende Einträge werden nicht geändert.
 13. **`docs/contract.md`** ist ein eingefrorener Entwurf: bei Regeländerungen nicht mitpflegen. Beim Start des Neubaus wird er einmal gegen die fertigen Regeln überarbeitet und dem Nutzer zur Abnahme vorgelegt.
+
+## Aufgabenverwaltung
+
+Der Ordner unter `docs/todo/` ist der Status und sagt, wer als Nächstes handeln kann:
+
+| Ordner | Bedeutung |
+|---|---|
+| `to-clarify/<epic>/` | Mindestens ein Punkt kann heute vom Nutzer entschieden werden; wartende Punkte stehen in der Datei unter „Waiting for“ |
+| `waiting/<epic>/` | Nichts ist entscheidbar oder bearbeitbar: alles wartet auf einen Test des Nutzers, eine Messung oder etwas Äußeres |
+| `open/<epic>/` | Der Agent kann ohne Rückfrage arbeiten; wartet die Aufgabe nur auf eine andere, bleibt sie hier und nennt sie unter „Prerequisites“ |
+| `in-progress/<epic>/` | Nur für Arbeit über eine Sitzung hinaus; sonst nach jeder Übergabe leer |
+| `done/<epic>/` | Geschlossen: erfüllt, aufgegeben oder ersetzt, mit einer Zeile `Closed:` |
+
+- **Epics:** `battle`, `skills`, `monsters`, `overworld`, `project`; eine Aufgabe hat genau eines.
+- **Datei:** `T<Nummer>-<slug>.md`, erste Zeile `# T<Nummer> · <Titel>` (Thema, kein Datum). Kopfzeilen: `Decided`, wahlweise `Built/Measured`, `Waiting for` (Pflicht in `waiting/`), `Prerequisites`, wahlweise `Replaces`, `Sources`. Abschnitte: „For the user to decide“, „To confirm (chosen without the user)“, „To do“; am Ende `Done when`. Aufgaben nennen einander mit der ID, ohne Pfad.
+- **Nur das Offene:** Die Datei enthält, was offen ist, und den Stand in den Kopfzeilen; keine Daten, keine Geschichte.
+- **Schließen, Teilen, Wiederöffnen:** Eine geschlossene Aufgabe wird nicht zurückgeholt; ein neuer Anlass bekommt eine neue Aufgabe mit `Replaces`. Teile einer geteilten Aufgabe bekommen neue Nummern, die alte wird mit `Closed: split into T…` geschlossen.
+- **Ohne den Nutzer Gewähltes:** Muss ein Agent beim Schreiben oder Bauen etwas wählen, steht es in der Aufgabe unter „To confirm“ und gilt als Entwurf.
+- **`docs/temp_todo.md`** hat fünf Abschnitte: How the Task Folder Works; Current State (Übergabe mit Datum, etwa 3 000 Zeichen, wird überschrieben; jeder Schritt von „Next, in this order“ beginnt mit „User:“ oder „Agent:“); Open Questions for the User (nur heute ohne Test Entscheidbares; Rang eindeutig, zuerst nach Abhängigkeit, dann nach freigegebener Arbeit; höchstens zehn; eine Entscheidung je Zeile mit Empfehlung als Entwurf; die Aufgabe liegt in `to-clarify/`); Waiting for the User (eine Zeile je Ereignis: worauf zu achten ist, welche Aufgaben); Tasks (vom Skript).
+- **Nur die Hauptsitzung** legt Aufgaben an, verschiebt sie und schreibt `docs/temp_todo.md`; Unteragenten berichten.
+- **Skript** `godot/tools/tasks.gd` (Aufruf wie die anderen Werkzeuge, [godot/tools/README.md](godot/tools/README.md#task-folder)): `-- generate` schreibt die Aufgabentabelle zwischen die Marken in `docs/temp_todo.md`; `-- check` ändert nichts und meldet Fehler (Fehlercode 1) und Warnungen; `-- next` nennt die nächste freie Nummer.
+- **Übergabe,** wenn der Nutzer sie verlangt und vor jedem beauftragten Commit:
+  1. `check`; jede gemeldete Aufgabendatei, die in der Sitzung berührt wurde, auf das Offene kürzen. Vor dem Löschen eines entschiedenen Punkts prüfen, dass seine Zeile in `docs/decisions.md` steht. Nicht berührte gemeldete Dateien nicht kürzen, sondern in „Current State“ unter „Not looked through“ nennen.
+  2. Geschlossene Aufgaben mit `Closed:` nach `done/` verschieben.
+  3. Fragentabelle und „Waiting for the User“ neu ordnen.
+  4. „Current State“ neu schreiben.
+  5. `generate`, dann `check`; Fehler beheben, das Ergebnis mit den verbleibenden Warnungen berichten.
 
 ## Working style
 
@@ -63,7 +90,7 @@
 - **Wiedereinstieg:** `docs/temp_todo.md` lesen, dann gezielt die zuständigen Abschnitte. `docs/decisions.md` ist keine Pflichtlektüre beim Einstieg (siehe Regel 4).
 - **Priorität:** aktuelle Nutzeranweisung vor älterer Übergabe.
 - **Entscheidungen:** grundlegendes Gameplay mit dem Nutzer klären; Beschlossenes nur bei neuem Anlass erneut öffnen.
-- **Rückfragen:** für Nutzerentscheidungen das AskUserQuestion-Tool verwenden (Empfehlung zuerst, gebündelt). Nicht nach dem nächsten Arbeitsschritt fragen, sondern ihn aus der Aufgabenliste vorgeben.
+- **Rückfragen:** für Nutzerentscheidungen das AskUserQuestion-Tool verwenden (Empfehlung zuerst, gebündelt). Nicht nach dem nächsten Arbeitsschritt fragen: Er kommt aus „Next, in this order“; steht dort kein Agentenschritt, das sagen und auf den Nutzer warten.
 - **Tempo:** Der Nutzer will Änderungen in der Regel schnell umgesetzt haben; keine ungefragten Nebenarbeiten.
 - **Entwürfe:** neue Zahlen und Empfehlungen als Entwurf kennzeichnen; daraus keine Freigabe ableiten.
 - **Lücken:** fehlende Regeln und Widersprüche benennen und gebündelt vorlegen, keine Standardannahmen erfinden.

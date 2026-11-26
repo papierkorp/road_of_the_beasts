@@ -1,7 +1,7 @@
 # T12 · Select the Launch Roster
 
-**Status:** Blocked — T11 identities/coverage are not ready; candidate names alone are not launch selection.
-**Prerequisites:** T11.
+**Decided:** —
+**Prerequisites:** T11 (its identities and coverage are not ready; candidate names alone are no launch selection).
 **Sources:** Monsters [content.md §5](../../../content.md#5-the-nine-monsters)–[content.md §5](../../../content.md#5-the-nine-monsters).
 - Without a mandatory Kin×aspect matrix, select a diverse roster from the nine reference monsters and additional name ideas (previous target about 15); prioritize free themes and distinct playstyles over category completeness.
 - Check missing blueprint/movement coverage and distinct one-sentence identities.

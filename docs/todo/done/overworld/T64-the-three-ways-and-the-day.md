@@ -1,6 +1,7 @@
 # T64 · The Three Ways and the Day Without AP
 
-**Status:** Closed 2026-11-22: the day, the dungeon, the forge and the cauldron were replaced before the Ways were played ([T65](../../to-clarify/overworld/T65-the-wild-and-the-one-clock.md)); what is still to confirm about the Ways moved there. Before that: Decided (user, 2026-11-22; [decisions.md](../../../decisions.md)), written into the rule files and **built** ([godot/README.md](../../../../godot/README.md), "The hub game"; what was chosen while building: [implementation.md](../../implementation.md) I121–I132). Not played by hand.
+**Closed:** replaced by T65 before its 'Done when' was met ([decisions.md](../../../decisions.md)).
+**State before closing:** Closed 2026-11-22: the day, the dungeon, the forge and the cauldron were replaced before the Ways were played (T65); what is still to confirm about the Ways moved there. Before that: Decided (user, 2026-11-22; [decisions.md](../../../decisions.md)), written into the rule files and **built** ([godot/README.md](../../../../godot/README.md), "The hub game"; what was chosen while building: [implementation.md](../../implementation.md) I121–I132). Not played by hand.
 **Prerequisites:** the user plays the three Ways.
 **Replaces in part:** T54 (day AP), T55 (wild area, harvest), T57 (the systems), T58 (weapons, tiers).
 

@@ -1,6 +1,6 @@
 # T62 · Build the Board Rules of 2026-11-22
 
-**Status:** Built, to confirm. The rules are decided and written (user, 2026-11-22; [decisions.md](../../../decisions.md)) and the build plays them ([godot/README.md](../../../../godot/README.md), tests `tests/battle/test_board_rules.gd`); the readings below wait for the user.
+**Decided:** The rules are decided and written (user, 2026-11-22; [decisions.md](../../../decisions.md)) and the build plays them ([godot/README.md](../../../../godot/README.md), tests `tests/battle/test_board_rules.gd`); the readings below wait for the user.
 **Prerequisites:** none.
 **Sources:** [battle.md §3](../../../battle.md#3-timing), [§4.2](../../../battle.md#42-dragon-veins-surrounding-and-late-round-pressure), [§4.5](../../../battle.md#45-ground), [§4.6](../../../battle.md#46-zones), [content.md §3](../../../content.md#3-props).
 
@@ -14,7 +14,7 @@ Core rules: they hold in the multiplayer battle and in the ingame battle.
 - [x] **Opponent AI:** it sees zones on arriving through its dry runs and counts the cost of staying on a vein, a vein lock by the HP the prop has left, and a prop that ground or a vein wears down. Not played against by hand yet.
 - [x] Rule tests (gdUnit) for each point; [godot/README.md](../../../../godot/README.md) follows.
 
-**Readings chosen while writing (to confirm):**
+**To confirm (chosen without the user):**
 
 - A prop that falls to 0 HP on the ground it is pushed off stays on that square and acts from there, like a monster defeated on leaving.
 - The zone move also follows a self retreat after a Strike and the swap of two allies.

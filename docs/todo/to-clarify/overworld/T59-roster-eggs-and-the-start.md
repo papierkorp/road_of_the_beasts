@@ -1,10 +1,10 @@
 # T59 · Roster, Eggs and the Start
 
-**Status:** To clarify — an orphan who chooses one of three eggs, and catching as the way to further monsters, are decided ([vision.md §5](../../../vision.md#5-the-start)). Takes the place of T24.
+**Decided:** An orphan who chooses one of three eggs, and catching as the way to further monsters, are decided ([vision.md §5](../../../vision.md#5-the-start)). Takes the place of T24.
 **Prerequisites:** T12 for the species to choose from.
 **Sources:** [vision.md §5](../../../vision.md#5-the-start); [overworld.md §4](../../../overworld.md#4-monsters-outside-the-battle); [monsters.md §1](../../../monsters.md#1-species-and-individual).
 
-**Open for the user:**
+**For the user to decide:**
 
 | Topic | Questions |
 |---|---|

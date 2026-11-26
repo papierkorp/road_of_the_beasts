@@ -1,7 +1,8 @@
 # T32 · Design Signature Skills
 
 **Reshape 2026-11-13:** Major Surges are gone with Surges; this task now covers Signature skills only, on the skill card ([skills.md §1](../../../skills.md#1-the-kit)). The earlier Ancient-only Major access question is void.
-**Status:** Open — part of Battle completion, not postponed until after Overworld economy; content/access/slot treatment unresolved.
+**Decided:** —
+**Built/Measured:** Part of Battle completion, not postponed until after Overworld economy; content/access/slot treatment unresolved.
 **Prerequisites:** Relevant T02/T05 contracts and T12 roster/access decisions; use initial T13 core results for calibration, then test this content in the full-scope T13 pass. No T29–T31 or complete T13 prerequisite before drafting.
 **Sources:** Monsters [monsters.md §3](../../../monsters.md#3-kins), [monsters.md §5](../../../monsters.md#5-growth); Skills [skills.md §1](../../../skills.md#1-the-kit) (access), [skills.md §2](../../../skills.md#2-the-skill-card), [skills.md §3](../../../skills.md#3-what-a-skill-does-and-creates), [skills.md §8](../../../skills.md#8-development); [skills.md](../../../skills.md) (integration only).
 - **What the GDDs say today (re-verified 2026-11-15):** a Signature skill is an ordinary skill card with restricted access ([skills.md §1](../../../skills.md#1-the-kit)), reached by a Legendary at Sovereign Lower ([monsters.md §4](../../../monsters.md#4-no-bloodline) “+ signature at max stage”, §5.3 step 16, [overworld.md §5.1](../../../overworld.md#51-stages)). Skills §11 holds no content and no rule; the build has only the `once_per_battle` use limit (I19).

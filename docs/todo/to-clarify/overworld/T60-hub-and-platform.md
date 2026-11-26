@@ -1,10 +1,10 @@
 # T60 · Hub and Platform
 
-**Status:** To clarify — a hub screen of buildings, a phone in landscape and a PC alike are decided ([vision.md §1](../../../vision.md#1-the-game-in-one-picture)); the list of buildings is a draft ([vision.md §6](../../../vision.md#6-the-hub)).
+**Decided:** A hub screen of buildings, a phone in landscape and a PC alike are decided ([vision.md §1](../../../vision.md#1-the-game-in-one-picture)); the list of buildings is a draft ([vision.md §6](../../../vision.md#6-the-hub)).
 **Prerequisites:** none.
 **Sources:** [vision.md §1](../../../vision.md#1-the-game-in-one-picture), [§6](../../../vision.md#6-the-hub); [overworld.md §7](../../../overworld.md#7-technical-notes); [godot/README.md](../../../../godot/README.md).
 
-**Open for the user:**
+**For the user to decide:**
 
 | Topic | Questions |
 |---|---|

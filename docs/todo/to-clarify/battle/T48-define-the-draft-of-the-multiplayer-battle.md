@@ -1,12 +1,12 @@
 # T48 · Define the Draft of the Multiplayer Battle
 
-**Status:** To clarify — the basic idea is the user's (2026-11-18); the draft is built only in the rebuilt code ([T42](../../open/project/T42-rebuild-the-game-cleanly-on-the-target-architect.md)), not in the prototype.
-**Prerequisites:** skill prices ([T02](../../open/skills/T02-find-skill-prices.md)): a draft is fair only if every offered monster costs the same and every skill has its price.
+**Built/Measured:** The basic idea is the user's (2026-11-18); the draft is built only in the rebuilt code (T42), not in the prototype.
+**Prerequisites:** skill prices (T02): a draft is fair only if every offered monster costs the same and every skill has its price.
 **Sources:** [battle.md §1](../../../battle.md#1-goals-and-pillars); [architecture.md §4](../../../architecture.md#4-the-battle); [monsters.md §2.2](../../../monsters.md#22-prices-and-points); [skills.md §7](../../../skills.md#7-value-and-prices).
 
 **Decided:** no fixed monsters or skills in the multiplayer battle. The players pick monsters alternately in the order 1 · 2 · 2 · 1 · 2 · 1, then skills for each monster. Both players get the same generated pool or each a pool of their own. Players can save monsters and skills they made.
 
-**Open for the user:**
+**For the user to decide:**
 
 | Topic | Questions |
 |---|---|

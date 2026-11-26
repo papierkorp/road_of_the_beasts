@@ -1,10 +1,10 @@
 # T46 · Define the Ingame Battle
 
-**Status:** To clarify — the split into a multiplayer battle and an ingame battle on one rule core is decided (2026-11-18); what the ingame battle adds is open.
+**Decided:** The split into a multiplayer battle and an ingame battle on one rule core is decided (2026-11-18); what the ingame battle adds is open.
 **Prerequisites:** none.
 **Sources:** [battle_ingame.md](../../../battle_ingame.md); [battle.md §1](../../../battle.md#1-goals-and-pillars); [architecture.md §1](../../../architecture.md#1-two-games-and-what-they-share), [§4](../../../architecture.md#4-the-battle); [godot/README.md](../../../../godot/README.md) (battle menu, prototype screen).
 
-**Open for the user:**
+**For the user to decide:**
 
 | Topic | Questions |
 |---|---|

@@ -1,6 +1,7 @@
 # T53 · Frame of Persons, Bonds, Events and Leading
 
-**Status:** Done — the user took the five blocks as a whole on 2026-11-20 ("sounds good for now"); they stand in [vision.md](../../../vision.md) and [overworld.md §7](../../../overworld.md#7-management), the decisions in [decisions.md](../../../decisions.md). The details wait in T52. The text below is the draft as it was taken.
+**Closed:** fulfilled ([decisions.md](../../../decisions.md)).
+**State before closing:** Done — the user took the five blocks as a whole on 2026-11-20 ("sounds good for now"); they stand in [vision.md](../../../vision.md) and [overworld.md §7](../../../overworld.md#7-management), the decisions in [decisions.md](../../../decisions.md). The details wait in T52. The text below is the draft as it was taken.
 **Prerequisites:** none.
 **Not part of it:** the insights and tamer skills by root; both belong to the progression of the player ([overworld.md §6](../../../overworld.md#6-progression)).
 

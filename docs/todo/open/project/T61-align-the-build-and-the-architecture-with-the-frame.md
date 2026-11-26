@@ -1,6 +1,7 @@
 # T61 · Align the Build with the Frame
 
-**Status:** Open — the build follows the frame: a hub of buildings, the lifespan as the one clock, the wild, the void and the three Ways. [architecture.md](../../../architecture.md) describes the target of the rebuild; the build is a prototype and is not moved onto it (T42).
+**Decided:** —
+**Built/Measured:** The build follows the frame: a hub of buildings, the lifespan as the one clock, the wild, the void and the three Ways. [architecture.md](../../../architecture.md) describes the target of the rebuild; the build is a prototype and is not moved onto it (T42).
 **Prerequisites:** the user's play of the hub game; T60 for what the hub shows.
 **Sources:** [vision.md](../../../vision.md); [architecture.md](../../../architecture.md); [godot/README.md](../../../../godot/README.md) ("The hub game").
 

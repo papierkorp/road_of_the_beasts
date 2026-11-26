@@ -1,10 +1,10 @@
 # T56 · The Void and the Player's Battleground
 
-**Status:** To clarify — the void, its depths, the trial as the last depth and the battleground shaped freely in an editor from forged parts and the Sovereign beast as the last depth are decided ([vision.md §4](../../../vision.md#4-where-battles-happen), [battle_ingame.md §3](../../../battle_ingame.md#3-battlegrounds)); the limits and numbers are open. Takes the place of T30.
+**Decided:** The void, its depths, the trial as the last depth and the battleground shaped freely in an editor from forged parts and the Sovereign beast as the last depth are decided ([vision.md §4](../../../vision.md#4-where-battles-happen), [battle_ingame.md §3](../../../battle_ingame.md#3-battlegrounds)); the limits and numbers are open. Takes the place of T30.
 **Prerequisites:** none. The map editor of the build is the tool to try boards with.
 **Sources:** [vision.md §4](../../../vision.md#4-where-battles-happen); [battle_ingame.md §3](../../../battle_ingame.md#3-battlegrounds); [overworld.md §5.2](../../../overworld.md#52-the-breakthrough-trial), [§5.3](../../../overworld.md#53-the-way).
 
-**Open for the user:**
+**For the user to decide:**
 
 | Topic | Questions |
 |---|---|

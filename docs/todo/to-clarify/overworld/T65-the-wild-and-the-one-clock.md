@@ -1,12 +1,13 @@
 # T65 · The Wild, the One Clock and Drops Instead of Crafting
 
-**Status:** Decided (user, 2026-11-22; [decisions.md](../../../decisions.md)), written into the rule files and **built** ([godot/README.md](../../../../godot/README.md), "The hub game"; what was chosen while building: [implementation.md](../../implementation.md) I133–I141). Not played by hand.
+**Built/Measured:** Decided (user, 2026-11-22; [decisions.md](../../../decisions.md)), written into the rule files and **built** ([godot/README.md](../../../../godot/README.md), "The hub game"; what was chosen while building: [implementation.md](../../implementation.md) I133–I141). Not played by hand.
+**Waiting for:** a game of each Way by the user, for the points under “To confirm”; the two proposals for Insight can be decided now.
 **Prerequisites:** the user plays the three Ways.
 **Replaces:** T64 (the day as one deed, the dungeon), and in part T54 (days), T55 (the dungeon), T58 (materials, forge, cauldron).
 
 **Decided:** a roguelike without an advantage for the next game (the pool of eggs still grows); the Sovereign beast stays the goal; the lifespan is the one clock and every deed costs a year of it; the wild shows a few battles and a new look costs a year; a wild battle won lifts monsters by one step, each monster defeated lifting one monster at its step or below, the player choosing where the rises do not reach; a monster rises into the next stage only by a battle won in the void; every battle starts at full HP; parts and pills drop ready from the wild, per Way; a boon at every breakthrough, a longer life among them.
 
-**To confirm after play (chosen while writing and building):**
+**To confirm (chosen without the user), after play:**
 
 - **The numbers:** 10 to 14 years per stage; 1 year for a wild battle, a new look and an attack on the void; 3 battles per look; 1–2 up to 2–4 monsters per battle by stage; an egg hatches after 2 battles.
 - **The drop:** one unit per monster of the battle (a part, a pill); the Formation gains 1 Insight from a battle against 2 or more. Pills are drawn evenly from all ten kinds, the strong ones (Tempering, Honing, Growth) included.

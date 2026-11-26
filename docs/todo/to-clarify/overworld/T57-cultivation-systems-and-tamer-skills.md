@@ -1,10 +1,10 @@
 # T57 · Ways and Tamer Skills
 
-**Status:** To clarify — a Way chosen at the start, a small tree per stage and Insight from the void are decided ([vision.md §8](../../../vision.md#8-growth), [overworld.md §5.3](../../../overworld.md#53-the-way)); the systems themselves are open. Takes the place of T20.
+**Decided:** A Way chosen at the start, a small tree per stage and Insight from the void are decided ([vision.md §8](../../../vision.md#8-growth), [overworld.md §5.3](../../../overworld.md#53-the-way)); the systems themselves are open. Takes the place of T20.
 **Prerequisites:** none.
 **Sources:** [vision.md §8](../../../vision.md#8-growth); [overworld.md §5.3](../../../overworld.md#53-the-way), [§5.4](../../../overworld.md#54-tamer-skills); [battle_ingame.md §5](../../../battle_ingame.md#5-tamer-skills); [skills.md §8](../../../skills.md#8-development).
 
-**Open for the user:**
+**For the user to decide:**
 
 | Topic | Questions |
 |---|---|

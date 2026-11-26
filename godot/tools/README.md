@@ -14,6 +14,7 @@ Simulations run on the battle core itself (`battle/core`), on the same content f
 | `discovery.gd` | New skills, one-shot movement and map candidates using authored stats; reuses progression's measurement helpers, not its entry proxy. |
 | `skill_impact.gd` | What the parts of a skill are worth: mirrored teams with random kits of generated skills (`KitDraw`, `SkillGen.draw_kind`), every pairing played twice with the kits swapped; `run` writes one row per battle, `fit` reads any number of such files and prints, per part, what it adds to win rate and HP margin (least squares over all parts at once) and how the bots used it. The source of the draft prices in `battle/defs/skill_calc.gd`. |
 | `smoke_ui.gd` | Plays draft → placement → battle through the real UI (not a measurement tool). |
+| `tasks.gd` | No simulation: writes and checks the task table of [docs/temp_todo.md](../../docs/temp_todo.md) from the folders under `docs/todo/` ([Task folder](#task-folder)). |
 | `body_preview.gd` | Shows every body of the eight Kins (`shared/monster_body.gd`) or, with `props`, the figures of the game's props (`battle/view/prop_body.gd`) and plays their movements in turn; with a folder as second argument it saves one picture per movement. Needs a window, no battle runs. |
 | `lib/sim_bots.gd` | Move policies `game` (AiBrain as the game plays it: greedy with the lookahead of `ai_veins`), `greedy` (AiBrain without the lookahead: it walks up to the enemy; `hunt` is the same bot), `wait` (AiBrain up to S011: ends the turn instead), `chase` (walks up only while not ahead), `plan` (AiBrain's evaluation over two actions of one turn, about five times slower), `tactic` (plans the whole turn and plays the best end positions on with greedy bots until the monster's next turn; about twenty times slower), `rush`, `kite`, `random`. |
 | `lib/sim_runner.gd`, `lib/cli.gd` | Boards and start squares for fixed-team runs, the game loop, argument parsing. |
@@ -166,3 +167,16 @@ Two monsters that differ in more than one thing probe the whole sheet, **not the
 ## Recording results
 
 Completed `sim.gd` run blocks/compact rows and `progression.gd` / `discovery.gd` reports are pasted unchanged into [docs/simulation_log.md](../../docs/simulation_log.md), which defines the entry format. **Every reported result, in the log, in `temp_todo.md` and in a summary for the user, gives the mean rounds together with the number of battles under 3 and over 5 rounds** *(user instruction 2026-11-15)*. A `compare.gd` table is recorded with its command, seeds, game count and limits under T13 in [docs/temp_todo.md](../../docs/temp_todo.md). Conclusions become tasks there; nothing is concluded in this folder.
+
+## Task folder
+
+`tasks.gd` reads `docs/todo/`: the status and the epic of a task come from its path, its ID and title from the first heading. The rules it checks stand in [CLAUDE.md](../../CLAUDE.md).
+
+```
+godot --headless --path godot -s res://tools/tasks.gd -- generate   # writes the table between the marks in docs/temp_todo.md
+godot --headless --path godot -s res://tools/tasks.gd -- check      # changes nothing; exit code 1 on an error, warnings do not fail
+godot --headless --path godot -s res://tools/tasks.gd -- next       # the next free task number
+```
+
+- **Errors:** the table differs from the folders; a heading without `T<number>`, a number used twice or one that differs from the file name; a file outside an epic folder; a `Status:` line; a file in `waiting/` without `Waiting for:`; a file outside `done/` without `Done when:`; a file in `done/` without `Closed:`; a link to a missing file; more than ten questions, a rank used twice, a question whose task is not in `to-clarify/`.
+- **Warnings:** a task file over 6 000 characters; a date in a task file outside `done/`; a link to a missing anchor from outside `done/`; a task in `to-clarify/` without a question in the table; `temp_todo.md` over 10 000 characters without the table.

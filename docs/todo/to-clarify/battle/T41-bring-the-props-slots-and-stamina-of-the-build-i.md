@@ -1,10 +1,10 @@
 # T41 · Decide the Props of the Catalogue
 
-**Status:** To clarify — what a prop is, traps as walkable props, cover, the prop step of the round end, the clock of a created prop, displaced props and Stamina are rules ([battle.md §4.7](../../../battle.md#47-props), [§2.4](../../../battle.md#24-action-points-and-stamina)). Which content stays is open.
+**Decided:** What a prop is, traps as walkable props, cover, the prop step of the round end, the clock of a created prop, displaced props and Stamina are rules ([battle.md §4.7](../../../battle.md#47-props), [§2.4](../../../battle.md#24-action-points-and-stamina)). Which content stays is open.
 **Prerequisites:** the user's play of the build.
 **Sources:** [battle.md §4.7](../../../battle.md#47-props), [§6.1](../../../battle.md#61-damage), [§6.4](../../../battle.md#64-displacement); [content.md §3](../../../content.md#3-props), [§4](../../../content.md#4-skills).
 
-**Open for the user:**
+**For the user to decide:**
 
 - **The catalogue:** which props of [content.md §3](../../../content.md#3-props) and which placing skills of [content.md §4](../../../content.md#4-skills) stay. The user has not said.
 - **The Thorn Idol and fair damage at range:** it deals 1 damage to its eight neighbours when it is hit, so it can be set next to a monster and struck in the same turn: damage at a distance with no turn of the victim in between ([battle.md §6.1](../../../battle.md#61-damage)). Keep, change or drop.
